@@ -16,7 +16,7 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 1;
+	private const int PerformanceResultSchemaVersion = 2;
 	private const string PerformanceResultsDirectory = "performance";
 	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
 	private const string InspectorPerformanceTask = "PERFORMANCE-OVERVIEW-001/v3";
@@ -91,6 +91,8 @@ public sealed class VoxelManager : Component
 	private int _performanceMemorySampleCount;
 	private int _performanceChunksIntegrated;
 	private bool _performanceSnapshotReady;
+	private bool _performanceVisibilityPending;
+	private GpuVisibilityMeasurement _lastPerformanceVisibility;
 	private float _lastPerformanceWindowSeconds;
 	private int _lastPerformanceFrameSampleCount;
 	private int _lastPerformanceTruncatedFrameSampleCount;
@@ -222,7 +224,7 @@ public sealed class VoxelManager : Component
 		_gpuMesher = new GpuVoxelMesher( Scene, CellsPerAxis );
 		ApplyConfigurationAndRebuild();
 
-		while ( _streamInProgress || _gpuMesher.PendingCount > 0 )
+		while ( _streamInProgress )
 		{
 			if ( IntegrateCompletedChunks() )
 			{
@@ -235,13 +237,11 @@ public sealed class VoxelManager : Component
 				RefreshReadableStatus();
 			}
 
-			_gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
-
 			await Task.Yield();
 		}
 
 		_initialLoadCompleted = _loadedChunks.Count == _desiredChunks.Count &&
-			_pendingChunks.Count == 0 && _gpuMesher.PendingCount == 0;
+			_pendingChunks.Count == 0;
 		if ( VerboseLogging )
 		{
 			Log.Info(
@@ -267,6 +267,7 @@ public sealed class VoxelManager : Component
 
 	protected override void OnUpdate()
 	{
+		TrySaveCompletedPerformanceTest();
 		UpdatePlayerFigureEight();
 		UpdatePerformanceOverview();
 
@@ -344,6 +345,7 @@ public sealed class VoxelManager : Component
 		}
 		_gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
 		TryCompletePlayerFigureEightTest();
+		TrySaveCompletedPerformanceTest();
 	}
 
 	protected override void OnDestroy()
@@ -479,10 +481,13 @@ public sealed class VoxelManager : Component
 		_playerFigureEightTestCompletionReady = false;
 		_playerFigureEightTestRunning = true;
 		_performanceSnapshotReady = false;
+		_performanceVisibilityPending = false;
+		_lastPerformanceVisibility = default;
 		FramePerformance = $"Figure-eight test running: 0 of {loopCount} loops";
 		ProcessMemoryUsage = "Collecting figure-eight test window";
 		ResetPerformanceWindow();
 		SamplePerformanceMemory();
+		_gpuMesher?.BeginVisibilityMeasurement();
 		Log.Info( string.Concat(
 			FormattableString.Invariant(
 				$"[VoxelWorld] performance.test.begin task=\"{EscapeLogValue( _playerFigureEightTestTask )}\" " ),
@@ -616,6 +621,19 @@ public sealed class VoxelManager : Component
 				GpuProfilerPath = meshingGpuProfilerPath,
 				AverageGpuMilliseconds = meshingGpuSmoothedMilliseconds,
 				MaximumGpuMilliseconds = meshingGpuMaximumMilliseconds
+			},
+			Visibility = new PerformanceVisibilityMetrics
+			{
+				Samples = _lastPerformanceVisibility.FrameCount,
+				AverageResidentMeshChunks = _lastPerformanceVisibility.AverageResident,
+				AverageVisibleMeshChunks = _lastPerformanceVisibility.AverageVisible,
+				MinimumVisibleMeshChunks = _lastPerformanceVisibility.MinimumVisible,
+				MaximumVisibleMeshChunks = _lastPerformanceVisibility.MaximumVisible,
+				AverageNonZeroIndirectDraws = _lastPerformanceVisibility.AverageVisible,
+				AverageCulledDraws = _lastPerformanceVisibility.AverageCulled,
+				CulledDrawPercentage = _lastPerformanceVisibility.CulledPercent,
+				LogicalBufferBytes = _lastPerformanceVisibility.LogicalBufferBytes,
+				ScalarReadbacks = _lastPerformanceVisibility.ScalarReadbacks
 			}
 		};
 
@@ -773,11 +791,36 @@ public sealed class VoxelManager : Component
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTarget = null;
 		_playerFigureEightBody = null;
+		_gpuMesher?.EndVisibilityMeasurement();
+		_performanceVisibilityPending = true;
 		if ( !_performanceSnapshotReady )
 		{
+			_performanceVisibilityPending = false;
 			Log.Error( "[VoxelWorld] performance.test.failed reason=\"no complete performance snapshot\"" );
 			return;
 		}
+
+		FramePerformance += "; awaiting GPU visibility counters";
+	}
+
+	private void TrySaveCompletedPerformanceTest()
+	{
+		if ( !_performanceVisibilityPending ||
+			_gpuMesher is null )
+		{
+			return;
+		}
+
+		// The measured loop is already complete. Wait for its final derived mesh work
+		// to settle so the saved resident/backlog snapshot represents availability at
+		// the completed route, without extending or changing the measured frame window.
+		if ( _gpuMesher.PendingCount > 0 ||
+			!_gpuMesher.TryTakeVisibilityMeasurement( out _lastPerformanceVisibility ) )
+		{
+			return;
+		}
+
+		_performanceVisibilityPending = false;
 
 		try
 		{

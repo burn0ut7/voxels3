@@ -11,6 +11,7 @@ internal sealed class PerformanceTestResult
 	public PerformanceMemoryMetrics Memory { get; init; }
 	public PerformanceChunkMetrics Chunks { get; init; }
 	public PerformanceMeshingMetrics Meshing { get; init; }
+	public PerformanceVisibilityMetrics Visibility { get; init; }
 }
 
 internal sealed class PerformanceTestSource
@@ -91,6 +92,20 @@ internal sealed class PerformanceMeshingMetrics
 	public string GpuProfilerPath { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
 	public float MaximumGpuMilliseconds { get; init; }
+}
+
+internal sealed class PerformanceVisibilityMetrics
+{
+	public uint Samples { get; init; }
+	public float AverageResidentMeshChunks { get; init; }
+	public float AverageVisibleMeshChunks { get; init; }
+	public uint MinimumVisibleMeshChunks { get; init; }
+	public uint MaximumVisibleMeshChunks { get; init; }
+	public float AverageNonZeroIndirectDraws { get; init; }
+	public float AverageCulledDraws { get; init; }
+	public float CulledDrawPercentage { get; init; }
+	public long LogicalBufferBytes { get; init; }
+	public long ScalarReadbacks { get; init; }
 }
 
 internal sealed class PerformanceVector2

@@ -2441,3 +2441,277 @@ Record an approved extraordinary change here before adding the new version:
   bounded inspection path remains available on demand, correctness is
   unchanged, and every measured acceptance budget passes without a material
   regression.
+
+### GPU-FRUSTUM-CULL-001/v1 - Conservative resident-mesh frustum culling
+
+- Definition recorded before implementation and before the first measurement.
+- Production world: `Assets/scenes/basic_example.scene`; one local player; the
+  existing user-authored plane renderer/collider remains enabled and unchanged;
+  main game camera at `1280x720`, horizontal FOV `60`; engine build `26.08.19`.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  `TerrainSurfaceHeight=0`; LOD0 regular-cell Transvoxel; at most `8` mesh
+  dispatches per update. Logical residency, streaming, and mesh residency use
+  their existing production paths.
+- Fixed player journey: unchanged `PERFORMANCE-OVERVIEW-001/v3` figure eight
+  from `(0,0,0)` at fixed world Z `0`, speed `2500`, distance `50000`, one loop,
+  frame capacity `524,288`, per-update frame sampling, one-second memory
+  sampling, and nearest-rank p95/p99 frame duration. Hardware, graphics settings,
+  VSync/frame-cap state, warmup procedure, and initial camera orientation are
+  recorded with the baseline and held unchanged for the candidate.
+- Visibility definitions: resident means GPU-resident surface meshes, not all
+  logically loaded chunks. A non-zero terrain draw is a resident indirect draw
+  whose GPU-produced instance count is non-zero. The installed API has no
+  GPU-produced draw-count entry point, so fixed zero-instance command entries do
+  not count as geometry-bearing terrain draws.
+- Fixed correctness views use the production main camera and the unobscured
+  chunk-boundary intersection `(8192,8192,0)`: top-down from
+  `(8192,8192,2048)`, grazing from `(6144,6144,128)`, inside/near a chunk bound,
+  and a 180-degree turn with a slow extreme-angle frustum-edge sweep. Existing
+  surface/solid/air GPU mesh probes remain unchanged.
+- Pass criteria fixed before execution:
+  - Candidate average non-zero terrain indirect draws decrease by at least 25%
+    relative to average resident surface meshes; no visible boundary, seam,
+    popping, or early-disappearance defect is observed.
+  - Candidate average full-frame GPU duration improves by at least `0.05 ms`;
+    p95 remains at most `16.67 ms`; p99 remains at most `25 ms`; no other
+    correctness, responsiveness, streaming, or frame-pacing regression hides the
+    improvement.
+  - Logical visibility buffers remain below `1 MiB` at the production workload;
+    engine GPU memory increases by no more than `16 MiB` and shows no continuing
+    loop-over-loop growth.
+  - Loaded chunks and resident meshes remain available, the mesh backlog returns
+    to zero, stale revisions remain rejected, and post-warmup mesh pool
+    allocations remain zero.
+  - Normal production performs zero visibility and geometry readbacks. The
+    opted-in completed performance run performs exactly one asynchronous scalar
+    visibility readback after its measured boundary and never uses that data to
+    decide rendering.
+  - Full chunk-volume AABBs are expanded by one cell and rejected only when all
+    eight corners are outside one homogeneous frustum plane. No density,
+    heightfield, neighbor, occlusion, cave, or overhang assumption participates.
+  - Runtime/editor builds, shader compilation, live production execution, fresh
+    console inspection, and `git diff --check` pass.
+- Current production terrain contains no cave or overhang geometry. This
+  scenario validates cave/overhang readiness structurally through full 3D bounds
+  and absence of terrain-shape heuristics; it does not claim unavailable visual
+  cave coverage or introduce synthetic terrain.
+
+#### Uncullled baseline 2026-08-28 - pass
+
+- Run ID `63487a58582344d497d6b063581086bc`; revision label
+  `0ad2a40+unculled-baseline`; engine build `26.08.19`; AMD Ryzen 7 9800X3D;
+  NVIDIA GeForce RTX 5090 driver `32.0.16.1088`. The existing plane and editor
+  graphics state remained unchanged.
+- Exact locked figure eight: origin start, fixed Z `0`, speed `2500`, distance
+  `50000`, one loop, duration `121.943184` seconds, `28,052` frame samples, and
+  zero truncated samples.
+- Frame: average FPS `230.03337`; p95 `5.4749 ms`; p99 `7.9662 ms`; average
+  full-frame GPU `1.1383078 ms`.
+- GPU memory: average `1,362,484,170` bytes; peak `1,365,132,546` bytes.
+- Streaming/meshing: `33,792` loaded; completion snapshot `2,145` pending;
+  `25,504` mesh dispatches; `1,024` resident surface meshes; mesh backlog `0`;
+  `65` pooled resources; `0` pool allocations; `25,515` pool reuses; `0`
+  scalar and geometry readbacks.
+- The canonical uncullled path submits one non-zero indirect terrain draw for
+  every resident surface mesh, so the baseline contains `1,024` resident,
+  visible, and geometry-bearing terrain draws at the completion snapshot. No
+  frustum visibility classification or visibility readback existed.
+- Outcome: pass and accepted as the fixed pre-change comparison. The production
+  player journey completed, streaming and meshing settled normally, and no
+  terminal console error was observed.
+
+#### GPU-written indirect development probes 2026-08-28 - fail
+
+- Engine build `26.08.19`; Vulkan renderer; the fixed scenario candidate was
+  not started because the implementation failed the earlier live safety gate.
+- A compute classifier using conservative full-volume chunk bounds completed
+  without device loss while terrain continued to draw from each mesh's original
+  indirect buffer. Copying append counters into a shared source-count buffer was
+  also stable with explicit transitions and UAV barriers.
+- Every probe that changed terrain draws to consume the compute-written shared
+  indirect-argument buffer ended in GPU device loss or the editor's GPU-crash
+  handler. This reproduced with `ByteAddress | IndirectDrawArguments` and
+  `Structured | IndirectDrawArguments`, with explicit UAV/indirect transitions,
+  and with compute plus draws combined in one camera command list.
+- No performance sample, correctness capture, or visibility scalar readback was
+  accepted from these failed probes. They are not candidate results and cannot
+  be compared with the baseline.
+- The experimental buffers, shaders, instrumentation, and draw path were
+  removed after the failure. Runtime and editor builds then passed with zero
+  warnings and errors, `git diff --check` passed, and a clear-state editor launch
+  compiled successfully on the restored per-resource indirect renderer.
+- A read-only comparison with the neighboring `voxels2` project found no
+  GPU-written visibility/indirect precedent: that project performs CPU frustum
+  tests, compacts indirect commands on the CPU, uploads them with `SetData`, and
+  only consumes the uploaded buffer on the GPU. Adopting that route would change
+  this scenario's GPU-only visibility architecture and exactly-one-readback
+  contract, so it requires an explicit design and validation decision rather
+  than being treated as a like-for-like fix.
+
+#### Visibility telemetry development runs 2026-08-28 - fail
+
+- All runs used the locked `PERFORMANCE-OVERVIEW-001/v3` world and nominal
+  `121.94`-second figure-eight workload. They are retained as failures rather
+  than discarded. Engine build was `26.08.19` on the baseline hardware.
+- Prototype 2: run `585a3441facc4dd6b275606b704ccc08`, revision
+  `0ad2a40+gpu-frustum-prototype-2`; `20,777` frames; average GPU
+  `0.72838247 ms`; p95/p99 `7.1405/9.3374 ms`; `1,032` resident and `57`
+  pending mesh results at capture. The one scalar readback returned `0`
+  visibility samples, so visible/resident draw metrics were invalid.
+- Prototype 3: run `c93ef2ab44c141f9a018c0ecffa4260c`, revision
+  `0ad2a40+gpu-frustum-prototype-3`; `21,115` frames; average GPU
+  `0.7318834 ms`; p95/p99 `7.0765/9.4759 ms`; `1,032` resident and `57`
+  pending. Visibility samples remained `0` after one scalar readback.
+- Prototype 4: run `a02cc83b8ab64b8aa0fc15e1d90aceb7`, revision
+  `0ad2a40+gpu-frustum-prototype-4`; `21,119` frames; average GPU
+  `0.7327399 ms`; p95/p99 `7.0421/9.4694 ms`; `1,032` resident and `57`
+  pending. Visibility samples remained `0` after one scalar readback.
+- Prototype 5: run `d2ffa1441744489bb008dcdb3f426424`, revision
+  `0ad2a40+gpu-frustum-prototype-5`; `23,129` frames; average GPU
+  `0.73450196 ms`; p95/p99 `6.5038/8.8201 ms`; `1,040` resident and `49`
+  pending. Visibility samples remained `0` after one scalar readback.
+- Every failed run recorded `35,937` loaded chunks, `0` chunk backlog, `0`
+  post-warmup pool allocations, `0` normal meshing scalar readbacks, `0`
+  geometry readbacks, `131,100` logical visibility bytes, and exactly one
+  visibility scalar readback. Failure was the absent GPU aggregate sample, not
+  a favorable partial result.
+
+#### GPU frustum prototype 6 2026-08-28 - measured pass, not final acceptance
+
+- Run `7fe7c5b57d654320a758a39b416f60ad`; revision
+  `0ad2a40+gpu-frustum-prototype-6`; captured
+  `2026-08-28T22:48:14.6364964+00:00` on the locked baseline hardware and
+  settings. The full player journey completed in `121.94015` seconds with
+  `29,100` frame samples and no truncation.
+- Frame results: average FPS `238.6298`; average full-frame GPU
+  `0.70830303 ms`; p95 `5.0253 ms`; p99 `6.9579 ms`.
+- GPU memory was constant at `1,342,113,110` start/end/average/peak bytes.
+  Logical visibility storage was `131,100` bytes (`0.125 MiB`).
+- Streaming/meshing capture: `35,937` loaded, `0` chunk pending; `25,513` mesh
+  dispatches; `1,040` resident and `49` in-flight/pending mesh results; `41`
+  pooled; `0` post-warmup allocations; `25,522` pool reuses; `0` normal meshing
+  scalar readbacks; `0` geometry readbacks.
+- GPU visibility: `29,099` samples; average resident surface meshes
+  `1,085.5598`; average visible/non-zero indirect draws `253.75165`; minimum/
+  maximum visible `238/269`; average culled draws `831.80817`; reduction
+  `76.62482%`; exactly one asynchronous visibility scalar readback.
+- Versus the accepted uncullled baseline, average GPU time improved
+  `0.43000477 ms` (`37.78%`), p95 improved `0.4496 ms`, p99 improved
+  `1.0083 ms`, and average GPU memory decreased `20,371,060` bytes. Draw
+  reduction exceeded the required `25%`; GPU improvement exceeded `0.05 ms`;
+  p95/p99, logical memory, engine memory, pool allocation, and readback budgets
+  passed.
+- Fixed production probes after the run reported `1,024` active cells,
+  `2,048` triangles, `0` invalid gradients, and `0` overflow for
+  `C[0,0,0]`, `C[-1,0,0]`, `C[0,-1,0]`, and `C[-1,-1,0]`. `C[0,0,-1]`
+  remained completely solid and `C[0,0,1]` completely air with no mesh
+  resource. Geometry readbacks remained zero.
+- Production-camera captures at `(8192,8192,0)` covered top-down, grazing,
+  inside/near-bound, a 180-degree turn, and incremental extreme-angle edge
+  views. The flat production surface remained continuous without an observed
+  seam, hole, early disappearance, or popping. No cave/overhang visual claim is
+  made; readiness is structural through full 3D padded bounds and the absence
+  of heightfield, density, neighbor, or enclosure heuristics.
+- This run proves the GPU culling and telemetry route, but it is not the final
+  repository acceptance result. The completion snapshot still contained `49`
+  mesh results awaiting commit, and the scene-object bounds implementation was
+  refined afterward to use the installed engine's native infinite custom-object
+  bounds. The fixed figure eight must complete once more on the final source
+  before commit/push.
+
+#### Final-source rerun attempts 2026-08-28 - incomplete
+
+- Prototype 7 began with the locked speed, distance, loop count, resolution, and
+  world settings, but an earlier editor transform persisted and the begin record
+  reported center `[512,0,0]`. This violates the immutable origin and no result
+  was accepted.
+- Prototypes 8 and 9 began from the correct origin with the same locked inputs.
+  After the MCP-driven play restart, the game camera rendered the resident
+  terrain on demand, but simulation updates did not advance: the production
+  player remained exactly `(0,0,0)` and neither run completed or wrote a result
+  record. Waiting longer, requesting camera renders, polling editor state, and
+  toggling pause/resume did not advance the journey.
+- Installed engine source at public cache commit
+  `0f86783568728892a4ea318779cc3681aef8ae94` confirms that
+  `SceneCustomObject` starts with native infinite bounds specifically so its
+  callback renders when callers do not need spatial bounds. Final source now
+  keeps that supported default and removes both the experimental billion-unit
+  AABB and camera-relative helper bound.
+- Outcome: incomplete, not accepted, not committed, and not pushed. The blocker
+  is the restarted live session failing to advance the production player
+  journey, not a substituted shorter workload. The unchanged canonical scenario
+  remains required.
+
+#### Clean-start lifecycle correction 2026-08-28 - pass
+
+- A fully restarted editor exposed a circular startup dependency rather than a
+  visibility-classification failure. `VoxelManager.OnLoad` waited for the GPU
+  mesh queue, while that queue required camera rendering that cannot begin until
+  component loading completes. The authored chunks became logically available,
+  but update-driven movement and the measured journey could not start.
+- The canonical ownership boundary now ends `OnLoad` when the authoritative
+  logical chunk stream has integrated. Derived GPU mesh work drains afterward
+  through the unchanged production limit of eight dispatches per update. No
+  terrain state, streaming decision, mesh owner, revision rule, or render
+  visibility decision moved to the CPU.
+- Live compilation completed with zero errors and warnings. After a clean play
+  restart, the outer production surface chunk `C[16,16,0]` became GPU resident
+  and reported `1,024` active cells, `2,048` triangles, `0` invalid gradients,
+  `0` overflow, and `0` geometry readbacks. A full figure eight then advanced
+  and saved normally without a crash or device-loss entry.
+- The opted-in result finalizer was also corrected to wait for the route's final
+  derived mesh backlog to settle before saving residency/backlog fields. The
+  measured loop and its GPU/frame samples end at the original locked boundary;
+  only the post-measurement snapshot/save is deferred.
+
+#### Final GPU frustum candidate 2026-08-28 - pass
+
+- Run ID `3973db55b60f4c4e935232715e813e31`; revision label
+  `0ad2a40+gpu-frustum-final-4`; engine build `26.08.19`; unchanged baseline
+  hardware, driver, graphics state, existing plane, camera orientation, and
+  warmup procedure.
+- Exact locked figure eight: origin start, fixed Z `0`, speed `2500`, distance
+  `50000`, one loop, duration `121.94021` seconds, `29,147` frame samples, and
+  zero truncated samples.
+- Frame results: average FPS `239.01791`; average full-frame GPU
+  `0.5307214 ms`; p95 `5.0189 ms`; p99 `6.7573 ms`.
+- GPU memory was constant at `1,242,977,954` start/end/average/peak bytes.
+  Logical visibility storage was `131,100` bytes (`0.125 MiB`). Relative to the
+  uncullled baseline, average GPU time improved `0.6075864 ms` (`53.38%`), p95
+  improved `0.4560 ms`, p99 improved `1.2089 ms`, average GPU memory decreased
+  `119,506,216` bytes, and peak GPU memory decreased `122,154,592` bytes.
+- Streaming/meshing: `35,937` loaded chunks, `0` chunk pending; `25,516` mesh
+  dispatches; `1,089` resident surface meshes, `0` mesh pending, `0` pooled at
+  the settled origin; `0` post-warmup pool allocations; `25,525` pool reuses;
+  `0` normal meshing scalar readbacks; `0` geometry readbacks. The candidate did
+  not reduce logical or GPU-resident terrain availability.
+- GPU visibility: `29,146` samples; average resident surface meshes
+  `1,085.5763`; average visible/non-zero terrain indirect draws `253.74707`;
+  minimum/maximum visible `238/269`; average culled draws `831.8292`; draw
+  reduction `76.62559%`; exactly one asynchronous visibility scalar readback.
+- Post-run probes reported `1,024` active cells, `2,048` triangles, `0` invalid
+  gradients, and `0` overflow for `C[0,0,0]`, `C[-1,0,0]`, `C[0,-1,0]`, and
+  `C[-1,-1,0]`. `C[0,0,-1]` remained completely solid and `C[0,0,1]`
+  completely air with no mesh resource. Geometry readbacks remained zero.
+- The unchanged final visibility shader and draw route retain the production
+  camera evidence recorded with prototype 6: top-down, grazing, inside/near
+  bound, 180-degree turn, and extreme-angle frustum-edge views showed a
+  continuous surface without an observed seam, hole, early disappearance, or
+  popping. The later lifecycle/result-finalization corrections do not modify
+  bounds, classification, indirect arguments, draw attributes, or camera
+  rendering. Cave/overhang readiness remains structural, not a visual claim.
+- `dotnet build Code/voxels3.csproj --no-restore` and
+  `dotnet build Editor/voxels3.editor.csproj --no-restore` both completed with
+  zero warnings and errors. The live engine generated
+  `voxel_chunk_visibility_cs.shader_c` from the new source with the same UTC
+  timestamp and executed it throughout the measured run. The generic MCP asset
+  recompile endpoint could not force a second compile because it classified the
+  shader as compiled-only, but the live compiler remained successful with zero
+  errors, the fresh console contained no runtime or shader error, and
+  `git diff --check` passed. The remaining console warnings are unrelated engine
+  startup resource/font warnings and predate the candidate run.
+- Outcome: pass. Average non-zero draw reduction exceeds `25%`; average GPU
+  improvement exceeds `0.05 ms`; p95/p99, logical buffer memory, engine GPU
+  memory, settled backlog, pooling, dispatch, readback, and mesh-correctness
+  gates all pass. The production session completed without a new runtime error,
+  GPU device loss, or crash.
