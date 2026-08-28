@@ -177,6 +177,26 @@ Record an approved extraordinary change here before adding the new version:
 - Comparability warning: v4 and v5 have equal chunk counts at the origin but
   different vertical coordinates and residency semantics.
 
+### VOXEL-STATUS-001 v1 to v2
+
+- Date: `2026-08-28`
+- Substantive issue making the old scenario invalid or impossible: v1 fixed
+  `LoadRadius=4`, but the actual authored `basic_example` production scene fixes
+  `LoadRadius=16`. Executing v1 would require changing the scene configuration
+  instead of validating the shipping world as authored.
+- Evidence: `Assets/scenes/basic_example.scene` contains `"LoadRadius": 16`; a
+  clean production load logged range `C[-16,-16,-16]` through `C[16,16,16]` and
+  `35,937` loaded chunks.
+- Exact parameter changes: set `LoadRadius=16`; initial loaded/generated chunks
+  change from `729/729` to `35,937/35,937`; the +X shift retained/unloaded/
+  generated counts change from `648/81/81` to `34,848/1,089/1,089`.
+- Why no unchanged-parameter execution is possible: v1 does not match the
+  shipping scene, and changing authored configuration solely for validation
+  would test a different production setup.
+- New baseline required: yes
+- Comparability warning: v1 and v2 use different residency volumes and must not
+  be treated as a continuous before/after comparison.
+
 ## Recorded Scenarios and Runs
 
 ### VOXEL-STREAM-001/v1 — initial chunk population and one-chunk stream shift
@@ -1271,6 +1291,128 @@ Record an approved extraordinary change here before adding the new version:
 - Remaining unmeasured risks: live inspector serialization, initial population,
   +X streaming behavior, production logs, settle time, and density/material
   probes require a controllable s&box production session
+
+### VOXEL-STATUS-001/v1 — concise inspector dashboard
+
+- Production entry point: async `VoxelManager.OnLoad`, production chunk
+  integration, player-boundary streaming, inspector status, and stream-completion
+  logging
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: Populate the real loaded world and
+  move the player exactly one chunk in +X. The `World Status` inspector category
+  exposes only three high-level values: chunk state, recent streaming
+  performance, and process working-set memory. Detailed diagnostic values remain
+  available in structured logs without appearing as individual inspector rows.
+- Pass criteria fixed before execution:
+  - The `World Status` category contains exactly `3` properties: `Chunk Status`,
+    `Streaming Performance`, and `Process Memory Usage`
+  - Initial and +X phases each report `729` loaded chunks and `0` queued chunks
+  - The initial and +X performance summaries report finite positive effective
+    chunks/second and settle milliseconds
+  - Process memory reports a finite positive MiB value labeled as the approximate
+    whole-process working set; it does not claim chunk or manager attribution
+  - The +X stream log retains loaded, pending, retained, unloaded, generated,
+    stale, worker, generation, integration, frame, throughput, and probe fields
+  - No compile error, runtime exception, invalid configuration, non-finite
+    result, target rejection, or duplicate manager occurs
+- Parameters:
+  - Project/source revision: working source hashes recorded with the run
+  - Engine build and hardware/environment: recorded with the run
+  - World/scene: `basic_example`; fixed plane; no seed; one local player
+  - Inputs and order: start at `(0,0,0)`; allow production `OnLoad` to complete;
+    issue `voxel_stream_origin 512 0 0`; wait for zero pending; inspect status and
+    stream log after each phase; stop play
+  - Operation count: one 729-chunk population and one exact +X shift
+  - Warmup: none
+  - Settings: `32` cells/axis, `16` units/cell, `LoadRadius=4`, surface height
+    `0`, assigned Player Controller, one worker, `0.500 ms` integration budget,
+    overlays/lifecycle logging disabled
+- Metrics and units: inspector property count and exact labels; loaded/queued
+  chunks; effective chunks/second; settle milliseconds; process working-set MiB;
+  required structured-log field count
+
+### VOXEL-STATUS-001/v2 — concise inspector dashboard
+
+- Production entry point: async `VoxelManager.OnLoad`, production chunk
+  integration, player-boundary streaming, inspector status, and stream-completion
+  logging
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: Populate the real loaded world and
+  move the player exactly one chunk in +X. The `World Status` inspector category
+  exposes only `Chunk Status`, `Streaming Performance`, and `Process Memory
+  Usage`; detailed diagnostics remain in structured logs.
+- Pass criteria fixed before execution:
+  - The `World Status` category contains exactly the three named properties
+  - Initial and +X phases each report `35,937` loaded chunks and `0` queued
+  - Initial population generates `35,937`; the +X shift retains `34,848`,
+    unloads `1,089`, generates `1,089`, and discards `0` stale chunks
+  - Both performance summaries report finite positive effective chunks/second
+    and settle milliseconds
+  - Process memory reports a finite positive approximate whole-process working
+    set; it does not claim chunk or manager attribution
+  - The +X stream log retains loaded, pending, retained, unloaded, generated,
+    stale, worker, generation, integration, frame, throughput, memory, and probe
+    fields
+  - No compile error, runtime exception, invalid configuration, non-finite
+    result, target rejection, or duplicate manager occurs during the clean run
+- Parameters:
+  - Project/source revision: working source hashes recorded with the run
+  - Engine build and hardware/environment: recorded with the run
+  - World/scene: `basic_example`; fixed plane; no seed; one local player
+  - Inputs and order: start at `(0,0,0)`; allow production `OnLoad` to complete;
+    issue `voxel_stream_origin 512 0 0`; wait for zero pending; inspect the live
+    component schema and stream log; stop play
+  - Operation count: one 35,937-chunk population and one exact +X shift
+  - Warmup: none
+  - Settings: `32` cells/axis, `16` units/cell, `LoadRadius=16`, surface height
+    `0`, assigned Player Controller, one worker, `0.500 ms` integration budget,
+    overlays/lifecycle logging disabled
+- Metrics and units: inspector property count and exact labels; loaded/queued/
+  retained/unloaded/generated/stale chunks; effective chunks/second; settle,
+  worker, generation, integration, slowest integration update, and maximum frame
+  milliseconds; process working-set bytes/MiB; density/material probes
+
+#### Run 2026-08-28 12:56:07 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Project/source state:
+  - `Code/Voxels/VoxelManager.cs` SHA-256
+    `4FCE1218CF8F18912CE0AD4A5367E9CB07FED5A10FA03819A41BD6ECD17C4421`
+  - `Assets/scenes/basic_example.scene` SHA-256
+    `7EDDDDE1F31F12E880ED54CFC16DB8CCE0AEF4A4A347F2488954A76E5D88E667`
+- Engine build and environment: `26.08.19`; Windows 11 Pro build 26200;
+  AMD Ryzen 7 9800X3D (8 cores/16 threads); approximately 32 GiB RAM;
+  NVIDIA GeForce RTX 5090 driver 32.0.16.1088; one local client
+- Confirmation that scenario parameters were unchanged: yes
+- Exact execution path: clean start of `basic_example`; allow production
+  `OnLoad` to settle; issue `voxel_stream_origin 512 0 0`; read the live
+  component schema and structured completion logs; stop play
+- Raw measurements:
+  - Inspector schema: exactly `3` `World Status` properties — `Chunk Status`,
+    `Streaming Performance`, and `Process Memory Usage`
+  - Initial: loaded `35,937`, pending `0`, generated `35,937`, stale `0`, settle
+    `24.164 ms`, worker `2.202 ms`, generation `1.059 ms`, integration `3.054
+    ms`, slowest integration update `0.500 ms`, effective `1,487,194`
+    chunks/second, process memory `4,095,877,120` bytes (`3,906.13 MiB`), probes
+    density/material `0/Grass 1` and `16/Air 0`
+  - +X: loaded `35,937`, pending `0`, retained `34,848`, unloaded `1,089`,
+    generated `1,089`, stale `0`, settle `5.325 ms`, worker `0.084 ms`,
+    generation `0.043 ms`, integration `0.106 ms`, slowest integration update
+    `0.106 ms`, maximum frame `1.477 ms`, effective `204,510.9` chunks/second,
+    process memory `4,098,568,192` bytes (`3,908.70 MiB`), probes density/
+    material `0/Grass 1` and `16/Air 0`
+  - The +X structured log retained every required detailed field
+- Build verification: `dotnet build voxels3.slnx --nologo` succeeded with `0`
+  warnings and `0` errors; live s&box compilation succeeded with `0` errors;
+  scene JSON parsed; `git diff --check` found no whitespace errors
+- Outcome: pass
+- Evidence location: live s&box console entries timestamped `2026/08/28
+  12:55:05` and `12:55:16`; exact results are retained here
+- Remaining unmeasured risks: the engine metric is an approximate whole-process
+  working set and cannot attribute memory to the voxel manager or individual
+  chunks
+- Notes: no guessed chunk-object size, GC API, compatibility property, test
+  scene, test component, mock, or alternate streaming path was added.
 
 ### PLAYER-FIGURE-EIGHT-001/v1 — MCP movement smoke
 

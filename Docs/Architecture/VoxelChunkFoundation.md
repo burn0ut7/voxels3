@@ -50,8 +50,10 @@ here.
 
 At the default radius the settled world contains `26,198,073` logical density
 samples. The current plane evaluates them directly and has no density arrays.
-Runtime diagnostics do not estimate or report chunk memory; allocator and
-managed-runtime layout are outside the chunk data contract.
+Runtime diagnostics do not estimate or report chunk-attributed memory; allocator
+and managed-runtime layout are outside the chunk data contract. The concise
+inspector reports s&box's approximate working-set measurement for the whole
+process and labels it accordingly.
 
 There is no authored minimum or maximum chunk Z. The one load radius defines a
 viewer-centered cubic interest volume equally in all three axes. At radius `4`,
@@ -157,10 +159,13 @@ before that policy changes.
 
 ## Debug Contract
 
-- Human-facing inspector properties use descriptive names and summaries.
-- The inspector derives `Player Chunk` and `Player Chunk Data` directly from the
-  actual streaming target. There is no manually selected chunk coordinate,
-  local sample, or cell-slice state to keep synchronized with the player.
+- The human-facing `World Status` inspector category contains only `Chunk
+  Status`, `Streaming Performance`, and `Process Memory Usage`. Configuration
+  and opt-in visualization controls remain separate editable categories.
+- Chunk status combines loaded and queued counts. Streaming performance combines
+  effective chunks per second with the last settle time. Process memory is the
+  engine-reported approximate whole-process working set, not memory attributed to
+  chunks or one manager.
 - Logs use the stable machine-searchable field `chunk=C[x,y,z]` plus the
   readable chunk name.
 - Chunk lifecycle detail is opt-in; stream completion and invalid configuration
@@ -177,8 +182,8 @@ before that policy changes.
   generation chunks per second, worker time, time-budgeted integration work,
   slowest integration update, maximum observed active-play frame, loaded,
   retained, unloaded, generated, pending, and discarded stale chunk counts.
-  Inspector status exposes the corresponding non-memory state with human-readable
-  names.
+  These detailed fields remain in structured logs rather than becoming separate
+  inspector rows.
 - Runtime overlays can draw all loaded chunk bounds and labels; the chunk
   containing the actual player is highlighted. The inspector button and console
   commands query the real loaded production data; there is no separate debug

@@ -68,66 +68,54 @@ public sealed class VoxelManager : Component
 	public bool LogChunkLifecycle { get; set; } = false;
 
 	[Property, ReadOnly, Category( "World Status" )]
+	public string ChunkStatus { get; private set; } = "Not initialized";
+
+	[Property, ReadOnly, Category( "World Status" )]
+	public string StreamingPerformance { get; private set; } = "No stream completed";
+
+	[Property, ReadOnly, Category( "World Status" )]
+	public string ProcessMemoryUsage { get; private set; } = "Not measured";
+
 	public int LoadedChunkCount { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public int PendingChunkCount { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public string PlayerChunk { get; private set; } = "Not initialized";
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public string PlayerChunkData { get; private set; } = "Not initialized";
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public string LoadedChunkRange { get; private set; } = "Not initialized";
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public string LastStreamSummary { get; private set; } = "No stream completed";
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastStreamSettleMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastChunkGenerationMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float SlowestChunkGenerationMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastStreamGenerationMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastBackgroundWorkerMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastStreamIntegrationMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float SlowestIntegrationFrameMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float MaximumObservedFrameMilliseconds { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastEffectiveChunksPerSecond { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public float LastGenerationChunksPerSecond { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public string StreamingTargetStatus { get; private set; } = "Manager object (no target assigned)";
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public int LastRetainedChunkCount { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public int LastUnloadedChunkCount { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public int LastGeneratedChunkCount { get; private set; }
 
-	[Property, ReadOnly, Category( "World Status" )]
 	public int LastStaleDiscardedChunkCount { get; private set; }
 
 	protected override async System.Threading.Tasks.Task OnLoad()
@@ -753,6 +741,8 @@ public sealed class VoxelManager : Component
 		LastGenerationChunksPerSecond = LastStreamGenerationMilliseconds > 0f
 			? _generatedThisStream * 1000f / LastStreamGenerationMilliseconds
 			: 0f;
+		var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
+		ProcessMemoryUsage = $"~{processMemoryBytes / (1024f * 1024f):N1} MiB whole process";
 		LastStreamSummary =
 			$"Loaded {_loadedChunks.Count}; retained {_retainedThisStream}; unloaded {_unloadedThisStream}; " +
 			$"generated {_generatedThisStream}; stale {_staleDiscardedThisStream}; " +
@@ -782,6 +772,7 @@ public sealed class VoxelManager : Component
 			$"maxObservedFrameMs={MaximumObservedFrameMilliseconds:0.###} " +
 			$"effectiveChunksPerSecond={LastEffectiveChunksPerSecond:0.###} " +
 			$"generationChunksPerSecond={LastGenerationChunksPerSecond:0.###} " +
+			$"processMemoryBytes={processMemoryBytes} " +
 			$"slowestChunkMs={SlowestChunkGenerationMilliseconds:0.###} " +
 			$"probeChunk={probeChunkId} probeCell0=L[0,0,0] probeDensity0={surfaceProbeDensity} " +
 			$"probeMaterial0=\"{VoxelChunk.GetMaterialName( surfaceProbeMaterialId )}\" probeMaterialId0={surfaceProbeMaterialId} " +
@@ -793,6 +784,10 @@ public sealed class VoxelManager : Component
 	{
 		LoadedChunkCount = _loadedChunks.Count;
 		PendingChunkCount = _pendingChunks.Count;
+		ChunkStatus = $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued";
+		StreamingPerformance = LastStreamSettleMilliseconds > 0f
+			? $"{LastEffectiveChunksPerSecond:N1} chunks/sec; {LastStreamSettleMilliseconds:N3} ms last stream"
+			: "No stream completed";
 		LoadedChunkRange = _hasStreamingCenter
 			? $"X {_streamingCenterCoordinate.x - LoadRadius} through {_streamingCenterCoordinate.x + LoadRadius}; " +
 				$"Y {_streamingCenterCoordinate.y - LoadRadius} through {_streamingCenterCoordinate.y + LoadRadius}; " +
