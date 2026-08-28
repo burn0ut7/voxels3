@@ -120,11 +120,11 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Chunk Configuration" )]
 	public GameObject StreamingTarget { get; set; }
 
-	[Property, Category( "Smoke Test" ), Range( 1f, 2048f )]
-	public float FigureEightSpeed { get; set; } = 320f;
+	[Property, Category( "Smoke Test" ), Range( 1f, 10000f )]
+	public float FigureEightSpeed { get; set; } = 2500f;
 
-	[Property, Category( "Smoke Test" ), Range( 1f, 8192f )]
-	public float FigureEightDistance { get; set; } = 1024f;
+	[Property, Category( "Smoke Test" ), Range( 1f, 1000000f )]
+	public float FigureEightDistance { get; set; } = 50000f;
 
 	[Property, Category( "Smoke Test" ), Range( 1, MaximumFigureEightLoopCount )]
 	public int FigureEightLoopCount { get; set; } = 1;

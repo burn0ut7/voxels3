@@ -222,3 +222,7 @@ of `Code/`.
   push, or describe a performance-sensitive change as complete until the
   figure-eight comparison passes or the extraordinary-regression exception is
   fully documented.
+
+## Git commit policy
+
+After completing a task, commit and push the task's changes. The commit subject must contain no more than five words, and the commit description/body must be blank.
