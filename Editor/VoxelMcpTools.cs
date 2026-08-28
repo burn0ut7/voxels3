@@ -30,8 +30,8 @@ public static class VoxelMcpTools
 	}
 
 	/// <summary>
-	/// Inspect bounded GPU meshing counters for one loaded chunk. This reads only
-	/// indirect arguments and the two-word statistics buffer.
+	/// Inspect bounded GPU meshing counters for one loaded chunk. This schedules
+	/// one diagnostic compute pass and reads only scalar counters.
 	/// </summary>
 	[McpTool( "inspect_gpu_mesh" )]
 	public static string InspectGpuMesh( int x, int y, int z )

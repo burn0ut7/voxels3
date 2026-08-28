@@ -2341,3 +2341,43 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: pass. Routine production logging and its diagnostic-only work are
   absent by default, opt-in detail remains bounded and functional, the structured
   performance result still saves, and every fixed acceptance budget passes.
+
+### GPU-MESH-DIAGNOSTICS-001/v1 - On-demand mesh diagnostics
+
+- Definition recorded before source implementation. Remove logical-triangle
+  atomics and center-gradient validation from the normal production meshing
+  dispatch. The bounded `inspect_gpu_mesh` path must instead derive those
+  statistics from the resident GPU active-cell stream in a separate on-demand
+  compute pass. Normal meshing must not allocate, clear, bind, or write a
+  statistics buffer.
+- Correctness workload: unchanged `GPU-VOXEL-MESH-001/v1` world and probes at
+  `32` cells/axis, cell size `16`, radius `16`, surface height `0`, LOD0, normal
+  step `8`, and at most `8` mesh dispatches/update. Performance workload:
+  unchanged `PERFORMANCE-OVERVIEW-001/v3`, one local player from `(0,0,0)`,
+  speed `2500`, distance `50000`, fixed Z `0`, one loop, per-update sampling,
+  nearest-rank percentiles, and engine build `26.08.19`.
+- Pass criteria: four surface probes retain `1,024` active cells, `2,048`
+  logical triangles, finite gradients, and zero overflow; solid and air chunks
+  remain resource-free; normal production records zero scalar and geometry
+  readbacks; p95 remains at most `16.67 ms`, p99 at most `25 ms`; mesh backlog
+  returns to zero; pool allocations remain zero after warmup; logical voxel
+  buffers remain below `256 MiB`; process and GPU memory show no unbounded
+  growth; both .NET projects and both shader assets compile; live compiler and
+  console state are clean; and `git diff --check` passes.
+
+#### Pre-change run 2026-08-28 - pass
+
+- Run ID `806b0f9f7fe14ae7b8bdc6a91de03993`; revision `c2704a5`; exact locked
+  figure eight; duration `121.936935` seconds; `28,196` samples; zero truncated.
+- Frame: average FPS `231.2179`; p95 `5.8408 ms`; p99 `8.1294 ms`; average
+  full-frame GPU `1.1578912 ms`.
+- Memory bytes: process start `3,113,435,136`, end `3,105,312,768`, average
+  `3,105,332,207`, peak `3,115,651,072`; GPU start/end/average/peak
+  `1,365,095,974`; GPU budget `32,945,209,344`.
+- Streaming/meshing: `33,792` loaded chunks; completion snapshot `2,145`
+  pending chunks; `843,183` integrated; `25,509` mesh dispatches; `1,024`
+  resident meshes; mesh backlog `0`; `65` pooled; `134,217,728` logical bytes;
+  `0` pool allocations; `25,514` reuses; `0` scalar and geometry readbacks.
+- Outcome: accepted comparable baseline. The normal compute shader still
+  performed one logical-triangle atomic and one center-gradient sample per
+  active cell, plus invalid-gradient atomics when applicable.

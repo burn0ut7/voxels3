@@ -67,9 +67,14 @@ pool of same-capacity resource sets. Each resource owns:
 
 - one append buffer with exactly `CellsPerAxis^3` four-byte records;
 - one four-word indirect argument buffer;
-- one two-word statistics buffer containing logical triangles and invalid
-  gradients; and
 - persistent draw attributes.
+
+Normal meshing allocates, clears, binds, and writes no statistics buffer. A
+resource inspected through `inspect_gpu_mesh` lazily acquires one three-word
+diagnostic buffer from its own lifetime. The first word receives the append
+counter, while the diagnostic pass accumulates logical triangles and invalid
+gradients into the other two words. Uninspected resources therefore carry no
+diagnostic allocation.
 
 At 32 cells per axis, each active-cell buffer is 131,072 bytes. The fixed
 production radius contains 1,089 possible surface chunks, for 142,737,408 bytes
@@ -86,8 +91,12 @@ incompatible pool. Compute counter reset, dispatch, counter copy, and subsequent
 draw depend only on GPU queue ordering, without fences or CPU synchronization.
 
 Normal production never invokes `GetData` or `GetDataAsync` for active-cell
-geometry. The bounded `inspect_gpu_mesh(x,y,z)` editor diagnostic may
-asynchronously read the indirect arguments and two-word statistics buffer.
+geometry. The bounded `inspect_gpu_mesh(x,y,z)` editor diagnostic schedules a
+separate compute pass over the actual resident active-cell stream. That pass
+decodes the packed triangle count and samples the center gradient only on
+request; it does not reclassify cells or mutate the append stream. After GPU
+queue ordering makes the results available, the diagnostic may asynchronously
+read the indirect arguments and three-word scalar buffer.
 Scalar and geometry readbacks are counted separately; the geometry count is a
 constant zero. Performance records add mesh residency, backlog, capacity,
 dispatch, pool, allocation, and readback metrics. The allocation field is null

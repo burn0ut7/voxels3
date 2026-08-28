@@ -21,7 +21,6 @@ CS
 	#include "common.fxc"
 
 	AppendStructuredBuffer<uint> ActiveCells < Attribute( "ActiveCells" ); >;
-	RWStructuredBuffer<uint> MeshStatistics < Attribute( "MeshStatistics" ); >;
 	int3 ChunkCoordinate < Attribute( "ChunkCoordinate" ); >;
 	int CellsPerAxis < Attribute( "CellsPerAxis" ); >;
 	float CellSize < Attribute( "CellSize" ); >;
@@ -65,12 +64,5 @@ CS
 			(triangleCount << 18) |
 			(caseIndex << 24);
 		ActiveCells.Append( packedCell );
-		InterlockedAdd( MeshStatistics[0], triangleCount );
-		float3 worldCellCenter = ((float3)globalCell + 0.5) * CellSize;
-		float3 gradient = SampleVoxelSdfGradient( worldCellCenter, CellSize, SurfaceHeight );
-		if ( any( isnan( gradient ) ) || any( isinf( gradient ) ) || dot( gradient, gradient ) <= 1.0e-12 )
-		{
-			InterlockedAdd( MeshStatistics[1], 1 );
-		}
 	}
 }
