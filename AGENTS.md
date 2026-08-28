@@ -158,3 +158,44 @@ of `Code/`.
   optimize the measured bottleneck without creating a second implementation.
 - Constants that define spatial scale, sign conventions, coordinate transforms,
   or network protocol meaning must have one owner and be documented beside it.
+
+## Figure-Eight Performance Acceptance
+
+- After completing any non-simple change, and after any change that could
+  plausibly affect runtime performance, run the canonical figure-eight scenario
+  through the real playable-world production path before accepting the change.
+  Performance-sensitive changes include world generation, chunk streaming,
+  meshing, rendering, collision, networking, memory ownership or allocation,
+  threading, jobs, frame scheduling, and changes to work performed per frame.
+- A change may skip the figure-eight scenario only when it is plainly unable to
+  affect runtime behavior or performance, such as a documentation-only change.
+  When uncertain, run the scenario.
+- Use the figure-eight scenario's exact recorded parameters without alteration.
+  Compare the candidate result with the most recent accepted, comparable
+  baseline from the same scenario version. If no valid comparable baseline
+  exists, capture and record one from the unchanged pre-change revision before
+  evaluating the candidate.
+- Evaluate the whole player journey and all recorded metrics. Frame pacing and
+  tail latency, average and median frame rate or frame time, completed and
+  resident chunk work, streaming responsiveness, peak and steady-state memory,
+  memory growth, allocations, and correctness are independent acceptance
+  dimensions. One improved or acceptable metric cannot hide a regression in
+  another.
+- Reject the change when the fixed figure-eight comparison shows any material
+  unexplained regression. Failure includes visible or measured stutters even
+  when average frame rate is unchanged, frame-rate or frame-time degradation
+  beyond the scenario's recorded tolerance, fewer required chunks loaded or
+  less streaming work completed along the same route, delayed or missing chunk
+  availability, excessive peak or steady-state memory, unbounded memory growth,
+  or materially higher allocation pressure.
+- A performance regression may be accepted only for an extraordinary,
+  substantive reason supported by measurements and an explicit product-level
+  tradeoff decision. Document the evidence, justification, affected metrics,
+  and approval in `Docs/ValidationResults.md`; convenience, schedule pressure,
+  implementation difficulty, or an unrelated metric improvement are not
+  sufficient reasons.
+- Append both the baseline and candidate measurements, exact parameters, pass
+  criteria, and pass/fail decision to `Docs/ValidationResults.md`. Do not commit,
+  push, or describe a performance-sensitive change as complete until the
+  figure-eight comparison passes or the extraordinary-regression exception is
+  fully documented.
