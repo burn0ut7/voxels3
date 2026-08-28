@@ -159,13 +159,15 @@ before that policy changes.
 
 ## Debug Contract
 
-- The human-facing `World Status` inspector category contains only `Chunk
-  Status`, `Streaming Performance`, and `Process Memory Usage`. Configuration
-  and opt-in visualization controls remain separate editable categories.
-- Chunk status combines loaded and queued counts. Streaming performance combines
-  effective chunks per second with the last settle time. Process memory is the
-  engine-reported approximate whole-process working set, not memory attributed to
-  chunks or one manager.
+- The human-facing `World Status` inspector category contains `Frame
+  Performance`, `Chunk Status`, `Streaming Performance`, and `Process Memory
+  Usage`. Configuration, performance-log context, and opt-in visualization
+  controls remain separate editable categories.
+- Frame performance reports the last complete 10-second frame window. Chunk
+  status combines loaded and queued counts with the last window's integration
+  rate. Streaming performance retains effective chunks per second and the last
+  settle time. Process memory reports windowed process RAM and engine-tracked GPU
+  memory; neither is memory attributed to chunks or one manager.
 - Logs use the stable machine-searchable field `chunk=C[x,y,z]` plus the
   readable chunk name.
 - Chunk lifecycle detail is opt-in; stream completion and invalid configuration
@@ -221,3 +223,44 @@ exist. Keeping the movement loop in the editor tool was superseded because a
 runtime inspector button could not share that owner without an editor dependency.
 A separate test component remains rejected because the existing manager already
 owns the exact target and update point needed by this smoke behavior.
+
+## Performance Overview
+
+`VoxelManager` owns one top-level performance snapshot because it already owns
+the production frame callback and canonical chunk-stream counters. A fixed
+10-second window samples the engine's previous-frame duration every update and
+process/GPU memory once per second. Chunk integrations are counted where they
+enter the canonical loaded dictionary. The published snapshot contains three
+pillars:
+
+- frame performance: average frames per second, p95 and p99 frame duration, and
+  average GPU frame duration;
+- memory: average and peak approximate process working set plus average and peak
+  engine-tracked GPU memory and the current GPU memory budget;
+- chunks: current loaded and pending counts, chunks integrated during the
+  window, window chunks per second, and the existing last-stream settle and
+  generation throughput.
+
+Upper-tail frame duration is the canonical stutter metric. Percentile FPS was
+rejected because inversion makes a high percentile describe the fastest rather
+than the slowest frames. Averages alone were rejected because they hide stalls.
+Process working set and engine-tracked GPU allocations are deliberately labeled
+as different scopes; neither is presented as memory owned only by voxel chunks.
+
+The per-frame path writes scalar values into fixed arrays and performs no
+sorting, logging, Git access, process launch, or network access. Memory is read
+at 1 Hz. Copying and sorting happen once per completed window, and the fixed
+32,768-frame capacity reports truncation rather than silently allocating. This
+supports a complete 10-second window up to 3,276 frames per second. A separate
+profiler component and an editor-owned sampler were rejected because either
+would duplicate the production frame/chunk lifecycle or prevent the human and
+MCP entry points from sharing one result.
+
+The manager inspector's `Log Performance Overview` button and the editor MCP
+tool `performance_overview` call the same manager method. That method emits one
+machine-searchable `performance.overview` record only on request. UTC capture
+time, scene, streaming center, target position, caller-supplied task, and
+caller-supplied revision identify when, where, and what was measured. Task and
+revision are passive strings: the runtime never queries Git, invokes another
+process, or performs a network lookup. The external MCP caller may supply the
+current commit, while a human may enter the same metadata in the inspector.

@@ -9,12 +9,17 @@ using System.Threading;
 public sealed class VoxelManager : Component
 {
 	private const float MainThreadIntegrationBudgetMilliseconds = 0.5f;
+	private const float PerformanceWindowSeconds = 10f;
+	private const float MemorySampleIntervalSeconds = 1f;
+	private const int MaximumPerformanceFrameSamples = 32768;
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
 	private readonly Queue<Vector3Int> _pendingChunks = new();
 	private readonly Queue<VoxelChunk> _completedChunks = new();
 	private readonly List<Vector3Int> _coordinateBuffer = new();
+	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
+	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 
 	private bool _hasStreamingCenter;
 	private bool _streamInProgress;
@@ -45,6 +50,36 @@ public sealed class VoxelManager : Component
 	private GameObject _playerFigureEightTarget;
 	private Vector2 _playerFigureEightCenter;
 	private float _playerFigureEightParameter;
+	private float _performanceWindowElapsedSeconds;
+	private float _memorySampleElapsedSeconds;
+	private int _performanceObservedFrameCount;
+	private int _performanceFrameSampleCount;
+	private int _performanceTruncatedFrameSampleCount;
+	private double _performanceFrameMillisecondsTotal;
+	private double _performanceGpuFrameMillisecondsTotal;
+	private int _performanceGpuFrameSampleCount;
+	private double _performanceProcessMemoryBytesTotal;
+	private ulong _performancePeakProcessMemoryBytes;
+	private double _performanceGpuMemoryBytesTotal;
+	private ulong _performancePeakGpuMemoryBytes;
+	private ulong _performanceGpuMemoryBudgetBytes;
+	private int _performanceMemorySampleCount;
+	private int _performanceChunksIntegrated;
+	private bool _performanceSnapshotReady;
+	private float _lastPerformanceWindowSeconds;
+	private int _lastPerformanceFrameSampleCount;
+	private int _lastPerformanceTruncatedFrameSampleCount;
+	private float _lastAverageFramesPerSecond;
+	private float _lastP95FrameMilliseconds;
+	private float _lastP99FrameMilliseconds;
+	private float _lastAverageGpuFrameMilliseconds;
+	private ulong _lastAverageProcessMemoryBytes;
+	private ulong _lastPeakProcessMemoryBytes;
+	private ulong _lastAverageGpuMemoryBytes;
+	private ulong _lastPeakGpuMemoryBytes;
+	private ulong _lastGpuMemoryBudgetBytes;
+	private int _lastPerformanceChunksIntegrated;
+	private float _lastPerformanceChunksPerSecond;
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 
 	[Property, Category( "Chunk Configuration" ), Range( 4, 64 )]
@@ -76,6 +111,15 @@ public sealed class VoxelManager : Component
 
 	[Property, Category( "Smoke Test" ), Range( 1f, 8192f )]
 	public float FigureEightDistance { get; set; } = 1024f;
+
+	[Property, Category( "Performance Logging" )]
+	public string PerformanceTask { get; set; } = "unassigned";
+
+	[Property, Category( "Performance Logging" )]
+	public string PerformanceRevision { get; set; } = "unassigned";
+
+	[Property, ReadOnly, Category( "World Status" )]
+	public string FramePerformance { get; private set; } = "Collecting first 10-second window";
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public string ChunkStatus { get; private set; } = "Not initialized";
@@ -164,12 +208,17 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
+		_performanceSnapshotReady = false;
+		FramePerformance = "Collecting first 10-second window";
+		ProcessMemoryUsage = "Collecting first 10-second window";
+		ResetPerformanceWindow();
 		RefreshReadableStatus();
 	}
 
 	protected override void OnUpdate()
 	{
 		UpdatePlayerFigureEight();
+		UpdatePerformanceOverview();
 
 		if ( _streamInProgress )
 		{
@@ -336,6 +385,66 @@ public sealed class VoxelManager : Component
 		return $"started speed={speed} distance={distance}";
 	}
 
+	[Button( "Log Performance Overview" )]
+	public void LogPerformanceOverviewFromInspector()
+	{
+		try
+		{
+			WritePerformanceOverview( PerformanceTask, PerformanceRevision );
+		}
+		catch ( Exception exception )
+		{
+			Log.Warning( $"[VoxelWorld] performance.overview.rejected reason=\"{exception.Message}\"" );
+		}
+	}
+
+	public string WritePerformanceOverview( string task, string revision )
+	{
+		if ( !Game.IsPlaying )
+		{
+			throw new InvalidOperationException( "Start play mode before logging a performance overview." );
+		}
+
+		if ( !_performanceSnapshotReady )
+		{
+			throw new InvalidOperationException( "Wait for one complete 10-second performance window." );
+		}
+
+		if ( !string.IsNullOrWhiteSpace( task ) )
+		{
+			PerformanceTask = task.Trim();
+		}
+
+		if ( !string.IsNullOrWhiteSpace( revision ) )
+		{
+			PerformanceRevision = revision.Trim();
+		}
+
+		var target = ActiveStreamingTarget;
+		var targetPosition = target.WorldPosition;
+		var sceneName = Scene?.Name ?? "unknown";
+		var line = string.Concat(
+			FormattableString.Invariant( $"[VoxelWorld] performance.overview capturedAtUtc=\"{DateTimeOffset.UtcNow:O}\" " ),
+			FormattableString.Invariant( $"scene=\"{EscapeLogValue( sceneName )}\" task=\"{EscapeLogValue( PerformanceTask )}\" " ),
+			FormattableString.Invariant( $"revision=\"{EscapeLogValue( PerformanceRevision )}\" " ),
+			FormattableString.Invariant( $"center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " ),
+			FormattableString.Invariant( $"targetX={targetPosition.x:0.###} targetY={targetPosition.y:0.###} targetZ={targetPosition.z:0.###} " ),
+			FormattableString.Invariant( $"windowSeconds={_lastPerformanceWindowSeconds:0.###} frameSamples={_lastPerformanceFrameSampleCount} " ),
+			FormattableString.Invariant( $"truncatedFrameSamples={_lastPerformanceTruncatedFrameSampleCount} " ),
+			FormattableString.Invariant( $"averageFps={_lastAverageFramesPerSecond:0.###} p95FrameMs={_lastP95FrameMilliseconds:0.###} " ),
+			FormattableString.Invariant( $"p99FrameMs={_lastP99FrameMilliseconds:0.###} averageGpuFrameMs={_lastAverageGpuFrameMilliseconds:0.###} " ),
+			FormattableString.Invariant( $"averageProcessMemoryBytes={_lastAverageProcessMemoryBytes} peakProcessMemoryBytes={_lastPeakProcessMemoryBytes} " ),
+			FormattableString.Invariant( $"averageGpuMemoryBytes={_lastAverageGpuMemoryBytes} peakGpuMemoryBytes={_lastPeakGpuMemoryBytes} " ),
+			FormattableString.Invariant( $"gpuMemoryBudgetBytes={_lastGpuMemoryBudgetBytes} loadedChunks={_loadedChunks.Count} " ),
+			FormattableString.Invariant( $"pendingChunks={_pendingChunks.Count} windowIntegratedChunks={_lastPerformanceChunksIntegrated} " ),
+			FormattableString.Invariant( $"windowChunksPerSecond={_lastPerformanceChunksPerSecond:0.###} " ),
+			FormattableString.Invariant( $"lastStreamGeneratedChunks={LastGeneratedChunkCount} lastStreamSettleMs={LastStreamSettleMilliseconds:0.###} " ),
+			FormattableString.Invariant( $"lastEffectiveChunksPerSecond={LastEffectiveChunksPerSecond:0.###} " ),
+			FormattableString.Invariant( $"lastGenerationChunksPerSecond={LastGenerationChunksPerSecond:0.###}" ) );
+		Log.Info( line );
+		return line;
+	}
+
 	[Button( "Log Player Chunk" )]
 	public void LogPlayerChunk()
 	{
@@ -437,6 +546,133 @@ public sealed class VoxelManager : Component
 			_playerFigureEightCenter.x + FigureEightDistance * sine,
 			_playerFigureEightCenter.y + FigureEightDistance * sine * cosine,
 			0f );
+	}
+
+	private void UpdatePerformanceOverview()
+	{
+		var frameMilliseconds = (float)(global::Sandbox.Diagnostics.PerformanceStats.FrameTime * 1000d);
+		if ( float.IsFinite( frameMilliseconds ) && frameMilliseconds > 0f )
+		{
+			_performanceObservedFrameCount++;
+			_performanceFrameMillisecondsTotal += frameMilliseconds;
+			if ( _performanceFrameSampleCount < _performanceFrameMilliseconds.Length )
+			{
+				_performanceFrameMilliseconds[_performanceFrameSampleCount++] = frameMilliseconds;
+			}
+			else
+			{
+				_performanceTruncatedFrameSampleCount++;
+			}
+		}
+
+		var gpuFrameMilliseconds = global::Sandbox.Diagnostics.PerformanceStats.GpuFrametime;
+		if ( float.IsFinite( gpuFrameMilliseconds ) && gpuFrameMilliseconds >= 0f )
+		{
+			_performanceGpuFrameMillisecondsTotal += gpuFrameMilliseconds;
+			_performanceGpuFrameSampleCount++;
+		}
+
+		var deltaSeconds = RealTime.Delta;
+		_performanceWindowElapsedSeconds += deltaSeconds;
+		_memorySampleElapsedSeconds += deltaSeconds;
+		if ( _memorySampleElapsedSeconds >= MemorySampleIntervalSeconds )
+		{
+			_memorySampleElapsedSeconds = 0f;
+			var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
+			var gpuMemoryBytes = global::Sandbox.Graphics.VideoMemoryUsed;
+			_performanceProcessMemoryBytesTotal += processMemoryBytes;
+			_performancePeakProcessMemoryBytes = Math.Max( _performancePeakProcessMemoryBytes, processMemoryBytes );
+			_performanceGpuMemoryBytesTotal += gpuMemoryBytes;
+			_performancePeakGpuMemoryBytes = Math.Max( _performancePeakGpuMemoryBytes, gpuMemoryBytes );
+			_performanceGpuMemoryBudgetBytes = global::Sandbox.Graphics.VideoMemoryBudget;
+			_performanceMemorySampleCount++;
+		}
+
+		if ( _performanceWindowElapsedSeconds >= PerformanceWindowSeconds )
+		{
+			CompletePerformanceWindow();
+		}
+	}
+
+	private void CompletePerformanceWindow()
+	{
+		if ( _performanceFrameSampleCount == 0 || _performanceMemorySampleCount == 0 )
+		{
+			ResetPerformanceWindow();
+			return;
+		}
+
+		Array.Copy(
+			_performanceFrameMilliseconds,
+			_sortedPerformanceFrameMilliseconds,
+			_performanceFrameSampleCount );
+		Array.Sort( _sortedPerformanceFrameMilliseconds, 0, _performanceFrameSampleCount );
+		var p95Index = Math.Clamp(
+			(int)Math.Ceiling( _performanceFrameSampleCount * 0.95d ) - 1,
+			0,
+			_performanceFrameSampleCount - 1 );
+		var p99Index = Math.Clamp(
+			(int)Math.Ceiling( _performanceFrameSampleCount * 0.99d ) - 1,
+			0,
+			_performanceFrameSampleCount - 1 );
+
+		_lastPerformanceWindowSeconds = _performanceWindowElapsedSeconds;
+		_lastPerformanceFrameSampleCount = _performanceObservedFrameCount;
+		_lastPerformanceTruncatedFrameSampleCount = _performanceTruncatedFrameSampleCount;
+		_lastAverageFramesPerSecond = (float)(
+			_performanceObservedFrameCount * 1000d / _performanceFrameMillisecondsTotal );
+		_lastP95FrameMilliseconds = _sortedPerformanceFrameMilliseconds[p95Index];
+		_lastP99FrameMilliseconds = _sortedPerformanceFrameMilliseconds[p99Index];
+		_lastAverageGpuFrameMilliseconds = _performanceGpuFrameSampleCount > 0
+			? (float)(_performanceGpuFrameMillisecondsTotal / _performanceGpuFrameSampleCount)
+			: 0f;
+		_lastAverageProcessMemoryBytes = (ulong)(
+			_performanceProcessMemoryBytesTotal / _performanceMemorySampleCount );
+		_lastPeakProcessMemoryBytes = _performancePeakProcessMemoryBytes;
+		_lastAverageGpuMemoryBytes = (ulong)(
+			_performanceGpuMemoryBytesTotal / _performanceMemorySampleCount );
+		_lastPeakGpuMemoryBytes = _performancePeakGpuMemoryBytes;
+		_lastGpuMemoryBudgetBytes = _performanceGpuMemoryBudgetBytes;
+		_lastPerformanceChunksIntegrated = _performanceChunksIntegrated;
+		_lastPerformanceChunksPerSecond =
+			_performanceChunksIntegrated / _performanceWindowElapsedSeconds;
+		_performanceSnapshotReady = true;
+
+		FramePerformance =
+			$"{_lastAverageFramesPerSecond:N1} FPS average; " +
+			$"p95 {_lastP95FrameMilliseconds:N2} ms; p99 {_lastP99FrameMilliseconds:N2} ms; " +
+			$"GPU {_lastAverageGpuFrameMilliseconds:N2} ms average";
+		ProcessMemoryUsage =
+			$"CPU {_lastAverageProcessMemoryBytes / (1024f * 1024f):N1} MiB average, " +
+			$"{_lastPeakProcessMemoryBytes / (1024f * 1024f):N1} MiB peak; " +
+			$"GPU {_lastAverageGpuMemoryBytes / (1024f * 1024f):N1} MiB average, " +
+			$"{_lastPeakGpuMemoryBytes / (1024f * 1024f):N1} MiB peak";
+		RefreshReadableStatus();
+		ResetPerformanceWindow();
+	}
+
+	private void ResetPerformanceWindow()
+	{
+		_performanceWindowElapsedSeconds = 0f;
+		_memorySampleElapsedSeconds = 0f;
+		_performanceObservedFrameCount = 0;
+		_performanceFrameSampleCount = 0;
+		_performanceTruncatedFrameSampleCount = 0;
+		_performanceFrameMillisecondsTotal = 0d;
+		_performanceGpuFrameMillisecondsTotal = 0d;
+		_performanceGpuFrameSampleCount = 0;
+		_performanceProcessMemoryBytesTotal = 0d;
+		_performancePeakProcessMemoryBytes = 0;
+		_performanceGpuMemoryBytesTotal = 0d;
+		_performancePeakGpuMemoryBytes = 0;
+		_performanceGpuMemoryBudgetBytes = 0;
+		_performanceMemorySampleCount = 0;
+		_performanceChunksIntegrated = 0;
+	}
+
+	private static string EscapeLogValue( string value )
+	{
+		return (value ?? string.Empty).Replace( "\\", "\\\\" ).Replace( "\"", "\\\"" );
 	}
 
 	private void LogChunkData( Vector3Int coordinate )
@@ -823,6 +1059,7 @@ public sealed class VoxelManager : Component
 
 		if ( integratedCount > 0 )
 		{
+			_performanceChunksIntegrated += integratedCount;
 			var integrationMilliseconds = (float)Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds;
 			_integrationMillisecondsThisStream += integrationMilliseconds;
 			_slowestIntegrationFrameMilliseconds = Math.Max(
@@ -858,7 +1095,6 @@ public sealed class VoxelManager : Component
 			? _generatedThisStream * 1000f / LastStreamGenerationMilliseconds
 			: 0f;
 		var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
-		ProcessMemoryUsage = $"~{processMemoryBytes / (1024f * 1024f):N1} MiB whole process";
 		LastStreamSummary =
 			$"Loaded {_loadedChunks.Count}; retained {_retainedThisStream}; unloaded {_unloadedThisStream}; " +
 			$"generated {_generatedThisStream}; stale {_staleDiscardedThisStream}; " +
@@ -900,7 +1136,10 @@ public sealed class VoxelManager : Component
 	{
 		LoadedChunkCount = _loadedChunks.Count;
 		PendingChunkCount = _pendingChunks.Count;
-		ChunkStatus = $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued";
+		ChunkStatus = _performanceSnapshotReady
+			? $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued; " +
+				$"{_lastPerformanceChunksPerSecond:N1} chunks/sec over {_lastPerformanceWindowSeconds:N1} sec"
+			: $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued";
 		StreamingPerformance = LastStreamSettleMilliseconds > 0f
 			? $"{LastEffectiveChunksPerSecond:N1} chunks/sec; {LastStreamSettleMilliseconds:N3} ms last stream"
 			: "No stream completed";

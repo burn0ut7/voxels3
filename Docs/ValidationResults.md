@@ -1631,3 +1631,120 @@ Record an approved extraordinary change here before adding the new version:
 - Remaining limitation: this slice intentionally fixes Z at `0`; terrain
   following, multiplayer automation protocol, and movement reporting remain out
   of scope
+
+### PERFORMANCE-OVERVIEW-001/v1 — three-pillar runtime baseline
+
+- Production entry point: `VoxelManager` production update, memory, and chunk
+  integration paths; editor MCP tool `performance_overview`; manager inspector
+  `Log Performance Overview` button
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: A completed fixed 10-second production
+  window exposes finite frame, memory, and chunk metrics, and an explicit MCP or
+  human request logs the same snapshot as one structured record with passive
+  task/revision context and spatial identity.
+- Pass criteria fixed before execution:
+  - Exactly one completed window reports at least one frame sample and no sample
+    truncation
+  - Average FPS is finite and positive; p95 and p99 frame duration are finite,
+    positive, and ordered `p95 <= p99`
+  - Average GPU frame duration is finite and non-negative
+  - Average and peak process working set and engine GPU memory are non-zero;
+    each peak is at least its average; GPU budget is non-zero
+  - Loaded, pending, window-integrated, and last-stream chunk counts are
+    non-negative; window and last-stream chunk rates are finite and non-negative
+  - One `performance.overview` record contains UTC time, scene, task, revision,
+    stream center, target position, window/sample identity, and numeric fields
+    for all three pillars
+  - MCP and inspector entry points call the same manager logging method; runtime
+    source performs no Git, process, shell, HTTP, or network lookup
+  - Sampling performs no per-update managed allocation between window
+    completions; memory reads occur at 1 Hz; sorting and logging do not occur in
+    the per-frame accumulation path
+  - Runtime and editor code compile without warnings or errors, and the live run
+    emits no exception
+- Parameters:
+  - Project/source revision: working source hashes recorded with the run
+  - Engine build and hardware/environment: recorded with the run
+  - World/scene: `basic_example`; one local player; initial position `(0,0,0)`;
+    `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+    `TerrainSurfaceHeight=0`
+  - Workload: wait for production `OnLoad` and `OnStart`; start the shared
+    figure-eight path with `speed=2500`, `distance=50000`, fixed Z `0`; collect
+    one complete `10`-second performance window; request one overview with
+    `task=PERFORMANCE-OVERVIEW-001/v1` and the externally supplied working
+    revision; stop movement; stop play
+  - Frame sampling: every production update; capacity `32,768`; percentile
+    definition: nearest-rank sorted frame duration at 95% and 99%
+  - Memory sampling: once per second; process scope is s&box approximate process
+    working set; GPU scope is engine-tracked render allocations and OS budget
+  - Chunk sampling: count successful insertions into the canonical loaded-chunk
+    dictionary during the same window; retain the existing complete-stream
+    metrics unchanged
+  - Warmup: initial production load only; measurement duration: `10` seconds;
+    player/client count: `1`; overview log operation count: `1`
+- Metrics and units: FPS; frame and GPU duration in milliseconds; CPU/GPU memory
+  in bytes and MiB; loaded/pending/integrated chunk counts; chunks per second;
+  last stream settle duration in milliseconds
+- Baseline policy: this first run establishes observed values and verifies the
+  measurement contract; it does not invent a product performance threshold
+  before evidence exists
+
+#### Run 2026-08-28 13:28 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Project/source state:
+  - Base revision supplied to the runtime: `0cf0e21+working-tree`
+  - `Code/Voxels/VoxelManager.cs` SHA-256
+    `BB14AEA9240DEE58B946763C71E949115831CDF971CB0F2D09F3AC5D0C0E5129`
+  - `Editor/VoxelMcpTools.cs` SHA-256
+    `9D4986E181F2D5E3D641AB0FCCE256B5E87B64B4CF54D7A4D78A72FECB2F607D`
+  - `Docs/Architecture/VoxelChunkFoundation.md` SHA-256
+    `74044A88F506F52216292DBAF326E68DA73FE847E585AA755728DFAB03794CDF`
+  - `Assets/scenes/basic_example.scene` SHA-256
+    `1B0187D67B4FBAD6F9E0B2911F01737D2D7869C126F6D7C9CA8E460256CCED8C`
+- Engine build and environment: `26.08.19`; Windows 11 Pro build 26200;
+  AMD Ryzen 7 9800X3D (8 cores/16 threads); approximately 32 GiB RAM;
+  NVIDIA GeForce RTX 5090 driver 32.0.16.1088; one local client
+- Confirmation that scenario parameters were unchanged: yes
+- Exact execution path: start project startup scene `basic_example`; wait for
+  production initial load (`35,937` loaded, `0` pending); invoke
+  `player_figure_eight(enabled=true, speed=2500, distance=50000)`; wait `11`
+  wall-clock seconds so one 10-second window completes; invoke
+  `performance_overview(task=PERFORMANCE-OVERVIEW-001/v1,
+  revision=0cf0e21+working-tree)`; stop the shared movement path; stop play
+- Raw structured record:
+  - `capturedAtUtc=2026-08-28T17:28:36.3607972+00:00`
+  - `scene=basic_example`; `center=C[80,45,0]`; target position
+    `[41030.2,23448.64,0]`; task and revision matched the supplied values
+  - Window `10.001` seconds; frame samples `2,390`; truncated samples `0`
+  - Average `238.977` FPS; p95 frame `5.084` ms; p99 frame `6.451` ms;
+    average GPU frame `0.964` ms
+  - Average process working set `6,340,146,972` bytes (`6,046.435` MiB); peak
+    `6,341,451,776` bytes (`6,047.680` MiB)
+  - Average and peak engine GPU memory `1,229,791,370` bytes (`1,172.820`
+    MiB); GPU memory budget `32,945,209,344` bytes (`31,419.000` MiB)
+  - Current chunks: `35,937` loaded, `0` pending; window integrated `73,920`;
+    window rate `7,391.247` chunks/second
+  - Last complete stream: generated `1,089`; settle `5.097` ms; effective
+    `213,642.5` chunks/second; generation `29,117,610` chunks/second
+- Surface and implementation evidence:
+  - Live MCP registry exposed one `performance_overview` tool with optional task
+    and revision strings, and live component metadata exposed `Performance Task`,
+    `Performance Revision`, and `Frame Performance`
+  - MCP and `[Button("Log Performance Overview")]` call the same
+    `WritePerformanceOverview` method
+  - Source inspection found no Git, process, shell, HTTP, or network operation;
+    task and revision enter only as passive strings
+  - The per-frame sample path contains no collection growth, sorting, logging,
+    or string construction; memory is gated by the one-second accumulator;
+    fixed-array copy/sort and display strings occur only at window completion
+- Build and runtime verification: `dotnet build voxels3.slnx --nologo`
+  succeeded with `0` warnings and `0` errors; live s&box compilation succeeded
+  with `0` errors; `git diff --check` passed; live error console contained no
+  matching entries after the run
+- Outcome: pass; all measurement-contract criteria passed and this run
+  establishes the first observed baseline
+- Remaining risks: this overview attributes process-wide RAM and engine-wide GPU
+  memory, not voxel-only memory; it is a top-level indicator rather than a CPU,
+  GPU-pass, allocator, or per-chunk profiler. Product pass/fail budgets remain to
+  be set from representative hardware and workload evidence.
