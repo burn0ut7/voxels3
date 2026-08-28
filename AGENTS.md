@@ -175,6 +175,29 @@ of `Code/`.
   baseline from the same scenario version. If no valid comparable baseline
   exists, capture and record one from the unchanged pre-change revision before
   evaluating the candidate.
+- Figure-eight workload and measurement parameters are locked across every run.
+  This includes the scene, seed, player count, start position, route geometry,
+  world height, speed, distance, loop count, chunk configuration, warmup and
+  completion boundaries, sampling cadence, sample capacity, percentile method,
+  and metric definitions. Do not create a shorter, faster, reduced, temporary,
+  debug, smoke, or otherwise modified run and present it as figure-eight
+  acceptance evidence. Only run identity metadata such as run ID, timestamp,
+  task, and revision should change, and those values must identify the actual
+  candidate being measured.
+- Changing a locked parameter is forbidden unless extraordinary measured
+  evidence shows that the existing scenario is invalid, impossible to execute,
+  or itself causing a deeper test or system failure. Before running any changed
+  parameters, stop and document the evidence, proposed change, and consequences
+  in `Docs/ValidationResults.md`, then obtain explicit approval from the human
+  user. An agent, script, CI job, or inferred intent cannot grant this approval.
+  Convenience, run duration, resource cost, a failing result, or a desire for a
+  cleaner baseline is not extraordinary evidence.
+- After human approval, preserve the old scenario definition and all results,
+  create a new scenario version, record the approval and justification, and
+  establish a new baseline. Never rewrite historical parameters or compare the
+  new version with the old version as though they were the same workload. If
+  explicit human approval is absent, do not run the modified scenario and do not
+  accept, commit, or push the performance-sensitive change.
 - Evaluate the whole player journey and all recorded metrics. Frame pacing and
   tail latency, average and median frame rate or frame time, completed and
   resident chunk work, streaming responsiveness, peak and steady-state memory,
