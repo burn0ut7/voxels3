@@ -170,26 +170,23 @@ before that policy changes.
   memory; neither is memory attributed to chunks or one manager.
 - Logs use the stable machine-searchable field `chunk=C[x,y,z]` plus the
   readable chunk name.
-- Chunk lifecycle detail is opt-in; stream completion and invalid configuration
-  remain concise summary/warning events.
+- Per-chunk load/unload logging is intentionally absent. Stream completion and
+  invalid configuration remain bounded summary/warning events.
 - The `voxel_stream_origin x y z` console command moves the real production
   streaming target to an exact world position for deterministic troubleshooting.
   It refuses to choose silently when more than one active manager exists.
-- `voxel_player_chunk` reports the target's current world position and chunk,
-  then retrieves that chunk's production data. `voxel_chunk_info x y z`
-  retrieves any currently loaded chunk by its log identifier coordinates and
-  reports its minimum- and maximum-Z sample density and material, or a clear
-  missing result otherwise.
+- `voxel_chunk_info x y z` retrieves any currently loaded chunk by its log
+  identifier coordinates and reports its minimum- and maximum-Z sample density
+  and material, or a clear missing result otherwise.
 - Stream completion reports effective loaded chunks per second, pure SDF
   generation chunks per second, worker time, time-budgeted integration work,
   slowest integration update, maximum observed active-play frame, loaded,
   retained, unloaded, generated, pending, and discarded stale chunk counts.
   These detailed fields remain in structured logs rather than becoming separate
   inspector rows.
-- Runtime overlays can draw all loaded chunk bounds and labels; the chunk
-  containing the actual player is highlighted. The inspector button and console
-  commands query the real loaded production data; there is no separate debug
-  copy or test implementation.
+- Loaded-chunk bounds and labels are not drawn at runtime because their work and
+  gizmo count scale with every loaded chunk. Targeted console queries remain the
+  bounded diagnostic path; there is no separate debug copy or test implementation.
 
 ## Player Figure-Eight Smoke Movement
 
@@ -257,14 +254,12 @@ separate profiler component and an editor-owned sampler were rejected because
 either would duplicate the production frame/chunk lifecycle or prevent the
 human and MCP entry points from sharing one result.
 
-The manager inspector's `Log Performance Overview` button and the editor MCP
-tool `performance_overview` call the same manager method. That method emits one
-machine-searchable `performance.overview` record only on request. UTC capture
-time, scene, streaming center, target position, caller-supplied task, and
-caller-supplied revision identify when, where, and what was measured. Task and
-revision are passive strings: the runtime never queries Git, invokes another
-process, or performs a network lookup. The external MCP caller may supply the
-current commit, while a human may enter the same metadata in the inspector.
+The automated suite emits one machine-searchable `performance.overview` record
+when its configured loop count completes. UTC capture time, scene, streaming
+center, target position, caller-supplied task, and caller-supplied revision
+identify when, where, and what was measured. Task and revision are passive
+strings: the runtime never queries Git, invokes another process, or performs a
+network lookup. There is no separate manual inspector or MCP reporting action.
 
 The inspector's `Toggle Player Figure Eight` button is the canonical automated
 suite entry point. Its speed, distance, and loop-count attributes are captured

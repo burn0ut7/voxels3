@@ -1829,3 +1829,61 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: pass. All fixed criteria passed. The inspector button binding was
   verified from source; live execution used its exact shared MCP method rather
   than a physical inspector click.
+
+### DEBUG-SURFACE-REMOVAL-001/v1 — bounded diagnostics
+
+- Definition recorded before execution: remove the manual world-summary,
+  player-chunk, and performance-overview actions plus the per-loaded-chunk
+  bounds, labels, and lifecycle logging paths. Preserve the automatic structured
+  result emitted by the figure-eight suite.
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Production entry point: start the real scene, then invoke
+  `player_figure_eight` once through its production MCP adapter.
+- Fixed parameters: one local player; initial position `(0,0,0)`;
+  `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  `TerrainSurfaceHeight=0`; speed `10000`; distance `1024`; loop count `1`;
+  task `DEBUG-SURFACE-REMOVAL-001/v1`; revision supplied passively by the caller.
+- Pass criteria fixed before execution:
+  - `VoxelManager` exposes no `ShowLoadedChunkBounds`,
+    `ShowLoadedChunkLabels`, or `LogChunkLifecycle` inspector properties and the
+    active scene serializes none of them
+  - Source contains no `Log World Summary`, `Log Player Chunk`, or
+    `Log Performance Overview` inspector action; no `voxel_player_chunk`
+    command; no loaded-chunk overlay traversal; and no `chunk.load` or
+    `chunk.unload` lifecycle event
+  - The live MCP registry exposes `player_figure_eight` but not the standalone
+    `performance_overview` action
+  - One live loop completes automatically and emits exactly one structured
+    `performance.overview` record with `figureEightTest=True`,
+    `completedLoops=1`, speed `10000`, distance `1024`, and zero truncated frame
+    samples
+  - The live run produces zero `chunk.load` and zero `chunk.unload` records
+  - Runtime/editor compilation, both .NET builds, and `git diff --check` succeed
+
+#### Run 2026-08-28 — pass
+
+- Revision: `f2089ab+working-tree`; engine build `26.08.19`
+- Static surface: live `VoxelManager` metadata exposed none of the three removed
+  properties; the MCP registry exposed `player_figure_eight` and returned zero
+  matches for `performance_overview`; source and scene searches returned no
+  removed runtime symbol, command, event, or serialized field
+- Begin record: `task=DEBUG-SURFACE-REMOVAL-001/v1`;
+  `revision=f2089ab+working-tree`; `loops=1`; `speed=10000`;
+  `distance=1024`; `center=[0,0,0]`
+- Automatic result: `capturedAtUtc=2026-08-28T17:55:01.2221318+00:00`;
+  `figureEightTest=True`; `completedLoops=1`; `testSpeed=10000`;
+  `testDistance=1024`; `windowSeconds=0.629`; `frameSamples=132`;
+  `truncatedFrameSamples=0`; `averageFps=209.828`;
+  `p95FrameMs=9.431`; `p99FrameMs=14.934`;
+  `averageGpuFrameMs=0.472`
+- Streaming activity: `windowIntegratedChunks=8679`;
+  `loadedChunks=33792`; `pendingChunks=2145`; buffered console contained zero
+  `chunk.load` and zero `chunk.unload` lifecycle records before and after the run
+- Validation: live runtime and editor compilers reported zero errors and zero
+  warnings; runtime and editor .NET builds completed with zero errors and zero
+  warnings; `git diff --check` passed
+- Hotload note: removing serialized members produced expected unresolved-member
+  migration messages at `13:53:56`; a fresh play session then started and the
+  measured run at `13:55:00–13:55:01` produced no runtime error
+- Outcome: pass. The unbounded debug surfaces are absent and the automated suite
+  retains its single bounded structured result.

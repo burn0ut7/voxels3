@@ -110,15 +110,6 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Chunk Configuration" )]
 	public GameObject StreamingTarget { get; set; }
 
-	[Property, Category( "Debug Visualization" )]
-	public bool ShowLoadedChunkBounds { get; set; } = false;
-
-	[Property, Category( "Debug Visualization" )]
-	public bool ShowLoadedChunkLabels { get; set; } = false;
-
-	[Property, Category( "Debug Visualization" )]
-	public bool LogChunkLifecycle { get; set; } = false;
-
 	[Property, Category( "Smoke Test" ), Range( 1f, 2048f )]
 	public float FigureEightSpeed { get; set; } = 320f;
 
@@ -271,7 +262,6 @@ public sealed class VoxelManager : Component
 			}
 
 			TryCompletePlayerFigureEightTest();
-			DrawDebugOverlay();
 			return;
 		}
 
@@ -309,7 +299,6 @@ public sealed class VoxelManager : Component
 			RefreshPlayerChunkStatus();
 		}
 		TryCompletePlayerFigureEightTest();
-		DrawDebugOverlay();
 	}
 
 	protected override void OnDestroy()
@@ -324,16 +313,6 @@ public sealed class VoxelManager : Component
 	protected override void OnValidate()
 	{
 		RefreshReadableStatus();
-	}
-
-	[Button( "Log World Summary" )]
-	public void LogWorldSummary()
-	{
-		Log.Info(
-			$"[VoxelWorld] summary center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " +
-			$"loadRadius={LoadRadius} " +
-			$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} " +
-			$"cellSize={CellSize} cellsPerAxis={CellsPerAxis}" );
 	}
 
 	[Button( "Toggle Player Figure Eight" )]
@@ -463,19 +442,6 @@ public sealed class VoxelManager : Component
 		return $"test started loops={loopCount} speed={speed} distance={distance}";
 	}
 
-	[Button( "Log Performance Overview" )]
-	public void LogPerformanceOverviewFromInspector()
-	{
-		try
-		{
-			WritePerformanceOverview( PerformanceTask, PerformanceRevision );
-		}
-		catch ( Exception exception )
-		{
-			Log.Warning( $"[VoxelWorld] performance.overview.rejected reason=\"{exception.Message}\"" );
-		}
-	}
-
 	public string WritePerformanceOverview( string task, string revision )
 	{
 		if ( !Game.IsPlaying )
@@ -523,27 +489,6 @@ public sealed class VoxelManager : Component
 			FormattableString.Invariant( $"lastGenerationChunksPerSecond={LastGenerationChunksPerSecond:0.###}" ) );
 		Log.Info( line );
 		return line;
-	}
-
-	[Button( "Log Player Chunk" )]
-	public void LogPlayerChunk()
-	{
-		var targetPosition = ActiveStreamingTarget.WorldPosition;
-		var coordinate = WorldToChunkCoordinate( targetPosition );
-		Log.Info(
-			$"[VoxelWorld] player.chunk target=\"{ActiveStreamingTarget.Name}\" " +
-			$"position=[{targetPosition.x},{targetPosition.y},{targetPosition.z}] " +
-			$"chunk=C[{coordinate.x},{coordinate.y},{coordinate.z}]" );
-		LogChunkData( coordinate );
-	}
-
-	[ConCmd( "voxel_player_chunk" )]
-	public static void LogPlayerChunkCommand()
-	{
-		if ( TryGetActiveManager( "player.chunk", out var manager ) )
-		{
-			manager.LogPlayerChunk();
-		}
 	}
 
 	[ConCmd( "voxel_chunk_info" )]
@@ -967,11 +912,6 @@ public sealed class VoxelManager : Component
 		var unloadedCount = _coordinateBuffer.Count;
 		foreach ( var coordinate in _coordinateBuffer )
 		{
-			if ( LogChunkLifecycle && _loadedChunks.TryGetValue( coordinate, out var chunk ) )
-			{
-				Log.Info( $"[VoxelWorld] chunk.unload chunk={chunk.LogId} name=\"{chunk.HumanName}\"" );
-			}
-
 			_loadedChunks.Remove( coordinate );
 		}
 
@@ -1173,12 +1113,6 @@ public sealed class VoxelManager : Component
 				integratedCount++;
 				_generatedThisStream++;
 
-				if ( LogChunkLifecycle )
-				{
-					Log.Info(
-						$"[VoxelWorld] chunk.load chunk={chunk.LogId} name=\"{chunk.HumanName}\" samples={chunk.SampleCount} " +
-						$"densityMin={chunk.MinimumDensity} densityMax={chunk.MaximumDensity}" );
-				}
 			}
 
 			if ( Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds >= MainThreadIntegrationBudgetMilliseconds )
@@ -1306,34 +1240,4 @@ public sealed class VoxelManager : Component
 		}
 	}
 
-	private void DrawDebugOverlay()
-	{
-		if ( !ShowLoadedChunkBounds && !ShowLoadedChunkLabels )
-		{
-			return;
-		}
-
-		var chunkWorldSize = CellsPerAxis * CellSize;
-		var playerCoordinate = WorldToChunkCoordinate( ActiveStreamingTarget.WorldPosition );
-		foreach ( var chunk in _loadedChunks.Values )
-		{
-			var minimum = new Vector3(
-				chunk.Coordinate.x * chunkWorldSize,
-				chunk.Coordinate.y * chunkWorldSize,
-				chunk.Coordinate.z * chunkWorldSize );
-			var maximum = minimum + new Vector3( chunkWorldSize );
-			var isPlayerChunk = chunk.Coordinate == playerCoordinate;
-			var color = isPlayerChunk ? Color.Yellow : Color.Cyan;
-
-			if ( ShowLoadedChunkBounds )
-			{
-				DebugOverlay.Box( new BBox( minimum, maximum ), color, 0f, global::Transform.Zero, true );
-			}
-
-			if ( ShowLoadedChunkLabels )
-			{
-				DebugOverlay.Text( (minimum + maximum) * 0.5f, chunk.HumanName, 18f, TextFlag.Center, color, 0f, true );
-			}
-		}
-	}
 }
