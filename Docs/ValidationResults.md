@@ -1534,3 +1534,100 @@ Record an approved extraordinary change here before adding the new version:
   timestamped during the run; exact aggregate measurements are retained here
 - Remaining limitation: this slice intentionally fixes Z at `0` and provides no
   terrain following, multiplayer automation protocol, or movement report
+
+### PLAYER-FIGURE-EIGHT-001/v2 — shared MCP and inspector control
+
+- Production entry point: `VoxelManager` figure-eight configuration and update
+  path, editor MCP tool `player_figure_eight`, and the manager inspector's
+  `Toggle Player Figure Eight` button
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: The MCP tool and human inspector
+  button configure the same manager-owned movement path. Either start surface
+  moves the assigned local player around the same fixed-Z figure-eight; MCP
+  disable or a second button press stops at the current position.
+- Pass criteria fixed before execution:
+  - The live MCP registry retains one `player_figure_eight` tool with enable,
+    speed, and distance inputs
+  - The live `VoxelManager` inspector schema exposes `Figure Eight Speed` and
+    `Figure Eight Distance` plus one `Toggle Player Figure Eight` button
+  - Source inspection confirms both entry points call one manager configuration
+    method and one manager update method; no editor-frame driver or second curve
+    implementation remains
+  - With speed `512` units/second and distance `1024` units, the shared path
+    reaches both positive-X and negative-X lobes
+  - Every sampled runtime position has world Z `0`; relative X remains within
+    `-1024..1024` and relative Y within `-512..512`
+  - Horizontal chord speed is within `460.8..563.2` units/second for every
+    moving interval outside entry/stop boundaries
+  - Stopped drift remains at or below `1` unit over two seconds
+  - No compile error, runtime exception, rejected target, non-finite position,
+    duplicate manager, or invalid configuration occurs
+- Parameters:
+  - Project/source revision: working source hashes recorded with the run
+  - Engine build and hardware/environment: recorded with the run
+  - World/scene: `basic_example`; one local player; initial position `(0,0,0)`
+  - Inputs and order: start play and wait for production `OnLoad`; configure
+    speed `512` and distance `1024`; start through the shared manager path;
+    sample the runtime player every `0.5` seconds for `14` seconds; stop through
+    the shared manager path; sample immediately and after `2` seconds; stop play
+  - Operation count: one start, `29` moving samples including the immediate
+    sample, one stop, and two stopped samples
+  - Warmup: initial production load only; player/client count: `1`
+  - Height: fixed world Z `0`; no terrain query, trace, or collision-following
+    behavior
+- Metrics and units: MCP and inspector schema; implementation-path count;
+  player X/Y/Z in world units; horizontal displacement and chord speed;
+  stopped-position drift; compiler and runtime diagnostics
+
+#### Run 2026-08-28 13:07 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Project/source state:
+  - `Editor/VoxelMcpTools.cs` SHA-256
+    `4F52DE10F1FE07DAEBDF09AA28B3B710CD570D4A66738CAC7FD991D651D61C1A`
+  - `Code/Voxels/VoxelManager.cs` SHA-256
+    `4B351861E703AA583FB94401DF627CDD41399626998564E65A4675EC46C1F0F1`
+  - `Docs/Architecture/VoxelChunkFoundation.md` SHA-256
+    `36E877EC89172B86F70E0B78435AC515391657852FB0A1AFF943E0F000374FA3`
+  - `Assets/scenes/basic_example.scene` SHA-256
+    `7EDDDDE1F31F12E880ED54CFC16DB8CCE0AEF4A4A347F2488954A76E5D88E667`
+- Engine build and environment: `26.08.19`; Windows 11 Pro build 26200;
+  AMD Ryzen 7 9800X3D (8 cores/16 threads); approximately 32 GiB RAM;
+  NVIDIA GeForce RTX 5090 driver 32.0.16.1088; one local client
+- Confirmation that scenario parameters were unchanged: yes
+- Exact execution path: restart the editor to load the changed runtime component
+  shape; start `basic_example`; wait for production `OnLoad`; invoke
+  `player_figure_eight(enabled=true, speed=512, distance=1024)`; obtain each
+  runtime position through the production `voxel_player_chunk` diagnostic every
+  `0.5` seconds for `14` seconds; invoke the same tool with `enabled=false`;
+  sample immediately and after `2` seconds; stop play
+- Surface and implementation evidence:
+  - Live MCP registry contained one `player_figure_eight` tool in the `voxels3`
+    toolset with optional `enabled`, `speed`, and `distance` inputs
+  - Live `VoxelManager` component metadata exposed `Figure Eight Speed` and
+    `Figure Eight Distance` in the `Smoke Test` inspector group
+  - The successfully compiled runtime source contains exactly one
+    `[Button("Toggle Player Figure Eight")]` method; it and the editor MCP tool
+    both call `ConfigurePlayerFigureEight`; the only curve update is
+    `VoxelManager.UpdatePlayerFigureEight`; no `EditorEvent.Frame` driver or
+    second curve implementation remains
+- Raw measurements:
+  - Moving samples: `29`; X minimum `-1022.597`, X maximum `1020.610`; Y minimum
+    `-510.777`, Y maximum `503.752`; Z minimum and maximum both `0`
+  - Horizontal chord speed across `28` intervals: minimum `484.909`, maximum
+    `516.593`, mean `505.467` units/second; intervals outside
+    `460.8..563.2`: `0`
+  - First position `[6.034,6.034,0]`; last moving position
+    `[1005.219,191.640,0]`
+  - Stop position immediately and after two seconds:
+    `[1010.890,161.239,0]`; drift `0` units
+- Build verification: `dotnet build voxels3.slnx --nologo` succeeded in `1.38`
+  seconds with `0` warnings and `0` errors; live s&box compilation succeeded
+  with `0` errors after a clean editor restart; `git diff --check` passed
+- Outcome: pass
+- Evidence location: live s&box component metadata, MCP registry, production
+  position/streaming logs, and compiled source; exact aggregate measurements
+  are retained here
+- Remaining limitation: this slice intentionally fixes Z at `0`; terrain
+  following, multiplayer automation protocol, and movement reporting remain out
+  of scope

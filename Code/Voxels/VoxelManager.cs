@@ -41,6 +41,10 @@ public sealed class VoxelManager : Component
 	private System.Threading.Tasks.Task _generationTask = System.Threading.Tasks.Task.CompletedTask;
 	private string _lastConfigurationError = string.Empty;
 	private GameObject _resolvedStreamingTarget;
+	private bool _playerFigureEightEnabled;
+	private GameObject _playerFigureEightTarget;
+	private Vector2 _playerFigureEightCenter;
+	private float _playerFigureEightParameter;
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 
 	[Property, Category( "Chunk Configuration" ), Range( 4, 64 )]
@@ -66,6 +70,12 @@ public sealed class VoxelManager : Component
 
 	[Property, Category( "Debug Visualization" )]
 	public bool LogChunkLifecycle { get; set; } = false;
+
+	[Property, Category( "Smoke Test" ), Range( 1f, 2048f )]
+	public float FigureEightSpeed { get; set; } = 320f;
+
+	[Property, Category( "Smoke Test" ), Range( 1f, 8192f )]
+	public float FigureEightDistance { get; set; } = 1024f;
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public string ChunkStatus { get; private set; } = "Not initialized";
@@ -159,6 +169,8 @@ public sealed class VoxelManager : Component
 
 	protected override void OnUpdate()
 	{
+		UpdatePlayerFigureEight();
+
 		if ( _streamInProgress )
 		{
 			if ( _hasObservedStreamingFrame )
@@ -235,6 +247,8 @@ public sealed class VoxelManager : Component
 
 	protected override void OnDestroy()
 	{
+		_playerFigureEightEnabled = false;
+		_playerFigureEightTarget = null;
 		_generationCancellation?.Cancel();
 	}
 
@@ -251,6 +265,75 @@ public sealed class VoxelManager : Component
 			$"loadRadius={LoadRadius} " +
 			$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} " +
 			$"cellSize={CellSize} cellsPerAxis={CellsPerAxis}" );
+	}
+
+	[Button( "Toggle Player Figure Eight" )]
+	public void TogglePlayerFigureEight()
+	{
+		try
+		{
+			var result = ConfigurePlayerFigureEight(
+				!_playerFigureEightEnabled,
+				FigureEightSpeed,
+				FigureEightDistance );
+			Log.Info( $"[VoxelWorld] player.figure_eight {result}" );
+		}
+		catch ( Exception exception )
+		{
+			Log.Warning( $"[VoxelWorld] player.figure_eight.rejected reason=\"{exception.Message}\"" );
+		}
+	}
+
+	public string ConfigurePlayerFigureEight( bool enabled, float speed, float distance )
+	{
+		if ( !Game.IsPlaying )
+		{
+			throw new InvalidOperationException( "Start play mode before running the player figure-eight." );
+		}
+
+		if ( !enabled )
+		{
+			_playerFigureEightEnabled = false;
+			_playerFigureEightTarget = null;
+			return "stopped";
+		}
+
+		if ( !float.IsFinite( speed ) || speed <= 0f )
+		{
+			throw new ArgumentOutOfRangeException( nameof( speed ), "Speed must be finite and greater than zero." );
+		}
+
+		if ( !float.IsFinite( distance ) || distance <= 0f )
+		{
+			throw new ArgumentOutOfRangeException( nameof( distance ), "Distance must be finite and greater than zero." );
+		}
+
+		var target = ActiveStreamingTarget;
+		PlayerController player = null;
+		foreach ( var candidate in Scene.GetAllComponents<PlayerController>() )
+		{
+			if ( candidate.GameObject == target && !candidate.IsProxy )
+			{
+				player = candidate;
+				break;
+			}
+		}
+
+		if ( player is null )
+		{
+			throw new InvalidOperationException( "The local player must be the VoxelManager streaming target." );
+		}
+
+		FigureEightSpeed = speed;
+		FigureEightDistance = distance;
+		var start = player.WorldPosition;
+		_playerFigureEightTarget = player.GameObject;
+		_playerFigureEightCenter = new Vector2( start.x, start.y );
+		_playerFigureEightParameter = 0f;
+		_playerFigureEightEnabled = true;
+		_playerFigureEightTarget.WorldPosition = new Vector3( start.x, start.y, 0f );
+
+		return $"started speed={speed} distance={distance}";
 	}
 
 	[Button( "Log Player Chunk" )]
@@ -321,6 +404,39 @@ public sealed class VoxelManager : Component
 
 		Log.Warning( $"[VoxelWorld] {operation}.rejected reason=\"no active VoxelManager component\"" );
 		return false;
+	}
+
+	private void UpdatePlayerFigureEight()
+	{
+		if ( !_playerFigureEightEnabled )
+		{
+			return;
+		}
+
+		if ( !_playerFigureEightTarget.IsValid() )
+		{
+			_playerFigureEightEnabled = false;
+			_playerFigureEightTarget = null;
+			return;
+		}
+
+		var tangentX = MathF.Cos( _playerFigureEightParameter );
+		var tangentY = MathF.Cos( 2f * _playerFigureEightParameter );
+		var tangentLength = MathF.Sqrt( tangentX * tangentX + tangentY * tangentY );
+		_playerFigureEightParameter +=
+			FigureEightSpeed * RealTime.Delta / (FigureEightDistance * tangentLength);
+
+		if ( _playerFigureEightParameter >= MathF.Tau )
+		{
+			_playerFigureEightParameter -= MathF.Tau;
+		}
+
+		var sine = MathF.Sin( _playerFigureEightParameter );
+		var cosine = MathF.Cos( _playerFigureEightParameter );
+		_playerFigureEightTarget.WorldPosition = new Vector3(
+			_playerFigureEightCenter.x + FigureEightDistance * sine,
+			_playerFigureEightCenter.y + FigureEightDistance * sine * cosine,
+			0f );
 	}
 
 	private void LogChunkData( Vector3Int coordinate )

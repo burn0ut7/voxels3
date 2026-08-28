@@ -191,25 +191,33 @@ before that policy changes.
 
 ## Player Figure-Eight Smoke Movement
 
-The `player_figure_eight` editor MCP tool owns the optional figure-eight
-automation state and moves the one local production player already consumed by
-`VoxelManager` as its streaming target. No scene component, console command, or
-second movement implementation is added. While enabled, an editor-frame callback
-moves the player around its start X/Y using a lemniscate whose
-configured distance is the maximum X offset, whose Y offset is half that value,
-and whose world Z is fixed at `0`. Speed is converted to curve progress from the
-local tangent so it remains a world-units-per-second input rather than a raw
-angular rate.
+`VoxelManager` owns the optional figure-eight automation state and the one update
+path that moves its local production streaming target. The
+`player_figure_eight` editor MCP tool and the manager inspector's `Toggle Player
+Figure Eight` button both call the same manager configuration method. The button
+uses the manager's `Figure Eight Speed` and `Figure Eight Distance` properties;
+pressing it again stops. No scene component, console command, editor-frame
+driver, or second movement implementation exists.
+
+While enabled, `VoxelManager.OnUpdate` moves the player around its start X/Y
+using a lemniscate whose configured distance is the maximum X offset, whose Y
+offset is half that value, and whose world Z is fixed at `0`. Speed is converted
+to curve progress from the local tangent so it remains a world-units-per-second
+input rather than a raw angular rate. Streaming observes the resulting real
+player position through its existing target path.
 
 The mutable enable flag, target, center, speed, distance, and curve parameter
-belong only to the editor tool. There is no worker access, downstream
-invalidation, replication protocol, terrain query, collision trace, or report in
-this slice. The tool rejects multiple managers, missing or proxy player targets,
-and non-finite or non-positive inputs. It operates only on the locally controlled
-player; multiplayer automation requires a later authority design.
+belong only to the active manager. There is no worker access, replication
+protocol, terrain query, collision trace, or report in this slice. Configuration
+rejects missing or proxy player targets and non-finite or non-positive inputs.
+The editor tool additionally rejects zero or multiple active managers. Movement
+operates only on the locally controlled player; multiplayer automation requires
+a later authority design.
 
 Physics steering was rejected because collision and acceleration would make the
 requested path indirect and difficult to repeat. Terrain tracing was rejected
 because this slice explicitly fixes Z at zero and voxel collision does not yet
-exist. A separate test component was rejected because the editor tool can drive
-the real player without modifying the playable scene or runtime component graph.
+exist. Keeping the movement loop in the editor tool was superseded because a
+runtime inspector button could not share that owner without an editor dependency.
+A separate test component remains rejected because the existing manager already
+owns the exact target and update point needed by this smoke behavior.
