@@ -1887,3 +1887,132 @@ Record an approved extraordinary change here before adding the new version:
   measured run at `13:55:00–13:55:01` produced no runtime error
 - Outcome: pass. The unbounded debug surfaces are absent and the automated suite
   retains its single bounded structured result.
+
+### PERFORMANCE-OVERVIEW-001/v3 — durable structured baseline
+
+- Version justification recorded before execution: v2 established an automatic
+  loop boundary but retained results only as general engine log text. V3 keeps
+  the canonical scene and one-loop workload unchanged while replacing the
+  result sink with a versioned append-only JSON Lines dataset.
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Production entry point: the manager inspector's `Run Performance Test` button
+  and editor MCP operation `run_performance_test` call the same manager start
+  method; the live validation uses the MCP adapter.
+- Fixed parameters unchanged from v2: one local player; initial position
+  `(0,0,0)`; `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  `TerrainSurfaceHeight=0`; speed `2500`; distance `50000`; world Z `0`;
+  loop count `1`; frame capacity `524,288`; per-update frame sampling;
+  one-game-time-second memory sampling; nearest-rank p95 and p99 frame duration.
+- Fixed identity for this run: task `PERFORMANCE-OVERVIEW-001/v3`; revision
+  `70d878f+working-tree`.
+- Canonical storage: append one compact JSON object per line to schema-versioned
+  virtual path `performance/results-v1.jsonl` in `FileSystem.Data`, after the
+  measured loop has completed.
+- Pass criteria fixed before execution:
+  - The inspector action is named `Run Performance Test`; the MCP registry
+    exposes `run_performance_test` with required task and revision and no
+    `player_figure_eight` operation
+  - Blank, whitespace, or case-insensitive `unassigned` task/revision is rejected
+    before movement and measurement start
+  - One unchanged canonical loop stops automatically and appends exactly one
+    newline-delimited JSON record after measurement, without rewriting earlier
+    records
+  - The appended object parses as JSON and contains schema version `1`, a unique
+    run ID, UTC timestamp, required task/revision, scene/world/test parameters,
+    and nested frame, memory, and chunk objects
+  - The record reports `completedLoops=1`, speed `2500`, distance `50000`,
+    positive finite frame measurements, ordered p95/p99 frame tails, valid
+    memory/chunk metrics, and zero truncated frame samples
+  - Runtime/editor compilation, both .NET builds, live production execution,
+    durable-file readback, and `git diff --check` succeed
+
+#### Run 2026-08-28 — pass
+
+- Engine build `26.08.19`; revision `70d878f+working-tree`
+- Rejection evidence: task `unassigned` was rejected by
+  `StartPerformanceTest` before movement began
+- Saved path:
+  `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\local\voxels3#local\performance\results-v1.jsonl`
+- Record identity: schema `1`; run ID
+  `40e2f1a60d3a48dc98299f0cb81d0b13`; captured UTC
+  `2026-08-28T18:08:25.0701717+00:00`; outcome `completed`; task
+  `PERFORMANCE-OVERVIEW-001/v3`; revision `70d878f+working-tree`
+- Workload/world: test `player-figure-eight`; one completed loop; speed `2500`;
+  distance `50000`; duration `121.943954` seconds; start/target `(0,0,0)`;
+  scene `basic_example`; cells per axis `32`; cell size `16`; load radius `16`;
+  terrain surface height `0`; streaming center `C[0,0,0]`
+- Frame: `26457` samples; `0` truncated; average FPS `216.95671`; p95
+  `9.6484` ms; p99 `13.4103` ms; average GPU `0.47542498` ms
+- Memory bytes: process average `5308304132`, peak `5398777856`; GPU
+  average/peak `1088171346`; GPU budget `32945209344`
+- Chunks: loaded `33792`; pending `2145`; integrated `842886`; integrated per
+  second `6912.077`; last generated `2145`; last settle `14.0532` ms; last
+  effective per second `152634.28`; last generation per second `36232860`
+- Durable readback: dataset contained one line and `1114` bytes; the line parsed
+  directly as JSON with every required nested object and value above
+- Outcome: pass. The unchanged baseline completed and the runtime created a
+  durable structured record after measurement.
+
+### PERFORMANCE-STORAGE-APPEND-001/v1 — append integrity
+
+- Definition recorded before execution: prove a second completed production
+  test appends one independently parseable record without changing the existing
+  canonical v3 baseline record.
+- Actual world/scene: the same live `basic_example` session after
+  `PERFORMANCE-OVERVIEW-001/v3`.
+- Fixed parameters: speed `10000`; distance `1024`; loop count `1`; world Z `0`;
+  task `PERFORMANCE-STORAGE-APPEND-001/v1`; revision
+  `70d878f+working-tree`.
+- Pre-run dataset: one line, `1114` bytes; first-record SHA-256
+  `021FB596DB81E6D02BF3D2586EE3981FE519F275C0AC9CA76BBCF2EBB4097D96`.
+- Pass criteria fixed before execution:
+  - The production `run_performance_test` operation completes one loop and saves
+    a record with the fixed identity and workload
+  - Dataset line count increases from one to two; both lines parse independently
+    as JSON; run IDs differ; and the first-record SHA-256 is unchanged
+  - The second record has schema version `1`, outcome `completed`, zero truncated
+    samples, and positive finite frame measurements
+
+#### Run 2026-08-28 — invalid validation
+
+- The production run completed and appended run
+  `99e0f14f3c0a49bb85400cb2d293c934`; the dataset increased to two independently
+  parseable lines and distinct run IDs.
+- The pre-run SHA-256 was invalid because PowerShell returned the one-line file
+  as a scalar string and `[0]` selected its first character rather than its first
+  line. The observed hash cannot establish the unchanged-record criterion.
+- Outcome: invalid validation, not a product failure. The records are retained;
+  the result is not used as append-integrity evidence.
+
+### PERFORMANCE-STORAGE-APPEND-001/v2 — corrected append integrity
+
+- Version justification recorded before execution: v1's workload and product
+  behavior were valid, but its verification command hashed one character. V2
+  preserves the same workload and uses an explicit array of full JSONL lines.
+- Fixed parameters unchanged from v1 except task
+  `PERFORMANCE-STORAGE-APPEND-001/v2`.
+- Pre-run dataset: two lines, `2230` bytes; full-line SHA-256 values, in order:
+  - `BD6D66D38F0DE68284E9809B0F975F0B551F329536757A8B63460A5BBF2E9540`
+  - `15E049A91EAD0803D81229F93ECE87489ED0846FD02923769872AB8BA295F7D1`
+- Pass criteria fixed before execution:
+  - The production run appends one third independently parseable record with the
+    v2 task, revision `70d878f+working-tree`, speed `10000`, distance `1024`, and
+    one completed loop
+  - Dataset line count increases from two to three, all run IDs differ, and both
+    pre-existing full-line SHA-256 values remain unchanged
+  - The third record has schema version `1`, outcome `completed`, zero truncated
+    samples, and positive finite frame measurements
+
+#### Run 2026-08-28 — pass
+
+- Saved run ID `7298bfe501f14a748a99511a5644b7bf`; task
+  `PERFORMANCE-STORAGE-APPEND-001/v2`; revision `70d878f+working-tree`
+- Workload/result: one completed loop; speed `10000`; distance `1024`; duration
+  `0.62613827` seconds; `118` frame samples; `0` truncated; average FPS
+  `188.45854`; p95 `13.7385` ms; p99 `15.222` ms
+- Dataset increased from two lines/`2230` bytes to three lines/`3347` bytes; all
+  three JSON objects parsed and all three run IDs were distinct
+- First and second hashes after append exactly matched both fixed pre-run hashes;
+  third-record SHA-256 was
+  `900D28C4C1C0A2C7752755358CC7B916940D2FA509B91412058719CC517468C2`
+- Outcome: pass. Append preserved both prior records byte-for-byte.

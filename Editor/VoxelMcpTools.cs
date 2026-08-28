@@ -5,41 +5,28 @@ using System;
 public static class VoxelMcpTools
 {
 	/// <summary>
-	/// Start or cancel the automated figure-eight performance test at world Z zero.
+	/// Run the automated figure-eight performance test and save one structured result.
 	/// </summary>
-	/// <param name="enabled">True to start a new test; false to cancel the active test.</param>
+	/// <param name="task">Required task or scenario identifier stored with the result.</param>
+	/// <param name="revision">Required Git commit or other source revision stored with the result.</param>
 	/// <param name="speed">Horizontal movement speed in world units per second.</param>
 	/// <param name="distance">Maximum X distance from the starting center; the Y reach is half this value.</param>
 	/// <param name="loopCount">Number of complete figure-eight loops to measure before automatic completion.</param>
-	/// <param name="task">Task or scenario label stored with the structured result.</param>
-	/// <param name="revision">Externally supplied Git commit or other source revision label.</param>
-	[McpTool( "player_figure_eight" )]
-	public static string PlayerFigureEight(
-		bool enabled = true,
+	[McpTool( "run_performance_test" )]
+	public static string RunPerformanceTest(
+		string task,
+		string revision,
 		float speed = 2500f,
 		float distance = 50000f,
-		int loopCount = 1,
-		string task = "",
-		string revision = "" )
+		int loopCount = 1 )
 	{
 		if ( !Game.IsPlaying )
 		{
 			throw new InvalidOperationException( "Start play mode before running the player figure-eight." );
 		}
 
-		var manager = FindManager();
-		if ( !string.IsNullOrWhiteSpace( task ) )
-		{
-			manager.PerformanceTask = task.Trim();
-		}
-
-		if ( !string.IsNullOrWhiteSpace( revision ) )
-		{
-			manager.PerformanceRevision = revision.Trim();
-		}
-
-		var result = manager.ConfigurePlayerFigureEightTest( enabled, speed, distance, loopCount );
-		return $"Player figure-eight performance test {result}.";
+		var result = FindManager().StartPerformanceTest( speed, distance, loopCount, task, revision );
+		return $"Performance test {result}.";
 	}
 
 	private static VoxelManager FindManager()

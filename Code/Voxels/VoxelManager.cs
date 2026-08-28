@@ -1,5 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 /// <summary>
@@ -13,6 +16,13 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
+	private const int PerformanceResultSchemaVersion = 1;
+	private const string PerformanceResultsDirectory = "performance";
+	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
+	private static readonly JsonSerializerOptions PerformanceJsonOptions = new()
+	{
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+	};
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
@@ -119,11 +129,17 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Smoke Test" ), Range( 1, MaximumFigureEightLoopCount )]
 	public int FigureEightLoopCount { get; set; } = 1;
 
-	[Property, Category( "Performance Logging" )]
-	public string PerformanceTask { get; set; } = "unassigned";
+	[Property, Category( "Performance Test" )]
+	public string PerformanceTask { get; set; } = string.Empty;
 
-	[Property, Category( "Performance Logging" )]
-	public string PerformanceRevision { get; set; } = "unassigned";
+	[Property, Category( "Performance Test" )]
+	public string PerformanceRevision { get; set; } = string.Empty;
+
+	[Property, ReadOnly, Category( "Performance Test" )]
+	public string PerformanceResultsLocation { get; private set; } = PerformanceResultsPath;
+
+	[Property, ReadOnly, Category( "Performance Test" )]
+	public string LastPerformanceRunId { get; private set; } = "No saved run";
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public string FramePerformance { get; private set; } = "Collecting first 10-second window";
@@ -315,36 +331,30 @@ public sealed class VoxelManager : Component
 		RefreshReadableStatus();
 	}
 
-	[Button( "Toggle Player Figure Eight" )]
-	public void TogglePlayerFigureEight()
+	[Button( "Run Performance Test" )]
+	public void RunPerformanceTestFromInspector()
 	{
 		try
 		{
-			var result = ConfigurePlayerFigureEightTest(
-				!_playerFigureEightTestRunning,
+			var result = StartPerformanceTest(
 				FigureEightSpeed,
 				FigureEightDistance,
-				FigureEightLoopCount );
-			Log.Info( $"[VoxelWorld] player.figure_eight {result}" );
+				FigureEightLoopCount,
+				PerformanceTask,
+				PerformanceRevision );
+			Log.Info( $"[VoxelWorld] performance.test {result}" );
 		}
 		catch ( Exception exception )
 		{
-			Log.Warning( $"[VoxelWorld] player.figure_eight.rejected reason=\"{exception.Message}\"" );
+			Log.Warning( $"[VoxelWorld] performance.test.rejected reason=\"{exception.Message}\"" );
 		}
 	}
 
-	public string ConfigurePlayerFigureEight( bool enabled, float speed, float distance )
+	private void StartPlayerFigureEight( float speed, float distance )
 	{
 		if ( !Game.IsPlaying )
 		{
 			throw new InvalidOperationException( "Start play mode before running the player figure-eight." );
-		}
-
-		if ( !enabled )
-		{
-			_playerFigureEightEnabled = false;
-			_playerFigureEightTarget = null;
-			return "stopped";
 		}
 
 		if ( !float.IsFinite( speed ) || speed <= 0f )
@@ -381,29 +391,15 @@ public sealed class VoxelManager : Component
 		_playerFigureEightParameter = 0f;
 		_playerFigureEightEnabled = true;
 		_playerFigureEightTarget.WorldPosition = new Vector3( start.x, start.y, 0f );
-
-		return $"started speed={speed} distance={distance}";
 	}
 
-	public string ConfigurePlayerFigureEightTest( bool enabled, float speed, float distance, int loopCount )
+	public string StartPerformanceTest(
+		float speed,
+		float distance,
+		int loopCount,
+		string task,
+		string revision )
 	{
-		if ( !enabled )
-		{
-			var completedLoops = _playerFigureEightCompletedLoops;
-			var wasRunning = _playerFigureEightTestRunning;
-			_playerFigureEightTestRunning = false;
-			_playerFigureEightTestCompletionReady = false;
-			ConfigurePlayerFigureEight( false, speed, distance );
-			if ( wasRunning )
-			{
-				Log.Info(
-					$"[VoxelWorld] performance.test.cancelled completedLoops={completedLoops} " +
-					$"targetLoops={_playerFigureEightTargetLoops}" );
-			}
-
-			return wasRunning ? $"test cancelled after {completedLoops} loops" : "stopped";
-		}
-
 		if ( _playerFigureEightTestRunning )
 		{
 			throw new InvalidOperationException( "A player figure-eight performance test is already running." );
@@ -416,14 +412,18 @@ public sealed class VoxelManager : Component
 				$"Loop count must be between 1 and {MaximumFigureEightLoopCount}." );
 		}
 
-		ConfigurePlayerFigureEight( true, speed, distance );
+		var normalizedTask = RequirePerformanceContext( task, nameof( task ) );
+		var normalizedRevision = RequirePerformanceContext( revision, nameof( revision ) );
+		StartPlayerFigureEight( speed, distance );
 		FigureEightLoopCount = loopCount;
+		PerformanceTask = normalizedTask;
+		PerformanceRevision = normalizedRevision;
 		_playerFigureEightCompletedLoops = 0;
 		_playerFigureEightTargetLoops = loopCount;
 		_playerFigureEightTestSpeed = speed;
 		_playerFigureEightTestDistance = distance;
-		_playerFigureEightTestTask = PerformanceTask;
-		_playerFigureEightTestRevision = PerformanceRevision;
+		_playerFigureEightTestTask = normalizedTask;
+		_playerFigureEightTestRevision = normalizedRevision;
 		_playerFigureEightTestCompletionReady = false;
 		_playerFigureEightTestRunning = true;
 		_performanceSnapshotReady = false;
@@ -442,53 +442,105 @@ public sealed class VoxelManager : Component
 		return $"test started loops={loopCount} speed={speed} distance={distance}";
 	}
 
-	public string WritePerformanceOverview( string task, string revision )
+	private string SavePerformanceResult()
 	{
-		if ( !Game.IsPlaying )
+		if ( !_performanceSnapshotReady || !_lastPerformanceWasFigureEightTest )
 		{
-			throw new InvalidOperationException( "Start play mode before logging a performance overview." );
-		}
-
-		if ( !_performanceSnapshotReady )
-		{
-			throw new InvalidOperationException( "Wait for a complete performance test or 10-second overview window." );
-		}
-
-		if ( !string.IsNullOrWhiteSpace( task ) )
-		{
-			PerformanceTask = task.Trim();
-		}
-
-		if ( !string.IsNullOrWhiteSpace( revision ) )
-		{
-			PerformanceRevision = revision.Trim();
+			throw new InvalidOperationException( "A complete performance-test snapshot is required before saving." );
 		}
 
 		var target = ActiveStreamingTarget;
 		var targetPosition = target.WorldPosition;
 		var sceneName = Scene?.Name ?? "unknown";
-		var line = string.Concat(
-			FormattableString.Invariant( $"[VoxelWorld] performance.overview capturedAtUtc=\"{DateTimeOffset.UtcNow:O}\" " ),
-			FormattableString.Invariant( $"scene=\"{EscapeLogValue( sceneName )}\" task=\"{EscapeLogValue( PerformanceTask )}\" " ),
-			FormattableString.Invariant( $"revision=\"{EscapeLogValue( PerformanceRevision )}\" " ),
-			FormattableString.Invariant( $"figureEightTest={_lastPerformanceWasFigureEightTest} completedLoops={_lastPerformanceCompletedLoops} " ),
-			FormattableString.Invariant( $"testSpeed={_lastPerformanceTestSpeed:0.###} testDistance={_lastPerformanceTestDistance:0.###} " ),
-			FormattableString.Invariant( $"center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " ),
-			FormattableString.Invariant( $"targetX={targetPosition.x:0.###} targetY={targetPosition.y:0.###} targetZ={targetPosition.z:0.###} " ),
-			FormattableString.Invariant( $"windowSeconds={_lastPerformanceWindowSeconds:0.###} frameSamples={_lastPerformanceFrameSampleCount} " ),
-			FormattableString.Invariant( $"truncatedFrameSamples={_lastPerformanceTruncatedFrameSampleCount} " ),
-			FormattableString.Invariant( $"averageFps={_lastAverageFramesPerSecond:0.###} p95FrameMs={_lastP95FrameMilliseconds:0.###} " ),
-			FormattableString.Invariant( $"p99FrameMs={_lastP99FrameMilliseconds:0.###} averageGpuFrameMs={_lastAverageGpuFrameMilliseconds:0.###} " ),
-			FormattableString.Invariant( $"averageProcessMemoryBytes={_lastAverageProcessMemoryBytes} peakProcessMemoryBytes={_lastPeakProcessMemoryBytes} " ),
-			FormattableString.Invariant( $"averageGpuMemoryBytes={_lastAverageGpuMemoryBytes} peakGpuMemoryBytes={_lastPeakGpuMemoryBytes} " ),
-			FormattableString.Invariant( $"gpuMemoryBudgetBytes={_lastGpuMemoryBudgetBytes} loadedChunks={_loadedChunks.Count} " ),
-			FormattableString.Invariant( $"pendingChunks={_pendingChunks.Count} windowIntegratedChunks={_lastPerformanceChunksIntegrated} " ),
-			FormattableString.Invariant( $"windowChunksPerSecond={_lastPerformanceChunksPerSecond:0.###} " ),
-			FormattableString.Invariant( $"lastStreamGeneratedChunks={LastGeneratedChunkCount} lastStreamSettleMs={LastStreamSettleMilliseconds:0.###} " ),
-			FormattableString.Invariant( $"lastEffectiveChunksPerSecond={LastEffectiveChunksPerSecond:0.###} " ),
-			FormattableString.Invariant( $"lastGenerationChunksPerSecond={LastGenerationChunksPerSecond:0.###}" ) );
-		Log.Info( line );
-		return line;
+		var runId = Guid.NewGuid().ToString( "N" );
+		var result = new PerformanceTestResult
+		{
+			SchemaVersion = PerformanceResultSchemaVersion,
+			RunId = runId,
+			CapturedAtUtc = DateTimeOffset.UtcNow.ToString( "O" ),
+			Outcome = "completed",
+			Source = new PerformanceTestSource
+			{
+				Task = _playerFigureEightTestTask,
+				Revision = _playerFigureEightTestRevision
+			},
+			Test = new PerformanceTestDefinition
+			{
+				Name = "player-figure-eight",
+				CompletedLoops = _lastPerformanceCompletedLoops,
+				Speed = _lastPerformanceTestSpeed,
+				Distance = _lastPerformanceTestDistance,
+				WorldHeight = 0f,
+				DurationSeconds = _lastPerformanceWindowSeconds,
+				StartCenter = new PerformanceVector2
+				{
+					X = _playerFigureEightCenter.x,
+					Y = _playerFigureEightCenter.y
+				}
+			},
+			World = new PerformanceWorldContext
+			{
+				Scene = sceneName,
+				CellsPerAxis = CellsPerAxis,
+				CellSize = CellSize,
+				LoadRadius = LoadRadius,
+				TerrainSurfaceHeight = TerrainSurfaceHeight,
+				StreamingCenter = new PerformanceVector3Int
+				{
+					X = _streamingCenterCoordinate.x,
+					Y = _streamingCenterCoordinate.y,
+					Z = _streamingCenterCoordinate.z
+				},
+				TargetPosition = new PerformanceVector3
+				{
+					X = targetPosition.x,
+					Y = targetPosition.y,
+					Z = targetPosition.z
+				}
+			},
+			Frame = new PerformanceFrameMetrics
+			{
+				Samples = _lastPerformanceFrameSampleCount,
+				TruncatedSamples = _lastPerformanceTruncatedFrameSampleCount,
+				AverageFps = _lastAverageFramesPerSecond,
+				P95Milliseconds = _lastP95FrameMilliseconds,
+				P99Milliseconds = _lastP99FrameMilliseconds,
+				AverageGpuMilliseconds = _lastAverageGpuFrameMilliseconds
+			},
+			Memory = new PerformanceMemoryMetrics
+			{
+				AverageProcessBytes = _lastAverageProcessMemoryBytes,
+				PeakProcessBytes = _lastPeakProcessMemoryBytes,
+				AverageGpuBytes = _lastAverageGpuMemoryBytes,
+				PeakGpuBytes = _lastPeakGpuMemoryBytes,
+				GpuBudgetBytes = _lastGpuMemoryBudgetBytes
+			},
+			Chunks = new PerformanceChunkMetrics
+			{
+				Loaded = _loadedChunks.Count,
+				Pending = _pendingChunks.Count,
+				Integrated = _lastPerformanceChunksIntegrated,
+				IntegratedPerSecond = _lastPerformanceChunksPerSecond,
+				LastStreamGenerated = LastGeneratedChunkCount,
+				LastStreamSettleMilliseconds = LastStreamSettleMilliseconds,
+				LastEffectivePerSecond = LastEffectiveChunksPerSecond,
+				LastGenerationPerSecond = LastGenerationChunksPerSecond
+			}
+		};
+
+		var json = JsonSerializer.Serialize( result, PerformanceJsonOptions );
+		var bytes = Encoding.UTF8.GetBytes( json + "\n" );
+		global::Sandbox.FileSystem.Data.CreateDirectory( PerformanceResultsDirectory );
+		using ( var stream = global::Sandbox.FileSystem.Data.OpenWrite( PerformanceResultsPath, FileMode.Append ) )
+		{
+			stream.Write( bytes, 0, bytes.Length );
+			stream.Flush();
+		}
+
+		PerformanceResultsLocation =
+			global::Sandbox.FileSystem.Data.GetFullPath( PerformanceResultsPath ) ?? PerformanceResultsPath;
+		LastPerformanceRunId = runId;
+		return runId;
 	}
 
 	[ConCmd( "voxel_chunk_info" )]
@@ -611,7 +663,21 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
-		WritePerformanceOverview( _playerFigureEightTestTask, _playerFigureEightTestRevision );
+		try
+		{
+			var runId = SavePerformanceResult();
+			FramePerformance += $"; saved run {runId}";
+			Log.Info(
+				$"[VoxelWorld] performance.result.saved runId=\"{runId}\" " +
+				$"task=\"{EscapeLogValue( _playerFigureEightTestTask )}\" " +
+				$"revision=\"{EscapeLogValue( _playerFigureEightTestRevision )}\" " +
+				$"path=\"{EscapeLogValue( PerformanceResultsLocation )}\"" );
+		}
+		catch ( Exception exception )
+		{
+			FramePerformance = $"Performance test completed but save failed: {exception.Message}";
+			Log.Error( $"[VoxelWorld] performance.result.failed reason=\"{EscapeLogValue( exception.Message )}\"" );
+		}
 	}
 
 	private void UpdatePerformanceOverview()
@@ -748,6 +814,20 @@ public sealed class VoxelManager : Component
 	private static string EscapeLogValue( string value )
 	{
 		return (value ?? string.Empty).Replace( "\\", "\\\\" ).Replace( "\"", "\\\"" );
+	}
+
+	private static string RequirePerformanceContext( string value, string parameterName )
+	{
+		var normalized = value?.Trim();
+		if ( string.IsNullOrWhiteSpace( normalized ) ||
+			normalized.Equals( "unassigned", StringComparison.OrdinalIgnoreCase ) )
+		{
+			throw new ArgumentException(
+				$"{parameterName} is required and cannot be 'unassigned'.",
+				parameterName );
+		}
+
+		return normalized;
 	}
 
 	private void LogChunkData( Vector3Int coordinate )

@@ -254,28 +254,39 @@ separate profiler component and an editor-owned sampler were rejected because
 either would duplicate the production frame/chunk lifecycle or prevent the
 human and MCP entry points from sharing one result.
 
-The automated suite emits one machine-searchable `performance.overview` record
-when its configured loop count completes. UTC capture time, scene, streaming
-center, target position, caller-supplied task, and caller-supplied revision
-identify when, where, and what was measured. Task and revision are passive
-strings: the runtime never queries Git, invokes another process, or performs a
-network lookup. There is no separate manual inspector or MCP reporting action.
+The automated suite appends one versioned JSON object to
+`performance/results-v1.jsonl` in `FileSystem.Data` when its configured loop
+count completes. Each record contains a unique run ID; UTC capture time;
+required task and revision; scene, world, and workload parameters; and nested
+frame, memory, and chunk metrics. The manager exposes the resolved results path
+as inspector status. Task and revision are passive caller-supplied strings: the
+runtime never queries Git, invokes another process, or performs a network
+lookup. Blank or `unassigned` context rejects the run before movement begins.
 
-The inspector's `Toggle Player Figure Eight` button is the canonical automated
-suite entry point. Its speed, distance, and loop-count attributes are captured
-once when the test starts. The manager resets measurement on that same update
-boundary, advances the shared production movement path, counts exact full-curve
-crossings, stops automatically at the configured loop count, and immediately
-publishes one structured result covering the complete run. The canonical v2
-baseline uses speed `2500`, distance `50000`, and one loop; the inspector permits
-one through eight loops for explicitly different workloads.
+The inspector's `Run Performance Test` button is the canonical automated suite
+entry point. Its task, revision, speed, distance, and loop-count attributes are
+captured once when the test starts. The manager resets measurement on that same
+update boundary, advances the shared production figure-eight movement path,
+counts exact full-curve crossings, and stops automatically at the configured
+loop count. Only then does it serialize and append the result, keeping file I/O
+outside the measured interval. The canonical v3 baseline uses speed `2500`,
+distance `50000`, and one loop; the inspector permits one through eight loops
+for explicitly different workloads.
 
-The editor MCP `player_figure_eight` operation calls the same manager method as
-the button and accepts the same workload plus passive task and revision labels.
+The editor MCP `run_performance_test` operation calls the same manager method as
+the button and requires the same passive task and revision labels.
 Neither entry point controls completion timing: no human, AI, external sleep,
 polling cadence, Git discovery, process launch, or network lookup participates in
 the measured boundary. Manual start/report/stop calls and an external script
 clock were rejected because their scheduling variance would change the measured
-interval. Structured output includes UTC time, scene and world position,
-workload parameters, completed loops, task, revision, and all three performance
-pillars so a later deterministic ingestion script or dashboard can consume it.
+interval.
+
+JSON Lines is the canonical storage shape because each completed run is one
+self-contained append, a partial final write cannot invalidate earlier runs,
+and later scripts or dashboards can stream records without loading or rewriting
+history. Rewriting one growing JSON array was rejected because save cost scales
+with history. One file per run was rejected because it creates an unnecessary
+file-enumeration and retention problem. General engine logs were rejected as the
+data store because their rotation, formatting, and retention are not owned by
+the project. The append occurs on the manager thread after measurement; only one
+local manager/test may write at a time.
