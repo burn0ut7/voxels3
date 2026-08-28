@@ -8,8 +8,9 @@ networking, or persistence.
 
 The first voxel-world foundation is established in `Code/Voxels/VoxelManager.cs`
 and `Code/Voxels/VoxelChunk.cs`. `VoxelManager` owns one canonical loaded-chunk
-dictionary and bounded desired/load queues; each `VoxelChunk` owns its SDF sample
-array. The current deterministic base field is a flat world-space plane. Read
+dictionary and bounded desired/load queues; each `VoxelChunk` owns the parameters
+for its implicit flat SDF and derives Grass/Air material IDs without sample
+arrays. The current deterministic base field is a flat world-space plane. Read
 `Docs/Architecture/VoxelChunkFoundation.md` before changing these boundaries or
 dimensions.
 
