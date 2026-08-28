@@ -183,3 +183,28 @@ before that policy changes.
   containing the actual player is highlighted. The inspector button and console
   commands query the real loaded production data; there is no separate debug
   copy or test implementation.
+
+## Player Figure-Eight Smoke Movement
+
+The `player_figure_eight` editor MCP tool owns the optional figure-eight
+automation state and moves the one local production player already consumed by
+`VoxelManager` as its streaming target. No scene component, console command, or
+second movement implementation is added. While enabled, an editor-frame callback
+moves the player around its start X/Y using a lemniscate whose
+configured distance is the maximum X offset, whose Y offset is half that value,
+and whose world Z is fixed at `0`. Speed is converted to curve progress from the
+local tangent so it remains a world-units-per-second input rather than a raw
+angular rate.
+
+The mutable enable flag, target, center, speed, distance, and curve parameter
+belong only to the editor tool. There is no worker access, downstream
+invalidation, replication protocol, terrain query, collision trace, or report in
+this slice. The tool rejects multiple managers, missing or proxy player targets,
+and non-finite or non-positive inputs. It operates only on the locally controlled
+player; multiplayer automation requires a later authority design.
+
+Physics steering was rejected because collision and acceleration would make the
+requested path indirect and difficult to repeat. Terrain tracing was rejected
+because this slice explicitly fixes Z at zero and voxel collision does not yet
+exist. A separate test component was rejected because the editor tool can drive
+the real player without modifying the playable scene or runtime component graph.

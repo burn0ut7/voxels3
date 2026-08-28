@@ -1271,3 +1271,124 @@ Record an approved extraordinary change here before adding the new version:
 - Remaining unmeasured risks: live inspector serialization, initial population,
   +X streaming behavior, production logs, settle time, and density/material
   probes require a controllable s&box production session
+
+### PLAYER-FIGURE-EIGHT-001/v1 — MCP movement smoke
+
+- Production entry point: editor MCP tool `player_figure_eight`, the active
+  `VoxelManager`, its assigned local `Player Controller`, and
+  `VoxelManager.OnUpdate`
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: Start the real player on a continuous
+  figure-eight centered at its initial X/Y, keep world Z exactly `0`, move at the
+  configured horizontal speed and distance, then stop at the current position.
+- Pass criteria fixed before execution:
+  - The live MCP registry exposes one `player_figure_eight` tool with enable,
+    speed, and distance inputs
+  - Enabling with speed `512` units/second and distance `1024` units moves the
+    assigned non-proxy player through both positive-X and negative-X lobes
+  - Every sampled position has world Z `0`; X remains within `-1024..1024` and Y
+    remains within `-512..512`, relative to the fixed start center
+  - Across the moving samples, measured horizontal chord speed is within
+    `460.8..563.2` units/second except any interval spanning the tool invocation
+    or stop boundary
+  - Disabling leaves the player within `1` unit of its stopped position for two
+    seconds
+  - No compile error, runtime exception, rejected target, non-finite position,
+    duplicate manager, or invalid configuration occurs
+- Parameters:
+  - Project/source revision: working source hashes recorded with the run
+  - Engine build and hardware/environment: recorded with the run
+  - World/scene: `basic_example`; one local player; initial position `(0,0,0)`
+  - Inputs and order: start play and wait for production `OnLoad`; call
+    `player_figure_eight` with `enabled=true`, `speed=512`, `distance=1024`;
+    sample the player every `0.5` seconds for `14` seconds; call the same tool
+    with `enabled=false`; sample immediately and after `2` seconds; stop play
+  - Operation count: one enable, `29` moving position samples including the
+    immediate sample, one disable, and two stopped position samples
+  - Warmup: initial production load only; player/client count: `1`
+  - Height: fixed world Z `0`; no terrain query, trace, or collision-following
+    behavior
+- Metrics and units: MCP tool count/schema; player X/Y/Z in world units;
+  horizontal displacement and chord speed; stopped-position drift; compiler and
+  runtime diagnostics
+
+#### Run 2026-08-28 12:46 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Source state: initial editor-tool implementation using an automatically
+  discovered static `[EditorEvent.Frame]` callback; superseded after this run
+- Confirmation that scenario parameters were unchanged: yes
+- Raw measurements: tool registration and invocation succeeded; `29` samples
+  over `14` seconds all remained `(0,0,0)`; horizontal speed was `0`
+  units/second for all `28` intervals; stopped drift was `0`
+- Outcome: fail; the newly added static frame callback was not discovered by
+  editor hotload, so the player did not move
+- Notes: The implementation was replaced with explicit registration of one
+  in-memory editor driver. No scenario parameter or pass criterion changed.
+
+#### Run 2026-08-28 12:51 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Source state: explicit editor-driver registration implementation
+- Confirmation that scenario parameters were unchanged: yes
+- Raw measurements: `29` samples obtained through `get_game_object` all reported
+  `(0,0,0)`, but the production `VoxelManager` simultaneously logged boundary
+  crossings through both positive- and negative-X chunks with Z chunk `0`
+- Outcome: incomplete; the scene tool resolved the parallel edit-scene object
+  sharing the runtime object's GUID, so those position samples did not measure
+  the production player
+- Notes: The unchanged scenario was rerun using the existing production
+  `voxel_player_chunk` diagnostic to disambiguate the runtime object.
+
+#### Run 2026-08-28 12:52 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Source state: explicit editor-driver registration implementation
+- Confirmation that scenario parameters were unchanged: yes
+- Raw measurements: the run stopped after its first attempted production
+  position sample because the console read occurred before the diagnostic log
+  was available
+- Outcome: incomplete; no comparable movement metrics were produced
+- Notes: A fixed `30 ms` diagnostic-log read delay was added to the observation
+  procedure only. Movement inputs, sample cadence, duration, and pass criteria
+  remained unchanged.
+
+#### Run 2026-08-28 12:53 EDT
+
+- Executor: Codex (Sol) through the live s&box editor and production game session
+- Project/source state:
+  - `Editor/VoxelMcpTools.cs` SHA-256
+    `42457F5399ED85E29BD3B3158BDD19C5584F168F7D11164A76E3133414D85723`
+  - `Code/Voxels/VoxelManager.cs` SHA-256
+    `409C7BA960059A8C4A1CDB4B4606AAFEFA1AAB7424E4794E2A16100D8057D8AD`
+  - `Assets/scenes/basic_example.scene` SHA-256
+    `7EDDDDE1F31F12E880ED54CFC16DB8CCE0AEF4A4A347F2488954A76E5D88E667`
+- Engine build and environment: `26.08.19`; Windows 11 Pro build 26200;
+  AMD Ryzen 7 9800X3D (8 cores/16 threads); approximately 32 GiB RAM;
+  NVIDIA GeForce RTX 5090 driver 32.0.16.1088; one local client
+- Confirmation that scenario parameters were unchanged: yes
+- Exact execution path: start `basic_example`; wait for production `OnLoad`;
+  invoke `player_figure_eight(enabled=true, speed=512, distance=1024)`; obtain
+  each runtime position through `voxel_player_chunk` every `0.5` seconds for
+  `14` seconds; invoke the same MCP tool with `enabled=false`; sample immediately
+  and after `2` seconds; stop play
+- Raw measurements:
+  - MCP registry: one `player_figure_eight` tool in the `voxels3` toolset with
+    optional boolean `enabled`, number `speed`, and number `distance` inputs
+  - Moving samples: `29`; X minimum `-1022.750`, X maximum `1020.830`; Y minimum
+    `-510.071`, Y maximum `503.535`; Z minimum and maximum both `0`
+  - Horizontal chord speed across `28` intervals: minimum `482.269`, maximum
+    `527.828`, mean `505.433` units/second; intervals outside
+    `460.8..563.2`: `0`
+  - First position `[5.801,5.801,0]`; last moving position
+    `[1006.823,183.640,0]`
+  - Stop position immediately and after two seconds:
+    `[1012.015,154.381,0]`; drift `0` units
+- Build verification: `dotnet build voxels3.slnx --nologo` succeeded in `1.16`
+  seconds with `0` warnings and `0` errors; live s&box compilation succeeded
+  with `0` errors; `git diff --check` passed before final commit checks
+- Outcome: pass
+- Evidence location: live s&box console production position and streaming logs
+  timestamped during the run; exact aggregate measurements are retained here
+- Remaining limitation: this slice intentionally fixes Z at `0` and provides no
+  terrain following, multiplayer automation protocol, or movement report
