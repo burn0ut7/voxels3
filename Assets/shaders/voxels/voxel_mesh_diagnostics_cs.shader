@@ -9,39 +9,44 @@ FEATURES
 
 COMMON
 {
-	// Inspect the canonical active-cell stream without mutating production output.
+	// Re-evaluate one chunk through the canonical SDF/case boundary on demand.
 	#include "system.fxc"
 	#include "shaders/voxels/voxel_sdf.hlsl"
+	#include "shaders/voxels/voxel_regular_cell.hlsl"
+	#include "shaders/voxels/transvoxel_regular_metadata.hlsl"
 }
 
 CS
 {
 	#include "common.fxc"
 
-	StructuredBuffer<uint> DiagnosticActiveCells < Attribute( "DiagnosticActiveCells" ); >;
 	RWStructuredBuffer<uint> MeshStatistics < Attribute( "MeshStatistics" ); >;
 	int3 ChunkCoordinate < Attribute( "ChunkCoordinate" ); >;
 	int CellsPerAxis < Attribute( "CellsPerAxis" ); >;
 	float CellSize < Attribute( "CellSize" ); >;
 	float SurfaceHeight < Attribute( "SurfaceHeight" ); >;
 
-	[numthreads( 64, 1, 1 )]
+	[numthreads( 4, 4, 4 )]
 	void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 	{
-		uint activeCellCount = MeshStatistics[0];
-		if ( dispatchId.x >= activeCellCount )
+		if ( any( dispatchId >= (uint)CellsPerAxis ) )
 		{
 			return;
 		}
 
-		uint activeCell = DiagnosticActiveCells[dispatchId.x];
-		InterlockedAdd( MeshStatistics[1], (activeCell >> 18) & 7 );
-
-		int3 localCell = int3(
-			activeCell & 63,
-			(activeCell >> 6) & 63,
-			(activeCell >> 12) & 63 );
+		int3 localCell = int3( dispatchId );
 		int3 globalCell = ChunkCoordinate * CellsPerAxis + localCell;
+		uint caseIndex = ClassifyVoxelRegularCell( globalCell, CellSize, SurfaceHeight );
+		if ( caseIndex == 0 || caseIndex == 255 )
+		{
+			return;
+		}
+
+		uint cellClass = RegularCellClass[caseIndex];
+		uint triangleCount = RegularCellGeometryCounts[cellClass] & 15;
+		InterlockedAdd( MeshStatistics[0], 1 );
+		InterlockedAdd( MeshStatistics[1], triangleCount );
+
 		float3 worldCellCenter = ((float3)globalCell + 0.5) * CellSize;
 		float3 gradient = SampleVoxelSdfGradient( worldCellCenter, CellSize, SurfaceHeight );
 		if ( any( isnan( gradient ) ) || any( isinf( gradient ) ) || dot( gradient, gradient ) <= 1.0e-12 )

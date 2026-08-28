@@ -72,9 +72,10 @@ pool of same-capacity resource sets. Each resource owns:
 Normal meshing allocates, clears, binds, and writes no statistics buffer. A
 resource inspected through `inspect_gpu_mesh` lazily acquires one three-word
 diagnostic buffer from its own lifetime. The first word receives the append
-counter, while the diagnostic pass accumulates logical triangles and invalid
-gradients into the other two words. Uninspected resources therefore carry no
-diagnostic allocation.
+cell count, while the other two words receive logical triangles and invalid
+gradients. Resource sets that have never serviced an inspection therefore carry
+no diagnostic allocation; a pooled set retains its tiny 12-byte logical buffer
+for later diagnostic reuse.
 
 At 32 cells per axis, each active-cell buffer is 131,072 bytes. The fixed
 production radius contains 1,089 possible surface chunks, for 142,737,408 bytes
@@ -92,9 +93,10 @@ draw depend only on GPU queue ordering, without fences or CPU synchronization.
 
 Normal production never invokes `GetData` or `GetDataAsync` for active-cell
 geometry. The bounded `inspect_gpu_mesh(x,y,z)` editor diagnostic schedules a
-separate compute pass over the actual resident active-cell stream. That pass
-decodes the packed triangle count and samples the center gradient only on
-request; it does not reclassify cells or mutate the append stream. After GPU
+separate compute pass for the resident mesh descriptor. That pass
+uses the same shared SDF and regular-cell classification function as production,
+then samples the center gradient only on request. Its active count is compared
+with the real indirect draw count; it never mutates the append stream. After GPU
 queue ordering makes the results available, the diagnostic may asynchronously
 read the indirect arguments and three-word scalar buffer.
 Scalar and geometry readbacks are counted separately; the geometry count is a
@@ -119,5 +121,12 @@ expose a stable named compute entry rather than being inferred from CPU time.
   a second geometry/data path and violate the authoritative boundary.
 - Counter or geometry readback to determine draw size introduces a GPU/CPU
   round trip. GPU counter copy plus indirect drawing makes it unnecessary.
+- Accumulating triangle and gradient statistics in every production dispatch
+  charged all remeshes for information consumed only by an explicit inspector.
+  The selected lazy pass moves that work and allocation out of normal meshing.
+- Reading the append buffer as a compute SRV was rejected on installed s&box
+  26.08.19 because the counter copy succeeded but the compute pass did not
+  expose appended records. Reclassification remains diagnostic-only and shares
+  the production SDF/case function rather than duplicating that contract.
 - Rebuilding meshes every frame discards their derived-cache value. Resident
   buffers persist until their coordinate unloads or source revision changes.

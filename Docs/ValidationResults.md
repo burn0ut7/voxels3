@@ -2381,3 +2381,63 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: accepted comparable baseline. The normal compute shader still
   performed one logical-triangle atomic and one center-gradient sample per
   active cell, plus invalid-gradient atomics when applicable.
+
+#### Development probes 2026-08-28 - failed, corrected
+
+- The first on-demand probe ran before the new diagnostic shader's generated
+  asset existed and reported `1,024` indirect active cells but `0` triangles.
+  The live console recorded the failed on-demand compile and missing compiled
+  resource at `16:58:19`. Recompiling the source removed the resource error.
+- A second attempt copied the append counter successfully but could not consume
+  the append buffer as a compute SRV in this installed engine path. It reported
+  `1,024` indirect and diagnostic active cells but `0` triangles. This approach
+  was removed rather than retained as a fallback.
+- The accepted diagnostic now shares one regular-cell classification function
+  with production and re-evaluates only the explicitly inspected descriptor.
+  These failed development observations are retained and are not acceptance
+  evidence.
+
+#### Candidate run 2026-08-28 - pass
+
+- Run ID `2e6a7fd6771440c0ad30dab888004818`; revision label
+  `c2704a5+on-demand-mesh-diagnostics-candidate`; exact locked figure eight;
+  duration `121.94006` seconds; `28,948` samples; zero truncated.
+- Frame: average FPS `237.37947`; p95 `5.0998 ms`; p99 `7.3115 ms`; average
+  full-frame GPU `1.1580387 ms`. Relative to the pre-change run, p95 decreased
+  `0.7410 ms`, p99 decreased `0.8179 ms`, average FPS increased `2.66%`, and
+  average GPU increased `0.0001475 ms` (`0.013%`). The GPU delta is effectively
+  flat and is not claimed as a measured stage-level speedup.
+- Memory bytes: process start `4,511,604,736`, end `4,248,846,336`, average
+  `4,332,726,473`, peak `4,511,604,736`; GPU start/end/average/peak
+  `1,365,095,974`; GPU budget `32,945,209,344`. Process memory decreased
+  `262,758,400` bytes and engine-tracked GPU memory remained constant.
+- Streaming/meshing: `33,792` loaded chunks; completion snapshot `2,145`
+  pending chunks; `843,315` integrated; last settle `6.2467 ms`; `25,510` mesh
+  dispatches; `1,024` resident meshes; mesh backlog `0`; `65` pooled;
+  `134,217,728` logical bytes; `0` pool allocations; `25,519` reuses; `0`
+  scalar and geometry readbacks during the performance interval.
+- In this flat workload, removing the normal diagnostic work avoided
+  `26,122,240` logical-triangle atomics and the same number of center-gradient
+  evaluations across the recorded dispatches. Each gradient previously issued
+  six SDF samples, totaling `156,733,440` avoided diagnostic SDF evaluations.
+  Named meshing compute timing remains unavailable in the installed profiler.
+- Correctness probes after queue settlement: `C[0,0,0]`, `C[-1,0,0]`,
+  `C[0,-1,0]`, and `C[-1,-1,0]` each reported `1,024` indirect active cells,
+  `1,024` diagnostic active cells, `2,048` logical triangles, `0` invalid
+  gradients, and `0` overflow. `C[0,0,-1]` was solid and `C[0,0,1]` was air;
+  neither owned a GPU mesh resource. The four surface inspections performed
+  eight scalar readbacks; geometry readbacks remained zero. A fresh `1280x720`
+  game capture showed continuous terrain, consistent lighting, and no visible
+  seam or z-fighting.
+- Both modified shader sources compiled live at `17:07:08`; the diagnostic
+  shader recompiled again at `17:07:15` after its final source update. Final
+  runtime and editor builds passed with `0` warnings and `0` errors. Settled
+  live compiler state reported success with `0` errors and `0` warnings for
+  both project compilers. The only retained console warnings were the documented
+  failed development compile at `16:58:19`; no fresh warning or error followed
+  the successful shader compiles and accepted run. `git diff --check` passed.
+- Outcome: pass. Normal meshing no longer allocates, clears, binds, or writes
+  diagnostic statistics and performs no diagnostic gradient sampling. The
+  bounded inspection path remains available on demand, correctness is
+  unchanged, and every measured acceptance budget passes without a material
+  regression.

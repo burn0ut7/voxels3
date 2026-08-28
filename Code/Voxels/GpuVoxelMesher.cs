@@ -33,6 +33,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private long _poolAllocationCount;
 	private long _poolReuseCount;
 	private long _scalarReadbackCount;
+	private long _updateSequence;
 	private long _renderSequence;
 	private long _submittedRenderSequence;
 
@@ -110,6 +111,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public int ProcessPending( int maximumDispatches )
 	{
+		System.Threading.Interlocked.Increment( ref _updateSequence );
 		AttachToMainCamera();
 		FinalizeInFlight();
 		if ( _inFlight.Count > 0 )
@@ -153,7 +155,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_submittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
 		}
 
-		ProcessInspections( System.Threading.Interlocked.Read( ref _renderSequence ) );
+		ProcessInspections( System.Threading.Interlocked.Read( ref _updateSequence ) );
 		CommitDrawCommands();
 		return processed;
 	}
@@ -265,7 +267,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return $"{chunk.LogId} inspection=scheduled geometryReadbacks=0";
 	}
 
-	private void ProcessInspections( long submittedRenderSequence )
+	private void ProcessInspections( long submittedUpdateSequence )
 	{
 		while ( true )
 		{
@@ -299,7 +301,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 			var statistics = resource.EnsureStatistics();
 			var descriptor = resource.Descriptor;
-			_meshCommands.Attributes.Set( "DiagnosticActiveCells", resource.ActiveCells );
 			_meshCommands.Attributes.Set( "MeshStatistics", statistics );
 			_meshCommands.Attributes.Set( "ChunkCoordinate", new Vector3(
 				descriptor.ChunkCoordinate.x,
@@ -309,8 +310,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_meshCommands.Attributes.Set( "CellSize", descriptor.CellSize );
 			_meshCommands.Attributes.Set( "SurfaceHeight", descriptor.SurfaceHeight );
 			_meshCommands.Clear( statistics, 0 );
-			_meshCommands.CopyStructureCount( resource.ActiveCells, statistics, 0 );
-			_meshCommands.DispatchCompute( _diagnosticShader, _capacity, 1, 1 );
+			_meshCommands.DispatchCompute(
+				_diagnosticShader,
+				descriptor.CellsPerAxis,
+				descriptor.CellsPerAxis,
+				descriptor.CellsPerAxis );
 
 			lock ( _inspectionLock )
 			{
@@ -318,7 +322,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					request,
 					resource,
 					statistics,
-					submittedRenderSequence ) );
+					submittedUpdateSequence ) );
 			}
 		}
 	}
@@ -331,7 +335,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			lock ( _inspectionLock )
 			{
 				if ( !_readbackQueue.TryPeek( out readback ) ||
-					System.Threading.Interlocked.Read( ref _renderSequence ) <= readback.SubmittedRenderSequence + 1 )
+					System.Threading.Interlocked.Read( ref _updateSequence ) <= readback.SubmittedUpdateSequence )
 				{
 					return;
 				}
@@ -340,7 +344,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			}
 
 			var argumentsCompletion = new TaskCompletionSource<GpuBuffer.IndirectDrawArguments>( TaskCreationOptions.RunContinuationsAsynchronously );
-			var statisticsCompletion = new TaskCompletionSource<(uint Triangles, uint InvalidGradients)>( TaskCreationOptions.RunContinuationsAsynchronously );
+			var statisticsCompletion = new TaskCompletionSource<(uint ActiveCells, uint Triangles, uint InvalidGradients)>( TaskCreationOptions.RunContinuationsAsynchronously );
 			_scalarReadbackCount += 2;
 			readback.Resource.IndirectArguments.GetDataAsync<GpuBuffer.IndirectDrawArguments>( data =>
 			{
@@ -348,7 +352,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			} );
 			readback.Statistics.GetDataAsync<uint>( data =>
 			{
-				statisticsCompletion.TrySetResult( data.Length >= 3 ? (data[1], data[2]) : default );
+				statisticsCompletion.TrySetResult( data.Length >= 3 ? (data[0], data[1], data[2]) : default );
 			} );
 			CompleteInspectionAsync( readback.Inspection, argumentsCompletion.Task, statisticsCompletion.Task );
 		}
@@ -357,13 +361,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private async void CompleteInspectionAsync(
 		InspectionRequest request,
 		Task<GpuBuffer.IndirectDrawArguments> argumentsTask,
-		Task<(uint Triangles, uint InvalidGradients)> statisticsTask )
+		Task<(uint ActiveCells, uint Triangles, uint InvalidGradients)> statisticsTask )
 	{
 		var arguments = await argumentsTask;
 		var statistics = await statisticsTask;
 		StoreInspection( request,
 			$"{request.LogId} classification=surface gpuResource=true activeCells={arguments.InstanceCount} " +
-			$"logicalTriangles={statistics.Triangles} invalidGradients={statistics.InvalidGradients} overflow=0 " +
+			$"diagnosticActiveCells={statistics.ActiveCells} logicalTriangles={statistics.Triangles} " +
+			$"invalidGradients={statistics.InvalidGradients} overflow=0 " +
 			$"capacityRecords={_capacity} capacityBytes={_capacity * sizeof( uint )} " +
 			$"scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0" );
 	}
@@ -477,7 +482,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		InspectionRequest Inspection,
 		MeshResource Resource,
 		GpuBuffer<uint> Statistics,
-		long SubmittedRenderSequence );
+		long SubmittedUpdateSequence );
 	private readonly record struct InFlightMesh( GpuSdfDescriptor Descriptor, MeshResource Resource );
 
 	private sealed class ReadbackSceneObject : SceneCustomObject

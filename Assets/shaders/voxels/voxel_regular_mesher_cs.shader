@@ -12,6 +12,7 @@ COMMON
 	// Classify LOD0 cells into the compact GPU-resident active stream.
 	#include "system.fxc"
 	#include "shaders/voxels/voxel_sdf.hlsl"
+	#include "shaders/voxels/voxel_regular_cell.hlsl"
 	#include "shaders/voxels/transvoxel_regular_metadata.hlsl"
 }
 
@@ -36,19 +37,7 @@ CS
 
 		int3 localCell = int3( dispatchId );
 		int3 globalCell = ChunkCoordinate * CellsPerAxis + localCell;
-		uint caseIndex = 0;
-		float cornerDensity[8];
-		for ( uint corner = 0; corner < 8; corner++ )
-		{
-			cornerDensity[corner] = SampleVoxelSdf(
-				globalCell + VoxelCornerOffset( corner ),
-				CellSize,
-				SurfaceHeight );
-			if ( cornerDensity[corner] <= 0.0 )
-			{
-				caseIndex |= 1u << corner;
-			}
-		}
+		uint caseIndex = ClassifyVoxelRegularCell( globalCell, CellSize, SurfaceHeight );
 
 		if ( caseIndex == 0 || caseIndex == 255 )
 		{
