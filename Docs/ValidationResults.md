@@ -2287,3 +2287,57 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: pass. Geometry and GPU ownership are unchanged, correctness is
   preserved, all fixed budgets pass, and full-frame GPU time improved without a
   material regression in any measured acceptance dimension.
+
+### VOXEL-LOGGING-001/v1 - Opt-in verbose runtime logging
+
+- Definition recorded before the candidate run. Use the unchanged
+  `PERFORMANCE-OVERVIEW-001/v3` production figure eight at speed `2500`, distance
+  `50000`, fixed Z `0`, one loop, and the existing `GPU-VOXEL-MESH-001/v1`
+  world parameters on engine `26.08.19`.
+- Baseline: run `7e402734e60042bab79f9743065e784a` from revision
+  `422a4f8+active-cell-pack-steady`, with unconditional stream begin/completion
+  logging. The live console separately demonstrated at least `20` begin and `20`
+  large completion records within four seconds of production movement.
+- Candidate behavior: `VerboseLogging=false` by default; normal movement emits
+  zero stream begin, completion, or stale-detail records and performs none of
+  their string formatting, process-memory query, or density/material probes.
+  Enabling the setting in the inspector or through
+  `voxel_verbose_logging true|false` restores those details. Warnings, errors,
+  explicit diagnostics, and the sparse performance begin/save records remain
+  available.
+- Pass criteria: zero routine stream records with verbose logging disabled;
+  verbose mode restores begin/completion records; performance results still save;
+  p95 remains at most `16.67 ms`, p99 at most `25 ms`; mesh backlog, pooling,
+  memory, readbacks, builds, live compilation, console errors, and
+  `git diff --check` retain the existing production acceptance requirements.
+
+#### Candidate run 2026-08-28 - pass
+
+- Run ID `d72e003452f2483b8299919c65c05d73`; revision
+  `87a0f06+quiet-logging-candidate`; exact locked figure eight from `(0,0,0)`;
+  duration `121.93505` seconds; `28,846` samples; zero truncated samples.
+- Frame: average FPS `236.54837`; p95 `5.1717 ms`; p99 `7.3602 ms`; average
+  full-frame GPU `1.1492101 ms`. Relative to the logging-on baseline, p95
+  decreased `1.094 ms`, p99 decreased `9.02 ms`, average GPU decreased
+  `0.0345663 ms` (`2.92%`), and average FPS increased `7.64%`.
+- Memory bytes: process start `3,451,805,696`, end `3,131,015,168`, average
+  `3,289,091,290`, peak `3,462,180,864`; GPU start/end/average/peak
+  `1,365,095,974`; GPU budget `32,945,209,344`. Process memory decreased across
+  the loop and GPU memory remained constant.
+- Streaming/meshing: `33,792` loaded chunks and the established completion
+  snapshot of `2,145` pending chunks; `843,216` integrated; last settle
+  `9.4243 ms`; `25,509` mesh dispatches; `1,024` resident meshes; mesh backlog
+  `0`; `65` pooled; `134,217,728` logical bytes; `0` pool allocations; `25,521`
+  reuses; `0` scalar and geometry readbacks.
+- Console interval `16:40:43` through `16:42:45` contained the sparse
+  performance begin/save records and exactly `0` `stream.begin`, `0`
+  `stream.complete`, and `0` `stream.stale` records. A separate live boundary
+  move with verbose logging enabled at `16:40:08` emitted one begin/completion
+  pair, proving the troubleshooting path remains available; it was switched off
+  before measurement.
+- Runtime and editor builds passed with `0` warnings and `0` errors. Live
+  compilation succeeded with `0` errors, fresh runtime console errors were `0`,
+  and `git diff --check` passed.
+- Outcome: pass. Routine production logging and its diagnostic-only work are
+  absent by default, opt-in detail remains bounded and functional, the structured
+  performance result still saves, and every fixed acceptance budget passes.

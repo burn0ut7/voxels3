@@ -173,8 +173,14 @@ before that policy changes.
   memory; neither is memory attributed to chunks or one manager.
 - Logs use the stable machine-searchable field `chunk=C[x,y,z]` plus the
   readable chunk name.
-- Per-chunk load/unload logging is intentionally absent. Stream completion and
-  invalid configuration remain bounded summary/warning events.
+- Per-chunk load/unload logging is intentionally absent. Routine startup,
+  streaming begin/completion, and stale-result detail is available only through
+  the inspector's opt-in `Verbose Logging` setting, which defaults off and
+  avoids constructing diagnostic strings and probes in normal production.
+  Warnings, errors, explicit diagnostic-command results, and performance-test
+  begin/save records remain unconditional because they are sparse and actionable.
+- `voxel_verbose_logging true|false` changes the same setting on the live
+  manager without requiring a scene restart.
 - The `voxel_stream_origin x y z` console command moves the real production
   streaming target to an exact world position for deterministic troubleshooting.
   It refuses to choose silently when more than one active manager exists.

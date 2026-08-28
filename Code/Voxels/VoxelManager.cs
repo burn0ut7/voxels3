@@ -153,6 +153,9 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Performance Test" )]
 	public string PerformanceRevision { get; set; } = InspectorPerformanceRevision;
 
+	[Property, Category( "Diagnostics" )]
+	public bool VerboseLogging { get; set; } = false;
+
 	[Property, ReadOnly, Category( "Performance Test" )]
 	public string PerformanceResultsLocation { get; private set; } = PerformanceResultsPath;
 
@@ -239,9 +242,12 @@ public sealed class VoxelManager : Component
 
 		_initialLoadCompleted = _loadedChunks.Count == _desiredChunks.Count &&
 			_pendingChunks.Count == 0 && _gpuMesher.PendingCount == 0;
-		Log.Info(
-			$"[VoxelWorld] load.complete ready={_initialLoadCompleted} loaded={_loadedChunks.Count} " +
-			$"pending={_pendingChunks.Count}" );
+		if ( VerboseLogging )
+		{
+			Log.Info(
+				$"[VoxelWorld] load.complete ready={_initialLoadCompleted} loaded={_loadedChunks.Count} " +
+				$"pending={_pendingChunks.Count}" );
+		}
 	}
 
 	protected override void OnStart()
@@ -384,7 +390,10 @@ public sealed class VoxelManager : Component
 				FigureEightLoopCount,
 				task,
 				revision );
-			Log.Info( $"[VoxelWorld] performance.test {result}" );
+			if ( VerboseLogging )
+			{
+				Log.Info( $"[VoxelWorld] performance.test {result}" );
+			}
 		}
 		catch ( Exception exception )
 		{
@@ -648,6 +657,18 @@ public sealed class VoxelManager : Component
 		Log.Info(
 			$"[VoxelWorld] debug.origin.applied position=[{x},{y},{z}] " +
 			$"target=\"{manager.ActiveStreamingTarget.Name}\"" );
+	}
+
+	[ConCmd( "voxel_verbose_logging" )]
+	public static void SetVerboseLoggingCommand( bool enabled )
+	{
+		if ( !TryGetActiveManager( "logging.verbose", out var manager ) )
+		{
+			return;
+		}
+
+		manager.VerboseLogging = enabled;
+		Log.Info( $"[VoxelWorld] logging.verbose enabled={enabled}" );
 	}
 
 	private static bool TryGetActiveManager( string operation, out VoxelManager manager )
@@ -983,7 +1004,10 @@ public sealed class VoxelManager : Component
 		if ( StreamingTarget is not null )
 		{
 			_resolvedStreamingTarget = StreamingTarget;
-			Log.Info( $"[VoxelWorld] target.resolve mode=assigned name=\"{StreamingTarget.Name}\"" );
+			if ( VerboseLogging )
+			{
+				Log.Info( $"[VoxelWorld] target.resolve mode=assigned name=\"{StreamingTarget.Name}\"" );
+			}
 			return;
 		}
 
@@ -1008,9 +1032,12 @@ public sealed class VoxelManager : Component
 		}
 
 		_resolvedStreamingTarget = localPlayer ?? GameObject;
-		Log.Info(
-			$"[VoxelWorld] target.resolve mode={(localPlayer is null ? "manager-fallback" : "local-player")} " +
-			$"name=\"{_resolvedStreamingTarget.Name}\"" );
+		if ( VerboseLogging )
+		{
+			Log.Info(
+				$"[VoxelWorld] target.resolve mode={(localPlayer is null ? "manager-fallback" : "local-player")} " +
+				$"name=\"{_resolvedStreamingTarget.Name}\"" );
+		}
 	}
 
 	private bool TryValidateConfiguration( out string error )
@@ -1171,10 +1198,13 @@ public sealed class VoxelManager : Component
 		_streamStartedTimestamp = Stopwatch.GetTimestamp();
 		_streamInProgress = true;
 
-		Log.Info(
-			$"[VoxelWorld] stream.begin center=C[{center.x},{center.y},{center.z}] reason=\"{reason}\" " +
-			$"loadRadius={LoadRadius} retained={_loadedChunks.Count} " +
-			$"unloaded={unloadedCount} queued={_pendingChunks.Count} desired={_desiredChunks.Count}" );
+		if ( VerboseLogging )
+		{
+			Log.Info(
+				$"[VoxelWorld] stream.begin center=C[{center.x},{center.y},{center.z}] reason=\"{reason}\" " +
+				$"loadRadius={LoadRadius} retained={_loadedChunks.Count} " +
+				$"unloaded={unloadedCount} queued={_pendingChunks.Count} desired={_desiredChunks.Count}" );
+		}
 		RefreshReadableStatus();
 
 		if ( _pendingChunks.Count == 0 )
@@ -1260,7 +1290,7 @@ public sealed class VoxelManager : Component
 			if ( cancellationToken.IsCancellationRequested || revision != _streamRevision )
 			{
 				_staleDiscardedThisStream += batch.Chunks.Count;
-				if ( batch.Chunks.Count > 0 )
+				if ( VerboseLogging && batch.Chunks.Count > 0 )
 				{
 					Log.Info(
 						$"[VoxelWorld] stream.stale revision={revision} currentRevision={_streamRevision} " +
@@ -1367,42 +1397,45 @@ public sealed class VoxelManager : Component
 		LastGenerationChunksPerSecond = LastStreamGenerationMilliseconds > 0f
 			? _generatedThisStream * 1000f / LastStreamGenerationMilliseconds
 			: 0f;
-		var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
 		LastStreamSummary =
 			$"Loaded {_loadedChunks.Count}; retained {_retainedThisStream}; unloaded {_unloadedThisStream}; " +
 			$"generated {_generatedThisStream}; stale {_staleDiscardedThisStream}; " +
 			$"{LastEffectiveChunksPerSecond:0.0} chunks/sec effective; " +
 			$"{LastGenerationChunksPerSecond:0.0} chunks/sec generation";
-		var probeChunkId = "missing";
-		var surfaceProbeDensity = float.NaN;
-		var oneCellUpProbeDensity = float.NaN;
-		var surfaceProbeMaterialId = byte.MaxValue;
-		var oneCellUpProbeMaterialId = byte.MaxValue;
-		if ( _loadedChunks.TryGetValue( _streamingCenterCoordinate, out var probeChunk ) )
+		if ( VerboseLogging )
 		{
-			probeChunkId = probeChunk.LogId;
-			probeChunk.TryGetSample( Vector3Int.Zero, out surfaceProbeDensity, out surfaceProbeMaterialId );
-			probeChunk.TryGetSample( Vector3Int.OneZ, out oneCellUpProbeDensity, out oneCellUpProbeMaterialId );
-		}
+			var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
+			var probeChunkId = "missing";
+			var surfaceProbeDensity = float.NaN;
+			var oneCellUpProbeDensity = float.NaN;
+			var surfaceProbeMaterialId = byte.MaxValue;
+			var oneCellUpProbeMaterialId = byte.MaxValue;
+			if ( _loadedChunks.TryGetValue( _streamingCenterCoordinate, out var probeChunk ) )
+			{
+				probeChunkId = probeChunk.LogId;
+				probeChunk.TryGetSample( Vector3Int.Zero, out surfaceProbeDensity, out surfaceProbeMaterialId );
+				probeChunk.TryGetSample( Vector3Int.OneZ, out oneCellUpProbeDensity, out oneCellUpProbeMaterialId );
+			}
 
-		Log.Info(
-			$"[VoxelWorld] stream.complete center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " +
-			$"rangeMin=C[{_streamingCenterCoordinate.x - LoadRadius},{_streamingCenterCoordinate.y - LoadRadius},{_streamingCenterCoordinate.z - LoadRadius}] " +
-			$"rangeMax=C[{_streamingCenterCoordinate.x + LoadRadius},{_streamingCenterCoordinate.y + LoadRadius},{_streamingCenterCoordinate.z + LoadRadius}] " +
-			$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} retained={_retainedThisStream} " +
-			$"unloaded={_unloadedThisStream} generated={_generatedThisStream} staleDiscarded={_staleDiscardedThisStream} " +
-			$"settleMs={LastStreamSettleMilliseconds:0.###} workerMs={LastBackgroundWorkerMilliseconds:0.###} " +
-			$"generationMs={LastStreamGenerationMilliseconds:0.###} integrationMs={LastStreamIntegrationMilliseconds:0.###} " +
-			$"slowestIntegrationFrameMs={SlowestIntegrationFrameMilliseconds:0.###} " +
-			$"maxObservedFrameMs={MaximumObservedFrameMilliseconds:0.###} " +
-			$"effectiveChunksPerSecond={LastEffectiveChunksPerSecond:0.###} " +
-			$"generationChunksPerSecond={LastGenerationChunksPerSecond:0.###} " +
-			$"processMemoryBytes={processMemoryBytes} " +
-			$"slowestChunkMs={SlowestChunkGenerationMilliseconds:0.###} " +
-			$"probeChunk={probeChunkId} probeCell0=L[0,0,0] probeDensity0={surfaceProbeDensity} " +
-			$"probeMaterial0=\"{VoxelChunk.GetMaterialName( surfaceProbeMaterialId )}\" probeMaterialId0={surfaceProbeMaterialId} " +
-			$"probeCellUp=L[0,0,1] probeDensityUp={oneCellUpProbeDensity} " +
-			$"probeMaterialUp=\"{VoxelChunk.GetMaterialName( oneCellUpProbeMaterialId )}\" probeMaterialIdUp={oneCellUpProbeMaterialId}" );
+			Log.Info(
+				$"[VoxelWorld] stream.complete center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " +
+				$"rangeMin=C[{_streamingCenterCoordinate.x - LoadRadius},{_streamingCenterCoordinate.y - LoadRadius},{_streamingCenterCoordinate.z - LoadRadius}] " +
+				$"rangeMax=C[{_streamingCenterCoordinate.x + LoadRadius},{_streamingCenterCoordinate.y + LoadRadius},{_streamingCenterCoordinate.z + LoadRadius}] " +
+				$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} retained={_retainedThisStream} " +
+				$"unloaded={_unloadedThisStream} generated={_generatedThisStream} staleDiscarded={_staleDiscardedThisStream} " +
+				$"settleMs={LastStreamSettleMilliseconds:0.###} workerMs={LastBackgroundWorkerMilliseconds:0.###} " +
+				$"generationMs={LastStreamGenerationMilliseconds:0.###} integrationMs={LastStreamIntegrationMilliseconds:0.###} " +
+				$"slowestIntegrationFrameMs={SlowestIntegrationFrameMilliseconds:0.###} " +
+				$"maxObservedFrameMs={MaximumObservedFrameMilliseconds:0.###} " +
+				$"effectiveChunksPerSecond={LastEffectiveChunksPerSecond:0.###} " +
+				$"generationChunksPerSecond={LastGenerationChunksPerSecond:0.###} " +
+				$"processMemoryBytes={processMemoryBytes} " +
+				$"slowestChunkMs={SlowestChunkGenerationMilliseconds:0.###} " +
+				$"probeChunk={probeChunkId} probeCell0=L[0,0,0] probeDensity0={surfaceProbeDensity} " +
+				$"probeMaterial0=\"{VoxelChunk.GetMaterialName( surfaceProbeMaterialId )}\" probeMaterialId0={surfaceProbeMaterialId} " +
+				$"probeCellUp=L[0,0,1] probeDensityUp={oneCellUpProbeDensity} " +
+				$"probeMaterialUp=\"{VoxelChunk.GetMaterialName( oneCellUpProbeMaterialId )}\" probeMaterialIdUp={oneCellUpProbeMaterialId}" );
+		}
 	}
 
 	private void RefreshReadableStatus()
