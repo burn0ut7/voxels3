@@ -42,20 +42,23 @@ VS
 	PixelInput MainVs( uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID )
 	{
 		uint activeCell = ActiveCells[instanceId];
-		uint linearCellIndex = activeCell & 0x3FFFF;
+		uint triangleCount = (activeCell >> 18) & 7;
+		if ( vertexId >= triangleCount * 3 )
+		{
+			PixelInput paddedOutput = (PixelInput)0;
+			paddedOutput.vPositionPs = float4( 2.0, 2.0, 2.0, 1.0 );
+			paddedOutput.vNormalWs = float3( 0.0, 0.0, 1.0 );
+			return paddedOutput;
+		}
+
 		uint caseIndex = activeCell >> 24;
-		uint cellsSquared = CellsPerAxis * CellsPerAxis;
 		int3 localCell = int3(
-			linearCellIndex % CellsPerAxis,
-			(linearCellIndex / CellsPerAxis) % CellsPerAxis,
-			linearCellIndex / cellsSquared );
+			activeCell & 63,
+			(activeCell >> 6) & 63,
+			(activeCell >> 12) & 63 );
 
 		uint cellClass = RegularCellClass[caseIndex];
-		uint geometryCounts = RegularCellGeometryCounts[cellClass];
-		uint triangleVertexCount = (geometryCounts & 15) * 3;
-		uint topologyVertex = vertexId < triangleVertexCount
-			? RegularCellVertexIndices[cellClass * 15 + vertexId]
-			: RegularCellVertexIndices[cellClass * 15];
+		uint topologyVertex = RegularCellVertexIndices[cellClass * 15 + vertexId];
 		uint edgeData = RegularVertexData[caseIndex * 12 + topologyVertex] & 255;
 		uint corner0 = edgeData >> 4;
 		uint corner1 = edgeData & 15;

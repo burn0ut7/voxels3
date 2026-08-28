@@ -2202,3 +2202,88 @@ Record an approved extraordinary change here before adding the new version:
   memory, streaming availability, backlog settlement, pooling, and zero geometry
   readback. Named compute timing and direct allocation-byte attribution were not
   available from the installed public diagnostics and are explicitly unverified.
+
+### GPU-ACTIVE-CELL-PACK-001/v1 - Packed metadata vertex early-out
+
+- Definition: optimize the production `GPU-VOXEL-MESH-001/v1` path without
+  changing its fixed world, geometry, buffer capacity, or indirect draw shape.
+  Active-cell records pack six-bit local X/Y/Z, a three-bit triangle count, and
+  the existing eight-bit case index. Padded vertices must exit before topology,
+  SDF interpolation, and gradient work while preserving rendered output.
+- Correctness workload: unchanged `GPU-VOXEL-MESH-001/v1` scene and probes at
+  `32` cells/axis, cell size `16`, radius `16`, surface height `0`, LOD0, normal
+  step `8`, and at most `8` dispatches/update. Performance workload: unchanged
+  `PERFORMANCE-OVERVIEW-001/v3`, one local player from `(0,0,0)`, speed `2500`,
+  distance `50000`, fixed Z `0`, one loop, per-update sampling, nearest-rank
+  percentiles, and engine build `26.08.19`.
+- Pass criteria: every fixed mesh probe retains its canonical counts and finite
+  gradients; solid/air classification, boundaries, lighting, and culling remain
+  correct; p95 remains at most `16.67 ms`, p99 at most `25 ms`; backlog returns
+  to zero; pool allocations and geometry readbacks remain zero; logical voxel
+  buffers remain below `256 MiB`; consecutive runs show no unbounded memory
+  growth; builds, shader compilation, live compiler state, console errors, and
+  `git diff --check` pass.
+
+#### Pre-change run 2026-08-28 - pass
+
+- Run ID `6a925eb2c58c4e4892c11cb093181992`; revision
+  `422a4f8-pre-active-cell-pack`; duration `121.93478` seconds; `25,072` samples;
+  zero truncated samples.
+- Frame: average FPS `205.60045`; p95 `13.8122 ms`; p99 `17.3015 ms`; average
+  full-frame GPU `1.1994879 ms`.
+- Memory bytes: process start `2,441,359,360`, end `2,443,816,960`, average
+  `2,539,527,654`, peak `2,630,955,008`; GPU start/end/average/peak
+  `1,365,095,974`; GPU budget `32,945,209,344`.
+- Meshing: `25,462` dispatches; `1,024` resident; `0` pending; `65` pooled;
+  `134,217,728` logical bytes; `0` pool allocations; `25,470` reuses; `0`
+  scalar and geometry readbacks. Named meshing GPU timing and direct allocated
+  bytes remained unavailable from the installed public diagnostics.
+
+#### Candidate and steady-state runs 2026-08-28 - pass
+
+- First candidate run ID `e3d6dd8e94d24a199ed8a5ccdcb7d24d`; revision
+  `422a4f8+active-cell-pack-candidate`; duration `121.934525` seconds; `28,329`
+  samples; zero truncated; average FPS `232.30719`; p95 `5.2992 ms`; p99
+  `8.8741 ms`; average GPU `1.1678941 ms`.
+- First-run memory bytes: process start `2,817,224,704`, end `2,847,035,392`,
+  average `2,881,167,057`, peak `3,011,670,016`; GPU constant at
+  `1,369,096,198`. This run includes post-shader warmup and is retained rather
+  than used alone for steady-memory acceptance.
+- Steady run ID `7e402734e60042bab79f9743065e784a`; revision
+  `422a4f8+active-cell-pack-steady`; duration `121.935745` seconds; `26,797`
+  samples; zero truncated; average FPS `219.74837`; p95 `6.2657 ms`; p99
+  `16.3802 ms`; average GPU `1.1837764 ms`.
+- Steady memory bytes: process start `2,820,841,472`, end `2,830,811,136`,
+  average `2,927,531,561`, peak `3,020,550,144`; GPU start `1,369,096,198`, end
+  `1,365,095,974`, average `1,367,003,385`, peak `1,369,096,198`. The steady
+  final process value was `16,224,256` bytes below the preceding run's final
+  value, and GPU memory decreased, demonstrating no continuing loop-over-loop
+  growth.
+- Steady meshing: `25,485` dispatches; `1,024` resident; `0` pending; `65`
+  pooled; `134,217,728` logical bytes; `0` pool allocations; `25,491` reuses;
+  `0` scalar and geometry readbacks. Streaming retained `33,792` loaded chunks
+  with the established completion-snapshot `2,145` pending chunks; the mesh
+  backlog returned to zero.
+- Relative to baseline, steady average GPU time decreased `0.0157115 ms`
+  (`1.31%`), while p95 decreased `7.5465 ms` and p99 decreased `0.9213 ms`.
+  Named vertex-stage timing remains unavailable, so only the full-frame GPU
+  change is claimed as measured benefit.
+- Correctness probes after queue settlement: `C[0,0,0]`, `C[-1,0,0]`,
+  `C[0,-1,0]`, and `C[-1,-1,0]` each reported `1,024` active cells, `2,048`
+  logical triangles, `0` invalid gradients, and `0` overflow. `C[0,0,-1]` was
+  solid and `C[0,0,1]` was air; neither owned a GPU mesh resource. Eight bounded
+  scalar readbacks performed these inspections; geometry readbacks remained
+  zero. A fresh `1280x720` production camera capture showed continuous terrain,
+  consistent lighting, and correct culling without seams or z-fighting.
+- The flat field emits two triangles per active cell, so `9` of each fixed `15`
+  vertex slots (`60%`) now take the constant clipped early-out. Across `1,024`
+  resident surface chunks, `9,437,184` padded vertex invocations per rendered
+  frame avoid topology lookup, coordinate division, SDF interpolation, and six
+  central-gradient samples.
+- Runtime and editor .NET builds passed with `0` warnings and `0` errors. Both
+  shader sources compiled on demand and executed in the live production path;
+  fresh live compiler state reported success with `0` errors, fresh console
+  errors were `0`, and `git diff --check` passed.
+- Outcome: pass. Geometry and GPU ownership are unchanged, correctness is
+  preserved, all fixed budgets pass, and full-frame GPU time improved without a
+  material regression in any measured acceptance dimension.

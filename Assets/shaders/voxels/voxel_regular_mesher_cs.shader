@@ -56,14 +56,16 @@ CS
 			return;
 		}
 
-		uint linearCellIndex = dispatchId.x +
-			dispatchId.y * CellsPerAxis +
-			dispatchId.z * CellsPerAxis * CellsPerAxis;
-		ActiveCells.Append( linearCellIndex | (caseIndex << 24) );
-
 		uint cellClass = RegularCellClass[caseIndex];
 		uint geometryCounts = RegularCellGeometryCounts[cellClass];
-		InterlockedAdd( MeshStatistics[0], geometryCounts & 15 );
+		uint triangleCount = geometryCounts & 15;
+		uint packedCell = dispatchId.x |
+			(dispatchId.y << 6) |
+			(dispatchId.z << 12) |
+			(triangleCount << 18) |
+			(caseIndex << 24);
+		ActiveCells.Append( packedCell );
+		InterlockedAdd( MeshStatistics[0], triangleCount );
 		float3 worldCellCenter = ((float3)globalCell + 0.5) * CellSize;
 		float3 gradient = SampleVoxelSdfGradient( worldCellCenter, CellSize, SurfaceHeight );
 		if ( any( isnan( gradient ) ) || any( isinf( gradient ) ) || dot( gradient, gradient ) <= 1.0e-12 )

@@ -31,16 +31,21 @@ preserves the authoritative negative-solid, positive-air, zero-solid convention
 and makes samples on adjacent chunk faces bit-identical.
 
 One compute thread classifies one regular cell. Cases 0 and 255 emit nothing.
-Every other cell appends one `uint`: bits 0 through 17 store the local linear
-cell index and bits 24 through 31 store the case index. Official topology data
-supplies logical triangle counts and draw-time vertex expansion; no CPU mesher,
-CPU SDF array, geometry upload, or geometry readback exists.
+Every other cell appends one `uint`: bits 0 through 5 store local X, bits 6
+through 11 store local Y, bits 12 through 17 store local Z, bits 18 through 20
+store the triangle count, bits 21 through 23 are unused, and bits 24 through 31
+store the case index. Six bits per coordinate preserve the supported maximum of
+64 cells per axis. Official topology data supplies logical triangle counts and
+draw-time vertex expansion; no CPU mesher, CPU SDF array, geometry upload, or
+geometry readback exists.
 
 The append counter is copied by GPU queue order into
 `IndirectDrawArguments.InstanceCount`. `VertexCount` is fixed at 15 so each
-active-cell instance can represent five triangles. Slots beyond the topology's
-triangle count repeat one vertex and therefore form degenerate triangles. The
-vertex shader interpolates chunk-local positions with
+active-cell instance can represent five triangles. Slots beyond the packed
+triangle count return the same constant out-of-clip position before topology
+lookup, coordinate arithmetic, SDF sampling, interpolation, or gradient work;
+each padded triangle is therefore degenerate and clipped. The vertex shader
+decodes local XYZ directly and interpolates chunk-local positions with
 `saturate(d0 / (d0 - d1))`. It evaluates central-difference gradients at half a
 cell in world space, normalizes them from solid toward air, and adds the chunk
 origin only for rendering.
