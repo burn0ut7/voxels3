@@ -11,7 +11,8 @@ public sealed class VoxelManager : Component
 	private const float MainThreadIntegrationBudgetMilliseconds = 0.5f;
 	private const float PerformanceWindowSeconds = 10f;
 	private const float MemorySampleIntervalSeconds = 1f;
-	private const int MaximumPerformanceFrameSamples = 32768;
+	private const int MaximumPerformanceFrameSamples = 524288;
+	private const int MaximumFigureEightLoopCount = 8;
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
@@ -50,6 +51,14 @@ public sealed class VoxelManager : Component
 	private GameObject _playerFigureEightTarget;
 	private Vector2 _playerFigureEightCenter;
 	private float _playerFigureEightParameter;
+	private bool _playerFigureEightTestRunning;
+	private bool _playerFigureEightTestCompletionReady;
+	private int _playerFigureEightCompletedLoops;
+	private int _playerFigureEightTargetLoops;
+	private float _playerFigureEightTestSpeed;
+	private float _playerFigureEightTestDistance;
+	private string _playerFigureEightTestTask;
+	private string _playerFigureEightTestRevision;
 	private float _performanceWindowElapsedSeconds;
 	private float _memorySampleElapsedSeconds;
 	private int _performanceObservedFrameCount;
@@ -80,6 +89,10 @@ public sealed class VoxelManager : Component
 	private ulong _lastGpuMemoryBudgetBytes;
 	private int _lastPerformanceChunksIntegrated;
 	private float _lastPerformanceChunksPerSecond;
+	private bool _lastPerformanceWasFigureEightTest;
+	private int _lastPerformanceCompletedLoops;
+	private float _lastPerformanceTestSpeed;
+	private float _lastPerformanceTestDistance;
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 
 	[Property, Category( "Chunk Configuration" ), Range( 4, 64 )]
@@ -111,6 +124,9 @@ public sealed class VoxelManager : Component
 
 	[Property, Category( "Smoke Test" ), Range( 1f, 8192f )]
 	public float FigureEightDistance { get; set; } = 1024f;
+
+	[Property, Category( "Smoke Test" ), Range( 1, MaximumFigureEightLoopCount )]
+	public int FigureEightLoopCount { get; set; } = 1;
 
 	[Property, Category( "Performance Logging" )]
 	public string PerformanceTask { get; set; } = "unassigned";
@@ -254,6 +270,7 @@ public sealed class VoxelManager : Component
 				RefreshReadableStatus();
 			}
 
+			TryCompletePlayerFigureEightTest();
 			DrawDebugOverlay();
 			return;
 		}
@@ -291,6 +308,7 @@ public sealed class VoxelManager : Component
 		{
 			RefreshPlayerChunkStatus();
 		}
+		TryCompletePlayerFigureEightTest();
 		DrawDebugOverlay();
 	}
 
@@ -298,6 +316,8 @@ public sealed class VoxelManager : Component
 	{
 		_playerFigureEightEnabled = false;
 		_playerFigureEightTarget = null;
+		_playerFigureEightTestRunning = false;
+		_playerFigureEightTestCompletionReady = false;
 		_generationCancellation?.Cancel();
 	}
 
@@ -321,10 +341,11 @@ public sealed class VoxelManager : Component
 	{
 		try
 		{
-			var result = ConfigurePlayerFigureEight(
-				!_playerFigureEightEnabled,
+			var result = ConfigurePlayerFigureEightTest(
+				!_playerFigureEightTestRunning,
 				FigureEightSpeed,
-				FigureEightDistance );
+				FigureEightDistance,
+				FigureEightLoopCount );
 			Log.Info( $"[VoxelWorld] player.figure_eight {result}" );
 		}
 		catch ( Exception exception )
@@ -385,6 +406,63 @@ public sealed class VoxelManager : Component
 		return $"started speed={speed} distance={distance}";
 	}
 
+	public string ConfigurePlayerFigureEightTest( bool enabled, float speed, float distance, int loopCount )
+	{
+		if ( !enabled )
+		{
+			var completedLoops = _playerFigureEightCompletedLoops;
+			var wasRunning = _playerFigureEightTestRunning;
+			_playerFigureEightTestRunning = false;
+			_playerFigureEightTestCompletionReady = false;
+			ConfigurePlayerFigureEight( false, speed, distance );
+			if ( wasRunning )
+			{
+				Log.Info(
+					$"[VoxelWorld] performance.test.cancelled completedLoops={completedLoops} " +
+					$"targetLoops={_playerFigureEightTargetLoops}" );
+			}
+
+			return wasRunning ? $"test cancelled after {completedLoops} loops" : "stopped";
+		}
+
+		if ( _playerFigureEightTestRunning )
+		{
+			throw new InvalidOperationException( "A player figure-eight performance test is already running." );
+		}
+
+		if ( loopCount < 1 || loopCount > MaximumFigureEightLoopCount )
+		{
+			throw new ArgumentOutOfRangeException(
+				nameof( loopCount ),
+				$"Loop count must be between 1 and {MaximumFigureEightLoopCount}." );
+		}
+
+		ConfigurePlayerFigureEight( true, speed, distance );
+		FigureEightLoopCount = loopCount;
+		_playerFigureEightCompletedLoops = 0;
+		_playerFigureEightTargetLoops = loopCount;
+		_playerFigureEightTestSpeed = speed;
+		_playerFigureEightTestDistance = distance;
+		_playerFigureEightTestTask = PerformanceTask;
+		_playerFigureEightTestRevision = PerformanceRevision;
+		_playerFigureEightTestCompletionReady = false;
+		_playerFigureEightTestRunning = true;
+		_performanceSnapshotReady = false;
+		FramePerformance = $"Figure-eight test running: 0 of {loopCount} loops";
+		ProcessMemoryUsage = "Collecting figure-eight test window";
+		ResetPerformanceWindow();
+		SamplePerformanceMemory();
+		Log.Info( string.Concat(
+			FormattableString.Invariant(
+				$"[VoxelWorld] performance.test.begin task=\"{EscapeLogValue( _playerFigureEightTestTask )}\" " ),
+			FormattableString.Invariant(
+				$"revision=\"{EscapeLogValue( _playerFigureEightTestRevision )}\" loops={loopCount} " ),
+			FormattableString.Invariant( $"speed={speed:0.###} distance={distance:0.###} " ),
+			FormattableString.Invariant(
+				$"center=[{_playerFigureEightCenter.x:0.###},{_playerFigureEightCenter.y:0.###},0]" ) ) );
+		return $"test started loops={loopCount} speed={speed} distance={distance}";
+	}
+
 	[Button( "Log Performance Overview" )]
 	public void LogPerformanceOverviewFromInspector()
 	{
@@ -407,7 +485,7 @@ public sealed class VoxelManager : Component
 
 		if ( !_performanceSnapshotReady )
 		{
-			throw new InvalidOperationException( "Wait for one complete 10-second performance window." );
+			throw new InvalidOperationException( "Wait for a complete performance test or 10-second overview window." );
 		}
 
 		if ( !string.IsNullOrWhiteSpace( task ) )
@@ -427,6 +505,8 @@ public sealed class VoxelManager : Component
 			FormattableString.Invariant( $"[VoxelWorld] performance.overview capturedAtUtc=\"{DateTimeOffset.UtcNow:O}\" " ),
 			FormattableString.Invariant( $"scene=\"{EscapeLogValue( sceneName )}\" task=\"{EscapeLogValue( PerformanceTask )}\" " ),
 			FormattableString.Invariant( $"revision=\"{EscapeLogValue( PerformanceRevision )}\" " ),
+			FormattableString.Invariant( $"figureEightTest={_lastPerformanceWasFigureEightTest} completedLoops={_lastPerformanceCompletedLoops} " ),
+			FormattableString.Invariant( $"testSpeed={_lastPerformanceTestSpeed:0.###} testDistance={_lastPerformanceTestDistance:0.###} " ),
 			FormattableString.Invariant( $"center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " ),
 			FormattableString.Invariant( $"targetX={targetPosition.x:0.###} targetY={targetPosition.y:0.###} targetZ={targetPosition.z:0.###} " ),
 			FormattableString.Invariant( $"windowSeconds={_lastPerformanceWindowSeconds:0.###} frameSamples={_lastPerformanceFrameSampleCount} " ),
@@ -526,26 +606,67 @@ public sealed class VoxelManager : Component
 		{
 			_playerFigureEightEnabled = false;
 			_playerFigureEightTarget = null;
+			if ( _playerFigureEightTestRunning )
+			{
+				_playerFigureEightTestRunning = false;
+				_playerFigureEightTestCompletionReady = false;
+				Log.Error( "[VoxelWorld] performance.test.failed reason=\"player target became invalid\"" );
+			}
 			return;
 		}
 
+		var speed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : FigureEightSpeed;
+		var distance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : FigureEightDistance;
 		var tangentX = MathF.Cos( _playerFigureEightParameter );
 		var tangentY = MathF.Cos( 2f * _playerFigureEightParameter );
 		var tangentLength = MathF.Sqrt( tangentX * tangentX + tangentY * tangentY );
 		_playerFigureEightParameter +=
-			FigureEightSpeed * RealTime.Delta / (FigureEightDistance * tangentLength);
+			speed * RealTime.Delta / (distance * tangentLength);
 
-		if ( _playerFigureEightParameter >= MathF.Tau )
+		while ( _playerFigureEightParameter >= MathF.Tau )
 		{
 			_playerFigureEightParameter -= MathF.Tau;
+			if ( _playerFigureEightTestRunning )
+			{
+				_playerFigureEightCompletedLoops++;
+				FramePerformance =
+					$"Figure-eight test running: {_playerFigureEightCompletedLoops} of {_playerFigureEightTargetLoops} loops";
+				if ( _playerFigureEightCompletedLoops >= _playerFigureEightTargetLoops )
+				{
+					_playerFigureEightParameter = 0f;
+					_playerFigureEightEnabled = false;
+					_playerFigureEightTestCompletionReady = true;
+					break;
+				}
+			}
 		}
 
 		var sine = MathF.Sin( _playerFigureEightParameter );
 		var cosine = MathF.Cos( _playerFigureEightParameter );
 		_playerFigureEightTarget.WorldPosition = new Vector3(
-			_playerFigureEightCenter.x + FigureEightDistance * sine,
-			_playerFigureEightCenter.y + FigureEightDistance * sine * cosine,
+			_playerFigureEightCenter.x + distance * sine,
+			_playerFigureEightCenter.y + distance * sine * cosine,
 			0f );
+	}
+
+	private void TryCompletePlayerFigureEightTest()
+	{
+		if ( !_playerFigureEightTestCompletionReady )
+		{
+			return;
+		}
+
+		_playerFigureEightTestCompletionReady = false;
+		CompletePerformanceWindow();
+		_playerFigureEightTestRunning = false;
+		_playerFigureEightTarget = null;
+		if ( !_performanceSnapshotReady )
+		{
+			Log.Error( "[VoxelWorld] performance.test.failed reason=\"no complete performance snapshot\"" );
+			return;
+		}
+
+		WritePerformanceOverview( _playerFigureEightTestTask, _playerFigureEightTestRevision );
 	}
 
 	private void UpdatePerformanceOverview()
@@ -578,17 +699,10 @@ public sealed class VoxelManager : Component
 		if ( _memorySampleElapsedSeconds >= MemorySampleIntervalSeconds )
 		{
 			_memorySampleElapsedSeconds = 0f;
-			var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
-			var gpuMemoryBytes = global::Sandbox.Graphics.VideoMemoryUsed;
-			_performanceProcessMemoryBytesTotal += processMemoryBytes;
-			_performancePeakProcessMemoryBytes = Math.Max( _performancePeakProcessMemoryBytes, processMemoryBytes );
-			_performanceGpuMemoryBytesTotal += gpuMemoryBytes;
-			_performancePeakGpuMemoryBytes = Math.Max( _performancePeakGpuMemoryBytes, gpuMemoryBytes );
-			_performanceGpuMemoryBudgetBytes = global::Sandbox.Graphics.VideoMemoryBudget;
-			_performanceMemorySampleCount++;
+			SamplePerformanceMemory();
 		}
 
-		if ( _performanceWindowElapsedSeconds >= PerformanceWindowSeconds )
+		if ( !_playerFigureEightTestRunning && _performanceWindowElapsedSeconds >= PerformanceWindowSeconds )
 		{
 			CompletePerformanceWindow();
 		}
@@ -636,6 +750,10 @@ public sealed class VoxelManager : Component
 		_lastPerformanceChunksIntegrated = _performanceChunksIntegrated;
 		_lastPerformanceChunksPerSecond =
 			_performanceChunksIntegrated / _performanceWindowElapsedSeconds;
+		_lastPerformanceWasFigureEightTest = _playerFigureEightTestRunning;
+		_lastPerformanceCompletedLoops = _playerFigureEightTestRunning ? _playerFigureEightCompletedLoops : 0;
+		_lastPerformanceTestSpeed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : 0f;
+		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
 		_performanceSnapshotReady = true;
 
 		FramePerformance =
@@ -649,6 +767,18 @@ public sealed class VoxelManager : Component
 			$"{_lastPeakGpuMemoryBytes / (1024f * 1024f):N1} MiB peak";
 		RefreshReadableStatus();
 		ResetPerformanceWindow();
+	}
+
+	private void SamplePerformanceMemory()
+	{
+		var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
+		var gpuMemoryBytes = global::Sandbox.Graphics.VideoMemoryUsed;
+		_performanceProcessMemoryBytesTotal += processMemoryBytes;
+		_performancePeakProcessMemoryBytes = Math.Max( _performancePeakProcessMemoryBytes, processMemoryBytes );
+		_performanceGpuMemoryBytesTotal += gpuMemoryBytes;
+		_performancePeakGpuMemoryBytes = Math.Max( _performancePeakGpuMemoryBytes, gpuMemoryBytes );
+		_performanceGpuMemoryBudgetBytes = global::Sandbox.Graphics.VideoMemoryBudget;
+		_performanceMemorySampleCount++;
 	}
 
 	private void ResetPerformanceWindow()

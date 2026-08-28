@@ -5,13 +5,22 @@ using System;
 public static class VoxelMcpTools
 {
 	/// <summary>
-	/// Start or stop moving the active local player around a horizontal figure-eight at world Z zero.
+	/// Start or cancel the automated figure-eight performance test at world Z zero.
 	/// </summary>
-	/// <param name="enabled">True to start or reconfigure movement; false to stop at the current position.</param>
+	/// <param name="enabled">True to start a new test; false to cancel the active test.</param>
 	/// <param name="speed">Horizontal movement speed in world units per second.</param>
 	/// <param name="distance">Maximum X distance from the starting center; the Y reach is half this value.</param>
+	/// <param name="loopCount">Number of complete figure-eight loops to measure before automatic completion.</param>
+	/// <param name="task">Task or scenario label stored with the structured result.</param>
+	/// <param name="revision">Externally supplied Git commit or other source revision label.</param>
 	[McpTool( "player_figure_eight" )]
-	public static string PlayerFigureEight( bool enabled = true, float speed = 320f, float distance = 1024f )
+	public static string PlayerFigureEight(
+		bool enabled = true,
+		float speed = 2500f,
+		float distance = 50000f,
+		int loopCount = 1,
+		string task = "",
+		string revision = "" )
 	{
 		if ( !Game.IsPlaying )
 		{
@@ -19,8 +28,18 @@ public static class VoxelMcpTools
 		}
 
 		var manager = FindManager();
-		var result = manager.ConfigurePlayerFigureEight( enabled, speed, distance );
-		return $"Player figure-eight {result}.";
+		if ( !string.IsNullOrWhiteSpace( task ) )
+		{
+			manager.PerformanceTask = task.Trim();
+		}
+
+		if ( !string.IsNullOrWhiteSpace( revision ) )
+		{
+			manager.PerformanceRevision = revision.Trim();
+		}
+
+		var result = manager.ConfigurePlayerFigureEightTest( enabled, speed, distance, loopCount );
+		return $"Player figure-eight performance test {result}.";
 	}
 
 	/// <summary>

@@ -1748,3 +1748,84 @@ Record an approved extraordinary change here before adding the new version:
   memory, not voxel-only memory; it is a top-level indicator rather than a CPU,
   GPU-pass, allocator, or per-chunk profiler. Product pass/fail budgets remain to
   be set from representative hardware and workload evidence.
+
+### PERFORMANCE-OVERVIEW-001/v2 — automated loop-boundary baseline
+
+- Version justification recorded before execution: v1 depended on separately
+  timed start, wait, report, and stop calls. That execution procedure is not a
+  repeatable benchmark boundary even though its workload parameters were fixed.
+  V2 preserves the scene, workload, and metrics while replacing manual timing
+  and the arbitrary 10-second cutoff with one complete manager-owned loop.
+- Production entry point: the manager inspector's `Toggle Player Figure Eight`
+  button and editor MCP operation `player_figure_eight` invoke the same
+  `ConfigurePlayerFigureEightTest` method. `VoxelManager` owns the exact workload
+  start, window reset, loop-boundary completion, movement stop, and structured
+  result.
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: One button press starts the suite,
+  measures exactly one complete figure-eight loop, stops movement automatically,
+  and emits one structured result. The MCP entry point is an automation adapter
+  for the identical manager call. No AI timing, wall-clock sleep, Git discovery,
+  remote lookup, or separately timed report call is involved.
+- Pass criteria fixed before execution:
+  - The button captures speed, distance, and loop count once at start; later
+    inspector edits cannot change the active workload
+  - One `ConfigurePlayerFigureEightTest` call resets the production window and
+    starts movement on the same manager-thread boundary, then completes only at
+    the configured exact full-curve crossing
+  - Completion stops the shared figure-eight path before returning and emits
+    exactly one `performance.overview` record marked `figureEightTest=True` with
+    completed loops `1`, speed `2500`, and distance `50000`
+  - The result meets the v1 metric-validity criteria: positive finite FPS and
+    ordered frame tails, valid RAM/VRAM, non-negative chunk telemetry, at least
+    one frame sample, and zero frame-sample truncation
+  - Runtime/editor compilation, a live production-path run, structured-log
+    readback, and `git diff --check` all succeed
+- Canonical parameters:
+  - Scene `basic_example`; one local player; initial position `(0,0,0)`;
+    `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+    `TerrainSurfaceHeight=0`
+  - Figure-eight speed `2500`, distance `50000`, world Z `0`
+  - One complete loop; configurable inspector range `1..8`; frame capacity
+    `524,288`; frame sample every production update; process/GPU memory sample
+    every one game-time second; canonical chunk integration counters
+  - Nearest-rank p95 and p99 frame duration; the same three-pillar numeric fields
+    and scopes defined by v1
+- Metadata: task and revision are passive inspector or MCP inputs; the runtime
+  does not discover either value
+- Baseline policy: v2 replaces v1 as the canonical comparable execution method.
+  V1 remains historical evidence and is not compared as an automated run.
+
+#### Run 2026-08-28 — pass
+
+- Entry: live `player_figure_eight` MCP adapter, which invokes the same
+  `ConfigurePlayerFigureEightTest` method as the inspector button
+- Task: `PERFORMANCE-OVERVIEW-001/v2`
+- Revision: `2ef4cfa+working-tree`
+- Begin record: `loops=1 speed=2500 distance=50000 center=[0,0,0]`
+- Automatic result: `capturedAtUtc=2026-08-28T17:47:55.0473204+00:00`;
+  `scene=basic_example`; `figureEightTest=True`; `completedLoops=1`;
+  `testSpeed=2500`; `testDistance=50000`; `center=C[0,0,0]`;
+  `targetX=0`; `targetY=0`; `targetZ=0`
+- Frame result: `windowSeconds=121.944`; `frameSamples=26369`;
+  `truncatedFrameSamples=0`; `averageFps=216.235`;
+  `p95FrameMs=9.825`; `p99FrameMs=13.813`;
+  `averageGpuFrameMs=0.482`
+- Memory result: `averageProcessMemoryBytes=4527794243`;
+  `peakProcessMemoryBytes=4808781824`;
+  `averageGpuMemoryBytes=1065161886`;
+  `peakGpuMemoryBytes=1065161886`; `gpuMemoryBudgetBytes=32945209344`
+- Chunk result: `loadedChunks=33792`; `pendingChunks=2145`;
+  `windowIntegratedChunks=842853`; `windowChunksPerSecond=6911.794`;
+  `lastStreamGeneratedChunks=2145`; `lastStreamSettleMs=15.479`;
+  `lastEffectiveChunksPerSecond=138578.4`;
+  `lastGenerationChunksPerSecond=35869320`
+- Automation evidence: no stop or report operation was called during the run;
+  the sole overview record appeared when the manager counted the first complete
+  loop. Play was stopped only after result readback.
+- Validation: live runtime and editor compilers reported zero errors and zero
+  warnings; both .NET projects built with zero errors and zero warnings; the MCP
+  registry exposed all six expected test parameters; `git diff --check` passed.
+- Outcome: pass. All fixed criteria passed. The inspector button binding was
+  verified from source; live execution used its exact shared MCP method rather
+  than a physical inspector click.

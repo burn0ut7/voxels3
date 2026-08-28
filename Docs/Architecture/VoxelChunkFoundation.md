@@ -250,11 +250,12 @@ as different scopes; neither is presented as memory owned only by voxel chunks.
 The per-frame path writes scalar values into fixed arrays and performs no
 sorting, logging, Git access, process launch, or network access. Memory is read
 at 1 Hz. Copying and sorting happen once per completed window, and the fixed
-32,768-frame capacity reports truncation rather than silently allocating. This
-supports a complete 10-second window up to 3,276 frames per second. A separate
-profiler component and an editor-owned sampler were rejected because either
-would duplicate the production frame/chunk lifecycle or prevent the human and
-MCP entry points from sharing one result.
+524,288-frame capacity reports truncation rather than silently allocating. The
+capacity covers the bounded eight-loop inspector limit at the canonical speed
+and distance with substantial headroom on the current baseline hardware. A
+separate profiler component and an editor-owned sampler were rejected because
+either would duplicate the production frame/chunk lifecycle or prevent the
+human and MCP entry points from sharing one result.
 
 The manager inspector's `Log Performance Overview` button and the editor MCP
 tool `performance_overview` call the same manager method. That method emits one
@@ -264,3 +265,22 @@ caller-supplied revision identify when, where, and what was measured. Task and
 revision are passive strings: the runtime never queries Git, invokes another
 process, or performs a network lookup. The external MCP caller may supply the
 current commit, while a human may enter the same metadata in the inspector.
+
+The inspector's `Toggle Player Figure Eight` button is the canonical automated
+suite entry point. Its speed, distance, and loop-count attributes are captured
+once when the test starts. The manager resets measurement on that same update
+boundary, advances the shared production movement path, counts exact full-curve
+crossings, stops automatically at the configured loop count, and immediately
+publishes one structured result covering the complete run. The canonical v2
+baseline uses speed `2500`, distance `50000`, and one loop; the inspector permits
+one through eight loops for explicitly different workloads.
+
+The editor MCP `player_figure_eight` operation calls the same manager method as
+the button and accepts the same workload plus passive task and revision labels.
+Neither entry point controls completion timing: no human, AI, external sleep,
+polling cadence, Git discovery, process launch, or network lookup participates in
+the measured boundary. Manual start/report/stop calls and an external script
+clock were rejected because their scheduling variance would change the measured
+interval. Structured output includes UTC time, scene and world position,
+workload parameters, completed loops, task, revision, and all three performance
+pillars so a later deterministic ingestion script or dashboard can consume it.
