@@ -42,6 +42,8 @@ For detailed source locations, cache commands, and version handling, read [sourc
 
 The connected `sbox` MCP operates on the project currently open in the editor. Its visible entry points are a gateway to a registry that changes when editor or add-on code hotloads.
 
+Saving source normally triggers compilation and hotload automatically after about a second. Treat that automatic hotload as the default edit/test loop: save, wait for compilation to settle, then inspect the refreshed registry, console, and behavior. Do not stop and restart play, reload the project, or manually rebuild assemblies between ordinary edits or repeated compile checks. Reserve reload or restart for a final clear-state recovery after automatic hotload and targeted diagnostics have failed.
+
 1. Call `editor_status` to identify the live editor context.
 2. Use `search_tools` for a task-oriented lookup, or `list_toolsets` followed by `describe_toolset` to inspect a complete tool group.
 3. Invoke a discovered operation with `call_tool`. Use `call_tools` for an ordered batch; a failed call stops the remaining batch.

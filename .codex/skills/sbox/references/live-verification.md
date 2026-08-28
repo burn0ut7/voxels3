@@ -20,6 +20,14 @@ Tool schemas can change after a hotload. A fresh `search_tools` or `describe_too
 
 Find `compile_status` through the registry and inspect all compiler records. Its build flags show whether compilation is still active or pending; its success state and diagnostics describe the latest settled build.
 
+Saving a source file is the normal compile and test trigger. The editor automatically detects the save, compiles, and hotloads the changed code, typically after about a second. Use this default loop for ordinary development and repeated compile-behavior checks:
+
+1. Save the edit.
+2. Allow the automatic compiler and hotloader to react, polling `compile_status` until the build settles rather than assuming a fixed delay proves completion.
+3. Read fresh console output, rediscover any affected tool schema, and exercise or read back the changed behavior.
+
+Do not routinely stop and restart play, invoke a reload, restart the editor, or manually rebuild assemblies after each edit. Those actions discard useful live state and do not represent the normal development loop. Stopping play remains appropriate when the scenario itself requires a clean edit-state transition or as final scenario cleanup; it is not a prerequisite for applying source changes.
+
 Shader gotcha: after changing shader or material source, explicitly compile the shaders through the discovered live editor tool before judging the result. A successful code compile or hotload does not guarantee that shader changes have been compiled and applied; rediscover the registry afterward if the shader compile changes any hotloaded tools or state.
 
 After a source edit, the useful live signals are:
@@ -30,6 +38,8 @@ After a source edit, the useful live signals are:
 - a readback whose scene, play state, and behavior match the changed implementation.
 
 Old stack line numbers, duplicate registered names, a tool schema that disagrees with its result, or editor-scene data returned during play identify stale hotload state. Runtime and editor assemblies can be rebuilt through the corresponding discovered tools, followed by registry rediscovery and another readback.
+
+Use a targeted manual assembly rebuild only when a bounded wait shows that automatic compilation never began or settled, or when the stale-state evidence above persists after a successful hotload. Use a full reload or editor restart only as the final clear-out recovery after automatic hotload, registry rediscovery, readbacks, and any justified targeted rebuild have failed. Record that reset because it invalidates prior live state and may conceal a hotload defect that should remain visible during diagnosis.
 
 ## Play and observation
 
