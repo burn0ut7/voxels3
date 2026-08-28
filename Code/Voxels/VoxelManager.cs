@@ -19,6 +19,8 @@ public sealed class VoxelManager : Component
 	private const int PerformanceResultSchemaVersion = 1;
 	private const string PerformanceResultsDirectory = "performance";
 	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
+	private const string InspectorPerformanceTask = "PERFORMANCE-OVERVIEW-001/v3";
+	private const string InspectorPerformanceRevision = "manual-inspector";
 	private static readonly JsonSerializerOptions PerformanceJsonOptions = new()
 	{
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -146,10 +148,10 @@ public sealed class VoxelManager : Component
 	public int FigureEightLoopCount { get; set; } = 1;
 
 	[Property, Category( "Performance Test" )]
-	public string PerformanceTask { get; set; } = string.Empty;
+	public string PerformanceTask { get; set; } = InspectorPerformanceTask;
 
 	[Property, Category( "Performance Test" )]
-	public string PerformanceRevision { get; set; } = string.Empty;
+	public string PerformanceRevision { get; set; } = InspectorPerformanceRevision;
 
 	[Property, ReadOnly, Category( "Performance Test" )]
 	public string PerformanceResultsLocation { get; private set; } = PerformanceResultsPath;
@@ -360,12 +362,28 @@ public sealed class VoxelManager : Component
 	{
 		try
 		{
+			var task = PerformanceTask?.Trim();
+			if ( string.IsNullOrWhiteSpace( task ) ||
+				task.Equals( "unassigned", StringComparison.OrdinalIgnoreCase ) )
+			{
+				task = InspectorPerformanceTask;
+			}
+
+			var revision = PerformanceRevision?.Trim();
+			if ( string.IsNullOrWhiteSpace( revision ) ||
+				revision.Equals( "unassigned", StringComparison.OrdinalIgnoreCase ) )
+			{
+				revision = InspectorPerformanceRevision;
+			}
+
+			PerformanceTask = task;
+			PerformanceRevision = revision;
 			var result = StartPerformanceTest(
 				FigureEightSpeed,
 				FigureEightDistance,
 				FigureEightLoopCount,
-				PerformanceTask,
-				PerformanceRevision );
+				task,
+				revision );
 			Log.Info( $"[VoxelWorld] performance.test {result}" );
 		}
 		catch ( Exception exception )
