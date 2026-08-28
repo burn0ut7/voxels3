@@ -9,8 +9,6 @@ using System.Threading;
 public sealed class VoxelManager : Component
 {
 	private const float MainThreadIntegrationBudgetMilliseconds = 0.5f;
-	// 16-byte x64 object header + 44 bytes of fields, rounded to 8-byte alignment.
-	private const long EstimatedVoxelChunkObjectBytes = 64;
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
@@ -76,22 +74,6 @@ public sealed class VoxelManager : Component
 	public int PendingChunkCount { get; private set; }
 
 	[Property, ReadOnly, Category( "World Status" )]
-	public long LoadedDensitySampleCount { get; private set; }
-
-	[Property, ReadOnly, Category( "World Status" )]
-	public int LoadedDensityPayloadChunkCount { get; private set; }
-
-	[Property, ReadOnly, Category( "World Status" )]
-	public long LoadedDensityPayloadBytes { get; private set; }
-
-	[Property, ReadOnly, Category( "World Status" )]
-	public long EstimatedLoadedVoxelBytes { get; private set; }
-
-	[Property, ReadOnly, Category( "World Status" )]
-	public string EstimatedLoadedVoxelMemory { get; private set; } =
-		"0 bytes; chunk objects plus density payload; managed collection overhead excluded";
-
-	[Property, ReadOnly, Category( "World Status" )]
 	public string PlayerChunk { get; private set; } = "Not initialized";
 
 	[Property, ReadOnly, Category( "World Status" )]
@@ -117,9 +99,6 @@ public sealed class VoxelManager : Component
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public float LastBackgroundWorkerMilliseconds { get; private set; }
-
-	[Property, ReadOnly, Category( "World Status" )]
-	public long LastGeneratedDensityPayloadBytes { get; private set; }
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public float LastStreamIntegrationMilliseconds { get; private set; }
@@ -279,14 +258,10 @@ public sealed class VoxelManager : Component
 	[Button( "Log World Summary" )]
 	public void LogWorldSummary()
 	{
-		var storage = CalculateLoadedStorage();
-		var estimatedVoxelBytes = _loadedChunks.Count * EstimatedVoxelChunkObjectBytes + storage.DensityBytes;
 		Log.Info(
 			$"[VoxelWorld] summary center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " +
 			$"loadRadius={LoadRadius} " +
-			$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} samples={storage.SampleCount} " +
-			$"payloadChunks={storage.PayloadChunkCount} densityBytes={storage.DensityBytes} " +
-			$"estimatedVoxelBytes={estimatedVoxelBytes} " +
+			$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} " +
 			$"cellSize={CellSize} cellsPerAxis={CellsPerAxis}" );
 	}
 
@@ -378,7 +353,6 @@ public sealed class VoxelManager : Component
 		Log.Info(
 			$"[VoxelWorld] chunk.inspect chunk={chunk.LogId} name=\"{chunk.HumanName}\" cellsPerAxis={chunk.CellsPerAxis} " +
 			$"samplesPerAxis={chunk.SamplesPerAxis} sampleCount={chunk.SampleCount} " +
-			$"hasDensityPayload={chunk.HasDensityPayload} payloadSamples={chunk.DensityPayloadSampleCount} densityBytes={chunk.DensityBytes} " +
 			$"densityMin={chunk.MinimumDensity} densityMax={chunk.MaximumDensity} " +
 			$"minimumSample=L[0,0,0] minimumSampleDensity={minimumSampleDensity} " +
 			$"minimumSampleMaterial=\"{VoxelChunk.GetMaterialName( minimumSampleMaterialId )}\" minimumSampleMaterialId={minimumSampleMaterialId} " +
@@ -578,7 +552,6 @@ public sealed class VoxelManager : Component
 		_completionReady = false;
 		SlowestChunkGenerationMilliseconds = 0f;
 		LastBackgroundWorkerMilliseconds = 0f;
-		LastGeneratedDensityPayloadBytes = 0;
 		_streamStartedTimestamp = Stopwatch.GetTimestamp();
 		_streamInProgress = true;
 
@@ -642,7 +615,6 @@ public sealed class VoxelManager : Component
 				var workerStart = Stopwatch.GetTimestamp();
 				var chunks = new List<VoxelChunk>( coordinates.Length );
 				var generationMilliseconds = 0f;
-				long generatedDensityPayloadBytes = 0;
 				var lastChunkMilliseconds = 0f;
 				var slowestChunkMilliseconds = 0f;
 				foreach ( var coordinate in coordinates )
@@ -655,7 +627,6 @@ public sealed class VoxelManager : Component
 					var generationStart = Stopwatch.GetTimestamp();
 					var chunk = new VoxelChunk( coordinate, cellsPerAxis, cellSize, terrainSurfaceHeight );
 					chunks.Add( chunk );
-					generatedDensityPayloadBytes += chunk.DensityBytes;
 					lastChunkMilliseconds = (float)Stopwatch.GetElapsedTime( generationStart ).TotalMilliseconds;
 					generationMilliseconds += lastChunkMilliseconds;
 					slowestChunkMilliseconds = Math.Max( slowestChunkMilliseconds, lastChunkMilliseconds );
@@ -666,7 +637,6 @@ public sealed class VoxelManager : Component
 					GenerationMilliseconds: generationMilliseconds,
 					LastChunkMilliseconds: lastChunkMilliseconds,
 					SlowestChunkMilliseconds: slowestChunkMilliseconds,
-					GeneratedDensityPayloadBytes: generatedDensityPayloadBytes,
 					WorkerMilliseconds: (float)Stopwatch.GetElapsedTime( workerStart ).TotalMilliseconds );
 			} );
 
@@ -684,7 +654,6 @@ public sealed class VoxelManager : Component
 			}
 
 			LastBackgroundWorkerMilliseconds = batch.WorkerMilliseconds;
-			LastGeneratedDensityPayloadBytes = batch.GeneratedDensityPayloadBytes;
 			_generationMillisecondsThisStream = batch.GenerationMilliseconds;
 			LastChunkGenerationMilliseconds = batch.LastChunkMilliseconds;
 			SlowestChunkGenerationMilliseconds = batch.SlowestChunkMilliseconds;
@@ -738,7 +707,7 @@ public sealed class VoxelManager : Component
 				{
 					Log.Info(
 						$"[VoxelWorld] chunk.load chunk={chunk.LogId} name=\"{chunk.HumanName}\" samples={chunk.SampleCount} " +
-						$"densityBytes={chunk.DensityBytes} densityMin={chunk.MinimumDensity} densityMax={chunk.MaximumDensity}" );
+						$"densityMin={chunk.MinimumDensity} densityMax={chunk.MaximumDensity}" );
 				}
 			}
 
@@ -784,8 +753,6 @@ public sealed class VoxelManager : Component
 		LastGenerationChunksPerSecond = LastStreamGenerationMilliseconds > 0f
 			? _generatedThisStream * 1000f / LastStreamGenerationMilliseconds
 			: 0f;
-		var storage = CalculateLoadedStorage();
-		var estimatedVoxelBytes = _loadedChunks.Count * EstimatedVoxelChunkObjectBytes + storage.DensityBytes;
 		LastStreamSummary =
 			$"Loaded {_loadedChunks.Count}; retained {_retainedThisStream}; unloaded {_unloadedThisStream}; " +
 			$"generated {_generatedThisStream}; stale {_staleDiscardedThisStream}; " +
@@ -809,10 +776,7 @@ public sealed class VoxelManager : Component
 			$"rangeMax=C[{_streamingCenterCoordinate.x + LoadRadius},{_streamingCenterCoordinate.y + LoadRadius},{_streamingCenterCoordinate.z + LoadRadius}] " +
 			$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} retained={_retainedThisStream} " +
 			$"unloaded={_unloadedThisStream} generated={_generatedThisStream} staleDiscarded={_staleDiscardedThisStream} " +
-			$"samples={storage.SampleCount} payloadChunks={storage.PayloadChunkCount} densityBytes={storage.DensityBytes} " +
-			$"estimatedVoxelBytes={estimatedVoxelBytes} " +
 			$"settleMs={LastStreamSettleMilliseconds:0.###} workerMs={LastBackgroundWorkerMilliseconds:0.###} " +
-			$"generatedDensityPayloadBytes={LastGeneratedDensityPayloadBytes} " +
 			$"generationMs={LastStreamGenerationMilliseconds:0.###} integrationMs={LastStreamIntegrationMilliseconds:0.###} " +
 			$"slowestIntegrationFrameMs={SlowestIntegrationFrameMilliseconds:0.###} " +
 			$"maxObservedFrameMs={MaximumObservedFrameMilliseconds:0.###} " +
@@ -825,37 +789,10 @@ public sealed class VoxelManager : Component
 			$"probeMaterialUp=\"{VoxelChunk.GetMaterialName( oneCellUpProbeMaterialId )}\" probeMaterialIdUp={oneCellUpProbeMaterialId}" );
 	}
 
-	private (long SampleCount, int PayloadChunkCount, long DensityBytes) CalculateLoadedStorage()
-	{
-		long sampleCount = 0;
-		long densityBytes = 0;
-		var payloadChunkCount = 0;
-		foreach ( var chunk in _loadedChunks.Values )
-		{
-			sampleCount += chunk.SampleCount;
-			densityBytes += chunk.DensityBytes;
-			if ( chunk.HasDensityPayload )
-			{
-				payloadChunkCount++;
-			}
-		}
-
-		return (sampleCount, payloadChunkCount, densityBytes);
-	}
-
 	private void RefreshReadableStatus()
 	{
 		LoadedChunkCount = _loadedChunks.Count;
 		PendingChunkCount = _pendingChunks.Count;
-		var storage = CalculateLoadedStorage();
-		LoadedDensitySampleCount = storage.SampleCount;
-		LoadedDensityPayloadChunkCount = storage.PayloadChunkCount;
-		LoadedDensityPayloadBytes = storage.DensityBytes;
-		EstimatedLoadedVoxelBytes = _loadedChunks.Count * EstimatedVoxelChunkObjectBytes + storage.DensityBytes;
-		EstimatedLoadedVoxelMemory =
-			$"~{EstimatedLoadedVoxelBytes:N0} bytes ({EstimatedLoadedVoxelBytes / (1024f * 1024f):0.00} MiB); " +
-			$"{_loadedChunks.Count:N0} chunk objects × {EstimatedVoxelChunkObjectBytes} bytes + " +
-			$"{storage.DensityBytes:N0} density-payload bytes; managed collection overhead excluded";
 		LoadedChunkRange = _hasStreamingCenter
 			? $"X {_streamingCenterCoordinate.x - LoadRadius} through {_streamingCenterCoordinate.x + LoadRadius}; " +
 				$"Y {_streamingCenterCoordinate.y - LoadRadius} through {_streamingCenterCoordinate.y + LoadRadius}; " +
@@ -877,7 +814,6 @@ public sealed class VoxelManager : Component
 		{
 			PlayerChunkData =
 				$"Loaded; {playerChunk.CellsPerAxis} cells per axis; {playerChunk.SampleCount:N0} logical samples; " +
-				$"{playerChunk.DensityPayloadSampleCount:N0} payload samples; " +
 				$"density {playerChunk.MinimumDensity:0.###} to {playerChunk.MaximumDensity:0.###}";
 		}
 		else if ( _desiredChunks.Contains( targetCoordinate ) )

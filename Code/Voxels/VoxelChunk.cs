@@ -17,9 +17,6 @@ public sealed class VoxelChunk
 	public int SamplesPerAxis { get; }
 	public float CellSize { get; }
 	public int SampleCount { get; }
-	public bool HasDensityPayload => false;
-	public int DensityPayloadSampleCount => 0;
-	public long DensityBytes => 0;
 	public float MinimumDensity { get; }
 	public float MaximumDensity { get; }
 	public string HumanName => $"Chunk X {Coordinate.x}, Y {Coordinate.y}, Z {Coordinate.z}";

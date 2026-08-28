@@ -1204,3 +1204,70 @@ Record an approved extraordinary change here before adding the new version:
   a stable project-owned estimate, not a claim of process-level heap precision.
 - Notes: No GC API, profiler harness, test file, test scene, test component,
   compatibility property, fallback metric, or alternate memory path was added.
+
+### VOXEL-DIAGNOSTICS-001/v1 — memory reporting removal
+
+- Production entry point: async `VoxelManager.OnLoad`, production chunk
+  integration, player-boundary streaming, inspector status, chunk inspection,
+  and stream/world summary logging
+- Actual world/scene: `Assets/scenes/basic_example.scene`
+- Behavior and complete expected outcome: Populate the real loaded world and
+  move the player exactly one chunk in +X without calculating, carrying, or
+  reporting chunk-memory or density-payload-memory metrics. Terrain sampling,
+  streaming state, and non-memory diagnostics remain unchanged.
+- Pass criteria fixed before execution:
+  - Initial and +X phases each settle with `729` loaded chunks and `0` pending or
+    stale chunks
+  - The +X shift retains `648`, unloads `81`, and generates `81`
+  - Existing probes remain density/material `0/Grass 1` and `16/Air 0`
+  - Inspector status, world summary, chunk inspection, lifecycle logging,
+    stream-completion logging, and worker results expose no estimated object
+    size, density-payload count, density-payload bytes, or aggregate memory value
+  - Initial settle remains at or below `250.000 ms`; +X settles at or below
+    `100.000 ms`; no compile error, runtime exception, invalid configuration,
+    non-finite result, target rejection, or duplicate manager occurs
+- Parameters:
+  - Project/source revision: working source hashes recorded with the run
+  - Engine build and hardware/environment: recorded with the run
+  - World/scene: `basic_example`; fixed plane; no seed; one local player
+  - Inputs and order: start at `(0,0,0)`; allow production `OnLoad` to complete;
+    issue `voxel_stream_origin 512 0 0`; wait for zero pending; stop play
+  - Operation count: one 729-chunk population and one exact +X shift
+  - Warmup: none
+  - Settings: `32` cells/axis, `16` units/cell, `LoadRadius=4`, surface height
+    `0`, assigned Player Controller, one worker, `0.500 ms` integration budget,
+    overlays/lifecycle logging disabled
+- Metrics and units: loaded/pending/retained/unloaded/generated/stale chunks;
+  settle milliseconds; density/material probes; memory-field occurrence count
+  by each production diagnostic surface
+
+#### Run 2026-08-28 12:42:23 EDT
+
+- Executor: Codex (Sol); production execution not available through the active
+  toolset
+- Project/source state:
+  - `Code/Voxels/VoxelChunk.cs` SHA-256
+    `B247C17CA704201FFE234C051F477E7183BB278372C5EC176695C4845CFD4DB4`
+  - `Code/Voxels/VoxelManager.cs` SHA-256
+    `5FBDAC24150D8BA26F35517E14B9761EF38F764B7FC67C65C2988AE08F6F614F`
+  - `Assets/scenes/basic_example.scene` SHA-256
+    `31A4C5535BEB9E92C85900870B1425CCDAEFE8186E05065127633EC581B606E0`
+- Engine/environment: `sbox-dev` was running from the Steam installation and
+  reported file version `1.0.1.0`; no live Workbench or production-session
+  control was available in the active toolset
+- Confirmation that scenario parameters were unchanged: yes; the scenario was
+  not executed
+- Exact execution path: not run. Process detection did not establish an
+  inspectable production play session, and no synthetic substitute was used.
+- Static verification:
+  - `dotnet build voxels3.slnx --nologo` succeeded with `0` warnings and `0`
+    errors
+  - Scene JSON parsing and `git diff --check` passed
+  - Removed memory-reporting identifiers and log fields had `0` occurrences in
+    `Code/Voxels/` and `Assets/scenes/basic_example.scene`
+- Raw production measurements: none
+- Outcome: incomplete; compile and source-shape checks pass, but the fixed
+  in-world streaming scenario was not run
+- Remaining unmeasured risks: live inspector serialization, initial population,
+  +X streaming behavior, production logs, settle time, and density/material
+  probes require a controllable s&box production session

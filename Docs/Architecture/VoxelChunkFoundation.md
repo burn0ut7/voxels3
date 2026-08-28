@@ -42,8 +42,6 @@ here.
 - Cell size: `16` s&box units (s&box uses Source-style inches)
 - Chunk world extent: `512` units per axis
 - Density samples per chunk: `35,937`
-- Logical float-density memory per chunk if materialized: `143,748` bytes, about
-  `140.38 KiB`; the current implicit plane allocates `0` density-payload bytes
 - Default load radius: `4` chunks in X/Y/Z around the player's current chunk
   (`9x9x9 = 729` chunks)
 - Background generation concurrency: one serialized worker pipeline
@@ -51,17 +49,9 @@ here.
   count
 
 At the default radius the settled world contains `26,198,073` logical density
-samples. Materializing them would use `104,792,292` raw density bytes, about
-`99.94 MiB`. The current plane is evaluated directly and therefore uses no
-density arrays; chunk objects and dictionary storage still have managed overhead.
-
-Memory diagnostics separate exact density-payload bytes from an estimated loaded
-voxel footprint. The estimate uses `64` bytes per `VoxelChunk`: a `16`-byte x64
-managed-object header plus `44` bytes of current instance fields, rounded to
-8-byte alignment, then adds exact density-payload bytes. At `729` implicit chunks
-this is approximately `46,656` bytes (`45.56 KiB`). Dictionary, hash-set, queue,
-list, task, allocator, and component overhead is explicitly excluded because
-their capacities and runtime layouts are not owned by the chunk data contract.
+samples. The current plane evaluates them directly and has no density arrays.
+Runtime diagnostics do not estimate or report chunk memory; allocator and
+managed-runtime layout are outside the chunk data contract.
 
 There is no authored minimum or maximum chunk Z. The one load radius defines a
 viewer-centered cubic interest volume equally in all three axes. At radius `4`,
@@ -80,9 +70,8 @@ layouts.
 - `16^3` cells produces small, responsive chunks but quadruples chunk count per
   horizontal area relative to `32^3`, increasing dictionary, boundary, streaming,
   scheduling, and eventual draw/dispatch overhead.
-- `64^3` cells reduces chunk count but requires `65^3 = 274,625` density samples,
-  about `1.05 MiB` raw density memory per chunk. It also makes one edit invalidate
-  a much larger mesh/collision job.
+- `64^3` cells reduces chunk count but requires `65^3 = 274,625` density samples
+  and makes one edit invalidate a much larger mesh/collision job.
 - An `8`-unit cell offers more detail but multiplies sample and eventual mesh work
   for the same world extent. A `32`-unit cell gives only about 2.25 cells across a
   72-unit-tall player. `16` units starts with about 4.5 cells across that scale.
@@ -98,8 +87,7 @@ layouts.
   floor and ceiling, fail to follow vertical player movement, and duplicate the
   meaning already owned by view distance.
 - Full per-chunk arrays duplicate an exactly derivable value for every current
-  sample and create about `99.94 MiB` of payload at the default radius. They were
-  removed rather than pooled or compressed.
+  sample. They were removed rather than pooled or compressed.
 - A single constant for sign-uniform solid or air chunks is smaller than an
   array but changes exact density queries because density still varies with local
   Z. The selected representation evaluates the canonical expression
@@ -109,16 +97,14 @@ layouts.
   the current plane needing neither. General compression, profiles, and mutable
   payload promotion remain out of scope until an implemented feature requires
   stored non-planar values.
-- A byte array of material IDs would add `26,198,073` redundant bytes at the
-  default radius. Returning Grass or Air from the canonical density result is
-  exact, deterministic, and requires no second storage path.
+- A material-ID array would duplicate values that are exactly derivable from the
+  canonical density result. Returning Grass or Air directly is deterministic and
+  requires no second storage path.
 - A material registry, biome mapping, layered soil, and render-material resource
   references are not required for the first two IDs and are intentionally absent.
-- Reporting only density-array bytes made the implicit representation appear to
-  use no memory. The selected report keeps that exact payload metric and adds the
-  documented chunk-object estimate. Global GC totals and guessed collection
-  internals were rejected because they cannot attribute memory reliably to one
-  manager.
+- Chunk-memory reporting was removed because object sizes and managed collection
+  internals are not stable project-owned measurements, while the implicit field
+  has no density payload to measure.
 
 `32^3` at `16` units is the best initial balance, not a permanent claim. A future
 dimension change requires representative fixed-parameter in-world measurements
@@ -189,11 +175,10 @@ before that policy changes.
   missing result otherwise.
 - Stream completion reports effective loaded chunks per second, pure SDF
   generation chunks per second, worker time, time-budgeted integration work,
-  slowest integration update, maximum observed active-play frame, generated
-  density-payload bytes, logical samples, loaded density-payload chunks and exact
-  bytes, the estimated loaded voxel footprint, and discarded stale results.
-  Inspector status exposes the same values with human-readable names and states
-  what the estimate excludes.
+  slowest integration update, maximum observed active-play frame, loaded,
+  retained, unloaded, generated, pending, and discarded stale chunk counts.
+  Inspector status exposes the corresponding non-memory state with human-readable
+  names.
 - Runtime overlays can draw all loaded chunk bounds and labels; the chunk
   containing the actual player is highlighted. The inspector button and console
   commands query the real loaded production data; there is no separate debug
