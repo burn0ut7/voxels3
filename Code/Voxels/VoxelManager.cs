@@ -1193,7 +1193,7 @@ public sealed class VoxelManager : Component
 	private void StartBackgroundGeneration( Vector3Int[] coordinates )
 	{
 		_generationCancellation?.Cancel();
-		var previousTask = _generationTask;
+		var previousTask = _generationTask ?? System.Threading.Tasks.Task.CompletedTask;
 		var cancellation = new CancellationTokenSource();
 		_generationCancellation = cancellation;
 		var revision = ++_streamRevision;
@@ -1295,7 +1295,9 @@ public sealed class VoxelManager : Component
 			_pendingChunks.Clear();
 			_streamInProgress = false;
 			LastStreamSummary = $"Background generation failed: {exception.Message}";
-			Log.Error( $"[VoxelWorld] stream.failed revision={revision} error=\"{exception.Message}\"" );
+			Log.Error(
+				exception,
+				$"[VoxelWorld] stream.failed revision={revision} error=\"{exception.Message}\"" );
 			RefreshReadableStatus();
 		}
 	}
