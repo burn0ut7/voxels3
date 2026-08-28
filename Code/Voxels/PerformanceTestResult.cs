@@ -10,6 +10,7 @@ internal sealed class PerformanceTestResult
 	public PerformanceFrameMetrics Frame { get; init; }
 	public PerformanceMemoryMetrics Memory { get; init; }
 	public PerformanceChunkMetrics Chunks { get; init; }
+	public PerformanceMeshingMetrics Meshing { get; init; }
 }
 
 internal sealed class PerformanceTestSource
@@ -52,8 +53,12 @@ internal sealed class PerformanceFrameMetrics
 
 internal sealed class PerformanceMemoryMetrics
 {
+	public ulong StartProcessBytes { get; init; }
+	public ulong EndProcessBytes { get; init; }
 	public ulong AverageProcessBytes { get; init; }
 	public ulong PeakProcessBytes { get; init; }
+	public ulong StartGpuBytes { get; init; }
+	public ulong EndGpuBytes { get; init; }
 	public ulong AverageGpuBytes { get; init; }
 	public ulong PeakGpuBytes { get; init; }
 	public ulong GpuBudgetBytes { get; init; }
@@ -69,6 +74,23 @@ internal sealed class PerformanceChunkMetrics
 	public float LastStreamSettleMilliseconds { get; init; }
 	public float LastEffectivePerSecond { get; init; }
 	public float LastGenerationPerSecond { get; init; }
+}
+
+internal sealed class PerformanceMeshingMetrics
+{
+	public long Dispatches { get; init; }
+	public int Resident { get; init; }
+	public int Pending { get; init; }
+	public int PoolAvailable { get; init; }
+	public long LogicalCapacityBytes { get; init; }
+	public long PoolAllocations { get; init; }
+	public long PoolReuses { get; init; }
+	public long? GameThreadAllocatedBytes { get; init; }
+	public long ScalarReadbacks { get; init; }
+	public long GeometryReadbacks { get; init; }
+	public string GpuProfilerPath { get; init; }
+	public float AverageGpuMilliseconds { get; init; }
+	public float MaximumGpuMilliseconds { get; init; }
 }
 
 internal sealed class PerformanceVector2

@@ -4,9 +4,9 @@
 
 This decision covers the first production chunk slice: integer chunk identity,
 implicit SDF data, deterministic flat-terrain population, bounded streaming,
-and runtime/editor diagnostics. Surface extraction, collision, live edits,
-persistence, and network replication are later slices and are not implemented
-here.
+and runtime/editor diagnostics. LOD0 surface extraction is now implemented by
+the sole GPU path documented in `GpuVoxelMeshing.md`. Collision, live edits,
+persistence, and network replication remain later slices.
 
 ## Canonical Ownership and Data Flow
 
@@ -26,6 +26,9 @@ here.
   peers can reconstruct the same base field; a later edit slice must route
   authoritative mutations through this single chunk state rather than creating a
   second copy.
+- `VoxelManager` owns the GPU mesher that derives transient render data from an
+  immutable chunk/SDF descriptor. `VoxelChunk` remains free of engine resources,
+  GPU buffers, render objects, and mesh lifetime state.
 - Streaming target movement computes one desired coordinate set. Obsolete chunks
   are removed and missing chunks are ordered nearest-first with deterministic tie
   breaks. One component-scoped worker pipeline generates the complete missing set
@@ -42,13 +45,13 @@ here.
 - Cell size: `16` s&box units (s&box uses Source-style inches)
 - Chunk world extent: `512` units per axis
 - Density samples per chunk: `35,937`
-- Default load radius: `4` chunks in X/Y/Z around the player's current chunk
-  (`9x9x9 = 729` chunks)
+- Production load radius: `16` chunks in X/Y/Z around the player's current chunk
+  (`33x33x33 = 35,937` chunks)
 - Background generation concurrency: one serialized worker pipeline
 - Main-thread integration budget: `0.500 ms` per update, independent of chunk
   count
 
-At the default radius the settled world contains `26,198,073` logical density
+At the production radius the settled world contains `1,291,467,969` logical density
 samples. The current plane evaluates them directly and has no density arrays.
 Runtime diagnostics do not estimate or report chunk-attributed memory; allocator
 and managed-runtime layout are outside the chunk data contract. The concise
@@ -122,7 +125,7 @@ manager, log, or call engine resource APIs. Completion explicitly returns to the
 main thread before any authoritative collection changes.
 
 Initial population runs through this same pipeline from async `OnLoad`. s&box
-keeps the loading screen active until the component finishes, so the first 729
+keeps the loading screen active until the component finishes, so the first 35,937
 chunks exist before `OnStart` admits active play. Player boundary crossings use
 the identical generator and integration queue from `OnUpdate`; startup does not
 maintain a second terrain or scheduling implementation.

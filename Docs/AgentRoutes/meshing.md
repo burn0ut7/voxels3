@@ -5,10 +5,12 @@ collision geometry, normals, seams, LOD, and mesh scheduling.
 
 ## Decision Status
 
-The repository has no selected meshing algorithm and no CPU or GPU mesher.
-Before implementation, compare the viable algorithms and execution locations
-against smoothness, topology, edit latency, collision needs, s&box API limits,
-hardware targets, memory movement, and measured throughput.
+LOD0 rendering uses the production regular-cell Transvoxel GPU path documented
+in `Docs/Architecture/GpuVoxelMeshing.md`. Transition cells, other LODs, and
+collision meshing remain unselected. Before implementing those responsibilities,
+compare viable algorithms and execution locations against smoothness, topology,
+edit latency, collision needs, s&box API limits, hardware targets, memory
+movement, and measured throughput.
 
 Select one canonical production meshing path for a given responsibility. Do not
 ship CPU and GPU implementations as mutual fallbacks or allow them to diverge.

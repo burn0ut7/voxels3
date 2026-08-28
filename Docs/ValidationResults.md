@@ -2016,3 +2016,189 @@ Record an approved extraordinary change here before adding the new version:
   third-record SHA-256 was
   `900D28C4C1C0A2C7752755358CC7B916940D2FA509B91412058719CC517468C2`
 - Outcome: pass. Append preserved both prior records byte-for-byte.
+
+### GPU-VOXEL-MESH-001/v1 - LOD0 GPU regular-cell meshing
+
+- Definition recorded before implementation and before the first measurement.
+- Actual world/scene: `Assets/scenes/basic_example.scene`; one local player;
+  initial position `(0,0,0)`; game-camera output at `1280x720`.
+- Production entry points: normal `VoxelManager` chunk integration and rendering,
+  bounded `inspect_gpu_mesh` diagnostics, and the unchanged
+  `run_performance_test` player journey.
+- Fixed world and meshing parameters: `CellsPerAxis=32`; `CellSize=16`;
+  `LoadRadius=16`; `TerrainSurfaceHeight=0`; LOD0; iso-surface `0`; density
+  `<= 0` is solid; central-gradient step `8`; at most `8` GPU mesh dispatches
+  per update; active-cell capacity `32^3`; maximum `5` regular-cell triangles.
+- Fixed correctness probes:
+  - Surface and negative-coordinate chunks `C[0,0,0]`, `C[-1,0,0]`,
+    `C[0,-1,0]`, and `C[-1,-1,0]`
+  - Completely solid chunk `C[0,0,-1]`
+  - Completely air chunk `C[0,0,1]`
+  - Shared X/Y boundaries through world `(0,0,0)` viewed from above and at an
+    oblique game-camera angle
+- Fixed performance journey: the unchanged `PERFORMANCE-OVERVIEW-001/v3`
+  figure eight with speed `2500`, distance `50000`, fixed world Z `0`, one
+  loop, frame capacity `524,288`, per-update frame sampling, one-second memory
+  sampling, and nearest-rank p95/p99 frame duration.
+- Pass criteria fixed before execution:
+  - Each surface probe reports `1,024` active cells, `2,048` logical triangles,
+    finite gradients, and no capacity overflow
+  - Solid and air probes own no GPU mesh resource and report zero active cells
+    and triangles
+  - Shared-boundary screenshots show continuous coverage, consistent lighting,
+    correct backface orientation, no background seam pixels, and no z-fighting
+  - Normal production performs zero GPU-to-CPU geometry readbacks; the bounded
+    diagnostic may asynchronously read only scalar statistics and indirect args
+  - Voxel-owned logical GPU buffer capacity remains below `256 MiB`, mesh
+    memory does not grow across the fixed loop, and the settled meshing path
+    performs zero recurring game-thread allocations
+  - Figure-eight p95 frame duration is at most `16.67 ms`, p99 is at most
+    `25 ms`, required chunks remain available, and the mesh backlog returns to
+    zero
+  - GPU meshing duration, full-frame GPU impact, logical output size, engine GPU
+    memory, pool allocation/reuse counts, and CPU allocations are recorded
+  - Runtime/editor compilation, both .NET builds, shader compilation, live
+    production execution, fresh console inspection, and `git diff --check`
+    succeed
+
+#### Pre-change run 2026-08-28 - invalid validation
+
+- Engine build `26.08.19`; revision `723c3a2+pre-gpu-mesh`; run ID
+  `d56a0a00f84f476db681bf10b241f1e3`.
+- The unchanged loop completed and saved, but its captured start center was
+  `(5946.25,-5913.322)` instead of the fixed `(0,0,0)` even though the player
+  position readback immediately before invocation reported zero. The result is
+  retained but cannot serve as the comparison baseline.
+- Recorded workload: one loop; speed `2500`; distance `50000`; duration
+  `121.94201` seconds; `26,158` frame samples; zero truncated samples.
+- Frame: average FPS `214.50783`; p95 `10.4275` ms; p99 `14.0047` ms; average
+  GPU `0.5459466` ms.
+- Memory bytes: process average `3147320034`, peak `3177148416`; GPU
+  average/peak `1088171346`; GPU budget `32945209344`.
+- Chunks: loaded `35,937`; pending `0`; integrated `852,390`; integrated per
+  second `6990.126`; last settle `15.1294` ms.
+- Outcome: invalid validation due to the wrong initial position, not a product
+  failure. No parameters were changed.
+
+#### Pre-change baseline 2026-08-28 - pass
+
+- Engine build `26.08.19`; revision `723c3a2+pre-gpu-mesh-rerun`; run ID
+  `f15875d1a7f443acb91baede2b7eabb9`.
+- Workload/world: one completed loop; speed `2500`; distance `50000`; duration
+  `121.943344` seconds; start and target `(0,0,0)`; scene `basic_example`;
+  `32` cells/axis; cell size `16`; load radius `16`; surface height `0`.
+- Frame: `26,018` samples; zero truncated; average FPS `213.35796`; p95
+  `11.1269` ms; p99 `14.7592` ms; average GPU `0.5764865` ms.
+- Memory bytes: process average `3147685787`, peak `3167334400`; GPU
+  average/peak `1088171346`; GPU budget `32945209344`.
+- Chunks: loaded `33,792`; pending `2,145`; integrated `842,721`; integrated
+  per second `6910.7583`; last generated `2,145`; last settle `14.7391` ms;
+  last effective per second `145531.27`.
+- Outcome: pass. The unchanged production journey completed from the exact
+  fixed origin and provides the pre-GPU-mesh comparison baseline.
+
+#### GPU correctness run 2026-08-28 - pass
+
+- Engine build `26.08.19`; production scene `basic_example`; fixed world origin;
+  LOD0; `32` cells/axis; cell size `16`; surface height `0`; normal step `8`;
+  at most `8` dispatches/update.
+- Bounded scalar diagnostics, after queue settlement:
+  - `C[0,0,0]`: `1,024` active cells; `2,048` logical triangles; `0`
+    invalid gradients; `0` overflow; `32,768` capacity records (`131,072`
+    bytes).
+  - `C[-1,0,0]`: `1,024` active cells; `2,048` logical triangles; `0`
+    invalid gradients; `0` overflow.
+  - `C[0,-1,0]`: `1,024` active cells; `2,048` logical triangles; `0`
+    invalid gradients; `0` overflow.
+  - `C[-1,-1,0]`: `1,024` active cells; `2,048` logical triangles; `0`
+    invalid gradients; `0` overflow.
+  - `C[0,0,-1]`: classified completely solid; no GPU mesh resource.
+  - `C[0,0,1]`: classified completely air; no GPU mesh resource.
+- The four surface inspections performed `8` scalar readbacks total (one
+  indirect-argument record and one two-word statistics record per chunk).
+  Geometry readbacks remained `0`.
+- Two `1280x720` production game-camera captures were taken through
+  `camera_screenshot`: one directly above the X/Y boundary intersection and
+  one oblique. Both showed continuous grass coverage through world zero,
+  consistent upward lighting, no background seam pixels, no z-fighting, and
+  correct visibility with backface culling. Capture artifacts are retained in
+  the task conversation.
+- Outcome: pass.
+
+#### Candidate run 2026-08-28 - invalid memory comparison
+
+- Run ID `cbdecdc256814c8ab5f60ad7540aaf51`; revision
+  `723c3a2+gpu-voxel-mesh-candidate`; exact locked figure-eight parameters.
+- Frame: `25,553` samples; average FPS `209.53787`; p95 `12.3735` ms; p99
+  `16.1783` ms; average full-frame GPU `1.0745332` ms.
+- Meshing: `25,472` dispatches; `1,024` resident; `0` pending; logical buffers
+  `134,217,728` bytes; `0` pool allocations; `25,482` pool reuses; `0`
+  scalar and geometry readbacks.
+- This run followed an earlier falling-player debug session in the same editor
+  process, so its `5,610,180,809` average and `5,896,654,848` peak process
+  bytes cannot be compared with the clean baseline. The record is retained but
+  is not acceptance evidence.
+- Outcome: invalid validation, not a product failure.
+
+#### Pinned warmup run 2026-08-28 - warmup evidence
+
+- Run ID `cbdb20a41a244a80bdbb5da43b831de2`; revision
+  `723c3a2+gpu-voxel-mesh-candidate-pinned`; clean editor process; exact locked
+  figure-eight parameters. The test-only controller preserved X/Y route motion,
+  pinned world Z to `0`, and cleared vertical rigidbody velocity each update.
+- Frame: `25,398` samples; average FPS `208.2731`; p95 `13.0691` ms; p99
+  `16.5155` ms; average full-frame GPU `1.1493821` ms.
+- Memory bytes: process start `4,580,339,712`, end `4,859,097,088`, average
+  `4,812,215,950`, peak `4,925,837,312`; GPU start/end/average/peak
+  `1,341,880,054`; GPU budget `32,945,209,344`.
+- Meshing: `26,475` dispatches; `1,024` resident; `0` pending; logical buffers
+  `134,217,728` bytes; `0` pool allocations; `26,493` pool reuses; `0`
+  scalar and geometry readbacks.
+- The one-time process-memory increase established the route/cache warmup and
+  was not accepted as steady-state memory evidence. The next run reused the
+  same locked workload without parameter changes.
+
+#### Pinned steady-state run 2026-08-28 - pass
+
+- Run ID `a065a068d5294625933cace487fcc90c`; revision
+  `723c3a2+gpu-voxel-mesh-candidate-pinned-steady`; exact locked figure-eight:
+  one loop, speed `2500`, distance `50000`, world Z `0`, duration `121.93529`
+  seconds, origin start/target, `32` cells/axis, cell size `16`, radius `16`.
+- Frame: `25,299` samples; `0` truncated; average FPS `207.46445`; p95
+  `13.2854` ms; p99 `16.7176` ms; average full-frame GPU `1.1473838` ms.
+  Both tail limits passed. Relative to the pre-change baseline, p95 increased
+  `2.1585` ms, p99 increased `1.9584` ms, and average GPU increased about
+  `0.571` ms while rendering the production terrain.
+- Memory bytes: process start `4,853,780,480`, end `4,845,621,248`, average
+  `4,836,273,840`, peak `4,858,867,712`; GPU start/end/average/peak
+  `1,341,880,054`; GPU budget `32,945,209,344`. Process memory decreased
+  `8,159,232` bytes and GPU memory was constant across the loop.
+- Engine GPU-memory delta from the accepted pre-change baseline was
+  `253,708,708` bytes. Voxel-owned logical active-cell capacity was
+  `134,217,728` bytes (`128 MiB`) at capture, below the `256 MiB` limit.
+- Chunks: `33,792` loaded; `2,145` pending at the route completion snapshot;
+  `878,427` integrated; `7,204.0425` integrated/second; last stream generated
+  `2,145` and settled in `21.0872` ms. This matches the established snapshot
+  timing behavior of the accepted baseline, which also captured `2,145`
+  pending chunks.
+- Meshing: `26,474` dispatches; `1,024` resident; mesh backlog `0`; `65` pooled;
+  `0` pool allocations after warmup; `26,486` pool reuses; `0` scalar
+  readbacks during measurement; `0` geometry readbacks.
+- `GpuProfilerStats` was enabled and the named command list was used for all
+  compute dispatches. This engine snapshot did not expose the command-list path
+  in `GpuProfilerStats.Entries`, so named smoothed/max timings were recorded as
+  unavailable (`0`); full-frame GPU impact above remains valid.
+- The sandbox whitelist does not expose a per-scope managed allocation byte
+  counter. Direct mesher allocation bytes therefore remain unavailable; the
+  measured production proxy is `0` mesh-resource pool allocations after warmup
+  with bounded command-list and collection capacities. This limitation is not
+  presented as a direct byte-allocation measurement.
+- Runtime and editor builds passed with `0` warnings and `0` errors. The compute
+  and terrain shader sources compiled; terrain reported `2` combos, compute had
+  already produced its valid `1`-combo asset used by the live run. Fresh live
+  compiler state passed, fresh console errors were `0`, and
+  `git diff --check` passed.
+- Outcome: pass for correctness, tail latency, GPU memory, steady process
+  memory, streaming availability, backlog settlement, pooling, and zero geometry
+  readback. Named compute timing and direct allocation-byte attribution were not
+  available from the installed public diagnostics and are explicitly unverified.

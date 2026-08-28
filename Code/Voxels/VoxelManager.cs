@@ -31,6 +31,7 @@ public sealed class VoxelManager : Component
 	private readonly List<Vector3Int> _coordinateBuffer = new();
 	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
+	private GpuVoxelMesher _gpuMesher;
 
 	private bool _hasStreamingCenter;
 	private bool _streamInProgress;
@@ -59,6 +60,7 @@ public sealed class VoxelManager : Component
 	private GameObject _resolvedStreamingTarget;
 	private bool _playerFigureEightEnabled;
 	private GameObject _playerFigureEightTarget;
+	private Rigidbody _playerFigureEightBody;
 	private Vector2 _playerFigureEightCenter;
 	private float _playerFigureEightParameter;
 	private bool _playerFigureEightTestRunning;
@@ -82,6 +84,8 @@ public sealed class VoxelManager : Component
 	private double _performanceGpuMemoryBytesTotal;
 	private ulong _performancePeakGpuMemoryBytes;
 	private ulong _performanceGpuMemoryBudgetBytes;
+	private ulong _performanceStartProcessMemoryBytes;
+	private ulong _performanceStartGpuMemoryBytes;
 	private int _performanceMemorySampleCount;
 	private int _performanceChunksIntegrated;
 	private bool _performanceSnapshotReady;
@@ -94,10 +98,22 @@ public sealed class VoxelManager : Component
 	private float _lastAverageGpuFrameMilliseconds;
 	private ulong _lastAverageProcessMemoryBytes;
 	private ulong _lastPeakProcessMemoryBytes;
+	private ulong _lastStartProcessMemoryBytes;
+	private ulong _lastEndProcessMemoryBytes;
 	private ulong _lastAverageGpuMemoryBytes;
 	private ulong _lastPeakGpuMemoryBytes;
+	private ulong _lastStartGpuMemoryBytes;
+	private ulong _lastEndGpuMemoryBytes;
 	private ulong _lastGpuMemoryBudgetBytes;
 	private int _lastPerformanceChunksIntegrated;
+	private long _performanceMesherDispatchStart;
+	private long _performanceMesherPoolAllocationStart;
+	private long _performanceMesherPoolReuseStart;
+	private long _performanceMesherScalarReadbackStart;
+	private long _lastPerformanceMeshDispatches;
+	private long _lastPerformanceMeshPoolAllocations;
+	private long _lastPerformanceMeshPoolReuses;
+	private long _lastPerformanceMeshScalarReadbacks;
 	private float _lastPerformanceChunksPerSecond;
 	private bool _lastPerformanceWasFigureEightTest;
 	private int _lastPerformanceCompletedLoops;
@@ -198,9 +214,10 @@ public sealed class VoxelManager : Component
 	protected override async System.Threading.Tasks.Task OnLoad()
 	{
 		ResolveStreamingTarget();
+		_gpuMesher = new GpuVoxelMesher( Scene, CellsPerAxis );
 		ApplyConfigurationAndRebuild();
 
-		while ( _streamInProgress )
+		while ( _streamInProgress || _gpuMesher.PendingCount > 0 )
 		{
 			if ( IntegrateCompletedChunks() )
 			{
@@ -211,13 +228,15 @@ public sealed class VoxelManager : Component
 			{
 				CompleteStream();
 				RefreshReadableStatus();
-				break;
 			}
+
+			_gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
 
 			await Task.Yield();
 		}
 
-		_initialLoadCompleted = _loadedChunks.Count == _desiredChunks.Count && _pendingChunks.Count == 0;
+		_initialLoadCompleted = _loadedChunks.Count == _desiredChunks.Count &&
+			_pendingChunks.Count == 0 && _gpuMesher.PendingCount == 0;
 		Log.Info(
 			$"[VoxelWorld] load.complete ready={_initialLoadCompleted} loaded={_loadedChunks.Count} " +
 			$"pending={_pendingChunks.Count}" );
@@ -266,6 +285,7 @@ public sealed class VoxelManager : Component
 			{
 				_generationCancellation?.Cancel();
 				_streamRevision++;
+				_gpuMesher?.Clear();
 				_loadedChunks.Clear();
 				_desiredChunks.Clear();
 				_pendingChunks.Clear();
@@ -314,6 +334,7 @@ public sealed class VoxelManager : Component
 		{
 			RefreshPlayerChunkStatus();
 		}
+		_gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
 		TryCompletePlayerFigureEightTest();
 	}
 
@@ -321,9 +342,12 @@ public sealed class VoxelManager : Component
 	{
 		_playerFigureEightEnabled = false;
 		_playerFigureEightTarget = null;
+		_playerFigureEightBody = null;
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTestCompletionReady = false;
 		_generationCancellation?.Cancel();
+		_gpuMesher?.Dispose();
+		_gpuMesher = null;
 	}
 
 	protected override void OnValidate()
@@ -387,10 +411,11 @@ public sealed class VoxelManager : Component
 		FigureEightDistance = distance;
 		var start = player.WorldPosition;
 		_playerFigureEightTarget = player.GameObject;
+		_playerFigureEightBody = player.Body;
 		_playerFigureEightCenter = new Vector2( start.x, start.y );
 		_playerFigureEightParameter = 0f;
 		_playerFigureEightEnabled = true;
-		_playerFigureEightTarget.WorldPosition = new Vector3( start.x, start.y, 0f );
+		SetFigureEightPosition( start.x, start.y );
 	}
 
 	public string StartPerformanceTest(
@@ -453,6 +478,25 @@ public sealed class VoxelManager : Component
 		var targetPosition = target.WorldPosition;
 		var sceneName = Scene?.Name ?? "unknown";
 		var runId = Guid.NewGuid().ToString( "N" );
+		var meshingGpuSmoothedMilliseconds = 0f;
+		var meshingGpuMaximumMilliseconds = 0f;
+		var meshingGpuProfilerPath = string.Empty;
+		foreach ( var path in global::Sandbox.Diagnostics.GpuProfilerStats.Entries )
+		{
+			if ( !path.Contains( "Voxel Terrain Meshing", StringComparison.Ordinal ) )
+			{
+				continue;
+			}
+
+			meshingGpuSmoothedMilliseconds = Math.Max(
+				meshingGpuSmoothedMilliseconds,
+				global::Sandbox.Diagnostics.GpuProfilerStats.GetSmoothedDuration( path ) );
+			meshingGpuMaximumMilliseconds = Math.Max(
+				meshingGpuMaximumMilliseconds,
+				global::Sandbox.Diagnostics.GpuProfilerStats.GetMaxDuration( path ) );
+			meshingGpuProfilerPath = path;
+		}
+
 		var result = new PerformanceTestResult
 		{
 			SchemaVersion = PerformanceResultSchemaVersion,
@@ -509,8 +553,12 @@ public sealed class VoxelManager : Component
 			},
 			Memory = new PerformanceMemoryMetrics
 			{
+				StartProcessBytes = _lastStartProcessMemoryBytes,
+				EndProcessBytes = _lastEndProcessMemoryBytes,
 				AverageProcessBytes = _lastAverageProcessMemoryBytes,
 				PeakProcessBytes = _lastPeakProcessMemoryBytes,
+				StartGpuBytes = _lastStartGpuMemoryBytes,
+				EndGpuBytes = _lastEndGpuMemoryBytes,
 				AverageGpuBytes = _lastAverageGpuMemoryBytes,
 				PeakGpuBytes = _lastPeakGpuMemoryBytes,
 				GpuBudgetBytes = _lastGpuMemoryBudgetBytes
@@ -525,6 +573,22 @@ public sealed class VoxelManager : Component
 				LastStreamSettleMilliseconds = LastStreamSettleMilliseconds,
 				LastEffectivePerSecond = LastEffectiveChunksPerSecond,
 				LastGenerationPerSecond = LastGenerationChunksPerSecond
+			},
+			Meshing = new PerformanceMeshingMetrics
+			{
+				Dispatches = _lastPerformanceMeshDispatches,
+				Resident = _gpuMesher?.ResidentCount ?? 0,
+				Pending = _gpuMesher?.PendingCount ?? 0,
+				PoolAvailable = _gpuMesher?.PoolCount ?? 0,
+				LogicalCapacityBytes = _gpuMesher?.LogicalCapacityBytes ?? 0,
+				PoolAllocations = _lastPerformanceMeshPoolAllocations,
+				PoolReuses = _lastPerformanceMeshPoolReuses,
+				GameThreadAllocatedBytes = null,
+				ScalarReadbacks = _lastPerformanceMeshScalarReadbacks,
+				GeometryReadbacks = GpuVoxelMesher.GeometryReadbackCount,
+				GpuProfilerPath = meshingGpuProfilerPath,
+				AverageGpuMilliseconds = meshingGpuSmoothedMilliseconds,
+				MaximumGpuMilliseconds = meshingGpuMaximumMilliseconds
 			}
 		};
 
@@ -603,6 +667,7 @@ public sealed class VoxelManager : Component
 		{
 			_playerFigureEightEnabled = false;
 			_playerFigureEightTarget = null;
+			_playerFigureEightBody = null;
 			if ( _playerFigureEightTestRunning )
 			{
 				_playerFigureEightTestRunning = false;
@@ -640,10 +705,21 @@ public sealed class VoxelManager : Component
 
 		var sine = MathF.Sin( _playerFigureEightParameter );
 		var cosine = MathF.Cos( _playerFigureEightParameter );
-		_playerFigureEightTarget.WorldPosition = new Vector3(
+		SetFigureEightPosition(
 			_playerFigureEightCenter.x + distance * sine,
-			_playerFigureEightCenter.y + distance * sine * cosine,
-			0f );
+			_playerFigureEightCenter.y + distance * sine * cosine );
+	}
+
+	private void SetFigureEightPosition( float x, float y )
+	{
+		_playerFigureEightTarget.WorldPosition = new Vector3( x, y, 0f );
+		if ( !_playerFigureEightBody.IsValid() )
+		{
+			return;
+		}
+
+		var velocity = _playerFigureEightBody.Velocity;
+		_playerFigureEightBody.Velocity = new Vector3( velocity.x, velocity.y, 0f );
 	}
 
 	private void TryCompletePlayerFigureEightTest()
@@ -657,6 +733,7 @@ public sealed class VoxelManager : Component
 		CompletePerformanceWindow();
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTarget = null;
+		_playerFigureEightBody = null;
 		if ( !_performanceSnapshotReady )
 		{
 			Log.Error( "[VoxelWorld] performance.test.failed reason=\"no complete performance snapshot\"" );
@@ -754,13 +831,24 @@ public sealed class VoxelManager : Component
 		_lastAverageProcessMemoryBytes = (ulong)(
 			_performanceProcessMemoryBytesTotal / _performanceMemorySampleCount );
 		_lastPeakProcessMemoryBytes = _performancePeakProcessMemoryBytes;
+		_lastStartProcessMemoryBytes = _performanceStartProcessMemoryBytes;
+		_lastEndProcessMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
 		_lastAverageGpuMemoryBytes = (ulong)(
 			_performanceGpuMemoryBytesTotal / _performanceMemorySampleCount );
 		_lastPeakGpuMemoryBytes = _performancePeakGpuMemoryBytes;
+		_lastStartGpuMemoryBytes = _performanceStartGpuMemoryBytes;
+		_lastEndGpuMemoryBytes = global::Sandbox.Graphics.VideoMemoryUsed;
 		_lastGpuMemoryBudgetBytes = _performanceGpuMemoryBudgetBytes;
 		_lastPerformanceChunksIntegrated = _performanceChunksIntegrated;
 		_lastPerformanceChunksPerSecond =
 			_performanceChunksIntegrated / _performanceWindowElapsedSeconds;
+		_lastPerformanceMeshDispatches = (_gpuMesher?.DispatchCount ?? 0) - _performanceMesherDispatchStart;
+		_lastPerformanceMeshPoolAllocations =
+			(_gpuMesher?.PoolAllocationCount ?? 0) - _performanceMesherPoolAllocationStart;
+		_lastPerformanceMeshPoolReuses =
+			(_gpuMesher?.PoolReuseCount ?? 0) - _performanceMesherPoolReuseStart;
+		_lastPerformanceMeshScalarReadbacks =
+			(_gpuMesher?.ScalarReadbackCount ?? 0) - _performanceMesherScalarReadbackStart;
 		_lastPerformanceWasFigureEightTest = _playerFigureEightTestRunning;
 		_lastPerformanceCompletedLoops = _playerFigureEightTestRunning ? _playerFigureEightCompletedLoops : 0;
 		_lastPerformanceTestSpeed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : 0f;
@@ -807,8 +895,14 @@ public sealed class VoxelManager : Component
 		_performanceGpuMemoryBytesTotal = 0d;
 		_performancePeakGpuMemoryBytes = 0;
 		_performanceGpuMemoryBudgetBytes = 0;
+		_performanceStartProcessMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
+		_performanceStartGpuMemoryBytes = global::Sandbox.Graphics.VideoMemoryUsed;
 		_performanceMemorySampleCount = 0;
 		_performanceChunksIntegrated = 0;
+		_performanceMesherDispatchStart = _gpuMesher?.DispatchCount ?? 0;
+		_performanceMesherPoolAllocationStart = _gpuMesher?.PoolAllocationCount ?? 0;
+		_performanceMesherPoolReuseStart = _gpuMesher?.PoolReuseCount ?? 0;
+		_performanceMesherScalarReadbackStart = _gpuMesher?.ScalarReadbackCount ?? 0;
 	}
 
 	private static string EscapeLogValue( string value )
@@ -853,6 +947,17 @@ public sealed class VoxelManager : Component
 			$"minimumSampleMaterial=\"{VoxelChunk.GetMaterialName( minimumSampleMaterialId )}\" minimumSampleMaterialId={minimumSampleMaterialId} " +
 			$"maximumSample=L[0,0,{chunk.CellsPerAxis}] maximumSampleDensity={maximumSampleDensity} " +
 			$"maximumSampleMaterial=\"{VoxelChunk.GetMaterialName( maximumSampleMaterialId )}\" maximumSampleMaterialId={maximumSampleMaterialId}" );
+	}
+
+	public string InspectGpuMesh( int x, int y, int z )
+	{
+		var coordinate = new Vector3Int( x, y, z );
+		if ( !_loadedChunks.TryGetValue( coordinate, out var chunk ) )
+		{
+			return $"C[{x},{y},{z}] loaded=false";
+		}
+
+		return _gpuMesher.Inspect( chunk );
 	}
 
 	private void ResolveStreamingTarget()
@@ -943,6 +1048,7 @@ public sealed class VoxelManager : Component
 
 		_generationCancellation?.Cancel();
 		_streamRevision++;
+		_gpuMesher.Reset( CellsPerAxis );
 		_loadedChunks.Clear();
 		_desiredChunks.Clear();
 		_pendingChunks.Clear();
@@ -992,8 +1098,10 @@ public sealed class VoxelManager : Component
 		var unloadedCount = _coordinateBuffer.Count;
 		foreach ( var coordinate in _coordinateBuffer )
 		{
+			_gpuMesher.Remove( coordinate );
 			_loadedChunks.Remove( coordinate );
 		}
+		_gpuMesher.CommitDrawCommands();
 
 		_coordinateBuffer.Clear();
 		foreach ( var coordinate in _desiredChunks )
@@ -1190,6 +1298,7 @@ public sealed class VoxelManager : Component
 			if ( _desiredChunks.Contains( chunk.Coordinate ) && !_loadedChunks.ContainsKey( chunk.Coordinate ) )
 			{
 				_loadedChunks.Add( chunk.Coordinate, chunk );
+				_gpuMesher.Schedule( chunk, TerrainSurfaceHeight, _streamRevision );
 				integratedCount++;
 				_generatedThisStream++;
 
@@ -1282,8 +1391,10 @@ public sealed class VoxelManager : Component
 		PendingChunkCount = _pendingChunks.Count;
 		ChunkStatus = _performanceSnapshotReady
 			? $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued; " +
-				$"{_lastPerformanceChunksPerSecond:N1} chunks/sec over {_lastPerformanceWindowSeconds:N1} sec"
-			: $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued";
+				$"{_lastPerformanceChunksPerSecond:N1} chunks/sec over {_lastPerformanceWindowSeconds:N1} sec; " +
+				$"{_gpuMesher?.ResidentCount ?? 0:N0} GPU meshes"
+			: $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued; " +
+				$"{_gpuMesher?.ResidentCount ?? 0:N0} GPU meshes; {_gpuMesher?.PendingCount ?? 0:N0} mesh queued";
 		StreamingPerformance = LastStreamSettleMilliseconds > 0f
 			? $"{LastEffectiveChunksPerSecond:N1} chunks/sec; {LastStreamSettleMilliseconds:N3} ms last stream"
 			: "No stream completed";
