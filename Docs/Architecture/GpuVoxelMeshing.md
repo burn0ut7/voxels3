@@ -111,13 +111,9 @@ resource owner or a fixed terrain-shape limit. At the production capacity of
 2,048 slots, visibility bounds, source/visible arguments, frame counters, and
 aggregate counters total `131,100` logical bytes.
 
-Normal meshing allocates, clears, binds, and writes no statistics buffer. A
-resource inspected through `inspect_gpu_mesh` lazily acquires one three-word
-diagnostic buffer from its own lifetime. The first word receives the append
-cell count, while the other two words receive logical triangles and invalid
-gradients. Resource sets that have never serviced an inspection therefore carry
-no diagnostic allocation; a pooled set retains its tiny 12-byte logical buffer
-for later diagnostic reuse.
+Mesh resources contain only production active-cell and indirect-argument data.
+There is no diagnostic statistics buffer, inspection queue, or second compute
+shader that reclassifies production cells.
 
 At 32 cells per axis, each active-cell buffer is 131,072 bytes. The fixed
 production radius contains 1,089 possible surface chunks, for 142,737,408 bytes
@@ -154,14 +150,7 @@ incompatible pool. Compute counter reset, dispatch, counter copy, and subsequent
 draw depend only on GPU queue ordering, without fences or CPU synchronization.
 
 Normal production never invokes `GetData` or `GetDataAsync` for active-cell
-geometry. The bounded `inspect_gpu_mesh(x,y,z)` editor diagnostic schedules a
-separate compute pass for the resident mesh descriptor. That pass
-uses the same shared SDF and regular-cell classification function as production,
-then samples the center gradient only on request. Its active count is compared
-with the real indirect draw count; it never mutates the append stream. After GPU
-queue ordering makes the results available, the diagnostic may asynchronously
-read the indirect arguments and three-word scalar buffer.
-Scalar and geometry readbacks are counted separately; the geometry count is a
+geometry, and no project diagnostic does so either. Geometry readbacks remain a
 constant zero. Normal rendering performs no visibility readback. During an
 opted-in performance run, the shader accumulates sample/resident/warm/visible/minimum/
 maximum counters entirely on GPU. After the measured loop, one asynchronous
@@ -188,6 +177,9 @@ expose a stable named compute entry rather than being inferred from CPU time.
   simple pool exact and bounded.
 - CPU topology decoding, a reference mesher, or CPU density arrays would create
   a second geometry/data path and violate the authoritative boundary.
+- The former diagnostic-only mesh compute shader and scalar inspection readback
+  were removed because they formed a second executable classification path.
+  Mesh validation now observes production rendering and residency instead.
 - Counter or geometry readback to determine draw size introduces a GPU/CPU
   round trip. GPU counter copy plus indirect drawing makes it unnecessary.
 - Per-chunk CPU frustum tests and CPU-compacted indirect uploads would add

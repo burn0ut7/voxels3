@@ -192,13 +192,8 @@ before that policy changes.
   streaming begin/completion, and stale-result detail is available only through
   the inspector's opt-in `Verbose Logging` setting, which defaults off and
   avoids constructing diagnostic strings and probes in normal production.
-  Warnings, errors, explicit diagnostic-command results, and performance-test
+  Warnings, errors, bounded read-only diagnostic results, and performance-test
   begin/save records remain unconditional because they are sparse and actionable.
-- `voxel_verbose_logging true|false` changes the same setting on the live
-  manager without requiring a scene restart.
-- The `voxel_stream_origin x y z` console command moves the real production
-  streaming target to an exact world position for deterministic troubleshooting.
-  It refuses to choose silently when more than one active manager exists.
 - `voxel_chunk_info x y z` retrieves any currently loaded chunk by its log
   identifier coordinates and reports its minimum- and maximum-Z sample density
   and material, or a clear missing result otherwise.
@@ -209,8 +204,9 @@ before that policy changes.
   These detailed fields remain in structured logs rather than becoming separate
   inspector rows.
 - Loaded-chunk bounds and labels are not drawn at runtime because their work and
-  gizmo count scale with every loaded chunk. Targeted console queries remain the
-  bounded diagnostic path; there is no separate debug copy or test implementation.
+  gizmo count scale with every loaded chunk. The read-only chunk query remains a
+  bounded observation of canonical state. There is no diagnostic command that
+  moves the streaming target and no separate debug copy or test implementation.
 
 ## Player Figure-Eight Smoke Movement
 

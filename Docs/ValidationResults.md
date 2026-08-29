@@ -22,6 +22,12 @@ delete an earlier result because it failed or because a scenario was superseded.
 7. Version a scenario only when an extraordinary, substantive issue makes the
    old definition invalid or impossible. Add the written justification before
    the new definition and preserve all old definitions and results.
+8. The existing figure-eight is the primary automated journey and remains the
+   sole project-owned test trigger. Read-only production-state observations may
+   support it, but direct streaming-origin mutation and diagnostic-only terrain
+   or mesh implementations are not valid substitute test paths. Historical
+   results that used removed diagnostics remain immutable evidence, not current
+   executable scenarios.
 
 ## Scenario Definition Template
 
@@ -3010,3 +3016,50 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: pass. Full-rebuild fallback, progressive nearest-first availability,
   bounded batches, conservative warm rejection, latest-revision authority, and
   final desired-set correctness were observed through the production path.
+
+### Testing-surface cleanup 2026-08-29
+
+- Scope: remove executable artifacts belonging to superseded diagnostic test
+  paths while preserving the existing figure-eight implementation, inspector
+  action, MCP trigger, parameters, schema, and result persistence unchanged.
+- Removed paths: the mutating `voxel_stream_origin` command, the redundant
+  `voxel_verbose_logging` console wrapper, the `inspect_gpu_mesh` editor tool,
+  its manager/mesher inspection queues and readbacks, and the diagnostic-only
+  mesh compute shader.
+- Retained evidence surfaces: the figure-eight performance suite; passive
+  production frame, memory, chunk, streaming, meshing, visibility, dispatch,
+  pool, backlog, and readback counters; inspector status; normal structured
+  logs; production screenshots; and the read-only `voxel_chunk_info` query.
+- Historical results and scenario definitions were not rewritten. References to
+  removed paths describe immutable past runs and are not current instructions.
+
+#### PERFORMANCE-OVERVIEW-001/v3 cleanup run 2026-08-29 01:44 EDT — pass
+
+- Executor: Codex through the unchanged `run_performance_test` figure-eight.
+- Project/source state: cleanup candidate based on `22bced7`, revision label
+  `testing-cleanup-candidate`.
+- Engine build: `26.08.19`.
+- Hardware/environment: AMD Ryzen 7 9800X3D, NVIDIA GeForce RTX 5090,
+  `basic_example`, one local player.
+- Confirmation that scenario parameters were unchanged: yes; speed `2500`,
+  distance `50000`, loop count `1`, world height `0`, and all streaming/mesh
+  settings matched `PERFORMANCE-OVERVIEW-001/v3`.
+- Raw measurements: schema `4`, run
+  `fcbbebb2ff9640afb2c3810997efc16d`, one completed loop in `121.93755 s`,
+  `28,748` samples, zero truncation, average `235.74437 FPS`, p95 `5.2687 ms`,
+  p99 `6.9917 ms`, average GPU `0.7027053 ms`; `35,937` loaded chunks;
+  `1,089` gameplay and `136` warm resident meshes; zero settled gameplay/warm
+  backlog; zero normal scalar readbacks; zero geometry readbacks; one
+  post-measurement visibility scalar readback.
+- Streaming measurements: `752` incremental updates, zero full updates,
+  maximum synchronous update `15.4422 ms`, maximum generation batch `256`, and
+  peak gameplay/warm mesh backlogs `1,089/136`, both settled to zero.
+- Derived measurements: p95 and p99 passed their `16.67/25 ms` limits; the
+  result returned to streaming center `C[0,0,0]` and target `(0,0,0.04125)`;
+  the production camera showed continuous flat terrain after settlement.
+- Outcome: pass.
+- Evidence location: `performance/results-v1.jsonl` in `FileSystem.Data`, run ID
+  above, matching begin/save logs, and the live production-camera observation.
+- Remaining unmeasured risks: this cleanup deliberately removes the former
+  diagnostic-only per-cell GPU probe; future mesh correctness evidence must come
+  from production rendering/residency and player-visible behavior.

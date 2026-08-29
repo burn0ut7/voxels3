@@ -704,34 +704,6 @@ public sealed class VoxelManager : Component
 		}
 	}
 
-	[ConCmd( "voxel_stream_origin" )]
-	public static void SetDebugStreamingOrigin( float x, float y, float z )
-	{
-		if ( !TryGetActiveManager( "debug.origin", out var manager ) )
-		{
-			return;
-		}
-
-		var requestedPosition = new Vector3( x, y, z );
-		manager.ActiveStreamingTarget.WorldPosition = requestedPosition;
-
-		Log.Info(
-			$"[VoxelWorld] debug.origin.applied position=[{x},{y},{z}] " +
-			$"target=\"{manager.ActiveStreamingTarget.Name}\"" );
-	}
-
-	[ConCmd( "voxel_verbose_logging" )]
-	public static void SetVerboseLoggingCommand( bool enabled )
-	{
-		if ( !TryGetActiveManager( "logging.verbose", out var manager ) )
-		{
-			return;
-		}
-
-		manager.VerboseLogging = enabled;
-		Log.Info( $"[VoxelWorld] logging.verbose enabled={enabled}" );
-	}
-
 	private static bool TryGetActiveManager( string operation, out VoxelManager manager )
 	{
 		manager = null;
@@ -1086,17 +1058,6 @@ public sealed class VoxelManager : Component
 			$"minimumSampleMaterial=\"{VoxelChunk.GetMaterialName( minimumSampleMaterialId )}\" minimumSampleMaterialId={minimumSampleMaterialId} " +
 			$"maximumSample=L[0,0,{chunk.CellsPerAxis}] maximumSampleDensity={maximumSampleDensity} " +
 			$"maximumSampleMaterial=\"{VoxelChunk.GetMaterialName( maximumSampleMaterialId )}\" maximumSampleMaterialId={maximumSampleMaterialId}" );
-	}
-
-	public string InspectGpuMesh( int x, int y, int z )
-	{
-		var coordinate = new Vector3Int( x, y, z );
-		if ( !_loadedChunks.TryGetValue( coordinate, out var chunk ) )
-		{
-			return $"C[{x},{y},{z}] loaded=false";
-		}
-
-		return _gpuMesher.Inspect( chunk );
 	}
 
 	private void ResolveStreamingTarget()

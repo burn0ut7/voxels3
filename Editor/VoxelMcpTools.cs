@@ -29,21 +29,6 @@ public static class VoxelMcpTools
 		return $"Performance test {result}.";
 	}
 
-	/// <summary>
-	/// Inspect bounded GPU meshing counters for one loaded chunk. This schedules
-	/// one diagnostic compute pass and reads only scalar counters.
-	/// </summary>
-	[McpTool( "inspect_gpu_mesh" )]
-	public static string InspectGpuMesh( int x, int y, int z )
-	{
-		if ( !Game.IsPlaying )
-		{
-			throw new InvalidOperationException( "Start play mode before inspecting a GPU mesh." );
-		}
-
-		return FindManager().InspectGpuMesh( x, y, z );
-	}
-
 	private static VoxelManager FindManager()
 	{
 		VoxelManager manager = null;

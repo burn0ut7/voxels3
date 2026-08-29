@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Sandbox.Rendering;
 
 internal sealed class GpuVoxelMesher : IDisposable
@@ -9,7 +8,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private readonly Scene _scene;
 	private readonly ComputeShader _computeShader = new( "shaders/voxels/voxel_regular_mesher_cs.shader" );
-	private readonly ComputeShader _diagnosticShader = new( "shaders/voxels/voxel_mesh_diagnostics_cs.shader" );
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
 	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_terrain.shader" );
 	private readonly Sandbox.Rendering.CommandList _meshCommands = new( "Voxel Terrain Meshing" );
@@ -18,11 +16,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly Dictionary<Vector3Int, PendingMesh> _pending = new();
 	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();
 	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
-	private readonly Queue<InspectionRequest> _inspectionQueue = new();
-	private readonly Queue<ReadbackRequest> _readbackQueue = new();
-	private readonly HashSet<Vector3Int> _pendingInspections = new();
-	private readonly Dictionary<Vector3Int, string> _completedInspections = new();
-	private readonly object _inspectionLock = new();
 	private readonly object _visibilityLock = new();
 	private readonly Stack<MeshResource> _pool = new();
 	private readonly List<MeshResource> _drawOrder = new();
@@ -57,7 +50,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private long _poolReuseCount;
 	private long _scalarReadbackCount;
 	private long _visibilityScalarReadbackCount;
-	private long _updateSequence;
 	private long _renderSequence;
 	private long _submittedRenderSequence;
 
@@ -183,7 +175,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public int ProcessPending( int maximumDispatches )
 	{
-		System.Threading.Interlocked.Increment( ref _updateSequence );
 		AttachToMainCamera();
 		FinalizeInFlight();
 		if ( _inFlight.Count > 0 )
@@ -264,7 +255,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_submittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
 		}
 
-		ProcessInspections( System.Threading.Interlocked.Read( ref _updateSequence ) );
 		CommitDrawCommands();
 		return processed;
 	}
@@ -500,131 +490,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 			(float)System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds );
 	}
 
-	public string Inspect( VoxelChunk chunk )
-	{
-		if ( chunk.MaximumDensity <= 0f )
-		{
-			return $"{chunk.LogId} classification=solid gpuResource=false scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0";
-		}
-
-		if ( chunk.MinimumDensity > 0f )
-		{
-			return $"{chunk.LogId} classification=air gpuResource=false scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0";
-		}
-
-		var request = new InspectionRequest(
-			chunk.Coordinate,
-			chunk.LogId,
-			chunk.MinimumDensity,
-			chunk.MaximumDensity );
-		lock ( _inspectionLock )
-		{
-			if ( _completedInspections.Remove( chunk.Coordinate, out var completed ) )
-			{
-				return completed;
-			}
-
-			if ( !_pendingInspections.Add( chunk.Coordinate ) )
-			{
-				return $"{chunk.LogId} inspection=pending geometryReadbacks=0";
-			}
-
-			_inspectionQueue.Enqueue( request );
-		}
-
-		return $"{chunk.LogId} inspection=scheduled geometryReadbacks=0";
-	}
-
-	private void ProcessInspections( long submittedUpdateSequence )
-	{
-		while ( true )
-		{
-			InspectionRequest request;
-			lock ( _inspectionLock )
-			{
-				if ( !_inspectionQueue.TryDequeue( out request ) )
-				{
-					return;
-				}
-			}
-
-			if ( request.MaximumDensity <= 0f )
-			{
-				StoreInspection( request, $"{request.LogId} classification=solid gpuResource=false scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0" );
-				continue;
-			}
-
-			if ( request.MinimumDensity > 0f )
-			{
-				StoreInspection( request, $"{request.LogId} classification=air gpuResource=false scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0" );
-				continue;
-			}
-
-			if ( !_resident.TryGetValue( request.Coordinate, out var resource ) )
-			{
-				var state = _pending.ContainsKey( request.Coordinate ) ? "pending" : "missing";
-				StoreInspection( request, $"{request.LogId} classification=surface gpuResource=false state={state} scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0" );
-				continue;
-			}
-
-			var statistics = resource.EnsureStatistics();
-			var descriptor = resource.Descriptor;
-			_meshCommands.Attributes.Set( "MeshStatistics", statistics );
-			_meshCommands.Attributes.Set( "ChunkCoordinate", new Vector3(
-				descriptor.ChunkCoordinate.x,
-				descriptor.ChunkCoordinate.y,
-				descriptor.ChunkCoordinate.z ) );
-			_meshCommands.Attributes.Set( "CellsPerAxis", descriptor.CellsPerAxis );
-			_meshCommands.Attributes.Set( "CellSize", descriptor.CellSize );
-			_meshCommands.Attributes.Set( "SurfaceHeight", descriptor.SurfaceHeight );
-			_meshCommands.Clear( statistics, 0 );
-			_meshCommands.DispatchCompute(
-				_diagnosticShader,
-				descriptor.CellsPerAxis,
-				descriptor.CellsPerAxis,
-				descriptor.CellsPerAxis );
-
-			lock ( _inspectionLock )
-			{
-				_readbackQueue.Enqueue( new ReadbackRequest(
-					request,
-					resource,
-					statistics,
-					submittedUpdateSequence ) );
-			}
-		}
-	}
-
-	private void ProcessReadbacks()
+	private void ProcessVisibilityReadback()
 	{
 		BeginVisibilityReadbackIfRequested();
-		while ( true )
-		{
-			ReadbackRequest readback;
-			lock ( _inspectionLock )
-			{
-				if ( !_readbackQueue.TryPeek( out readback ) ||
-					System.Threading.Interlocked.Read( ref _updateSequence ) <= readback.SubmittedUpdateSequence )
-				{
-					return;
-				}
-
-				_readbackQueue.Dequeue();
-			}
-
-			var argumentsCompletion = new TaskCompletionSource<GpuBuffer.IndirectDrawArguments>( TaskCreationOptions.RunContinuationsAsynchronously );
-			var statisticsCompletion = new TaskCompletionSource<(uint ActiveCells, uint Triangles, uint InvalidGradients)>( TaskCreationOptions.RunContinuationsAsynchronously );
-			_scalarReadbackCount += 2;
-			readback.Resource.IndirectArguments.GetDataAsync<GpuBuffer.IndirectDrawArguments>( data =>
-			{
-				argumentsCompletion.TrySetResult( data.Length > 0 ? data[0] : default );
-			} );
-			readback.Statistics.GetDataAsync<uint>( data =>
-			{
-				statisticsCompletion.TrySetResult( data.Length >= 3 ? (data[0], data[1], data[2]) : default );
-			} );
-			CompleteInspectionAsync( readback.Inspection, argumentsCompletion.Task, statisticsCompletion.Task );
-		}
 	}
 
 	private void BeginVisibilityReadbackIfRequested()
@@ -715,30 +583,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 			measurement = completed;
 			_completedVisibilityMeasurement = null;
 			return true;
-		}
-	}
-
-	private async void CompleteInspectionAsync(
-		InspectionRequest request,
-		Task<GpuBuffer.IndirectDrawArguments> argumentsTask,
-		Task<(uint ActiveCells, uint Triangles, uint InvalidGradients)> statisticsTask )
-	{
-		var arguments = await argumentsTask;
-		var statistics = await statisticsTask;
-		StoreInspection( request,
-			$"{request.LogId} classification=surface gpuResource=true activeCells={arguments.InstanceCount} " +
-			$"diagnosticActiveCells={statistics.ActiveCells} logicalTriangles={statistics.Triangles} " +
-			$"invalidGradients={statistics.InvalidGradients} overflow=0 " +
-			$"capacityRecords={_capacity} capacityBytes={_capacity * sizeof( uint )} " +
-			$"scalarReadbacks={_scalarReadbackCount} geometryReadbacks=0" );
-	}
-
-	private void StoreInspection( InspectionRequest request, string result )
-	{
-		lock ( _inspectionLock )
-		{
-			_pendingInspections.Remove( request.Coordinate );
-			_completedInspections[request.Coordinate] = result;
 		}
 	}
 
@@ -951,26 +795,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_visibilityCountsNeedRefresh = false;
 	}
 
-	private sealed class InspectionRequest
-	{
-		public Vector3Int Coordinate { get; }
-		public string LogId { get; }
-		public float MinimumDensity { get; }
-		public float MaximumDensity { get; }
-		public InspectionRequest( Vector3Int coordinate, string logId, float minimumDensity, float maximumDensity )
-		{
-			Coordinate = coordinate;
-			LogId = logId;
-			MinimumDensity = minimumDensity;
-			MaximumDensity = maximumDensity;
-		}
-	}
-
-	private readonly record struct ReadbackRequest(
-		InspectionRequest Inspection,
-		MeshResource Resource,
-		GpuBuffer<uint> Statistics,
-		long SubmittedUpdateSequence );
 	private readonly record struct PendingMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency );
 	private readonly record struct InFlightMesh(
 		GpuSdfDescriptor Descriptor,
@@ -1018,14 +842,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public override void RenderSceneObject()
 		{
 			System.Threading.Interlocked.Increment( ref _owner._renderSequence );
-			_owner.ProcessReadbacks();
+			_owner.ProcessVisibilityReadback();
 		}
 	}
 
 	private sealed class MeshResource : IDisposable
 	{
 		private readonly long _allocationId;
-		private GpuBuffer<uint> _statistics;
 
 		public GpuSdfDescriptor Descriptor { get; private set; }
 		public GpuMeshResidency Residency { get; set; }
@@ -1075,20 +898,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 			DrawAttributes.Set( "SurfaceHeight", descriptor.SurfaceHeight );
 		}
 
-		public GpuBuffer<uint> EnsureStatistics()
-		{
-			_statistics ??= new GpuBuffer<uint>(
-				3,
-				GpuBuffer.UsageFlags.Structured,
-				$"Voxel Mesh Diagnostics {_allocationId}" );
-			return _statistics;
-		}
-
 		public void Dispose()
 		{
 			ActiveCells.Dispose();
 			IndirectArguments.Dispose();
-			_statistics?.Dispose();
 		}
 	}
 }
