@@ -81,7 +81,11 @@ internal sealed class PerformanceMeshingMetrics
 {
 	public long Dispatches { get; init; }
 	public int Resident { get; init; }
+	public int GameplayResident { get; init; }
+	public int WarmResident { get; init; }
 	public int Pending { get; init; }
+	public int GameplayPending { get; init; }
+	public int WarmPending { get; init; }
 	public int PoolAvailable { get; init; }
 	public long LogicalCapacityBytes { get; init; }
 	public long PoolAllocations { get; init; }
@@ -99,6 +103,7 @@ internal sealed class PerformanceVisibilityMetrics
 	public uint Samples { get; init; }
 	public float AverageResidentMeshChunks { get; init; }
 	public float AverageVisibleMeshChunks { get; init; }
+	public float AverageWarmMeshChunks { get; init; }
 	public uint MinimumVisibleMeshChunks { get; init; }
 	public uint MaximumVisibleMeshChunks { get; init; }
 	public float AverageNonZeroIndirectDraws { get; init; }

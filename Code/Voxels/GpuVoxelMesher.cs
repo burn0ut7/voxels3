@@ -15,8 +15,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly Sandbox.Rendering.CommandList _meshCommands = new( "Voxel Terrain Meshing" );
 	private readonly Sandbox.Rendering.CommandList _drawCommands = new( "Voxel Terrain Indirect Draws" );
 	private readonly Dictionary<Vector3Int, MeshResource> _resident = new();
-	private readonly Dictionary<Vector3Int, GpuSdfDescriptor> _pending = new();
-	private readonly Queue<GpuSdfDescriptor> _dispatchQueue = new();
+	private readonly Dictionary<Vector3Int, PendingMesh> _pending = new();
+	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();
+	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
 	private readonly Queue<InspectionRequest> _inspectionQueue = new();
 	private readonly Queue<ReadbackRequest> _readbackQueue = new();
 	private readonly HashSet<Vector3Int> _pendingInspections = new();
@@ -34,10 +35,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private int _capacity;
 	private int _allocatedResourceCount;
 	private int _visibilityCapacity;
+	private int _pendingGameplayCount;
+	private int _pendingWarmCount;
+	private int _warmResidentCount;
 	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
 	private VisibilityBuffers _visibilityBuffers;
 	private readonly GpuBuffer<uint> _visibilityAggregateCounters = new(
-		5,
+		6,
 		GpuBuffer.UsageFlags.Structured,
 		"Voxel Visibility Aggregate Counters" );
 	private bool _drawCommandsDirty;
@@ -58,7 +62,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private long _submittedRenderSequence;
 
 	public int ResidentCount => _resident.Count;
-	public int PendingCount => _pending.Count + _inFlight.Count;
+	public int PendingCount => PendingGameplayCount + PendingWarmCount;
+	public int PendingGameplayCount => _pendingGameplayCount + CountInFlight( GpuMeshResidency.Gameplay );
+	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Warm );
+	public int WarmResidentCount => _warmResidentCount;
 	public int PoolCount => _pool.Count;
 	public long DispatchCount => _dispatchCount;
 	public long PoolAllocationCount => _poolAllocationCount;
@@ -69,7 +76,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public long LogicalCapacityBytes => (long)_resident.Count * _capacity * sizeof( uint );
 	public long LogicalVisibilityBytes => _visibilityCapacity == 0
 		? 0
-		: (long)_visibilityCapacity * (sizeof( float ) * 8 + sizeof( uint ) * 8) + sizeof( uint ) * 7;
+		: (long)_visibilityCapacity * (sizeof( float ) * 8 + sizeof( uint ) * 8) + sizeof( uint ) * 9;
 
 	// Installed s&box 26.08.19 ABI: four sequential uint fields. CopyStructureCount uses
 	// byte offsets, while DrawInstancedIndirect uses an argument-element index.
@@ -85,7 +92,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		AttachToMainCamera();
 	}
 
-	public void Schedule( VoxelChunk chunk, float surfaceHeight, int sourceRevision )
+	public void Schedule(
+		VoxelChunk chunk,
+		float surfaceHeight,
+		int sourceRevision,
+		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
 		if ( chunk.MaximumDensity <= 0f || chunk.MinimumDensity > 0f )
 		{
@@ -97,16 +108,43 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( _resident.TryGetValue( chunk.Coordinate, out var resident ) &&
 			resident.Descriptor == descriptor )
 		{
+			if ( residency == GpuMeshResidency.Gameplay )
+			{
+				SetResidency( resident, residency );
+			}
 			return;
 		}
 
-		_pending[chunk.Coordinate] = descriptor;
-		_dispatchQueue.Enqueue( descriptor );
+		QueuePending( new PendingMesh( descriptor, residency ) );
+	}
+
+	public void SetResidency( Vector3Int coordinate, GpuMeshResidency residency )
+	{
+		if ( _resident.TryGetValue( coordinate, out var resource ) )
+		{
+			SetResidency( resource, residency );
+			return;
+		}
+
+		if ( _pending.TryGetValue( coordinate, out var pending ) && pending.Residency != residency )
+		{
+			QueuePending( pending with { Residency = residency } );
+			return;
+		}
+
+		for ( var index = 0; index < _inFlight.Count; index++ )
+		{
+			if ( _inFlight[index].Descriptor.ChunkCoordinate == coordinate )
+			{
+				_inFlight[index] = _inFlight[index] with { Residency = residency };
+				return;
+			}
+		}
 	}
 
 	public void Remove( Vector3Int coordinate )
 	{
-		_pending.Remove( coordinate );
+		RemovePending( coordinate );
 		foreach ( var inFlight in _inFlight )
 		{
 			if ( inFlight.Descriptor.ChunkCoordinate == coordinate )
@@ -122,6 +160,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		SetVisibilityActive( resource, false );
+		if ( resource.Residency == GpuMeshResidency.Warm )
+		{
+			_warmResidentCount--;
+		}
 		_pool.Push( resource );
 		_drawCommandsDirty = true;
 	}
@@ -150,7 +192,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		_meshCommands.Reset();
-		var maximumPotentialAcquisitions = Math.Min( maximumDispatches, _dispatchQueue.Count );
+		var maximumPotentialAcquisitions = Math.Min( maximumDispatches, _pending.Count );
 		var maximumNewResources = Math.Max( 0, maximumPotentialAcquisitions - _pool.Count );
 		EnsureVisibilityCapacity( checked( _allocatedResourceCount + maximumNewResources ) );
 		var copyVisibilityCounts = _visibilityCountsNeedRefresh || maximumPotentialAcquisitions > 0;
@@ -174,16 +216,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		var processed = 0;
-		while ( processed < maximumDispatches && _dispatchQueue.TryDequeue( out var descriptor ) )
+		while ( processed < maximumDispatches && TryDequeuePending( out var pending ) )
 		{
-			if ( !_pending.TryGetValue( descriptor.ChunkCoordinate, out var current ) || current != descriptor )
-			{
-				continue;
-			}
-
-			_pending.Remove( descriptor.ChunkCoordinate );
+			var descriptor = pending.Descriptor;
 			var resource = Acquire();
-			resource.Prepare( descriptor );
+			resource.Prepare( descriptor, pending.Residency );
 			_meshCommands.Attributes.Set( "ActiveCells", resource.ActiveCells );
 			_meshCommands.Attributes.Set( "ChunkCoordinate", new Vector3(
 				descriptor.ChunkCoordinate.x,
@@ -211,7 +248,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				resource.VisibilitySlot * IndirectArgumentStride + IndirectInstanceCountOffset );
 			_meshCommands.ResourceBarrierTransition( resource.ActiveCells, ResourceState.GenericRead );
 			_meshCommands.ResourceBarrierTransition( resource.IndirectArguments, ResourceState.IndirectArgument );
-			_inFlight.Add( new InFlightMesh( descriptor, resource ) );
+			_inFlight.Add( new InFlightMesh( descriptor, pending.Residency, resource ) );
 			processed++;
 		}
 
@@ -243,26 +280,140 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var completed in _inFlight )
 		{
 			var coordinate = completed.Descriptor.ChunkCoordinate;
-			if ( _cancelledInFlight.Remove( coordinate ) ||
-				(_pending.TryGetValue( coordinate, out var replacement ) && replacement != completed.Descriptor) )
+			if ( _cancelledInFlight.Remove( coordinate ) )
 			{
 				_pool.Push( completed.Resource );
 				continue;
 			}
 
+			var residency = completed.Residency;
+			if ( _pending.TryGetValue( coordinate, out var replacement ) )
+			{
+				if ( replacement.Descriptor != completed.Descriptor )
+				{
+					_pool.Push( completed.Resource );
+					continue;
+				}
+
+				residency = replacement.Residency;
+				RemovePending( coordinate );
+			}
+
 			if ( _resident.Remove( coordinate, out var previous ) )
 			{
 				SetVisibilityActive( previous, false );
+				if ( previous.Residency == GpuMeshResidency.Warm )
+				{
+					_warmResidentCount--;
+				}
 				_pool.Push( previous );
 			}
 
+			completed.Resource.Residency = residency;
 			_resident.Add( coordinate, completed.Resource );
+			if ( residency == GpuMeshResidency.Warm )
+			{
+				_warmResidentCount++;
+			}
 			SetVisibilityActive( completed.Resource, true );
 			_dispatchCount++;
 			_drawCommandsDirty = true;
 		}
 
 		_inFlight.Clear();
+	}
+
+	private void QueuePending( PendingMesh pending )
+	{
+		RemovePending( pending.Descriptor.ChunkCoordinate );
+		_pending[pending.Descriptor.ChunkCoordinate] = pending;
+		if ( pending.Residency == GpuMeshResidency.Gameplay )
+		{
+			_pendingGameplayCount++;
+			_gameplayDispatchQueue.Enqueue( pending );
+		}
+		else
+		{
+			_pendingWarmCount++;
+			_warmDispatchQueue.Enqueue( pending );
+		}
+	}
+
+	private bool TryDequeuePending( out PendingMesh pending )
+	{
+		while ( _gameplayDispatchQueue.TryDequeue( out pending ) )
+		{
+			if ( _pending.TryGetValue( pending.Descriptor.ChunkCoordinate, out var current ) &&
+				current == pending )
+			{
+				RemovePending( pending.Descriptor.ChunkCoordinate );
+				return true;
+			}
+		}
+
+		while ( _warmDispatchQueue.TryDequeue( out pending ) )
+		{
+			if ( _pending.TryGetValue( pending.Descriptor.ChunkCoordinate, out var current ) &&
+				current == pending )
+			{
+				RemovePending( pending.Descriptor.ChunkCoordinate );
+				return true;
+			}
+		}
+
+		pending = default;
+		return false;
+	}
+
+	private bool RemovePending( Vector3Int coordinate )
+	{
+		if ( !_pending.Remove( coordinate, out var pending ) )
+		{
+			return false;
+		}
+
+		if ( pending.Residency == GpuMeshResidency.Gameplay )
+		{
+			_pendingGameplayCount--;
+		}
+		else
+		{
+			_pendingWarmCount--;
+		}
+		return true;
+	}
+
+	private int CountInFlight( GpuMeshResidency residency )
+	{
+		var count = 0;
+		foreach ( var mesh in _inFlight )
+		{
+			if ( mesh.Residency == residency )
+			{
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private void SetResidency( MeshResource resource, GpuMeshResidency residency )
+	{
+		if ( resource.Residency == residency )
+		{
+			return;
+		}
+
+		if ( resource.Residency == GpuMeshResidency.Warm )
+		{
+			_warmResidentCount--;
+		}
+		if ( residency == GpuMeshResidency.Warm )
+		{
+			_warmResidentCount++;
+		}
+
+		resource.Residency = residency;
+		SetVisibilityActive( resource, true );
 	}
 
 	public void CommitDrawCommands()
@@ -280,6 +431,34 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_drawCommandsDirty = false;
 			return;
 		}
+
+		_drawCommands.Attributes.Set( "VisibilityBounds", _visibilityBuffers.Bounds );
+		_drawCommands.Attributes.Set( "SourceIndirectArguments", _visibilityBuffers.SourceArguments );
+		_drawCommands.Attributes.Set( "VisibleIndirectArguments", _visibilityBuffers.VisibleArguments );
+		_drawCommands.Attributes.Set( "VisibilityFrameCounters", _visibilityBuffers.FrameCounters );
+		_drawCommands.Attributes.Set( "VisibilityAggregateCounters", _visibilityAggregateCounters );
+		_drawCommands.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
+		_drawCommands.Attributes.Set( "VisibilityPass", 0 );
+		_drawCommands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
+		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.Bounds, ResourceState.GenericRead );
+		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.SourceArguments, ResourceState.GenericRead );
+		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.UnorderedAccess );
+		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.UnorderedAccess );
+		_drawCommands.Clear( _visibilityBuffers.FrameCounters, 0 );
+		_drawCommands.DispatchCompute( _visibilityShader, _visibilityCapacity, 1, 1 );
+		_drawCommands.UavBarrier( _visibilityBuffers.VisibleArguments );
+		_drawCommands.UavBarrier( _visibilityBuffers.FrameCounters );
+
+		if ( _visibilityMeasurementActive )
+		{
+			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.GenericRead );
+			_drawCommands.ResourceBarrierTransition( _visibilityAggregateCounters, ResourceState.UnorderedAccess );
+			_drawCommands.Attributes.Set( "VisibilityPass", 1 );
+			_drawCommands.DispatchCompute( _visibilityShader, 1, 1, 1 );
+			_drawCommands.UavBarrier( _visibilityAggregateCounters );
+		}
+
+		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.IndirectArgument );
 
 		foreach ( var resource in _resident.Values )
 		{
@@ -463,11 +642,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 		counters.GetDataAsync<uint>( data =>
 		{
-			var frames = data.Length >= 5 ? data[0] : 0;
-			var residentTotal = data.Length >= 5 ? data[1] : 0;
-			var visibleTotal = data.Length >= 5 ? data[2] : 0;
-			var minimumVisible = data.Length >= 5 && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
-			var maximumVisible = data.Length >= 5 ? data[4] : 0;
+			var frames = data.Length >= 6 ? data[0] : 0;
+			var residentTotal = data.Length >= 6 ? data[1] : 0;
+			var visibleTotal = data.Length >= 6 ? data[2] : 0;
+			var minimumVisible = data.Length >= 6 && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
+			var maximumVisible = data.Length >= 6 ? data[4] : 0;
+			var warmTotal = data.Length >= 6 ? data[5] : 0;
 			lock ( _visibilityLock )
 			{
 				_completedVisibilityMeasurement = new GpuVisibilityMeasurement(
@@ -476,6 +656,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					visibleTotal,
 					minimumVisible,
 					maximumVisible,
+					warmTotal,
 					logicalBytes,
 					1 );
 				_visibilityReadbackInFlight = false;
@@ -492,7 +673,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_visibilityReadbackInFlight = false;
 		}
 
-		Span<uint> initialCounters = stackalloc uint[5];
+		Span<uint> initialCounters = stackalloc uint[6];
 		initialCounters[3] = uint.MaxValue;
 		_visibilityAggregateCounters.SetData( initialCounters );
 		_visibilityMeasurementActive = true;
@@ -588,7 +769,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
 			"Voxel Visible Indirect Arguments" );
 		var frameCounters = new GpuBuffer<uint>(
-			2,
+			3,
 			GpuBuffer.UsageFlags.Structured,
 			"Voxel Visibility Frame Counters" );
 		var initialArguments = new GpuBuffer.IndirectDrawArguments[newCapacity];
@@ -638,7 +819,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var minimum = chunkWorldOrigin - padding;
 		var maximum = chunkWorldOrigin + new Vector3( chunkWorldSize ) + padding;
 		var index = resource.VisibilitySlot * 2;
-		_visibilityBoundsData[index] = new Vector4( minimum, active ? 1f : 0f );
+		var activeResidency = resource.Residency == GpuMeshResidency.Warm ? 2f : 1f;
+		_visibilityBoundsData[index] = new Vector4( minimum, active ? activeResidency : 0f );
 		_visibilityBoundsData[index + 1] = new Vector4( maximum, 0f );
 	}
 
@@ -653,49 +835,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_visibilityDescriptorsDirty = false;
 	}
 
-	private void DispatchVisibility()
-	{
-		UploadVisibilityDescriptors();
-		if ( _visibilityBuffers is null || _visibilityCapacity == 0 || _camera is null )
-		{
-			return;
-		}
-
-		_visibilityShader.Attributes.Set( "VisibilityBounds", _visibilityBuffers.Bounds );
-		_visibilityShader.Attributes.Set( "SourceIndirectArguments", _visibilityBuffers.SourceArguments );
-		_visibilityShader.Attributes.Set( "VisibleIndirectArguments", _visibilityBuffers.VisibleArguments );
-		_visibilityShader.Attributes.Set( "VisibilityFrameCounters", _visibilityBuffers.FrameCounters );
-		_visibilityShader.Attributes.Set( "VisibilityAggregateCounters", _visibilityAggregateCounters );
-		_visibilityShader.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
-		_visibilityShader.Attributes.Set( "VisibilityPass", 0 );
-		_visibilityShader.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
-		Graphics.ResourceBarrierTransition( _visibilityBuffers.Bounds, ResourceState.GenericRead );
-		Graphics.ResourceBarrierTransition( _visibilityBuffers.SourceArguments, ResourceState.GenericRead );
-		Graphics.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.UnorderedAccess );
-		Graphics.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.UnorderedAccess );
-		_visibilityBuffers.FrameCounters.Clear();
-		_visibilityShader.Dispatch( _visibilityCapacity, 1, 1 );
-		Graphics.UavBarrier( _visibilityBuffers.VisibleArguments );
-		Graphics.UavBarrier( _visibilityBuffers.FrameCounters );
-		Graphics.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.IndirectArgument );
-
-		if ( !_visibilityMeasurementActive )
-		{
-			return;
-		}
-
-		Graphics.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.GenericRead );
-		Graphics.ResourceBarrierTransition( _visibilityAggregateCounters, ResourceState.UnorderedAccess );
-		_visibilityShader.Attributes.Set( "VisibilityPass", 1 );
-		_visibilityShader.Dispatch( 1, 1, 1 );
-		Graphics.UavBarrier( _visibilityAggregateCounters );
-	}
-
 	public void Clear()
 	{
 		_meshCommands.Reset();
 		_pending.Clear();
-		_dispatchQueue.Clear();
+		_gameplayDispatchQueue.Clear();
+		_warmDispatchQueue.Clear();
+		_pendingGameplayCount = 0;
+		_pendingWarmCount = 0;
 		_cancelledInFlight.Clear();
 		foreach ( var inFlight in _inFlight )
 		{
@@ -710,6 +857,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		_resident.Clear();
+		_warmResidentCount = 0;
 		_drawCommandsDirty = true;
 		CommitDrawCommands();
 	}
@@ -815,7 +963,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		MeshResource Resource,
 		GpuBuffer<uint> Statistics,
 		long SubmittedUpdateSequence );
-	private readonly record struct InFlightMesh( GpuSdfDescriptor Descriptor, MeshResource Resource );
+	private readonly record struct PendingMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency );
+	private readonly record struct InFlightMesh(
+		GpuSdfDescriptor Descriptor,
+		GpuMeshResidency Residency,
+		MeshResource Resource );
 
 	private sealed class VisibilityBuffers : IDisposable
 	{
@@ -858,7 +1010,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public override void RenderSceneObject()
 		{
 			System.Threading.Interlocked.Increment( ref _owner._renderSequence );
-			_owner.DispatchVisibility();
 			_owner.ProcessReadbacks();
 		}
 	}
@@ -869,6 +1020,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		private GpuBuffer<uint> _statistics;
 
 		public GpuSdfDescriptor Descriptor { get; private set; }
+		public GpuMeshResidency Residency { get; set; }
 		public int VisibilitySlot { get; }
 		public GpuBuffer<uint> ActiveCells { get; }
 		public GpuBuffer<GpuBuffer.IndirectDrawArguments> IndirectArguments { get; }
@@ -898,9 +1050,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 			DrawAttributes.Set( "ActiveCells", ActiveCells );
 		}
 
-		public void Prepare( GpuSdfDescriptor descriptor )
+		public void Prepare( GpuSdfDescriptor descriptor, GpuMeshResidency residency )
 		{
 			Descriptor = descriptor;
+			Residency = residency;
 			var chunkWorldSize = descriptor.CellsPerAxis * descriptor.CellSize;
 			var chunkWorldOrigin = new Vector3(
 				descriptor.ChunkCoordinate.x * chunkWorldSize,
@@ -938,11 +1091,19 @@ internal readonly record struct GpuVisibilityMeasurement(
 	uint VisibleTotal,
 	uint MinimumVisible,
 	uint MaximumVisible,
+	uint WarmTotal,
 	long LogicalBufferBytes,
 	long ScalarReadbacks )
 {
 	public float AverageResident => FrameCount > 0 ? (float)ResidentTotal / FrameCount : 0f;
 	public float AverageVisible => FrameCount > 0 ? (float)VisibleTotal / FrameCount : 0f;
+	public float AverageWarm => FrameCount > 0 ? (float)WarmTotal / FrameCount : 0f;
 	public float AverageCulled => MathF.Max( 0f, AverageResident - AverageVisible );
 	public float CulledPercent => AverageResident > 0f ? AverageCulled * 100f / AverageResident : 0f;
+}
+
+internal enum GpuMeshResidency
+{
+	Gameplay,
+	Warm
 }

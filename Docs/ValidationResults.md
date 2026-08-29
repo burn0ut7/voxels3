@@ -2715,3 +2715,92 @@ Record an approved extraordinary change here before adding the new version:
   memory, settled backlog, pooling, dispatch, readback, and mesh-correctness
   gates all pass. The production session completed without a new runtime error,
   GPU device loss, or crash.
+### VISIBILITY-EDGE-STRESS-001/v1 - Rapid terrain visibility and warm-residency stress
+
+- Definition recorded on 2026-08-28 before implementation and before the first
+  comparable run.
+- Production world: `Assets/scenes/basic_example.scene`; one local player;
+  existing user-authored plane renderer/collider unchanged; main game camera at
+  `1280x720`, horizontal FOV `60`; engine build `26.08.19`.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  `TerrainSurfaceHeight=0`; LOD0 regular-cell Transvoxel; at most `8` total GPU
+  mesh dispatches per update. Gameplay residency remains the inclusive
+  player-centered radius-16 cube.
+- Fixed movement workload: the production `PERFORMANCE-OVERVIEW-001/v3`
+  figure-eight route from `(0,0,0)` at fixed Z `0`, speed `2500`, distance
+  `50000`, and one loop. During the measured loop, apply twenty alternating
+  180-degree main-camera turns reaching at least `900 degrees/second`, followed
+  by slow frustum-edge sweeps at extreme positive and negative pitch. Hold the
+  baseline hardware, graphics settings, VSync/frame-cap state, warmup, mouse
+  input trace, and initial camera orientation unchanged for the candidate.
+- Visual capture: record every presented frame at `120 FPS` or higher. Inspect
+  the complete capture, including camera-inside/near-bound views and lateral
+  streaming-boundary crossings, for terrain-colored continuity against the
+  existing background/plane. A chunk-shaped hole, white edge flash, seam, early
+  disappearance, or pop in any single presented frame fails.
+- Metrics: average full-frame GPU time; nearest-rank p95/p99 frame time; total,
+  gameplay, and render-warm resident surface meshes; gameplay and warm mesh
+  backlog; mesh dispatches and pooling; average visible/non-zero terrain draws;
+  culled count/percentage; logical mesh and visibility capacity; engine GPU
+  memory; scalar and geometry readbacks.
+- Candidate pass criteria: zero defective captured frames; average GPU time no
+  more than `0.05 ms` above accepted run
+  `3973db55b60f4c4e935232715e813e31`; p95 at most `16.67 ms`; p99 at most
+  `25 ms`; at least `70%` average non-zero-draw culling; gameplay and warm mesh
+  backlogs settle to zero; settled flat-world residency is `1,089` gameplay
+  plus `136` warm surface meshes; logical mesh capacity grows by at most
+  `20 MiB`; engine GPU memory grows by at most `24 MiB` without loop-over-loop
+  growth; the total dispatch cap remains `8`; the opted-in run performs exactly
+  one asynchronous visibility scalar readback and zero geometry readbacks.
+- The current production SDF has no caves or overhangs. Readiness is validated
+  structurally through full 3D bounds, canonical full-volume SDF generation,
+  and absence of heightfield, enclosure, neighbor, or visibility-derived world
+  ownership; this scenario makes no unavailable visual cave claim.
+
+#### Pre-fix figure-eight baseline 2026-08-28 - invalid for comparison
+
+- Run `6dece56ee2ce4f6596d815dc8f857abb`; revision label
+  `b885b08+pre-fix-baseline`; engine build `26.08.19`; duration `121.94102`
+  seconds; `28,933` samples; zero truncated.
+- The production tool began at `(-2.3004785,0.9764664,0)` rather than the
+  scenario's immutable `(0,0,0)` origin, and the live registry supplied no
+  camera-input or per-present video-capture route for the twenty rapid turns.
+  The run is retained as invalid rather than compared as acceptance evidence.
+- Supporting telemetry only: average GPU `0.69462204 ms`; p95/p99
+  `5.0757/7.3443 ms`; GPU memory constant at `1,365,068,726` bytes; `35,937`
+  loaded chunks; `1,089` resident meshes; zero chunk/mesh backlog; `25,542`
+  mesh dispatches; zero post-warmup allocations; `25,553` pool reuses; average
+  visible/resident meshes `253.25536/1,085.5249`; `76.66978%` culled; exactly
+  one visibility scalar readback and zero geometry readbacks.
+- Outcome: invalid for comparison. It confirms the current production route
+  still completes before implementation, but it does not satisfy the fixed
+  origin or rapid-camera visual workload.
+
+#### Candidate live validation 2026-08-29 - incomplete
+
+- Source state: working tree based on `b885b08`; engine build `26.08.19`.
+  Runtime and editor builds completed with zero warnings and zero errors;
+  `local.voxels3` and `local.voxels3.editor` both reported settled successful
+  live compiler state with zero diagnostics. The live asset compiler classified
+  the compute shader as compiled-only and could not force a redundant compile;
+  the engine-generated shader binary changed after the source save and the
+  camera rendered the new command path without device loss.
+- A hotloaded production-camera render showed continuous terrain and confirmed
+  that the combined visibility-dispatch/barrier/indirect-draw command list could
+  execute. This is a bounded safety observation, not the rapid-turn acceptance
+  capture.
+- A required clean play restart loaded all `35,937` authoritative chunks from
+  the authored origin `(0,0,0)`, but the MCP-started play session then reproduced
+  the previously documented editor condition where simulation updates do not
+  advance. Derived mesh draining remained at `0` resident and `1,089` queued;
+  pause/resume, camera renders, and a stop/wait/start retry did not resume update
+  progression. No new runtime, shader, or GPU error accompanied the stall.
+- Because the production figure-eight, render-warm settlement, scalar
+  visibility result, rapid camera input, and per-present capture could not run,
+  no candidate frame-time, memory, culling, backlog, residency, or visual-pop
+  result is accepted. The four surface and solid/air probes were also not
+  rerun because their queued GPU diagnostics require advancing updates.
+- Outcome: incomplete. Static builds and one bounded render safety check pass;
+  the immutable player journey, warm-residency counts, performance comparison,
+  and zero-defect rapid-camera capture remain required before acceptance,
+  commit, or push.

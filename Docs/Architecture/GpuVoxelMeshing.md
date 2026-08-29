@@ -71,21 +71,21 @@ logical chunks, SDF state, active-cell geometry, revisions, and pooled resources
 are otherwise unchanged. Stale or cancelled results never activate a slot.
 
 The mesh command list runs at `AfterDepthPrepass/-100` and supplies source
-counts without CPU readback. An always-rendered `SceneCustomObject` dispatches
-the visibility compute shader from the camera's opaque render context. It keeps
-the engine's default native infinite bounds for custom scene objects; project
-code does not manufacture a giant world AABB or chase the camera with a helper
-bound. The persistent terrain draw list then consumes the visible arguments at
-`AfterOpaque/0`. This ordering is required by the installed public surface:
-project code cannot directly execute a command list on the render thread, and
-the visibility dispatch needs the active camera render context for
-`g_matWorldToProjection`. The visibility pass and draw list share queue-ordered
-barriers and never synchronize visibility back to the CPU.
+counts without CPU readback. One persistent camera-attached terrain command list
+runs at `AfterOpaque/0`: it binds visibility resources, clears counters,
+dispatches visibility against that camera stage's `g_matWorldToProjection`,
+applies UAV and indirect-argument barriers, optionally aggregates bounded
+performance counters, and immediately issues the terrain indirect draws. The
+compute and draws therefore consume one deterministic same-frame camera state.
+The always-rendered `SceneCustomObject` owns only render-sequence tracking and
+asynchronous diagnostics; visibility never passes through its callback.
 
 One compute thread classifies one allocated slot by transforming all eight AABB
 corners to homogeneous clip space. It culls only when every corner lies outside
-the same frustum plane. A non-finite transform, near-zero homogeneous W, or any
-other ambiguous case is visible. The shader never samples density or reasons
+the same frustum plane. The lateral clip planes are widened to `1.25w`, while
+the depth planes remain exact. This static guard keeps near-edge terrain
+drawable without temporal visibility history. A non-finite transform, near-zero
+homogeneous W, or any other ambiguous case is visible. The shader never samples density or reasons
 about height, neighboring chunks, enclosure, streaming distance, caves, cliffs,
 floating terrain, or overhangs. This conservative contract may draw false
 positives but must not create false negatives.
@@ -132,8 +132,16 @@ derived GPU meshes. Camera render callbacks do not execute until component load
 has completed, so making `OnLoad` wait for GPU mesh completion creates a circular
 startup dependency. Once `OnStart` has accepted the authoritative load, the
 normal update/render path drains the mesh queue at the same bounded rate.
-Retained descriptors leave their buffers untouched. Unload removes their draw
-and returns resources to the pool. A source revision change replaces only a
+Retained descriptors leave their buffers untouched. A fixed one-chunk render
+warm shell surrounds the authoritative gameplay cube. `VoxelManager` generates
+it through the same full-volume `VoxelChunk` SDF path on a separate cancellable
+worker queue, then discards the transient chunks after scheduling their derived
+meshes. Warm coordinates never enter the authoritative loaded dictionary.
+Gameplay mesh requests drain before warm requests under the same eight-dispatch
+total limit. Promotion or demotion retains the mesh resource and visibility
+slot. Leaving the combined render region returns the resource to the pool.
+Stream-request revisions cancel jobs independently from the terrain-content
+revision that determines whether geometry is stale. A content revision change replaces only a
 stale coordinate; a dimension change clears resident state and disposes the
 incompatible pool. Compute counter reset, dispatch, counter copy, and subsequent
 draw depend only on GPU queue ordering, without fences or CPU synchronization.
@@ -148,9 +156,9 @@ queue ordering makes the results available, the diagnostic may asynchronously
 read the indirect arguments and three-word scalar buffer.
 Scalar and geometry readbacks are counted separately; the geometry count is a
 constant zero. Normal rendering performs no visibility readback. During an
-opted-in performance run, the shader accumulates sample/resident/visible/minimum/
+opted-in performance run, the shader accumulates sample/resident/warm/visible/minimum/
 maximum counters entirely on GPU. After the measured loop, one asynchronous
-five-word scalar readback completes before the result is saved. Saving also
+six-word scalar readback completes before the result is saved. Saving also
 waits for the route's final derived mesh backlog to reach zero so its residency
 snapshot records settled availability without extending the measured frame
 window. Gameplay and rendering never consume the readback. Performance records add mesh residency, backlog,
@@ -178,6 +186,11 @@ expose a stable named compute entry rather than being inferred from CPU time.
 - Per-chunk CPU frustum tests and CPU-compacted indirect uploads would add
   recurring CPU work and make CPU visibility part of draw ownership. The nearby
   `voxels2` project uses that pattern, but it is deliberately not copied here.
+- Enlarging authoritative gameplay residency would make render latency change
+  terrain existence, edits, multiplayer, and later collision. The warm shell is
+  independently disposable derived data and cannot become world truth.
+- Temporal visibility history adds delayed camera state. Same-command
+  sequencing plus a static conservative guard solves this slice without it.
 - A global mesh arena or GPU variable-size allocator would replace the existing
   fixed-capacity resource pool and broaden this rendering-only slice into mesh
   ownership and allocation policy.

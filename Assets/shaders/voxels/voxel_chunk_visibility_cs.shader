@@ -27,6 +27,7 @@ CS
 
 	bool IsDefinitelyOutsideFrustum( float3 minimum, float3 maximum )
 	{
+		const float LateralGuardScale = 1.25;
 		uint outsideCounts[6] = { 0, 0, 0, 0, 0, 0 };
 
 		[unroll]
@@ -43,10 +44,10 @@ CS
 			}
 
 			float tolerance = max( 1.0, abs( clip.w ) ) * 1e-5;
-			outsideCounts[0] += clip.x < -clip.w - tolerance;
-			outsideCounts[1] += clip.x > clip.w + tolerance;
-			outsideCounts[2] += clip.y < -clip.w - tolerance;
-			outsideCounts[3] += clip.y > clip.w + tolerance;
+			outsideCounts[0] += clip.x < -clip.w * LateralGuardScale - tolerance;
+			outsideCounts[1] += clip.x > clip.w * LateralGuardScale + tolerance;
+			outsideCounts[2] += clip.y < -clip.w * LateralGuardScale - tolerance;
+			outsideCounts[3] += clip.y > clip.w * LateralGuardScale + tolerance;
 			outsideCounts[4] += clip.z < -tolerance;
 			outsideCounts[5] += clip.z > clip.w + tolerance;
 		}
@@ -77,6 +78,7 @@ CS
 				VisibilityAggregateCounters[2] += visible;
 				VisibilityAggregateCounters[3] = min( VisibilityAggregateCounters[3], visible );
 				VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
+				VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
 			}
 
 			return;
@@ -92,6 +94,7 @@ CS
 		float3 maximum = VisibilityBounds[slot * 2 + 1].xyz;
 		uint activeCellCount = SourceIndirectArguments[slot].y;
 		bool active = minimumAndActive.w > 0.5;
+		bool warm = minimumAndActive.w > 1.5;
 		bool visible = active && activeCellCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
@@ -99,6 +102,10 @@ CS
 		if ( active && activeCellCount > 0 )
 		{
 			InterlockedAdd( VisibilityFrameCounters[0], 1 );
+			if ( warm )
+			{
+				InterlockedAdd( VisibilityFrameCounters[2], 1 );
+			}
 			if ( visible )
 			{
 				InterlockedAdd( VisibilityFrameCounters[1], 1 );

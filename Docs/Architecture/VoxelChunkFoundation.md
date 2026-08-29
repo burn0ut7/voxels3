@@ -29,6 +29,10 @@ persistence, and network replication remain later slices.
 - `VoxelManager` owns the GPU mesher that derives transient render data from an
   immutable chunk/SDF descriptor. `VoxelChunk` remains free of engine resources,
   GPU buffers, render objects, and mesh lifetime state.
+- A one-chunk render-only warm shell is generated through that same canonical
+  SDF constructor but never enters the loaded-chunk dictionary. Its transient
+  chunk objects are discarded after GPU scheduling; the shell is a derived
+  latency cache rather than gameplay residency or world existence.
 - Streaming target movement computes one desired coordinate set. Obsolete chunks
   are removed and missing chunks are ordered nearest-first with deterministic tie
   breaks. One component-scoped worker pipeline generates the complete missing set
