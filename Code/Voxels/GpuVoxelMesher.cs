@@ -67,6 +67,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public long ScalarReadbackCount => _scalarReadbackCount;
 	public long VisibilityScalarReadbackCount => _visibilityScalarReadbackCount;
 	public const long GeometryReadbackCount = 0;
+	public int TerrainIndirectApiSubmissionCount => _resident.Count;
+	public int IndirectArgumentRecordCount => _resident.Count;
+	public int TerrainBufferGroupCount => _allocatedResourceCount;
 	public long LogicalCapacityBytes => (long)_resident.Count * _capacity * sizeof( uint );
 	public long ReservedActiveCellCapacity => (long)_allocatedResourceCount * _capacity;
 	public long ReservedActiveCellCapacityBytes => ReservedActiveCellCapacity * sizeof( uint );
