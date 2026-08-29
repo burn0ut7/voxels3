@@ -641,7 +641,7 @@ public sealed class VoxelManager : Component
 				CellsPerAxis = CellsPerAxis,
 				CellSize = CellSize,
 				LoadRadius = LoadRadius,
-				Generator = "deterministic-simplex-surface",
+				Generator = "deterministic-simplex-caves",
 				WorldSeed = WorldSeed,
 				GeneratorVersion = ProceduralTerrainSdf.CurrentVersion,
 				SurfaceBaseHeight = SurfaceBaseHeight,
@@ -1014,7 +1014,9 @@ public sealed class VoxelManager : Component
 			SamplePerformanceMemory();
 		}
 
-		if ( !_playerFigureEightTestRunning && _performanceWindowElapsedSeconds >= PerformanceWindowSeconds )
+		if ( !_playerFigureEightTestRunning &&
+			!_performanceVisibilityPending &&
+			_performanceWindowElapsedSeconds >= PerformanceWindowSeconds )
 		{
 			CompletePerformanceWindow();
 		}
@@ -1024,6 +1026,13 @@ public sealed class VoxelManager : Component
 	{
 		if ( _performanceFrameSampleCount == 0 || _performanceMemorySampleCount == 0 )
 		{
+			Log.Error(
+				$"[VoxelWorld] performance.snapshot.incomplete " +
+				$"frameSamples={_performanceFrameSampleCount} " +
+				$"observedFrames={_performanceObservedFrameCount} " +
+				$"memorySamples={_performanceMemorySampleCount} " +
+				$"elapsedSeconds={_performanceWindowElapsedSeconds:0.######} " +
+				$"memoryElapsedSeconds={_memorySampleElapsedSeconds:0.######}" );
 			ResetPerformanceWindow();
 			return;
 		}
@@ -2303,7 +2312,7 @@ public sealed class VoxelManager : Component
 		LoadedChunkCount = _loadedChunks.Count;
 		PendingChunkCount = _pendingChunks.Count;
 		GeneratorStatus =
-			$"Simplex surface v{ProceduralTerrainSdf.CurrentVersion}; seed {WorldSeed}; " +
+			$"Simplex noodle-and-cheese caves v{ProceduralTerrainSdf.CurrentVersion}; seed {WorldSeed}; " +
 			$"base {SurfaceBaseHeight:0.##}, f {SurfaceFrequency:0.######}, " +
 			$"amplitude {SurfaceAmplitude:0.##}";
 		ChunkStatus = _performanceSnapshotReady

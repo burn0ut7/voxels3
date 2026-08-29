@@ -9,24 +9,43 @@ public readonly record struct ProceduralTerrainSettings(
 public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 
 /// <summary>
-/// Canonical deterministic version-2 surface terrain field. The GPU mirror uses
-/// the same integer hash and single-octave 2D simplex recipe.
+/// Canonical deterministic version-3 volumetric terrain field. The GPU mirror
+/// uses the same integer hash, simplex recipes, and constructive composition.
 /// </summary>
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 2;
+	public const int CurrentVersion = 3;
 	public const int DefaultWorldSeed = 1337;
 	public const float DefaultSurfaceBaseHeight = 0f;
 	public const float DefaultSurfaceFrequency = 0.0005f;
 	public const float DefaultSurfaceAmplitude = 128f;
+	public const float NoodleAWavelength = 3072f;
+	public const float NoodleBWavelength = 3456f;
+	public const float ThicknessWavelength = 8192f;
+	public const float CheeseWavelength = 4096f;
+	public const float CaveDensityScale = 512f;
+	public const float CaveMaximumDepth = 2048f;
+	public const float NoodleBaseThreshold = 0.056f;
+	public const float NoodleThicknessVariation = 0.016f;
+	public const float CheeseThreshold = 0.84f;
 
 	private const float SimplexF2 = 0.3660254037844386f;
 	private const float SimplexG2 = 0.21132486540518713f;
+	private const float SimplexF3 = 1f / 3f;
+	private const float SimplexG3 = 1f / 6f;
+	private const uint NoodleASeedSalt = 0xA511E9B3u;
+	private const uint NoodleBSeedSalt = 0x63D83595u;
+	private const uint ThicknessSeedSalt = 0xC2B2AE35u;
+	private const uint CheeseSeedSalt = 0x27D4EB2Fu;
 	// Each of the three simplex contributions has gradient magnitude at most
 	// 27/343 before the canonical scale of 70. The exact global bound is therefore
 	// 3 * 70 * 27/343 = 16.530612... . Seventeen leaves deterministic margin.
 	private const double SimplexLipschitzBound = 17d;
+	// A normalized 3D gradient has magnitude one. For one contribution
+	// (0.6-r^2)^4 dot(g,x), the largest gradient magnitude is below 0.164;
+	// four contributions scaled by 32 remain below 21. Twenty-two leaves margin.
+	private const double Simplex3DLipschitzBound = 22d;
 	private const double SimplexFinitePrecisionPadding = 0.0001d;
 
 	public static float SampleGlobal(
@@ -47,7 +66,22 @@ internal static class ProceduralTerrainSdf
 			worldPosition.x * settings.SurfaceFrequency,
 			worldPosition.y * settings.SurfaceFrequency,
 			unchecked((uint)settings.WorldSeed) ) * settings.SurfaceAmplitude;
-		return worldPosition.z - surfaceHeight;
+		var surfaceDensity = worldPosition.z - surfaceHeight;
+		var seed = unchecked((uint)settings.WorldSeed);
+		var noodleA = SimplexNoise3D( worldPosition / NoodleAWavelength, seed ^ NoodleASeedSalt );
+		var noodleB = SimplexNoise3D( worldPosition / NoodleBWavelength, seed ^ NoodleBSeedSalt );
+		var thickness = SimplexNoise3D(
+			worldPosition / ThicknessWavelength,
+			seed ^ ThicknessSeedSalt );
+		var threshold = NoodleBaseThreshold + NoodleThicknessVariation * thickness;
+		var tunnelDensity = CaveDensityScale *
+			(threshold - MathF.Max( MathF.Abs( noodleA ), MathF.Abs( noodleB ) ));
+		var cheese = SimplexNoise3D( worldPosition / CheeseWavelength, seed ^ CheeseSeedSalt );
+		var cheeseDensity = CaveDensityScale * (cheese - CheeseThreshold);
+		var depth = -surfaceDensity;
+		var envelope = MathF.Min( depth, CaveMaximumDepth - depth );
+		var caveDensity = MathF.Min( MathF.Max( tunnelDensity, cheeseDensity ), envelope );
+		return MathF.Max( surfaceDensity, caveDensity );
 	}
 
 	public static ChunkDensityRange ClassifyDensityRange(
@@ -94,6 +128,20 @@ internal static class ProceduralTerrainSdf
 				ChunkDensityClassification.PotentiallySurfaceContaining );
 		}
 
+		var bound = BoundDensityAabb( worldAabb, minimumSubdivisionSize, settings );
+		return new ChunkDensityRange(
+			MathF.BitDecrement( bound.Minimum ),
+			MathF.BitIncrement( bound.Maximum ),
+			bound.Classification );
+	}
+
+	private static DensityBound BoundDensityAabb(
+		SdfWorldAabb worldAabb,
+		float minimumSubdivisionSize,
+		ProceduralTerrainSettings settings )
+	{
+		var minimum = worldAabb.Minimum;
+		var maximum = worldAabb.Maximum;
 		var surfaceRange = BoundSurfaceRectangle(
 			minimum.x,
 			maximum.x,
@@ -103,10 +151,113 @@ internal static class ProceduralTerrainSdf
 			maximum.z,
 			minimumSubdivisionSize,
 			settings );
-		var minimumDensity = MathF.BitDecrement( minimum.z - surfaceRange.MaximumHeight );
-		var maximumDensity = MathF.BitIncrement( maximum.z - surfaceRange.MinimumHeight );
-		var classification = surfaceRange.Classification;
-		return new ChunkDensityRange( minimumDensity, maximumDensity, classification );
+		var surface = new DensityInterval(
+			MathF.BitDecrement( minimum.z - surfaceRange.MaximumHeight ),
+			MathF.BitIncrement( maximum.z - surfaceRange.MinimumHeight ) );
+		var cave = BoundCaveDensity( worldAabb, surface, unchecked((uint)settings.WorldSeed) );
+		var density = new DensityInterval(
+			MathF.BitDecrement( MathF.Max( surface.Minimum, cave.Minimum ) ),
+			MathF.BitIncrement( MathF.Max( surface.Maximum, cave.Maximum ) ) );
+
+		if ( density.Maximum <= 0f )
+		{
+			return new DensityBound(
+				density.Minimum, density.Maximum, ChunkDensityClassification.DefinitelySolid );
+		}
+		if ( density.Minimum > 0f )
+		{
+			return new DensityBound(
+				density.Minimum, density.Maximum, ChunkDensityClassification.DefinitelyAir );
+		}
+		if ( surfaceRange.Classification == ChunkDensityClassification.DefinitelyAir )
+		{
+			return new DensityBound(
+				density.Minimum, density.Maximum, ChunkDensityClassification.DefinitelyAir );
+		}
+		if ( surfaceRange.Classification == ChunkDensityClassification.PotentiallySurfaceContaining )
+		{
+			return new DensityBound(
+				density.Minimum,
+				density.Maximum,
+				ChunkDensityClassification.PotentiallySurfaceContaining );
+		}
+		return new DensityBound(
+			density.Minimum,
+			density.Maximum,
+			ChunkDensityClassification.PotentiallySurfaceContaining );
+	}
+
+	private static DensityInterval BoundCaveDensity(
+		SdfWorldAabb worldAabb,
+		DensityInterval surface,
+		uint seed )
+	{
+		var noodleA = BoundSimplex3D( worldAabb, 1f / NoodleAWavelength, seed ^ NoodleASeedSalt );
+		var noodleB = BoundSimplex3D( worldAabb, 1f / NoodleBWavelength, seed ^ NoodleBSeedSalt );
+		var thickness = BoundSimplex3D(
+			worldAabb,
+			1f / ThicknessWavelength,
+			seed ^ ThicknessSeedSalt );
+		var cheese = BoundSimplex3D( worldAabb, 1f / CheeseWavelength, seed ^ CheeseSeedSalt );
+		var absoluteA = AbsoluteInterval( noodleA );
+		var absoluteB = AbsoluteInterval( noodleB );
+		var maximumAbsolute = new DensityInterval(
+			MathF.Max( absoluteA.Minimum, absoluteB.Minimum ),
+			MathF.Max( absoluteA.Maximum, absoluteB.Maximum ) );
+		var threshold = new DensityInterval(
+			NoodleBaseThreshold + NoodleThicknessVariation * thickness.Minimum,
+			NoodleBaseThreshold + NoodleThicknessVariation * thickness.Maximum );
+		var tunnel = new DensityInterval(
+			CaveDensityScale * (threshold.Minimum - maximumAbsolute.Maximum),
+			CaveDensityScale * (threshold.Maximum - maximumAbsolute.Minimum) );
+		var cavern = new DensityInterval(
+			CaveDensityScale * (cheese.Minimum - CheeseThreshold),
+			CaveDensityScale * (cheese.Maximum - CheeseThreshold) );
+		var union = new DensityInterval(
+			MathF.Max( tunnel.Minimum, cavern.Minimum ),
+			MathF.Max( tunnel.Maximum, cavern.Maximum ) );
+		var minimumDepth = -surface.Maximum;
+		var maximumDepth = -surface.Minimum;
+		var envelopeAtMinimum = MathF.Min( minimumDepth, CaveMaximumDepth - minimumDepth );
+		var envelopeAtMaximum = MathF.Min( maximumDepth, CaveMaximumDepth - maximumDepth );
+		var envelopeMaximum = minimumDepth <= CaveMaximumDepth * 0.5f &&
+			maximumDepth >= CaveMaximumDepth * 0.5f
+			? CaveMaximumDepth * 0.5f
+			: MathF.Max( envelopeAtMinimum, envelopeAtMaximum );
+		var envelope = new DensityInterval(
+			MathF.Min( envelopeAtMinimum, envelopeAtMaximum ),
+			envelopeMaximum );
+		return new DensityInterval(
+			MathF.Min( union.Minimum, envelope.Minimum ),
+			MathF.Min( union.Maximum, envelope.Maximum ) );
+	}
+
+	private static DensityInterval BoundSimplex3D(
+		SdfWorldAabb worldAabb,
+		float frequency,
+		uint seed )
+	{
+		var center = worldAabb.Minimum + (worldAabb.Maximum - worldAabb.Minimum) * 0.5f;
+		var halfExtent = (worldAabb.Maximum - worldAabb.Minimum) * 0.5f;
+		var centerNoise = SimplexNoise3D( center * frequency, seed );
+		var radius = Math.Sqrt(
+			(double)halfExtent.x * halfExtent.x +
+			(double)halfExtent.y * halfExtent.y +
+			(double)halfExtent.z * halfExtent.z ) * Math.Abs( frequency );
+		var variation = Simplex3DLipschitzBound * radius + SimplexFinitePrecisionPadding;
+		return new DensityInterval(
+			(float)Math.Clamp( centerNoise - variation, -1d, 1d ),
+			(float)Math.Clamp( centerNoise + variation, -1d, 1d ) );
+	}
+
+	private static DensityInterval AbsoluteInterval( DensityInterval interval )
+	{
+		var minimum = interval.Minimum <= 0f && interval.Maximum >= 0f
+			? 0f
+			: MathF.Min( MathF.Abs( interval.Minimum ), MathF.Abs( interval.Maximum ) );
+		return new DensityInterval(
+			minimum,
+			MathF.Max( MathF.Abs( interval.Minimum ), MathF.Abs( interval.Maximum ) ) );
 	}
 
 	private static SurfaceRange BoundSurfaceRectangle(
@@ -263,6 +414,125 @@ internal static class ProceduralTerrainSdf
 		float MaximumHeight,
 		ChunkDensityClassification Classification );
 
+	private readonly record struct DensityInterval( float Minimum, float Maximum );
+
+	private readonly record struct DensityBound(
+		float Minimum,
+		float Maximum,
+		ChunkDensityClassification Classification );
+
+	private static float SimplexNoise3D( Vector3 position, uint seed )
+	{
+		var skew = (position.x + position.y + position.z) * SimplexF3;
+		var i = (int)MathF.Floor( position.x + skew );
+		var j = (int)MathF.Floor( position.y + skew );
+		var k = (int)MathF.Floor( position.z + skew );
+		var unskew = (i + j + k) * SimplexG3;
+		var x0 = position.x - (i - unskew);
+		var y0 = position.y - (j - unskew);
+		var z0 = position.z - (k - unskew);
+
+		int i1;
+		int j1;
+		int k1;
+		int i2;
+		int j2;
+		int k2;
+		if ( x0 >= y0 )
+		{
+			if ( y0 >= z0 )
+			{
+				i1 = 1; j1 = 0; k1 = 0;
+				i2 = 1; j2 = 1; k2 = 0;
+			}
+			else if ( x0 >= z0 )
+			{
+				i1 = 1; j1 = 0; k1 = 0;
+				i2 = 1; j2 = 0; k2 = 1;
+			}
+			else
+			{
+				i1 = 0; j1 = 0; k1 = 1;
+				i2 = 1; j2 = 0; k2 = 1;
+			}
+		}
+		else
+		{
+			if ( y0 < z0 )
+			{
+				i1 = 0; j1 = 0; k1 = 1;
+				i2 = 0; j2 = 1; k2 = 1;
+			}
+			else if ( x0 < z0 )
+			{
+				i1 = 0; j1 = 1; k1 = 0;
+				i2 = 0; j2 = 1; k2 = 1;
+			}
+			else
+			{
+				i1 = 0; j1 = 1; k1 = 0;
+				i2 = 1; j2 = 1; k2 = 0;
+			}
+		}
+
+		var x1 = x0 - i1 + SimplexG3;
+		var y1 = y0 - j1 + SimplexG3;
+		var z1 = z0 - k1 + SimplexG3;
+		var x2 = x0 - i2 + 2f * SimplexG3;
+		var y2 = y0 - j2 + 2f * SimplexG3;
+		var z2 = z0 - k2 + 2f * SimplexG3;
+		var x3 = x0 - 1f + 3f * SimplexG3;
+		var y3 = y0 - 1f + 3f * SimplexG3;
+		var z3 = z0 - 1f + 3f * SimplexG3;
+		var value =
+			SimplexContribution3D( i, j, k, x0, y0, z0, seed ) +
+			SimplexContribution3D( i + i1, j + j1, k + k1, x1, y1, z1, seed ) +
+			SimplexContribution3D( i + i2, j + j2, k + k2, x2, y2, z2, seed ) +
+			SimplexContribution3D( i + 1, j + 1, k + 1, x3, y3, z3, seed );
+		return Math.Clamp( value * 32f, -1f, 1f );
+	}
+
+	private static float SimplexContribution3D(
+		int x,
+		int y,
+		int z,
+		float offsetX,
+		float offsetY,
+		float offsetZ,
+		uint seed )
+	{
+		var attenuation = 0.6f - offsetX * offsetX - offsetY * offsetY - offsetZ * offsetZ;
+		if ( attenuation <= 0f )
+		{
+			return 0f;
+		}
+
+		var gradient = Gradient3D( Hash( x, y, z, seed ) );
+		attenuation *= attenuation;
+		return attenuation * attenuation *
+			(gradient.x * offsetX + gradient.y * offsetY + gradient.z * offsetZ);
+	}
+
+	private static Vector3 Gradient3D( uint hash )
+	{
+		const float diagonal = 0.70710677f;
+		return (hash % 12u) switch
+		{
+			0u => new Vector3( diagonal, diagonal, 0f ),
+			1u => new Vector3( -diagonal, diagonal, 0f ),
+			2u => new Vector3( diagonal, -diagonal, 0f ),
+			3u => new Vector3( -diagonal, -diagonal, 0f ),
+			4u => new Vector3( diagonal, 0f, diagonal ),
+			5u => new Vector3( -diagonal, 0f, diagonal ),
+			6u => new Vector3( diagonal, 0f, -diagonal ),
+			7u => new Vector3( -diagonal, 0f, -diagonal ),
+			8u => new Vector3( 0f, diagonal, diagonal ),
+			9u => new Vector3( 0f, -diagonal, diagonal ),
+			10u => new Vector3( 0f, diagonal, -diagonal ),
+			_ => new Vector3( 0f, -diagonal, -diagonal )
+		};
+	}
+
 	private static float SimplexNoise2D( float x, float y, uint seed )
 	{
 		var skew = (x + y) * SimplexF2;
@@ -326,6 +596,26 @@ internal static class ProceduralTerrainSdf
 			hash = RotateLeft( hash, 13 ) * 0x85EBCA77u;
 			hash ^= (uint)y * 0xC2B2AE3Du;
 			hash = RotateLeft( hash, 15 ) * 0x27D4EB2Fu;
+			hash ^= hash >> 16;
+			hash *= 0x7FEB352Du;
+			hash ^= hash >> 15;
+			hash *= 0x846CA68Bu;
+			hash ^= hash >> 16;
+			return hash;
+		}
+	}
+
+	private static uint Hash( int x, int y, int z, uint seed )
+	{
+		unchecked
+		{
+			var hash = seed;
+			hash ^= (uint)x * 0x9E3779B1u;
+			hash = RotateLeft( hash, 13 ) * 0x85EBCA77u;
+			hash ^= (uint)y * 0xC2B2AE3Du;
+			hash = RotateLeft( hash, 15 ) * 0x27D4EB2Fu;
+			hash ^= (uint)z * 0x165667B1u;
+			hash = RotateLeft( hash, 17 ) * 0xD3A2646Cu;
 			hash ^= hash >> 16;
 			hash *= 0x7FEB352Du;
 			hash ^= hash >> 15;

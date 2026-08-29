@@ -4,8 +4,9 @@
 
 LOD0 regular-cell Transvoxel is the sole terrain render path. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; mesh data is derived,
-GPU-resident, and disposable. Deterministic surface generator version 2 now
-supplies the field. This slice deliberately excludes transition cells, other
+GPU-resident, and disposable. Deterministic volumetric generator version 3 now
+supplies the exterior mountain surface plus noodle tunnels and cheese caverns.
+This slice deliberately excludes transition cells, other
 LODs, clipboxes, collision, edits, networking, generator optimization, and a
 general mesh allocator.
 
@@ -32,7 +33,9 @@ All other descriptors enter the GPU path conservatively.
 
 The immutable GPU descriptor contains only chunk coordinate, cells per axis,
 cell size, immutable procedural settings, backend generator version, and source revision. Compute evaluates the field via
-the shared `voxel_sdf.hlsl` boundary. It derives every cell corner from an
+the shared versioned `voxel_sdf_v3.hlsl` boundary. Cave constants and seed salts
+are owned by that generator version, so the shared descriptor remains unchanged.
+It derives every cell corner from an
 integer global sample coordinate, and sets a case bit for `density <= 0`. This
 preserves the authoritative negative-solid, positive-air, zero-solid convention
 and makes samples on adjacent chunk faces bit-identical.
@@ -60,8 +63,10 @@ out-of-clip position before topology lookup, coordinate arithmetic, SDF
 sampling, interpolation, or gradient work; each padded triangle is therefore
 degenerate and clipped. The vertex shader decodes local XYZ directly and
 interpolates chunk-local positions with `saturate(d0 / (d0 - d1))`. It evaluates
-central-difference gradients at half a cell in world space, normalizes them from
-solid toward air, and adds the chunk origin only for rendering.
+six-sample central-difference gradients at half a cell in world space,
+normalizes them from solid toward air, and adds the chunk origin only for
+rendering. Sampling all three axes removes the former heightfield-only analytic
+Z derivative and makes draw-time reconstruction use the same volumetric field.
 
 Installed s&box 26.08.19 exposes indirect drawing publicly through a
 camera-attached `Sandbox.Rendering.CommandList`; the corresponding immediate

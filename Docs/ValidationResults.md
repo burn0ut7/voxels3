@@ -3609,3 +3609,260 @@ Record an approved extraordinary change here before adding the new version:
   last-stream settle below one crossing, frame p95/p99 within `5%` of baseline,
   and average GPU at most `4 ms` while exact topology and readback gates remain
   unchanged. Three clean runs of the final candidate would define acceptance.
+
+### CAVE-STRESS-001/v1 - Deterministic noodle-and-cheese caves
+
+- Definition recorded on 2026-08-29 before generator implementation and before
+  the first cave performance run. This is a topology stress workload, not an
+  optimization scenario; the accepted shared-slab renderer remains unchanged.
+- Production path: `Assets/scenes/basic_example.scene`; engine build `26.08.19`;
+  one local player; main camera `1280x720`; LOD0 regular-cell Transvoxel;
+  GPU-only visual meshing; shared 256-region slabs; zero geometry readbacks.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  one render-warm chunk; at most `8` GPU mesh dispatches per update; `0.500 ms`
+  main-thread integration budget; `WorldSeed=1337`; `SurfaceBaseHeight=0`;
+  `SurfaceFrequency=0.0005`; `SurfaceAmplitude=4096`.
+- Fixed generator version 3 field: retain
+  `surface=worldZ-(base+simplex2D(worldXY*frequency,seed)*amplitude)`; sample four
+  independently seed-salted normalized 3D simplex fields from absolute world
+  coordinates. Noodle wavelengths are `1024` and `1152`; thickness wavelength
+  is `4096` with threshold `0.14+0.05*thicknessNoise`; tunnel density is
+  `512*(threshold-max(abs(noodleA),abs(noodleB)))`. Cheese wavelength is `2048`
+  with density `512*(cheeseNoise-0.52)`. Let `depth=-surface`, cave union be the
+  maximum of tunnel and cheese, envelope be `min(depth,2048-depth)`, cave term
+  be the minimum of cave union and envelope, and final density be
+  `max(surface,caveTerm)`. Density `<=0` is solid Grass; density `>0` is Air.
+  No domain warp, explicit carver, room graph, cave biome, or secondary field
+  implementation is permitted.
+- Fixed journey: start and center `(0,0,0)` at world Z `0`; speed `2500`;
+  maximum X distance `50000` and Y reach `25000`; one complete loop. Preserve
+  the `524,288` frame-sample capacity, per-update frame/GPU sampling, one-second
+  memory sampling, nearest-rank p95/p99, final gameplay/warm backlog settlement,
+  one bounded end-of-run scalar readback, and zero geometry readbacks.
+- Required evidence: FPS, p95/p99, average GPU frame time, process/GPU memory;
+  bound query classifications and total/maximum CPU cost; settled candidate
+  resources versus non-empty surface regions; total/average/maximum active
+  cells; slabs, reserved capacity, and utilization; visible regions; dispatches;
+  peak/final gameplay and warm backlogs; streaming availability; and
+  schedule-to-renderable p50/p95/p99/maximum.
+- Correctness gates: deterministic repeated CPU samples; identical shared
+  positive and negative chunk-face samples; representative samples contained by
+  conservative closed-AABB bounds; uncertainty remains
+  `PotentiallySurfaceContaining`; CPU and GPU implement the same versioned
+  formula; visible mountains, entrances, tunnels, intersections, ceilings,
+  walls, overhangs, chambers, and internal layers; no seam, repeated topology,
+  stale flash, missing surface, relevant runtime/shader error, or geometry
+  readback. A correctness failure leaves the slice incomplete.
+- Measurement decision: performance degradation is valid evidence. Sharp slab
+  or memory growth nominates a future paged arena; non-settling backlog or
+  schedule p95 above `204.8 ms` / maximum above `409.6 ms` nominates meshing
+  throughput; dominant or frame-scale bounds work nominates bounds refinement;
+  GPU growth beyond the mountain control, especially per visible region,
+  nominates draw-time SDF reconstruction. Record only the evidence and next
+  candidate; do not optimize it in this slice.
+
+#### Mountain-only control 2026-08-29 - pass
+
+- Run `aceb7a543c4e4ca1a57c4f2be1e2629e`, revision
+  `2e7de04-mountain-control`, executed the production `run_performance_test`
+  entry point before generator source changed. Engine `26.08.19`, authored
+  scene, player, camera, high-amplitude surface settings, route, sampling, and
+  completion boundary matched the locked scenario.
+- The loop completed in `121.94493 s` with `202.42227 FPS`, p95 `9.2426 ms`,
+  p99 `17.66 ms`, and average GPU time `0.8764267 ms`. Process memory was
+  `1,633,517,568` bytes at start, `1,827,151,872` at end, `1,743,011,134`
+  average, and `1,821,810,688` peak. GPU memory was `2,282,526,762` bytes at
+  start/end/average/peak.
+- Bounds recorded `855,327` gameplay queries (`319,272` solid, `345,329` air,
+  `190,726` potential) and `943,747` warm queries (`358,539` solid, `385,315`
+  air, `199,893` potential), consuming `50,607.074 ms` total with a `17.8468 ms`
+  maximum; `37,080` stale/cancelled queries were retained.
+- Settled candidates were `9,019` resources (`8,024` gameplay, `995` warm)
+  versus `8,235` non-empty surface regions including `906` warm. They occupied
+  `36` slabs and reserved `301,989,888` active-cell records
+  (`1,207,959,552` bytes). Actual topology contained `8,894,280` active cells,
+  average `1,080.0582`, maximum `3,474`, for `2.9452245%` utilization.
+- The run dispatched `171,478` meshes with the unchanged maximum of `8` per
+  update. Gameplay/warm backlogs peaked at `5,391/742` and settled to zero.
+  Schedule-to-renderable latency was p50 `128.943 ms`, p95 `3,088.177 ms`, p99
+  `4,068.0642 ms`, and maximum `7,706.0093 ms`; `27` samples cancelled and
+  `106,067` were superseded. The last stream settled in `54.6473 ms`.
+- Average visible regions were `691.2997`; maximum visible was `8,235`; average
+  resident/warm regions were `7,072.46/584.6069`; culling was `90.225464%`.
+  The run retained `35,937` loaded chunks, zero final pending work, one bounded
+  scalar readback, zero geometry readbacks, and no fresh console error. Outcome:
+  pass as the exact pre-change topology and performance control.
+
+#### Cave candidate attempt 1 2026-08-29 - invalid
+
+- Revision `cave-v3-candidate` invoked the locked production route once after a
+  clean editor restart. The route began at `14:55:28` and reached its terminal
+  save boundary at `14:57:53` without any recurrence of the background-task
+  non-yield warning that blocked the initial recursive-bounds implementation.
+- The run produced no JSONL record. `CompletePerformanceWindow` did not produce
+  a complete frame/memory snapshot, so the existing save gate emitted
+  `performance.result.failed reason="A complete performance-test snapshot is
+  required before saving."` No metric from this attempt is accepted or inferred.
+- The workload, generator recipe, scene, route, and budgets remain unchanged.
+  Recovery is limited to restoring the interactive editor window as the active
+  rendering context, allowing a fresh passive sampling window, and repeating the
+  identical production run. The failure and absence of a run ID remain recorded.
+
+#### Cave candidate attempt 2 2026-08-29 - invalid
+
+- Revision `cave-v3-candidate-2` repeated the exact v1 route after restoring the
+  editor window as the active rendering context. It again reached the terminal
+  save boundary without a task-yield warning, but produced no JSONL result and
+  failed the same complete-snapshot gate. No performance value is accepted.
+- Production observation after the recursive-bounds removal showed that the
+  world now loaded and rendered, but the locked v1 cave topology was far denser
+  than the intended stress workload, with cave structure present in roughly
+  every chunk. The user explicitly rejected that topology on 2026-08-29 and
+  authorized an approximately `90%` reduction before further measurement.
+
+### CAVE-STRESS-001/v2 - Sparse noodle-and-cheese caves
+
+- Human-approved scenario revision recorded on 2026-08-29 before applying the
+  changed generator constants. V1, its definition, and both invalid attempts
+  remain immutable. V2 preserves the scene, mountain term, seed, depth envelope,
+  player route, streaming dimensions, renderer, budgets, telemetry, correctness
+  gates, and stop rule; results are not same-version comparisons with v1.
+- Noodle wavelengths become `2048` and `2304`; thickness wavelength becomes
+  `8192`; threshold becomes `0.045+0.015*thicknessNoise`, a fixed `0.03..0.06`
+  range. Relative to v1's `0.14` base threshold, paired near-zero cross-sectional
+  occupancy is approximately `(0.045/0.14)^2 = 10.33%`. Doubling wavelengths
+  preserves moderate physical tunnel widths while spacing the network farther
+  apart.
+- Cheese wavelength becomes `4096` and its threshold becomes `0.72`, preserving
+  large chambers while making qualifying lobes substantially rarer. Density
+  scale `512`, maximum relative depth `2048`, constructive composition, seed
+  salts, sign/material convention, full-AABB bounds, and all excluded systems
+  remain unchanged.
+- Acceptance adds the observed topology gate: the route must show meaningful
+  tunnels, intersections, entrances, and chambers without continuous cave
+  structure in nearly every chunk or noise-soup layering. Performance remains
+  evidence rather than a tuning target.
+
+#### Sparse v2 candidate 2026-08-29 - aborted by human review
+
+- Revision `sparse-cave-v3-candidate` began the locked v2 production route but
+  was stopped before completion and produced no result. Human visual review
+  found the approximately `10%` v1 noodle occupancy still far too dense and
+  explicitly requested surface amplitude `128` plus a further drastic cave
+  reduction. No v2 measurement is accepted or inferred.
+
+### CAVE-STRESS-001/v3 - Very sparse volumetric stress field
+
+- Human-approved scenario revision recorded on 2026-08-29 before applying the
+  changed generator constants. V1/v2 definitions and attempts remain immutable.
+  The authored surface amplitude returns from `4096` to the accepted mountain
+  baseline value `128`; every other route, streaming, rendering, measurement,
+  correctness, and stop-rule parameter remains unchanged.
+- Noodle wavelengths become `6144` and `6912`; thickness wavelength becomes
+  `16384`; threshold becomes `0.014+0.004*thicknessNoise`, range `0.01..0.018`.
+  Paired near-zero occupancy is approximately `(0.014/0.045)^2 = 9.68%` of v2
+  and `(0.014/0.14)^2 = 1%` of rejected v1. Tripled wavelength preserves a
+  moderate world-space passage width while greatly increasing feature spacing.
+- Cheese wavelength becomes `8192` and threshold becomes `0.84`, retaining
+  occasional large chambers while rejecting the pervasive lower-threshold
+  lobes. Density scale `512`, relative depth `2048`, seed salts, composition,
+  bounds contract, shared-slab renderer, and exclusions remain unchanged.
+- Acceptance requires obvious empty underground spans between features. Tunnels
+  and chambers must remain discoverable along the complete figure-eight, but
+  feature absence in most individual chunks is intentional.
+
+#### Very sparse v3 candidate pre-clean run 2026-08-29 - diagnostic only
+
+- Run `7b253b5a03a94231b7ce527bab04d04c`, revision
+  `very-sparse-cave-v3-candidate-fixed`, completed the unchanged production
+  route in `121.94574 s`. It verified the benchmark lifecycle correction:
+  the completed figure-eight snapshot remained intact while derived cave meshes
+  settled, both final backlogs reached zero, and the JSONL result saved.
+- The measured loop recorded `91.08138 FPS`, p95 `22.149 ms`, p99
+  `30.6354 ms`, and average GPU time `10.83518 ms`. It issued `88,752` mesh
+  dispatches with the unchanged maximum of `8` per update. Gameplay/warm
+  backlogs peaked at `6,377/704` and settled to `0/0`.
+- Settled residency was `7,195` candidates (`6,393` gameplay and `802` warm)
+  versus `6,682` actual non-empty surface meshes including `735` warm. The
+  geometry contained `12,472,234` active cells, average `1,866.5421`, maximum
+  `5,588`, in `29` slabs with `243,269,632` reserved active-cell records
+  (`973,078,528` bytes) and `5.126918%` utilization. Geometry readbacks were
+  zero.
+- Schedule-to-renderable latency was p50 `4,473.97 ms`, p95 `7,050.6406 ms`,
+  p99 `15,052.021 ms`, and maximum `24,051.562 ms`; `203,647` samples were
+  superseded. Average/max visible regions were `239.8734/1,569`.
+- Bounds recorded `873,384` gameplay queries (`290,328` solid, `426,959` air,
+  `156,097` potential) and `951,413` warm queries (`324,054` solid, `465,094`
+  air, `162,265` potential). Total/max bounds CPU cost was
+  `6,285.7744/11.7135 ms`; `49,617` stale/cancelled queries were retained. No
+  background-task non-yield warning, shader/runtime error, or bounds error was
+  emitted.
+- Process memory was `5,049,597,952` bytes at start, `4,845,981,696` at end,
+  `4,896,989,452` average, and `5,068,738,560` peak. GPU memory was
+  `2,058,205,366` bytes throughout. Because this run followed several invalid
+  and aborted cave runs in the same editor process, it does not satisfy the
+  scenario's clean-process requirement and is retained as diagnostic evidence,
+  not the accepted control comparison. A fresh-process v3 run remains required.
+
+### CAVE-STRESS-001/v4 - More frequent, wider passages
+
+- Human-approved scenario revision recorded on 2026-08-29 before applying the
+  changed generator constants. V1-v3 and their measurements remain immutable.
+  V4 preserves surface amplitude `128`, seed, route, streaming dimensions,
+  renderer, budgets, telemetry, correctness gates, and stop rule.
+- Noodle wavelengths are halved to `3072` and `3456`, and thickness wavelength
+  is halved to `8192`, making the fields spatially twice as frequent. The
+  threshold becomes `0.056+0.016*thicknessNoise`, range `0.04..0.072`. Because
+  a tunnel's approximate world-space width is proportional to wavelength times
+  near-zero threshold, the fourfold threshold combined with the halved
+  wavelengths makes passages approximately twice as wide as v3.
+- Cheese wavelength is halved to `4096`, while its rare `0.84` threshold is
+  retained. Density scale `512`, relative depth `2048`, seed salts, CSG
+  composition, full-AABB conservative bounds, and shared-slab rendering remain
+  unchanged. This revision supersedes the pending clean-process v3 acceptance
+  run; the next clean measurement uses v4 without treating v3 and v4 as
+  comparable scenario versions.
+
+#### More frequent, wider v4 candidate 2026-08-29 - pass
+
+- Run `0bea4b81ff0d465ebfa86b98b7ff7b65`, revision
+  `frequent-wide-cave-v4-candidate`, executed the unchanged production route in
+  a fresh editor process and completed one loop in `121.94495 s`. The source and
+  live shader compiled cleanly before the run. No task-yield warning,
+  shader/runtime error, bounds error, stale flash, seam report, or missing-mesh
+  report occurred; final gameplay and warm backlogs were zero.
+- The run recorded `185.54071 FPS`, p95 `9.7478 ms`, p99 `12.2063 ms`, and
+  average GPU time `3.1891732 ms` across `22,626` frame samples. Process memory
+  was `4,475,396,096` bytes at start, `4,479,840,256` at end,
+  `4,475,442,461` average, and `4,558,254,080` peak. GPU memory was
+  `2,023,950,374` bytes at start, `2,023,356,494` at end,
+  `2,024,866,675` average, and `2,028,854,394` peak.
+- Bounds recorded `858,015` gameplay queries (`285,809` solid, `419,476` air,
+  `152,730` potential) and `962,658` warm queries (`329,458` solid, `471,157`
+  air, `162,043` potential). Total/max bounds CPU cost was
+  `5,644.699/11.462 ms`, with `21,421` stale/cancelled queries. The conservative
+  classifier rejected no GPU-reported surface and unresolved regions remained
+  potential.
+- Settled residency was `7,198` candidates (`6,394` gameplay and `804` warm)
+  versus `2,360` actual non-empty surface meshes including `251` warm. Geometry
+  contained `1,727,765` active cells, average `732.1038`, maximum `4,787`, in
+  `29` slabs with `243,269,632` reserved active-cell records
+  (`973,078,528` bytes) and `0.71022636%` utilization. One bounded scalar
+  readback and zero geometry readbacks were retained.
+- Meshing issued `149,348` dispatches with the unchanged configured and observed
+  maximum of `8` per update. Gameplay/warm backlogs peaked at `2,250/596` and
+  settled to `0/0`. Schedule-to-renderable latency was p50 `138.3315 ms`, p95
+  `1,873.9406 ms`, p99 `2,099.255 ms`, and maximum `2,252.6453 ms`; `49`
+  samples cancelled and `75,768` were superseded.
+- Average/max visible regions were `693.30695/2,313`; average resident/warm
+  regions were `2,149.4148/180.87129`. The run retained `35,937` loaded chunks,
+  zero pending chunks, `750` incremental updates, and a last-stream settle of
+  `17.644 ms`.
+- Outcome: **pass** for the approved v4 cave-generator slice. The field is a
+  deterministic, genuinely volumetric production workload with disconnected
+  internal surfaces, while the rare cheese cutoff avoids returning to the
+  rejected pervasive cave topology. Performance degradation is accepted stress
+  evidence. The p95 and maximum schedule latency exceed the locked
+  `204.8/409.6 ms` nomination thresholds by large margins, so **meshing
+  throughput is the single next candidate subsystem**. No allocator, bounds,
+  meshing, renderer, or draw-SDF optimization is included in this slice.

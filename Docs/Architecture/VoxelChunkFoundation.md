@@ -15,10 +15,10 @@ persistence, and network replication remain later slices.
 - Each `VoxelChunk` owns the parameters required to evaluate its authoritative
   `(CellsPerAxis + 1)^3` logical density samples. Negative density is solid,
   positive density is air, and zero is the surface.
-- The current unedited base field is deterministic surface generator version
-  `2`, identified by explicit generation settings and evaluated only from absolute
-  coordinates. Shared chunk-boundary samples therefore receive identical
-  integer lattice inputs.
+- The current unedited base field is deterministic volumetric generator version
+  `3`, identified by explicit generation settings and evaluated only from
+  absolute coordinates. Shared chunk-boundary samples therefore receive
+  identical integer lattice inputs.
 - The same canonical sample query derives one semantic material ID from density:
   `Air = 0` when density is positive and `Grass = 1` when density is zero or
   negative. The zero-density surface therefore belongs to Grass on both chunks
@@ -44,15 +44,15 @@ persistence, and network replication remain later slices.
   client. It refuses to choose among multiple locally controlled players and
   logs that multi-origin server interest management is still required.
 
-## Procedural Generator Version 2
+## Procedural Generator Version 3
 
-`ProceduralTerrainSdf` owns one surface-only 2D simplex field. The serialized,
-user-facing settings are `WorldSeed`, `SurfaceBaseHeight`,
+`ProceduralTerrainSdf` owns the single unedited base field. The serialized,
+user-facing settings remain `WorldSeed`, `SurfaceBaseHeight`,
 `SurfaceFrequency`, and `SurfaceAmplitude`. Defaults are respectively `1337`,
-`0`, `0.0005`, and `128`, producing broad, slow rolling hills around world Z
-zero at this project's world scale. Generator version `2`, the gradient table,
-and hash are backend-owned; there is no inspector-selectable generator
-variation or alternate implementation.
+`0`, `0.0005`, and `128`; the authored stress scene uses those same settings.
+Generator version `3`, the 2D/3D gradient tables, hashes, seed salts, and cave
+recipe are backend-owned. There is no inspector-selectable generator variation
+or alternate implementation.
 
 Changing any exposed setting cancels gameplay and warm generation, increments
 the existing stream and terrain-content revisions, clears derived GPU meshes,
@@ -61,32 +61,54 @@ retains the complete settings value used to construct it. The GPU SDF descriptor
 copies that value, so descriptor equality and stale-result rejection include
 every field-shaping input.
 
-The CPU owner and `voxel_sdf_v2.hlsl` use the same unchecked 32-bit integer
-hash, fixed gradient table, simplex skew/unskew constants, and operation
-order. Negative coordinates use explicit floor operations. Simplex outputs are
-clamped to `[-1,1]`, making their conservative range contractual even where CPU
-and GPU floating-point implementations differ slightly.
+The CPU owner and `voxel_sdf_v3.hlsl` use the same unchecked 32-bit integer
+hashes, fixed gradient tables, seed salts, simplex skew/unskew constants, and
+operation order. Negative coordinates use explicit floor operations. Simplex
+outputs are clamped to `[-1,1]`, making their conservative range contractual
+even where CPU and GPU floating-point implementations differ slightly.
 
 The canonical field is:
 
 ```text
 surfaceZ = surfaceBaseHeight
     + simplex2D(worldXY * surfaceFrequency, worldSeed) * surfaceAmplitude
-density = worldZ - surfaceZ
+surface = worldZ - surfaceZ
+noodleThreshold = 0.056 + 0.016 * simplex3D(world / 8192, thicknessSeed)
+tunnel = 512 * (noodleThreshold - max(
+	abs(simplex3D(world / 3072, noodleASeed)),
+	abs(simplex3D(world / 3456, noodleBSeed))))
+cheese = 512 * (simplex3D(world / 4096, cheeseSeed) - 0.84)
+depth = -surface
+cave = min(max(tunnel, cheese), min(depth, 2048 - depth))
+density = max(surface, cave)
 ```
 
-Version 2 deliberately has one exterior height surface: it does not generate
-caves, tunnels, floating/internal surfaces, or multiple terrain planes. The
-simplex result is clamped to `[-1,1]`. The complete surface range is
-`surfaceBaseHeight +/- abs(surfaceAmplitude)`. A chunk is solid or air only when
-that complete range proves the classification; otherwise it remains potentially
-surface-containing. A future non-heightfield contribution must extend this full
-field bound before either definite classification remains valid.
+The surface term remains the exterior terrain. Intersecting near-zero regions of
+two independent 3D fields form long noodle passages; a slowly varying third
+field changes their thickness. The paired threshold targets approximately one
+percent of the rejected v1 cross-sectional occupancy, while longer wavelengths
+preserve useful physical width. A lower-frequency, higher-threshold field adds
+sparse large cheese chambers. The relative-depth envelope admits entrances and confines
+topology to the first `2048` units below the exterior surface. This is an
+intentional volumetric performance workload, not final world-generation art.
 
-Rejected alternatives are fBm/octave controls, a selectable generator/version
-menu, a general noise graph, continuing the cave branch before the basic surface
-is satisfactory, exposing the gradient table or hash, dense CPU sample arrays,
-and any allocator or meshing optimization bundled with this generator change.
+Conservative classification remains a full closed-AABB contract. The existing
+tight 2D surface interval first proves exterior air or solid. Underground solid
+regions propagate conservative 3D simplex intervals through `abs`, `max`,
+`min`, thickness, the depth envelope, and final composition. Normalized 3D
+simplex uses a documented Lipschitz bound of `22`. A complete-AABB interval may
+prove a chunk solid or air; otherwise only the depth-banded cave region remains
+`PotentiallySurfaceContaining`. Per-cell recursive proof was rejected after it
+made background batches run for seconds without yielding. Non-finite input and
+remaining uncertainty also stay potential; no heightfield assumption can reject
+a cave.
+
+Rejected alternatives are domain warping, explicit worm carvers, room graphs,
+fBm/octave controls, a selectable generator menu, a general noise graph,
+exposing hashes or salts, dense CPU sample arrays, and any allocator or meshing
+optimization bundled with this generator change. Unwarped fields plus thickness
+modulation supply the required topology while keeping evaluation and bounds
+small enough to understand and measure.
 
 ## Selected Dimensions
 
