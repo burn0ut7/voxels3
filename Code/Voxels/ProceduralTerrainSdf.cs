@@ -1,90 +1,62 @@
 using System;
 
+public readonly record struct ProceduralTerrainSettings(
+	int WorldSeed,
+	float SurfaceBaseHeight,
+	float SurfaceFrequency,
+	float SurfaceAmplitude );
+
 /// <summary>
-/// Canonical deterministic version-1 procedural terrain field. The GPU mirror
-/// lives in voxel_sdf.hlsl; both use the same integer hash, constants, and
-/// absolute-coordinate recipe.
+/// Canonical deterministic version-2 surface terrain field. The GPU mirror uses
+/// the same integer hash and single-octave 2D simplex recipe.
 /// </summary>
 internal static class ProceduralTerrainSdf
 {
-	public const int CurrentVersion = 1;
+	// Saved worlds identify this backend revision; it is not a variation control.
+	public const int CurrentVersion = 2;
 	public const int DefaultWorldSeed = 1337;
+	public const float DefaultSurfaceBaseHeight = 0f;
+	public const float DefaultSurfaceFrequency = 0.0005f;
+	public const float DefaultSurfaceAmplitude = 128f;
 
-	private const float HillAmplitude0 = 320f;
-	private const float HillWavelength0 = 4096f;
-	private const float HillAmplitude1 = 96f;
-	private const float HillWavelength1 = 2048f;
-	private const float HillAmplitudeBound = HillAmplitude0 + HillAmplitude1;
-	private const float CaveWeight0 = 0.67f;
-	private const float CaveWavelength0 = 1024f;
-	private const float CaveWeight1 = 0.33f;
-	private const float CaveWavelength1 = 512f;
-	private const float CaveThreshold = 0.18f;
-	private const float CaveScale = 192f;
-	private const float CaveCenterZ = -128f;
-	private const float CaveHalfExtent = 512f;
-	private const uint HillSalt0 = 0xA511E9B3u;
-	private const uint HillSalt1 = 0x63D83595u;
-	private const uint CaveSalt0 = 0xB5297A4Du;
-	private const uint CaveSalt1 = 0x1B56C4E9u;
+	private const float SimplexF2 = 0.3660254037844386f;
+	private const float SimplexG2 = 0.21132486540518713f;
 
 	public static float SampleGlobal(
 		Vector3Int globalSampleCoordinate,
 		float cellSize,
-		int worldSeed,
-		int generatorVersion )
+		ProceduralTerrainSettings settings )
 	{
 		var worldPosition = new Vector3(
 			globalSampleCoordinate.x * cellSize,
 			globalSampleCoordinate.y * cellSize,
 			globalSampleCoordinate.z * cellSize );
-		return SampleWorld( worldPosition, worldSeed, generatorVersion );
+		return SampleWorld( worldPosition, settings );
 	}
 
-	public static float SampleWorld( Vector3 worldPosition, int worldSeed, int generatorVersion )
+	public static float SampleWorld( Vector3 worldPosition, ProceduralTerrainSettings settings )
 	{
-		var versionedSeed = unchecked((uint)worldSeed ^ (uint)generatorVersion * 0x9E3779B9u);
-		var hillHeight =
-			HillAmplitude0 * ValueNoise2D( worldPosition.x, worldPosition.y, HillWavelength0, versionedSeed, HillSalt0 ) +
-			HillAmplitude1 * ValueNoise2D( worldPosition.x, worldPosition.y, HillWavelength1, versionedSeed, HillSalt1 );
-		var terrainDensity = worldPosition.z - hillHeight;
-
-		var caveNoise =
-			CaveWeight0 * ValueNoise3D( worldPosition, CaveWavelength0, versionedSeed, CaveSalt0 ) +
-			CaveWeight1 * ValueNoise3D( worldPosition, CaveWavelength1, versionedSeed, CaveSalt1 );
-		var caveNoiseBoundary = (MathF.Abs( caveNoise ) - CaveThreshold) * CaveScale;
-		var caveVerticalEnvelope = MathF.Abs( worldPosition.z - CaveCenterZ ) - CaveHalfExtent;
-		var caveBoundary = MathF.Max( caveNoiseBoundary, caveVerticalEnvelope );
-		return MathF.Max( terrainDensity, -caveBoundary );
+		var surfaceHeight = settings.SurfaceBaseHeight + SimplexNoise2D(
+			worldPosition.x * settings.SurfaceFrequency,
+			worldPosition.y * settings.SurfaceFrequency,
+			unchecked((uint)settings.WorldSeed) ) * settings.SurfaceAmplitude;
+		return worldPosition.z - surfaceHeight;
 	}
 
 	public static ChunkDensityRange ClassifyDensityRange(
 		Vector3Int coordinate,
 		int cellsPerAxis,
-		float cellSize )
+		float cellSize,
+		ProceduralTerrainSettings settings )
 	{
 		var chunkWorldSize = cellsPerAxis * cellSize;
 		var chunkMinimumZ = coordinate.z * chunkWorldSize;
 		var chunkMaximumZ = chunkMinimumZ + chunkWorldSize;
-		var terrainMinimum = chunkMinimumZ - HillAmplitudeBound;
-		var terrainMaximum = chunkMaximumZ + HillAmplitudeBound;
-
-		var shiftedMinimumZ = chunkMinimumZ - CaveCenterZ;
-		var shiftedMaximumZ = chunkMaximumZ - CaveCenterZ;
-		var minimumAbsoluteZ = shiftedMinimumZ <= 0f && shiftedMaximumZ >= 0f
-			? 0f
-			: MathF.Min( MathF.Abs( shiftedMinimumZ ), MathF.Abs( shiftedMaximumZ ) );
-		var maximumAbsoluteZ = MathF.Max( MathF.Abs( shiftedMinimumZ ), MathF.Abs( shiftedMaximumZ ) );
-		var verticalEnvelopeMinimum = minimumAbsoluteZ - CaveHalfExtent;
-		var verticalEnvelopeMaximum = maximumAbsoluteZ - CaveHalfExtent;
-		var caveNoiseBoundaryMinimum = -CaveThreshold * CaveScale;
-		var caveNoiseBoundaryMaximum = (1f - CaveThreshold) * CaveScale;
-		var caveBoundaryMinimum = MathF.Max( caveNoiseBoundaryMinimum, verticalEnvelopeMinimum );
-		var caveBoundaryMaximum = MathF.Max( caveNoiseBoundaryMaximum, verticalEnvelopeMaximum );
-		var carveMinimum = -caveBoundaryMaximum;
-		var carveMaximum = -caveBoundaryMinimum;
-		var minimumDensity = MathF.Max( terrainMinimum, carveMinimum );
-		var maximumDensity = MathF.Max( terrainMaximum, carveMaximum );
+		var heightBound = MathF.Abs( settings.SurfaceAmplitude );
+		var minimumDensity =
+			chunkMinimumZ - settings.SurfaceBaseHeight - heightBound;
+		var maximumDensity =
+			chunkMaximumZ - settings.SurfaceBaseHeight + heightBound;
 		var classification = maximumDensity <= 0f
 			? ChunkDensityClassification.DefinitelySolid
 			: minimumDensity > 0f
@@ -93,87 +65,80 @@ internal static class ProceduralTerrainSdf
 		return new ChunkDensityRange( minimumDensity, maximumDensity, classification );
 	}
 
-	private static float ValueNoise2D( float worldX, float worldY, float wavelength, uint seed, uint salt )
+	private static float SimplexNoise2D( float x, float y, uint seed )
 	{
-		var sampleX = worldX / wavelength;
-		var sampleY = worldY / wavelength;
-		var minimumX = (int)MathF.Floor( sampleX );
-		var minimumY = (int)MathF.Floor( sampleY );
-		var blendX = Smooth( sampleX - minimumX );
-		var blendY = Smooth( sampleY - minimumY );
-		var lower = Lerp(
-			HashValue( minimumX, minimumY, 0, seed, salt ),
-			HashValue( minimumX + 1, minimumY, 0, seed, salt ),
-			blendX );
-		var upper = Lerp(
-			HashValue( minimumX, minimumY + 1, 0, seed, salt ),
-			HashValue( minimumX + 1, minimumY + 1, 0, seed, salt ),
-			blendX );
-		return Lerp( lower, upper, blendY );
+		var skew = (x + y) * SimplexF2;
+		var i = (int)MathF.Floor( x + skew );
+		var j = (int)MathF.Floor( y + skew );
+		var unskew = (i + j) * SimplexG2;
+		var x0 = x - (i - unskew);
+		var y0 = y - (j - unskew);
+		var i1 = x0 > y0 ? 1 : 0;
+		var j1 = x0 > y0 ? 0 : 1;
+		var x1 = x0 - i1 + SimplexG2;
+		var y1 = y0 - j1 + SimplexG2;
+		var x2 = x0 - 1f + 2f * SimplexG2;
+		var y2 = y0 - 1f + 2f * SimplexG2;
+		var value =
+			SimplexContribution2D( i, j, x0, y0, seed ) +
+			SimplexContribution2D( i + i1, j + j1, x1, y1, seed ) +
+			SimplexContribution2D( i + 1, j + 1, x2, y2, seed );
+		return Math.Clamp( value * 70f, -1f, 1f );
 	}
 
-	private static float ValueNoise3D( Vector3 worldPosition, float wavelength, uint seed, uint salt )
+	private static float SimplexContribution2D(
+		int x,
+		int y,
+		float offsetX,
+		float offsetY,
+		uint seed )
 	{
-		var sample = worldPosition / wavelength;
-		var minimumX = (int)MathF.Floor( sample.x );
-		var minimumY = (int)MathF.Floor( sample.y );
-		var minimumZ = (int)MathF.Floor( sample.z );
-		var blendX = Smooth( sample.x - minimumX );
-		var blendY = Smooth( sample.y - minimumY );
-		var blendZ = Smooth( sample.z - minimumZ );
-		var z0y0 = Lerp(
-			HashValue( minimumX, minimumY, minimumZ, seed, salt ),
-			HashValue( minimumX + 1, minimumY, minimumZ, seed, salt ),
-			blendX );
-		var z0y1 = Lerp(
-			HashValue( minimumX, minimumY + 1, minimumZ, seed, salt ),
-			HashValue( minimumX + 1, minimumY + 1, minimumZ, seed, salt ),
-			blendX );
-		var z1y0 = Lerp(
-			HashValue( minimumX, minimumY, minimumZ + 1, seed, salt ),
-			HashValue( minimumX + 1, minimumY, minimumZ + 1, seed, salt ),
-			blendX );
-		var z1y1 = Lerp(
-			HashValue( minimumX, minimumY + 1, minimumZ + 1, seed, salt ),
-			HashValue( minimumX + 1, minimumY + 1, minimumZ + 1, seed, salt ),
-			blendX );
-		return Lerp(
-			Lerp( z0y0, z0y1, blendY ),
-			Lerp( z1y0, z1y1, blendY ),
-			blendZ );
+		var attenuation = 0.5f - offsetX * offsetX - offsetY * offsetY;
+		if ( attenuation <= 0f )
+		{
+			return 0f;
+		}
+
+		var gradient = Gradient2D( Hash( x, y, seed ) );
+		attenuation *= attenuation;
+		return attenuation * attenuation * (gradient.x * offsetX + gradient.y * offsetY);
 	}
 
-	private static float HashValue( int x, int y, int z, uint seed, uint salt )
+	private static Vector2 Gradient2D( uint hash )
+	{
+		return (hash & 7u) switch
+		{
+			0u => new Vector2( 1f, 0f ),
+			1u => new Vector2( -1f, 0f ),
+			2u => new Vector2( 0f, 1f ),
+			3u => new Vector2( 0f, -1f ),
+			4u => new Vector2( 0.70710677f, 0.70710677f ),
+			5u => new Vector2( -0.70710677f, 0.70710677f ),
+			6u => new Vector2( 0.70710677f, -0.70710677f ),
+			_ => new Vector2( -0.70710677f, -0.70710677f )
+		};
+	}
+
+	private static uint Hash( int x, int y, uint seed )
 	{
 		unchecked
 		{
-			var hash = seed ^ salt;
+			var hash = seed;
 			hash ^= (uint)x * 0x9E3779B1u;
 			hash = RotateLeft( hash, 13 ) * 0x85EBCA77u;
 			hash ^= (uint)y * 0xC2B2AE3Du;
 			hash = RotateLeft( hash, 15 ) * 0x27D4EB2Fu;
-			hash ^= (uint)z * 0x165667B1u;
 			hash ^= hash >> 16;
 			hash *= 0x7FEB352Du;
 			hash ^= hash >> 15;
 			hash *= 0x846CA68Bu;
 			hash ^= hash >> 16;
-			return (hash & 0x00FFFFFFu) * (2f / 16777215f) - 1f;
+			return hash;
 		}
 	}
 
 	private static uint RotateLeft( uint value, int count )
 	{
 		return value << count | value >> (32 - count);
-	}
-
-	private static float Smooth( float value )
-	{
-		return value * value * (3f - 2f * value);
-	}
-
-	private static float Lerp( float from, float to, float amount )
-	{
-		return from + (to - from) * amount;
 	}
 }

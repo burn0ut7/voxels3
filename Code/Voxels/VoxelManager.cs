@@ -72,7 +72,9 @@ public sealed class VoxelManager : Component
 	private float _appliedCellSize;
 	private int _appliedLoadRadius;
 	private int _appliedWorldSeed;
-	private int _appliedGeneratorVersion;
+	private float _appliedSurfaceBaseHeight;
+	private float _appliedSurfaceFrequency;
+	private float _appliedSurfaceAmplitude;
 	private int _streamRevision;
 	private int _terrainContentRevision;
 	private bool _workerCompleted;
@@ -153,6 +155,11 @@ public sealed class VoxelManager : Component
 	private PerformanceStreamingMetrics _performanceStreaming = new();
 	private PerformanceStreamingMetrics _lastPerformanceStreaming = new();
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
+	private ProceduralTerrainSettings CurrentTerrainSettings => new(
+		WorldSeed,
+		SurfaceBaseHeight,
+		SurfaceFrequency,
+		SurfaceAmplitude );
 
 	[Property, Category( "Chunk Configuration" ), Range( 4, 64 )]
 	public int CellsPerAxis { get; set; } = 32;
@@ -163,11 +170,17 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Chunk Configuration" ), Range( 0, 128 )]
 	public int LoadRadius { get; set; } = 16;
 
-	[Property, Category( "Chunk Configuration" )]
+	[Property, Category( "Terrain Generation" )]
 	public int WorldSeed { get; set; } = ProceduralTerrainSdf.DefaultWorldSeed;
 
-	[Property, Category( "Chunk Configuration" )]
-	public int GeneratorVersion { get; set; } = ProceduralTerrainSdf.CurrentVersion;
+	[Property, Category( "Terrain Generation" ), Range( -4096f, 4096f )]
+	public float SurfaceBaseHeight { get; set; } = ProceduralTerrainSdf.DefaultSurfaceBaseHeight;
+
+	[Property, Category( "Terrain Generation" ), Range( 0.0001f, 0.1f )]
+	public float SurfaceFrequency { get; set; } = ProceduralTerrainSdf.DefaultSurfaceFrequency;
+
+	[Property, Category( "Terrain Generation" ), Range( 0f, 4096f )]
+	public float SurfaceAmplitude { get; set; } = ProceduralTerrainSdf.DefaultSurfaceAmplitude;
 
 	[Property, Category( "Chunk Configuration" )]
 	public GameObject StreamingTarget { get; set; }
@@ -613,9 +626,12 @@ public sealed class VoxelManager : Component
 				CellsPerAxis = CellsPerAxis,
 				CellSize = CellSize,
 				LoadRadius = LoadRadius,
-				Generator = "deterministic-volumetric",
+				Generator = "deterministic-simplex-surface",
 				WorldSeed = WorldSeed,
-				GeneratorVersion = GeneratorVersion,
+				GeneratorVersion = ProceduralTerrainSdf.CurrentVersion,
+				SurfaceBaseHeight = SurfaceBaseHeight,
+				SurfaceFrequency = SurfaceFrequency,
+				SurfaceAmplitude = SurfaceAmplitude,
 				StreamingCenter = new PerformanceVector3Int
 				{
 					X = _streamingCenterCoordinate.x,
@@ -1111,7 +1127,9 @@ public sealed class VoxelManager : Component
 		Log.Info(
 			$"[VoxelWorld] chunk.inspect chunk={chunk.LogId} name=\"{chunk.HumanName}\" cellsPerAxis={chunk.CellsPerAxis} " +
 			$"samplesPerAxis={chunk.SamplesPerAxis} sampleCount={chunk.SampleCount} " +
-			$"worldSeed={WorldSeed} generatorVersion={GeneratorVersion} " +
+			$"worldSeed={WorldSeed} generatorVersion={ProceduralTerrainSdf.CurrentVersion} " +
+			$"surfaceBaseHeight={SurfaceBaseHeight} surfaceFrequency={SurfaceFrequency} " +
+			$"surfaceAmplitude={SurfaceAmplitude} " +
 			$"densityMin={chunk.MinimumDensity} densityMax={chunk.MaximumDensity} " +
 			$"originDensity={originDensity} originMaterial=\"{VoxelChunk.GetMaterialName( originMaterialId )}\" " +
 			$"originMaterialId={originMaterialId} positiveXFaceDensity={positiveXDensity} " +
@@ -1179,15 +1197,29 @@ public sealed class VoxelManager : Component
 			return false;
 		}
 
-		if ( GeneratorVersion != ProceduralTerrainSdf.CurrentVersion )
-		{
-			error = $"Generator Version must be {ProceduralTerrainSdf.CurrentVersion}.";
-			return false;
-		}
-
 		if ( WorldSeed < -16777216 || WorldSeed > 16777216 )
 		{
 			error = "World Seed must be between -16,777,216 and 16,777,216 for exact GPU transport.";
+			return false;
+		}
+
+		if ( !float.IsFinite( SurfaceBaseHeight ) ||
+			SurfaceBaseHeight < -4096f ||
+			SurfaceBaseHeight > 4096f )
+		{
+			error = "Surface Base Height must be finite and between -4,096 and 4,096.";
+			return false;
+		}
+
+		if ( !float.IsFinite( SurfaceFrequency ) || SurfaceFrequency < 0.0001f || SurfaceFrequency > 0.1f )
+		{
+			error = "Surface Frequency must be finite and between 0.0001 and 0.1.";
+			return false;
+		}
+
+		if ( !float.IsFinite( SurfaceAmplitude ) || SurfaceAmplitude < 0f || SurfaceAmplitude > 4096f )
+		{
+			error = "Surface Amplitude must be finite and between 0 and 4,096.";
 			return false;
 		}
 
@@ -1200,7 +1232,9 @@ public sealed class VoxelManager : Component
 		return CellsPerAxis != _appliedCellsPerAxis ||
 			CellSize != _appliedCellSize ||
 			WorldSeed != _appliedWorldSeed ||
-			GeneratorVersion != _appliedGeneratorVersion;
+			SurfaceBaseHeight != _appliedSurfaceBaseHeight ||
+			SurfaceFrequency != _appliedSurfaceFrequency ||
+			SurfaceAmplitude != _appliedSurfaceAmplitude;
 	}
 
 	private void ApplyConfigurationAndRebuild()
@@ -1216,7 +1250,9 @@ public sealed class VoxelManager : Component
 		_appliedCellSize = CellSize;
 		_appliedLoadRadius = LoadRadius;
 		_appliedWorldSeed = WorldSeed;
-		_appliedGeneratorVersion = GeneratorVersion;
+		_appliedSurfaceBaseHeight = SurfaceBaseHeight;
+		_appliedSurfaceFrequency = SurfaceFrequency;
+		_appliedSurfaceAmplitude = SurfaceAmplitude;
 
 		_generationCancellation?.Cancel();
 		_warmGenerationCancellation?.Cancel();
@@ -1655,8 +1691,7 @@ public sealed class VoxelManager : Component
 			coordinates,
 			CellsPerAxis,
 			CellSize,
-			WorldSeed,
-			GeneratorVersion,
+			CurrentTerrainSettings,
 			revision,
 			cancellation.Token );
 	}
@@ -1666,8 +1701,7 @@ public sealed class VoxelManager : Component
 		Vector3Int[] coordinates,
 		int cellsPerAxis,
 		float cellSize,
-		int worldSeed,
-		int generatorVersion,
+		ProceduralTerrainSettings terrainSettings,
 		int revision,
 		CancellationToken cancellationToken )
 	{
@@ -1704,8 +1738,7 @@ public sealed class VoxelManager : Component
 							coordinates[batchOffset + index],
 							cellsPerAxis,
 							cellSize,
-							worldSeed,
-							generatorVersion );
+							terrainSettings );
 						chunks.Add( chunk );
 						lastChunkMilliseconds = (float)Stopwatch.GetElapsedTime( generationStart ).TotalMilliseconds;
 						generationMilliseconds += lastChunkMilliseconds;
@@ -1822,8 +1855,7 @@ public sealed class VoxelManager : Component
 			coordinates,
 			CellsPerAxis,
 			CellSize,
-			WorldSeed,
-			GeneratorVersion,
+			CurrentTerrainSettings,
 			revision,
 			cancellation.Token );
 	}
@@ -1834,8 +1866,7 @@ public sealed class VoxelManager : Component
 		Vector3Int[] coordinates,
 		int cellsPerAxis,
 		float cellSize,
-		int worldSeed,
-		int generatorVersion,
+		ProceduralTerrainSettings terrainSettings,
 		int revision,
 		CancellationToken cancellationToken )
 	{
@@ -1868,15 +1899,14 @@ public sealed class VoxelManager : Component
 
 						var coordinate = coordinates[batchOffset + index];
 						var densityRange = VoxelChunk.ClassifyDensityRange(
-							coordinate, cellsPerAxis, cellSize );
+							coordinate, cellsPerAxis, cellSize, terrainSettings );
 						var chunk = densityRange.Classification ==
 							ChunkDensityClassification.PotentiallySurfaceContaining
 							? new VoxelChunk(
 								coordinate,
 								cellsPerAxis,
 								cellSize,
-								worldSeed,
-								generatorVersion )
+								terrainSettings )
 							: null;
 						results.Add( new WarmChunkResult( coordinate, densityRange.Classification, chunk ) );
 					}
@@ -1969,8 +1999,6 @@ public sealed class VoxelManager : Component
 				_renderPreparedChunks.Add( chunk.Coordinate );
 				_gpuMesher.Schedule(
 					chunk,
-					WorldSeed,
-					GeneratorVersion,
 					_terrainContentRevision,
 					GpuMeshResidency.Gameplay );
 				integratedCount++;
@@ -2028,8 +2056,6 @@ public sealed class VoxelManager : Component
 						: GpuMeshResidency.Warm;
 					_gpuMesher.Schedule(
 						result.Chunk,
-						WorldSeed,
-						GeneratorVersion,
 						_terrainContentRevision,
 						residency );
 				}
@@ -2114,7 +2140,10 @@ public sealed class VoxelManager : Component
 	{
 		LoadedChunkCount = _loadedChunks.Count;
 		PendingChunkCount = _pendingChunks.Count;
-		GeneratorStatus = $"Deterministic volumetric v{GeneratorVersion}; seed {WorldSeed}";
+		GeneratorStatus =
+			$"Simplex surface v{ProceduralTerrainSdf.CurrentVersion}; seed {WorldSeed}; " +
+			$"base {SurfaceBaseHeight:0.##}, f {SurfaceFrequency:0.######}, " +
+			$"amplitude {SurfaceAmplitude:0.##}";
 		ChunkStatus = _performanceSnapshotReady
 			? $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued; " +
 				$"{_lastPerformanceChunksPerSecond:N1} chunks/sec over {_lastPerformanceWindowSeconds:N1} sec; " +

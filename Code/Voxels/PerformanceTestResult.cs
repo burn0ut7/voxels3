@@ -65,6 +65,9 @@ internal sealed class PerformanceWorldContext
 	public string Generator { get; init; }
 	public int WorldSeed { get; init; }
 	public int GeneratorVersion { get; init; }
+	public float SurfaceBaseHeight { get; init; }
+	public float SurfaceFrequency { get; init; }
+	public float SurfaceAmplitude { get; init; }
 	public PerformanceVector3Int StreamingCenter { get; init; }
 	public PerformanceVector3 TargetPosition { get; init; }
 }

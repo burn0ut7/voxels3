@@ -16,14 +16,11 @@ MODES
 COMMON
 {
 	#include "common/shared.hlsl"
-	#include "shaders/voxels/voxel_sdf_v1.hlsl"
+	#include "shaders/voxels/voxel_sdf_v2.hlsl"
 	#include "shaders/voxels/transvoxel_regular_tables.hlsl"
 
 	StructuredBuffer<uint> ActiveCells < Attribute( "ActiveCells" ); >;
-	float3 ChunkWorldOrigin < Attribute( "ChunkWorldOrigin" ); >;
-	int CellsPerAxis < Attribute( "CellsPerAxis" ); >;
-	float CellSize < Attribute( "CellSize" ); >;
-	float2 GeneratorIdentity < Attribute( "GeneratorIdentity" ); >;
+	StructuredBuffer<float4> SdfParameters < Attribute( "SdfParameters" ); >;
 }
 
 struct PixelInput
@@ -40,6 +37,10 @@ VS
 {
 	PixelInput MainVs( uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID )
 	{
+		float4 spatial = SdfParameters[0];
+		float4 terrain = SdfParameters[1];
+		float3 chunkWorldOrigin = spatial.xyz;
+		float cellSize = spatial.w;
 		uint activeCell = ActiveCells[instanceId];
 		uint triangleCount = (activeCell >> 18) & 7;
 		if ( vertexId >= triangleCount * 3 )
@@ -61,23 +62,37 @@ VS
 		uint edgeData = RegularVertexData[caseIndex * 12 + topologyVertex] & 255;
 		uint corner0 = edgeData >> 4;
 		uint corner1 = edgeData & 15;
-		int3 globalSampleOrigin = (int3)round( ChunkWorldOrigin / CellSize );
+		int3 globalSampleOrigin = (int3)round( chunkWorldOrigin / cellSize );
 		int3 globalCell = globalSampleOrigin + localCell;
 		int3 globalSample0 = globalCell + VoxelCornerOffset( corner0 );
 		int3 globalSample1 = globalCell + VoxelCornerOffset( corner1 );
-		float density0 = SampleVoxelSdf( globalSample0, CellSize, (int)GeneratorIdentity.x, (int)GeneratorIdentity.y );
-		float density1 = SampleVoxelSdf( globalSample1, CellSize, (int)GeneratorIdentity.x, (int)GeneratorIdentity.y );
+		float density0 = SampleVoxelSdf(
+			globalSample0,
+			cellSize,
+			(int)terrain.x,
+			terrain.y,
+			terrain.z,
+			terrain.w );
+		float density1 = SampleVoxelSdf(
+			globalSample1,
+			cellSize,
+			(int)terrain.x,
+			terrain.y,
+			terrain.z,
+			terrain.w );
 		float interpolation = saturate( density0 / (density0 - density1) );
 		float3 localPosition = lerp(
-			(float3)(localCell + VoxelCornerOffset( corner0 )) * CellSize,
-			(float3)(localCell + VoxelCornerOffset( corner1 )) * CellSize,
+			(float3)(localCell + VoxelCornerOffset( corner0 )) * cellSize,
+			(float3)(localCell + VoxelCornerOffset( corner1 )) * cellSize,
 			interpolation );
-		float3 worldPosition = ChunkWorldOrigin + localPosition;
+		float3 worldPosition = chunkWorldOrigin + localPosition;
 		float3 gradient = SampleVoxelSdfGradient(
 			worldPosition,
-			CellSize,
-			(int)GeneratorIdentity.x,
-			(int)GeneratorIdentity.y );
+			cellSize,
+			(int)terrain.x,
+			terrain.y,
+			terrain.z,
+			terrain.w );
 
 		PixelInput output;
 		output.vPositionWs = worldPosition - g_vHighPrecisionLightingOffsetWs.xyz;

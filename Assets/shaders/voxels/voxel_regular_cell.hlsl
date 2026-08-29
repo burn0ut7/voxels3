@@ -3,7 +3,9 @@ uint ClassifyVoxelRegularCell(
 	int3 globalCell,
 	float cellSize,
 	int worldSeed,
-	int generatorVersion )
+	float surfaceBaseHeight,
+	float surfaceFrequency,
+	float surfaceAmplitude )
 {
 	uint caseIndex = 0;
 	for ( uint corner = 0; corner < 8; corner++ )
@@ -12,7 +14,9 @@ uint ClassifyVoxelRegularCell(
 			globalCell + VoxelCornerOffset( corner ),
 			cellSize,
 			worldSeed,
-			generatorVersion );
+			surfaceBaseHeight,
+			surfaceFrequency,
+			surfaceAmplitude );
 		if ( density <= 0.0 )
 		{
 			caseIndex |= 1u << corner;

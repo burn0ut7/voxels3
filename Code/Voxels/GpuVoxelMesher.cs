@@ -90,8 +90,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void Schedule(
 		VoxelChunk chunk,
-		int worldSeed,
-		int generatorVersion,
 		int sourceRevision,
 		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
@@ -103,8 +101,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 		var descriptor = GpuSdfDescriptor.FromChunk(
 			chunk,
-			worldSeed,
-			generatorVersion,
 			sourceRevision );
 		if ( _resident.TryGetValue( chunk.Coordinate, out var resident ) &&
 			resident.Descriptor == descriptor )
@@ -222,18 +218,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var resource = Acquire();
 			resource.Prepare( descriptor, pending.Residency );
 			_meshCommands.Attributes.Set( "ActiveCells", resource.ActiveCells );
-			var chunkWorldSize = descriptor.CellsPerAxis * descriptor.CellSize;
-			_meshCommands.Attributes.Set(
-				"ChunkWorldOrigin",
-				new Vector3(
-					descriptor.ChunkCoordinate.x * chunkWorldSize,
-					descriptor.ChunkCoordinate.y * chunkWorldSize,
-					descriptor.ChunkCoordinate.z * chunkWorldSize ) );
-			_meshCommands.Attributes.Set( "CellsPerAxis", descriptor.CellsPerAxis );
-			_meshCommands.Attributes.Set( "CellSize", descriptor.CellSize );
-			_meshCommands.Attributes.Set(
-				"GeneratorIdentity",
-				new Vector2( descriptor.WorldSeed, descriptor.GeneratorVersion ) );
+			_meshCommands.Attributes.Set( "SdfParameters", resource.SdfParameters );
 			_meshCommands.ResourceBarrierTransition( resource.ActiveCells, ResourceState.UnorderedAccess );
 			_meshCommands.SetCounterValue( resource.ActiveCells, 0 );
 			_meshCommands.DispatchCompute(
@@ -888,6 +873,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public GpuMeshResidency Residency { get; set; }
 		public int VisibilitySlot { get; }
 		public GpuBuffer<uint> ActiveCells { get; }
+		public GpuBuffer<Vector4> SdfParameters { get; private set; }
 		public GpuBuffer<GpuBuffer.IndirectDrawArguments> IndirectArguments { get; }
 		public RenderAttributes DrawAttributes { get; } = new();
 
@@ -899,6 +885,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 				capacity,
 				GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.Append,
 				$"Voxel Active Cells {allocationId}" );
+			SdfParameters = new GpuBuffer<Vector4>(
+				3,
+				GpuBuffer.UsageFlags.Structured,
+				$"Voxel SDF Parameters {allocationId}" );
 			IndirectArguments = new GpuBuffer<GpuBuffer.IndirectDrawArguments>(
 				1,
 				GpuBuffer.UsageFlags.IndirectDrawArguments,
@@ -913,10 +903,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 			};
 			IndirectArguments.SetData( initialArguments );
 			DrawAttributes.Set( "ActiveCells", ActiveCells );
+			DrawAttributes.Set( "SdfParameters", SdfParameters );
 		}
 
 		public void Prepare( GpuSdfDescriptor descriptor, GpuMeshResidency residency )
 		{
+			if ( SdfParameters is null )
+			{
+				SdfParameters = new GpuBuffer<Vector4>(
+					3,
+					GpuBuffer.UsageFlags.Structured,
+					$"Voxel SDF Parameters {_allocationId}" );
+				DrawAttributes.Set( "SdfParameters", SdfParameters );
+			}
+
 			Descriptor = descriptor;
 			Residency = residency;
 			var chunkWorldSize = descriptor.CellsPerAxis * descriptor.CellSize;
@@ -925,17 +925,29 @@ internal sealed class GpuVoxelMesher : IDisposable
 				descriptor.ChunkCoordinate.y * chunkWorldSize,
 				descriptor.ChunkCoordinate.z * chunkWorldSize );
 
-			DrawAttributes.Set( "ChunkWorldOrigin", chunkWorldOrigin );
-			DrawAttributes.Set( "CellsPerAxis", descriptor.CellsPerAxis );
-			DrawAttributes.Set( "CellSize", descriptor.CellSize );
-			DrawAttributes.Set(
-				"GeneratorIdentity",
-				new Vector2( descriptor.WorldSeed, descriptor.GeneratorVersion ) );
+			Span<Vector4> parameters = stackalloc Vector4[3];
+			parameters[0] = new Vector4(
+				chunkWorldOrigin.x,
+				chunkWorldOrigin.y,
+				chunkWorldOrigin.z,
+				descriptor.CellSize );
+			parameters[1] = new Vector4(
+				descriptor.TerrainSettings.WorldSeed,
+				descriptor.TerrainSettings.SurfaceBaseHeight,
+				descriptor.TerrainSettings.SurfaceFrequency,
+				descriptor.TerrainSettings.SurfaceAmplitude );
+			parameters[2] = new Vector4(
+				descriptor.CellsPerAxis,
+				0f,
+				0f,
+				0f );
+			SdfParameters.SetData( parameters );
 		}
 
 		public void Dispose()
 		{
 			ActiveCells.Dispose();
+			SdfParameters?.Dispose();
 			IndirectArguments.Dispose();
 		}
 	}

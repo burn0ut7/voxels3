@@ -9,9 +9,9 @@ FEATURES
 
 COMMON
 {
-	// Classify LOD0 cells into the compact GPU-resident active stream.
+	// Classify LOD0 cells against the canonical surface into the active stream.
 	#include "system.fxc"
-	#include "shaders/voxels/voxel_sdf_v1.hlsl"
+	#include "shaders/voxels/voxel_sdf_v2.hlsl"
 	#include "shaders/voxels/voxel_regular_cell.hlsl"
 	#include "shaders/voxels/transvoxel_regular_metadata.hlsl"
 }
@@ -22,28 +22,30 @@ CS
 	#include "common.fxc"
 
 	AppendStructuredBuffer<uint> ActiveCells < Attribute( "ActiveCells" ); >;
-	float3 ChunkWorldOrigin < Attribute( "ChunkWorldOrigin" ); >;
-	int CellsPerAxis < Attribute( "CellsPerAxis" ); >;
-	float CellSize < Attribute( "CellSize" ); >;
-	// Numeric floats preserve the validated seed and version exactly.
-	float2 GeneratorIdentity < Attribute( "GeneratorIdentity" ); >;
+	StructuredBuffer<float4> SdfParameters < Attribute( "SdfParameters" ); >;
 
 	[numthreads( 4, 4, 4 )]
 	void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 	{
-		if ( any( dispatchId >= (uint)CellsPerAxis ) )
+		float4 spatial = SdfParameters[0];
+		float4 terrain = SdfParameters[1];
+		int cellsPerAxis = (int)SdfParameters[2].x;
+		if ( any( dispatchId >= (uint)cellsPerAxis ) )
 		{
 			return;
 		}
 
 		int3 localCell = int3( dispatchId );
-		int3 globalSampleOrigin = (int3)round( ChunkWorldOrigin / CellSize );
+		float cellSize = spatial.w;
+		int3 globalSampleOrigin = (int3)round( spatial.xyz / cellSize );
 		int3 globalCell = globalSampleOrigin + localCell;
 		uint caseIndex = ClassifyVoxelRegularCell(
 			globalCell,
-			CellSize,
-			(int)GeneratorIdentity.x,
-			(int)GeneratorIdentity.y );
+			cellSize,
+			(int)terrain.x,
+			terrain.y,
+			terrain.z,
+			terrain.w );
 
 		if ( caseIndex == 0 || caseIndex == 255 )
 		{

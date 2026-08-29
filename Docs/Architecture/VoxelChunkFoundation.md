@@ -15,8 +15,8 @@ persistence, and network replication remain later slices.
 - Each `VoxelChunk` owns the parameters required to evaluate its authoritative
   `(CellsPerAxis + 1)^3` logical density samples. Negative density is solid,
   positive density is air, and zero is the surface.
-- The current unedited base field is deterministic volumetric generator version
-  `1`, identified by an explicit world seed and evaluated only from absolute
+- The current unedited base field is deterministic surface generator version
+  `2`, identified by explicit generation settings and evaluated only from absolute
   coordinates. Shared chunk-boundary samples therefore receive identical
   integer lattice inputs.
 - The same canonical sample query derives one semantic material ID from density:
@@ -44,53 +44,49 @@ persistence, and network replication remain later slices.
   client. It refuses to choose among multiple locally controlled players and
   logs that multi-origin server interest management is still required.
 
-## Procedural Generator Version 1
+## Procedural Generator Version 2
 
-`WorldSeed` defaults to `1337` and is configurable. `GeneratorVersion` is
-serialized and fixed to the only implemented value, `1`; unsupported values are
-rejected rather than selecting a fallback. Changing either value cancels current
-generation, advances the terrain-content revision, clears derived meshes, and
-rebuilds the one canonical loaded set.
+`ProceduralTerrainSdf` owns one surface-only 2D simplex field. The serialized,
+user-facing settings are `WorldSeed`, `SurfaceBaseHeight`,
+`SurfaceFrequency`, and `SurfaceAmplitude`. Defaults are respectively `1337`,
+`0`, `0.0005`, and `128`, producing broad, slow rolling hills around world Z
+zero at this project's world scale. Generator version `2`, the gradient table,
+and hash are backend-owned; there is no inspector-selectable generator
+variation or alternate implementation.
 
-The CPU owner is `ProceduralTerrainSdf`; `voxel_sdf.hlsl` mirrors the exact
-recipe for GPU classification, interpolation, and gradients. Both use unchecked
-32-bit integer hashing with fixed salts and cubic-interpolated lattice value
-noise. Float evaluation may follow platform compiler rules, but shared GPU chunk
-corners are bit-stable because their global integer coordinates, seed, version,
-constants, and operation sequence are identical.
+Changing any exposed setting cancels gameplay and warm generation, increments
+the existing stream and terrain-content revisions, clears derived GPU meshes,
+and rebuilds through the canonical streaming path. Each immutable `VoxelChunk`
+retains the complete settings value used to construct it. The GPU SDF descriptor
+copies that value, so descriptor equality and stale-result rejection include
+every field-shaping input.
 
-The fixed v1 field is:
+The CPU owner and `voxel_sdf_v2.hlsl` use the same unchecked 32-bit integer
+hash, fixed gradient table, simplex skew/unskew constants, and operation
+order. Negative coordinates use explicit floor operations. Simplex outputs are
+clamped to `[-1,1]`, making their conservative range contractual even where CPU
+and GPU floating-point implementations differ slightly.
+
+The canonical field is:
 
 ```text
-hill = 320 * noise2D(worldXY / 4096)
-     +  96 * noise2D(worldXY / 2048)
-
-caveNoise = 0.67 * noise3D(worldXYZ / 1024)
-          + 0.33 * noise3D(worldXYZ / 512)
-caveBoundary = max((abs(caveNoise) - 0.18) * 192,
-                   abs(worldZ + 128) - 512)
-density = max(worldZ - hill, -caveBoundary)
+surfaceZ = surfaceBaseHeight
+    + simplex2D(worldXY * surfaceFrequency, worldSeed) * surfaceAmplitude
+density = worldZ - surfaceZ
 ```
 
-The height branch supplies broad hills and valleys. The bounded 3D carved branch
-creates underground sheets/tunnels, ceilings, steep walls, overhangs, and
-openings without making the complete field a heightfield. The recipe is kept to
-two 2D and two 3D value-noise evaluations so this slice primarily measures
-topology and residency rather than deliberately maximizing noise cost.
+Version 2 deliberately has one exterior height surface: it does not generate
+caves, tunnels, floating/internal surfaces, or multiple terrain planes. The
+simplex result is clamped to `[-1,1]`. The complete surface range is
+`surfaceBaseHeight +/- abs(surfaceAmplitude)`. A chunk is solid or air only when
+that complete range proves the classification; otherwise it remains potentially
+surface-containing. A future non-heightfield contribution must extend this full
+field bound before either definite classification remains valid.
 
-The complete hill range is `[-416,416]`. The cave-noise boundary is bounded by
-`[-34.56,157.44]`; the vertical-envelope minimum and maximum are evaluated over
-the complete chunk Z interval. Bounds for both final `max` operands are combined
-before classification. A chunk is definitely solid only when the combined upper
-bound is non-positive, definitely air only when the combined lower bound is
-positive, and potentially surface-containing otherwise. No classification step
-assumes one surface, one height, or exterior visibility.
-
-Serious alternatives rejected for this slice were additive-only 3D deformation,
-which does not explicitly create the requested carved tunnel topology; dense CPU
-sample arrays, which duplicate an immutable function; multiple runtime generator
-paths, which would split authority; and allocator or meshing changes made in
-reaction to the new workload, which require separate evidence-driven slices.
+Rejected alternatives are fBm/octave controls, a selectable generator/version
+menu, a general noise graph, continuing the cave branch before the basic surface
+is satisfactory, exposing the gradient table or hash, dense CPU sample arrays,
+and any allocator or meshing optimization bundled with this generator change.
 
 ## Selected Dimensions
 
@@ -172,7 +168,7 @@ and a versioned validation scenario.
 
 `VoxelManager` is the only owner of loaded, desired, pending, and completed
 collections. The worker receives an immutable snapshot of missing coordinates
-plus cells/axis, cell size, world seed, generator version, and a stream revision. It constructs
+plus cells/axis, cell size, the immutable procedural settings, and a stream revision. It constructs
 only ordinary `VoxelChunk` managed data; it does not read scene state, mutate the
 manager, log, or call engine resource APIs. Completion explicitly returns to the
 main thread before any authoritative collection changes.

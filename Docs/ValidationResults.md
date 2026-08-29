@@ -3259,3 +3259,75 @@ Record an approved extraordinary change here before adding the new version:
   only valid comparison. No conclusion is drawn about volumetric topology cost,
   and no allocator, meshing, visibility, persistence, LOD, collision, edit, or
   networking optimization is implemented or authorized by these failed runs.
+
+### PERFORMANCE-OVERVIEW-001/v5 - Simplex surface baseline
+
+- Scenario change authorized by the user on 2026-08-29: replace the unsuccessful
+  volumetric cave field with one surface-only simplex generator matching the
+  established Voxels2 surface recipe. Version 4
+  and all its failed results remain preserved and are not treated as comparable
+  same-generator regressions.
+- Production path and route remain unchanged: scene `basic_example`; one local
+  player; start and figure-eight center `(0,0,0)`; speed `2500`; maximum X
+  distance `50000` (Y reach `25000`); world Z `0`; one loop;
+  `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`; one warm shell;
+  maximum eight GPU mesh dispatches per update; existing sampling cadence,
+  capacity, completion boundary, percentile method, and schema 5 diagnostics.
+- Locked generator parameters: backend generator version `2`; `WorldSeed=1337`;
+  `SurfaceBaseHeight=0`; `SurfaceFrequency=0.0005`;
+  `SurfaceAmplitude=128`. The fixed formula is
+  `surfaceZ=base+simplex2D(worldXY*frequency,seed)*amplitude`, with no octave,
+  cave, tunnel, or internal-surface term.
+- Correctness pass criteria: one continuous exterior height surface with broad
+  rolling hills; no cave sheets, internal/floating planes, holes, shader errors,
+  stale mesh flashes, or chunk seams; shared CPU chunk-boundary samples remain
+  deterministic; complete-field chunk bounds contain observed samples; settled
+  pending gameplay and warm mesh work is zero.
+- Performance evidence records the existing schema-5 frame, GPU, memory,
+  residency, active-cell, utilization, dispatch, backlog, visibility, and
+  readback metrics. This first v5 run establishes a new generator baseline; it
+  is not compared numerically with v3 flat or failed v4 volumetric runs.
+- Invalid pre-fix run `d988281ecf5141679ec43dc630fc8b3f`, revision
+  `simplex-surface-baseline`, completed in `121.95441 s` but is not accepted
+  evidence. Every one of `3,675` resident resources reported exactly `1,024`
+  active cells (`3,763,200` total), and the live renderer showed repeated
+  surface planes. Root cause was batched command-list dispatches observing the
+  last scalar chunk origin/generator attributes instead of per-dispatch values.
+  The run is preserved in JSONL and was not rewritten.
+
+#### Simplex surface candidate 2026-08-29 - pass
+
+- Run `68478f945e644796940b40d02a8b3156`, revision
+  `simplex-surface-v2`, completed the locked v5 route in `121.94757 s` with
+  `WorldSeed=1337`, `SurfaceBaseHeight=0`, `SurfaceFrequency=0.0005`, and
+  `SurfaceAmplitude=128`.
+- Correctness: amplitude `0` rendered exactly one flat exterior surface;
+  restoring amplitude `128` restored broad deterministic peaks and valleys
+  without adding planes. The production view showed a continuous rolling
+  checker-textured surface with no cave sheets, floating/internal surfaces, or
+  visible chunk seams. Both terrain shaders compiled fresh; the runtime C#
+  compiler settled successfully with zero diagnostics; no new runtime errors
+  appeared during the accepted run.
+- Frame measurements: `17,368` samples, zero truncation, `142.42236 FPS`, p95
+  `9.4623 ms`, p99 `11.1649 ms`, and average GPU frame time `0.78756744 ms`.
+  GPU memory was `1,410,270,550` bytes start/end/average/peak against a
+  `32,945,209,344`-byte budget. Process memory started at `4,668,149,760`, ended
+  at `4,751,093,760`, averaged `4,690,094,785`, and peaked at
+  `4,747,661,312` bytes.
+- Settled topology: `2,450` allocated resident mesh resources (`2,178`
+  gameplay, `272` warm), of which `2,076` were non-empty surface meshes and
+  `233` were non-empty warm surface meshes. The settled scalar aggregation
+  reported `1,494,987` active-cell records, average `720.1286` and maximum
+  `1,234` per non-empty surface chunk. Reserved capacity was `80,281,600`
+  records (`321,126,400` bytes), for `1.8621789%` utilization.
+- Meshing/visibility: `53,840` dispatches; configured and observed maximum `8`
+  per update; peak gameplay/warm backlogs `0/129`; settled gameplay/warm
+  backlogs `0/0`; average `493.54788` visible meshes, range `443..550`;
+  average `2,033.6924` resident and `202.73703` warm meshes during the route.
+  Diagnostics used one bounded visibility scalar readback and zero geometry
+  readbacks.
+- Outcome: **pass**. This is the first accepted v5 surface-generator baseline.
+  The earlier generalized fBm controls and volumetric cave branch are removed;
+  no allocator, persistent-geometry, meshing, visibility, collision, LOD, edit,
+  networking, or other performance optimization was introduced in response to
+  these measurements.

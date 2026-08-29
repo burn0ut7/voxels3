@@ -22,13 +22,12 @@ public sealed class VoxelChunk
 	public const byte GrassMaterialId = 1;
 
 	private readonly Vector3Int _globalSampleOrigin;
-	private readonly int _worldSeed;
-	private readonly int _generatorVersion;
 
 	public Vector3Int Coordinate { get; }
 	public int CellsPerAxis { get; }
 	public int SamplesPerAxis { get; }
 	public float CellSize { get; }
+	public ProceduralTerrainSettings TerrainSettings { get; }
 	public int SampleCount { get; }
 	public float MinimumDensity { get; }
 	public float MaximumDensity { get; }
@@ -40,18 +39,20 @@ public sealed class VoxelChunk
 		Vector3Int coordinate,
 		int cellsPerAxis,
 		float cellSize,
-		int worldSeed,
-		int generatorVersion )
+		ProceduralTerrainSettings terrainSettings )
 	{
 		Coordinate = coordinate;
 		CellsPerAxis = cellsPerAxis;
 		SamplesPerAxis = cellsPerAxis + 1;
 		CellSize = cellSize;
 
-		var densityRange = ClassifyDensityRange( coordinate, cellsPerAxis, cellSize );
+		var densityRange = ClassifyDensityRange(
+			coordinate,
+			cellsPerAxis,
+			cellSize,
+			terrainSettings );
 		_globalSampleOrigin = coordinate * cellsPerAxis;
-		_worldSeed = worldSeed;
-		_generatorVersion = generatorVersion;
+		TerrainSettings = terrainSettings;
 		SampleCount = checked( SamplesPerAxis * SamplesPerAxis * SamplesPerAxis );
 		MinimumDensity = densityRange.MinimumDensity;
 		MaximumDensity = densityRange.MaximumDensity;
@@ -66,9 +67,14 @@ public sealed class VoxelChunk
 	public static ChunkDensityRange ClassifyDensityRange(
 		Vector3Int coordinate,
 		int cellsPerAxis,
-		float cellSize )
+		float cellSize,
+		ProceduralTerrainSettings terrainSettings )
 	{
-		return ProceduralTerrainSdf.ClassifyDensityRange( coordinate, cellsPerAxis, cellSize );
+		return ProceduralTerrainSdf.ClassifyDensityRange(
+			coordinate,
+			cellsPerAxis,
+			cellSize,
+			terrainSettings );
 	}
 
 	public bool TryGetSample( Vector3Int localSample, out float density, out byte materialId )
@@ -85,8 +91,7 @@ public sealed class VoxelChunk
 		density = ProceduralTerrainSdf.SampleGlobal(
 			_globalSampleOrigin + localSample,
 			CellSize,
-			_worldSeed,
-			_generatorVersion );
+			TerrainSettings );
 		materialId = density <= 0f ? GrassMaterialId : AirMaterialId;
 		return true;
 	}
