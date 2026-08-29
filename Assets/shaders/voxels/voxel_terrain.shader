@@ -15,12 +15,14 @@ MODES
 
 COMMON
 {
+	// Each record's FirstVertex encodes the slab slot; SV_InstanceID stays slot-local.
 	#include "common/shared.hlsl"
 	#include "shaders/voxels/voxel_sdf_v2.hlsl"
 	#include "shaders/voxels/transvoxel_regular_tables.hlsl"
 
-	StructuredBuffer<uint> ActiveCells < Attribute( "ActiveCells" ); >;
-	StructuredBuffer<float4> SdfParameters < Attribute( "SdfParameters" ); >;
+	StructuredBuffer<uint> SlabActiveCells < Attribute( "SlabActiveCells" ); >;
+	StructuredBuffer<float4> SlabSdfParameters < Attribute( "SlabSdfParameters" ); >;
+	int SlabRegionCapacity < Attribute( "SlabRegionCapacity" ); >;
 }
 
 struct PixelInput
@@ -28,20 +30,17 @@ struct PixelInput
 	#include "common/pixelinput.hlsl"
 };
 
-struct VS_INPUT
-{
-	float3 position : POSITION < Semantic( None ); >;
-};
-
 VS
 {
-	PixelInput MainVs( uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID )
+	PixelInput MainVs( uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID,
+		uint firstVertex : SV_StartVertexLocation )
 	{
-		float4 spatial = SdfParameters[0];
-		float4 terrain = SdfParameters[1];
+		uint slot = firstVertex / 15;
+		float4 spatial = SlabSdfParameters[slot * 3];
+		float4 terrain = SlabSdfParameters[slot * 3 + 1];
 		float3 chunkWorldOrigin = spatial.xyz;
 		float cellSize = spatial.w;
-		uint activeCell = ActiveCells[instanceId];
+		uint activeCell = SlabActiveCells[slot * (uint)SlabRegionCapacity + instanceId];
 		uint triangleCount = (activeCell >> 18) & 7;
 		if ( vertexId >= triangleCount * 3 )
 		{

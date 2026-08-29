@@ -3370,3 +3370,84 @@ Record an approved extraordinary change here before adding the new version:
   pressure, record the result and plan the next experiment separately. Do not
   implement compaction, paged allocation, edits, volumetric generation, LOD, or
   another renderer in this scenario.
+
+#### Telemetry-only baseline - 2026-08-29
+
+- Revision under test: `462fde9` (`Complete submission telemetry`), after a full
+  s&box editor process restart. The restart was required because switching the
+  hotloaded candidate and baseline GPU resource layouts in one editor process
+  produced visually empty terrain without a compile or runtime error. A fresh
+  process restored the unchanged baseline renderer. Every pre/post-run 1280x720
+  UI-off production-camera screenshot showed continuous green simplex terrain
+  across the lower half of the frame, with no missing/repeated regions, hard
+  seams, or popping.
+- Three earlier records (`53c280528bb1450a97d7c3e8698eec56`,
+  `4144182dc1124384a95f6c13f02ba502`, and
+  `a878050e29d94b82a8becfcf6dc45b27`) are preserved in the raw JSONL but do not
+  define this baseline range. Only the first retained settled topology; the
+  other two saved zero settled topology after an invalid hotload state.
+
+| Run | Run ID | FPS | p95 / p99 ms | GPU ms | API submissions avg/max | Records avg/max | Buffer groups avg/max |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `462fde9-baseline-fresh-1` | `a3f65377b4864aef8c24f378f01b6d36` | `161.10977` | `8.1096 / 10.0952` | `0.8124716` | `2417.5193 / 2450` | `2417.5193 / 2450` | `2450 / 2450` |
+| `462fde9-baseline-fresh-2` | `c1f95166a94e44e99687256c5d2e5b8d` | `161.26524` | `8.0954 / 10.0491` | `0.8086758` | `2417.4253 / 2450` | `2417.4253 / 2450` | `2450 / 2450` |
+| `462fde9-baseline-fresh-3` | `4b36e8bb117f4cc6a71b3e1166f16e10` | `161.51163` | `8.1165 / 9.8813` | `0.81433934` | `2417.3667 / 2450` | `2417.3667 / 2450` | `2450 / 2450` |
+
+- All runs completed one locked loop in approximately `121.948` seconds with
+  zero truncated samples, `35,937` loaded chunks, zero final chunk/gameplay/warm
+  mesh backlogs, `2,076` settled surface meshes, `233` settled warm meshes,
+  `1,494,987` total active cells, and maximum `1,234` active cells in one chunk.
+  The observed dispatch maximum remained `8`; normal scalar and geometry
+  readbacks remained zero; one bounded visibility scalar readback recorded the
+  settled values.
+- Baseline reserved active-cell capacity was `321,126,400` bytes. GPU peak was
+  `1,377,651,638` bytes in all runs; process peaks were `4,408,717,312`,
+  `4,465,119,232`, and `4,598,628,352` bytes. Generic engine `Render` averaged
+  `5.0395327..5.1167183 ms/frame`. Draw-command rebuild recording totaled
+  `992.7615..1004.9698 ms` per run.
+
+#### Shared-slab candidate - 2026-08-29
+
+- Candidate used the same locked workload after another full editor process
+  restart. Every pre/post-run 1280x720 UI-off production-camera screenshot
+  showed the same continuous simplex surface and no visible missing regions,
+  repeated topology, hard seams, stale flashes, or popping.
+
+| Run | Run ID | FPS | p95 / p99 ms | GPU ms | API submissions avg/max | Records avg/max | Slabs avg/max |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `shared-slab-candidate-1` | `9badbe21385d417db0331f5b1495f83a` | `239.59502` | `4.9192 / 5.1751` | `0.70090264` | `10 / 10` | `2560 / 2560` | `10 / 10` |
+| `shared-slab-candidate-2` | `b1a617fb9eee4c13957a705c7d2601f9` | `239.64673` | `4.9135 / 5.1515` | `0.7029374` | `10 / 10` | `2560 / 2560` | `10 / 10` |
+| `shared-slab-candidate-3` | `5fabb787cf3e4673933522a1f0b3a3d2` | `239.65454` | `4.9082 / 5.1220` | `0.70437694` | `10 / 10` | `2560 / 2560` | `10 / 10` |
+
+- All correctness values matched the baseline exactly: `35,937` loaded chunks,
+  zero final backlogs, `2,076` settled surface meshes, `233` settled warm meshes,
+  `1,494,987` active cells, maximum `1,234`, dispatch maximum `8`, zero normal
+  scalar/geometry readbacks, and one bounded visibility scalar readback. Average
+  visible regions were `496.25700..496.34244`, versus baseline
+  `494.27017..494.27573`; both ranges retained the conservative full-3D
+  visibility contract.
+- The structural gate passed exactly: `2,450` logical resident regions occupied
+  `10` fixed slabs, every slab submitted one 256-record range, and terrain API
+  submissions were `10` rather than approximately `2,417` per frame. No
+  per-region active-cell, SDF-parameter, or indirect-argument buffer remains.
+- Median frame time improved from `6.201 ms` to `4.173 ms`, far beyond the
+  complete `0.016 ms` baseline range. FPS and p95/p99 improved in all three
+  candidate runs; average GPU time also decreased. Generic engine `Render`
+  averaged `0.569128..0.6457625 ms/frame`, non-overlapping with the baseline
+  `5.0395327..5.1167183` range. Draw-command rebuild recording totaled only
+  `20.813206..20.9572 ms` per run.
+- Candidate reserved active-cell capacity was `335,544,320` bytes, the expected
+  256-slot rounding above the baseline's `2,450` logical regions. GPU peak was
+  `1,390,234,550` bytes (`12,582,912` bytes above baseline); process peaks were
+  `4,250,554,368`, `4,265,828,352`, and `4,409,147,392` bytes, with no
+  candidate-run monotonic GPU growth.
+- The saved 200-frame profiler snapshots do not expose exact named render-worker
+  `DrawInstancedIndirect` or `Graphics.SetRenderState` counters. They expose the
+  non-overlapping generic engine `Render` ranges above; no exact named value is
+  inferred from that proxy. The raw records remain in
+  `performance/results-v1.jsonl`.
+- Outcome: the shared fixed-stride slab and multi-record submission slice passes
+  correctness, structural batching, frame performance, tail latency, GPU time,
+  memory, streaming, and available profiler gates. Stop here. Shared variable
+  allocation, compaction, edits, caves, LOD, persistent geometry, and other
+  renderer work require a separate explicit plan and decision.

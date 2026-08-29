@@ -9,6 +9,7 @@ FEATURES
 
 COMMON
 {
+	// Slab visibility preserves each record's vertex and instance offsets.
 	#include "system.fxc"
 }
 
@@ -103,13 +104,19 @@ CS
 
 		float4 minimumAndActive = VisibilityBounds[slot * 2];
 		float3 maximum = VisibilityBounds[slot * 2 + 1].xyz;
-		uint activeCellCount = SourceIndirectArguments[slot].y;
+		uint4 sourceArguments = SourceIndirectArguments[slot];
+		uint activeCellCount = sourceArguments.y;
+		uint firstVertex = sourceArguments.z;
 		bool active = minimumAndActive.w > 0.5;
 		bool warm = minimumAndActive.w > 1.5;
 		bool visible = active && activeCellCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
-		VisibleIndirectArguments[slot] = uint4( 15, visible ? activeCellCount : 0, 0, 0 );
+		VisibleIndirectArguments[slot] = uint4(
+			15,
+			visible ? activeCellCount : 0,
+			firstVertex,
+			sourceArguments.w );
 		if ( active && activeCellCount > 0 )
 		{
 			InterlockedAdd( VisibilityFrameCounters[0], 1 );
