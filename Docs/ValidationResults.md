@@ -3331,3 +3331,42 @@ Record an approved extraordinary change here before adding the new version:
   no allocator, persistent-geometry, meshing, visibility, collision, LOD, edit,
   networking, or other performance optimization was introduced in response to
   these measurements.
+
+### GPU-SHARED-SLAB-001/v1 - Shared terrain submission experiment
+
+- Definition recorded on 2026-08-29 before the first experiment run and before
+  changing terrain GPU resource or draw ownership.
+- Production path and locked parameters are exactly
+  `PERFORMANCE-OVERVIEW-001/v5`: `Assets/scenes/basic_example.scene`; one local
+  player; start and center `(0,0,0)`; speed `2500`; distance `50000`; world Z
+  `0`; one loop; `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`; one warm
+  shell; maximum eight GPU mesh dispatches per update; generator version `2`;
+  seed `1337`; surface base `0`; frequency `0.0005`; amplitude `128`; unchanged
+  sampling cadence, capacity, completion boundary, and percentile method.
+- The baseline adds only average/maximum terrain indirect API submissions per
+  frame, indirect argument records submitted per frame, and terrain GPU buffer
+  groups. Existing schema metrics remain the correctness and performance
+  evidence. Three consecutive valid baseline runs and three consecutive valid
+  candidate runs define their respective ranges.
+- Candidate architecture: `256` fixed-capacity logical region slots per shared
+  slab; unchanged `32^3` packed active-cell capacity per slot; shared SDF,
+  visibility, and indirect resources; one fixed `256`-record public
+  `CommandList.DrawInstancedIndirect` call per active slab; zero instance count
+  for inactive, empty, or culled entries; no GPU compaction or alternate path.
+- Correctness gates: settled surface/warm counts, total and maximum active cells,
+  logical residency and visibility behavior, revision/stale rejection, dispatch
+  limit, final zero gameplay/warm backlog, zero geometry readbacks, and visible
+  seamless simplex terrain remain equivalent to baseline.
+- Structural gate: terrain API submissions become approximately
+  `ceil(residentRegions / 256)`, allowing only explained temporary slab
+  fragmentation, and per-region active-cell/SDF/argument buffers are absent.
+- Performance gate: all candidate runs improve frame performance consistently;
+  median frame-time improvement exceeds the complete baseline run range;
+  render-worker `DrawInstancedIndirect`/`Graphics.SetRenderState` pressure falls
+  correspondingly with non-overlapping timing ranges; p95, p99, GPU time,
+  memory, streaming, and correctness show no regression outside baseline
+  variance. No arbitrary percentage threshold applies.
+- Stop rule: if submissions collapse without reduced per-record render-worker
+  pressure, record the result and plan the next experiment separately. Do not
+  implement compaction, paged allocation, edits, volumetric generation, LOD, or
+  another renderer in this scenario.

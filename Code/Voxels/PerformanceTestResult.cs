@@ -12,8 +12,19 @@ internal sealed class PerformanceTestResult
 	public PerformanceChunkMetrics Chunks { get; init; }
 	public PerformanceMeshingMetrics Meshing { get; init; }
 	public PerformanceVisibilityMetrics Visibility { get; init; }
+	public PerformanceSubmissionMetrics Submission { get; init; }
 	public PerformanceStreamingMetrics Streaming { get; init; }
 	public PerformanceProfilerMetrics Profiler { get; init; }
+}
+
+internal sealed class PerformanceSubmissionMetrics
+{
+	public float AverageTerrainIndirectApiSubmissionsPerFrame { get; init; }
+	public int MaximumTerrainIndirectApiSubmissionsPerFrame { get; init; }
+	public float AverageIndirectArgumentRecordsPerFrame { get; init; }
+	public int MaximumIndirectArgumentRecordsPerFrame { get; init; }
+	public float AverageTerrainBufferGroups { get; init; }
+	public int MaximumTerrainBufferGroups { get; init; }
 }
 
 internal sealed class PerformanceProfilerMetrics

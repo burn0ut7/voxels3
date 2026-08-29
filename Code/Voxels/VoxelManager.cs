@@ -16,7 +16,7 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 6;
+	private const int PerformanceResultSchemaVersion = 7;
 	private const int RenderWarmShellChunks = 1;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
@@ -147,6 +147,14 @@ public sealed class VoxelManager : Component
 	private long _lastPerformanceMeshScalarReadbacks;
 	private int _performancePeakMeshDispatchesPerUpdate;
 	private int _lastPerformancePeakMeshDispatchesPerUpdate;
+	private long _performanceTerrainSubmissionTotal;
+	private int _performanceTerrainSubmissionMaximum;
+	private long _performanceIndirectRecordTotal;
+	private int _performanceIndirectRecordMaximum;
+	private long _performanceTerrainBufferGroupTotal;
+	private int _performanceTerrainBufferGroupMaximum;
+	private int _performanceSubmissionSampleCount;
+	private PerformanceSubmissionMetrics _lastPerformanceSubmission = new();
 	private float _lastPerformanceChunksPerSecond;
 	private bool _lastPerformanceWasFigureEightTest;
 	private int _lastPerformanceCompletedLoops;
@@ -732,7 +740,9 @@ public sealed class VoxelManager : Component
 				LogicalBufferBytes = _lastPerformanceVisibility.LogicalBufferBytes,
 				ScalarReadbacks = _lastPerformanceVisibility.ScalarReadbacks
 			},
-			Streaming = _lastPerformanceStreaming
+			Submission = _lastPerformanceSubmission,
+			Streaming = _lastPerformanceStreaming,
+			Profiler = _lastPerformanceProfiler
 		};
 
 		var json = JsonSerializer.Serialize( result, PerformanceJsonOptions );
@@ -959,6 +969,22 @@ public sealed class VoxelManager : Component
 			_performanceStreaming.PeakWarmMeshBacklog = Math.Max(
 				_performanceStreaming.PeakWarmMeshBacklog,
 				_gpuMesher?.PendingWarmCount ?? 0 );
+			var terrainSubmissions = _gpuMesher?.TerrainIndirectApiSubmissionCount ?? 0;
+			var indirectRecords = _gpuMesher?.IndirectArgumentRecordCount ?? 0;
+			var terrainBufferGroups = _gpuMesher?.TerrainBufferGroupCount ?? 0;
+			_performanceTerrainSubmissionTotal += terrainSubmissions;
+			_performanceTerrainSubmissionMaximum = Math.Max(
+				_performanceTerrainSubmissionMaximum,
+				terrainSubmissions );
+			_performanceIndirectRecordTotal += indirectRecords;
+			_performanceIndirectRecordMaximum = Math.Max(
+				_performanceIndirectRecordMaximum,
+				indirectRecords );
+			_performanceTerrainBufferGroupTotal += terrainBufferGroups;
+			_performanceTerrainBufferGroupMaximum = Math.Max(
+				_performanceTerrainBufferGroupMaximum,
+				terrainBufferGroups );
+			_performanceSubmissionSampleCount++;
 		}
 
 		var deltaSeconds = RealTime.Delta;
@@ -1031,6 +1057,21 @@ public sealed class VoxelManager : Component
 			(_gpuMesher?.ScalarReadbackCount ?? 0) - _performanceMesherScalarReadbackStart;
 		_lastPerformanceWasFigureEightTest = _playerFigureEightTestRunning;
 		_lastPerformancePeakMeshDispatchesPerUpdate = _performancePeakMeshDispatchesPerUpdate;
+		_lastPerformanceSubmission = new PerformanceSubmissionMetrics
+		{
+			AverageTerrainIndirectApiSubmissionsPerFrame = _performanceSubmissionSampleCount > 0
+				? (float)_performanceTerrainSubmissionTotal / _performanceSubmissionSampleCount
+				: 0f,
+			MaximumTerrainIndirectApiSubmissionsPerFrame = _performanceTerrainSubmissionMaximum,
+			AverageIndirectArgumentRecordsPerFrame = _performanceSubmissionSampleCount > 0
+				? (float)_performanceIndirectRecordTotal / _performanceSubmissionSampleCount
+				: 0f,
+			MaximumIndirectArgumentRecordsPerFrame = _performanceIndirectRecordMaximum,
+			AverageTerrainBufferGroups = _performanceSubmissionSampleCount > 0
+				? (float)_performanceTerrainBufferGroupTotal / _performanceSubmissionSampleCount
+				: 0f,
+			MaximumTerrainBufferGroups = _performanceTerrainBufferGroupMaximum
+		};
 		_lastPerformanceCompletedLoops = _playerFigureEightTestRunning ? _playerFigureEightCompletedLoops : 0;
 		_lastPerformanceTestSpeed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : 0f;
 		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
@@ -1089,6 +1130,13 @@ public sealed class VoxelManager : Component
 		_performanceMesherPoolReuseStart = _gpuMesher?.PoolReuseCount ?? 0;
 		_performanceMesherScalarReadbackStart = _gpuMesher?.ScalarReadbackCount ?? 0;
 		_performancePeakMeshDispatchesPerUpdate = 0;
+		_performanceTerrainSubmissionTotal = 0;
+		_performanceTerrainSubmissionMaximum = 0;
+		_performanceIndirectRecordTotal = 0;
+		_performanceIndirectRecordMaximum = 0;
+		_performanceTerrainBufferGroupTotal = 0;
+		_performanceTerrainBufferGroupMaximum = 0;
+		_performanceSubmissionSampleCount = 0;
 		_performanceStreaming = new PerformanceStreamingMetrics();
 	}
 
