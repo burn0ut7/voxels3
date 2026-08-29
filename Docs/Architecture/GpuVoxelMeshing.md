@@ -82,7 +82,7 @@ asynchronous diagnostics; visibility never passes through its callback.
 
 One compute thread classifies one allocated slot by transforming all eight AABB
 corners to homogeneous clip space. It culls only when every corner lies outside
-the same frustum plane. The lateral clip planes are widened to `1.25w`, while
+the same frustum plane. The lateral clip planes are widened to `1.10w`, while
 the depth planes remain exact. This static guard keeps near-edge terrain
 drawable without temporal visibility history. A non-finite transform, near-zero
 homogeneous W, or any other ambiguous case is visible. The shader never samples density or reasons

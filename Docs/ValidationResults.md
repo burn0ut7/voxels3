@@ -2804,3 +2804,20 @@ Record an approved extraordinary change here before adding the new version:
   the immutable player journey, warm-residency counts, performance comparison,
   and zero-defect rapid-camera capture remain required before acceptance,
   commit, or push.
+
+#### Lateral guard 1.10 tuning 2026-08-29 - incomplete
+
+- Source state: working tree based on `a503193`; the sole runtime behavior
+  change reduces the homogeneous lateral guard from `1.25w` to `1.10w`. Full
+  3D padded bounds, exact depth planes, same-command GPU ordering, warm
+  residency, dispatch limits, and readback behavior are unchanged.
+- Runtime and editor builds completed with zero warnings and zero errors. The
+  live compiler settled successfully and regenerated the visibility shader.
+- The current MCP-started play session remained at `35,937` authoritative
+  chunks, `0` resident meshes, and `1,089` queued meshes because simulation
+  updates were still not advancing after the prior clean restart. It therefore
+  cannot answer whether the smaller guard eliminates rapid-turn popping or
+  preserves the required culling percentage.
+- Outcome: incomplete. The 1.10 tuning compiles, but an advancing production
+  play session, rapid camera sweep, and unchanged figure-eight comparison remain
+  required before acceptance.

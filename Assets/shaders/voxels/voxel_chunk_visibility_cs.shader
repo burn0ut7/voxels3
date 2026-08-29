@@ -27,7 +27,7 @@ CS
 
 	bool IsDefinitelyOutsideFrustum( float3 minimum, float3 maximum )
 	{
-		const float LateralGuardScale = 1.25;
+		const float LateralGuardScale = 1.05;
 		uint outsideCounts[6] = { 0, 0, 0, 0, 0, 0 };
 
 		[unroll]
