@@ -1,4 +1,4 @@
-// Canonical GPU mirror of ProceduralTerrainSdf version 3.
+// Canonical GPU mirror of ProceduralTerrainSdf version 4.
 static const float VoxelSimplexF2 = 0.3660254037844386;
 static const float VoxelSimplexG2 = 0.21132486540518713;
 static const float VoxelSimplexF3 = 1.0 / 3.0;
@@ -215,16 +215,17 @@ float SampleVoxelSdfWorld(
 		surfaceFrequency,
 		surfaceAmplitude );
 	uint seed = (uint)worldSeed;
-	float noodleA = SampleVoxelSimplex3D( worldPosition / 3072.0, seed ^ VoxelNoodleASeedSalt );
-	float noodleB = SampleVoxelSimplex3D( worldPosition / 3456.0, seed ^ VoxelNoodleBSeedSalt );
+	float noodleA = SampleVoxelSimplex3D( worldPosition / 6144.0, seed ^ VoxelNoodleASeedSalt );
+	float noodleB = SampleVoxelSimplex3D( worldPosition / 6912.0, seed ^ VoxelNoodleBSeedSalt );
 	float thickness = SampleVoxelSimplex3D(
-		worldPosition / 8192.0,
+		worldPosition / 16384.0,
 		seed ^ VoxelThicknessSeedSalt );
 	float threshold = 0.056 + 0.016 * thickness;
 	float tunnelDensity = 512.0 *
 		(threshold - max( abs( noodleA ), abs( noodleB ) ));
-	float cheese = SampleVoxelSimplex3D( worldPosition / 4096.0, seed ^ VoxelCheeseSeedSalt );
-	float cheeseDensity = 512.0 * (cheese - 0.84);
+	float cheese = SampleVoxelSimplex3D( worldPosition / 8192.0, seed ^ VoxelCheeseSeedSalt );
+	float cheeseThreshold = 0.48 - 0.12 * thickness;
+	float cheeseDensity = 512.0 * (cheese - cheeseThreshold);
 	float depth = -surfaceDensity;
 	float envelope = min( depth, 2048.0 - depth );
 	float caveDensity = min( max( tunnelDensity, cheeseDensity ), envelope );

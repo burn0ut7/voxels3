@@ -15,9 +15,9 @@ MODES
 
 COMMON
 {
-	// Each record's FirstVertex encodes the slab slot; SV_InstanceID stays slot-local.
+	// Each record's FirstVertex encodes the slab slot; generator v4 reconstructs double-scale caves.
 	#include "common/shared.hlsl"
-	#include "shaders/voxels/voxel_sdf_v3.hlsl"
+	#include "shaders/voxels/voxel_sdf_v4.hlsl"
 	#include "shaders/voxels/transvoxel_regular_tables.hlsl"
 
 	StructuredBuffer<uint> SlabActiveCells < Attribute( "SlabActiveCells" ); >;

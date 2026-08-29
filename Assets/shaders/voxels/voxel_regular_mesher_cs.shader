@@ -9,9 +9,9 @@ FEATURES
 
 COMMON
 {
-	// Classify LOD0 cells against the canonical field into the active stream.
+	// Classify LOD0 cells against the generator-v4 double-scale cave field.
 	#include "system.fxc"
-	#include "shaders/voxels/voxel_sdf_v3.hlsl"
+	#include "shaders/voxels/voxel_sdf_v4.hlsl"
 	#include "shaders/voxels/voxel_regular_cell.hlsl"
 	#include "shaders/voxels/transvoxel_regular_metadata.hlsl"
 }

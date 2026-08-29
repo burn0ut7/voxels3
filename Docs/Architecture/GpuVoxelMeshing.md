@@ -4,7 +4,7 @@
 
 LOD0 regular-cell Transvoxel is the sole terrain render path. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; mesh data is derived,
-GPU-resident, and disposable. Deterministic volumetric generator version 3 now
+GPU-resident, and disposable. Deterministic volumetric generator version 4 now
 supplies the exterior mountain surface plus noodle tunnels and cheese caverns.
 This slice deliberately excludes transition cells, other
 LODs, clipboxes, collision, edits, networking, generator optimization, and a
@@ -33,7 +33,7 @@ All other descriptors enter the GPU path conservatively.
 
 The immutable GPU descriptor contains only chunk coordinate, cells per axis,
 cell size, immutable procedural settings, backend generator version, and source revision. Compute evaluates the field via
-the shared versioned `voxel_sdf_v3.hlsl` boundary. Cave constants and seed salts
+the shared versioned `voxel_sdf_v4.hlsl` boundary. Cave constants and seed salts
 are owned by that generator version, so the shared descriptor remains unchanged.
 It derives every cell corner from an
 integer global sample coordinate, and sets a case bit for `density <= 0`. This

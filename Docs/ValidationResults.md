@@ -3866,3 +3866,183 @@ Record an approved extraordinary change here before adding the new version:
   `204.8/409.6 ms` nomination thresholds by large margins, so **meshing
   throughput is the single next candidate subsystem**. No allocator, bounds,
   meshing, renderer, or draw-SDF optimization is included in this slice.
+
+### CAVE-STRESS-001/v5 - Chamber and passage variation
+
+- Human-approved scenario revision recorded on 2026-08-29 before changing the
+  accepted generator. V1-v4 and every prior measurement remain immutable. V5
+  preserves surface amplitude `128`, seed `1337`, noodle wavelengths
+  `3072/3456`, thickness wavelength `8192`, noodle threshold
+  `0.056+0.016*thicknessNoise`, cheese wavelength `4096`, density scale `512`,
+  relative depth `2048`, route, streaming dimensions, shared-slab renderer,
+  budgets, telemetry, correctness gates, and stop rule.
+- Generator identity advances to version `4`. The one changed field expression
+  is the cheese cutoff: `cheeseThreshold=0.68-0.08*thicknessNoise`, range
+  `0.60..0.76`, and `cheeseDensity=512*(cheeseNoise-cheeseThreshold)`. This
+  reuses the existing slow thickness sample, adding no noise evaluation.
+  Positive thickness regions therefore combine wider noodles with larger,
+  more frequent cheese chambers; negative regions combine thinner noodles with
+  smaller, rarer chambers. The intended result is alternating quiet passages,
+  swells, intersections, and large connected voids rather than uniform tubes.
+- Acceptance requires multiple visibly chamber-scale voids along the complete
+  route, with noodle-to-chamber openings and meaningful width variation, while
+  retaining empty underground spans and avoiding the rejected continuous noise
+  soup. CPU/GPU parity, closed-AABB conservative bounds, seam freedom, final
+  backlog settlement, one bounded scalar readback, zero geometry readbacks, and
+  all fixed figure-eight measurements remain required. V5 is a new topology
+  workload and is not treated as a same-version performance comparison with v4.
+
+#### Chamber-variation v5 candidate 2026-08-29 - topology fail
+
+- Run `d55f24df459e432fa170971b4565934d`, revision
+  `chamber-variation-v4-candidate`, completed the unchanged production route in
+  `121.94492 s` with generator version `4`. It recorded `203.92006 FPS`, p95
+  `6.2179 ms`, p99 `7.0628 ms`, and average GPU time `4.896054 ms` across
+  `24,867` frame samples.
+- Settled residency was `7,195` candidates versus `3,424` actual non-empty
+  surface meshes including `366` warm. Geometry contained `2,884,709` active
+  cells, average `842.49677`, maximum `4,697`, in `29` slabs with
+  `973,078,528` reserved bytes and `1.1858072%` utilization. One bounded scalar
+  readback and zero geometry readbacks were retained.
+- Meshing issued `156,453` dispatches. Gameplay/warm backlogs peaked at
+  `55/382` and settled to `0/0`. Schedule-to-renderable latency was p50
+  `84.1707 ms`, p95 `189.5593 ms`, p99 `220.4989 ms`, and maximum
+  `263.7203 ms`; `143` samples cancelled and `1,595` were superseded.
+- Bounds recorded `857,624` gameplay and `956,946` warm queries, consuming
+  `5,549.4297 ms` total with a `1.0154 ms` maximum. No task-yield,
+  shader/runtime, bounds, seam, missing-geometry, or snapshot error occurred.
+- Outcome: **not accepted for requested topology**. The surface-region count
+  increased by `1,064` over v4, but the available automated route remained at
+  world Z `0` and did not expose a chamber interior. A subsequent attempted
+  underground camera probe was invalid: explicit shared GUIDs resolved the
+  authored scene clone, while the terrain command lists remained attached only
+  to the running production main camera. Those probe results are discarded and
+  make no claim about v5 air volume. The valid route metrics remain retained;
+  v5 was superseded by the more permissive, human-authorized v6 cutoff rather
+  than accepted without integrated visual evidence.
+
+### CAVE-STRESS-001/v6 - Chamber-scale cheese voids
+
+- Human-authorized corrective scenario revision recorded on 2026-08-29 before
+  changing the failed v5 constants. V1-v5 definitions and measurements remain
+  immutable. V6 changes only the generator-version-4 cheese cutoff to
+  `cheeseThreshold=0.48-0.12*thicknessNoise`, range `0.36..0.60`. Every other
+  v5 field, route, renderer, streaming, measurement, correctness, and stop-rule
+  parameter remains unchanged.
+- Cave-rich positive-thickness zones now combine the existing wider noodles
+  with a `0.36` cutoff, expanding positive low-frequency cheese lobes into
+  chamber-scale voids. Quiet negative-thickness zones retain a `0.60` cutoff,
+  preserving large solid separations. Acceptance requires at least one directly
+  observed production-camera chamber with floor, ceiling, and distant walls,
+  plus the unchanged v5 noodle-to-chamber, quiet-space, correctness, and
+  measurement gates. V5 and v6 are incompatible topology workloads.
+
+#### Chamber-scale v6 candidate 2026-08-29 - visual acceptance pending
+
+- Run `60263999f26747d590aa6774eeeebae3`, revision
+  `chamber-scale-v4-candidate`, completed the unchanged production route in
+  `121.947296 s` with generator version `4`. Fresh compute and draw shader
+  binaries were compiled from the same v4 include before play. No task-yield,
+  shader/runtime, bounds, seam, missing-geometry, or snapshot error occurred;
+  gameplay and warm backlogs settled to zero.
+- The run recorded `136.33752 FPS`, p95 `14.0606 ms`, p99 `17.017 ms`, and
+  average GPU time `4.5586967 ms` across `16,626` frame samples. Process memory
+  was `4,513,337,344` bytes at start, `4,614,635,520` at end,
+  `4,558,334,052` average, and `4,613,345,280` peak. GPU memory averaged
+  `2,024,970,061` bytes and peaked at `2,028,882,562`.
+- Bounds recorded `866,810` gameplay queries (`288,607` solid, `423,791` air,
+  `154,412` potential) and `964,480` warm queries (`330,144` solid, `471,994`
+  air, `162,342` potential). Total/max bounds CPU cost was
+  `5,660.433/1.5877 ms`; `25,909` stale/cancelled queries were retained.
+- Settled residency was `7,195` candidates (`6,393` gameplay and `802` warm)
+  versus `3,909` actual non-empty surface meshes including `402` warm. Geometry
+  contained `3,573,529` active cells, average `914.1799`, maximum `4,697`, in
+  `29` slabs with `973,078,528` reserved bytes and `1.4689581%` utilization.
+  One bounded scalar readback and zero geometry readbacks were retained.
+- Relative to v4, the chamber field adds `1,549` non-empty regions (`65.64%`)
+  and `1,845,764` active cells (`106.83%`) without changing conservative
+  candidate count or slab reservation. Relative to v5, it adds `485` non-empty
+  regions and `688,820` active cells. This is production-mesher evidence of
+  substantially more and larger internal topology, but not a substitute for
+  direct chamber-interior observation.
+- Meshing issued `130,972` dispatches. Gameplay/warm backlogs peaked at
+  `4,235/600` and settled to `0/0`. Schedule-to-renderable latency was p50
+  `1,423.5159 ms`, p95 `3,667.2332 ms`, p99 `4,135.904 ms`, and maximum
+  `4,290.363 ms`; `79` samples cancelled and `158,643` were superseded.
+  Average/max visible regions were `898.4858/3,131`.
+- Outcome: architectural, determinism, bounds, shader-parity, settlement, and
+  quantitative topology checks **pass**. Direct underground visual acceptance
+  remains **not run** because the live registry cannot transform the running
+  main-camera clone and terrain command lists are not submitted to a temporary
+  diagnostic camera. The production scene is left available for human visual
+  review. No follow-up optimization is included; the measured p95/maximum
+  latency again nominates meshing throughput if the topology is accepted.
+
+#### Chamber-scale v6 human review 2026-08-29 - scale rejected
+
+- Human production-world review rejected v6 before commit: noodle passages were
+  still physically too small for comfortable traversal, and both noodle and
+  chamber features occurred too frequently. The quantitative run remains valid
+  evidence for v6, but its requested player-scale topology does not pass.
+
+### CAVE-STRESS-001/v7 - Double-scale, half-frequency caves
+
+- Human-approved scenario revision recorded on 2026-08-29 before changing v6.
+  V1-v6 definitions and measurements remain immutable. V7 doubles noodle
+  wavelengths from `3072/3456` to `6144/6912`, thickness wavelength from `8192`
+  to `16384`, and cheese wavelength from `4096` to `8192`. Normalized noodle
+  threshold `0.056+0.016*thicknessNoise`, cheese threshold
+  `0.48-0.12*thicknessNoise`, density scale `512`, depth envelope `2048`, seed
+  salts, CSG composition, and every non-generator scenario parameter remain
+  unchanged.
+- For an unchanged normalized simplex level set, doubling wavelength doubles
+  approximate world-space tunnel diameter and chamber dimensions while halving
+  spatial frequency on each axis. This changes literal feature scale and
+  spacing rather than adding more caves or inflating the normalized occupancy
+  threshold. The accepted target is comfortably traversable noodle passages,
+  larger cheese voids, and approximately twice the distance between comparable
+  structures.
+- Acceptance retains v6 determinism, CPU/GPU parity, bounds, seam, settlement,
+  readback, measurement, quiet-space, and topology gates. Human review must
+  confirm the wider passages and reduced encounter frequency before the change
+  is committed. V6 and v7 are incompatible topology workloads.
+
+#### Double-scale v7 candidate 2026-08-29 - visual acceptance pending
+
+- Run `9c7b3e69a0ac4e1b9dd6d0e10238817b`, revision
+  `double-scale-half-frequency-v4-candidate`, completed the unchanged production
+  route in `121.95008 s` with generator version `4`. Fresh compute and draw
+  shader binaries were compiled from the same v4 include before play. No
+  task-yield, shader/runtime, bounds, seam, missing-geometry, or snapshot error
+  occurred; gameplay and warm backlogs settled to zero.
+- The run recorded `185.88733 FPS`, p95 `9.7457 ms`, p99 `13.5184 ms`, and
+  average GPU time `4.538139 ms` across `22,669` frame samples. Process memory
+  was `4,576,612,352` bytes at start, `4,587,913,216` at end,
+  `4,532,566,486` average, and `4,629,774,336` peak. GPU memory averaged
+  `2,026,321,524` bytes and peaked at `2,051,886,006`.
+- Bounds recorded `860,102` gameplay queries (`286,433` solid, `420,446` air,
+  `153,223` potential) and `962,245` warm queries (`329,879` solid, `471,018`
+  air, `161,348` potential). Total/max bounds CPU cost was
+  `5,541.916/0.7799 ms`; `23,211` stale/cancelled queries were retained.
+- Settled residency was `7,195` candidates (`6,393` gameplay and `802` warm)
+  versus `3,012` actual non-empty surface meshes including `300` warm. Geometry
+  contained `2,693,777` active cells, average `894.34827`, maximum `4,088`, in
+  `29` slabs with `973,078,528` reserved bytes and `1.1073215%` utilization.
+  One bounded scalar readback and zero geometry readbacks were retained.
+- Relative to v6, doubling all cave wavelengths reduced encountered non-empty
+  regions by `897` (`22.95%`) and active cells by `879,752` (`24.62%`). This is
+  production-mesher evidence of lower encounter frequency. The unchanged
+  normalized level sets combined with exactly doubled wavelengths establish an
+  exact `2x` spatial transform for corresponding noodle and cheese features
+  before clipping by the unchanged surface-relative depth envelope.
+- Meshing issued `148,661` dispatches. Gameplay/warm backlogs peaked at
+  `3,337/537` and settled to `0/0`. Schedule-to-renderable latency was p50
+  `109.194 ms`, p95 `1,852.3651 ms`, p99 `2,783.6187 ms`, and maximum
+  `2,984.3015 ms`; `60` samples cancelled and `61,026` were superseded.
+  Average/max visible regions were `709.9714/2,659`.
+- Outcome: deterministic field scale, CPU/GPU parity, conservative bounds,
+  production meshing, settlement, and measurement checks **pass**. Comfortable
+  player walkability and subjective spacing remain **pending human visual
+  review**, as required before commit. No allocator, bounds, meshing, renderer,
+  or draw-SDF optimization is included; the p95/maximum latency continues to
+  nominate meshing throughput after topology acceptance.

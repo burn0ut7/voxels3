@@ -9,26 +9,27 @@ public readonly record struct ProceduralTerrainSettings(
 public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 
 /// <summary>
-/// Canonical deterministic version-3 volumetric terrain field. The GPU mirror
+/// Canonical deterministic version-4 volumetric terrain field. The GPU mirror
 /// uses the same integer hash, simplex recipes, and constructive composition.
 /// </summary>
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 3;
+	public const int CurrentVersion = 4;
 	public const int DefaultWorldSeed = 1337;
 	public const float DefaultSurfaceBaseHeight = 0f;
 	public const float DefaultSurfaceFrequency = 0.0005f;
 	public const float DefaultSurfaceAmplitude = 128f;
-	public const float NoodleAWavelength = 3072f;
-	public const float NoodleBWavelength = 3456f;
-	public const float ThicknessWavelength = 8192f;
-	public const float CheeseWavelength = 4096f;
+	public const float NoodleAWavelength = 6144f;
+	public const float NoodleBWavelength = 6912f;
+	public const float ThicknessWavelength = 16384f;
+	public const float CheeseWavelength = 8192f;
 	public const float CaveDensityScale = 512f;
 	public const float CaveMaximumDepth = 2048f;
 	public const float NoodleBaseThreshold = 0.056f;
 	public const float NoodleThicknessVariation = 0.016f;
-	public const float CheeseThreshold = 0.84f;
+	public const float CheeseBaseThreshold = 0.48f;
+	public const float CheeseThresholdVariation = 0.12f;
 
 	private const float SimplexF2 = 0.3660254037844386f;
 	private const float SimplexG2 = 0.21132486540518713f;
@@ -77,7 +78,8 @@ internal static class ProceduralTerrainSdf
 		var tunnelDensity = CaveDensityScale *
 			(threshold - MathF.Max( MathF.Abs( noodleA ), MathF.Abs( noodleB ) ));
 		var cheese = SimplexNoise3D( worldPosition / CheeseWavelength, seed ^ CheeseSeedSalt );
-		var cheeseDensity = CaveDensityScale * (cheese - CheeseThreshold);
+		var cheeseThreshold = CheeseBaseThreshold - CheeseThresholdVariation * thickness;
+		var cheeseDensity = CaveDensityScale * (cheese - cheeseThreshold);
 		var depth = -surfaceDensity;
 		var envelope = MathF.Min( depth, CaveMaximumDepth - depth );
 		var caveDensity = MathF.Min( MathF.Max( tunnelDensity, cheeseDensity ), envelope );
@@ -210,9 +212,12 @@ internal static class ProceduralTerrainSdf
 		var tunnel = new DensityInterval(
 			CaveDensityScale * (threshold.Minimum - maximumAbsolute.Maximum),
 			CaveDensityScale * (threshold.Maximum - maximumAbsolute.Minimum) );
+		var cheeseThreshold = new DensityInterval(
+			CheeseBaseThreshold - CheeseThresholdVariation * thickness.Maximum,
+			CheeseBaseThreshold - CheeseThresholdVariation * thickness.Minimum );
 		var cavern = new DensityInterval(
-			CaveDensityScale * (cheese.Minimum - CheeseThreshold),
-			CaveDensityScale * (cheese.Maximum - CheeseThreshold) );
+			CaveDensityScale * (cheese.Minimum - cheeseThreshold.Maximum),
+			CaveDensityScale * (cheese.Maximum - cheeseThreshold.Minimum) );
 		var union = new DensityInterval(
 			MathF.Max( tunnel.Minimum, cavern.Minimum ),
 			MathF.Max( tunnel.Maximum, cavern.Maximum ) );
