@@ -134,9 +134,16 @@ startup dependency. Once `OnStart` has accepted the authoritative load, the
 normal update/render path drains the mesh queue at the same bounded rate.
 Retained descriptors leave their buffers untouched. A fixed one-chunk render
 warm shell surrounds the authoritative gameplay cube. `VoxelManager` generates
-it through the same full-volume `VoxelChunk` SDF path on a separate cancellable
-worker queue, then discards the transient chunks after scheduling their derived
-meshes. Warm coordinates never enter the authoritative loaded dictionary.
+it on a separate cancellable worker queue. Before constructing a transient
+chunk, the canonical authoritative SDF range contract classifies the complete
+chunk as definitely solid, definitely air, or potentially surface-containing.
+Only the potential result constructs a chunk and reaches GPU scheduling; the
+other results are marked render-prepared without a mesh. The current plane has
+exact bounds, while any future cave, noise, edit, or replicated contribution
+whose full range is not proven must return potentially surface-containing.
+This contract is conservative full-volume reasoning, not a heightfield or
+surface-band heuristic. Warm coordinates never enter the authoritative loaded
+dictionary.
 Gameplay mesh requests drain before warm requests under the same eight-dispatch
 total limit. Promotion or demotion retains the mesh resource and visibility
 slot. Leaving the combined render region returns the resource to the pool.

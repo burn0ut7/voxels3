@@ -12,6 +12,31 @@ internal sealed class PerformanceTestResult
 	public PerformanceChunkMetrics Chunks { get; init; }
 	public PerformanceMeshingMetrics Meshing { get; init; }
 	public PerformanceVisibilityMetrics Visibility { get; init; }
+	public PerformanceStreamingMetrics Streaming { get; init; }
+}
+
+internal sealed class PerformanceStreamingMetrics
+{
+	public int FullUpdates { get; set; }
+	public int IncrementalUpdates { get; set; }
+	public float TotalSynchronousMilliseconds { get; set; }
+	public float MaximumSynchronousMilliseconds { get; set; }
+	public float TotalDesiredUpdateMilliseconds { get; set; }
+	public float TotalPrioritizationMilliseconds { get; set; }
+	public float TotalDrawCommitMilliseconds { get; set; }
+	public int DrawRebuilds { get; set; }
+	public long GameplayCoordinatesTouched { get; set; }
+	public long RenderCoordinatesTouched { get; set; }
+	public int GenerationBatches { get; set; }
+	public int MaximumGenerationBatchSize { get; set; }
+	public float MaximumFirstGameplayBatchMilliseconds { get; set; }
+	public int WarmCoordinatesClassified { get; set; }
+	public int WarmRejectedSolid { get; set; }
+	public int WarmRejectedAir { get; set; }
+	public int WarmPotentiallySurfaceContaining { get; set; }
+	public int WarmTransientChunksConstructed { get; set; }
+	public int PeakGameplayMeshBacklog { get; set; }
+	public int PeakWarmMeshBacklog { get; set; }
 }
 
 internal sealed class PerformanceTestSource

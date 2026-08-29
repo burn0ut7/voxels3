@@ -2821,3 +2821,192 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: incomplete. The 1.10 tuning compiles, but an advancing production
   play session, rapid camera sweep, and unchanged figure-eight comparison remain
   required before acceptance.
+### VOXEL-STREAM-SLIDING-001/v1 - Adjacent sliding-window streaming
+
+- Definition recorded on 2026-08-29 before instrumentation, baseline execution,
+  or implementation.
+- Production world: `Assets/scenes/basic_example.scene`; one local player;
+  engine build `26.08.19`; main camera `1280x720`; existing user-authored plane
+  renderer/collider unchanged.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  `TerrainSurfaceHeight=0`; one render-warm chunk; at most `8` total GPU mesh
+  dispatches per update; `0.500 ms` main-thread integration budget.
+- Fixed journey: begin fully settled at `C[0,0,0]`, then move the production
+  streaming target through `C[1,0,0]`, `C[2,1,0]`, `C[2,1,1]`, `C[1,0,0]`,
+  and `C[0,0,0]`. Gameplay generation, warm generation, and gameplay/warm mesh
+  backlogs must settle to zero before each next move.
+- Measurement boundary: synchronous timing starts before desired-set mutation
+  and ends after unload/demotion, pending-work prioritization, generation-worker
+  startup, draw-command commit, status refresh, and structured record creation.
+  Record total, desired-update, prioritization, and draw-command milliseconds;
+  gameplay/render entering, leaving, and unique touched coordinates; warm
+  classification/construction totals; frame p95/p99; average GPU time; peak and
+  settled mesh backlog; scalar and geometry readbacks.
+- Fixed pass criteria:
+  - Every settled desired set contains exactly `33^3 = 35,937` gameplay and
+    `35^3 = 42,875` render coordinates.
+  - One-, two-, and three-axis adjacent moves enter and leave respectively
+    `1,089`, `2,145`, and `3,169` gameplay coordinates and `1,225`, `2,415`,
+    and `3,571` render coordinates.
+  - The candidate uses incremental mode for every listed move; its median and
+    p95 synchronous time improve over the instrumented full-rebuild baseline,
+    and desired/prioritization work scales with the recorded slabs rather than
+    either complete cube.
+  - Loaded membership, surface/solid/air probes, visible terrain, warm-shell
+    anti-pop behavior, gameplay priority, and the dispatch limit remain
+    unchanged. Gameplay and warm mesh backlogs settle to zero.
+  - Frame p95 is at most `16.67 ms`; p99 is at most `25 ms`; average GPU time is
+    no more than `0.05 ms` above the comparable baseline. Normal production
+    performs zero scalar and geometry readbacks.
+
+### VOXEL-STREAM-TELEPORT-001/v1 - Progressive large-teleport streaming
+
+- Definition recorded on 2026-08-29 before instrumentation, baseline execution,
+  or implementation.
+- Production world, player, engine, camera, world configuration, integration
+  budget, warm shell, and GPU dispatch limit are identical to
+  `VOXEL-STREAM-SLIDING-001/v1`.
+- Fixed journey: begin fully settled at `C[0,0,0]`; move the production
+  streaming target directly to `C[64,64,0]`; settle; then begin a second
+  non-overlapping teleport and move again immediately after its first generated
+  gameplay batch is published to exercise stale-revision cancellation.
+- Fixed measurements: full synchronous-path subdivisions; full gameplay/render
+  coordinate counts; generation batch count and maximum size; first gameplay
+  batch publication/integration latency; warm range classifications and
+  transient constructions; stale publications/integrations; frame p95/p99;
+  average GPU time; mesh backlog; scalar and geometry readbacks.
+- Fixed pass criteria:
+  - Teleports use full-rebuild mode and settle at `35,937` authoritative chunks.
+  - The current flat field classifies all `6,938` warm-shell coordinates before
+    construction, rejects `6,802` as provably solid or air, and constructs only
+    the `136` potentially surface-containing coordinates.
+  - Gameplay generation publishes deterministic nearest-first batches of at
+    most `256`; the center batch becomes available before the complete
+    `35,937`-chunk generation finishes.
+  - A newer movement revision immediately invalidates remaining obsolete work;
+    stale chunks never enter loaded state or GPU scheduling.
+  - Terrain correctness, warm-shell quality, frame limits, GPU regression
+    budget, settled backlogs, dispatch limit, and readback invariants are the
+    same as `VOXEL-STREAM-SLIDING-001/v1`.
+  - Cave/edit readiness is structural: any field whose complete chunk range is
+    not proven returns `PotentiallySurfaceContaining`; this flat-world scenario
+    makes no unavailable visual cave claim.
+
+#### Instrumented full-rebuild baseline 2026-08-29
+
+- Source state `9a51a2f+instrumented-full-baseline`; engine build `26.08.19`;
+  AMD Ryzen 7 9800X3D; NVIDIA GeForce RTX 5090; production play session and
+  authored scene unchanged. Instrumentation was added without changing the
+  full-rebuild, monolithic-generation, warm-construction, integration, or GPU
+  scheduling behavior.
+- Settled adjacent transitions remained full rebuilds and visited all `35,937`
+  gameplay plus `42,875` render coordinates each time:
+  - `C[0,0,0]` to `C[1,0,0]`: total `18.9701 ms`; desired `0.8649 ms`;
+    prioritization `7.2663 ms`; draw commit `1.2393 ms`; queued gameplay/warm
+    `1,089/1,225`; all `1,225` warm candidates constructed.
+  - `C[1,0,0]` to `C[2,1,0]`: total `9.3234 ms`; desired `0.9792 ms`;
+    prioritization `3.6632 ms`; draw commit `0.6338 ms`; queued gameplay/warm
+    `2,145/2,415`; all `2,415` warm candidates constructed.
+  - `C[2,1,0]` to `C[2,1,1]`: total `7.3107 ms`; desired `0.9015 ms`;
+    prioritization `2.9904 ms`; draw commit `0.0003 ms`; queued gameplay/warm
+    `1,089/1,225`; all `1,225` warm candidates constructed.
+  - `C[2,1,1]` to `C[1,0,0]`: total `10.6814 ms`; desired `0.9926 ms`;
+    prioritization `5.0411 ms`; draw commit `0.6975 ms`; queued gameplay/warm
+    `3,169/3,571`; all `3,571` warm candidates constructed.
+- A deliberately immediate final move reproduced cancellation and is not used
+  in settled adjacent timing: its new full rebuild queued `4,193` gameplay and
+  `3,638` warm coordinates because prior work was still pending.
+- The no-overlap teleport from `C[0,0,0]` to `C[64,64,0]` used full rebuild,
+  visited `35,937/42,875` gameplay/render coordinates, queued `35,937` gameplay
+  and `6,938` warm coordinates, and took `28.9618 ms` synchronously (`0.8643 ms`
+  desired; `18.8722 ms` prioritization; `0.0366 ms` draw commit). The monolithic
+  worker settled in `111.310 ms`; all `6,938` warm coordinates constructed
+  transient chunks and none were rejected before construction.
+- Canonical figure-eight run `dc1e4ac71256410f94e47c3d02875f82` completed the
+  unchanged origin-centered one-loop workload in `121.93662 s`: `27,535` frame
+  samples, zero truncation, average `225.79832 FPS`, p95 `5.5041 ms`, p99
+  `12.3281 ms`, average GPU `0.7476039 ms`. It settled at `35,937` loaded chunks,
+  `1,089` gameplay plus `136` warm resident meshes, zero gameplay/warm backlog,
+  zero post-warmup pool allocations, zero normal scalar readbacks, zero geometry
+  readbacks, and exactly one post-measurement visibility scalar readback.
+- Baseline outcome: pass as comparison evidence. It establishes the avoidable
+  full-volume synchronous work and transient construction cost; it is not the
+  optimized acceptance result.
+
+#### Incremental candidate 2026-08-29 - pass
+
+- Source state `9a51a2f+incremental-candidate`; engine build `26.08.19`; baseline
+  hardware, scene, player, camera, world settings, dispatch cap, integration
+  budget, and movement coordinates unchanged. The baseline `desired` sub-timer
+  ended after gameplay-cube construction and therefore excluded render-cube
+  construction; baseline total synchronous and prioritization measurements are
+  valid comparisons, while that isolated sub-timer is retained but not compared.
+- Every locked adjacent transition selected incremental mode and retained exact
+  desired cardinalities. Unique set differences and synchronous timings were:
+  - `C[0,0,0]` to `C[1,0,0]`: gameplay `1,089` enter/leave; render `1,225`
+    enter/leave; `2,178/2,450` total gameplay/render touched; total `8.1938 ms`;
+    prioritization `1.2440 ms`; draw commit `0.8962 ms`.
+  - `C[1,0,0]` to `C[2,1,0]`: gameplay `2,145` enter/leave; render `2,415`
+    enter/leave; `4,290/4,830` touched; total `4.9028 ms`; prioritization
+    `1.9594 ms`; draw commit `0.7321 ms`.
+  - `C[2,1,0]` to `C[2,1,1]`: gameplay `1,089` enter/leave; render `1,225`
+    enter/leave; `2,178/2,450` touched; total `2.3336 ms`; prioritization
+    `0.8667 ms`; no draw rebuild was required.
+  - `C[2,1,1]` to `C[1,0,0]`: gameplay `3,169` enter/leave; render `3,571`
+    enter/leave; `6,338/7,142` touched; total `6.4085 ms`; prioritization
+    `3.0999 ms`; draw commit `0.5725 ms`.
+  - `C[1,0,0]` to `C[0,0,0]`: gameplay `1,089` enter/leave; render `1,225`
+    enter/leave; `2,178/2,450` touched; total `2.8687 ms`; prioritization
+    `0.8507 ms`; draw commit `0.6149 ms`.
+- The candidate range was `2.3336-8.1938 ms` versus the settled baseline's
+  `7.3107-18.9701 ms`. A one-axis warm slab classified `1,225` coordinates,
+  rejected `595` solid plus `595` air, and constructed only `35` potential
+  surface chunks rather than all `1,225`.
+- Canonical figure-eight run `8d8b3115bccf46b6a9af9401d59afc44`
+  completed in `121.931114 s` with schema `4`: `28,360` samples, zero
+  truncation, average `232.57283 FPS`, p95 `5.1986 ms`, p99 `6.8883 ms`, and
+  average GPU `0.7129534 ms`. Versus baseline, p95 improved `0.3055 ms`, p99
+  improved `5.4398 ms`, and average GPU improved `0.0346505 ms`.
+- Schema-v4 streaming aggregate: `742` incremental and `3` guarded full updates;
+  `2,167.673 ms` total and `11.7184 ms` maximum synchronous work; `1,774,575`
+  gameplay plus `2,003,645` render coordinates touched; `3,866` generation
+  batches, maximum batch `256`, worst first-batch publication `11.8871 ms`;
+  `926,973` warm coordinates classified, `900,720` proven solid/air rejections,
+  and `26,253` potential/transient constructions. Peak gameplay/warm mesh
+  backlogs were `226/79` and both settled to zero.
+- Settled rendering remained `1,089` gameplay plus `136` warm resident meshes,
+  zero mesh backlog, zero post-warmup pool allocations, zero normal scalar
+  readbacks, zero geometry readbacks, and exactly one post-measurement visibility
+  scalar readback. Four surface probes retained `1,024` active cells, `2,048`
+  triangles, zero invalid gradients, and zero overflow; adjacent solid/air probes
+  retained no GPU resource. A production-camera `1280x720` frame showed
+  continuous terrain without a visible seam or hole.
+- Outcome: pass for the fixed adjacent journey and canonical figure-eight
+  comparison. The existing live registry still exposes no fixed rapid-camera
+  input/capture route required to complete `VISIBILITY-EDGE-STRESS-001/v1`, so
+  this run does not replace that scenario's previously recorded incomplete
+  rapid-turn evidence.
+
+#### Progressive teleport candidate 2026-08-29 - pass
+
+- Source state, engine, hardware, scene, world, and budgets match the incremental
+  candidate above. The no-overlap move to `C[64,64,0]` selected full mode,
+  rebuilt `35,937/42,875` gameplay/render coordinates, and settled with all
+  `35,937` authoritative chunks present.
+- Gameplay generation published `141` deterministic batches: maximum `256`,
+  final batch `97`. First publication occurred at `7.152 ms`; first gameplay
+  integration occurred at `7.839 ms` while the worker was still incomplete.
+  Total settle was `361.147 ms`; the longer complete settle is accepted because
+  nearest terrain became available incrementally instead of waiting for the
+  former monolithic batch.
+- All `6,938` warm-shell coordinates were classified before construction:
+  `3,401` definitely solid, `3,401` definitely air, and `136` potentially
+  surface-containing. Exactly the `136` potential coordinates constructed
+  transient chunks and reached GPU scheduling.
+- A second no-overlap teleport followed immediately by another move produced
+  two distinct full revisions; the obsolete worker emitted
+  `stream.stale ... discarded=256`, and no stale coordinate integrated or
+  scheduled a mesh under the newer revision.
+- Outcome: pass. Full-rebuild fallback, progressive nearest-first availability,
+  bounded batches, conservative warm rejection, latest-revision authority, and
+  final desired-set correctness were observed through the production path.

@@ -33,10 +33,11 @@ persistence, and network replication remain later slices.
   SDF constructor but never enters the loaded-chunk dictionary. Its transient
   chunk objects are discarded after GPU scheduling; the shell is a derived
   latency cache rather than gameplay residency or world existence.
-- Streaming target movement computes one desired coordinate set. Obsolete chunks
-  are removed and missing chunks are ordered nearest-first with deterministic tie
-  breaks. One component-scoped worker pipeline generates the complete missing set
-  off-thread; the main thread integrates ready results under a time budget.
+- Streaming target movement owns one gameplay desired set and one render-desired
+  set. An adjacent move slides both sets in place by their exact entering and
+  leaving slabs; initialization, configuration changes, large jumps, and failed
+  set-integrity guards use the same owner's full rebuild path. Missing gameplay
+  coordinates are ordered nearest-first with deterministic tie breaks.
 - An explicitly assigned `StreamingTarget` is authoritative. Without one, the
   manager resolves exactly one active non-proxy `PlayerController` for the local
   client. It refuses to choose among multiple locally controlled players and
@@ -136,10 +137,14 @@ maintain a second terrain or scheduling implementation.
 
 Only one worker pipeline may execute for a manager. A newer desired set cancels
 the prior revision, waits for that worker to yield, and then starts, preventing
-task stacking and CPU oversubscription. Results whose revision or desired
-membership changed are counted and discarded. Configuration changes invalidate
-all loaded and queued chunks because their coordinate-to-sample meaning changed;
-target movement retains chunks still in the desired set.
+task stacking and CPU oversubscription. The sorted sequence publishes immutable
+batches of at most 256 chunks to the main thread, so nearest results integrate
+before a large teleport's complete coordinate set finishes generation. Revision
+and cancellation checks run before construction, before publication, and during
+integration. Results whose revision or desired membership changed are counted
+and discarded. Configuration changes invalidate all loaded and queued chunks
+because their coordinate-to-sample meaning changed; target movement retains
+chunks and pending coordinates still in the desired set.
 
 There is no chunks-per-frame setting. Every missing chunk is eligible for the
 single worker immediately, while ready results are integrated until the current
@@ -158,6 +163,12 @@ Serious alternatives considered:
 - A configurable chunks-per-frame count bounds work indirectly but does not
   guarantee a frame-time budget and unnecessarily stretches cheap workloads
   across many frames.
+- One task per chunk would increase scheduler pressure and make cancellation
+  storms more likely. Increasing the global GPU dispatch cap would move the
+  hitch rather than eliminate avoidable coordinate and construction work.
+- Keeping full rebuild and incremental movement as separate streaming systems
+  would duplicate ownership. Both modes instead feed the same queues, revisions,
+  generation batches, integration budget, and GPU scheduler.
 
 The serialized worker plus time-budgeted integration is the canonical path. More
 worker concurrency is not added speculatively; representative procedural terrain
@@ -271,10 +282,14 @@ The automated suite appends one versioned JSON object to
 `performance/results-v1.jsonl` in `FileSystem.Data` when its configured loop
 count completes. Each record contains a unique run ID; UTC capture time;
 required task and revision; scene, world, and workload parameters; and nested
-frame, memory, and chunk metrics. The manager exposes the resolved results path
-as inspector status. Task and revision are passive caller-supplied strings: the
-runtime never queries Git, invokes another process, or performs a network
-lookup. Blank or `unassigned` context rejects the run before movement begins.
+frame, memory, chunk, meshing, visibility, and streaming metrics. Schema version
+4 records full/incremental update counts, complete synchronous-path timing,
+coordinate work, draw-command rebuild cost, generation batch/first-availability
+timing, conservative warm classifications/constructions, and peak gameplay/warm
+mesh backlog. The manager exposes the resolved results path as inspector status.
+Task and revision are passive caller-supplied strings: the runtime never queries
+Git, invokes another process, or performs a network lookup. Blank or `unassigned`
+context rejects the run before movement begins.
 
 The inspector's `Run Performance Test` button is the canonical automated suite
 entry point. Its task, revision, speed, distance, and loop-count attributes are

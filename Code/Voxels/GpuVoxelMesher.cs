@@ -98,7 +98,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		int sourceRevision,
 		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
-		if ( chunk.MaximumDensity <= 0f || chunk.MinimumDensity > 0f )
+		if ( chunk.DensityClassification != ChunkDensityClassification.PotentiallySurfaceContaining )
 		{
 			Remove( chunk.Coordinate );
 			return;
@@ -416,12 +416,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 		SetVisibilityActive( resource, true );
 	}
 
-	public void CommitDrawCommands()
+	public DrawCommandCommitResult CommitDrawCommands()
 	{
+		var start = System.Diagnostics.Stopwatch.GetTimestamp();
 		UploadVisibilityDescriptors();
 		if ( !_drawCommandsDirty )
 		{
-			return;
+			return new DrawCommandCommitResult(
+				false,
+				(float)System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds );
 		}
 
 		_drawCommands.Reset();
@@ -429,7 +432,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( _visibilityCapacity == 0 )
 		{
 			_drawCommandsDirty = false;
-			return;
+			return new DrawCommandCommitResult(
+				true,
+				(float)System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds );
 		}
 
 		_drawCommands.Attributes.Set( "VisibilityBounds", _visibilityBuffers.Bounds );
@@ -490,6 +495,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		_drawCommandsDirty = false;
+		return new DrawCommandCommitResult(
+			true,
+			(float)System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds );
 	}
 
 	public string Inspect( VoxelChunk chunk )
@@ -1084,6 +1092,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 	}
 }
+
+internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Milliseconds );
 
 internal readonly record struct GpuVisibilityMeasurement(
 	uint FrameCount,

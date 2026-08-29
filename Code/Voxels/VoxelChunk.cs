@@ -1,3 +1,15 @@
+public enum ChunkDensityClassification
+{
+	DefinitelySolid,
+	DefinitelyAir,
+	PotentiallySurfaceContaining
+}
+
+public readonly record struct ChunkDensityRange(
+	float MinimumDensity,
+	float MaximumDensity,
+	ChunkDensityClassification Classification );
+
 /// <summary>
 /// Authoritative logical SDF samples for one spatial chunk. The current flat
 /// field is evaluated directly without allocating a redundant density array.
@@ -19,6 +31,7 @@ public sealed class VoxelChunk
 	public int SampleCount { get; }
 	public float MinimumDensity { get; }
 	public float MaximumDensity { get; }
+	public ChunkDensityClassification DensityClassification { get; }
 	public string HumanName => $"Chunk X {Coordinate.x}, Y {Coordinate.y}, Z {Coordinate.z}";
 	public string LogId => $"C[{Coordinate.x},{Coordinate.y},{Coordinate.z}]";
 
@@ -29,12 +42,37 @@ public sealed class VoxelChunk
 		SamplesPerAxis = cellsPerAxis + 1;
 		CellSize = cellSize;
 
+		var densityRange = ClassifyDensityRange( coordinate, cellsPerAxis, cellSize, terrainSurfaceHeight );
 		var chunkWorldSize = cellsPerAxis * cellSize;
 		_chunkMinimumZ = coordinate.z * chunkWorldSize;
 		_terrainSurfaceHeight = terrainSurfaceHeight;
 		SampleCount = checked( SamplesPerAxis * SamplesPerAxis * SamplesPerAxis );
-		MinimumDensity = _chunkMinimumZ - _terrainSurfaceHeight;
-		MaximumDensity = _chunkMinimumZ + CellsPerAxis * CellSize - _terrainSurfaceHeight;
+		MinimumDensity = densityRange.MinimumDensity;
+		MaximumDensity = densityRange.MaximumDensity;
+		DensityClassification = densityRange.Classification;
+	}
+
+	/// <summary>
+	/// Conservatively classifies the complete authoritative field range of one chunk.
+	/// Future field contributions must participate in these bounds; when a complete
+	/// range cannot be proven, return PotentiallySurfaceContaining.
+	/// </summary>
+	public static ChunkDensityRange ClassifyDensityRange(
+		Vector3Int coordinate,
+		int cellsPerAxis,
+		float cellSize,
+		float terrainSurfaceHeight )
+	{
+		var chunkWorldSize = cellsPerAxis * cellSize;
+		var chunkMinimumZ = coordinate.z * chunkWorldSize;
+		var minimumDensity = chunkMinimumZ - terrainSurfaceHeight;
+		var maximumDensity = chunkMinimumZ + cellsPerAxis * cellSize - terrainSurfaceHeight;
+		var classification = maximumDensity <= 0f
+			? ChunkDensityClassification.DefinitelySolid
+			: minimumDensity > 0f
+				? ChunkDensityClassification.DefinitelyAir
+				: ChunkDensityClassification.PotentiallySurfaceContaining;
+		return new ChunkDensityRange( minimumDensity, maximumDensity, classification );
 	}
 
 	public bool TryGetSample( Vector3Int localSample, out float density, out byte materialId )
