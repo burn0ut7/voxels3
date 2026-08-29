@@ -3063,3 +3063,199 @@ Record an approved extraordinary change here before adding the new version:
 - Remaining unmeasured risks: this cleanup deliberately removes the former
   diagnostic-only per-cell GPU probe; future mesh correctness evidence must come
   from production rendering/residency and player-visible behavior.
+
+### PERFORMANCE-OVERVIEW-001/v4 - Deterministic volumetric terrain evidence
+
+- Definition recorded on 2026-08-29 before the volumetric generator was
+  implemented or its first performance run was executed. The user explicitly
+  authorized replacing the locked flat generator and preserving the existing
+  player journey; v3 history remains unchanged and cross-version comparisons
+  are reported only as the controlled topology change requested for this slice.
+- Production world: `Assets/scenes/basic_example.scene`; one local player;
+  engine build `26.08.19`; main camera `1280x720`; LOD0 regular-cell
+  Transvoxel; GPU-only visual meshing; indirect rendering; zero geometry
+  readbacks.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  one render-warm chunk; at most `8` GPU mesh dispatches per update;
+  `0.500 ms` main-thread integration budget; `WorldSeed=1337`;
+  `GeneratorVersion=1`.
+- Fixed generator v1 recipe: cubic-interpolated integer-hash value noise from
+  absolute coordinates; hills at amplitudes/wavelengths `320/4096` and
+  `96/2048`; cave noise weights/wavelengths `0.67/1024` and `0.33/512`;
+  cave threshold `0.18`; cave scale `192`; vertical envelope centered at
+  `Z=-128` with half-extent `512`; negative density is solid, positive is air,
+  and zero is solid Grass.
+- Fixed journey and measurement: unchanged origin-centered player figure-eight
+  at world Z `0`, speed `2500`, distance `50000`, one complete loop; fixed
+  `524,288` frame-sample capacity; per-update frame/GPU sampling; one-second
+  process/GPU-memory sampling; nearest-rank p95/p99; wait for final gameplay and
+  warm mesh backlogs to settle; exactly one bounded end-of-run scalar readback.
+- Required evidence: loaded chunks; settled resource and non-empty surface-mesh
+  residency; warm surface meshes; total, average, and maximum active cells;
+  total reserved active-cell capacity and utilization; total/configured/peak
+  per-update dispatches; peak and settled gameplay/warm backlogs; visible mesh
+  counts; GPU memory; average GPU frame time; FPS; p95; p99; scalar and geometry
+  readbacks.
+- Correctness pass criteria: deterministic repeated CPU sampling; matching
+  shared samples on positive and negative chunk boundaries; sampled densities
+  remain inside conservative full-field chunk bounds; visible hills, valleys,
+  caves, ceilings, steep/overhanging walls, and openings; no visible chunk seam,
+  stale mesh, streaming instability, or relevant runtime/shader error.
+- Evidence-slice decision: topology-induced cost is recorded rather than
+  optimized here. Allocator, persistent-geometry, meshing, visibility,
+  collision, LOD, edit, and networking changes are explicitly deferred. A run
+  that cannot complete or a correctness failure leaves this slice incomplete.
+
+#### Schema-5 flat telemetry attempt 2026-08-29 - invalid topology counters
+
+- Run `4e545c94d12642b8a6ebec462a91e6bd`, revision
+  `volumetric-telemetry-flat-reference`, completed the unchanged v3 route in
+  `121.94172 s` with `28,339` samples, `232.38638 FPS`, p95 `5.6951 ms`, p99
+  `7.2859 ms`, average GPU `0.70801806 ms`, and one scalar/zero geometry
+  readbacks.
+- Settled residency was `1,225` resources (`1,089` gameplay, `136` warm), but
+  the new active-cell fields incorrectly returned zero. Inspection found that
+  the visibility shader wrote five per-frame scalar counters while the existing
+  buffer still allocated three. The run is retained as valid legacy
+  frame/memory/streaming evidence but invalid for all new topology fields.
+- Corrective action before any generator change: enlarge that existing bounded
+  scalar buffer to five words and repeat the identical flat reference. No
+  generator, streaming, meshing, visibility, allocator, or workload behavior is
+  changed by the correction.
+
+#### Schema-5 flat telemetry reference 2026-08-29 - pass
+
+- Run `c9db2cbb03ac487ea470df29a12c73d1`, revision
+  `volumetric-telemetry-flat-reference-2`, completed the unchanged v3 journey in
+  `121.93817 s`: `28,646` samples, zero truncation, `234.9101 FPS`, p95
+  `5.3935 ms`, p99 `7.0923 ms`, and average GPU `0.7144761 ms`.
+- GPU memory was `1,079,956,090` bytes at start and `1,240,388,218` bytes at
+  end/average/peak. Settled residency was `1,225` non-empty meshes: `1,089`
+  gameplay plus `136` warm. The field used `1,254,400` active-cell records,
+  exactly `1,024` average/maximum per surface chunk, against `40,140,800`
+  reserved records (`160,563,200` bytes), for `3.125%` utilization.
+- The loop issued `28,114` mesh dispatches, observed the configured maximum of
+  `8` per update, peaked at `1,089/136` gameplay/warm backlog, and settled both
+  to zero. Average visible meshes were `293.89795`; average resident/warm
+  non-empty meshes during traversal were `1,213.6696/128.4871`.
+- Readbacks remained zero during the measured interval and zero for geometry;
+  the existing single post-measurement scalar readback returned both traversal
+  aggregates and the settled topology snapshot. Outcome: pass as the controlled
+  flat reference for the authorized v4 topology change.
+
+#### Volumetric candidate attempt 2026-08-29 - invalid
+
+- Run `24b96d0d9bcb4fc4b4243894e3cd0046`, revision
+  `volumetric-terrain-candidate`, completed in `121.94701 s` but is invalid for
+  v4 acceptance. It started at `[2048,0]` rather than the locked origin because
+  an earlier live visual probe remained in the editor session across a play
+  restart; the target also ended below locked world Z `0`.
+- The run allocated `3,675` mesh resources (`3,267` gameplay, `408` warm) and
+  reserved `120,422,400` active-cell records (`481,689,600` bytes), but GPU
+  indirect counts returned zero non-empty meshes and zero active cells. This
+  disagrees with production CPU samples that cross sign between adjacent Z
+  samples and is a correctness failure, not topology evidence.
+- Retained diagnostic measurements: `88.99801 FPS`, p95 `14.4356 ms`, p99
+  `16.5052 ms`, average GPU `0.5355206 ms`, peak GPU memory `1,564,398,202`
+  bytes, `81,440` dispatches, `3,267/408` peak gameplay/warm backlog, one scalar
+  and zero geometry readbacks.
+- Recovery is limited to restoring the authored player/camera origin and forcing
+  full compilation of the two changed production shaders before a clean rerun.
+  No generator parameter, allocator, meshing, visibility, or workload change is
+  authorized by this invalid attempt.
+
+#### Volumetric candidate attempt 2 2026-08-29 - aborted
+
+- Revision `volumetric-terrain-candidate-2` started the locked v4 route at
+  `[0,0,0]`, but production screenshots showed no voxel geometry. The run was
+  stopped before completion and produced no result record.
+- A production-shader isolation reproduced the old plane only after the two new
+  scalar generator attributes were removed. Seed and version were therefore
+  rebound as one exact `int2` generator-identity attribute; this changed no
+  field, route, allocator, residency, dispatch, or visibility policy.
+
+#### Volumetric candidate attempt 3 2026-08-29 - invalid coordinates
+
+- Run `f61c392813aa480faeccf481d1658136`, revision
+  `volumetric-terrain-candidate-final`, completed the locked route in
+  `121.95078 s`, but is invalid as topology evidence. Every one of its `3,675`
+  settled meshes reported exactly `1,024` active cells (`3,763,200` total,
+  `3.125%` utilization), which proved that the compute pass repeated one local
+  chunk topology instead of evaluating absolute chunk coordinates.
+- The cause was an exact shader-attribute type mismatch: compute declared
+  `ChunkCoordinate` as `int3` while C# uploaded a float `Vector3`. The renderer
+  already used `Vector3Int`; the compute upload now uses the same exact integer
+  type. The invalid run's other measurements (`88.47027 FPS`, p95 `14.3382 ms`,
+  p99 `16.2414 ms`, average GPU `2.4205205 ms`, GPU memory
+  `1,565,446,778` bytes, and `79,296` dispatches) are retained only as failure
+  diagnostics and are not compared with the flat reference.
+
+#### Volumetric candidate attempt 4 2026-08-29 - invalid coordinates
+
+- Run `13cd4355c92d48c2934d61d53c7beab1`, revision
+  `volumetric-terrain-candidate-final-2`, completed the locked route in
+  `121.953575 s` after switching the compute upload to `Vector3Int`, but again
+  returned the impossible repeated topology: all `3,675` meshes had exactly
+  `1,024` active cells. It remains invalid and is not a performance comparison.
+- The engine's command-list path therefore did not consume either vector form
+  reliably for this attribute. The canonical coordinate is now bound as three
+  scalar integer attributes in both compute and draw shaders. No field,
+  classifier, workload, residency, allocator, or dispatch policy changed.
+
+#### Volumetric candidate attempt 5 2026-08-29 - stale compute binary
+
+- Run `6de0fb4632b84bfa905e204258421562`, revision
+  `volumetric-terrain-candidate-final-3`, completed the locked route in
+  `121.96771 s` and again returned `3,675` meshes at exactly `1,024` cells.
+- Post-run binary reflection proved that the editor's nominal compute compile
+  had left `voxel_regular_mesher_cs.shader_c` unchanged at its earlier
+  `ChunkCoordinate` interface even though the source and terrain shader had
+  advanced. Asset metadata also reported the compute shader out of date. The
+  single derived binary was regenerated from the current source and reflected
+  `ChunkCoordinateX/Y/Z` plus `GeneratorIdentity` before rerunning. The stale
+  run is invalid and its performance numbers are not used.
+
+#### Volumetric candidate attempt 6 2026-08-29 - invalid integer transport
+
+- Run `3d178e808d33455984629c5ba53e9012`, revision
+  `volumetric-terrain-final`, used a freshly regenerated compute binary with
+  reflected scalar integer coordinates, but still returned the origin-cell
+  signature (`3,675` meshes, `1,024/1,024` average/maximum active cells).
+- An independent evaluation of the exact canonical recipe produced strongly
+  varying counts for representative chunks (including `0`, `770`, `1,182`,
+  `1,576`, `2,950`, and `3,003`), so the run is a GPU-uniform correctness
+  failure, not valid topology evidence. Integer uniforms were replaced only as
+  a transport detail by exact numeric float attributes: chunk world origins
+  reconstruct integer lattice origins, and seed/version are accepted only in
+  the exactly representable range. The hash and field remain integer-based.
+
+#### Volumetric candidate attempt 7 2026-08-29 - invalid cached include
+
+- Run `b6fe49fe3f5b44819118d52830fb4389`, revision
+  `volumetric-terrain-final-float-binding`, completed in `121.950645 s` but
+  retained the invalid `1,024/1,024` active-cell signature. The compute binary
+  reflected the float origin/identity interface but had not refreshed after the
+  shared SDF include changed, so the result is not topology evidence.
+
+#### Volumetric candidate attempt 8 2026-08-29 - fail, slice incomplete
+
+- Run `d566e7947ac3432c93160c403c950e5d`, revision
+  `volumetric-terrain-final-verified-shader`, completed the locked v4 route in
+  `121.95116 s` from `[0,0,0]`. Before the run, both generated shader binaries
+  were verified to reference the newly versioned `voxel_sdf_v1` include and the
+  compute binary reflected `ChunkWorldOrigin` plus `GeneratorIdentity`.
+- Raw measurements: `10,581` samples, zero truncation, `86.76423 FPS`, p95
+  `14.7485 ms`, p99 `16.9328 ms`, average GPU `2.252956 ms`; GPU memory
+  `1,565,446,778` bytes start/end/average/peak; `78,993` dispatches; configured
+  and observed maximum `8`; peak gameplay/warm backlog `191/219`; settled
+  backlog `0/0`; average visible meshes `851.42487`; one bounded scalar and
+  zero geometry readbacks.
+- Settled residency remained `3,675` meshes (`3,267` gameplay, `408` warm),
+  reserving `120,422,400` active records (`481,689,600` bytes), but the GPU again
+  reported exactly `3,763,200` active cells, `1,024/1,024` average/maximum, and
+  `3.125%` utilization. This contradicts representative canonical CPU counts
+  and proves the CPU and GPU fields are not yet trustworthy equivalents.
+- Outcome: **fail; slice incomplete**. The flat schema-5 reference remains the
+  only valid comparison. No conclusion is drawn about volumetric topology cost,
+  and no allocator, meshing, visibility, persistence, LOD, collision, edit, or
+  networking optimization is implemented or authorized by these failed runs.

@@ -16,12 +16,12 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 4;
+	private const int PerformanceResultSchemaVersion = 5;
 	private const int RenderWarmShellChunks = 1;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
 	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
-	private const string InspectorPerformanceTask = "PERFORMANCE-OVERVIEW-001/v3";
+	private const string InspectorPerformanceTask = "PERFORMANCE-OVERVIEW-001/v4";
 	private const string InspectorPerformanceRevision = "manual-inspector";
 	private static readonly JsonSerializerOptions PerformanceJsonOptions = new()
 	{
@@ -71,7 +71,8 @@ public sealed class VoxelManager : Component
 	private int _appliedCellsPerAxis;
 	private float _appliedCellSize;
 	private int _appliedLoadRadius;
-	private float _appliedTerrainSurfaceHeight;
+	private int _appliedWorldSeed;
+	private int _appliedGeneratorVersion;
 	private int _streamRevision;
 	private int _terrainContentRevision;
 	private bool _workerCompleted;
@@ -115,6 +116,7 @@ public sealed class VoxelManager : Component
 	private int _performanceChunksIntegrated;
 	private bool _performanceSnapshotReady;
 	private bool _performanceVisibilityPending;
+	private bool _performanceSettledCaptureRequested;
 	private GpuVisibilityMeasurement _lastPerformanceVisibility;
 	private float _lastPerformanceWindowSeconds;
 	private int _lastPerformanceFrameSampleCount;
@@ -141,6 +143,8 @@ public sealed class VoxelManager : Component
 	private long _lastPerformanceMeshPoolAllocations;
 	private long _lastPerformanceMeshPoolReuses;
 	private long _lastPerformanceMeshScalarReadbacks;
+	private int _performancePeakMeshDispatchesPerUpdate;
+	private int _lastPerformancePeakMeshDispatchesPerUpdate;
 	private float _lastPerformanceChunksPerSecond;
 	private bool _lastPerformanceWasFigureEightTest;
 	private int _lastPerformanceCompletedLoops;
@@ -160,7 +164,10 @@ public sealed class VoxelManager : Component
 	public int LoadRadius { get; set; } = 16;
 
 	[Property, Category( "Chunk Configuration" )]
-	public float TerrainSurfaceHeight { get; set; } = 0f;
+	public int WorldSeed { get; set; } = ProceduralTerrainSdf.DefaultWorldSeed;
+
+	[Property, Category( "Chunk Configuration" )]
+	public int GeneratorVersion { get; set; } = ProceduralTerrainSdf.CurrentVersion;
 
 	[Property, Category( "Chunk Configuration" )]
 	public GameObject StreamingTarget { get; set; }
@@ -194,6 +201,9 @@ public sealed class VoxelManager : Component
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public string ChunkStatus { get; private set; } = "Not initialized";
+
+	[Property, ReadOnly, Category( "World Status" )]
+	public string GeneratorStatus { get; private set; } = "Not initialized";
 
 	[Property, ReadOnly, Category( "World Status" )]
 	public string StreamingPerformance { get; private set; } = "No stream completed";
@@ -379,7 +389,13 @@ public sealed class VoxelManager : Component
 		{
 			RefreshPlayerChunkStatus();
 		}
-		_gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
+		var meshDispatches = _gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
+		if ( _playerFigureEightTestRunning )
+		{
+			_performancePeakMeshDispatchesPerUpdate = Math.Max(
+				_performancePeakMeshDispatchesPerUpdate,
+				meshDispatches );
+		}
 		TryCompletePlayerFigureEightTest();
 		TrySaveCompletedPerformanceTest();
 	}
@@ -597,7 +613,9 @@ public sealed class VoxelManager : Component
 				CellsPerAxis = CellsPerAxis,
 				CellSize = CellSize,
 				LoadRadius = LoadRadius,
-				TerrainSurfaceHeight = TerrainSurfaceHeight,
+				Generator = "deterministic-volumetric",
+				WorldSeed = WorldSeed,
+				GeneratorVersion = GeneratorVersion,
 				StreamingCenter = new PerformanceVector3Int
 				{
 					X = _streamingCenterCoordinate.x,
@@ -645,6 +663,8 @@ public sealed class VoxelManager : Component
 			},
 			Meshing = new PerformanceMeshingMetrics
 			{
+				ConfiguredMaximumDispatchesPerUpdate = GpuVoxelMesher.MaximumDispatchesPerUpdate,
+				ObservedMaximumDispatchesPerUpdate = _lastPerformancePeakMeshDispatchesPerUpdate,
 				Dispatches = _lastPerformanceMeshDispatches,
 				Resident = _gpuMesher?.ResidentCount ?? 0,
 				GameplayResident = (_gpuMesher?.ResidentCount ?? 0) - (_gpuMesher?.WarmResidentCount ?? 0),
@@ -654,6 +674,22 @@ public sealed class VoxelManager : Component
 				WarmPending = _gpuMesher?.PendingWarmCount ?? 0,
 				PoolAvailable = _gpuMesher?.PoolCount ?? 0,
 				LogicalCapacityBytes = _gpuMesher?.LogicalCapacityBytes ?? 0,
+				ReservedActiveCellCapacity = _gpuMesher?.ReservedActiveCellCapacity ?? 0,
+				ReservedActiveCellCapacityBytes = _gpuMesher?.ReservedActiveCellCapacityBytes ?? 0,
+				SettledSurfaceMeshes = _lastPerformanceVisibility.SettledSurfaceMeshes,
+				SettledWarmSurfaceMeshes = _lastPerformanceVisibility.SettledWarmSurfaceMeshes,
+				TotalActiveCells = _lastPerformanceVisibility.SettledActiveCells,
+				AverageActiveCellsPerSurfaceChunk =
+					_lastPerformanceVisibility.SettledSurfaceMeshes > 0
+						? (float)_lastPerformanceVisibility.SettledActiveCells /
+							_lastPerformanceVisibility.SettledSurfaceMeshes
+						: 0f,
+				MaximumActiveCellsPerSurfaceChunk =
+					_lastPerformanceVisibility.SettledMaximumActiveCells,
+				ActiveCellUtilizationPercent = (_gpuMesher?.ReservedActiveCellCapacity ?? 0) > 0
+					? (float)(_lastPerformanceVisibility.SettledActiveCells * 100d /
+						(_gpuMesher?.ReservedActiveCellCapacity ?? 0))
+					: 0f,
 				PoolAllocations = _lastPerformanceMeshPoolAllocations,
 				PoolReuses = _lastPerformanceMeshPoolReuses,
 				GameThreadAllocatedBytes = null,
@@ -806,8 +842,9 @@ public sealed class VoxelManager : Component
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTarget = null;
 		_playerFigureEightBody = null;
-		_gpuMesher?.EndVisibilityMeasurement();
+		_gpuMesher?.StopVisibilityMeasurement();
 		_performanceVisibilityPending = true;
+		_performanceSettledCaptureRequested = false;
 		if ( !_performanceSnapshotReady )
 		{
 			_performanceVisibilityPending = false;
@@ -832,8 +869,19 @@ public sealed class VoxelManager : Component
 		if ( _pendingWarmChunks.Count > 0 ||
 			_completedWarmChunks.Count > 0 ||
 			!_warmWorkerCompleted ||
-			_gpuMesher.PendingCount > 0 ||
-			!_gpuMesher.TryTakeVisibilityMeasurement( out _lastPerformanceVisibility ) )
+			_gpuMesher.PendingCount > 0 )
+		{
+			return;
+		}
+
+		if ( !_performanceSettledCaptureRequested )
+		{
+			_performanceSettledCaptureRequested = true;
+			_gpuMesher.CaptureSettledVisibilityMeasurement();
+			return;
+		}
+
+		if ( !_gpuMesher.TryTakeVisibilityMeasurement( out _lastPerformanceVisibility ) )
 		{
 			return;
 		}
@@ -959,6 +1007,7 @@ public sealed class VoxelManager : Component
 		_lastPerformanceMeshScalarReadbacks =
 			(_gpuMesher?.ScalarReadbackCount ?? 0) - _performanceMesherScalarReadbackStart;
 		_lastPerformanceWasFigureEightTest = _playerFigureEightTestRunning;
+		_lastPerformancePeakMeshDispatchesPerUpdate = _performancePeakMeshDispatchesPerUpdate;
 		_lastPerformanceCompletedLoops = _playerFigureEightTestRunning ? _playerFigureEightCompletedLoops : 0;
 		_lastPerformanceTestSpeed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : 0f;
 		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
@@ -1013,6 +1062,7 @@ public sealed class VoxelManager : Component
 		_performanceMesherPoolAllocationStart = _gpuMesher?.PoolAllocationCount ?? 0;
 		_performanceMesherPoolReuseStart = _gpuMesher?.PoolReuseCount ?? 0;
 		_performanceMesherScalarReadbackStart = _gpuMesher?.ScalarReadbackCount ?? 0;
+		_performancePeakMeshDispatchesPerUpdate = 0;
 		_performanceStreaming = new PerformanceStreamingMetrics();
 	}
 
@@ -1045,19 +1095,27 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
-		chunk.TryGetSample( Vector3Int.Zero, out var minimumSampleDensity, out var minimumSampleMaterialId );
+		chunk.TryGetSample( Vector3Int.Zero, out var originDensity, out var originMaterialId );
+		chunk.TryGetSample(
+			new Vector3Int( chunk.CellsPerAxis, 0, 0 ),
+			out var positiveXDensity,
+			out _ );
+		chunk.TryGetSample(
+			new Vector3Int( 0, chunk.CellsPerAxis, 0 ),
+			out var positiveYDensity,
+			out _ );
 		chunk.TryGetSample(
 			new Vector3Int( 0, 0, chunk.CellsPerAxis ),
-			out var maximumSampleDensity,
-			out var maximumSampleMaterialId );
+			out var positiveZDensity,
+			out _ );
 		Log.Info(
 			$"[VoxelWorld] chunk.inspect chunk={chunk.LogId} name=\"{chunk.HumanName}\" cellsPerAxis={chunk.CellsPerAxis} " +
 			$"samplesPerAxis={chunk.SamplesPerAxis} sampleCount={chunk.SampleCount} " +
+			$"worldSeed={WorldSeed} generatorVersion={GeneratorVersion} " +
 			$"densityMin={chunk.MinimumDensity} densityMax={chunk.MaximumDensity} " +
-			$"minimumSample=L[0,0,0] minimumSampleDensity={minimumSampleDensity} " +
-			$"minimumSampleMaterial=\"{VoxelChunk.GetMaterialName( minimumSampleMaterialId )}\" minimumSampleMaterialId={minimumSampleMaterialId} " +
-			$"maximumSample=L[0,0,{chunk.CellsPerAxis}] maximumSampleDensity={maximumSampleDensity} " +
-			$"maximumSampleMaterial=\"{VoxelChunk.GetMaterialName( maximumSampleMaterialId )}\" maximumSampleMaterialId={maximumSampleMaterialId}" );
+			$"originDensity={originDensity} originMaterial=\"{VoxelChunk.GetMaterialName( originMaterialId )}\" " +
+			$"originMaterialId={originMaterialId} positiveXFaceDensity={positiveXDensity} " +
+			$"positiveYFaceDensity={positiveYDensity} positiveZFaceDensity={positiveZDensity}" );
 	}
 
 	private void ResolveStreamingTarget()
@@ -1121,9 +1179,15 @@ public sealed class VoxelManager : Component
 			return false;
 		}
 
-		if ( !float.IsFinite( TerrainSurfaceHeight ) )
+		if ( GeneratorVersion != ProceduralTerrainSdf.CurrentVersion )
 		{
-			error = "Terrain Surface Height must be finite.";
+			error = $"Generator Version must be {ProceduralTerrainSdf.CurrentVersion}.";
+			return false;
+		}
+
+		if ( WorldSeed < -16777216 || WorldSeed > 16777216 )
+		{
+			error = "World Seed must be between -16,777,216 and 16,777,216 for exact GPU transport.";
 			return false;
 		}
 
@@ -1135,7 +1199,8 @@ public sealed class VoxelManager : Component
 	{
 		return CellsPerAxis != _appliedCellsPerAxis ||
 			CellSize != _appliedCellSize ||
-			TerrainSurfaceHeight != _appliedTerrainSurfaceHeight;
+			WorldSeed != _appliedWorldSeed ||
+			GeneratorVersion != _appliedGeneratorVersion;
 	}
 
 	private void ApplyConfigurationAndRebuild()
@@ -1150,7 +1215,8 @@ public sealed class VoxelManager : Component
 		_appliedCellsPerAxis = CellsPerAxis;
 		_appliedCellSize = CellSize;
 		_appliedLoadRadius = LoadRadius;
-		_appliedTerrainSurfaceHeight = TerrainSurfaceHeight;
+		_appliedWorldSeed = WorldSeed;
+		_appliedGeneratorVersion = GeneratorVersion;
 
 		_generationCancellation?.Cancel();
 		_warmGenerationCancellation?.Cancel();
@@ -1589,7 +1655,8 @@ public sealed class VoxelManager : Component
 			coordinates,
 			CellsPerAxis,
 			CellSize,
-			TerrainSurfaceHeight,
+			WorldSeed,
+			GeneratorVersion,
 			revision,
 			cancellation.Token );
 	}
@@ -1599,7 +1666,8 @@ public sealed class VoxelManager : Component
 		Vector3Int[] coordinates,
 		int cellsPerAxis,
 		float cellSize,
-		float terrainSurfaceHeight,
+		int worldSeed,
+		int generatorVersion,
 		int revision,
 		CancellationToken cancellationToken )
 	{
@@ -1633,7 +1701,11 @@ public sealed class VoxelManager : Component
 
 						var generationStart = Stopwatch.GetTimestamp();
 						var chunk = new VoxelChunk(
-							coordinates[batchOffset + index], cellsPerAxis, cellSize, terrainSurfaceHeight );
+							coordinates[batchOffset + index],
+							cellsPerAxis,
+							cellSize,
+							worldSeed,
+							generatorVersion );
 						chunks.Add( chunk );
 						lastChunkMilliseconds = (float)Stopwatch.GetElapsedTime( generationStart ).TotalMilliseconds;
 						generationMilliseconds += lastChunkMilliseconds;
@@ -1750,7 +1822,8 @@ public sealed class VoxelManager : Component
 			coordinates,
 			CellsPerAxis,
 			CellSize,
-			TerrainSurfaceHeight,
+			WorldSeed,
+			GeneratorVersion,
 			revision,
 			cancellation.Token );
 	}
@@ -1761,7 +1834,8 @@ public sealed class VoxelManager : Component
 		Vector3Int[] coordinates,
 		int cellsPerAxis,
 		float cellSize,
-		float terrainSurfaceHeight,
+		int worldSeed,
+		int generatorVersion,
 		int revision,
 		CancellationToken cancellationToken )
 	{
@@ -1794,10 +1868,15 @@ public sealed class VoxelManager : Component
 
 						var coordinate = coordinates[batchOffset + index];
 						var densityRange = VoxelChunk.ClassifyDensityRange(
-							coordinate, cellsPerAxis, cellSize, terrainSurfaceHeight );
+							coordinate, cellsPerAxis, cellSize );
 						var chunk = densityRange.Classification ==
 							ChunkDensityClassification.PotentiallySurfaceContaining
-							? new VoxelChunk( coordinate, cellsPerAxis, cellSize, terrainSurfaceHeight )
+							? new VoxelChunk(
+								coordinate,
+								cellsPerAxis,
+								cellSize,
+								worldSeed,
+								generatorVersion )
 							: null;
 						results.Add( new WarmChunkResult( coordinate, densityRange.Classification, chunk ) );
 					}
@@ -1890,7 +1969,8 @@ public sealed class VoxelManager : Component
 				_renderPreparedChunks.Add( chunk.Coordinate );
 				_gpuMesher.Schedule(
 					chunk,
-					TerrainSurfaceHeight,
+					WorldSeed,
+					GeneratorVersion,
 					_terrainContentRevision,
 					GpuMeshResidency.Gameplay );
 				integratedCount++;
@@ -1948,7 +2028,8 @@ public sealed class VoxelManager : Component
 						: GpuMeshResidency.Warm;
 					_gpuMesher.Schedule(
 						result.Chunk,
-						TerrainSurfaceHeight,
+						WorldSeed,
+						GeneratorVersion,
 						_terrainContentRevision,
 						residency );
 				}
@@ -2033,6 +2114,7 @@ public sealed class VoxelManager : Component
 	{
 		LoadedChunkCount = _loadedChunks.Count;
 		PendingChunkCount = _pendingChunks.Count;
+		GeneratorStatus = $"Deterministic volumetric v{GeneratorVersion}; seed {WorldSeed}";
 		ChunkStatus = _performanceSnapshotReady
 			? $"{LoadedChunkCount:N0} loaded; {PendingChunkCount:N0} queued; " +
 				$"{_lastPerformanceChunksPerSecond:N1} chunks/sec over {_lastPerformanceWindowSeconds:N1} sec; " +

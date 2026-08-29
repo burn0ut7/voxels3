@@ -62,7 +62,9 @@ internal sealed class PerformanceWorldContext
 	public int CellsPerAxis { get; init; }
 	public float CellSize { get; init; }
 	public int LoadRadius { get; init; }
-	public float TerrainSurfaceHeight { get; init; }
+	public string Generator { get; init; }
+	public int WorldSeed { get; init; }
+	public int GeneratorVersion { get; init; }
 	public PerformanceVector3Int StreamingCenter { get; init; }
 	public PerformanceVector3 TargetPosition { get; init; }
 }
@@ -104,6 +106,8 @@ internal sealed class PerformanceChunkMetrics
 
 internal sealed class PerformanceMeshingMetrics
 {
+	public int ConfiguredMaximumDispatchesPerUpdate { get; init; }
+	public int ObservedMaximumDispatchesPerUpdate { get; init; }
 	public long Dispatches { get; init; }
 	public int Resident { get; init; }
 	public int GameplayResident { get; init; }
@@ -113,6 +117,14 @@ internal sealed class PerformanceMeshingMetrics
 	public int WarmPending { get; init; }
 	public int PoolAvailable { get; init; }
 	public long LogicalCapacityBytes { get; init; }
+	public long ReservedActiveCellCapacity { get; init; }
+	public long ReservedActiveCellCapacityBytes { get; init; }
+	public uint SettledSurfaceMeshes { get; init; }
+	public uint SettledWarmSurfaceMeshes { get; init; }
+	public uint TotalActiveCells { get; init; }
+	public float AverageActiveCellsPerSurfaceChunk { get; init; }
+	public uint MaximumActiveCellsPerSurfaceChunk { get; init; }
+	public float ActiveCellUtilizationPercent { get; init; }
 	public long PoolAllocations { get; init; }
 	public long PoolReuses { get; init; }
 	public long? GameThreadAllocatedBytes { get; init; }

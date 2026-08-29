@@ -34,13 +34,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
 	private VisibilityBuffers _visibilityBuffers;
 	private readonly GpuBuffer<uint> _visibilityAggregateCounters = new(
-		6,
+		10,
 		GpuBuffer.UsageFlags.Structured,
 		"Voxel Visibility Aggregate Counters" );
 	private bool _drawCommandsDirty;
 	private bool _visibilityDescriptorsDirty;
 	private bool _visibilityCountsNeedRefresh;
 	private bool _visibilityMeasurementActive;
+	private bool _visibilitySettledCaptureActive;
 	private bool _visibilityReadbackPending;
 	private bool _visibilityReadbackInFlight;
 	private long _visibilityReadbackRequestedRenderSequence;
@@ -59,6 +60,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Warm );
 	public int WarmResidentCount => _warmResidentCount;
 	public int PoolCount => _pool.Count;
+	public int AllocatedResourceCount => _allocatedResourceCount;
 	public long DispatchCount => _dispatchCount;
 	public long PoolAllocationCount => _poolAllocationCount;
 	public long PoolReuseCount => _poolReuseCount;
@@ -66,9 +68,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public long VisibilityScalarReadbackCount => _visibilityScalarReadbackCount;
 	public const long GeometryReadbackCount = 0;
 	public long LogicalCapacityBytes => (long)_resident.Count * _capacity * sizeof( uint );
+	public long ReservedActiveCellCapacity => (long)_allocatedResourceCount * _capacity;
+	public long ReservedActiveCellCapacityBytes => ReservedActiveCellCapacity * sizeof( uint );
 	public long LogicalVisibilityBytes => _visibilityCapacity == 0
 		? 0
-		: (long)_visibilityCapacity * (sizeof( float ) * 8 + sizeof( uint ) * 8) + sizeof( uint ) * 9;
+		: (long)_visibilityCapacity * (sizeof( float ) * 8 + sizeof( uint ) * 8) + sizeof( uint ) * 15;
 
 	// Installed s&box 26.08.19 ABI: four sequential uint fields. CopyStructureCount uses
 	// byte offsets, while DrawInstancedIndirect uses an argument-element index.
@@ -86,7 +90,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void Schedule(
 		VoxelChunk chunk,
-		float surfaceHeight,
+		int worldSeed,
+		int generatorVersion,
 		int sourceRevision,
 		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
@@ -96,7 +101,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 			return;
 		}
 
-		var descriptor = GpuSdfDescriptor.FromChunk( chunk, surfaceHeight, sourceRevision );
+		var descriptor = GpuSdfDescriptor.FromChunk(
+			chunk,
+			worldSeed,
+			generatorVersion,
+			sourceRevision );
 		if ( _resident.TryGetValue( chunk.Coordinate, out var resident ) &&
 			resident.Descriptor == descriptor )
 		{
@@ -213,13 +222,18 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var resource = Acquire();
 			resource.Prepare( descriptor, pending.Residency );
 			_meshCommands.Attributes.Set( "ActiveCells", resource.ActiveCells );
-			_meshCommands.Attributes.Set( "ChunkCoordinate", new Vector3(
-				descriptor.ChunkCoordinate.x,
-				descriptor.ChunkCoordinate.y,
-				descriptor.ChunkCoordinate.z ) );
+			var chunkWorldSize = descriptor.CellsPerAxis * descriptor.CellSize;
+			_meshCommands.Attributes.Set(
+				"ChunkWorldOrigin",
+				new Vector3(
+					descriptor.ChunkCoordinate.x * chunkWorldSize,
+					descriptor.ChunkCoordinate.y * chunkWorldSize,
+					descriptor.ChunkCoordinate.z * chunkWorldSize ) );
 			_meshCommands.Attributes.Set( "CellsPerAxis", descriptor.CellsPerAxis );
 			_meshCommands.Attributes.Set( "CellSize", descriptor.CellSize );
-			_meshCommands.Attributes.Set( "SurfaceHeight", descriptor.SurfaceHeight );
+			_meshCommands.Attributes.Set(
+				"GeneratorIdentity",
+				new Vector2( descriptor.WorldSeed, descriptor.GeneratorVersion ) );
 			_meshCommands.ResourceBarrierTransition( resource.ActiveCells, ResourceState.UnorderedAccess );
 			_meshCommands.SetCounterValue( resource.ActiveCells, 0 );
 			_meshCommands.DispatchCompute(
@@ -435,6 +449,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_drawCommands.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
 		_drawCommands.Attributes.Set( "VisibilityPass", 0 );
 		_drawCommands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
+		_drawCommands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
 		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.Bounds, ResourceState.GenericRead );
 		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.SourceArguments, ResourceState.GenericRead );
 		_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.UnorderedAccess );
@@ -444,7 +459,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_drawCommands.UavBarrier( _visibilityBuffers.VisibleArguments );
 		_drawCommands.UavBarrier( _visibilityBuffers.FrameCounters );
 
-		if ( _visibilityMeasurementActive )
+		if ( _visibilityMeasurementActive || _visibilitySettledCaptureActive )
 		{
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.GenericRead );
 			_drawCommands.ResourceBarrierTransition( _visibilityAggregateCounters, ResourceState.UnorderedAccess );
@@ -518,12 +533,16 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 		counters.GetDataAsync<uint>( data =>
 		{
-			var frames = data.Length >= 6 ? data[0] : 0;
-			var residentTotal = data.Length >= 6 ? data[1] : 0;
-			var visibleTotal = data.Length >= 6 ? data[2] : 0;
-			var minimumVisible = data.Length >= 6 && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
-			var maximumVisible = data.Length >= 6 ? data[4] : 0;
-			var warmTotal = data.Length >= 6 ? data[5] : 0;
+			var frames = data.Length >= 10 ? data[0] : 0;
+			var residentTotal = data.Length >= 10 ? data[1] : 0;
+			var visibleTotal = data.Length >= 10 ? data[2] : 0;
+			var minimumVisible = data.Length >= 10 && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
+			var maximumVisible = data.Length >= 10 ? data[4] : 0;
+			var warmTotal = data.Length >= 10 ? data[5] : 0;
+			var settledSurfaceMeshes = data.Length >= 10 ? data[6] : 0;
+			var settledWarmSurfaceMeshes = data.Length >= 10 ? data[7] : 0;
+			var settledActiveCells = data.Length >= 10 ? data[8] : 0;
+			var settledMaximumActiveCells = data.Length >= 10 ? data[9] : 0;
 			lock ( _visibilityLock )
 			{
 				_completedVisibilityMeasurement = new GpuVisibilityMeasurement(
@@ -533,6 +552,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 					minimumVisible,
 					maximumVisible,
 					warmTotal,
+					settledSurfaceMeshes,
+					settledWarmSurfaceMeshes,
+					settledActiveCells,
+					settledMaximumActiveCells,
 					logicalBytes,
 					1 );
 				_visibilityReadbackInFlight = false;
@@ -549,17 +572,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_visibilityReadbackInFlight = false;
 		}
 
-		Span<uint> initialCounters = stackalloc uint[6];
+		Span<uint> initialCounters = stackalloc uint[10];
 		initialCounters[3] = uint.MaxValue;
 		_visibilityAggregateCounters.SetData( initialCounters );
 		_visibilityMeasurementActive = true;
+		_visibilitySettledCaptureActive = false;
 		_drawCommandsDirty = true;
 		CommitDrawCommands();
 	}
 
-	public void EndVisibilityMeasurement()
+	public void StopVisibilityMeasurement()
 	{
 		_visibilityMeasurementActive = false;
+		_drawCommandsDirty = true;
+		CommitDrawCommands();
+	}
+
+	public void CaptureSettledVisibilityMeasurement()
+	{
+		_visibilitySettledCaptureActive = true;
 		_drawCommandsDirty = true;
 		CommitDrawCommands();
 		lock ( _visibilityLock )
@@ -582,6 +613,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 			measurement = completed;
 			_completedVisibilityMeasurement = null;
+			_visibilitySettledCaptureActive = false;
+			_drawCommandsDirty = true;
+			CommitDrawCommands();
 			return true;
 		}
 	}
@@ -621,7 +655,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
 			"Voxel Visible Indirect Arguments" );
 		var frameCounters = new GpuBuffer<uint>(
-			3,
+			5,
 			GpuBuffer.UsageFlags.Structured,
 			"Voxel Visibility Frame Counters" );
 		var initialArguments = new GpuBuffer.IndirectDrawArguments[newCapacity];
@@ -891,11 +925,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 				descriptor.ChunkCoordinate.y * chunkWorldSize,
 				descriptor.ChunkCoordinate.z * chunkWorldSize );
 
-			DrawAttributes.Set( "ChunkCoordinate", descriptor.ChunkCoordinate );
 			DrawAttributes.Set( "ChunkWorldOrigin", chunkWorldOrigin );
 			DrawAttributes.Set( "CellsPerAxis", descriptor.CellsPerAxis );
 			DrawAttributes.Set( "CellSize", descriptor.CellSize );
-			DrawAttributes.Set( "SurfaceHeight", descriptor.SurfaceHeight );
+			DrawAttributes.Set(
+				"GeneratorIdentity",
+				new Vector2( descriptor.WorldSeed, descriptor.GeneratorVersion ) );
 		}
 
 		public void Dispose()
@@ -915,6 +950,10 @@ internal readonly record struct GpuVisibilityMeasurement(
 	uint MinimumVisible,
 	uint MaximumVisible,
 	uint WarmTotal,
+	uint SettledSurfaceMeshes,
+	uint SettledWarmSurfaceMeshes,
+	uint SettledActiveCells,
+	uint SettledMaximumActiveCells,
 	long LogicalBufferBytes,
 	long ScalarReadbacks )
 {

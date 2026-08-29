@@ -6,7 +6,7 @@
       "__version": 2,
       "Flags": 0,
       "Name": "Plane",
-      "Position": "0,0,0",
+      "Position": "0,0,-0.00100000005",
       "Rotation": "0,0,0,1",
       "Scale": "1,1,1",
       "Tags": "",
@@ -536,11 +536,13 @@
           "Flags": 0,
           "CellSize": 16,
           "CellsPerAxis": 32,
-          "ChunkStatus": "35,937 loaded; 0 queued; 0 GPU meshes; 1,089 mesh queued",
+          "ChunkStatus": "35,937 loaded; 0 queued; 0 GPU meshes (0 warm); 3,267 gameplay and 0 warm meshes queued",
           "FigureEightDistance": 50000,
           "FigureEightLoopCount": 1,
           "FigureEightSpeed": 2500,
           "FramePerformance": "Collecting first 10-second window",
+          "GeneratorStatus": "Deterministic volumetric v1; seed 1337",
+          "GeneratorVersion": 1,
           "LastPerformanceRunId": "No saved run",
           "LoadRadius": 16,
           "OnComponentDestroy": null,
@@ -553,13 +555,13 @@
           "PerformanceRevision": "",
           "PerformanceTask": "",
           "ProcessMemoryUsage": "~5,707.7 MiB whole process",
-          "StreamingPerformance": "65,240.7 chunks/sec; 550.837 ms last stream",
+          "StreamingPerformance": "72,068.9 chunks/sec; 498.648 ms last stream",
           "StreamingTarget": {
             "_type": "gameobject",
             "go": "fde76e17-1db9-4ccc-a193-897fddbc6239"
           },
-          "TerrainSurfaceHeight": 0,
-          "VerboseLogging": false
+          "VerboseLogging": false,
+          "WorldSeed": 1337
         }
       ],
       "Children": []

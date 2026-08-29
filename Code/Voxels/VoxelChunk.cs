@@ -11,8 +11,8 @@ public readonly record struct ChunkDensityRange(
 	ChunkDensityClassification Classification );
 
 /// <summary>
-/// Authoritative logical SDF samples for one spatial chunk. The current flat
-/// field is evaluated directly without allocating a redundant density array.
+/// Authoritative logical SDF samples for one spatial chunk. The deterministic
+/// procedural field is evaluated directly without allocating a density array.
 /// Density below zero is solid, density above zero is air, and zero is the
 /// terrain surface.
 /// </summary>
@@ -21,8 +21,9 @@ public sealed class VoxelChunk
 	public const byte AirMaterialId = 0;
 	public const byte GrassMaterialId = 1;
 
-	private readonly float _chunkMinimumZ;
-	private readonly float _terrainSurfaceHeight;
+	private readonly Vector3Int _globalSampleOrigin;
+	private readonly int _worldSeed;
+	private readonly int _generatorVersion;
 
 	public Vector3Int Coordinate { get; }
 	public int CellsPerAxis { get; }
@@ -35,17 +36,22 @@ public sealed class VoxelChunk
 	public string HumanName => $"Chunk X {Coordinate.x}, Y {Coordinate.y}, Z {Coordinate.z}";
 	public string LogId => $"C[{Coordinate.x},{Coordinate.y},{Coordinate.z}]";
 
-	public VoxelChunk( Vector3Int coordinate, int cellsPerAxis, float cellSize, float terrainSurfaceHeight )
+	public VoxelChunk(
+		Vector3Int coordinate,
+		int cellsPerAxis,
+		float cellSize,
+		int worldSeed,
+		int generatorVersion )
 	{
 		Coordinate = coordinate;
 		CellsPerAxis = cellsPerAxis;
 		SamplesPerAxis = cellsPerAxis + 1;
 		CellSize = cellSize;
 
-		var densityRange = ClassifyDensityRange( coordinate, cellsPerAxis, cellSize, terrainSurfaceHeight );
-		var chunkWorldSize = cellsPerAxis * cellSize;
-		_chunkMinimumZ = coordinate.z * chunkWorldSize;
-		_terrainSurfaceHeight = terrainSurfaceHeight;
+		var densityRange = ClassifyDensityRange( coordinate, cellsPerAxis, cellSize );
+		_globalSampleOrigin = coordinate * cellsPerAxis;
+		_worldSeed = worldSeed;
+		_generatorVersion = generatorVersion;
 		SampleCount = checked( SamplesPerAxis * SamplesPerAxis * SamplesPerAxis );
 		MinimumDensity = densityRange.MinimumDensity;
 		MaximumDensity = densityRange.MaximumDensity;
@@ -60,19 +66,9 @@ public sealed class VoxelChunk
 	public static ChunkDensityRange ClassifyDensityRange(
 		Vector3Int coordinate,
 		int cellsPerAxis,
-		float cellSize,
-		float terrainSurfaceHeight )
+		float cellSize )
 	{
-		var chunkWorldSize = cellsPerAxis * cellSize;
-		var chunkMinimumZ = coordinate.z * chunkWorldSize;
-		var minimumDensity = chunkMinimumZ - terrainSurfaceHeight;
-		var maximumDensity = chunkMinimumZ + cellsPerAxis * cellSize - terrainSurfaceHeight;
-		var classification = maximumDensity <= 0f
-			? ChunkDensityClassification.DefinitelySolid
-			: minimumDensity > 0f
-				? ChunkDensityClassification.DefinitelyAir
-				: ChunkDensityClassification.PotentiallySurfaceContaining;
-		return new ChunkDensityRange( minimumDensity, maximumDensity, classification );
+		return ProceduralTerrainSdf.ClassifyDensityRange( coordinate, cellsPerAxis, cellSize );
 	}
 
 	public bool TryGetSample( Vector3Int localSample, out float density, out byte materialId )
@@ -86,7 +82,11 @@ public sealed class VoxelChunk
 			return false;
 		}
 
-		density = _chunkMinimumZ + localSample.z * CellSize - _terrainSurfaceHeight;
+		density = ProceduralTerrainSdf.SampleGlobal(
+			_globalSampleOrigin + localSample,
+			CellSize,
+			_worldSeed,
+			_generatorVersion );
 		materialId = density <= 0f ? GrassMaterialId : AirMaterialId;
 		return true;
 	}

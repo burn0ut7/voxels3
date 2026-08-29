@@ -24,6 +24,7 @@ CS
 	int VisibilitySlotCount < Attribute( "VisibilitySlotCount" ); >;
 	int VisibilityPass < Attribute( "VisibilityPass" ); >;
 	int MeasureVisibility < Attribute( "MeasureVisibility" ); >;
+	int CaptureSettledDiagnostics < Attribute( "CaptureSettledDiagnostics" ); >;
 
 	bool IsDefinitelyOutsideFrustum( float3 minimum, float3 maximum )
 	{
@@ -69,16 +70,26 @@ CS
 	{
 		if ( VisibilityPass != 0 )
 		{
-			if ( dispatchId.x == 0 && MeasureVisibility != 0 )
+			if ( dispatchId.x == 0 )
 			{
 				uint resident = VisibilityFrameCounters[0];
 				uint visible = VisibilityFrameCounters[1];
-				VisibilityAggregateCounters[0] += 1;
-				VisibilityAggregateCounters[1] += resident;
-				VisibilityAggregateCounters[2] += visible;
-				VisibilityAggregateCounters[3] = min( VisibilityAggregateCounters[3], visible );
-				VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
-				VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
+				if ( MeasureVisibility != 0 )
+				{
+					VisibilityAggregateCounters[0] += 1;
+					VisibilityAggregateCounters[1] += resident;
+					VisibilityAggregateCounters[2] += visible;
+					VisibilityAggregateCounters[3] = min( VisibilityAggregateCounters[3], visible );
+					VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
+					VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
+				}
+				if ( CaptureSettledDiagnostics != 0 )
+				{
+					VisibilityAggregateCounters[6] = resident;
+					VisibilityAggregateCounters[7] = VisibilityFrameCounters[2];
+					VisibilityAggregateCounters[8] = VisibilityFrameCounters[3];
+					VisibilityAggregateCounters[9] = VisibilityFrameCounters[4];
+				}
 			}
 
 			return;
@@ -102,6 +113,8 @@ CS
 		if ( active && activeCellCount > 0 )
 		{
 			InterlockedAdd( VisibilityFrameCounters[0], 1 );
+			InterlockedAdd( VisibilityFrameCounters[3], activeCellCount );
+			InterlockedMax( VisibilityFrameCounters[4], activeCellCount );
 			if ( warm )
 			{
 				InterlockedAdd( VisibilityFrameCounters[2], 1 );

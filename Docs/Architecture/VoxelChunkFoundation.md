@@ -3,7 +3,7 @@
 ## Scope
 
 This decision covers the first production chunk slice: integer chunk identity,
-implicit SDF data, deterministic flat-terrain population, bounded streaming,
+implicit SDF data, deterministic volumetric terrain, bounded streaming,
 and runtime/editor diagnostics. LOD0 surface extraction is now implemented by
 the sole GPU path documented in `GpuVoxelMeshing.md`. Collision, live edits,
 persistence, and network replication remain later slices.
@@ -15,9 +15,10 @@ persistence, and network replication remain later slices.
 - Each `VoxelChunk` owns the parameters required to evaluate its authoritative
   `(CellsPerAxis + 1)^3` logical density samples. Negative density is solid,
   positive density is air, and zero is the surface.
-- The current unedited base field is the world-space plane
-  `density = worldZ - TerrainSurfaceHeight`. Sampling is based only on global
-  coordinates, so shared chunk-boundary samples are identical.
+- The current unedited base field is deterministic volumetric generator version
+  `1`, identified by an explicit world seed and evaluated only from absolute
+  coordinates. Shared chunk-boundary samples therefore receive identical
+  integer lattice inputs.
 - The same canonical sample query derives one semantic material ID from density:
   `Air = 0` when density is positive and `Grass = 1` when density is zero or
   negative. The zero-density surface therefore belongs to Grass on both chunks
@@ -43,6 +44,54 @@ persistence, and network replication remain later slices.
   client. It refuses to choose among multiple locally controlled players and
   logs that multi-origin server interest management is still required.
 
+## Procedural Generator Version 1
+
+`WorldSeed` defaults to `1337` and is configurable. `GeneratorVersion` is
+serialized and fixed to the only implemented value, `1`; unsupported values are
+rejected rather than selecting a fallback. Changing either value cancels current
+generation, advances the terrain-content revision, clears derived meshes, and
+rebuilds the one canonical loaded set.
+
+The CPU owner is `ProceduralTerrainSdf`; `voxel_sdf.hlsl` mirrors the exact
+recipe for GPU classification, interpolation, and gradients. Both use unchecked
+32-bit integer hashing with fixed salts and cubic-interpolated lattice value
+noise. Float evaluation may follow platform compiler rules, but shared GPU chunk
+corners are bit-stable because their global integer coordinates, seed, version,
+constants, and operation sequence are identical.
+
+The fixed v1 field is:
+
+```text
+hill = 320 * noise2D(worldXY / 4096)
+     +  96 * noise2D(worldXY / 2048)
+
+caveNoise = 0.67 * noise3D(worldXYZ / 1024)
+          + 0.33 * noise3D(worldXYZ / 512)
+caveBoundary = max((abs(caveNoise) - 0.18) * 192,
+                   abs(worldZ + 128) - 512)
+density = max(worldZ - hill, -caveBoundary)
+```
+
+The height branch supplies broad hills and valleys. The bounded 3D carved branch
+creates underground sheets/tunnels, ceilings, steep walls, overhangs, and
+openings without making the complete field a heightfield. The recipe is kept to
+two 2D and two 3D value-noise evaluations so this slice primarily measures
+topology and residency rather than deliberately maximizing noise cost.
+
+The complete hill range is `[-416,416]`. The cave-noise boundary is bounded by
+`[-34.56,157.44]`; the vertical-envelope minimum and maximum are evaluated over
+the complete chunk Z interval. Bounds for both final `max` operands are combined
+before classification. A chunk is definitely solid only when the combined upper
+bound is non-positive, definitely air only when the combined lower bound is
+positive, and potentially surface-containing otherwise. No classification step
+assumes one surface, one height, or exterior visibility.
+
+Serious alternatives rejected for this slice were additive-only 3D deformation,
+which does not explicitly create the requested carved tunnel topology; dense CPU
+sample arrays, which duplicate an immutable function; multiple runtime generator
+paths, which would split authority; and allocator or meshing changes made in
+reaction to the new workload, which require separate evidence-driven slices.
+
 ## Selected Dimensions
 
 - Cells per axis: `32`
@@ -57,7 +106,7 @@ persistence, and network replication remain later slices.
   count
 
 At the production radius the settled world contains `1,291,467,969` logical density
-samples. The current plane evaluates them directly and has no density arrays.
+samples. The procedural field evaluates them directly and has no density arrays.
 Runtime diagnostics do not estimate or report chunk-attributed memory; allocator
 and managed-runtime layout are outside the chunk data contract. The concise
 inspector reports s&box's approximate working-set measurement for the whole
@@ -99,10 +148,9 @@ layouts.
 - Full per-chunk arrays duplicate an exactly derivable value for every current
   sample. They were removed rather than pooled or compressed.
 - A single constant for sign-uniform solid or air chunks is smaller than an
-  array but changes exact density queries because density still varies with local
-  Z. The selected representation evaluates the canonical expression
-  `chunkMinimumZ + localZ * CellSize - TerrainSurfaceHeight`, preserving the same
-  float operation order and values for uniform and surface chunks alike.
+  array but changes exact density queries because the procedural field varies
+  throughout the volume. Every chunk retains only the immutable parameters
+  needed to evaluate the same canonical function on demand.
 - Keeping arrays only for surface chunks introduces two storage modes despite
   the current plane needing neither. General compression, profiles, and mutable
   payload promotion remain out of scope until an implemented feature requires
@@ -124,7 +172,7 @@ and a versioned validation scenario.
 
 `VoxelManager` is the only owner of loaded, desired, pending, and completed
 collections. The worker receives an immutable snapshot of missing coordinates
-plus cells/axis, cell size, surface height, and a stream revision. It constructs
+plus cells/axis, cell size, world seed, generator version, and a stream revision. It constructs
 only ordinary `VoxelChunk` managed data; it does not read scene state, mutate the
 manager, log, or call engine resource APIs. Completion explicitly returns to the
 main thread before any authoritative collection changes.
@@ -195,8 +243,9 @@ before that policy changes.
   Warnings, errors, bounded read-only diagnostic results, and performance-test
   begin/save records remain unconditional because they are sparse and actionable.
 - `voxel_chunk_info x y z` retrieves any currently loaded chunk by its log
-  identifier coordinates and reports its minimum- and maximum-Z sample density
-  and material, or a clear missing result otherwise.
+  identifier coordinates and reports generator identity, conservative density
+  bounds, the origin sample/material, and the three positive-face boundary
+  samples, or a clear missing result otherwise.
 - Stream completion reports effective loaded chunks per second, pure SDF
   generation chunks per second, worker time, time-budgeted integration work,
   slowest integration update, maximum observed active-play frame, loaded,
@@ -277,12 +326,16 @@ human and MCP entry points from sharing one result.
 The automated suite appends one versioned JSON object to
 `performance/results-v1.jsonl` in `FileSystem.Data` when its configured loop
 count completes. Each record contains a unique run ID; UTC capture time;
-required task and revision; scene, world, and workload parameters; and nested
+required task and revision; scene, world, generator, and workload parameters; and nested
 frame, memory, chunk, meshing, visibility, and streaming metrics. Schema version
 4 records full/incremental update counts, complete synchronous-path timing,
 coordinate work, draw-command rebuild cost, generation batch/first-availability
 timing, conservative warm classifications/constructions, and peak gameplay/warm
-mesh backlog. The manager exposes the resolved results path as inspector status.
+mesh backlog. Schema version 5 adds one settled GPU scalar snapshot containing
+non-empty surface/warm mesh counts and total/average/maximum active-cell usage,
+plus reserved capacity, utilization, and configured/observed dispatch limits.
+It reuses the existing single end-of-run scalar readback and performs no geometry
+readback. The manager exposes the resolved results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`
 context rejects the run before movement begins.

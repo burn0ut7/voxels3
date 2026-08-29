@@ -4,8 +4,9 @@
 
 LOD0 regular-cell Transvoxel is the sole terrain render path. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; mesh data is derived,
-GPU-resident, and disposable. This slice deliberately excludes transition cells,
-other LODs, clipboxes, collision, edits, networking, procedural noise, and a
+GPU-resident, and disposable. Deterministic volumetric generator version 1 now
+supplies the field. This slice deliberately excludes transition cells, other
+LODs, clipboxes, collision, edits, networking, generator optimization, and a
 general mesh allocator.
 
 The implementation uses Eric Lengyel's official regular-cell tables from the
@@ -24,7 +25,7 @@ completely air; neither state allocates a mesh resource or dispatches compute.
 All other descriptors enter the GPU path conservatively.
 
 The immutable GPU descriptor contains only chunk coordinate, cells per axis,
-cell size, surface height, and source revision. Compute evaluates the field via
+cell size, world seed, generator version, and source revision. Compute evaluates the field via
 the shared `voxel_sdf.hlsl` boundary. It derives every cell corner from an
 integer global sample coordinate, and sets a case bit for `density <= 0`. This
 preserves the authoritative negative-solid, positive-air, zero-solid convention
@@ -134,9 +135,9 @@ it on a separate cancellable worker queue. Before constructing a transient
 chunk, the canonical authoritative SDF range contract classifies the complete
 chunk as definitely solid, definitely air, or potentially surface-containing.
 Only the potential result constructs a chunk and reaches GPU scheduling; the
-other results are marked render-prepared without a mesh. The current plane has
-exact bounds, while any future cave, noise, edit, or replicated contribution
-whose full range is not proven must return potentially surface-containing.
+other results are marked render-prepared without a mesh. Generator v1 combines
+proven hill, cave-noise, and vertical-envelope bounds; any future contribution
+whose complete range is not proven must return potentially surface-containing.
 This contract is conservative full-volume reasoning, not a heightfield or
 surface-band heuristic. Warm coordinates never enter the authoritative loaded
 dictionary.
@@ -153,13 +154,18 @@ Normal production never invokes `GetData` or `GetDataAsync` for active-cell
 geometry, and no project diagnostic does so either. Geometry readbacks remain a
 constant zero. Normal rendering performs no visibility readback. During an
 opted-in performance run, the shader accumulates sample/resident/warm/visible/minimum/
-maximum counters entirely on GPU. After the measured loop, one asynchronous
-six-word scalar readback completes before the result is saved. Saving also
+maximum counters entirely on GPU. After the measured loop stops, saving waits
+for the route's final derived mesh backlog to reach zero, captures settled
+non-empty surface/warm counts plus total and maximum active cells from the same
+indirect arguments, and completes one asynchronous ten-word scalar readback.
+Saving also
 waits for the route's final derived mesh backlog to reach zero so its residency
 snapshot records settled availability without extending the measured frame
 window. Gameplay and rendering never consume the readback. Performance records add mesh residency, backlog,
 capacity, dispatch, pool, allocation, readback, visible/resident draw, and
-cull-percentage metrics. The allocation field is null
+cull-percentage metrics. CPU-side result assembly derives average active cells,
+total allocated-buffer record capacity, and utilization from those scalars; no
+per-chunk data is read back. The allocation field is null
 when s&box's runtime whitelist prevents a scoped managed-byte counter; production
 allocation validation then uses the engine allocation profiler. Dedicated GPU
 meshing timing is recorded as unavailable when the installed profiler does not
