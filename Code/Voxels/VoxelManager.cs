@@ -16,7 +16,7 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 5;
+	private const int PerformanceResultSchemaVersion = 6;
 	private const int RenderWarmShellChunks = 1;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
@@ -154,6 +154,7 @@ public sealed class VoxelManager : Component
 	private float _lastPerformanceTestDistance;
 	private PerformanceStreamingMetrics _performanceStreaming = new();
 	private PerformanceStreamingMetrics _lastPerformanceStreaming = new();
+	private PerformanceProfilerMetrics _lastPerformanceProfiler = new();
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 	private ProceduralTerrainSettings CurrentTerrainSettings => new(
 		WorldSeed,
@@ -315,6 +316,8 @@ public sealed class VoxelManager : Component
 
 	protected override void OnUpdate()
 	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.ManagerUpdate );
 		TrySaveCompletedPerformanceTest();
 		UpdatePlayerFigureEight();
 		UpdatePerformanceOverview();
@@ -782,6 +785,8 @@ public sealed class VoxelManager : Component
 
 	private void UpdatePlayerFigureEight()
 	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.FigureEightMovement );
 		if ( !_playerFigureEightEnabled )
 		{
 			return;
@@ -923,6 +928,8 @@ public sealed class VoxelManager : Component
 
 	private void UpdatePerformanceOverview()
 	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.PerformanceSampling );
 		var frameMilliseconds = (float)(global::Sandbox.Diagnostics.PerformanceStats.FrameTime * 1000d);
 		if ( float.IsFinite( frameMilliseconds ) && frameMilliseconds > 0f )
 		{
@@ -1028,6 +1035,9 @@ public sealed class VoxelManager : Component
 		_lastPerformanceTestSpeed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : 0f;
 		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
 		_lastPerformanceStreaming = _performanceStreaming;
+		_lastPerformanceProfiler = _playerFigureEightTestRunning
+			? VoxelPerformanceProfiler.Capture()
+			: new PerformanceProfilerMetrics();
 		_performanceSnapshotReady = true;
 
 		FramePerformance =

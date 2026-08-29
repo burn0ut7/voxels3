@@ -13,6 +13,25 @@ internal sealed class PerformanceTestResult
 	public PerformanceMeshingMetrics Meshing { get; init; }
 	public PerformanceVisibilityMetrics Visibility { get; init; }
 	public PerformanceStreamingMetrics Streaming { get; init; }
+	public PerformanceProfilerMetrics Profiler { get; init; }
+}
+
+internal sealed class PerformanceProfilerMetrics
+{
+	public int WindowFrames { get; init; }
+	public IReadOnlyList<PerformanceProfilerTiming> Engine { get; init; } =
+		System.Array.Empty<PerformanceProfilerTiming>();
+	public IReadOnlyList<PerformanceProfilerTiming> Scripts { get; init; } =
+		System.Array.Empty<PerformanceProfilerTiming>();
+}
+
+internal sealed class PerformanceProfilerTiming
+{
+	public string Name { get; init; }
+	public int Calls { get; init; }
+	public float MinimumMillisecondsPerFrame { get; init; }
+	public float AverageMillisecondsPerFrame { get; init; }
+	public float MaximumMillisecondsPerFrame { get; init; }
 }
 
 internal sealed class PerformanceStreamingMetrics
