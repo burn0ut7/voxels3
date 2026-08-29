@@ -6,6 +6,8 @@ public readonly record struct ProceduralTerrainSettings(
 	float SurfaceFrequency,
 	float SurfaceAmplitude );
 
+public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
+
 /// <summary>
 /// Canonical deterministic version-2 surface terrain field. The GPU mirror uses
 /// the same integer hash and single-octave 2D simplex recipe.
@@ -21,6 +23,11 @@ internal static class ProceduralTerrainSdf
 
 	private const float SimplexF2 = 0.3660254037844386f;
 	private const float SimplexG2 = 0.21132486540518713f;
+	// Each of the three simplex contributions has gradient magnitude at most
+	// 27/343 before the canonical scale of 70. The exact global bound is therefore
+	// 3 * 70 * 27/343 = 16.530612... . Seventeen leaves deterministic margin.
+	private const double SimplexLipschitzBound = 17d;
+	private const double SimplexFinitePrecisionPadding = 0.0001d;
 
 	public static float SampleGlobal(
 		Vector3Int globalSampleCoordinate,
@@ -50,20 +57,211 @@ internal static class ProceduralTerrainSdf
 		ProceduralTerrainSettings settings )
 	{
 		var chunkWorldSize = cellsPerAxis * cellSize;
-		var chunkMinimumZ = coordinate.z * chunkWorldSize;
-		var chunkMaximumZ = chunkMinimumZ + chunkWorldSize;
-		var heightBound = MathF.Abs( settings.SurfaceAmplitude );
-		var minimumDensity =
-			chunkMinimumZ - settings.SurfaceBaseHeight - heightBound;
-		var maximumDensity =
-			chunkMaximumZ - settings.SurfaceBaseHeight + heightBound;
-		var classification = maximumDensity <= 0f
-			? ChunkDensityClassification.DefinitelySolid
-			: minimumDensity > 0f
-				? ChunkDensityClassification.DefinitelyAir
-				: ChunkDensityClassification.PotentiallySurfaceContaining;
+		var minimum = new Vector3(
+			coordinate.x * chunkWorldSize,
+			coordinate.y * chunkWorldSize,
+			coordinate.z * chunkWorldSize );
+		return GetConservativeDensityRange(
+			new SdfWorldAabb( minimum, minimum + new Vector3( chunkWorldSize ) ),
+			cellSize,
+			settings );
+	}
+
+	/// <summary>
+	/// Conservatively bounds the canonical density field over a closed world-space
+	/// AABB. The current generator privately projects XY because its exact formula
+	/// is separable; callers receive a full 3D density interval and never a height.
+	/// </summary>
+	public static ChunkDensityRange GetConservativeDensityRange(
+		SdfWorldAabb worldAabb,
+		float minimumSubdivisionSize,
+		ProceduralTerrainSettings settings )
+	{
+		var minimum = worldAabb.Minimum;
+		var maximum = worldAabb.Maximum;
+		if ( !float.IsFinite( minimum.x ) || !float.IsFinite( minimum.y ) ||
+			!float.IsFinite( minimum.z ) || !float.IsFinite( maximum.x ) ||
+			!float.IsFinite( maximum.y ) || !float.IsFinite( maximum.z ) ||
+			!float.IsFinite( minimumSubdivisionSize ) || minimumSubdivisionSize <= 0f ||
+			!float.IsFinite( settings.SurfaceBaseHeight ) ||
+			!float.IsFinite( settings.SurfaceFrequency ) ||
+			!float.IsFinite( settings.SurfaceAmplitude ) ||
+			minimum.x > maximum.x || minimum.y > maximum.y || minimum.z > maximum.z )
+		{
+			return new ChunkDensityRange(
+				float.NegativeInfinity,
+				float.PositiveInfinity,
+				ChunkDensityClassification.PotentiallySurfaceContaining );
+		}
+
+		var surfaceRange = BoundSurfaceRectangle(
+			minimum.x,
+			maximum.x,
+			minimum.y,
+			maximum.y,
+			minimum.z,
+			maximum.z,
+			minimumSubdivisionSize,
+			settings );
+		var minimumDensity = MathF.BitDecrement( minimum.z - surfaceRange.MaximumHeight );
+		var maximumDensity = MathF.BitIncrement( maximum.z - surfaceRange.MinimumHeight );
+		var classification = surfaceRange.Classification;
 		return new ChunkDensityRange( minimumDensity, maximumDensity, classification );
 	}
+
+	private static SurfaceRange BoundSurfaceRectangle(
+		float minimumX,
+		float maximumX,
+		float minimumY,
+		float maximumY,
+		float minimumZ,
+		float maximumZ,
+		float minimumSubdivisionSize,
+		ProceduralTerrainSettings settings )
+	{
+		var centerX = minimumX + (maximumX - minimumX) * 0.5f;
+		var centerY = minimumY + (maximumY - minimumY) * 0.5f;
+		var centerNoise = SimplexNoise2D(
+			centerX * settings.SurfaceFrequency,
+			centerY * settings.SurfaceFrequency,
+			unchecked((uint)settings.WorldSeed) );
+		var centerHeight = settings.SurfaceBaseHeight + centerNoise * settings.SurfaceAmplitude;
+
+		var halfX = (double)(maximumX - minimumX) * 0.5d;
+		var halfY = (double)(maximumY - minimumY) * 0.5d;
+		var noiseRadius = Math.Sqrt( halfX * halfX + halfY * halfY ) *
+			Math.Abs( settings.SurfaceFrequency );
+		var noiseVariation = SimplexLipschitzBound * noiseRadius +
+			SimplexFinitePrecisionPadding;
+		var minimumNoise = Math.Clamp( centerNoise - noiseVariation, -1d, 1d );
+		var maximumNoise = Math.Clamp( centerNoise + noiseVariation, -1d, 1d );
+		var height0 = settings.SurfaceBaseHeight + minimumNoise * settings.SurfaceAmplitude;
+		var height1 = settings.SurfaceBaseHeight + maximumNoise * settings.SurfaceAmplitude;
+		var minimumHeight = MathF.BitDecrement( (float)Math.Min( height0, height1 ) );
+		var maximumHeight = MathF.BitIncrement( (float)Math.Max( height0, height1 ) );
+
+		if ( centerHeight >= minimumZ && centerHeight <= maximumZ )
+		{
+			return new SurfaceRange(
+				minimumHeight,
+				maximumHeight,
+				ChunkDensityClassification.PotentiallySurfaceContaining );
+		}
+		if ( maximumHeight < minimumZ )
+		{
+			return new SurfaceRange(
+				minimumHeight,
+				maximumHeight,
+				ChunkDensityClassification.DefinitelyAir );
+		}
+		if ( minimumHeight >= maximumZ )
+		{
+			return new SurfaceRange(
+				minimumHeight,
+				maximumHeight,
+				ChunkDensityClassification.DefinitelySolid );
+		}
+
+		var extentX = maximumX - minimumX;
+		var extentY = maximumY - minimumY;
+		if ( MathF.Max( extentX, extentY ) <= minimumSubdivisionSize )
+		{
+			return BoundSurfaceLeaf(
+				minimumX,
+				maximumX,
+				minimumY,
+				maximumY,
+				minimumZ,
+				maximumZ,
+				settings );
+		}
+
+		SurfaceRange first;
+		SurfaceRange second;
+		if ( extentX >= extentY )
+		{
+			first = BoundSurfaceRectangle(
+				minimumX, centerX, minimumY, maximumY,
+				minimumZ, maximumZ, minimumSubdivisionSize, settings );
+			second = BoundSurfaceRectangle(
+				centerX, maximumX, minimumY, maximumY,
+				minimumZ, maximumZ, minimumSubdivisionSize, settings );
+		}
+		else
+		{
+			first = BoundSurfaceRectangle(
+				minimumX, maximumX, minimumY, centerY,
+				minimumZ, maximumZ, minimumSubdivisionSize, settings );
+			second = BoundSurfaceRectangle(
+				minimumX, maximumX, centerY, maximumY,
+				minimumZ, maximumZ, minimumSubdivisionSize, settings );
+		}
+
+		var classification = first.Classification == second.Classification
+			? first.Classification
+			: ChunkDensityClassification.PotentiallySurfaceContaining;
+		return new SurfaceRange(
+			MathF.BitDecrement( MathF.Min( first.MinimumHeight, second.MinimumHeight ) ),
+			MathF.BitIncrement( MathF.Max( first.MaximumHeight, second.MaximumHeight ) ),
+			classification );
+	}
+
+	private static SurfaceRange BoundSurfaceLeaf(
+		float minimumX,
+		float maximumX,
+		float minimumY,
+		float maximumY,
+		float minimumZ,
+		float maximumZ,
+		ProceduralTerrainSettings settings )
+	{
+		var extentX = maximumX - minimumX;
+		var extentY = maximumY - minimumY;
+		var noiseRadius = Math.Sqrt(
+			(double)extentX * extentX / 16d + (double)extentY * extentY / 16d ) *
+			Math.Abs( settings.SurfaceFrequency );
+		var noiseVariation = SimplexLipschitzBound * noiseRadius +
+			SimplexFinitePrecisionPadding;
+		var minimumNoise = 1d;
+		var maximumNoise = -1d;
+		var containsSurfaceSample = false;
+		for ( var yIndex = 0; yIndex < 2; yIndex++ )
+		{
+			var y = minimumY + extentY * (yIndex == 0 ? 0.25f : 0.75f);
+			for ( var xIndex = 0; xIndex < 2; xIndex++ )
+			{
+				var x = minimumX + extentX * (xIndex == 0 ? 0.25f : 0.75f);
+				var noise = SimplexNoise2D(
+					x * settings.SurfaceFrequency,
+					y * settings.SurfaceFrequency,
+					unchecked((uint)settings.WorldSeed) );
+				minimumNoise = Math.Min( minimumNoise, noise - noiseVariation );
+				maximumNoise = Math.Max( maximumNoise, noise + noiseVariation );
+				var height = settings.SurfaceBaseHeight + noise * settings.SurfaceAmplitude;
+				containsSurfaceSample |= height >= minimumZ && height <= maximumZ;
+			}
+		}
+
+		minimumNoise = Math.Clamp( minimumNoise, -1d, 1d );
+		maximumNoise = Math.Clamp( maximumNoise, -1d, 1d );
+		var height0 = settings.SurfaceBaseHeight + minimumNoise * settings.SurfaceAmplitude;
+		var height1 = settings.SurfaceBaseHeight + maximumNoise * settings.SurfaceAmplitude;
+		var minimumHeight = MathF.BitDecrement( (float)Math.Min( height0, height1 ) );
+		var maximumHeight = MathF.BitIncrement( (float)Math.Max( height0, height1 ) );
+		var classification = containsSurfaceSample
+			? ChunkDensityClassification.PotentiallySurfaceContaining
+			: maximumHeight < minimumZ
+				? ChunkDensityClassification.DefinitelyAir
+				: minimumHeight >= maximumZ
+					? ChunkDensityClassification.DefinitelySolid
+					: ChunkDensityClassification.PotentiallySurfaceContaining;
+		return new SurfaceRange( minimumHeight, maximumHeight, classification );
+	}
+
+	private readonly record struct SurfaceRange(
+		float MinimumHeight,
+		float MaximumHeight,
+		ChunkDensityClassification Classification );
 
 	private static float SimplexNoise2D( float x, float y, uint seed )
 	{

@@ -14,7 +14,23 @@ internal sealed class PerformanceTestResult
 	public PerformanceVisibilityMetrics Visibility { get; init; }
 	public PerformanceSubmissionMetrics Submission { get; init; }
 	public PerformanceStreamingMetrics Streaming { get; init; }
+	public PerformanceBoundsMetrics Bounds { get; init; }
 	public PerformanceProfilerMetrics Profiler { get; init; }
+}
+
+internal sealed class PerformanceBoundsMetrics
+{
+	public int GameplayQueries { get; set; }
+	public int GameplayDefinitelySolid { get; set; }
+	public int GameplayDefinitelyAir { get; set; }
+	public int GameplayPotentiallySurfaceContaining { get; set; }
+	public int WarmQueries { get; set; }
+	public int WarmDefinitelySolid { get; set; }
+	public int WarmDefinitelyAir { get; set; }
+	public int WarmPotentiallySurfaceContaining { get; set; }
+	public float TotalCpuMilliseconds { get; set; }
+	public float MaximumQueryMilliseconds { get; set; }
+	public int StaleOrCancelledQueries { get; set; }
 }
 
 internal sealed class PerformanceSubmissionMetrics
@@ -152,6 +168,7 @@ internal sealed class PerformanceMeshingMetrics
 	public long LogicalCapacityBytes { get; init; }
 	public long ReservedActiveCellCapacity { get; init; }
 	public long ReservedActiveCellCapacityBytes { get; init; }
+	public int SettledSlabs { get; init; }
 	public uint SettledSurfaceMeshes { get; init; }
 	public uint SettledWarmSurfaceMeshes { get; init; }
 	public uint TotalActiveCells { get; init; }
@@ -166,6 +183,19 @@ internal sealed class PerformanceMeshingMetrics
 	public string GpuProfilerPath { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
 	public float MaximumGpuMilliseconds { get; init; }
+	public PerformanceLatencyMetrics ScheduleToRenderable { get; init; }
+}
+
+internal sealed class PerformanceLatencyMetrics
+{
+	public int Samples { get; init; }
+	public int TruncatedSamples { get; init; }
+	public float P50Milliseconds { get; init; }
+	public float P95Milliseconds { get; init; }
+	public float P99Milliseconds { get; init; }
+	public float MaximumMilliseconds { get; init; }
+	public int Cancelled { get; init; }
+	public int Superseded { get; init; }
 }
 
 internal sealed class PerformanceVisibilityMetrics

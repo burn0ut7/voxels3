@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Sandbox.Rendering;
 
 internal sealed class GpuVoxelMesher : IDisposable
@@ -9,6 +10,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private const int SdfVectorsPerRegion = 3;
 	private const int IndirectArgumentStride = sizeof( uint ) * 4;
+	private const int MaximumScheduleLatencySamples = 524288;
 
 	private readonly Scene _scene;
 	private readonly ComputeShader _computeShader = new( "shaders/voxels/voxel_regular_mesher_cs.shader" );
@@ -55,6 +57,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private long _visibilityScalarReadbackCount;
 	private long _renderSequence;
 	private long _submittedRenderSequence;
+	private float[] _scheduleLatencyMilliseconds = Array.Empty<float>();
+	private int _scheduleLatencySampleCount;
+	private int _scheduleLatencyTruncatedCount;
+	private int _scheduleLatencyCancelledCount;
+	private int _scheduleLatencySupersededCount;
+	private bool _scheduleLatencyMeasurementActive;
 
 	public int ResidentCount => _resident.Count;
 	public int PendingCount => PendingGameplayCount + PendingWarmCount;
@@ -107,7 +115,49 @@ internal sealed class GpuVoxelMesher : IDisposable
 			}
 			return;
 		}
-		QueuePending( new PendingMesh( descriptor, residency ) );
+		QueuePending( new PendingMesh( descriptor, residency, Stopwatch.GetTimestamp() ) );
+	}
+
+	public void BeginScheduleLatencyMeasurement()
+	{
+		_scheduleLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
+		_scheduleLatencySampleCount = 0;
+		_scheduleLatencyTruncatedCount = 0;
+		_scheduleLatencyCancelledCount = 0;
+		_scheduleLatencySupersededCount = 0;
+		_scheduleLatencyMeasurementActive = true;
+	}
+
+	public GpuMeshScheduleLatencyMeasurement CompleteScheduleLatencyMeasurement()
+	{
+		_scheduleLatencyMeasurementActive = false;
+		Array.Sort( _scheduleLatencyMilliseconds, 0, _scheduleLatencySampleCount );
+		var result = new GpuMeshScheduleLatencyMeasurement(
+			_scheduleLatencySampleCount,
+			_scheduleLatencyTruncatedCount,
+			GetScheduleLatencyPercentile( 0.50d ),
+			GetScheduleLatencyPercentile( 0.95d ),
+			GetScheduleLatencyPercentile( 0.99d ),
+			_scheduleLatencySampleCount > 0
+				? _scheduleLatencyMilliseconds[_scheduleLatencySampleCount - 1]
+				: 0f,
+			_scheduleLatencyCancelledCount,
+			_scheduleLatencySupersededCount );
+		_scheduleLatencyMilliseconds = Array.Empty<float>();
+		return result;
+	}
+
+	private float GetScheduleLatencyPercentile( double percentile )
+	{
+		if ( _scheduleLatencySampleCount == 0 )
+		{
+			return 0f;
+		}
+		var index = Math.Clamp(
+			(int)Math.Ceiling( _scheduleLatencySampleCount * percentile ) - 1,
+			0,
+			_scheduleLatencySampleCount - 1 );
+		return _scheduleLatencyMilliseconds[index];
 	}
 
 	public void SetResidency( Vector3Int coordinate, GpuMeshResidency residency )
@@ -188,7 +238,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		while ( processed < maximumDispatches && TryDequeuePending( out var pending ) )
 		{
 			var handle = Acquire();
-			var inFlight = new InFlightMesh( pending.Descriptor, pending.Residency, handle );
+			var inFlight = new InFlightMesh(
+				pending.Descriptor,
+				pending.Residency,
+				handle,
+				pending.ScheduledTimestamp );
 			handle.Slab.Prepare( handle.Slot, pending.Descriptor );
 			handle.Slab.PendingJobs.Add( inFlight );
 			_inFlight.Add( inFlight );
@@ -260,6 +314,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var coordinate = completed.Descriptor.ChunkCoordinate;
 			if ( _cancelledInFlight.Remove( coordinate ) )
 			{
+				if ( _scheduleLatencyMeasurementActive )
+				{
+					_scheduleLatencyCancelledCount++;
+				}
 				Release( completed.Handle );
 				continue;
 			}
@@ -268,6 +326,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 			{
 				if ( replacement.Descriptor != completed.Descriptor )
 				{
+					if ( _scheduleLatencyMeasurementActive )
+					{
+						_scheduleLatencySupersededCount++;
+					}
 					Release( completed.Handle );
 					continue;
 				}
@@ -292,6 +354,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 				_warmResidentCount++;
 			}
 			SetVisibilityActive( resident, true );
+			if ( _scheduleLatencyMeasurementActive )
+			{
+				var milliseconds = (float)Stopwatch.GetElapsedTime(
+					completed.ScheduledTimestamp ).TotalMilliseconds;
+				if ( _scheduleLatencySampleCount < _scheduleLatencyMilliseconds.Length )
+				{
+					_scheduleLatencyMilliseconds[_scheduleLatencySampleCount++] = milliseconds;
+				}
+				else
+				{
+					_scheduleLatencyTruncatedCount++;
+				}
+			}
 			_dispatchCount++;
 			_drawCommandsDirty = true;
 		}
@@ -300,6 +375,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void QueuePending( PendingMesh pending )
 	{
+		if ( _scheduleLatencyMeasurementActive &&
+			_pending.ContainsKey( pending.Descriptor.ChunkCoordinate ) )
+		{
+			_scheduleLatencySupersededCount++;
+		}
 		RemovePending( pending.Descriptor.ChunkCoordinate );
 		_pending[pending.Descriptor.ChunkCoordinate] = pending;
 		if ( pending.Residency == GpuMeshResidency.Gameplay )
@@ -673,6 +753,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void Clear()
 	{
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			_scheduleLatencyCancelledCount += _pending.Count + _inFlight.Count;
+		}
 		_pending.Clear();
 		_gameplayDispatchQueue.Clear();
 		_warmDispatchQueue.Clear();
@@ -792,11 +876,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 	}
 
-	private readonly record struct PendingMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency );
+	private readonly record struct PendingMesh(
+		GpuSdfDescriptor Descriptor,
+		GpuMeshResidency Residency,
+		long ScheduledTimestamp );
 	private readonly record struct InFlightMesh(
 		GpuSdfDescriptor Descriptor,
 		GpuMeshResidency Residency,
-		MeshHandle Handle );
+		MeshHandle Handle,
+		long ScheduledTimestamp );
 	private readonly record struct MeshHandle( MeshSlab Slab, int Slot, uint Generation )
 	{
 		public int GlobalSlot => Slab.Index * RegionsPerSlab + Slot;
@@ -987,6 +1075,16 @@ internal sealed class GpuVoxelMesher : IDisposable
 }
 
 internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Milliseconds );
+
+internal readonly record struct GpuMeshScheduleLatencyMeasurement(
+	int Samples,
+	int TruncatedSamples,
+	float P50Milliseconds,
+	float P95Milliseconds,
+	float P99Milliseconds,
+	float MaximumMilliseconds,
+	int Cancelled,
+	int Superseded );
 
 internal readonly record struct GpuVisibilityMeasurement(
 	uint FrameCount,

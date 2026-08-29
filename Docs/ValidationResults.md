@@ -3451,3 +3451,161 @@ Record an approved extraordinary change here before adding the new version:
   memory, streaming, and available profiler gates. Stop here. Shared variable
   allocation, compaction, edits, caves, LOD, persistent geometry, and other
   renderer work require a separate explicit plan and decision.
+
+### SDF-LOCAL-BOUNDS-001/v1 - High-amplitude local conservative bounds
+
+- Definition recorded on 2026-08-29 before the first run and before changing
+  the production density-range classifier. This scenario does not replace or
+  alter `PERFORMANCE-OVERVIEW-001/v5` or `GPU-SHARED-SLAB-001/v1`.
+- Production path: `Assets/scenes/basic_example.scene`; one local player;
+  engine build `26.08.19`; main camera `1280x720`; LOD0 regular-cell
+  Transvoxel; GPU-only visual meshing; shared 256-region slabs; zero geometry
+  readbacks.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  one render-warm chunk; at most `8` GPU mesh dispatches per update; `0.500 ms`
+  main-thread integration budget; generator version `2`; `WorldSeed=1337`;
+  `SurfaceBaseHeight=0`; `SurfaceFrequency=0.0005`;
+  `SurfaceAmplitude=4096`.
+- Fixed journey and measurement: start and figure-eight center `(0,0,0)` at
+  world Z `0`; speed `2500`; maximum X distance `50000` and Y reach `25000`;
+  one complete loop; fixed `524,288` frame-sample capacity; per-update
+  frame/GPU sampling; one-second process/GPU-memory sampling; nearest-rank
+  p95/p99; wait for final gameplay and warm mesh backlogs to settle; exactly
+  one bounded end-of-run scalar readback. Three clean global-bound runs and
+  three clean local-bound runs define the comparable ranges.
+- Current global-bound expectation at the settled origin: potential Z chunks
+  `-8..8`, producing `18,513` gameplay plus `2,312` warm candidates,
+  `20,825` total slots, `82` slabs, and `2,751,463,424` reserved active-cell
+  bytes.
+- Required schema-8 evidence: gameplay and warm bound queries split into
+  definite-solid, definite-air, and potential results; total and maximum bound
+  CPU time; cancelled/stale classifications; mesh schedule-to-renderable
+  publication p50/p95/p99/maximum and cancelled/superseded samples; peak/final
+  mesh backlog; settled slab count; reserved active-cell bytes; whole-engine
+  GPU memory; non-empty mesh and active-cell counts; utilization; frame/GPU
+  timing; streaming throughput and first availability; scalar and geometry
+  readbacks.
+- Candidate gates: at least `75%` fewer potential gameplay-plus-warm
+  classifications; at most `5,206` settled candidates, `21` slabs, and
+  `704,643,072` reserved active-cell bytes; at least `3x` active-cell
+  utilization; zero final backlog; schedule-to-renderable p95 at most
+  `204.8 ms` and maximum at most `409.6 ms`; no material streaming, frame-tail,
+  GPU-time, or whole-engine GPU-memory regression outside the three-run
+  baseline range.
+- Correctness gates: deterministic repeated samples and shared positive/negative
+  chunk-face samples; every production validation sample lies inside its closed
+  AABB density interval; non-finite or unproved bounds remain potential;
+  settled non-empty gameplay/warm mesh counts, total/maximum active cells, and
+  visible topology match the global-bound baseline; no missing surface, seam,
+  stale flash, pop, relevant runtime/shader error, geometry readback, dispatch
+  limit change, streaming-radius change, or shared-slab topology change.
+- Stop rule: if the candidate misses reduction, latency, correctness, or
+  non-regression gates, record the failure and profile the bounds evaluator.
+  Do not alter the radius, dispatch cap, chunk dimensions, amplitude, allocator,
+  renderer, caves, edits, collision, or LOD in this scenario.
+
+#### Schema-8 global-bound baselines - 2026-08-29
+
+- Three valid unchanged global-classifier runs completed the locked route:
+
+| Revision | Run ID | FPS | p95 / p99 ms | GPU ms | Residents / slabs | Reserved bytes | Schedule p95 / max ms |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `fcab412-global-bounds-schema8-baseline-1` | `9ba170b97a7646d3ab07cb4b7f56963b` | `239.43553` | `4.9852 / 5.4121` | `0.87557155` | `20,825 / 82` | `2,751,463,424` | `6,862.7246 / 12,815.064` |
+| `fcab412-global-bounds-schema8-baseline-2` | `20901c341caa483abc5af5bff498f5ea` | `239.43712` | `4.9721 / 5.3618` | `0.8757047` | `20,825 / 82` | `2,751,463,424` | `6,865.0537 / 12,821.742` |
+| `fcab412-global-bounds-schema8-baseline-3-repeat` | `6cfcfe813f3f433a84cfd016ed257457` | `239.45897` | `4.9924 / 5.4008` | `0.86641157` | `20,825 / 82` | `2,751,463,424` | `6,860.9526 / 12,817.222` |
+
+- All three retained exactly `8,228` non-empty surface meshes, including `882`
+  warm meshes, `8,887,401` active cells, maximum `3,474` active cells per
+  region, `1.2920253%` utilization, zero final backlog, zero scalar readbacks
+  during measurement, one bounded post-run scalar readback, and zero geometry
+  readbacks. Peak gameplay backlog was `18,489..18,497`; peak warm backlog was
+  `1,935..1,937`.
+- Bounds telemetry recorded `909,834..914,376` gameplay-plus-warm potential
+  results per traversal at only `75.64821..76.45198 ms` total CPU time. This is
+  the expected inexpensive but spatially global amplitude test.
+- Whole-engine GPU memory returned wrapped unsigned values near `ulong.MaxValue`
+  in all three baseline records and is invalid evidence for this session. Exact
+  project-owned reserved active-cell bytes remain valid.
+- The first attempt at the third baseline, revision
+  `fcab412-global-bounds-schema8-baseline-3`, completed its route but failed to
+  save because no complete performance snapshot was available. It produced no
+  JSON result and is retained as an invalid run; the identical repeat above is
+  the third valid baseline.
+
+#### Local AABB bounds candidate 1 - 2026-08-29 - v1 fail
+
+- Run `7fb4f39b766a4210ae792b513e281fe2`, revision
+  `local-aabb-bounds-candidate-1`, completed the unchanged route in
+  `121.94308 s` with `29,197` frame samples, zero truncation, `239.42773 FPS`,
+  p95 `4.9891 ms`, p99 `5.4316 ms`, and average GPU `1.9967712 ms`.
+- The candidate retained `9,752` residents (`8,685` gameplay and `1,067` warm)
+  in `39` slabs and reserved `1,308,622,848` active-cell bytes. It preserved
+  exactly the baseline's `8,228` non-empty surface meshes, `882` warm surface
+  meshes, `8,887,401` active cells, and maximum `3,474` active cells; utilization
+  improved to `2.716566%`. Geometry readbacks remained zero.
+- Gameplay-plus-warm potential results fell from the baseline range
+  `909,834..914,376` to `421,512` (`53.7%..53.9%` reduction). Peak gameplay/warm
+  backlogs fell to `127/521`, and schedule-to-renderable latency fell to p50
+  `108.5412 ms`, p95 `216.5472 ms`, p99 `236.6611 ms`, maximum `269.1691 ms`.
+  The backlog settled to zero without extending the measured loop.
+- Bounds evaluation consumed `33,163.47 ms` total on the serialized background
+  workers, maximum `12.1337 ms` for one query. The last stream settled in
+  `62.4091 ms`, below the locked `204.8 ms` chunk-crossing interval. Frame p95
+  and p99 remained inside the baseline range; average GPU time increased while
+  average visible geometry increased from the lagging baseline's approximately
+  `436` regions to `1,775` regions.
+- Production screenshots before and after traversal showed the same continuous
+  high-amplitude terrain topology. Exact non-empty mesh and active-cell equality
+  provides production GPU evidence that the classifier introduced no rejected
+  geometry-bearing region.
+- Outcome: **fail under v1 acceptance**. The `75%`, `5,206`-candidate, and
+  `21`-slab gates are impossible for this fixed terrain: the unchanged global
+  superset proves that `8,228` resident regions genuinely contain geometry, so
+  even a perfect classifier requires at least `33` 256-slot slabs. The p95
+  latency also exceeds the one-crossing gate by `11.7472 ms`. Per the stop rule,
+  no radius, dispatch, chunk, amplitude, allocator, renderer, cave, edit,
+  collision, or LOD change was made. A topology-aware scenario version and
+  revised acceptance gates require explicit human approval before further
+  comparable candidate acceptance runs.
+
+#### Local AABB bounds candidate 2 - 2026-08-29 - v1 topology gate still impossible
+
+- Run `d26e3f42b5284cc2b1b15e837d758fce`, revision
+  `local-aabb-bounds-leaf-refined-candidate-2`, retained the same tree stop at
+  one logical cell and tightened only the final proof with four canonical
+  quarter-cell samples under the same Lipschitz envelope.
+- The unchanged route completed in approximately `121.94 s` at `239.41507 FPS`,
+  p95 `5.0014 ms`, p99 `5.4598 ms`, and average GPU `2.044492 ms`. It retained
+  exactly `8,228` non-empty meshes, `882` warm meshes, `8,887,401` active cells,
+  and maximum `3,474` active cells, with zero final backlog and zero geometry
+  readbacks.
+- Residency fell to `9,007` candidates in `36` slabs with `1,207,959,552`
+  reserved active-cell bytes and `2.9429464%` utilization. This is only `779`
+  conservative candidates (`9.47%`) above the production GPU-proven non-empty
+  topology.
+- Gameplay-plus-warm potential results fell to `388,322`, a
+  `57.3%..57.5%` reduction from the three valid global baselines. Bounds work
+  consumed `44,146.98 ms` on the serialized background workers, maximum
+  `14.1185 ms` per query. Last-stream settle was `78.9395 ms` and maximum first
+  gameplay batch was `28.9908 ms`, both below one locked `204.8 ms` crossing.
+- Schedule-to-renderable latency passed the original responsiveness gate: p50
+  `87.6185 ms`, p95 `188.0156 ms`, p99 `207.6517 ms`, maximum `245.8311 ms`.
+  Peak gameplay/warm backlog was `130/440`; both settled to zero.
+- Average visible geometry was `1,776.622` regions versus approximately `436`
+  in the lagging global-bound baseline. The higher `2.044492 ms` average GPU
+  time therefore measures substantially more correct terrain availability, not
+  equivalent rendered work. Frame tail remained within approximately one
+  percent of the baseline range.
+- Outcome remains **fail under v1** solely because `8,228` real non-empty
+  regions cannot fit under the locked `5,206`-candidate/`21`-slab ceiling and
+  prevent a `75%` settled-capacity reduction. No workload parameter or v1 gate
+  has been changed.
+- Proposed `SDF-LOCAL-BOUNDS-001/v2`, pending explicit human approval, preserves
+  every v1 workload parameter and result. It would replace only the disproven
+  topology-blind gates with: settled candidates at most `110%` of the global
+  baseline's exact non-empty count (`9,051`), at most `36` slabs, at least `55%`
+  reductions in cumulative potential classifications and reserved active-cell
+  bytes, at least `2.25x` utilization, unchanged p95/maximum latency gates,
+  last-stream settle below one crossing, frame p95/p99 within `5%` of baseline,
+  and average GPU at most `4 ms` while exact topology and readback gates remain
+  unchanged. Three clean runs of the final candidate would define acceptance.

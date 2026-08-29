@@ -32,6 +32,7 @@ public sealed class VoxelChunk
 	public float MinimumDensity { get; }
 	public float MaximumDensity { get; }
 	public ChunkDensityClassification DensityClassification { get; }
+	public float DensityRangeEvaluationMilliseconds { get; }
 	public string HumanName => $"Chunk X {Coordinate.x}, Y {Coordinate.y}, Z {Coordinate.z}";
 	public string LogId => $"C[{Coordinate.x},{Coordinate.y},{Coordinate.z}]";
 
@@ -40,17 +41,41 @@ public sealed class VoxelChunk
 		int cellsPerAxis,
 		float cellSize,
 		ProceduralTerrainSettings terrainSettings )
+		: this( coordinate, cellsPerAxis, cellSize, terrainSettings, null )
+	{
+	}
+
+	internal VoxelChunk(
+		Vector3Int coordinate,
+		int cellsPerAxis,
+		float cellSize,
+		ProceduralTerrainSettings terrainSettings,
+		ChunkDensityRange densityRange )
+		: this( coordinate, cellsPerAxis, cellSize, terrainSettings, (ChunkDensityRange?)densityRange )
+	{
+	}
+
+	private VoxelChunk(
+		Vector3Int coordinate,
+		int cellsPerAxis,
+		float cellSize,
+		ProceduralTerrainSettings terrainSettings,
+		ChunkDensityRange? knownDensityRange )
 	{
 		Coordinate = coordinate;
 		CellsPerAxis = cellsPerAxis;
 		SamplesPerAxis = cellsPerAxis + 1;
 		CellSize = cellSize;
 
-		var densityRange = ClassifyDensityRange(
+		var boundsStart = System.Diagnostics.Stopwatch.GetTimestamp();
+		var densityRange = knownDensityRange ?? ClassifyDensityRange(
 			coordinate,
 			cellsPerAxis,
 			cellSize,
 			terrainSettings );
+		DensityRangeEvaluationMilliseconds = knownDensityRange.HasValue
+			? 0f
+			: (float)System.Diagnostics.Stopwatch.GetElapsedTime( boundsStart ).TotalMilliseconds;
 		_globalSampleOrigin = coordinate * cellsPerAxis;
 		TerrainSettings = terrainSettings;
 		SampleCount = checked( SamplesPerAxis * SamplesPerAxis * SamplesPerAxis );

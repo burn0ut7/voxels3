@@ -16,7 +16,7 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 7;
+	private const int PerformanceResultSchemaVersion = 8;
 	private const int RenderWarmShellChunks = 1;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
@@ -162,6 +162,9 @@ public sealed class VoxelManager : Component
 	private float _lastPerformanceTestDistance;
 	private PerformanceStreamingMetrics _performanceStreaming = new();
 	private PerformanceStreamingMetrics _lastPerformanceStreaming = new();
+	private PerformanceBoundsMetrics _performanceBounds = new();
+	private PerformanceBoundsMetrics _lastPerformanceBounds = new();
+	private GpuMeshScheduleLatencyMeasurement _lastPerformanceScheduleLatency;
 	private PerformanceProfilerMetrics _lastPerformanceProfiler = new();
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 	private ProceduralTerrainSettings CurrentTerrainSettings => new(
@@ -565,6 +568,7 @@ public sealed class VoxelManager : Component
 		ResetPerformanceWindow();
 		SamplePerformanceMemory();
 		_gpuMesher?.BeginVisibilityMeasurement();
+		_gpuMesher?.BeginScheduleLatencyMeasurement();
 		Log.Info( string.Concat(
 			FormattableString.Invariant(
 				$"[VoxelWorld] performance.test.begin task=\"{EscapeLogValue( _playerFigureEightTestTask )}\" " ),
@@ -703,6 +707,7 @@ public sealed class VoxelManager : Component
 				LogicalCapacityBytes = _gpuMesher?.LogicalCapacityBytes ?? 0,
 				ReservedActiveCellCapacity = _gpuMesher?.ReservedActiveCellCapacity ?? 0,
 				ReservedActiveCellCapacityBytes = _gpuMesher?.ReservedActiveCellCapacityBytes ?? 0,
+				SettledSlabs = _gpuMesher?.TerrainIndirectApiSubmissionCount ?? 0,
 				SettledSurfaceMeshes = _lastPerformanceVisibility.SettledSurfaceMeshes,
 				SettledWarmSurfaceMeshes = _lastPerformanceVisibility.SettledWarmSurfaceMeshes,
 				TotalActiveCells = _lastPerformanceVisibility.SettledActiveCells,
@@ -724,7 +729,18 @@ public sealed class VoxelManager : Component
 				GeometryReadbacks = GpuVoxelMesher.GeometryReadbackCount,
 				GpuProfilerPath = meshingGpuProfilerPath,
 				AverageGpuMilliseconds = meshingGpuSmoothedMilliseconds,
-				MaximumGpuMilliseconds = meshingGpuMaximumMilliseconds
+				MaximumGpuMilliseconds = meshingGpuMaximumMilliseconds,
+				ScheduleToRenderable = new PerformanceLatencyMetrics
+				{
+					Samples = _lastPerformanceScheduleLatency.Samples,
+					TruncatedSamples = _lastPerformanceScheduleLatency.TruncatedSamples,
+					P50Milliseconds = _lastPerformanceScheduleLatency.P50Milliseconds,
+					P95Milliseconds = _lastPerformanceScheduleLatency.P95Milliseconds,
+					P99Milliseconds = _lastPerformanceScheduleLatency.P99Milliseconds,
+					MaximumMilliseconds = _lastPerformanceScheduleLatency.MaximumMilliseconds,
+					Cancelled = _lastPerformanceScheduleLatency.Cancelled,
+					Superseded = _lastPerformanceScheduleLatency.Superseded
+				}
 			},
 			Visibility = new PerformanceVisibilityMetrics
 			{
@@ -742,6 +758,7 @@ public sealed class VoxelManager : Component
 			},
 			Submission = _lastPerformanceSubmission,
 			Streaming = _lastPerformanceStreaming,
+			Bounds = _lastPerformanceBounds,
 			Profiler = _lastPerformanceProfiler
 		};
 
@@ -918,6 +935,7 @@ public sealed class VoxelManager : Component
 		}
 
 		_performanceVisibilityPending = false;
+		_lastPerformanceScheduleLatency = _gpuMesher.CompleteScheduleLatencyMeasurement();
 
 		try
 		{
@@ -1076,6 +1094,7 @@ public sealed class VoxelManager : Component
 		_lastPerformanceTestSpeed = _playerFigureEightTestRunning ? _playerFigureEightTestSpeed : 0f;
 		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
 		_lastPerformanceStreaming = _performanceStreaming;
+		_lastPerformanceBounds = _performanceBounds;
 		_lastPerformanceProfiler = _playerFigureEightTestRunning
 			? VoxelPerformanceProfiler.Capture()
 			: new PerformanceProfilerMetrics();
@@ -1138,6 +1157,61 @@ public sealed class VoxelManager : Component
 		_performanceTerrainBufferGroupMaximum = 0;
 		_performanceSubmissionSampleCount = 0;
 		_performanceStreaming = new PerformanceStreamingMetrics();
+		_performanceBounds = new PerformanceBoundsMetrics();
+	}
+
+	private void RecordBoundsQuery(
+		ChunkDensityClassification classification,
+		float milliseconds,
+		bool warm )
+	{
+		if ( warm )
+		{
+			_performanceBounds.WarmQueries++;
+		}
+		else
+		{
+			_performanceBounds.GameplayQueries++;
+		}
+
+		switch ( classification )
+		{
+			case ChunkDensityClassification.DefinitelySolid:
+				if ( warm )
+				{
+					_performanceBounds.WarmDefinitelySolid++;
+				}
+				else
+				{
+					_performanceBounds.GameplayDefinitelySolid++;
+				}
+				break;
+			case ChunkDensityClassification.DefinitelyAir:
+				if ( warm )
+				{
+					_performanceBounds.WarmDefinitelyAir++;
+				}
+				else
+				{
+					_performanceBounds.GameplayDefinitelyAir++;
+				}
+				break;
+			default:
+				if ( warm )
+				{
+					_performanceBounds.WarmPotentiallySurfaceContaining++;
+				}
+				else
+				{
+					_performanceBounds.GameplayPotentiallySurfaceContaining++;
+				}
+				break;
+		}
+
+		_performanceBounds.TotalCpuMilliseconds += milliseconds;
+		_performanceBounds.MaximumQueryMilliseconds = Math.Max(
+			_performanceBounds.MaximumQueryMilliseconds,
+			milliseconds );
 	}
 
 	private static string EscapeLogValue( string value )
@@ -1815,6 +1889,10 @@ public sealed class VoxelManager : Component
 				if ( cancellationToken.IsCancellationRequested || revision != _streamRevision )
 				{
 					_staleDiscardedThisStream += batch.Chunks.Count;
+					if ( _playerFigureEightTestRunning )
+					{
+						_performanceBounds.StaleOrCancelledQueries += batch.Chunks.Count;
+					}
 					if ( VerboseLogging && batch.Chunks.Count > 0 )
 					{
 						Log.Info(
@@ -1832,6 +1910,13 @@ public sealed class VoxelManager : Component
 					batch.SlowestChunkMilliseconds );
 				foreach ( var chunk in batch.Chunks )
 				{
+					if ( _playerFigureEightTestRunning )
+					{
+						RecordBoundsQuery(
+							chunk.DensityClassification,
+							chunk.DensityRangeEvaluationMilliseconds,
+							false );
+					}
 					_completedChunks.Enqueue( chunk );
 				}
 				batchIndex++;
@@ -1956,17 +2041,25 @@ public sealed class VoxelManager : Component
 						}
 
 						var coordinate = coordinates[batchOffset + index];
+						var boundsStart = Stopwatch.GetTimestamp();
 						var densityRange = VoxelChunk.ClassifyDensityRange(
 							coordinate, cellsPerAxis, cellSize, terrainSettings );
+						var boundsMilliseconds = (float)Stopwatch.GetElapsedTime(
+							boundsStart ).TotalMilliseconds;
 						var chunk = densityRange.Classification ==
 							ChunkDensityClassification.PotentiallySurfaceContaining
 							? new VoxelChunk(
 								coordinate,
 								cellsPerAxis,
 								cellSize,
-								terrainSettings )
+								terrainSettings,
+								densityRange )
 							: null;
-						results.Add( new WarmChunkResult( coordinate, densityRange.Classification, chunk ) );
+						results.Add( new WarmChunkResult(
+							coordinate,
+							densityRange.Classification,
+							chunk,
+							boundsMilliseconds ) );
 					}
 					return results;
 				} );
@@ -1974,11 +2067,22 @@ public sealed class VoxelManager : Component
 				await Task.MainThread();
 				if ( cancellationToken.IsCancellationRequested || revision != _warmGenerationRevision )
 				{
+					if ( _playerFigureEightTestRunning )
+					{
+						_performanceBounds.StaleOrCancelledQueries += batch.Count;
+					}
 					return;
 				}
 
 				foreach ( var result in batch )
 				{
+					if ( _playerFigureEightTestRunning )
+					{
+						RecordBoundsQuery(
+							result.Classification,
+							result.BoundsMilliseconds,
+							true );
+					}
 					_completedWarmChunks.Enqueue( result );
 					switch ( result.Classification )
 					{
@@ -2253,4 +2357,5 @@ public sealed class VoxelManager : Component
 internal readonly record struct WarmChunkResult(
 	Vector3Int Coordinate,
 	ChunkDensityClassification Classification,
-	VoxelChunk Chunk );
+	VoxelChunk Chunk,
+	float BoundsMilliseconds );
