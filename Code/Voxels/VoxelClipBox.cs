@@ -41,7 +41,10 @@ internal readonly record struct VoxelClipBoxBounds(
 	Vector3Int Maximum )
 {
 	public int SideLength => checked( Maximum.x - Minimum.x );
-	public int RegionCount => checked( SideLength * SideLength * SideLength );
+	public int RegionCount => checked(
+		(Maximum.x - Minimum.x) *
+		(Maximum.y - Minimum.y) *
+		(Maximum.z - Minimum.z) );
 
 	public bool Contains( Vector3Int coordinate ) =>
 		coordinate.x >= Minimum.x && coordinate.x < Maximum.x &&
@@ -81,6 +84,260 @@ internal readonly record struct VoxelClipLevelCounts(
 	int ResidentRegular,
 	int ActiveRegular,
 	int TransitionFaces );
+
+internal readonly record struct VoxelClipLevelDeltaCounts(
+	int EnteringRegular,
+	int LeavingRegular,
+	int EnteringTransitions,
+	int LeavingTransitions );
+
+internal sealed class VoxelClipBoxDelta
+{
+	private readonly List<VoxelClipBoxBounds>[] _enteringRegularSlabs;
+	private readonly List<VoxelClipBoxBounds>[] _leavingRegularSlabs;
+	private readonly List<VoxelRenderRegionKey>[] _enteringTransitions;
+	private readonly List<VoxelRenderRegionKey>[] _leavingTransitions;
+	private readonly List<VoxelRenderRegionKey> _coverageChanges = new();
+
+	public VoxelClipBoxSelection Previous { get; }
+	public VoxelClipBoxSelection Current { get; }
+	public int MaximumLod { get; }
+	public int CoverageChangeCount => _coverageChanges.Count;
+
+	private VoxelClipBoxDelta(
+		VoxelClipBoxSelection previous,
+		VoxelClipBoxSelection current )
+	{
+		Previous = previous;
+		Current = current;
+		MaximumLod = Math.Max( previous?.MaximumLod ?? -1, current?.MaximumLod ?? -1 );
+		_enteringRegularSlabs = CreateLevelLists<VoxelClipBoxBounds>( MaximumLod + 1 );
+		_leavingRegularSlabs = CreateLevelLists<VoxelClipBoxBounds>( MaximumLod + 1 );
+		_enteringTransitions = CreateLevelLists<VoxelRenderRegionKey>( MaximumLod + 1 );
+		_leavingTransitions = CreateLevelLists<VoxelRenderRegionKey>( MaximumLod + 1 );
+	}
+
+	public static VoxelClipBoxDelta Build(
+		VoxelClipBoxSelection previous,
+		VoxelClipBoxSelection current )
+	{
+		if ( previous is null && current is null )
+			throw new ArgumentException( "A clip-box delta requires an old or new selection." );
+
+		var delta = new VoxelClipBoxDelta( previous, current );
+		for ( var lod = 0; lod <= delta.MaximumLod; lod++ )
+		{
+			var oldBounds = previous is not null && lod <= previous.MaximumLod
+				? previous.Boxes[lod]
+				: (VoxelClipBoxBounds?)null;
+			var newBounds = current is not null && lod <= current.MaximumLod
+				? current.Boxes[lod]
+				: (VoxelClipBoxBounds?)null;
+			if ( newBounds.HasValue )
+				AddDifferenceSlabs( newBounds.Value, oldBounds, delta._enteringRegularSlabs[lod] );
+			if ( oldBounds.HasValue )
+				AddDifferenceSlabs( oldBounds.Value, newBounds, delta._leavingRegularSlabs[lod] );
+		}
+
+		if ( current is not null )
+		{
+			foreach ( var key in current.TransitionFaces )
+			{
+				if ( previous is null || !previous.TransitionFaces.Contains( key ) )
+					delta._enteringTransitions[key.Lod].Add( key );
+			}
+		}
+		if ( previous is not null )
+		{
+			foreach ( var key in previous.TransitionFaces )
+			{
+				if ( current is null || !current.TransitionFaces.Contains( key ) )
+					delta._leavingTransitions[key.Lod].Add( key );
+			}
+		}
+
+		delta.BuildCoverageChanges();
+		return delta;
+	}
+
+	public IReadOnlyList<VoxelClipBoxBounds> GetEnteringRegularSlabs( int lod ) =>
+		IsValidLod( lod ) ? _enteringRegularSlabs[lod] : Array.Empty<VoxelClipBoxBounds>();
+
+	public IReadOnlyList<VoxelClipBoxBounds> GetLeavingRegularSlabs( int lod ) =>
+		IsValidLod( lod ) ? _leavingRegularSlabs[lod] : Array.Empty<VoxelClipBoxBounds>();
+
+	public IReadOnlyList<VoxelRenderRegionKey> GetEnteringTransitions( int lod ) =>
+		IsValidLod( lod ) ? _enteringTransitions[lod] : Array.Empty<VoxelRenderRegionKey>();
+
+	public IReadOnlyList<VoxelRenderRegionKey> GetLeavingTransitions( int lod ) =>
+		IsValidLod( lod ) ? _leavingTransitions[lod] : Array.Empty<VoxelRenderRegionKey>();
+
+	public IEnumerable<VoxelRenderRegionKey> EnumerateEnteringRegular( int lod ) =>
+		EnumerateRegular( lod, GetEnteringRegularSlabs( lod ) );
+
+	public IEnumerable<VoxelRenderRegionKey> EnumerateLeavingRegular( int lod ) =>
+		EnumerateRegular( lod, GetLeavingRegularSlabs( lod ) );
+
+	public IEnumerable<VoxelRenderRegionKey> EnumerateCoverageChanges() => _coverageChanges;
+
+	public VoxelClipLevelDeltaCounts GetLevelCounts( int lod )
+	{
+		if ( !IsValidLod( lod ) ) return default;
+		return new VoxelClipLevelDeltaCounts(
+			CountRegions( _enteringRegularSlabs[lod] ),
+			CountRegions( _leavingRegularSlabs[lod] ),
+			_enteringTransitions[lod].Count,
+			_leavingTransitions[lod].Count );
+	}
+
+	private void BuildCoverageChanges()
+	{
+		var changes = new HashSet<VoxelRenderRegionKey>();
+		for ( var lod = 0; lod <= MaximumLod; lod++ )
+		{
+			foreach ( var key in EnumerateEnteringRegular( lod ) ) changes.Add( key );
+			foreach ( var key in EnumerateLeavingRegular( lod ) ) changes.Add( key );
+
+			if ( lod > 0 )
+			{
+				var oldCovered = Previous is not null && lod <= Previous.MaximumLod
+					? Previous.GetCoveredChildBounds( lod )
+					: (VoxelClipBoxBounds?)null;
+				var newCovered = Current is not null && lod <= Current.MaximumLod
+					? Current.GetCoveredChildBounds( lod )
+					: (VoxelClipBoxBounds?)null;
+				var slabs = new List<VoxelClipBoxBounds>( 6 );
+				if ( oldCovered.HasValue )
+					AddDifferenceSlabs( oldCovered.Value, newCovered, slabs );
+				foreach ( var key in EnumerateRegular( lod, slabs ) ) changes.Add( key );
+				slabs.Clear();
+				if ( newCovered.HasValue )
+					AddDifferenceSlabs( newCovered.Value, oldCovered, slabs );
+				foreach ( var key in EnumerateRegular( lod, slabs ) ) changes.Add( key );
+			}
+
+			foreach ( var key in _enteringTransitions[lod] )
+			{
+				changes.Add( key );
+				changes.Add( VoxelRenderRegionKey.Regular( key.Lod, key.Coordinate ) );
+			}
+			foreach ( var key in _leavingTransitions[lod] )
+			{
+				changes.Add( key );
+				changes.Add( VoxelRenderRegionKey.Regular( key.Lod, key.Coordinate ) );
+			}
+		}
+
+		_coverageChanges.AddRange( changes );
+		_coverageChanges.Sort( CompareKeys );
+	}
+
+	private bool IsValidLod( int lod ) => lod >= 0 && lod <= MaximumLod;
+
+	private static List<T>[] CreateLevelLists<T>( int count )
+	{
+		var result = new List<T>[count];
+		for ( var index = 0; index < count; index++ ) result[index] = new List<T>();
+		return result;
+	}
+
+	private static void AddDifferenceSlabs(
+		VoxelClipBoxBounds source,
+		VoxelClipBoxBounds? excluded,
+		List<VoxelClipBoxBounds> destination )
+	{
+		if ( !excluded.HasValue )
+		{
+			destination.Add( source );
+			return;
+		}
+
+		var other = excluded.Value;
+		var minimum = new Vector3Int(
+			Math.Max( source.Minimum.x, other.Minimum.x ),
+			Math.Max( source.Minimum.y, other.Minimum.y ),
+			Math.Max( source.Minimum.z, other.Minimum.z ) );
+		var maximum = new Vector3Int(
+			Math.Min( source.Maximum.x, other.Maximum.x ),
+			Math.Min( source.Maximum.y, other.Maximum.y ),
+			Math.Min( source.Maximum.z, other.Maximum.z ) );
+		if ( minimum.x >= maximum.x || minimum.y >= maximum.y || minimum.z >= maximum.z )
+		{
+			destination.Add( source );
+			return;
+		}
+
+		AddSlab( source.Lod, source.Minimum.x, minimum.x,
+			source.Minimum.y, source.Maximum.y, source.Minimum.z, source.Maximum.z, destination );
+		AddSlab( source.Lod, maximum.x, source.Maximum.x,
+			source.Minimum.y, source.Maximum.y, source.Minimum.z, source.Maximum.z, destination );
+		AddSlab( source.Lod, minimum.x, maximum.x,
+			source.Minimum.y, minimum.y, source.Minimum.z, source.Maximum.z, destination );
+		AddSlab( source.Lod, minimum.x, maximum.x,
+			maximum.y, source.Maximum.y, source.Minimum.z, source.Maximum.z, destination );
+		AddSlab( source.Lod, minimum.x, maximum.x,
+			minimum.y, maximum.y, source.Minimum.z, minimum.z, destination );
+		AddSlab( source.Lod, minimum.x, maximum.x,
+			minimum.y, maximum.y, maximum.z, source.Maximum.z, destination );
+	}
+
+	private static void AddSlab(
+		int lod,
+		int minimumX,
+		int maximumX,
+		int minimumY,
+		int maximumY,
+		int minimumZ,
+		int maximumZ,
+		List<VoxelClipBoxBounds> destination )
+	{
+		if ( minimumX >= maximumX || minimumY >= maximumY || minimumZ >= maximumZ ) return;
+		destination.Add( new VoxelClipBoxBounds(
+			lod,
+			new Vector3Int( minimumX, minimumY, minimumZ ),
+			new Vector3Int( maximumX, maximumY, maximumZ ) ) );
+	}
+
+	private static IEnumerable<VoxelRenderRegionKey> EnumerateRegular(
+		int lod,
+		IReadOnlyList<VoxelClipBoxBounds> slabs )
+	{
+		for ( var slabIndex = 0; slabIndex < slabs.Count; slabIndex++ )
+		{
+			var slab = slabs[slabIndex];
+			for ( var z = slab.Minimum.z; z < slab.Maximum.z; z++ )
+			{
+				for ( var y = slab.Minimum.y; y < slab.Maximum.y; y++ )
+				{
+					for ( var x = slab.Minimum.x; x < slab.Maximum.x; x++ )
+						yield return VoxelRenderRegionKey.Regular( lod, new Vector3Int( x, y, z ) );
+				}
+			}
+		}
+	}
+
+	private static int CountRegions( IReadOnlyList<VoxelClipBoxBounds> slabs )
+	{
+		var count = 0;
+		for ( var index = 0; index < slabs.Count; index++ )
+			count = checked( count + slabs[index].RegionCount );
+		return count;
+	}
+
+	private static int CompareKeys( VoxelRenderRegionKey left, VoxelRenderRegionKey right )
+	{
+		var comparison = left.Lod.CompareTo( right.Lod );
+		if ( comparison != 0 ) return comparison;
+		comparison = left.MeshKind.CompareTo( right.MeshKind );
+		if ( comparison != 0 ) return comparison;
+		comparison = left.Face.CompareTo( right.Face );
+		if ( comparison != 0 ) return comparison;
+		comparison = left.Coordinate.z.CompareTo( right.Coordinate.z );
+		if ( comparison != 0 ) return comparison;
+		comparison = left.Coordinate.y.CompareTo( right.Coordinate.y );
+		return comparison != 0 ? comparison : left.Coordinate.x.CompareTo( right.Coordinate.x );
+	}
+}
 
 internal sealed class VoxelClipBoxSelection
 {
@@ -157,28 +414,35 @@ internal sealed class VoxelClipBoxSelection
 		return mask != 0;
 	}
 
-	public int GetExpectedActiveRegularCount( int minimumResidentLod )
+	public int CountAdjacencyViolations()
 	{
-		ValidateMinimumResidentLod( minimumResidentLod );
-		var count = _levelCounts[minimumResidentLod].ResidentRegular;
-		for ( var lod = minimumResidentLod + 1; lod <= MaximumLod; lod++ )
-			count = checked( count + _levelCounts[lod].ActiveRegular );
-		return count;
-	}
+		var violations = 0;
+		var observedFaces = new int[MaximumLod + 1];
+		foreach ( var transition in TransitionFaces )
+		{
+			observedFaces[transition.Lod]++;
+			var owner = VoxelRenderRegionKey.Regular( transition.Lod, transition.Coordinate );
+			if ( !ContainsActiveRegular( owner ) ) violations++;
+			if ( !TryGetTransitionMask( owner, out var mask ) ||
+				(mask & FaceBit( transition.Face )) == 0 ) violations++;
 
-	public int GetExpectedActiveTransitionCount( int minimumResidentLod )
-	{
-		ValidateMinimumResidentLod( minimumResidentLod );
-		var count = 0;
-		for ( var lod = minimumResidentLod + 1; lod <= MaximumLod; lod++ )
-			count = checked( count + _levelCounts[lod].TransitionFaces );
-		return count;
-	}
-
-	public int CountAdjacencyViolations( int minimumResidentLod )
-	{
-		ValidateMinimumResidentLod( minimumResidentLod );
-		return 0;
+			for ( var second = 0; second < 2; second++ )
+			{
+				for ( var first = 0; first < 2; first++ )
+				{
+					var fineCoordinate = GetFineNeighborCoordinate(
+						transition.Coordinate,
+						transition.Face,
+						first,
+						second );
+					var fine = VoxelRenderRegionKey.Regular( transition.Lod - 1, fineCoordinate );
+					if ( !ContainsActiveRegular( fine ) ) violations++;
+				}
+			}
+		}
+		for ( var lod = 1; lod <= MaximumLod; lod++ )
+			violations += Math.Abs( observedFaces[lod] - _levelCounts[lod].TransitionFaces );
+		return violations;
 	}
 
 	public bool PlacementEquals( VoxelClipBoxSelection other )
@@ -189,6 +453,23 @@ internal sealed class VoxelClipBoxSelection
 		{
 			if ( other._boxes[lod] != _boxes[lod] )
 				return false;
+		}
+		return true;
+	}
+
+	public bool OverlapsAtEveryLevel( VoxelClipBoxSelection other )
+	{
+		if ( other is null || other.MaximumLod != MaximumLod ) return false;
+		for ( var lod = 0; lod <= MaximumLod; lod++ )
+		{
+			var left = _boxes[lod];
+			var right = other._boxes[lod];
+			if ( left.Minimum.x >= right.Maximum.x || left.Maximum.x <= right.Minimum.x ||
+				left.Minimum.y >= right.Maximum.y || left.Maximum.y <= right.Minimum.y ||
+				left.Minimum.z >= right.Maximum.z || left.Maximum.z <= right.Minimum.z )
+			{
+				return false;
+			}
 		}
 		return true;
 	}
@@ -356,6 +637,37 @@ internal sealed class VoxelClipBoxSelection
 			FloorDivide( child.Maximum.z, 2 ) );
 	}
 
+	internal VoxelClipBoxBounds GetCoveredChildBounds( int lod )
+	{
+		if ( lod <= 0 || lod > MaximumLod ) throw new ArgumentOutOfRangeException( nameof( lod ) );
+		GetCoarseChildBounds( lod, out var minimum, out var maximum );
+		return new VoxelClipBoxBounds( lod, minimum, maximum );
+	}
+
+	private static Vector3Int GetFineNeighborCoordinate(
+		Vector3Int coarse,
+		VoxelTransitionFace face,
+		int first,
+		int second )
+	{
+		return face switch
+		{
+			VoxelTransitionFace.PositiveX => new Vector3Int(
+				checked( (coarse.x + 1) * 2 ), checked( coarse.y * 2 + first ), checked( coarse.z * 2 + second ) ),
+			VoxelTransitionFace.NegativeX => new Vector3Int(
+				checked( coarse.x * 2 - 1 ), checked( coarse.y * 2 + first ), checked( coarse.z * 2 + second ) ),
+			VoxelTransitionFace.PositiveY => new Vector3Int(
+				checked( coarse.x * 2 + second ), checked( (coarse.y + 1) * 2 ), checked( coarse.z * 2 + first ) ),
+			VoxelTransitionFace.NegativeY => new Vector3Int(
+				checked( coarse.x * 2 + second ), checked( coarse.y * 2 - 1 ), checked( coarse.z * 2 + first ) ),
+			VoxelTransitionFace.PositiveZ => new Vector3Int(
+				checked( coarse.x * 2 + first ), checked( coarse.y * 2 + second ), checked( (coarse.z + 1) * 2 ) ),
+			VoxelTransitionFace.NegativeZ => new Vector3Int(
+				checked( coarse.x * 2 + first ), checked( coarse.y * 2 + second ), checked( coarse.z * 2 - 1 ) ),
+			_ => throw new ArgumentOutOfRangeException( nameof( face ) )
+		};
+	}
+
 	private IEnumerable<VoxelRenderRegionKey> EnumerateRegular( bool activeOnly )
 	{
 		for ( var lod = 0; lod <= MaximumLod; lod++ )
@@ -457,12 +769,6 @@ internal sealed class VoxelClipBoxSelection
 				throw new InvalidOperationException( "A clip-box boundary is missing transition faces." );
 			}
 		}
-	}
-
-	private void ValidateMinimumResidentLod( int minimumResidentLod )
-	{
-		if ( minimumResidentLod < 0 || minimumResidentLod > MaximumLod )
-			throw new ArgumentOutOfRangeException( nameof( minimumResidentLod ) );
 	}
 
 	private static bool InRange( int value, int minimum, int maximum ) =>

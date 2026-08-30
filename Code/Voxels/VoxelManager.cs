@@ -25,7 +25,7 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 13;
+	private const int PerformanceResultSchemaVersion = 14;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
 	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
@@ -44,15 +44,21 @@ public sealed class VoxelManager : Component
 	private readonly HashSet<Vector3Int> _coordinateSetBuffer = new();
 	private VoxelClipBoxSelection _activeClipSelection;
 	private VoxelClipBoxSelection _pendingClipSelection;
-	private int _pendingClipMinimumLod;
 	private int _clipPlacementRevision;
-	private int _clipFallbackFrames;
+	private int _clipPublicationWaitFrames;
 	private int _clipCoverageMismatches;
 	private int _clipAdjacencyViolations;
 	private int _clipSelectionBudgetViolations;
 	private int _clipIntegrationBudgetViolations;
 	private float _maximumClipSelectionMilliseconds;
 	private float _maximumClipIntegrationMilliseconds;
+	private readonly long[] _performanceClipEnteringRegular = new long[GpuVoxelMesher.MaximumClipLevels];
+	private readonly long[] _performanceClipLeavingRegular = new long[GpuVoxelMesher.MaximumClipLevels];
+	private readonly long[] _performanceClipEnteringTransitions = new long[GpuVoxelMesher.MaximumClipLevels];
+	private readonly long[] _performanceClipLeavingTransitions = new long[GpuVoxelMesher.MaximumClipLevels];
+	private readonly long[] _performanceClipCoverageChanges = new long[GpuVoxelMesher.MaximumClipLevels];
+	private readonly int[] _performanceClipMaximumEnteringRegular = new int[GpuVoxelMesher.MaximumClipLevels];
+	private readonly int[] _performanceClipMaximumEnteringTransitions = new int[GpuVoxelMesher.MaximumClipLevels];
 	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
@@ -181,6 +187,8 @@ public sealed class VoxelManager : Component
 	private PerformanceStreamingMetrics _lastPerformanceStreaming = new();
 	private PerformanceBoundsMetrics _performanceBounds = new();
 	private PerformanceBoundsMetrics _lastPerformanceBounds = new();
+	private PerformanceClipMovementLevelMetrics[] _lastPerformanceClipMovementLevels =
+		Array.Empty<PerformanceClipMovementLevelMetrics>();
 	private GpuMeshScheduleLatencyMeasurement _lastPerformanceScheduleLatency;
 	private GpuMeshThroughputMeasurement _lastPerformanceThroughput;
 	private PerformanceProfilerMetrics _lastPerformanceProfiler = new();
@@ -197,7 +205,7 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Chunk Configuration" ), Range( 1f, 128f )]
 	public float CellSize { get; set; } = 16f;
 
-	[Property, Category( "Chunk Configuration" ), Range( 4, 128 )]
+	[Property, Category( "Chunk Configuration" ), Range( 4, 1024 )]
 	public int ViewRadiusChunks { get; set; } = 16;
 
 	[Property, Category( "Chunk Configuration" ), Range( 2, 128 )]
@@ -601,7 +609,7 @@ public sealed class VoxelManager : Component
 
 		var normalizedTask = RequirePerformanceContext( task, nameof( task ) );
 		var normalizedRevision = RequirePerformanceContext( revision, nameof( revision ) );
-		_clipFallbackFrames = 0;
+		_clipPublicationWaitFrames = 0;
 		_clipCoverageMismatches = 0;
 		_clipAdjacencyViolations = 0;
 		_clipSelectionBudgetViolations = 0;
@@ -1234,6 +1242,21 @@ public sealed class VoxelManager : Component
 		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
 		_lastPerformanceStreaming = _performanceStreaming;
 		_lastPerformanceBounds = _performanceBounds;
+		_lastPerformanceClipMovementLevels = new PerformanceClipMovementLevelMetrics[EffectiveMaximumLod + 1];
+		for ( var lod = 0; lod <= EffectiveMaximumLod; lod++ )
+		{
+			_lastPerformanceClipMovementLevels[lod] = new PerformanceClipMovementLevelMetrics
+			{
+				Lod = lod,
+				EnteringRegular = _performanceClipEnteringRegular[lod],
+				LeavingRegular = _performanceClipLeavingRegular[lod],
+				EnteringTransitions = _performanceClipEnteringTransitions[lod],
+				LeavingTransitions = _performanceClipLeavingTransitions[lod],
+				CoverageRecordsChanged = _performanceClipCoverageChanges[lod],
+				MaximumEnteringRegularPerUpdate = _performanceClipMaximumEnteringRegular[lod],
+				MaximumEnteringTransitionsPerUpdate = _performanceClipMaximumEnteringTransitions[lod]
+			};
+		}
 		_lastPerformanceProfiler = _playerFigureEightTestRunning
 			? VoxelPerformanceProfiler.Capture()
 			: new PerformanceProfilerMetrics();
@@ -1349,7 +1372,7 @@ public sealed class VoxelManager : Component
 				DesiredRegular = source.DesiredRegular,
 				ResidentRegular = source.ResidentRegular,
 				ActiveRegular = source.ActiveRegular,
-				FallbackRegular = source.FallbackRegular,
+				InactiveRegular = source.InactiveRegular,
 				DesiredTransitions = source.DesiredTransitions,
 				ResidentTransitions = source.ResidentTransitions,
 				ActiveTransitions = source.ActiveTransitions,
@@ -1367,7 +1390,7 @@ public sealed class VoxelManager : Component
 			ResidentRegular = selection?.ResidentRegularCount ?? 0,
 			ActiveRegular = selection?.ActiveRegularCount ?? 0,
 			LogicalTransitionFaces = selection?.LogicalTransitionFaceCount ?? 0,
-			FallbackFrames = _clipFallbackFrames,
+			PublicationWaitFrames = _clipPublicationWaitFrames,
 			CoverageMismatches = _clipCoverageMismatches,
 			TransitionMaskMismatches = _gpuMesher?.CountPublishedTransitionMaskMismatches() ?? 0,
 			AdjacencyViolations = _clipAdjacencyViolations,
@@ -1377,7 +1400,8 @@ public sealed class VoxelManager : Component
 			IntegrationBudgetViolations = _clipIntegrationBudgetViolations,
 			MaximumIntegrationMilliseconds = _maximumClipIntegrationMilliseconds,
 			ArenaSubmissions = _gpuMesher?.TerrainIndirectApiSubmissionCount ?? 0,
-			Levels = levels
+			Levels = levels,
+			MovementLevels = _lastPerformanceClipMovementLevels
 		};
 	}
 
@@ -1480,6 +1504,13 @@ public sealed class VoxelManager : Component
 		_performanceSubmissionSampleCount = 0;
 		_performanceStreaming = new PerformanceStreamingMetrics();
 		_performanceBounds = new PerformanceBoundsMetrics();
+		Array.Clear( _performanceClipEnteringRegular );
+		Array.Clear( _performanceClipLeavingRegular );
+		Array.Clear( _performanceClipEnteringTransitions );
+		Array.Clear( _performanceClipLeavingTransitions );
+		Array.Clear( _performanceClipCoverageChanges );
+		Array.Clear( _performanceClipMaximumEnteringRegular );
+		Array.Clear( _performanceClipMaximumEnteringTransitions );
 	}
 
 	private void RecordBoundsQuery(
@@ -1779,46 +1810,58 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
+		var placementDelta = VoxelClipBoxDelta.Build( comparedSelection, selection );
 		var previousPending = _pendingClipSelection;
 		_pendingClipSelection = selection;
 		var delta = hadPreviousCenter ? center - previousCenter : Vector3Int.Zero;
-		var adjacent = _activeClipSelection is not null &&
-			Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1;
-		_pendingClipMinimumLod = adjacent ? 0 : selection.MaximumLod;
+		var overlappingDelta = comparedSelection is not null &&
+			selection.OverlapsAtEveryLevel( comparedSelection );
 		var placementRevision = ++_clipPlacementRevision;
+		if ( comparedSelection is not null && !overlappingDelta )
+		{
+			var maximumEntering = 0;
+			var maximumEnteringLod = 0;
+			for ( var lod = 0; lod <= placementDelta.MaximumLod; lod++ )
+			{
+				var entering = placementDelta.GetLevelCounts( lod ).EnteringRegular;
+				if ( entering <= maximumEntering ) continue;
+				maximumEntering = entering;
+				maximumEnteringLod = lod;
+			}
+			var previousBounds = comparedSelection.Boxes[maximumEnteringLod];
+			var currentBounds = selection.Boxes[maximumEnteringLod];
+			Log.Warning(
+				$"[VoxelWorld] clip.delta.non_overlapping center=C[{center.x},{center.y},{center.z}] " +
+				$"delta=C[{delta.x},{delta.y},{delta.z}] reason=\"{reason}\" lod={maximumEnteringLod} " +
+				$"enteringRegular={maximumEntering} " +
+				$"old=[{previousBounds.Minimum.x},{previousBounds.Minimum.y},{previousBounds.Minimum.z}]-" +
+				$"[{previousBounds.Maximum.x},{previousBounds.Maximum.y},{previousBounds.Maximum.z}] " +
+				$"new=[{currentBounds.Minimum.x},{currentBounds.Minimum.y},{currentBounds.Minimum.z}]-" +
+				$"[{currentBounds.Maximum.x},{currentBounds.Maximum.y},{currentBounds.Maximum.z}]" );
+		}
 
 		if ( previousPending is not null )
 		{
-			var retained = new HashSet<VoxelRenderRegionKey>( selection.ResidentRegular );
-			retained.UnionWith( selection.TransitionFaces );
-			if ( _activeClipSelection is not null )
+			for ( var lod = 0; lod <= placementDelta.MaximumLod; lod++ )
 			{
-				retained.UnionWith( _activeClipSelection.ResidentRegular );
-				retained.UnionWith( _activeClipSelection.TransitionFaces );
-			}
-			foreach ( var key in previousPending.ResidentRegular )
-			{
-				if ( !retained.Contains( key ) ) _gpuMesher.Remove( key );
-			}
-			foreach ( var key in previousPending.TransitionFaces )
-			{
-				if ( !retained.Contains( key ) ) _gpuMesher.Remove( key );
+				foreach ( var key in placementDelta.EnumerateLeavingRegular( lod ) )
+				{
+					if ( _activeClipSelection?.ResidentRegular.Contains( key ) == true ) continue;
+					RemoveRenderRegionFamily( key );
+				}
 			}
 		}
 		_gpuMesher.PrepareClipCoverage( selection, placementRevision );
 
 		var desiredStart = Stopwatch.GetTimestamp();
-		_desiredChunks.Clear();
-		var lod0Bounds = selection.Boxes[0];
-		for ( var z = lod0Bounds.Minimum.z; z < lod0Bounds.Maximum.z; z++ )
+		if ( comparedSelection is null ) _desiredChunks.Clear();
+		foreach ( var key in placementDelta.EnumerateLeavingRegular( 0 ) )
 		{
-			for ( var y = lod0Bounds.Minimum.y; y < lod0Bounds.Maximum.y; y++ )
-			{
-				for ( var x = lod0Bounds.Minimum.x; x < lod0Bounds.Maximum.x; x++ )
-				{
-					_desiredChunks.Add( new Vector3Int( x, y, z ) );
-				}
-			}
+			_desiredChunks.Remove( key.Coordinate );
+		}
+		foreach ( var key in placementDelta.EnumerateEnteringRegular( 0 ) )
+		{
+			_desiredChunks.Add( key.Coordinate );
 		}
 		var desiredMilliseconds = (float)Stopwatch.GetElapsedTime( desiredStart ).TotalMilliseconds;
 
@@ -1853,13 +1896,10 @@ public sealed class VoxelManager : Component
 		_streamStartedTimestamp = Stopwatch.GetTimestamp();
 		_streamInProgress = true;
 
-		ScheduleClipLevel( selection, _pendingClipMinimumLod, placementRevision );
-		if ( adjacent )
+		ScheduleClipLevel( selection, placementDelta, 0 );
+		for ( var lod = selection.MaximumLod; lod > 0; lod-- )
 		{
-			for ( var lod = selection.MaximumLod; lod > 0; lod-- )
-			{
-				ScheduleClipLevel( selection, lod, placementRevision );
-			}
+			ScheduleClipLevel( selection, placementDelta, lod );
 		}
 
 		if ( _pendingChunks.Count == 0 )
@@ -1876,21 +1916,61 @@ public sealed class VoxelManager : Component
 		var totalMilliseconds = (float)Stopwatch.GetElapsedTime( synchronousStart ).TotalMilliseconds;
 		if ( _playerFigureEightTestRunning )
 		{
-			_performanceStreaming.IncrementalUpdates++;
+			var enteringRegular = 0;
+			var leavingRegular = 0;
+			var enteringTransitions = 0;
+			var leavingTransitions = 0;
+			for ( var lod = 0; lod <= placementDelta.MaximumLod; lod++ )
+			{
+				var counts = placementDelta.GetLevelCounts( lod );
+				enteringRegular = checked( enteringRegular + counts.EnteringRegular );
+				leavingRegular = checked( leavingRegular + counts.LeavingRegular );
+				enteringTransitions = checked( enteringTransitions + counts.EnteringTransitions );
+				leavingTransitions = checked( leavingTransitions + counts.LeavingTransitions );
+				_performanceClipEnteringRegular[lod] += counts.EnteringRegular;
+				_performanceClipLeavingRegular[lod] += counts.LeavingRegular;
+				_performanceClipEnteringTransitions[lod] += counts.EnteringTransitions;
+				_performanceClipLeavingTransitions[lod] += counts.LeavingTransitions;
+				_performanceClipMaximumEnteringRegular[lod] = Math.Max(
+					_performanceClipMaximumEnteringRegular[lod], counts.EnteringRegular );
+				_performanceClipMaximumEnteringTransitions[lod] = Math.Max(
+					_performanceClipMaximumEnteringTransitions[lod], counts.EnteringTransitions );
+			}
+			foreach ( var key in placementDelta.EnumerateCoverageChanges() )
+				_performanceClipCoverageChanges[key.Lod]++;
+			if ( overlappingDelta )
+			{
+				_performanceStreaming.IncrementalUpdates++;
+				_performanceStreaming.OverlappingPlacementChanges++;
+			}
+			else
+			{
+				_performanceStreaming.FullUpdates++;
+				_performanceStreaming.NonOverlappingPlacementChanges++;
+			}
+			_performanceStreaming.MaximumViewerChunkDelta = Math.Max(
+				_performanceStreaming.MaximumViewerChunkDelta,
+				Math.Max( Math.Abs( delta.x ), Math.Max( Math.Abs( delta.y ), Math.Abs( delta.z ) ) ) );
 			_performanceStreaming.TotalSynchronousMilliseconds += totalMilliseconds;
 			_performanceStreaming.MaximumSynchronousMilliseconds = Math.Max(
 				_performanceStreaming.MaximumSynchronousMilliseconds, totalMilliseconds );
 			_performanceStreaming.TotalDesiredUpdateMilliseconds += desiredMilliseconds;
-			_performanceStreaming.GameplayCoordinatesTouched += _desiredChunks.Count;
-			_performanceStreaming.RenderCoordinatesTouched +=
-				selection.ResidentRegularCount + selection.LogicalTransitionFaceCount;
+			var gameplayCounts = placementDelta.GetLevelCounts( 0 );
+			_performanceStreaming.GameplayCoordinatesTouched +=
+				gameplayCounts.EnteringRegular + gameplayCounts.LeavingRegular;
+			_performanceStreaming.RenderCoordinatesTouched += enteringRegular + enteringTransitions;
+			_performanceStreaming.RenderCoordinatesLeft += leavingRegular + leavingTransitions;
+			_performanceStreaming.CoverageCoordinatesTouched += placementDelta.CoverageChangeCount;
+			_performanceStreaming.MaximumRenderCoordinatesTouched = Math.Max(
+				_performanceStreaming.MaximumRenderCoordinatesTouched,
+				enteringRegular + enteringTransitions );
 		}
 
 		if ( VerboseLogging )
 		{
 			Log.Info(
 				$"[VoxelWorld] clip.request center=C[{center.x},{center.y},{center.z}] reason=\"{reason}\" " +
-				$"placementRevision={placementRevision} adjacent={adjacent} maximumLod={selection.MaximumLod} " +
+				$"placementRevision={placementRevision} overlapping={overlappingDelta} maximumLod={selection.MaximumLod} " +
 				$"viewRadius={ViewRadiusChunks} fullDetailRadius={FullDetailRadiusChunks} " +
 				$"residentRegular={selection.ResidentRegularCount} activeRegular={selection.ActiveRegularCount} " +
 				$"transitionFaces={selection.LogicalTransitionFaceCount} gameplayQueued={_pendingChunks.Count} " +
@@ -1899,31 +1979,39 @@ public sealed class VoxelManager : Component
 		RefreshReadableStatus();
 	}
 
+	private void RemoveRenderRegionFamily( VoxelRenderRegionKey regular )
+	{
+		_gpuMesher.Remove( regular );
+		for ( var face = VoxelTransitionFace.NegativeX;
+			face <= VoxelTransitionFace.PositiveZ; face++ )
+		{
+			_gpuMesher.Remove( VoxelRenderRegionKey.Transition(
+				regular.Lod,
+				regular.Coordinate,
+				face ) );
+		}
+	}
+
 	private void ScheduleClipLevel(
 		VoxelClipBoxSelection selection,
-		int lod,
-		int placementRevision )
+		VoxelClipBoxDelta delta,
+		int lod )
 	{
 		if ( lod == 0 )
 		{
-			foreach ( var pair in _loadedChunks )
+			foreach ( var key in delta.EnumerateEnteringRegular( 0 ) )
 			{
-				if ( !_desiredChunks.Contains( pair.Key ) ) continue;
+				if ( !_loadedChunks.TryGetValue( key.Coordinate, out var chunk ) ) continue;
 				_gpuMesher.Schedule(
-					pair.Value,
+					chunk,
 					_terrainContentRevision,
-					placementRevision,
 					_playerFigureEightRouteDistance,
-					GpuMeshResidency.Fallback );
+					GpuMeshResidency.Clip );
 			}
 		}
 		else
 		{
-			foreach ( var key in selection.ResidentRegular
-				.Where( key => key.Lod == lod )
-				.OrderBy( key => key.Coordinate.z )
-				.ThenBy( key => key.Coordinate.y )
-				.ThenBy( key => key.Coordinate.x ) )
+			foreach ( var key in delta.EnumerateEnteringRegular( lod ) )
 			{
 				_gpuMesher.Schedule(
 					GpuSdfDescriptor.ForRenderRegion(
@@ -1931,19 +2019,13 @@ public sealed class VoxelManager : Component
 						CellsPerAxis,
 						CellSize,
 						CurrentTerrainSettings,
-						_terrainContentRevision,
-						placementRevision ),
+						_terrainContentRevision ),
 					_playerFigureEightRouteDistance );
 			}
 		}
 
 		var coarseTransitionLod = lod + 1;
-		foreach ( var key in selection.TransitionFaces
-			.Where( key => key.Lod == coarseTransitionLod )
-			.OrderBy( key => key.Face )
-			.ThenBy( key => key.Coordinate.z )
-			.ThenBy( key => key.Coordinate.y )
-			.ThenBy( key => key.Coordinate.x ) )
+		foreach ( var key in delta.GetEnteringTransitions( coarseTransitionLod ) )
 		{
 			_gpuMesher.Schedule(
 				GpuSdfDescriptor.ForRenderRegion(
@@ -1951,8 +2033,7 @@ public sealed class VoxelManager : Component
 					CellsPerAxis,
 					CellSize,
 					CurrentTerrainSettings,
-					_terrainContentRevision,
-					placementRevision ),
+					_terrainContentRevision ),
 				_playerFigureEightRouteDistance );
 		}
 	}
@@ -1961,23 +2042,19 @@ public sealed class VoxelManager : Component
 	{
 		if ( _pendingClipSelection is null || _gpuMesher is null ) return;
 		var committedSelection = _pendingClipSelection;
-		var committedMinimumLod = _pendingClipMinimumLod;
 		if ( !_gpuMesher.IsClipCoverageReady(
 			committedSelection,
-			committedMinimumLod,
 			_terrainContentRevision,
 			_clipPlacementRevision,
 			out var missingRegions ) )
 		{
-			_clipFallbackFrames++;
-			ClipBoxStatus =
-				$"Refining LOD {_pendingClipMinimumLod}; {missingRegions:N0} regions or seams pending";
+			_clipPublicationWaitFrames++;
+			ClipBoxStatus = $"Preparing clip hierarchy; {missingRegions:N0} regions or seams pending";
 			return;
 		}
 		var integrationStart = Stopwatch.GetTimestamp();
 		_gpuMesher.CommitClipCoverage(
 			committedSelection,
-			committedMinimumLod,
 			_clipPlacementRevision );
 		var milliseconds = (float)Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds;
 		_maximumClipIntegrationMilliseconds = Math.Max( _maximumClipIntegrationMilliseconds, milliseconds );
@@ -1990,48 +2067,40 @@ public sealed class VoxelManager : Component
 		}
 		_gpuMesher.RetireCommittedClipCoverage();
 
-		if ( _pendingClipMinimumLod > 0 )
+		_activeClipSelection = _pendingClipSelection;
+		_pendingClipSelection = null;
+		_coordinateBuffer.Clear();
+		foreach ( var coordinate in _loadedChunks.Keys )
 		{
-			_pendingClipMinimumLod--;
-			ScheduleClipLevel(
-				_pendingClipSelection,
-				_pendingClipMinimumLod,
-				_clipPlacementRevision );
-			ClipBoxStatus = $"Fallback committed; refining LOD {_pendingClipMinimumLod}";
+			if ( !_desiredChunks.Contains( coordinate ) ) _coordinateBuffer.Add( coordinate );
 		}
-		else
+		foreach ( var coordinate in _coordinateBuffer )
 		{
-			_activeClipSelection = _pendingClipSelection;
-			_pendingClipSelection = null;
-			_coordinateBuffer.Clear();
-			foreach ( var coordinate in _loadedChunks.Keys )
-			{
-				if ( !_desiredChunks.Contains( coordinate ) ) _coordinateBuffer.Add( coordinate );
-			}
-			foreach ( var coordinate in _coordinateBuffer )
-			{
-				_loadedChunks.Remove( coordinate );
-				_unloadedThisStream++;
-			}
-			ClipBoxStatus =
-				$"LOD0-{EffectiveMaximumLod}; {_activeClipSelection.ResidentRegularCount:N0} resident; " +
-				$"{_activeClipSelection.ActiveRegularCount:N0} active; " +
-				$"{_activeClipSelection.LogicalTransitionFaceCount:N0} transitions";
+			_loadedChunks.Remove( coordinate );
+			_unloadedThisStream++;
 		}
-		var expectedRegular = committedSelection.GetExpectedActiveRegularCount( committedMinimumLod );
-		var expectedTransitions = committedSelection.GetExpectedActiveTransitionCount( committedMinimumLod );
-		var activeRegularCount = _gpuMesher.ActiveRegularCount;
-		var activeTransitionCount = _gpuMesher.ActiveTransitionCount;
-		if ( activeRegularCount != expectedRegular ||
-			activeTransitionCount != expectedTransitions )
+		ClipBoxStatus =
+			$"LOD0-{EffectiveMaximumLod}; {_activeClipSelection.ResidentRegularCount:N0} resident; " +
+			$"{_activeClipSelection.ActiveRegularCount:N0} active; " +
+			$"{_activeClipSelection.LogicalTransitionFaceCount:N0} transitions";
+		var coverageValidation = _gpuMesher.ValidatePublishedCoverage( committedSelection );
+		if ( coverageValidation.IdentityMismatches > 0 )
 		{
-			_clipCoverageMismatches++;
+			_clipCoverageMismatches += coverageValidation.IdentityMismatches;
+			var firstUnexpected = coverageValidation.FirstUnexpected is { } key
+				? $"L{key.Lod}:{key.MeshKind}:{key.Face}:C[{key.Coordinate.x},{key.Coordinate.y},{key.Coordinate.z}]"
+				: "none";
 			Log.Error(
-				$"[VoxelWorld] clip.coverage.mismatch expectedRegular={expectedRegular} " +
-				$"actualRegular={activeRegularCount} expectedTransitions={expectedTransitions} " +
-				$"actualTransitions={activeTransitionCount}" );
+				$"[VoxelWorld] clip.coverage.mismatch expectedRegular={coverageValidation.ExpectedRegular} " +
+				$"actualRegular={coverageValidation.ActualRegular} " +
+				$"expectedTransitions={coverageValidation.ExpectedTransitions} " +
+				$"actualTransitions={coverageValidation.ActualTransitions} " +
+				$"missingRegular={coverageValidation.MissingRegular} " +
+				$"missingTransitions={coverageValidation.MissingTransitions} " +
+				$"unexpectedActive={coverageValidation.UnexpectedActive} " +
+				$"firstUnexpected={firstUnexpected}" );
 		}
-		var adjacencyViolations = committedSelection.CountAdjacencyViolations( committedMinimumLod );
+		var adjacencyViolations = committedSelection.CountAdjacencyViolations();
 		_clipAdjacencyViolations += adjacencyViolations;
 		if ( adjacencyViolations > 0 )
 		{
@@ -2256,9 +2325,8 @@ public sealed class VoxelManager : Component
 				_gpuMesher.Schedule(
 					chunk,
 					_terrainContentRevision,
-					_clipPlacementRevision,
 					_playerFigureEightRouteDistance,
-					GpuMeshResidency.Fallback );
+					GpuMeshResidency.Clip );
 				integratedCount++;
 				_generatedThisStream++;
 

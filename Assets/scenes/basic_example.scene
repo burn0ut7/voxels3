@@ -116,7 +116,7 @@
           "RenderTexture": null,
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
-          "ZFar": 10000,
+          "ZFar": 100000,
           "ZNear": 10
         }
       ],
@@ -536,10 +536,10 @@
           "Flags": 0,
           "CellSize": 16,
           "CellsPerAxis": 32,
-          "ChunkStatus": "512 loaded; 0 queued; 206 GPU meshes (206 warm); 0 gameplay and 818 warm meshes queued",
-          "ClipBoxStatus": "Refining LOD 2; 512 regions or seams pending",
+          "ChunkStatus": "512 loaded; 0 queued; 206 GPU meshes (206 warm); 0 gameplay and 3,346 warm meshes queued",
+          "ClipBoxStatus": "Preparing clip hierarchy; 3,463 regions or seams pending",
           "DrawClipBoxes": false,
-          "EffectiveMaximumLod": 2,
+          "EffectiveMaximumLod": 5,
           "FigureEightDistance": 50000,
           "FigureEightLoopCount": 1,
           "FigureEightSpeed": 2500,
@@ -557,7 +557,7 @@
           "PerformanceRevision": "",
           "PerformanceTask": "",
           "ProcessMemoryUsage": "~5,707.7 MiB whole process",
-          "StreamingPerformance": "1,252.2 chunks/sec; 408.886 ms last stream",
+          "StreamingPerformance": "31,045.4 chunks/sec; 16.492 ms last stream",
           "StreamingTarget": {
             "_type": "gameobject",
             "go": "fde76e17-1db9-4ccc-a193-897fddbc6239"
@@ -566,7 +566,7 @@
           "SurfaceBaseHeight": 0,
           "SurfaceFrequency": 0.0005,
           "VerboseLogging": false,
-          "ViewRadiusChunks": 16,
+          "ViewRadiusChunks": 128,
           "WorldSeed": 1337
         }
       ],

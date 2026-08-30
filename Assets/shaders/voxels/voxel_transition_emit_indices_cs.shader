@@ -5,7 +5,7 @@ MODES
 
 FEATURES
 {
-	// Dedicated Transvoxel transition index emission.
+	// Dedicated arena-local Transvoxel transition index emission.
 }
 
 COMMON

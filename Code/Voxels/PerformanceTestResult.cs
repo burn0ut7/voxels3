@@ -26,7 +26,7 @@ internal sealed class PerformanceClipBoxMetrics
 	public int ResidentRegular { get; init; }
 	public int ActiveRegular { get; init; }
 	public int LogicalTransitionFaces { get; init; }
-	public int FallbackFrames { get; init; }
+	public int PublicationWaitFrames { get; init; }
 	public int CoverageMismatches { get; init; }
 	public int TransitionMaskMismatches { get; init; }
 	public int AdjacencyViolations { get; init; }
@@ -38,6 +38,20 @@ internal sealed class PerformanceClipBoxMetrics
 	public int ArenaSubmissions { get; init; }
 	public IReadOnlyList<PerformanceClipLevelMetrics> Levels { get; init; } =
 		System.Array.Empty<PerformanceClipLevelMetrics>();
+	public IReadOnlyList<PerformanceClipMovementLevelMetrics> MovementLevels { get; init; } =
+		System.Array.Empty<PerformanceClipMovementLevelMetrics>();
+}
+
+internal sealed class PerformanceClipMovementLevelMetrics
+{
+	public int Lod { get; init; }
+	public long EnteringRegular { get; init; }
+	public long LeavingRegular { get; init; }
+	public long EnteringTransitions { get; init; }
+	public long LeavingTransitions { get; init; }
+	public long CoverageRecordsChanged { get; init; }
+	public int MaximumEnteringRegularPerUpdate { get; init; }
+	public int MaximumEnteringTransitionsPerUpdate { get; init; }
 }
 
 internal sealed class PerformanceClipLevelMetrics
@@ -46,7 +60,7 @@ internal sealed class PerformanceClipLevelMetrics
 	public int DesiredRegular { get; init; }
 	public int ResidentRegular { get; init; }
 	public int ActiveRegular { get; init; }
-	public int FallbackRegular { get; init; }
+	public int InactiveRegular { get; init; }
 	public int DesiredTransitions { get; init; }
 	public int ResidentTransitions { get; init; }
 	public int ActiveTransitions { get; init; }
@@ -105,6 +119,9 @@ internal sealed class PerformanceStreamingMetrics
 {
 	public int FullUpdates { get; set; }
 	public int IncrementalUpdates { get; set; }
+	public int OverlappingPlacementChanges { get; set; }
+	public int NonOverlappingPlacementChanges { get; set; }
+	public int MaximumViewerChunkDelta { get; set; }
 	public float TotalSynchronousMilliseconds { get; set; }
 	public float MaximumSynchronousMilliseconds { get; set; }
 	public float TotalDesiredUpdateMilliseconds { get; set; }
@@ -113,6 +130,9 @@ internal sealed class PerformanceStreamingMetrics
 	public int DrawRebuilds { get; set; }
 	public long GameplayCoordinatesTouched { get; set; }
 	public long RenderCoordinatesTouched { get; set; }
+	public long RenderCoordinatesLeft { get; set; }
+	public long CoverageCoordinatesTouched { get; set; }
+	public int MaximumRenderCoordinatesTouched { get; set; }
 	public int GenerationBatches { get; set; }
 	public int MaximumGenerationBatchSize { get; set; }
 	public float MaximumFirstGameplayBatchMilliseconds { get; set; }

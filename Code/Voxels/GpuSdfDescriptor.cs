@@ -6,8 +6,7 @@ internal readonly record struct GpuSdfDescriptor(
 	float CellSize,
 	ProceduralTerrainSettings TerrainSettings,
 	int GeneratorVersion,
-	int ContentRevision,
-	int PlacementRevision )
+	int ContentRevision )
 {
 	public Vector3Int RegionCoordinate => Key.Coordinate;
 	public int Lod => Key.Lod;
@@ -16,8 +15,7 @@ internal readonly record struct GpuSdfDescriptor(
 
 	public static GpuSdfDescriptor FromChunk(
 		VoxelChunk chunk,
-		int contentRevision,
-		int placementRevision )
+		int contentRevision )
 	{
 		return new GpuSdfDescriptor(
 			VoxelRenderRegionKey.Regular( 0, chunk.Coordinate ),
@@ -25,8 +23,7 @@ internal readonly record struct GpuSdfDescriptor(
 			chunk.CellSize,
 			chunk.TerrainSettings,
 			ProceduralTerrainSdf.CurrentVersion,
-			contentRevision,
-			placementRevision );
+			contentRevision );
 	}
 
 	public static GpuSdfDescriptor ForRenderRegion(
@@ -34,8 +31,7 @@ internal readonly record struct GpuSdfDescriptor(
 		int cellsPerAxis,
 		float lod0CellSize,
 		ProceduralTerrainSettings terrainSettings,
-		int contentRevision,
-		int placementRevision )
+		int contentRevision )
 	{
 		if ( key.Lod < 0 || key.Lod > 30 )
 			throw new ArgumentOutOfRangeException( nameof( key ) );
@@ -45,7 +41,6 @@ internal readonly record struct GpuSdfDescriptor(
 			lod0CellSize * (1 << key.Lod),
 			terrainSettings,
 			ProceduralTerrainSdf.CurrentVersion,
-			contentRevision,
-			placementRevision );
+			contentRevision );
 	}
 }

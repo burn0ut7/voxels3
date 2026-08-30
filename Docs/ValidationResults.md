@@ -4815,3 +4815,212 @@ Record an approved extraordinary change here before adding the new version:
   below `0.500 ms`; terrain submissions remain below `25`; and moving and
   stationary CPU/GPU p95 and p99 may not regress from the latest accepted
   default clip-box candidate beyond the greater of `5%` or `0.25 ms`.
+
+#### Nearest-all-level diagnostic and candidates - 2026-08-30 - rejected
+
+- Formula sweep over viewer coordinates `-4096..4096` and LOD0-5 proved even
+  centers, negative/positive mirror symmetry, the intended per-level distance
+  bounds, and unchanged *per-level* `2^(L+1)` placement intervals. The observed
+  maxima were `0.5/1.5/3.5/7.5/15.5/31.5` LOD0 chunks for LOD0-5.
+- Overlay diagnostic run `943e85b459af44468d553462456c3d78`
+  completed the locked radius-16 route with exact `1,536/1,408/192` structure,
+  zero coverage/mask/adjacency/stale violations, selector/publication maxima
+  `0.0080/0.0175 ms`, five submissions, zero geometry readbacks, and zero
+  ordinary-render SDF evaluations. The opt-in overlay intentionally made this
+  run non-comparable for frame acceptance; CPU p95/p99 was `3.9033/5.7311 ms`
+  and GPU average/p95/p99 was `0.900309/0.913620/1.351118 ms`.
+- Pre-restart radius-16 candidates `90d2ca49da9d4b56b37ee165276969cc`
+  and `3aa330c5a7174994b1ff558d9402f0c3` both completed with exact structure,
+  settled queues, and zero correctness/readback/SDF violations. Candidate 1
+  recorded one `2.3064 ms` selector violation; candidate 2 recorded selector
+  and publication maxima `0.0094/0.0044 ms` with zero violations. Their moving
+  CPU p95/p99 values were `1.5794/2.7981` and `1.2904/2.7054 ms`; moving GPU
+  average/p95/p99 values were `0.601983/0.796318/1.106978` and
+  `0.599374/0.811577/1.136065 ms`. Candidate 1 settled at
+  `905,857` vertices, `1,632,664` triangles, and digests
+  `1C0C3D4044C17A73/678F6A6C38A766CC`; candidate 2 settled at `906,037`
+  vertices, `1,632,772` triangles, and
+  `9B2B955D290A1C87/D8F0A4CD5055B141`.
+- A full editor restart removed the preceding hotload command-list failure.
+  Clean radius-128 runs `331a3e940a3f46ae87a532fd36ac3838` and
+  `c03d51031b7d4ba1bdca2a338e607fc7` retained exact
+  `3,072/2,752/480` structure and zero correctness violations. They are stress
+  diagnostics, not default candidates. The first recorded selector/publication
+  maxima `0.0288/0.0064 ms`; the second recorded isolated
+  `0.8893/0.8214 ms` violations. Both settled at `2,038,830` vertices,
+  `3,469,784` triangles, and digests
+  `9960B487C716083C/A73EA1D676902243`.
+- Clean radius-16 candidates `659d82b97c3c47a9a94427f4401fd5ac`
+  and `d65cc441b8c5404e81e5f352d3b1bdab` again had exact structure, zero
+  correctness/readback/SDF violations, five submissions, and zero selection or
+  publication violations. Selector maxima were `0.1968/0.0190 ms`; publication
+  maxima were both `0.0046 ms`. Moving CPU p95/p99 was
+  `1.2649/1.9441` and `1.2196/1.8417 ms`; moving GPU average/p95/p99 was
+  `0.399490/0.556469/0.744343` and `0.400071/0.549555/0.812292 ms`.
+  Stationary CPU p95/p99 was `1.0687/1.4294` and `1.0264/1.3740 ms`;
+  stationary GPU average/p95/p99 was `0.381860/0.389099/0.582218` and
+  `0.369548/0.374317/0.664473 ms`. Schedule p95/p99 improved to
+  `38.0826/54.5087` and `37.7589/53.6972 ms`; route-lag p95/p99 improved to
+  `0.19322/0.27441` and `0.19186/0.27039` chunks; queue p95/p99 was
+  `104/176`; drain was `0.0064/0.0061 ms`.
+- Outcome: **rejected**. The assumption that unchanged per-level intervals
+  preserve total placement frequency was false. With nearest snapping at every
+  level, default LOD0 changes on odd chunk crossings while LOD1 and LOD2 change
+  on distinct even crossings; the union grows from four to seven placement
+  changes per eight chunk crossings. Both clean default runs exceeded the fixed
+  moving CPU p99 gate, and timing-dependent completion left `276` versus `280`
+  cached LOD2 transition records, so settled resident totals and digests did not
+  repeat. No result above is used to accept the nearest-all-level design.
+
+### TRANSVOXEL-CLIP-CENTERING-001/v2 - Coalesced unbiased outer placement
+
+- Status: fixed successor recorded before implementing the revised placement
+  formula. World, route, engine, renderer, radii, measurement boundaries, and
+  correctness/performance thresholds remain identical to v1; no workload or
+  gate is weakened.
+- Placement contract: when a hierarchy has coarser levels, LOD0 retains its
+  existing downward parent-aligned phase and remains the aggregate placement
+  cadence anchor. LOD1 and every coarser level select the nearest valid
+  parent-aligned center from the containing viewer chunk center. A single-level
+  hierarchy may use nearest placement because it has no competing level phase.
+- At default viewer chunk `[-1,-1,0]`, the expected physical box centers in
+  LOD0-chunk boundary units are LOD0 `[-2,-2,0]`, LOD1 `[0,0,0]`, and LOD2
+  `[0,0,0]`. At `[7,7,0]`, they are `[6,6,0]`, `[8,8,0]`, and `[8,8,0]`.
+  LOD0 is at most `1.5` chunks from the viewer chunk center; level `L >= 1`
+  is at most `2^L - 0.5` chunks away. Negative and positive LOD1+ placement is
+  mirror-symmetric and all child faces remain parent-aligned.
+- Aggregate placement-change frequency must remain exactly four of every eight
+  consecutive positive chunk crossings, matching the accepted implementation.
+  Region counts, entering-slab cardinality, transition topology, and request
+  limits remain unchanged.
+- Acceptance gates are unchanged from v1: exact `1,536/1,408/192` default
+  structure, zero coverage/mask/adjacency/stale/readback/render-SDF violations,
+  settled queues, stable repeated geometry/digests, fewer than 25 submissions,
+  selector/publication below `0.500 ms`, and CPU/GPU p95/p99 within the greater
+  of `5%` or `0.25 ms` of the accepted default candidates.
+
+- Status update: **superseded without acceptance**. The product direction keeps
+  nearest-centered placement and moves the optimization boundary into
+  incremental clip movement. This unused hybrid policy is retained here as
+  historical scenario evidence and is not the production contract.
+
+### TRANSVOXEL-CLIP-INCREMENTAL-001/v1 - Incremental clip-box movement
+
+- Status: fixed regression and performance scenario recorded on 2026-08-30
+  before implementing dirty-slab scheduling. It preserves the committed
+  nearest-centered placement formula, complete resident clip hierarchy, atomic
+  coverage publication, and existing Transvoxel geometry.
+- Pre-candidate contract amendment, approved by the product owner on 2026-08-30:
+  coarse-only publication is forbidden. Startup prepares the entire hierarchy
+  before first publication. Movement and teleports retain the previously
+  published hierarchy until the entire target hierarchy and seams are ready,
+  then publish once atomically. No workload parameter or performance gate was
+  changed.
+- Default workload: `Assets/scenes/basic_example.scene`; s&box `26.08.19`;
+  Vulkan; `1280x720`; `fps_max=1000`; one local player; generator v5; seed
+  `1337`; `CellsPerAxis=32`; `CellSize=16`; full-detail radius `4`; view radius
+  `16`; HZB disabled; the unchanged one-loop figure-eight at world Z `0`, speed
+  `2500`, X reach `50000`, Y reach `25000`, complete queue settlement, two
+  render advances, and the fixed ten-second stationary window.
+- Stress workload: the identical scene, field, route, player count, measurement
+  boundaries, and full-detail radius with view radius `128`, producing LOD0-5.
+  Default and stress each require two clean candidate repetitions.
+- Pre-incremental nearest-placement evidence uses default runs
+  `659d82b97c3c47a9a94427f4401fd5ac` and
+  `d65cc441b8c5404e81e5f352d3b1bdab`, plus radius-128 diagnostics
+  `331a3e940a3f46ae87a532fd36ac3838` and
+  `c03d51031b7d4ba1bdca2a338e607fc7`. These runs had exact structural counts
+  and zero coverage, mask, adjacency, stale-publication, geometry-readback, and
+  ordinary-render SDF violations. The second stress diagnostic's isolated
+  selector/publication budget violations remain failures, not a weakened gate.
+- Movement contract: every level computes disjoint entering and leaving slabs
+  from its old and new half-open bounds. A two-region placement step enters and
+  leaves exactly `128`, `224`, or `296` regular regions for a face, edge, or
+  corner move of an eight-region box. Transition scheduling is the exact new
+  boundary difference. Overlapping resident, pending, and in-flight geometry
+  records must produce zero new geometry schedules solely because placement
+  changed. Movement counters report entering/leaving regular regions,
+  entering/leaving transition faces, and coverage records changed per LOD.
+- Correctness gates: settled structure is exactly `1,536/1,408/192` at radius
+  16 and `3,072/2,752/480` at radius 128; coverage, transition-mask, real
+  adjacency, stale-publication, geometry-readback, and ordinary-render SDF
+  counters are zero; repeated settled active topology/position and geometry
+  totals are stable; queues settle; and no crack, gap, overlap, or missing
+  terrain appears through face, edge, corner, negative-coordinate, turnaround,
+  backtrack, teleport, or radius-change movement.
+- Scaling gates: ordinary adjacent movement touches only dirty slabs and
+  changed boundary faces, never the full resident volume. Radius 128 may add
+  work only for levels whose placement or child boundary changed. Actual newly
+  scheduled/count-submitted/published geometry, render coordinates touched,
+  cancellations, supersessions, queue tails, route lag, and drain must improve
+  beyond pre-incremental variation and may not regress in any tail metric.
+- Performance gates: clip selection and atomic integration each remain below
+  `0.500 ms`; default and radius-128 submissions remain below `25`; default
+  moving and stationary CPU/GPU p95/p99 may not regress beyond the greater of
+  pre-incremental variation, `5%`, or `0.25 ms`; radius-128 CPU/GPU tails and
+  peak memory remain within the greater of `10%` or `0.25 ms`, and `2.25x`
+  memory, relative to the default candidate. No arena, scratch-lane, batch,
+  morphing, crossfade, shader-topology, or centering-policy change is permitted.
+
+#### Interrupted diagnostics - 2026-08-30
+
+- Revision label `working-tree-incremental-default-1` was invalid for comparison:
+  the live editor still held a radius-128 clone after the scene source had been
+  restored to radius 16. Repeated `clip.coverage.mismatch` errors exposed an
+  unsynchronized inactive coverage bank during coarse-to-fine publication. The
+  run was stopped and produced no result record. The bank synchronization defect
+  was corrected before further testing.
+- Revision label `working-tree-incremental-default-1-fixed` began the locked
+  radius-16 route after a clean editor restart and emitted no fresh coverage,
+  adjacency, shader, dispatch, or managed errors. The user paused it after
+  observing terrain temporarily change from rolling to taller hills, so the run
+  was stopped without a result record and is not a candidate. Diagnosis found
+  that a multi-chunk frame delta entered the coarse-only placement publication
+  path. The product owner rejected that second behavior. The minimum-published-
+  LOD mechanism and progressive placement commits were removed; complete target
+  hierarchy readiness is now a prerequisite of the sole publication operation.
+
+### TRANSVOXEL-SECONDARY-POSITION-001/v1 - Boundary deformation continuity
+
+- Status: fixed visual-regression scenario recorded on 2026-08-30 before
+  changing secondary-position handling.
+- Defect evidence to capture before implementation: with stable published mesh
+  identities and zero coverage, mask, adjacency, and stale-publication errors,
+  terrain visibly raises or swells for a few rendered frames when a clip-box LOD
+  boundary changes. The current terrain vertex shader constructs displacement
+  independently from active transition-face bits. It has no cell-border versus
+  vertex-border permission test. The transition emitter likewise transforms
+  low-resolution-side vertices using only the owning face axis.
+- Reference contract: compute one Lengyel secondary position from the full
+  six-face block-boundary transform. A vertex may select it only when its cell
+  touches at least one active transition face and every block face containing
+  the vertex is active: `(activeMask & cellBorderMask) != 0` and
+  `(vertexBorderMask & ~activeMask) == 0`. Transition low-resolution-side
+  vertices use the same transform and permission rule; full-resolution-face
+  vertices remain fixed. Reference provenance is Lengyel's dissertation
+  equations 4.2-4.3 and Godot Voxel Tools commit
+  `2ac9f5f8a8219bf499314cc0fad54ffc47df908f`.
+- Causal A/B diagnostic: `Assets/scenes/basic_example.scene`; s&box `26.08.19`;
+  Vulkan; `1280x720`; one local player; generator v5; seed `1337`;
+  `CellsPerAxis=32`; `CellSize=16`; full-detail radius `4`; view radius `16`;
+  identical spawn and main-camera pose; complete initial queue settlement. Capture
+  the production camera once with the shipping deformation transform and once
+  with only that render-time transform temporarily disabled. Geometry source,
+  selection, topology, transition activation, and camera remain unchanged.
+- Targeted movement regression: use the unchanged production one-loop
+  figure-eight at world Z `0`, speed `2500`, X reach `50000`, Y reach `25000`,
+  followed by complete settlement, two render advances, and the fixed ten-second
+  stationary window. Observe and capture LOD boundary face interiors, two-face
+  edges, and three-face corners during active movement and after backtracking.
+- Correctness gates: no transient raising/swelling; no cracks or steps at face,
+  edge, or corner intersections; regular and transition low-resolution vertices
+  make the same primary/secondary decision; full-resolution transition vertices
+  remain fixed; coverage, transition-mask, adjacency, stale-publication,
+  geometry-readback, and ordinary-render SDF counters remain zero; settled
+  structure and geometry digests remain unchanged because this slice modifies
+  only render-time/final transition positioning, not Transvoxel topology.
+- Performance guard: this is not an optimization slice. The canonical route's
+  CPU/GPU p95 and p99, queue tails, submissions, and memory may not regress
+  beyond the existing greater-of-`5%`-or-`0.25 ms` tolerance. No incremental
+  clip movement, allocation, batch, morph, crossfade, publication, centering, or
+  LOD-policy change is permitted.

@@ -5,7 +5,7 @@ MODES
 
 FEATURES
 {
-	// Dedicated transition vertex emission; kept independent from regular output.
+	// Dedicated transition emission with packed identity and dynamic low-side deformation.
 }
 
 COMMON

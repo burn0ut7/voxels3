@@ -5,7 +5,7 @@ MODES
 
 FEATURES
 {
-	// Dedicated indexed-topology emission.
+	// Dedicated arena-local indexed-topology emission.
 }
 
 COMMON

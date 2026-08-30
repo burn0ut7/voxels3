@@ -122,30 +122,17 @@ float3 TransitionSafeNormalize( float3 value )
 	return lengthSquared > 1e-12 ? value * rsqrt( lengthSquared ) : float3( 0, 0, 1 );
 }
 
-float TransitionBoundaryDelta( float position, float extent, float cellSize, bool minimumFace )
+float2 TransitionEncodeTerrainNormal( float3 normal )
 {
-	float width = cellSize * 0.25;
-	return minimumFace
-		? (position < cellSize ? (1.0 - position / cellSize) * width : 0.0)
-		: (position > extent - cellSize ? ((extent - cellSize - position) / cellSize) * width : 0.0);
-}
-
-float3 TransitionSecondaryPosition(
-	TerrainRequest request,
-	uint face,
-	float3 primary,
-	float3 normal )
-{
-	float extent = request.OriginAndCellSize.w * request.CellsPerAxis;
-	float3 local = primary - request.OriginAndCellSize.xyz;
-	float3 delta = float3( 0, 0, 0 );
-	if ( face == 0 || face == 1 )
-		delta.x = TransitionBoundaryDelta( local.x, extent, request.OriginAndCellSize.w, face == 0 );
-	else if ( face == 2 || face == 3 )
-		delta.y = TransitionBoundaryDelta( local.y, extent, request.OriginAndCellSize.w, face == 2 );
-	else
-		delta.z = TransitionBoundaryDelta( local.z, extent, request.OriginAndCellSize.w, face == 4 );
-	return primary + delta - normal * dot( normal, delta );
+	normal /= abs( normal.x ) + abs( normal.y ) + abs( normal.z );
+	if ( normal.z < 0.0 )
+	{
+		float2 signValue = float2(
+			normal.x >= 0.0 ? 1.0 : -1.0,
+			normal.y >= 0.0 ? 1.0 : -1.0 );
+		normal.xy = (1.0 - abs( normal.yx )) * signValue;
+	}
+	return normal.xy;
 }
 
 [numthreads(256,1,1)]
@@ -192,14 +179,14 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 		float3 outputNormal = TransitionSafeNormalize(
 			lerp( firstGradient, secondGradient, interpolation ) );
 		float3 outputPosition = lerp( firstPosition, secondPosition, interpolation );
-		if ( firstSample >= 9 || secondSample >= 9 )
-			outputPosition = TransitionSecondaryPosition( request, face, outputPosition, outputNormal );
+		bool lowResolutionSide = firstSample >= 9 && secondSample >= 9;
+		float2 encodedNormal = TransitionEncodeTerrainNormal( outputNormal );
 
 		TerrainVertexWords output;
 		output.First = uint4(
 			asuint( outputPosition.x ), asuint( outputPosition.y ), asuint( outputPosition.z ),
-			asuint( outputNormal.x ) );
-		output.Second = uint2( asuint( outputNormal.y ), asuint( outputNormal.z ) );
+			asuint( (float)allocation.Reserved + (lowResolutionSide ? 0.5 : 0.0) ) );
+		output.Second = uint2( asuint( encodedNormal.x ), asuint( encodedNormal.y ) );
 		OutputVertices[allocation.VertexOffset + outputVertex] = output;
 	}
 }

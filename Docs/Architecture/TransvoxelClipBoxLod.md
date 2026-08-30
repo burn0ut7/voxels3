@@ -58,7 +58,7 @@ viewer position + validated radii
   no greater than the view radius.
 - Boxes are half open. Full-detail radius four covers eight LOD0 regions on
   every axis.
-- `CellsPerAxis` is even and lies in `4..64`. There is no odd-size fallback.
+- `CellsPerAxis` is even and lies in `4..64`; odd sizes are rejected.
 - `EffectiveMaximumLod` is
   `floor(log2(ViewRadiusChunks / FullDetailRadiusChunks))`.
 - Level `L` cell spacing is `CellSize * 2^L` and its region extent is
@@ -79,25 +79,45 @@ viewer position + validated radii
   deterministic diagnostic digests.
 
 At the selected default `(full detail 4, view 16)`, levels 0 through 2 contain
-1,536 resident regular fallback regions, 1,408 active regular regions, and 192
+1,536 resident regular regions, 1,408 active regular regions, and 192
 logical transition faces. At view radius 128, levels 0 through 5 contain 3,072
-resident regular fallback regions, 2,752 active regular regions, and 480
+resident regular regions, 2,752 active regular regions, and 480
 logical transition faces.
 
 ## Coverage and Movement
 
-Every level retains its complete resident box. LOD0 is active as a filled cube;
-each coarser level becomes a hollow shell only after the complete child
-replacement slab and all required seams are ready. Startup and teleports build
-the outermost box first and then refine coarse-to-fine. Adjacent movement keeps
-the previous fine placement active until its replacement slab is seam-ready.
-Entering and leaving slabs are diffed so unchanged region meshes remain cached.
+Every level retains its complete resident box. LOD0 is active as a filled cube
+and each coarser level is active as a hollow shell. There is no coarse-only
+publication mode. Startup prepares the complete hierarchy before its first
+publication. Every later placement, including a teleport, keeps the previously
+published hierarchy unchanged until the complete target hierarchy and all its
+seams are ready, then replaces it in one atomic commit. Entering and leaving
+slabs are diffed so unchanged region meshes remain cached.
+
+Placement changes use a geometry-clipmap delta rather than replaying the
+resident hierarchy. For each level, the selector decomposes `new - old` and
+`old - new` into at most six disjoint half-open slabs. Only entering regular
+regions and newly required transition faces are offered to the mesher; the
+overlap is neither rescheduled nor retagged. Transition changes are the exact
+symmetric difference of the old and new coarse/fine boundaries. Cached face
+geometry remains attached to its coarse owner until that owner leaves both the
+published and pending placements.
+
+Geometry validity and publication validity have separate revisions. A derived
+mesh is valid only for its render identity, cell layout, generator settings,
+generator version, and terrain-content revision. Clip placement revision never
+participates in that geometry descriptor. It instead guards the prepared
+selection and the atomic coverage-bank flip. Both coverage banks are kept in
+sync after each successful commit, allowing the next placement to rewrite only
+the resident, active, or transition-mask records named by the dirty slabs.
+Content changes still invalidate and rebuild derived geometry; placement alone
+does not.
 
 A refinement publication is one manager-thread transaction. Per-record
 membership, shell, and six-bit boundary-deformation state is prepared in an
 inactive descriptor bank while the previous bank remains published. Once every
 required regular region and seam is revision-ready, one command-list rebuild
-flips the bank and minimum active LOD together. This simultaneously activates
+flips the bank. This simultaneously activates
 fine regular records, deactivates covered coarse records, enables transition
 faces, and selects matching deformation masks without a synchronous bulk GPU
 upload. Empty, solid, and air results are ready coverage. Stale placement or
@@ -107,7 +127,7 @@ level.
 One coarse block has one reusable regular mesh and up to six cached transition
 face meshes. Same-level adjacency disables a transition. Coarse/fine adjacency
 activates the cached face and matching deformation bit. Face geometry remains
-resident while its owning coarse block remains in the fallback box.
+resident while its owning coarse block remains in the published or pending box.
 
 ## Rendering Contract
 
@@ -134,18 +154,22 @@ count-only readback, and direct persistent output. Normal rendering performs
 zero SDF evaluations and zero geometry readbacks. Terrain remains below 25
 arena submissions for the default and radius-128 scenarios.
 
-Telemetry reports per-level desired, resident, active, and fallback regular
+Telemetry reports per-level desired, resident, active, and inactive regular
 counts; regular and transition triangles and bytes; topology and position
 digests; logical and active
-transition faces; queue latency; visible records; arena submissions; fallback
-frames; coverage mismatches; stale publications; mask/face mismatches; and
+transition faces; queue latency; visible records; arena submissions; publication
+wait frames; coverage mismatches; stale publications; mask/face mismatches; and
 adjacency violations. An opt-in bounded overlay draws one color-coded box per
 level and never iterates per-region gizmos.
 
 ## Serious Alternatives
 
 - Keeping the one-chunk warm shell was rejected because it would create a
-  second fallback policy beside complete coarse clip boxes.
+  second residency and publication policy beside the clip hierarchy.
+- Publishing a coarse-only hierarchy during startup, teleports, or large frame
+  skips was rejected because point-sampled levels have different terrain
+  profiles. Temporarily substituting one makes hills visibly rise or fall. The
+  canonical path always publishes a complete hierarchy atomically.
 - Physically combining far chunks or building level mega-meshes was rejected
   because coarse regions already reduce record count exponentially, while
   welding sacrifices independent frustum culling and turns local invalidation
@@ -166,6 +190,11 @@ level and never iterates per-region gizmos.
   was rejected because either choice increases mesh invalidation without
   improving coverage. Nearest parent-aligned placement removes the directional
   bias while preserving the existing slab cardinality and update cadence.
+- Re-offering every resident key to reuse checks was rejected because it makes
+  placement cost proportional to resident volume and couples a publication
+  revision to otherwise valid geometry. Dirty-slab scheduling plus sparse
+  coverage-bank updates preserves the same residency and atomicity contracts
+  while making movement work proportional to changed box surfaces.
 
 ## Source Provenance
 
