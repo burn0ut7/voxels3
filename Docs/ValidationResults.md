@@ -4453,3 +4453,328 @@ Record an approved extraordinary change here before adding the new version:
 - Hard stop: if any gate fails, remove the HZB runtime path and retain only the
   result documentation. Do not tune terrain, workload, unrelated rendering, or
   acceptance thresholds after observing the candidate.
+### TRANSVOXEL-CLIP-BOX-LOD-001/v1 - Nested visual LOD coverage
+
+- Status: fixed scenario recorded before implementation or its first run.
+- Production path: `Assets/scenes/basic_example.scene`; s&box `26.08.19`;
+  `1280x720`; `fps_max=1000`; Vulkan; one local player; HZB disabled and not a
+  dependency.
+- World parameters: generator v5; seed `1337`; `CellsPerAxis=32`;
+  `CellSize=16`; full-detail half-extent `4` LOD0 chunks; view half-extent `16`
+  LOD0 chunks; levels LOD0 through LOD2; iso-surface `0`; negative density is
+  solid.
+- Pre-change baseline mapping: the unchanged radius-16 renderer at revision
+  `03ee3ed` uses `LoadRadius=16` and its existing one-chunk warm shell. Capture
+  two clean HZB-free runs before runtime source changes. These measure the old
+  workload and do not claim the new structural counts.
+- Fixed journey: begin and center at `(0,0,0)`; runtime-owned figure-eight at
+  fixed world Z `0`; speed `2500` world units/second; maximum X reach `50000`;
+  maximum Y reach `25000`; one complete loop. After the loop, wait for complete
+  generation and GPU queue settlement, advance the production renderer twice,
+  then capture the fixed ten-second stationary window.
+- Candidate repetitions: two clean runs after a successful hot compile and
+  clean editor restart.
+- Required settled structure: exactly `1,536` resident regular fallback
+  regions, `1,408` active regular regions, and `192` logical transition faces.
+- Correctness gates: zero coverage gaps, overlaps, adjacency violations, stale
+  publications, geometry readbacks, and ordinary-render SDF evaluations;
+  active transition faces and coarse deformation masks reconcile exactly;
+  repeated per-level topology and position digests and settled geometry totals
+  match; all queues settle; no visible cracks or missing terrain at LOD faces,
+  edges, corners, or clip shifts; no fresh shader, dispatch, managed, or render
+  errors.
+- Performance gates: moving and stationary CPU/GPU average, p95, and p99 may
+  not regress beyond the greater of the two baseline runs' variation, `5%`, or
+  `0.25 ms`. Streaming latency, route lag, queue depth, and drain must improve
+  beyond baseline variation and may not regress in a tail metric. Terrain arena
+  submissions remain below `25`. Clip selection plus atomic integration remains
+  at or below `0.500 ms` on the main thread.
+- Additional production-path cases in the candidate source state: runtime
+  radii `16 -> 128 -> 16`; large teleport; negative X/Y; generator reset;
+  cancellation; and clip-box face, edge, and corner crossings. If live editor
+  controls cannot create vertical player motion, vertical player-journey
+  coverage is explicitly unverified and is not replaced by a synthetic path.
+
+#### Pre-change HZB-free baseline 1 - 2026-08-30 - completed
+
+- Executor: Codex through the unchanged shipping `run_performance_test` entry
+  point.
+- Source: `03ee3ed`; passive revision label
+  `03ee3ed-hzb-free-baseline-1`; engine `26.08.19`; run
+  `27b8e315394940e5a4249c08c3940204`.
+- Parameters unchanged: yes. The result records `basic_example`, generator v5,
+  seed `1337`, 32 cells, cell size 16, legacy load radius 16, one loop, speed
+  2500, distance 50000, fixed Z 0, moving duration `121.92444 sec`, complete
+  settlement, two render advances, and stationary duration `10.000009 sec`.
+- Moving frame/GPU: `944.30743 FPS`; CPU p95/p99
+  `1.3163/2.0708 ms`; GPU average/p95/p99/max
+  `0.69957554/1.034975/1.4514923/3.015995 ms`.
+- Stationary frame/GPU: `993.1424 FPS`; CPU p95/p99
+  `1.1105/1.4879 ms`; GPU average/p95/p99/max
+  `0.68523073/0.8749962/1.2245178/2.4263859 ms`.
+- Streaming/meshing: schedule-to-renderable p95/p99/max
+  `175.5583/213.3851/292.6625 ms`; route lag p95/p99/max
+  `0.8550415/1.0408325/1.4296227` chunks; total queue p95/p99/max
+  `900/1089/1215`; post-loop drain `259.9979 ms`; zero pending at capture.
+- Settled geometry: `6,275` surface and `657` warm surface meshes;
+  `6,621,908` vertices; `12,402,710` triangles; 27 arenas in the final
+  allocator state; topology digest `945207C457C6FFD8`; position digest
+  `D952B7C7F3A6A81E`.
+- Submission/memory: moving arena submissions average/max
+  `25.365818/27`; stationary process peak `4,266,168,320 bytes`; stationary
+  GPU allocation peak `2,408,368,858 bytes`.
+- Correctness telemetry: geometry readbacks `0`; ordinary-render SDF
+  evaluations `0`; all queues settled; no fresh warning or error after the run
+  began; editor remained alive and compile-clean.
+- Evidence: production JSONL
+  `performance/results-v1.jsonl`, run ID above. Outcome: completed baseline;
+  comparison decision waits for baseline 2 and the candidate runs.
+
+#### Pre-change HZB-free baseline 2 - 2026-08-30 - completed
+
+- Executor: Codex through the unchanged shipping `run_performance_test` entry
+  point.
+- Source: `03ee3ed`; passive revision label
+  `03ee3ed-hzb-free-baseline-2`; engine `26.08.19`; run
+  `b024cd99f66940db8706695367d892ef`.
+- Parameters unchanged: yes. Moving duration was `121.92145 sec`; stationary
+  duration was `10.000601 sec`; every locked world and journey parameter
+  matched baseline 1.
+- Moving frame/GPU: `953.3092 FPS`; CPU p95/p99 `1.2668/1.8842 ms`;
+  GPU average/p95/p99/max `0.6970865/1.0139942/1.4390945/9.828091 ms`.
+- Stationary frame/GPU: `994.5781 FPS`; CPU p95/p99
+  `1.0918/1.467 ms`; GPU average/p95/p99/max
+  `0.67961437/0.8699894/1.2149811/2.2530556 ms`.
+- Streaming/meshing: schedule-to-renderable p95/p99/max
+  `171.7616/209.2328/272.4372 ms`; route lag p95/p99/max
+  `0.83651733/1.019043/1.3305969` chunks; total queue p95/p99/max
+  `895/1088/1204`; post-loop drain `259.355 ms`; zero pending at capture.
+- Settled geometry matched baseline 1 exactly: `6,275` surface and `657` warm
+  surface meshes; `6,621,908` vertices; `12,402,710` triangles; topology digest
+  `945207C457C6FFD8`; position digest `D952B7C7F3A6A81E`.
+- Submission/memory: moving arena submissions average/max
+  `25.425442/27`; stationary process peak `4,418,768,896 bytes`; stationary
+  GPU allocation peak `2,408,368,858 bytes`.
+- Correctness telemetry: geometry readbacks `0`; ordinary-render SDF
+  evaluations `0`; all queues settled; no fresh warning or error after the run
+  began; editor remained alive and compile-clean.
+- Evidence: production JSONL
+  `performance/results-v1.jsonl`, run ID above. Outcome: completed baseline.
+  The fixed baseline variation is the absolute difference between these two
+  repetitions for each metric; the predeclared floor tolerances still apply.
+
+### TRANSVOXEL-CLIP-BOX-STRESS-001/v1 - Radius-128 logarithmic scaling
+
+- Status: fixed scenario recorded before implementation or its first run.
+- Production path, engine, display, player, generator, seed, cell dimensions,
+  route, settlement boundary, render advances, ten-second stationary window,
+  and metric definitions are identical to
+  `TRANSVOXEL-CLIP-BOX-LOD-001/v1`.
+- Only workload difference: full-detail half-extent remains `4`; view half-
+  extent is `128` LOD0 chunks; levels LOD0 through LOD5.
+- Candidate repetitions: two clean runs in the same final source state.
+- Required settled structure: exactly `3,072` resident regular fallback
+  regions, `2,752` active regular regions, and `480` logical transition faces.
+  Eight times the view radius must therefore produce exactly twice the resident
+  regular-region count of the default candidate.
+- Correctness gates are identical to the default scenario, including stable
+  repeated per-level digests and totals, zero coverage/mask/adjacency/stale
+  violations, settled queues, and visual inspection of LOD faces, edges, and
+  corners.
+- Performance gates: terrain arena submissions remain below `25`; CPU/GPU tail
+  metrics remain within the greater of `10%` or `0.25 ms` of the default LOD
+  candidate; peak memory remains within `2.25x`; repeated traversal shows
+  stable memory; and clip selection plus atomic integration remains within
+  `0.500 ms`.
+
+#### Production-path mutation coverage - 2026-08-30 - pass with vertical limitation
+
+- Executor: Codex through the live shipping `VoxelManager`, gameplay chunk
+  generator, and `GpuVoxelMesher`. Temporary editor-only controls were used to
+  change the running component and player transform, then removed before the
+  final builds and candidate runs. They did not create a second runtime path.
+- Radius changes reached the canonical manager as `16 -> 128 -> 16`. The live
+  radius-128 request reported LOD0-5 and exactly `3,072` resident regular,
+  `2,752` active regular, and `480` logical transition regions. Hot selector
+  times for the changes were `0.0054`, `0.0046`, `0.0042`, and `0.0042 ms`.
+- A face crossing moved the target from world X `1023` to `1025` and published
+  clip center `[2,0,0]`; a horizontal edge crossing published `[2,2,0]`.
+  Selection was `0.0050/0.0031 ms`, and gameplay integration remained at or
+  below `0.202 ms` in those updates.
+- A large teleport to `[-50000,-25000,0]` exercised checked negative floor
+  division and published center `[-98,-49,0]`. It generated exactly `512`
+  LOD0 chunks in two fixed batches; selection was `0.0034 ms`, and the maximum
+  gameplay integration frame was `0.193 ms`.
+- Generator reset `1337 -> 1338 -> 1337` exercised cancellation and content
+  revision rejection. Both resets rebuilt the shipping manager path, generated
+  `512` chunks, selected in `0.0039/0.0033 ms`, and had maximum integration
+  frames `0.179/0.171 ms`. No managed, shader, dispatch, or rendering error was
+  logged during the mutation matrix.
+- Horizontal face and edge motion are verified. The available live movement
+  driver remained fixed at world Z `0`; vertical face and three-dimensional
+  corner player-journey coverage are therefore **unverified**, as required,
+  and were not replaced by a synthetic vertical test.
+
+#### Pre-final diagnostic runs - 2026-08-30 - superseded evidence
+
+- Schema-12 default diagnostic run `dfe4aa2225904fdf92ad6579c45d89ed`
+  first proved the required `1,536/1,408/192` structure, six arena submissions,
+  zero coverage and adjacency violations, zero geometry readbacks, and zero
+  ordinary-render SDF evaluations. Later selector, in-flight reuse, revision,
+  and telemetry changes invalidate it as final acceptance evidence.
+- Radius-128 warmup `0e5c86f78e5047149682b8e0aa26c175` and diagnostic
+  candidate `a177940c0c0246938d41d9250135b8b0` both produced identical
+  `2,039,689` vertices and `3,470,249` triangles, but their aggregate digests
+  differed. Investigation found that CPU-classified empty regions were XORed
+  out on retirement without being XORed in on publication. The canonical
+  publication path was fixed to balance empty-region identity accounting.
+- A subsequent run was stopped before saving because schema 12 lacked the
+  per-LOD digests required by this scenario. Schema 13 adds those fields. No
+  stopped or superseded diagnostic is used in an acceptance comparison.
+
+#### Final default candidate 1 - 2026-08-30 - pass
+
+- Run `e1f8105a3c3d4083951056fae7b31dd0`; passive revision label
+  `working-tree-schema13-default-1`; schema `13`; outcome `completed`; fixed
+  journey duration `121.90546 sec`.
+- Structure was exact: regular resident/active/fallback
+  `1,536/1,408/128`; logical/active transition faces `192/192`; six arena
+  submissions; `2,076` resident records; `755` non-empty surface meshes.
+- Per-level settled evidence:
+
+  | LOD | Regular desired/resident/active/fallback | Transition desired/resident/active | Regular/transition triangles | Topology digest | Position digest |
+  | --- | --- | --- | --- | --- | --- |
+  | 0 | `512/512/512/0` | `0/0/0` | `464,386/0` | `78042C303A622502` | `B4FDDB555B993F21` |
+  | 1 | `512/512/448/64` | `96/268/96` | `476,539/12,201` | `5CE0B22C942CF0F8` | `CEE6307E0BE936F0` |
+  | 2 | `512/512/448/64` | `96/272/96` | `665,856/13,482` | `B3A8BBA53DE3CF6D` | `F99BA6AC061AD582` |
+
+- Global settled geometry was `905,525` vertices, `4,897,392` indices, and
+  `1,632,464` triangles. Topology/position digests were
+  `974C25B993AD1A97/83804D87566ADC53`.
+- Correctness telemetry: coverage/mask/adjacency/stale counters
+  `0/0/0/0`; geometry readbacks `0`; ordinary-render SDF evaluations `0`;
+  every queue settled. Selector violations/max were `0/0.0473 ms`; atomic
+  integration violations/max were `0/0.0043 ms`.
+- Moving CPU p95/p99 was `1.0668/1.4211 ms`; GPU average/p95/p99 was
+  `0.39987093/0.5514622/0.7123947 ms`. Stationary CPU p95/p99 was
+  `1.0034/1.2321 ms`; GPU average/p95/p99 was
+  `0.38761136/0.395298/0.5772114 ms`.
+- Schedule-to-renderable p95/p99/max was
+  `74.4896/108.4526/150.6128 ms`; route-lag p95/p99/max was
+  `0.36880493/0.50250244/0.7435303` chunks; total-queue p95/p99/max was
+  `213/386/742`; post-loop drain was `135.31 ms`.
+- Moving process/GPU peaks were `4,042,907,648/1,291,149,306 bytes`;
+  stationary process/GPU peaks were `4,042,178,560/1,291,149,306 bytes`.
+
+#### Final default candidate 2 - 2026-08-30 - pass
+
+- Run `e93aa1f0ede34dd3b283240ce4bcaa27`; passive revision label
+  `working-tree-schema13-default-2`; schema `13`; outcome `completed`; fixed
+  journey duration `121.90394 sec`.
+- Every per-level structure value, triangle/byte total, topology digest, and
+  position digest matched default candidate 1 exactly. Global vertices,
+  indices, triangles, active cells, and both global digests also matched
+  exactly.
+- Correctness telemetry again recorded coverage/mask/adjacency/stale counters
+  `0/0/0/0`, zero geometry readbacks, zero ordinary-render SDF evaluations,
+  and settled queues. Selector violations/max were `0/0.0085 ms`; atomic
+  integration violations/max were `0/0.0038 ms`.
+- Moving CPU p95/p99 was `1.0799/1.4355 ms`; GPU average/p95/p99 was
+  `0.38892484/0.53977966/0.7035732 ms`. Stationary CPU p95/p99 was
+  `1.0042/1.2453 ms`; GPU average/p95/p99 was
+  `0.381441/0.3888607/0.5698204 ms`.
+- Schedule-to-renderable p95/p99/max was
+  `75.2946/107.4557/151.1487 ms`; route-lag p95/p99/max was
+  `0.3722229/0.50323486/0.74474716` chunks; total-queue p95/p99/max was
+  `214/388/742`; post-loop drain was `134.7062 ms`.
+- Moving process/GPU peaks were `3,927,674,880/1,350,044,322 bytes`;
+  stationary process/GPU peaks were `3,920,986,112/1,350,044,322 bytes`.
+
+#### Default comparison decision - pass
+
+- Against both pre-change baselines, every moving and stationary CPU/GPU
+  average or tail improved by substantially more than baseline variation. The
+  predeclared `0.25 ms` floor is the controlling tolerance for the frame-tail
+  checks; no candidate metric approaches a regression boundary.
+- Schedule p95 improved from `171.7616-175.5583` to
+  `74.4896-75.2946 ms`; schedule p99 improved from `209.2328-213.3851` to
+  `107.4557-108.4526 ms`. Route-lag p95 improved from
+  `0.83651733-0.8550415` to `0.36880493-0.3722229` chunks. Queue p95 improved
+  from `895-900` to `213-214`; post-loop drain improved from
+  `259.355-259.9979` to `134.7062-135.31 ms`. Every recorded streaming tail
+  improved beyond baseline variation; none regressed.
+- Terrain submissions fell from the accepted baseline maximum `27` to `6`,
+  below the required `25`. Final GPU allocation fell from
+  `2,408,368,858` to at most `1,350,044,322 bytes`.
+
+#### Final radius-128 stress candidates - pass
+
+- Runs `b7a9e43d483641049a8f79541bfb64c4` and
+  `cb639ed156c74a278eefb791fb52c5cd`; passive revision labels
+  `working-tree-schema13-stress-1/2`; schema `13`; outcomes `completed`;
+  durations `121.90822/121.90857 sec`.
+- Both runs reported exactly `3,072` resident regular, `2,752` active regular,
+  `320` fallback regular, `480` logical/active transitions, 12 submissions,
+  `4,550` resident records, and `1,324` non-empty surface meshes.
+- Every value in this per-level table matched across both repetitions:
+
+  | LOD | Regular desired/resident/active/fallback | Transition desired/resident/active | Regular/transition triangles | Topology digest | Position digest |
+  | --- | --- | --- | --- | --- | --- |
+  | 0 | `512/512/512/0` | `0/0/0` | `464,386/0` | `78042C303A622502` | `B4FDDB555B993F21` |
+  | 1 | `512/512/448/64` | `96/268/96` | `476,539/12,201` | `5CE0B22C942CF0F8` | `CEE6307E0BE936F0` |
+  | 2 | `512/512/448/64` | `96/272/96` | `665,856/13,482` | `B3A8BBA53DE3CF6D` | `F99BA6AC061AD582` |
+  | 3 | `512/512/448/64` | `96/280/96` | `620,774/22,108` | `D6C08BC76A1E4849` | `11D7721F5BA33406` |
+  | 4 | `512/512/448/64` | `96/296/96` | `592,004/17,237` | `25B2C12DF938C3D4` | `49E53102A05B551B` |
+  | 5 | `512/512/448/64` | `96/362/96` | `563,218/22,444` | `6FF5D1225D51FBD7` | `5ADF1CF1B007CB70` |
+
+- Global geometry and identity matched exactly: `2,039,689` vertices,
+  `10,410,747` indices, `3,470,249` triangles, topology digest
+  `0BCBBE715DDA6ADD`, and position digest `816D126B1D95763E`.
+- Both runs recorded coverage/mask/adjacency/stale counters `0/0/0/0`, zero
+  geometry readbacks, zero ordinary-render SDF evaluations, and settled queues.
+  Selector violations were zero with maxima `0.0382/0.0540 ms`; atomic
+  integration violations were zero with maxima `0.0044/0.0046 ms`.
+- Moving CPU p95/p99 was `1.2306/1.5690` and `1.2398/1.5896 ms`; GPU p95/p99
+  was `0.60892105/0.8227825` and `0.67329407/0.8773804 ms`. Stationary CPU
+  p95/p99 was `1.0033/1.2365` and `1.0047/1.2275 ms`; GPU p95/p99 was
+  `0.4181862/0.60606` and `0.4181862/0.60510635 ms`.
+- Schedule p95/p99/max was `151.2452/224.7698/329.5335` and
+  `151.7974/226.9841/326.9295 ms`; route-lag p95/p99/max was
+  `0.72824097/0.94421387/1.6265564` and
+  `0.7308197/0.94259644/1.5975647` chunks; queue p95/p99/max was
+  `332/667/1630` and `330/664/1618`; drain was `324.5481/325.4516 ms`.
+- Stress stationary GPU allocation was stable at `1,594,187,770 bytes` in
+  both runs. Process peaks differed by only `3,244,032` moving bytes and
+  `4,145,152` stationary bytes. Relative to the larger default candidate
+  peaks, stress used about `1.18x` GPU memory and `1.02x` process memory,
+  below `2.25x`.
+- Eight times the view radius produced exactly twice the resident regular
+  count (`3,072 / 1,536 = 2`). Stress remained at 12 submissions, below 25.
+  Every CPU/GPU p95 and p99 stayed within the greater of `10%` or `0.25 ms`
+  of the corresponding default candidate tail.
+
+#### Visual, build, restart, and log audit - pass with cold-JIT note
+
+- Settled `1280x720` camera captures at both radius 128 and radius 16 showed
+  continuous terrain across the visible LOD field, with no visible hole,
+  missing slab, or crack. Automated coverage, adjacency, transition-mask, and
+  stale-publication counters independently remained zero in all four final
+  runs.
+- `dotnet build .\voxels3.slnx --no-restore` completed after the final source
+  changes with zero warnings and zero errors. The live editor reported
+  `LastCompileSucceeded=true`, `LastCompileErrors=0`; shader assets had hot
+  compiled successfully before the required clean restarts. The final editor
+  launched without diagnostics and remained alive and responsive.
+- The final clean-session log contained no warning/error/exception attributable
+  to Voxels3 code, voxel shaders, GPU dispatch, terrain rendering, or managed
+  runtime behavior. Unrelated stock-engine missing-content messages were
+  excluded from project acceptance. The Sentry marker remained unchanged at
+  `2026-08-30T10:23:05.862970Z`, SHA-256
+  `E601BF5CC0E6A1135B3B4D9A91CBA4095653229299C41E9C82E64C66253051F6`.
+- Runtime selection and publication pass the `0.500 ms` gate in every final
+  candidate: selection max `0.0540 ms`, publication max `0.0046 ms`, and zero
+  violations. A separate first-call clean-load sample recorded `0.6861 ms`
+  while the selector method was cold-JIT compiled. It occurs before candidate
+  counters begin and every subsequent production selection is `0.0031-0.0540
+  ms`; this startup-only JIT cost is recorded here rather than hidden. No
+  exception to a timed candidate gate was required.

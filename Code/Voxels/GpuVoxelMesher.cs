@@ -10,6 +10,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public const int ScratchLaneCount = 3;
 	public const int RegionsPerSlab = 256;
 	public const int TerrainVertexBytes = 24;
+	public const int MaximumClipLevels = 7;
+	private const int VisibilityFrameCounterCount = 5;
+	private const int VisibilityAggregateCounterCount = 10;
 	private const int VertexArenaBytes = 32 * 1024 * 1024;
 	private const int IndexArenaBytes = 16 * 1024 * 1024;
 	private const int VertexArenaCapacity = VertexArenaBytes / TerrainVertexBytes;
@@ -17,22 +20,26 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private const int IndirectArgumentStride = sizeof( uint ) * 5;
 	private const int MaximumScheduleLatencySamples = 524288;
 	private const int MaximumThroughputBatchSamples = 65536;
+	private const int VisibilityVectorsPerRecord = 5;
+	private const int DescriptorVectorOffset = 2;
 
 	private readonly Scene _scene;
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
 	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_terrain.shader" );
 	private readonly Sandbox.Rendering.CommandList _drawCommands = new( "Voxel Terrain Indexed Indirect Draws" );
-	private readonly Dictionary<Vector3Int, ResidentMesh> _resident = new();
-	private readonly Dictionary<Vector3Int, PendingMesh> _pending = new();
+	private readonly Dictionary<VoxelRenderRegionKey, ResidentMesh> _resident = new();
+	private readonly Dictionary<VoxelRenderRegionKey, PendingMesh> _pending = new();
 	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();
 	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
+	private readonly Queue<PendingMesh> _transitionDispatchQueue = new();
 	private readonly List<GeometryArena> _arenas = new();
+	private readonly List<VoxelRenderRegionKey> _preparedResidentRemovals = new();
 	private ScratchLane[] _scratchLanes;
-	private readonly HashSet<Vector3Int> _cancelledInFlight = new();
+	private readonly HashSet<InFlightIdentity> _cancelledInFlight = new();
 	private readonly List<VisibilityBuffers> _retiredVisibilityBuffers = new();
 	private readonly object _visibilityLock = new();
 	private readonly ReadbackSceneObject _readbackObject;
-	private readonly GpuBuffer<uint> _visibilityAggregateCounters = new( 10, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Aggregate Counters" );
+	private readonly GpuBuffer<uint> _visibilityAggregateCounters = new( VisibilityAggregateCounterCount, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Aggregate Counters" );
 	private CameraComponent _camera;
 	private int _cellsPerAxis;
 	private int _visibilityCapacity;
@@ -49,6 +56,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private bool _visibilitySettledCaptureActive;
 	private bool _visibilityReadbackPending;
 	private bool _visibilityReadbackInFlight;
+	private VoxelClipBoxSelection _preparedClipSelection;
+	private VoxelClipBoxSelection _publishedClipSelection;
+	private int _preparedClipPlacementRevision;
+	private int _preparedClipBank = 1;
+	private int _publishedClipBank;
+	private int _publishedMinimumLod = MaximumClipLevels;
+	private int _stalePublicationCount;
 	private long _visibilityReadbackRequestedRenderSequence;
 	private GpuVisibilityMeasurement? _completedVisibilityMeasurement;
 	private long _dispatchCount;
@@ -79,8 +93,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public int ResidentCount => _resident.Count;
 	public int PendingCount => PendingGameplayCount + PendingWarmCount;
 	public int PendingGameplayCount => _pendingGameplayCount + CountInFlight( GpuMeshResidency.Gameplay );
-	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Warm );
+	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Fallback );
 	public int WarmResidentCount => _warmResidentCount;
+	public int ResidentRegularCount => _resident.Count( pair => pair.Key.MeshKind == VoxelRenderMeshKind.Regular );
+	public int ActiveRegularCount => _resident.Count( pair =>
+		pair.Key.MeshKind == VoxelRenderMeshKind.Regular && IsPublishedActive( pair.Value ) );
+	public int ResidentTransitionCount => _resident.Count( pair =>
+		pair.Key.MeshKind == VoxelRenderMeshKind.Transition );
+	public int ActiveTransitionCount => _resident.Count( pair =>
+		pair.Key.MeshKind == VoxelRenderMeshKind.Transition && IsPublishedActive( pair.Value ) );
 	public int PoolCount => _arenas.Sum( arena => arena.FreeSlotCount );
 	public int AllocatedResourceCount => _arenas.Count * RegionsPerSlab;
 	public long DispatchCount => _dispatchCount;
@@ -127,8 +148,48 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public string TopologyDigest => _topologyDigest.ToString( "X16" );
 	public string PositionDigest => _positionDigest.ToString( "X16" );
 	public long RenderSequence => System.Threading.Interlocked.Read( ref _renderSequence );
+	public int StalePublicationCount => _stalePublicationCount;
 	public long LogicalVisibilityBytes => _visibilityCapacity == 0 ? 0 :
-		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) + sizeof( uint ) * 15;
+		(long)_visibilityCapacity * (sizeof( float ) * VisibilityVectorsPerRecord * 4 + IndirectArgumentStride * 2) +
+		sizeof( uint ) * (VisibilityFrameCounterCount + VisibilityAggregateCounterCount);
+
+	public GpuClipLevelMeasurement[] CaptureClipLevelMeasurements( VoxelClipBoxSelection selection )
+	{
+		if ( selection is null ) return Array.Empty<GpuClipLevelMeasurement>();
+		var result = new GpuClipLevelMeasurement[selection.MaximumLod + 1];
+		for ( var lod = 0; lod <= selection.MaximumLod; lod++ )
+		{
+			var regular = _resident.Where( pair =>
+				pair.Key.Lod == lod && pair.Key.MeshKind == VoxelRenderMeshKind.Regular ).ToArray();
+			var transitions = _resident.Where( pair =>
+				pair.Key.Lod == lod && pair.Key.MeshKind == VoxelRenderMeshKind.Transition ).ToArray();
+			ulong topologyDigest = 0;
+			ulong positionDigest = 0;
+			foreach ( var pair in regular.Concat( transitions ) )
+			{
+				topologyDigest ^= RegionDigest( pair.Key, pair.Value.Counts.TopologyDigest );
+				positionDigest ^= RegionDigest( pair.Key, pair.Value.Counts.PositionDigest );
+			}
+			result[lod] = new GpuClipLevelMeasurement(
+				lod,
+				selection.ResidentRegular.Count( key => key.Lod == lod ),
+				regular.Length,
+				regular.Count( pair => IsPublishedActive( pair.Value ) ),
+				regular.Count( pair => !IsPublishedActive( pair.Value ) ),
+				selection.TransitionFaces.Count( key => key.Lod == lod ),
+				transitions.Length,
+				transitions.Count( pair => IsPublishedActive( pair.Value ) ),
+				regular.Sum( pair => (long)pair.Value.Counts.IndexCount / 3 ),
+				transitions.Sum( pair => (long)pair.Value.Counts.IndexCount / 3 ),
+				regular.Sum( pair => (long)pair.Value.Counts.VertexCount * TerrainVertexBytes +
+					(long)pair.Value.Counts.IndexCount * sizeof( uint ) ),
+				transitions.Sum( pair => (long)pair.Value.Counts.VertexCount * TerrainVertexBytes +
+					(long)pair.Value.Counts.IndexCount * sizeof( uint ) ),
+				topologyDigest,
+				positionDigest );
+		}
+		return result;
+	}
 
 	public GpuVoxelMesher( Scene scene, int cellsPerAxis )
 	{
@@ -138,6 +199,61 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_readbackObject = new ReadbackSceneObject( scene.SceneWorld, this );
 		Sandbox.Diagnostics.GpuProfilerStats.Enabled = true;
 		AttachToMainCamera();
+	}
+
+	public void PrepareClipCoverage( VoxelClipBoxSelection selection, int placementRevision )
+	{
+		_preparedClipSelection = selection ?? throw new ArgumentNullException( nameof( selection ) );
+		_preparedClipPlacementRevision = placementRevision;
+		_preparedClipBank = 1 - _publishedClipBank;
+		_preparedResidentRemovals.Clear();
+		if ( _publishedClipSelection is not null )
+		{
+			foreach ( var key in _publishedClipSelection.ResidentRegular )
+			{
+				if ( selection.ResidentRegular.Contains( key ) ) continue;
+				_preparedResidentRemovals.Add( key );
+				for ( var face = VoxelTransitionFace.NegativeX;
+					face <= VoxelTransitionFace.PositiveZ; face++ )
+				{
+					_preparedResidentRemovals.Add( VoxelRenderRegionKey.Transition(
+						key.Lod,
+						key.Coordinate,
+						face ) );
+				}
+			}
+		}
+
+		foreach ( var resident in _resident.Values ) ApplyPreparedCoverage( resident );
+	}
+
+	private void ApplyPreparedCoverage( ResidentMesh resident )
+	{
+		if ( _preparedClipSelection is null ) return;
+		var key = resident.Descriptor.Key;
+		var regularOwner = VoxelRenderRegionKey.Regular( key.Lod, key.Coordinate );
+		var residentMember = _preparedClipSelection.ResidentRegular.Contains( regularOwner );
+		var targetActive = key.MeshKind == VoxelRenderMeshKind.Regular
+			? residentMember && _preparedClipSelection.ActiveRegular.Contains( key )
+			: residentMember && _preparedClipSelection.TransitionFaces.Contains( key );
+		var transitionMask = key.MeshKind == VoxelRenderMeshKind.Regular &&
+			_preparedClipSelection.TryGetTransitionMask( key, out var mask )
+			? mask
+			: 0u;
+		resident.SetCoverageBank( _preparedClipBank, residentMember, targetActive, transitionMask );
+		SetVisibilityRecord( resident );
+	}
+
+	private bool IsPublishedActive( ResidentMesh resident )
+	{
+		var key = resident.Descriptor.Key;
+		var residentMember = resident.GetCoverageResident( _publishedClipBank );
+		var targetActive = resident.GetCoverageActive( _publishedClipBank );
+		return key.MeshKind == VoxelRenderMeshKind.Regular
+			? residentMember && (key.Lod == _publishedMinimumLod ||
+				(key.Lod > _publishedMinimumLod && targetActive)
+				)
+			: key.Lod > _publishedMinimumLod && targetActive;
 	}
 
 	public void BeginThroughputMeasurement( float chunkWorldSize )
@@ -183,19 +299,103 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return lanes;
 	}
 
-	public void Schedule( VoxelChunk chunk, int sourceRevision, float playerRouteDistance,
+	public void Schedule( VoxelChunk chunk, int contentRevision, int placementRevision, float playerRouteDistance,
 		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
+		var descriptor = GpuSdfDescriptor.FromChunk( chunk, contentRevision, placementRevision );
 		if ( chunk.DensityClassification != ChunkDensityClassification.PotentiallySurfaceContaining )
 		{
-			Remove( chunk.Coordinate );
+			PublishEmpty( descriptor, residency );
 			return;
 		}
-		var descriptor = GpuSdfDescriptor.FromChunk( chunk, sourceRevision );
-		if ( _resident.TryGetValue( chunk.Coordinate, out var resident ) && resident.Descriptor == descriptor )
+		Schedule( descriptor, playerRouteDistance, residency );
+	}
+
+	public void BeginClipMeasurement()
+	{
+		_stalePublicationCount = 0;
+	}
+
+	public int CountPublishedTransitionMaskMismatches()
+	{
+		var mismatches = 0;
+		foreach ( var pair in _resident )
 		{
+			if ( pair.Key.MeshKind != VoxelRenderMeshKind.Regular ||
+				!IsPublishedActive( pair.Value ) ) continue;
+			var mask = pair.Key.Lod > _publishedMinimumLod
+				? pair.Value.GetTransitionMask( _publishedClipBank )
+				: 0u;
+			for ( var face = VoxelTransitionFace.NegativeX;
+				face <= VoxelTransitionFace.PositiveZ; face++ )
+			{
+				var transition = VoxelRenderRegionKey.Transition(
+					pair.Key.Lod,
+					pair.Key.Coordinate,
+					face );
+				var transitionActive = _resident.TryGetValue( transition, out var transitionResident ) &&
+					IsPublishedActive( transitionResident );
+				var maskActive = (mask & VoxelClipBoxSelection.FaceBit( face )) != 0;
+				if ( transitionActive != maskActive ) mismatches++;
+			}
+		}
+		foreach ( var pair in _resident )
+		{
+			if ( pair.Key.MeshKind != VoxelRenderMeshKind.Transition ||
+				!IsPublishedActive( pair.Value ) ) continue;
+			var owner = VoxelRenderRegionKey.Regular( pair.Key.Lod, pair.Key.Coordinate );
+			if ( !_resident.TryGetValue( owner, out var regular ) || !IsPublishedActive( regular ) )
+				mismatches++;
+		}
+		return mismatches;
+	}
+
+	public void Schedule(
+		GpuSdfDescriptor descriptor,
+		float playerRouteDistance,
+		GpuMeshResidency residency = GpuMeshResidency.Fallback )
+	{
+		if ( _resident.TryGetValue( descriptor.Key, out var resident ) &&
+			GeometryEquivalent( resident.Descriptor, descriptor ) )
+		{
+			resident.Descriptor = descriptor;
 			if ( residency == GpuMeshResidency.Gameplay ) SetResidency( resident, residency );
 			return;
+		}
+		if ( _pending.TryGetValue( descriptor.Key, out var pending ) &&
+			GeometryEquivalent( pending.Descriptor, descriptor ) )
+		{
+			QueuePending( pending with { Descriptor = descriptor, Residency = residency } );
+			return;
+		}
+		foreach ( var lane in _scratchLanes )
+		{
+			for ( var index = 0; index < lane.CountInFlight.Count; index++ )
+			{
+				var inFlight = lane.CountInFlight[index];
+				if ( !GeometryEquivalent( inFlight.Descriptor, descriptor ) ) continue;
+				lane.CountInFlight[index] = inFlight with
+				{
+					Descriptor = descriptor,
+					Residency = residency == GpuMeshResidency.Gameplay
+						? GpuMeshResidency.Gameplay
+						: inFlight.Residency
+				};
+				return;
+			}
+			for ( var index = 0; index < lane.EmitInFlight.Count; index++ )
+			{
+				var inFlight = lane.EmitInFlight[index];
+				if ( !GeometryEquivalent( inFlight.Descriptor, descriptor ) ) continue;
+				lane.EmitInFlight[index] = inFlight with
+				{
+					Descriptor = descriptor,
+					Residency = residency == GpuMeshResidency.Gameplay
+						? GpuMeshResidency.Gameplay
+						: inFlight.Residency
+				};
+				return;
+			}
 		}
 		_throughput?.RecordScheduled();
 		QueuePending( new PendingMesh(
@@ -239,14 +439,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return _scheduleLatencyMilliseconds[index];
 	}
 
-	public void SetResidency( Vector3Int coordinate, GpuMeshResidency residency )
+	public void SetResidency( VoxelRenderRegionKey key, GpuMeshResidency residency )
 	{
-		if ( _resident.TryGetValue( coordinate, out var resident ) )
+		if ( _resident.TryGetValue( key, out var resident ) )
 		{
 			SetResidency( resident, residency );
 			return;
 		}
-		if ( _pending.TryGetValue( coordinate, out var pending ) && pending.Residency != residency )
+		if ( _pending.TryGetValue( key, out var pending ) && pending.Residency != residency )
 		{
 			QueuePending( pending with { Residency = residency } );
 			return;
@@ -255,7 +455,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			for ( var index = 0; index < lane.CountInFlight.Count; index++ )
 			{
-				if ( lane.CountInFlight[index].Descriptor.ChunkCoordinate == coordinate )
+				if ( lane.CountInFlight[index].Descriptor.Key == key )
 				{
 					lane.CountInFlight[index] = lane.CountInFlight[index] with { Residency = residency };
 					return;
@@ -263,7 +463,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			}
 			for ( var index = 0; index < lane.EmitInFlight.Count; index++ )
 			{
-				if ( lane.EmitInFlight[index].Descriptor.ChunkCoordinate == coordinate )
+				if ( lane.EmitInFlight[index].Descriptor.Key == key )
 				{
 					lane.EmitInFlight[index] = lane.EmitInFlight[index] with { Residency = residency };
 					return;
@@ -272,18 +472,98 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 	}
 
-	public void Remove( Vector3Int coordinate )
+	public void Remove( VoxelRenderRegionKey key )
 	{
-		RemovePending( coordinate );
-		if ( _scratchLanes.Any( lane =>
-			lane.CountInFlight.Any( value => value.Descriptor.ChunkCoordinate == coordinate ) ||
-			lane.EmitInFlight.Any( value => value.Descriptor.ChunkCoordinate == coordinate ) ) )
-		{
-			_cancelledInFlight.Add( coordinate );
-		}
-		if ( !_resident.Remove( coordinate, out var resident ) ) return;
+		RemovePending( key );
+		CancelInFlight( key );
+		if ( !_resident.Remove( key, out var resident ) ) return;
 		ReleaseResident( resident );
 		_drawCommandsDirty = true;
+	}
+
+	private void PublishEmpty( GpuSdfDescriptor descriptor, GpuMeshResidency residency )
+	{
+		if ( _resident.TryGetValue( descriptor.Key, out var existing ) &&
+			GeometryEquivalent( existing.Descriptor, descriptor ) )
+		{
+			existing.Descriptor = descriptor;
+			return;
+		}
+		RemovePending( descriptor.Key );
+		CancelInFlight( descriptor.Key );
+		if ( _resident.Remove( descriptor.Key, out var previous ) ) ReleaseResident( previous );
+		var resident = new ResidentMesh( descriptor, residency, null, default )
+		{
+		};
+		ApplyPreparedCoverage( resident );
+		_resident.Add( descriptor.Key, resident );
+		if ( residency == GpuMeshResidency.Fallback ) _warmResidentCount++;
+		_topologyDigest ^= RegionDigest( descriptor.Key, resident.Counts.TopologyDigest );
+		_positionDigest ^= RegionDigest( descriptor.Key, resident.Counts.PositionDigest );
+		_drawCommandsDirty = true;
+	}
+
+	private static bool GeometryEquivalent( GpuSdfDescriptor left, GpuSdfDescriptor right ) =>
+		left.Key == right.Key && left.CellsPerAxis == right.CellsPerAxis &&
+		left.CellSize == right.CellSize && left.TerrainSettings == right.TerrainSettings &&
+		left.GeneratorVersion == right.GeneratorVersion && left.ContentRevision == right.ContentRevision;
+
+	public bool IsClipCoverageReady(
+		VoxelClipBoxSelection selection,
+		int minimumResidentLod,
+		int contentRevision,
+		int placementRevision,
+		out int missingRegions )
+	{
+		missingRegions = 0;
+		if ( !ReferenceEquals( selection, _preparedClipSelection ) ||
+			placementRevision != _preparedClipPlacementRevision )
+		{
+			missingRegions = selection.ResidentRegularCount + selection.LogicalTransitionFaceCount;
+			return false;
+		}
+		foreach ( var key in selection.ResidentRegular )
+		{
+			if ( key.Lod < minimumResidentLod ) continue;
+			if ( !_resident.TryGetValue( key, out var resident ) ||
+				resident.Descriptor.ContentRevision != contentRevision ||
+				resident.Descriptor.PlacementRevision != placementRevision ) missingRegions++;
+		}
+		foreach ( var key in selection.TransitionFaces )
+		{
+			if ( key.Lod <= minimumResidentLod ) continue;
+			if ( !_resident.TryGetValue( key, out var resident ) ||
+				resident.Descriptor.ContentRevision != contentRevision ||
+				resident.Descriptor.PlacementRevision != placementRevision ) missingRegions++;
+		}
+		return missingRegions == 0;
+	}
+
+	public void CommitClipCoverage(
+		VoxelClipBoxSelection selection,
+		int minimumResidentLod,
+		int placementRevision )
+	{
+		if ( !ReferenceEquals( selection, _preparedClipSelection ) ||
+			placementRevision != _preparedClipPlacementRevision )
+		{
+			_stalePublicationCount++;
+			throw new InvalidOperationException( "Stale clip-box placement cannot be published." );
+		}
+		_publishedClipBank = _preparedClipBank;
+		_publishedMinimumLod = minimumResidentLod;
+		_publishedClipSelection = selection;
+		_drawCommandsDirty = true;
+		CommitDrawCommands();
+	}
+
+	public void RetireCommittedClipCoverage()
+	{
+		foreach ( var key in _preparedResidentRemovals )
+		{
+			if ( _resident.Remove( key, out var resident ) ) ReleaseResident( resident );
+		}
+		_preparedResidentRemovals.Clear();
 	}
 
 	public void Reset( int cellsPerAxis )
@@ -327,8 +607,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( targetLane is null ) return;
 		var requests = new GpuTerrainRequest[MaximumDispatchesPerUpdate];
 		var processed = 0;
-		while ( processed < _maximumDispatchesRequested && TryDequeuePending( out var pending ) )
+		VoxelRenderMeshKind? batchKind = null;
+		while ( processed < _maximumDispatchesRequested && TryDequeuePending( batchKind, out var pending ) )
 		{
+			batchKind ??= pending.Descriptor.MeshKind;
 			var generation = ++_nextGeneration;
 			var inFlight = new InFlightMesh(
 				pending.Descriptor,
@@ -355,9 +637,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var descriptor = inFlight.Descriptor;
 		var size = descriptor.CellsPerAxis * descriptor.CellSize;
 		var origin = new Vector3(
-			descriptor.ChunkCoordinate.x * size,
-			descriptor.ChunkCoordinate.y * size,
-			descriptor.ChunkCoordinate.z * size );
+			descriptor.RegionCoordinate.x * size,
+			descriptor.RegionCoordinate.y * size,
+			descriptor.RegionCoordinate.z * size );
 		return new GpuTerrainRequest
 		{
 			OriginAndCellSize = new Vector4( origin, descriptor.CellSize ),
@@ -368,9 +650,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 				descriptor.TerrainSettings.SurfaceAmplitude ),
 			CellsPerAxis = descriptor.CellsPerAxis,
 			Generation = inFlight.Generation,
-			RequestIndex = (uint)requestIndex
+			RequestIndex = (uint)requestIndex,
+			PackedIdentity = PackIdentity( descriptor.Key )
 		};
 	}
+
+	private static uint PackIdentity( VoxelRenderRegionKey key ) =>
+		((uint)key.MeshKind & 0x01u) |
+		(((uint)(byte)key.Face & 0xFFu) << 8) |
+		(((uint)key.Lod & 0xFFu) << 16);
 
 	private void AllocateAndEmit( ScratchLane lane, GpuTerrainCountResult[] counts, int count,
 		double readbackMilliseconds, double callbackWaitMilliseconds )
@@ -450,15 +738,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 				(float)Stopwatch.GetElapsedTime( lane.EmitSubmittedTimestamp ).TotalMilliseconds );
 			foreach ( var completed in lane.EmitInFlight )
 			{
-				var coordinate = completed.Descriptor.ChunkCoordinate;
-				if ( _cancelledInFlight.Remove( coordinate ) )
+				var key = completed.Descriptor.Key;
+				if ( _cancelledInFlight.Remove( new InFlightIdentity( key, completed.Generation ) ) )
 				{
 					if ( _scheduleLatencyMeasurementActive ) _scheduleLatencyCancelledCount++;
 					Release( completed.Handle );
 					continue;
 				}
 				var residency = completed.Residency;
-				if ( _pending.TryGetValue( coordinate, out var replacement ) )
+				if ( _pending.TryGetValue( key, out var replacement ) )
 				{
 					if ( replacement.Descriptor != completed.Descriptor )
 					{
@@ -467,19 +755,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 						continue;
 					}
 					residency = replacement.Residency;
-					RemovePending( coordinate );
+					RemovePending( key );
 				}
-				if ( _resident.Remove( coordinate, out var previous ) ) ReleaseResident( previous );
+				if ( _resident.Remove( key, out var previous ) ) ReleaseResident( previous );
 				var resident = new ResidentMesh( completed.Descriptor, residency, completed.Handle, completed.Counts );
-				_resident.Add( coordinate, resident );
-				if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
+				ApplyPreparedCoverage( resident );
+				_resident.Add( key, resident );
+				if ( residency == GpuMeshResidency.Fallback ) _warmResidentCount++;
 				if ( completed.Handle is not null )
 				{
 					completed.Handle.Arena.ActiveResidentCount++;
-					SetVisibilityActive( resident, true );
+					SetVisibilityRecord( resident );
 				}
-				_topologyDigest ^= CoordinateDigest( coordinate, completed.Counts.TopologyDigest );
-				_positionDigest ^= CoordinateDigest( coordinate, completed.Counts.PositionDigest );
+				_topologyDigest ^= RegionDigest( key, completed.Counts.TopologyDigest );
+				_positionDigest ^= RegionDigest( key, completed.Counts.PositionDigest );
 				RecordScheduleLatency( completed.ScheduledTimestamp );
 				_dispatchCount++;
 				_throughput?.RecordPublished(
@@ -495,10 +784,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 	}
 
-	private static ulong CoordinateDigest( Vector3Int coordinate, uint digest )
+	private static ulong RegionDigest( VoxelRenderRegionKey key, uint digest )
 	{
+		var coordinate = key.Coordinate;
 		ulong value = digest ^ (uint)coordinate.x * 0x9E3779B1u ^
-			(uint)coordinate.y * 0x85EBCA77u ^ (uint)coordinate.z * 0xC2B2AE3Du;
+			(uint)coordinate.y * 0x85EBCA77u ^ (uint)coordinate.z * 0xC2B2AE3Du ^
+			(uint)key.Lod * 0x27D4EB2Du ^ (uint)key.MeshKind * 0x165667B1u ^
+			(uint)(byte)key.Face * 0xD3A2646Cu;
 		value ^= value >> 30;
 		value *= 0xBF58476D1CE4E5B9ul;
 		value ^= value >> 27;
@@ -540,11 +832,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void ReleaseResident( ResidentMesh resident )
 	{
-		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
-		_topologyDigest ^= CoordinateDigest( resident.Descriptor.ChunkCoordinate, resident.Counts.TopologyDigest );
-		_positionDigest ^= CoordinateDigest( resident.Descriptor.ChunkCoordinate, resident.Counts.PositionDigest );
+		if ( resident.Residency == GpuMeshResidency.Fallback ) _warmResidentCount--;
+		_topologyDigest ^= RegionDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
+		_positionDigest ^= RegionDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
 		if ( resident.Handle is null ) return;
-		SetVisibilityActive( resident, false );
+		ClearVisibilityRecord( resident.Handle.GlobalSlot );
 		resident.Handle.Arena.ActiveResidentCount--;
 		Release( resident.Handle );
 	}
@@ -553,11 +845,16 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void QueuePending( PendingMesh pending )
 	{
-		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( pending.Descriptor.ChunkCoordinate ) )
+		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( pending.Descriptor.Key ) )
 			_scheduleLatencySupersededCount++;
-		RemovePending( pending.Descriptor.ChunkCoordinate );
-		_pending[pending.Descriptor.ChunkCoordinate] = pending;
-		if ( pending.Residency == GpuMeshResidency.Gameplay )
+		RemovePending( pending.Descriptor.Key );
+		_pending[pending.Descriptor.Key] = pending;
+		if ( pending.Descriptor.MeshKind == VoxelRenderMeshKind.Transition )
+		{
+			_pendingWarmCount++;
+			_transitionDispatchQueue.Enqueue( pending );
+		}
+		else if ( pending.Residency == GpuMeshResidency.Gameplay )
 		{
 			_pendingGameplayCount++;
 			_gameplayDispatchQueue.Enqueue( pending );
@@ -569,37 +866,71 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 	}
 
-	private bool TryDequeuePending( out PendingMesh pending )
+	private bool TryDequeuePending( VoxelRenderMeshKind? requiredKind, out PendingMesh pending )
 	{
-		while ( _gameplayDispatchQueue.TryDequeue( out var gameplay ) )
+		if ( requiredKind is null or VoxelRenderMeshKind.Regular )
 		{
-			if ( _pending.TryGetValue( gameplay.Descriptor.ChunkCoordinate, out var current ) && current == gameplay )
+			while ( _gameplayDispatchQueue.TryDequeue( out var gameplay ) )
 			{
-				_pending.Remove( gameplay.Descriptor.ChunkCoordinate );
-				_pendingGameplayCount--;
-				pending = gameplay;
-				return true;
+				if ( _pending.TryGetValue( gameplay.Descriptor.Key, out var current ) && current == gameplay )
+				{
+					_pending.Remove( gameplay.Descriptor.Key );
+					_pendingGameplayCount--;
+					pending = gameplay;
+					return true;
+				}
+			}
+			while ( _warmDispatchQueue.TryDequeue( out var warm ) )
+			{
+				if ( _pending.TryGetValue( warm.Descriptor.Key, out var current ) && current == warm )
+				{
+					_pending.Remove( warm.Descriptor.Key );
+					_pendingWarmCount--;
+					pending = warm;
+					return true;
+				}
 			}
 		}
-		while ( _warmDispatchQueue.TryDequeue( out var warm ) )
+		if ( requiredKind is null or VoxelRenderMeshKind.Transition )
 		{
-			if ( _pending.TryGetValue( warm.Descriptor.ChunkCoordinate, out var current ) && current == warm )
+			while ( _transitionDispatchQueue.TryDequeue( out var transition ) )
 			{
-				_pending.Remove( warm.Descriptor.ChunkCoordinate );
-				_pendingWarmCount--;
-				pending = warm;
-				return true;
+				if ( _pending.TryGetValue( transition.Descriptor.Key, out var current ) && current == transition )
+				{
+					_pending.Remove( transition.Descriptor.Key );
+					_pendingWarmCount--;
+					pending = transition;
+					return true;
+				}
 			}
 		}
 		pending = default;
 		return false;
 	}
 
-	private void RemovePending( Vector3Int coordinate )
+	private void RemovePending( VoxelRenderRegionKey key )
 	{
-		if ( !_pending.Remove( coordinate, out var pending ) ) return;
-		if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
+		if ( !_pending.Remove( key, out var pending ) ) return;
+		if ( pending.Descriptor.MeshKind == VoxelRenderMeshKind.Transition ) _pendingWarmCount--;
+		else if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
 		else _pendingWarmCount--;
+	}
+
+	private void CancelInFlight( VoxelRenderRegionKey key )
+	{
+		foreach ( var lane in _scratchLanes ?? Array.Empty<ScratchLane>() )
+		{
+			foreach ( var value in lane.CountInFlight )
+			{
+				if ( value.Descriptor.Key == key )
+					_cancelledInFlight.Add( new InFlightIdentity( key, value.Generation ) );
+			}
+			foreach ( var value in lane.EmitInFlight )
+			{
+				if ( value.Descriptor.Key == key )
+					_cancelledInFlight.Add( new InFlightIdentity( key, value.Generation ) );
+			}
+		}
 	}
 
 	private int CountInFlight( GpuMeshResidency residency ) =>
@@ -609,10 +940,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private void SetResidency( ResidentMesh resident, GpuMeshResidency residency )
 	{
 		if ( resident.Residency == residency ) return;
-		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
-		if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
+		if ( resident.Residency == GpuMeshResidency.Fallback ) _warmResidentCount--;
+		if ( residency == GpuMeshResidency.Fallback ) _warmResidentCount++;
 		resident.Residency = residency;
-		if ( resident.Handle is not null ) SetVisibilityActive( resident, true );
+		if ( resident.Handle is not null ) SetVisibilityRecord( resident );
 	}
 
 	public DrawCommandCommitResult CommitDrawCommands()
@@ -629,10 +960,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_drawCommands.Attributes.Set( "VisibleIndirectArguments", _visibilityBuffers.VisibleArguments );
 			_drawCommands.Attributes.Set( "VisibilityFrameCounters", _visibilityBuffers.FrameCounters );
 			_drawCommands.Attributes.Set( "VisibilityAggregateCounters", _visibilityAggregateCounters );
+			_drawCommands.Attributes.Set( "TerrainRecordDescriptors", _visibilityBuffers.Bounds );
 			_drawCommands.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
 			_drawCommands.Attributes.Set( "VisibilityPass", 0 );
 			_drawCommands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
 			_drawCommands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
+			_drawCommands.Attributes.Set( "ClipPublicationBank", _publishedClipBank );
+			_drawCommands.Attributes.Set( "ClipMinimumLod", _publishedMinimumLod );
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.Bounds, ResourceState.GenericRead );
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.SourceArguments, ResourceState.GenericRead );
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.UnorderedAccess );
@@ -679,7 +1013,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_visibilityReadbackPending = false;
 			_visibilityReadbackInFlight = false;
 		}
-		Span<uint> counters = stackalloc uint[10];
+		Span<uint> counters = stackalloc uint[VisibilityAggregateCounterCount];
 		counters[3] = uint.MaxValue;
 		_visibilityAggregateCounters.SetData( counters );
 		_visibilityMeasurementActive = true;
@@ -773,50 +1107,65 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var oldBounds = _visibilityBoundsData;
 		var oldArguments = _sourceArgumentData;
 		_visibilityCapacity = newCapacity;
-		_visibilityBoundsData = new Vector4[newCapacity * 2];
+		_visibilityBoundsData = new Vector4[newCapacity * VisibilityVectorsPerRecord];
 		_sourceArgumentData = new GpuBuffer.IndirectDrawIndexedArguments[newCapacity];
 		oldBounds.CopyTo( _visibilityBoundsData, 0 );
 		oldArguments.CopyTo( _sourceArgumentData, 0 );
-		var bounds = new GpuBuffer<Vector4>( newCapacity * 2, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Bounds" );
+		var bounds = new GpuBuffer<Vector4>( newCapacity * VisibilityVectorsPerRecord,
+			GpuBuffer.UsageFlags.Structured, "Voxel Terrain Record Metadata" );
 		var source = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( newCapacity,
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Source Indexed Arguments" );
 		var visible = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( newCapacity,
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Visible Indexed Arguments" );
-		var frame = new GpuBuffer<uint>( 5, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Frame Counters" );
+		var frame = new GpuBuffer<uint>( VisibilityFrameCounterCount, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Frame Counters" );
 		source.SetData( _sourceArgumentData );
 		visible.SetData( _sourceArgumentData );
 		_visibilityBuffers = new VisibilityBuffers( bounds, source, visible, frame );
-		_visibilityDescriptorsDirty = true;
+		_visibilityDescriptorsDirty = false;
 		_drawCommandsDirty = true;
 	}
 
-	private void SetVisibilityActive( ResidentMesh resident, bool active )
+	private void SetVisibilityRecord( ResidentMesh resident )
 	{
 		if ( resident.Handle is null ) return;
 		var descriptor = resident.Descriptor;
 		var size = descriptor.CellsPerAxis * descriptor.CellSize;
 		var origin = new Vector3(
-			descriptor.ChunkCoordinate.x * size,
-			descriptor.ChunkCoordinate.y * size,
-			descriptor.ChunkCoordinate.z * size );
+			descriptor.RegionCoordinate.x * size,
+			descriptor.RegionCoordinate.y * size,
+			descriptor.RegionCoordinate.z * size );
 		var padding = new Vector3( descriptor.CellSize );
 		var slot = resident.Handle.GlobalSlot;
-		var index = slot * 2;
-		var activeResidency = resident.Residency == GpuMeshResidency.Warm ? 2f : 1f;
-		_visibilityBoundsData[index] = new Vector4( origin - padding, active ? activeResidency : 0 );
+		var index = slot * VisibilityVectorsPerRecord;
+		var activeResidency = resident.Residency == GpuMeshResidency.Fallback ? 2f : 1f;
+		_visibilityBoundsData[index] = new Vector4( origin - padding, activeResidency );
 		_visibilityBoundsData[index + 1] = new Vector4(
 			origin + new Vector3( size ) + padding,
-			active ? resident.Counts.ActiveCells : 0 );
-		_sourceArgumentData[slot] = active
-			? new GpuBuffer.IndirectDrawIndexedArguments
-			{
-				IndexCount = (uint)resident.Handle.Indices.Count,
-				InstanceCount = 1,
-				FirstIndex = (uint)resident.Handle.Indices.Offset,
-				BaseVertex = resident.Handle.Vertices.Offset,
-				FirstInstance = 0
-			}
-			: default;
+			resident.Counts.ActiveCells );
+		_sourceArgumentData[slot] = new GpuBuffer.IndirectDrawIndexedArguments
+		{
+			IndexCount = (uint)resident.Handle.Indices.Count,
+			InstanceCount = 1,
+			FirstIndex = (uint)resident.Handle.Indices.Offset,
+			BaseVertex = resident.Handle.Vertices.Offset,
+			FirstInstance = (uint)slot
+		};
+		var descriptorOffset = index + DescriptorVectorOffset;
+		_visibilityBoundsData[descriptorOffset] = new Vector4( origin, descriptor.CellSize );
+		_visibilityBoundsData[descriptorOffset + 1] = new Vector4( size, size, size, descriptor.Lod );
+		_visibilityBoundsData[descriptorOffset + 2] = new Vector4(
+			BitConverter.UInt32BitsToSingle( resident.GetTransitionMask( 0 ) ),
+			BitConverter.UInt32BitsToSingle( resident.GetTransitionMask( 1 ) ),
+			BitConverter.UInt32BitsToSingle( resident.CoverageBits ),
+			BitConverter.UInt32BitsToSingle( (uint)descriptor.MeshKind ) );
+		_visibilityDescriptorsDirty = true;
+	}
+
+	private void ClearVisibilityRecord( int slot )
+	{
+		var index = slot * VisibilityVectorsPerRecord;
+		Array.Clear( _visibilityBoundsData, index, VisibilityVectorsPerRecord );
+		_sourceArgumentData[slot] = default;
 		_visibilityDescriptorsDirty = true;
 	}
 
@@ -830,12 +1179,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void Clear()
 	{
+		_preparedClipSelection = null;
+		_publishedClipSelection = null;
+		_preparedResidentRemovals.Clear();
+		_preparedClipPlacementRevision = 0;
+		_publishedClipBank = 0;
+		_preparedClipBank = 1;
+		_publishedMinimumLod = MaximumClipLevels;
 		if ( _scheduleLatencyMeasurementActive )
 			_scheduleLatencyCancelledCount += _pending.Count + (_scratchLanes?.Sum( lane =>
 				lane.CountInFlight.Count + lane.EmitInFlight.Count ) ?? 0);
 		_pending.Clear();
 		_gameplayDispatchQueue.Clear();
 		_warmDispatchQueue.Clear();
+		_transitionDispatchQueue.Clear();
 		_pendingGameplayCount = 0;
 		_pendingWarmCount = 0;
 		_cancelledInFlight.Clear();
@@ -1102,13 +1459,35 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private sealed class ResidentMesh
 	{
-		public GpuSdfDescriptor Descriptor { get; }
+		public GpuSdfDescriptor Descriptor { get; set; }
 		public GpuMeshResidency Residency { get; set; }
 		public GeometryHandle Handle { get; }
 		public GpuTerrainCountResult Counts { get; }
+		public uint CoverageBits { get; private set; }
+		private uint TransitionMask0 { get; set; }
+		private uint TransitionMask1 { get; set; }
 		public ResidentMesh( GpuSdfDescriptor descriptor, GpuMeshResidency residency, GeometryHandle handle, GpuTerrainCountResult counts )
 		{
 			Descriptor = descriptor; Residency = residency; Handle = handle; Counts = counts;
+		}
+
+		public bool GetCoverageResident( int bank ) =>
+			(CoverageBits & (1u << bank)) != 0;
+
+		public bool GetCoverageActive( int bank ) =>
+			(CoverageBits & (1u << (bank + 2))) != 0;
+
+		public uint GetTransitionMask( int bank ) =>
+			bank == 0 ? TransitionMask0 : TransitionMask1;
+
+		public void SetCoverageBank( int bank, bool resident, bool active, uint transitionMask )
+		{
+			var residentBit = 1u << bank;
+			var activeBit = 1u << (bank + 2);
+			CoverageBits = resident ? CoverageBits | residentBit : CoverageBits & ~residentBit;
+			CoverageBits = active ? CoverageBits | activeBit : CoverageBits & ~activeBit;
+			if ( bank == 0 ) TransitionMask0 = transitionMask;
+			else TransitionMask1 = transitionMask;
 		}
 	}
 
@@ -1134,6 +1513,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly record struct CandidateMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency,
 		uint Generation, long ScheduledTimestamp, float ScheduledRouteDistance,
 		GeometryHandle Handle, GpuTerrainCountResult Counts );
+	private readonly record struct InFlightIdentity( VoxelRenderRegionKey Key, uint Generation );
 
 	private sealed class GeometryHandle
 	{
@@ -1222,7 +1602,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			Bounds = bounds; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
 		}
-		public void Dispose() { Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose(); }
+		public void Dispose()
+		{
+			Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
+		}
 	}
 
 	private sealed class ReadbackSceneObject : SceneCustomObject
@@ -1243,6 +1626,21 @@ internal sealed class GpuVoxelMesher : IDisposable
 }
 
 internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Milliseconds );
+internal readonly record struct GpuClipLevelMeasurement(
+	int Lod,
+	int DesiredRegular,
+	int ResidentRegular,
+	int ActiveRegular,
+	int FallbackRegular,
+	int DesiredTransitions,
+	int ResidentTransitions,
+	int ActiveTransitions,
+	long RegularTriangles,
+	long TransitionTriangles,
+	long RegularBytes,
+	long TransitionBytes,
+	ulong TopologyDigest,
+	ulong PositionDigest );
 internal readonly record struct GpuMeshScheduleLatencyMeasurement(
 	int Samples, int TruncatedSamples, float P50Milliseconds, float P95Milliseconds,
 	float P99Milliseconds, float MaximumMilliseconds, int Cancelled, int Superseded );
@@ -1293,4 +1691,4 @@ internal readonly record struct GpuVisibilityMeasurement(
 	public float AverageCulled => MathF.Max( 0, AverageResident - AverageVisible );
 	public float CulledPercent => AverageResident > 0 ? AverageCulled * 100 / AverageResident : 0;
 }
-internal enum GpuMeshResidency { Gameplay, Warm }
+internal enum GpuMeshResidency { Gameplay, Fallback }

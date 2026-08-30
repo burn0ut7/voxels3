@@ -23,6 +23,7 @@ struct VertexInput
 {
 	float3 Position : POSITION < Semantic( None ); >;
 	float3 Normal : NORMAL < Semantic( None ); >;
+	uint InstanceId : SV_InstanceID;
 };
 
 struct PixelInput
@@ -32,12 +33,64 @@ struct PixelInput
 
 VS
 {
+	StructuredBuffer<float4> TerrainRecordDescriptors < Attribute( "TerrainRecordDescriptors" ); >;
+	int ClipPublicationBank < Attribute( "ClipPublicationBank" ); >;
+	int ClipMinimumLod < Attribute( "ClipMinimumLod" ); >;
+
+	float BoundaryDelta( float position, float extent, float cellSize, bool minimumActive, bool maximumActive )
+	{
+		float width = cellSize * 0.25;
+		if ( minimumActive && position < cellSize )
+		{
+			return (1.0 - position / cellSize) * width;
+		}
+		if ( maximumActive && position > extent - cellSize )
+		{
+			return ((extent - cellSize - position) / cellSize) * width;
+		}
+		return 0.0;
+	}
+
 	PixelInput MainVs( const VertexInput input )
 	{
 		PixelInput output;
-		output.vPositionWs = input.Position - g_vHighPrecisionLightingOffsetWs.xyz;
-		output.vPositionPs = Position3WsToPs( input.Position );
-		output.vNormalWs = normalize( input.Normal );
+		float3 normal = normalize( input.Normal );
+		float3 worldPosition = input.Position;
+		uint descriptorOffset = input.InstanceId * 5u + 2u;
+		float4 originAndCellSize = TerrainRecordDescriptors[descriptorOffset];
+		float4 extentAndLod = TerrainRecordDescriptors[descriptorOffset + 1u];
+		float4 identity = TerrainRecordDescriptors[descriptorOffset + 2u];
+		uint publicationBank = (uint)clamp( ClipPublicationBank, 0, 1 );
+		uint transitionMask = publicationBank == 0u ? asuint( identity.x ) : asuint( identity.y );
+		uint meshKind = asuint( identity.w );
+		if ( (uint)round( extentAndLod.w ) <= (uint)ClipMinimumLod ) transitionMask = 0u;
+		if ( meshKind == 0u && transitionMask != 0u )
+		{
+			float3 localPosition = worldPosition - originAndCellSize.xyz;
+			float3 delta;
+			delta.x = BoundaryDelta(
+				localPosition.x,
+				extentAndLod.x,
+				originAndCellSize.w,
+				(transitionMask & 1u) != 0u,
+				(transitionMask & 2u) != 0u );
+			delta.y = BoundaryDelta(
+				localPosition.y,
+				extentAndLod.y,
+				originAndCellSize.w,
+				(transitionMask & 4u) != 0u,
+				(transitionMask & 8u) != 0u );
+			delta.z = BoundaryDelta(
+				localPosition.z,
+				extentAndLod.z,
+				originAndCellSize.w,
+				(transitionMask & 16u) != 0u,
+				(transitionMask & 32u) != 0u );
+			worldPosition += delta - normal * dot( normal, delta );
+		}
+		output.vPositionWs = worldPosition - g_vHighPrecisionLightingOffsetWs.xyz;
+		output.vPositionPs = Position3WsToPs( worldPosition );
+		output.vNormalWs = normal;
 		return output;
 	}
 }

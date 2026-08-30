@@ -25,8 +25,7 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 10;
-	private const int RenderWarmShellChunks = 1;
+	private const int PerformanceResultSchemaVersion = 13;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
 	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
@@ -39,20 +38,21 @@ public sealed class VoxelManager : Component
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
-	private HashSet<Vector3Int> _renderDesiredChunks = new();
-	private HashSet<Vector3Int> _nextRenderDesiredChunks = new();
-	private readonly HashSet<Vector3Int> _renderPreparedChunks = new();
 	private readonly Queue<Vector3Int> _pendingChunks = new();
 	private readonly Queue<VoxelChunk> _completedChunks = new();
-	private readonly Queue<Vector3Int> _pendingWarmChunks = new();
-	private readonly Queue<WarmChunkResult> _completedWarmChunks = new();
 	private readonly List<Vector3Int> _coordinateBuffer = new();
-	private readonly List<Vector3Int> _warmCoordinateBuffer = new();
-	private readonly List<Vector3Int> _gameplayEnteringBuffer = new();
-	private readonly List<Vector3Int> _gameplayLeavingBuffer = new();
-	private readonly List<Vector3Int> _renderEnteringBuffer = new();
-	private readonly List<Vector3Int> _renderLeavingBuffer = new();
 	private readonly HashSet<Vector3Int> _coordinateSetBuffer = new();
+	private VoxelClipBoxSelection _activeClipSelection;
+	private VoxelClipBoxSelection _pendingClipSelection;
+	private int _pendingClipMinimumLod;
+	private int _clipPlacementRevision;
+	private int _clipFallbackFrames;
+	private int _clipCoverageMismatches;
+	private int _clipAdjacencyViolations;
+	private int _clipSelectionBudgetViolations;
+	private int _clipIntegrationBudgetViolations;
+	private float _maximumClipSelectionMilliseconds;
+	private float _maximumClipIntegrationMilliseconds;
 	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
@@ -81,7 +81,8 @@ public sealed class VoxelManager : Component
 	private bool _integratedBeforeWorkerCompleted;
 	private int _appliedCellsPerAxis;
 	private float _appliedCellSize;
-	private int _appliedLoadRadius;
+	private int _appliedViewRadiusChunks;
+	private int _appliedFullDetailRadiusChunks;
 	private int _appliedWorldSeed;
 	private float _appliedSurfaceBaseHeight;
 	private float _appliedSurfaceFrequency;
@@ -91,10 +92,6 @@ public sealed class VoxelManager : Component
 	private bool _workerCompleted;
 	private CancellationTokenSource _generationCancellation;
 	private System.Threading.Tasks.Task _generationTask = System.Threading.Tasks.Task.CompletedTask;
-	private int _warmGenerationRevision;
-	private bool _warmWorkerCompleted;
-	private CancellationTokenSource _warmGenerationCancellation;
-	private System.Threading.Tasks.Task _warmGenerationTask = System.Threading.Tasks.Task.CompletedTask;
 	private string _lastConfigurationError = string.Empty;
 	private GameObject _resolvedStreamingTarget;
 	private bool _playerFigureEightEnabled;
@@ -200,8 +197,14 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Chunk Configuration" ), Range( 1f, 128f )]
 	public float CellSize { get; set; } = 16f;
 
-	[Property, Category( "Chunk Configuration" ), Range( 0, 128 )]
-	public int LoadRadius { get; set; } = 16;
+	[Property, Category( "Chunk Configuration" ), Range( 4, 128 )]
+	public int ViewRadiusChunks { get; set; } = 16;
+
+	[Property, Category( "Chunk Configuration" ), Range( 2, 128 )]
+	public int FullDetailRadiusChunks { get; set; } = 4;
+
+	[Property, ReadOnly, Category( "Chunk Configuration" )]
+	public int EffectiveMaximumLod { get; private set; } = 2;
 
 	[Property, Category( "Terrain Generation" )]
 	public int WorldSeed { get; set; } = ProceduralTerrainSdf.DefaultWorldSeed;
@@ -235,6 +238,12 @@ public sealed class VoxelManager : Component
 
 	[Property, Category( "Diagnostics" )]
 	public bool VerboseLogging { get; set; } = false;
+
+	[Property, Category( "Diagnostics" )]
+	public bool DrawClipBoxes { get; set; } = false;
+
+	[Property, ReadOnly, Category( "World Status" )]
+	public string ClipBoxStatus { get; private set; } = "Not initialized";
 
 	[Property, ReadOnly, Category( "Performance Test" )]
 	public string PerformanceResultsLocation { get; private set; } = PerformanceResultsPath;
@@ -307,6 +316,8 @@ public sealed class VoxelManager : Component
 
 		while ( _streamInProgress )
 		{
+			_gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
+			TryAdvanceClipCoverage();
 			if ( IntegrateCompletedChunks() )
 			{
 				RefreshReadableStatus();
@@ -376,19 +387,14 @@ public sealed class VoxelManager : Component
 			if ( configurationError != _lastConfigurationError )
 			{
 				_generationCancellation?.Cancel();
-				_warmGenerationCancellation?.Cancel();
 				_streamRevision++;
-				_warmGenerationRevision++;
 				_gpuMesher?.Clear();
 				_loadedChunks.Clear();
 				_desiredChunks.Clear();
-				_renderDesiredChunks.Clear();
-				_nextRenderDesiredChunks.Clear();
-				_renderPreparedChunks.Clear();
 				_pendingChunks.Clear();
 				_completedChunks.Clear();
-				_pendingWarmChunks.Clear();
-				_completedWarmChunks.Clear();
+				_activeClipSelection = null;
+				_pendingClipSelection = null;
 				_hasStreamingCenter = false;
 				_streamInProgress = false;
 				_lastConfigurationError = configurationError;
@@ -408,11 +414,13 @@ public sealed class VoxelManager : Component
 		}
 		else
 		{
-			if ( LoadRadius != _appliedLoadRadius )
+			if ( ViewRadiusChunks != _appliedViewRadiusChunks ||
+				FullDetailRadiusChunks != _appliedFullDetailRadiusChunks )
 			{
-				_appliedLoadRadius = LoadRadius;
+				_appliedViewRadiusChunks = ViewRadiusChunks;
+				_appliedFullDetailRadiusChunks = FullDetailRadiusChunks;
 				var targetPosition = ActiveStreamingTarget.WorldPosition;
-				RebuildDesiredChunks( WorldToChunkCoordinate( targetPosition ), "load radius changed" );
+				RebuildDesiredChunks( WorldToChunkCoordinate( targetPosition ), "clip-box radius changed" );
 			}
 			else
 			{
@@ -429,15 +437,12 @@ public sealed class VoxelManager : Component
 		{
 			RefreshReadableStatus();
 		}
-		else if ( IntegrateCompletedWarmChunks() )
-		{
-			RefreshReadableStatus();
-		}
 		else
 		{
 			RefreshPlayerChunkStatus();
 		}
 		var meshDispatches = _gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
+		TryAdvanceClipCoverage();
 		if ( _playerFigureEightTestRunning )
 		{
 			_performancePeakMeshDispatchesPerUpdate = Math.Max(
@@ -446,6 +451,32 @@ public sealed class VoxelManager : Component
 		}
 		TryCompletePlayerFigureEightTest();
 		TrySaveCompletedPerformanceTest();
+		DrawClipBoxOverlay();
+	}
+
+	private void DrawClipBoxOverlay()
+	{
+		if ( !DrawClipBoxes ) return;
+		var selection = _pendingClipSelection ?? _activeClipSelection;
+		if ( selection is null ) return;
+		var colors = new[]
+		{
+			Color.Red, Color.Orange, Color.Yellow, Color.Green,
+			Color.Cyan, Color.Blue, Color.Magenta
+		};
+		foreach ( var bounds in selection.Boxes )
+		{
+			var extent = CellsPerAxis * CellSize * (1 << bounds.Lod);
+			var minimum = new Vector3(
+				bounds.Minimum.x * extent,
+				bounds.Minimum.y * extent,
+				bounds.Minimum.z * extent );
+			var maximum = new Vector3(
+				bounds.Maximum.x * extent,
+				bounds.Maximum.y * extent,
+				bounds.Maximum.z * extent );
+			DebugOverlay.Box( new BBox( minimum, maximum ), colors[bounds.Lod % colors.Length], 0f );
+		}
 	}
 
 	protected override void OnDestroy()
@@ -456,7 +487,6 @@ public sealed class VoxelManager : Component
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTestCompletionReady = false;
 		_generationCancellation?.Cancel();
-		_warmGenerationCancellation?.Cancel();
 		_gpuMesher?.Dispose();
 		_gpuMesher = null;
 	}
@@ -571,6 +601,14 @@ public sealed class VoxelManager : Component
 
 		var normalizedTask = RequirePerformanceContext( task, nameof( task ) );
 		var normalizedRevision = RequirePerformanceContext( revision, nameof( revision ) );
+		_clipFallbackFrames = 0;
+		_clipCoverageMismatches = 0;
+		_clipAdjacencyViolations = 0;
+		_clipSelectionBudgetViolations = 0;
+		_clipIntegrationBudgetViolations = 0;
+		_maximumClipSelectionMilliseconds = 0f;
+		_maximumClipIntegrationMilliseconds = 0f;
+		_gpuMesher?.BeginClipMeasurement();
 		StartPlayerFigureEight( speed, distance );
 		FigureEightLoopCount = loopCount;
 		PerformanceTask = normalizedTask;
@@ -667,7 +705,9 @@ public sealed class VoxelManager : Component
 				Scene = sceneName,
 				CellsPerAxis = CellsPerAxis,
 				CellSize = CellSize,
-				LoadRadius = LoadRadius,
+				ViewRadiusChunks = ViewRadiusChunks,
+				FullDetailRadiusChunks = FullDetailRadiusChunks,
+				EffectiveMaximumLod = EffectiveMaximumLod,
 				Generator = "deterministic-simplex-caves",
 				WorldSeed = WorldSeed,
 				GeneratorVersion = ProceduralTerrainSdf.CurrentVersion,
@@ -799,6 +839,7 @@ public sealed class VoxelManager : Component
 			Submission = _lastPerformanceSubmission,
 			Streaming = _lastPerformanceStreaming,
 			Bounds = _lastPerformanceBounds,
+			ClipBoxes = CreateClipBoxMetrics( _lastPerformanceVisibility ),
 			Profiler = _lastPerformanceProfiler
 		};
 
@@ -961,10 +1002,7 @@ public sealed class VoxelManager : Component
 
 		if ( _performanceCompletionPhase == PerformanceCompletionPhase.AwaitingMovingSettle )
 		{
-			if ( _pendingWarmChunks.Count > 0 ||
-				_completedWarmChunks.Count > 0 ||
-				!_warmWorkerCompleted ||
-				_gpuMesher.PendingCount > 0 )
+			if ( _pendingClipSelection is not null || _gpuMesher.PendingCount > 0 )
 			{
 				return;
 			}
@@ -1296,6 +1334,53 @@ public sealed class VoxelManager : Component
 		ScalarReadbacks = visibility.ScalarReadbacks
 	};
 
+	private PerformanceClipBoxMetrics CreateClipBoxMetrics( GpuVisibilityMeasurement visibility )
+	{
+		var selection = _activeClipSelection ?? _pendingClipSelection;
+		var captured = _gpuMesher?.CaptureClipLevelMeasurements( selection ) ??
+			Array.Empty<GpuClipLevelMeasurement>();
+		var levels = new PerformanceClipLevelMetrics[captured.Length];
+		for ( var index = 0; index < captured.Length; index++ )
+		{
+			var source = captured[index];
+			levels[index] = new PerformanceClipLevelMetrics
+			{
+				Lod = source.Lod,
+				DesiredRegular = source.DesiredRegular,
+				ResidentRegular = source.ResidentRegular,
+				ActiveRegular = source.ActiveRegular,
+				FallbackRegular = source.FallbackRegular,
+				DesiredTransitions = source.DesiredTransitions,
+				ResidentTransitions = source.ResidentTransitions,
+				ActiveTransitions = source.ActiveTransitions,
+				RegularTriangles = source.RegularTriangles,
+				TransitionTriangles = source.TransitionTriangles,
+				RegularBytes = source.RegularBytes,
+				TransitionBytes = source.TransitionBytes,
+				TopologyDigest = source.TopologyDigest.ToString( "X16" ),
+				PositionDigest = source.PositionDigest.ToString( "X16" )
+			};
+		}
+		return new PerformanceClipBoxMetrics
+		{
+			MaximumLod = selection?.MaximumLod ?? 0,
+			ResidentRegular = selection?.ResidentRegularCount ?? 0,
+			ActiveRegular = selection?.ActiveRegularCount ?? 0,
+			LogicalTransitionFaces = selection?.LogicalTransitionFaceCount ?? 0,
+			FallbackFrames = _clipFallbackFrames,
+			CoverageMismatches = _clipCoverageMismatches,
+			TransitionMaskMismatches = _gpuMesher?.CountPublishedTransitionMaskMismatches() ?? 0,
+			AdjacencyViolations = _clipAdjacencyViolations,
+			StalePublications = _gpuMesher?.StalePublicationCount ?? 0,
+			SelectionBudgetViolations = _clipSelectionBudgetViolations,
+			MaximumSelectionMilliseconds = _maximumClipSelectionMilliseconds,
+			IntegrationBudgetViolations = _clipIntegrationBudgetViolations,
+			MaximumIntegrationMilliseconds = _maximumClipIntegrationMilliseconds,
+			ArenaSubmissions = _gpuMesher?.TerrainIndirectApiSubmissionCount ?? 0,
+			Levels = levels
+		};
+	}
+
 	private static PerformanceMeshingThroughputMetrics CreateThroughputMetrics(
 		GpuMeshThroughputMeasurement throughput ) => new()
 	{
@@ -1548,9 +1633,9 @@ public sealed class VoxelManager : Component
 
 	private bool TryValidateConfiguration( out string error )
 	{
-		if ( CellsPerAxis < 4 || CellsPerAxis > 64 )
+		if ( CellsPerAxis < 4 || CellsPerAxis > 64 || (CellsPerAxis & 1) != 0 )
 		{
-			error = "Cells Per Axis must be between 4 and 64.";
+			error = "Cells Per Axis must be even and between 4 and 64.";
 			return false;
 		}
 
@@ -1560,9 +1645,16 @@ public sealed class VoxelManager : Component
 			return false;
 		}
 
-		if ( LoadRadius < 0 || LoadRadius > 16 )
+		if ( ViewRadiusChunks < 4 || ViewRadiusChunks > 128 )
 		{
-			error = "Load Radius must be between 0 and 16 chunks.";
+			error = "View Radius Chunks must be between 4 and 128.";
+			return false;
+		}
+
+		if ( FullDetailRadiusChunks < 2 || FullDetailRadiusChunks > ViewRadiusChunks ||
+			(FullDetailRadiusChunks & 1) != 0 )
+		{
+			error = "Full Detail Radius Chunks must be positive, even, and no greater than the view radius.";
 			return false;
 		}
 
@@ -1617,27 +1709,25 @@ public sealed class VoxelManager : Component
 
 		_appliedCellsPerAxis = CellsPerAxis;
 		_appliedCellSize = CellSize;
-		_appliedLoadRadius = LoadRadius;
+		_appliedViewRadiusChunks = ViewRadiusChunks;
+		_appliedFullDetailRadiusChunks = FullDetailRadiusChunks;
+		EffectiveMaximumLod = VoxelClipBoxSelection.CalculateMaximumLod(
+			FullDetailRadiusChunks, ViewRadiusChunks );
 		_appliedWorldSeed = WorldSeed;
 		_appliedSurfaceBaseHeight = SurfaceBaseHeight;
 		_appliedSurfaceFrequency = SurfaceFrequency;
 		_appliedSurfaceAmplitude = SurfaceAmplitude;
 
 		_generationCancellation?.Cancel();
-		_warmGenerationCancellation?.Cancel();
 		_streamRevision++;
-		_warmGenerationRevision++;
 		_terrainContentRevision++;
 		_gpuMesher.Reset( CellsPerAxis );
 		_loadedChunks.Clear();
 		_desiredChunks.Clear();
-		_renderDesiredChunks.Clear();
-		_nextRenderDesiredChunks.Clear();
-		_renderPreparedChunks.Clear();
 		_pendingChunks.Clear();
 		_completedChunks.Clear();
-		_pendingWarmChunks.Clear();
-		_completedWarmChunks.Clear();
+		_activeClipSelection = null;
+		_pendingClipSelection = null;
 		_hasStreamingCenter = false;
 		_streamInProgress = false;
 
@@ -1656,209 +1746,96 @@ public sealed class VoxelManager : Component
 
 	private void RebuildDesiredChunks( Vector3Int center, string reason )
 	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.RebuildDesiredChunks );
 		var synchronousStart = Stopwatch.GetTimestamp();
 		var previousCenter = _streamingCenterCoordinate;
 		var hadPreviousCenter = _hasStreamingCenter;
-		var desiredUpdateStart = Stopwatch.GetTimestamp();
-		var delta = hadPreviousCenter ? center - previousCenter : Vector3Int.Zero;
-		var renderRadius = LoadRadius + RenderWarmShellChunks;
-		var incremental = hadPreviousCenter && center != previousCenter &&
-			Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1 &&
-			_desiredChunks.Count == GetCubeCoordinateCount( LoadRadius ) &&
-			_renderDesiredChunks.Count == GetCubeCoordinateCount( renderRadius );
-
-		_gameplayEnteringBuffer.Clear();
-		_gameplayLeavingBuffer.Clear();
-		_renderEnteringBuffer.Clear();
-		_renderLeavingBuffer.Clear();
-		if ( incremental )
+		var selectionStart = Stopwatch.GetTimestamp();
+		var selection = VoxelClipBoxSelection.Build(
+			center,
+			FullDetailRadiusChunks,
+			ViewRadiusChunks );
+		var selectionMilliseconds =
+			(float)Stopwatch.GetElapsedTime( selectionStart ).TotalMilliseconds;
+		_maximumClipSelectionMilliseconds = Math.Max(
+			_maximumClipSelectionMilliseconds,
+			selectionMilliseconds );
+		if ( selectionMilliseconds > MainThreadIntegrationBudgetMilliseconds )
 		{
-			SlideDesiredWindow( _desiredChunks, previousCenter, center, LoadRadius,
-				_gameplayEnteringBuffer, _gameplayLeavingBuffer );
-			SlideDesiredWindow( _renderDesiredChunks, previousCenter, center, renderRadius,
-				_renderEnteringBuffer, _renderLeavingBuffer );
+			_clipSelectionBudgetViolations++;
+			Log.Warning(
+				$"[VoxelWorld] clip.selection.over_budget milliseconds={selectionMilliseconds:0.0000} " +
+				$"budget={MainThreadIntegrationBudgetMilliseconds:0.0000}" );
 		}
-		else
-		{
-			_desiredChunks.Clear();
-			for ( var z = -LoadRadius; z <= LoadRadius; z++ )
-			{
-				for ( var y = -LoadRadius; y <= LoadRadius; y++ )
-				{
-					for ( var x = -LoadRadius; x <= LoadRadius; x++ )
-					{
-						_desiredChunks.Add( new Vector3Int( center.x + x, center.y + y, center.z + z ) );
-					}
-				}
-			}
-
-			_nextRenderDesiredChunks.Clear();
-			for ( var z = -renderRadius; z <= renderRadius; z++ )
-			{
-				for ( var y = -renderRadius; y <= renderRadius; y++ )
-				{
-					for ( var x = -renderRadius; x <= renderRadius; x++ )
-					{
-						_nextRenderDesiredChunks.Add(
-							new Vector3Int( center.x + x, center.y + y, center.z + z ) );
-					}
-				}
-			}
-		}
-
+		EffectiveMaximumLod = selection.MaximumLod;
 		_streamingCenterCoordinate = center;
 		_hasStreamingCenter = true;
-		var desiredUpdateMilliseconds = (float)Stopwatch.GetElapsedTime( desiredUpdateStart ).TotalMilliseconds;
+
+		var comparedSelection = _pendingClipSelection ?? _activeClipSelection;
+		if ( comparedSelection is not null && selection.PlacementEquals( comparedSelection ) )
+		{
+			RefreshReadableStatus();
+			return;
+		}
+
+		var previousPending = _pendingClipSelection;
+		_pendingClipSelection = selection;
+		var delta = hadPreviousCenter ? center - previousCenter : Vector3Int.Zero;
+		var adjacent = _activeClipSelection is not null &&
+			Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1;
+		_pendingClipMinimumLod = adjacent ? 0 : selection.MaximumLod;
+		var placementRevision = ++_clipPlacementRevision;
+
+		if ( previousPending is not null )
+		{
+			var retained = new HashSet<VoxelRenderRegionKey>( selection.ResidentRegular );
+			retained.UnionWith( selection.TransitionFaces );
+			if ( _activeClipSelection is not null )
+			{
+				retained.UnionWith( _activeClipSelection.ResidentRegular );
+				retained.UnionWith( _activeClipSelection.TransitionFaces );
+			}
+			foreach ( var key in previousPending.ResidentRegular )
+			{
+				if ( !retained.Contains( key ) ) _gpuMesher.Remove( key );
+			}
+			foreach ( var key in previousPending.TransitionFaces )
+			{
+				if ( !retained.Contains( key ) ) _gpuMesher.Remove( key );
+			}
+		}
+		_gpuMesher.PrepareClipCoverage( selection, placementRevision );
+
+		var desiredStart = Stopwatch.GetTimestamp();
+		_desiredChunks.Clear();
+		var lod0Bounds = selection.Boxes[0];
+		for ( var z = lod0Bounds.Minimum.z; z < lod0Bounds.Maximum.z; z++ )
+		{
+			for ( var y = lod0Bounds.Minimum.y; y < lod0Bounds.Maximum.y; y++ )
+			{
+				for ( var x = lod0Bounds.Minimum.x; x < lod0Bounds.Maximum.x; x++ )
+				{
+					_desiredChunks.Add( new Vector3Int( x, y, z ) );
+				}
+			}
+		}
+		var desiredMilliseconds = (float)Stopwatch.GetElapsedTime( desiredStart ).TotalMilliseconds;
 
 		_coordinateBuffer.Clear();
-		if ( incremental )
+		foreach ( var coordinate in _desiredChunks )
 		{
-			_coordinateBuffer.AddRange( _gameplayLeavingBuffer );
-		}
-		else
-		{
-			foreach ( var coordinate in _loadedChunks.Keys )
-			{
-				if ( !_desiredChunks.Contains( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-
-		var unloadedCount = 0;
-		foreach ( var coordinate in _coordinateBuffer )
-		{
-			if ( (incremental ? _renderDesiredChunks : _nextRenderDesiredChunks).Contains( coordinate ) )
-			{
-				_gpuMesher.SetResidency( coordinate, GpuMeshResidency.Warm );
-			}
-			else
-			{
-				_gpuMesher.Remove( coordinate );
-				_renderPreparedChunks.Remove( coordinate );
-			}
-			if ( _loadedChunks.Remove( coordinate ) )
-			{
-				unloadedCount++;
-			}
-		}
-
-		_coordinateBuffer.Clear();
-		if ( incremental )
-		{
-			_coordinateBuffer.AddRange( _renderLeavingBuffer );
-		}
-		else
-		{
-			foreach ( var coordinate in _renderDesiredChunks )
-			{
-				if ( !_nextRenderDesiredChunks.Contains( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-
-		foreach ( var coordinate in _coordinateBuffer )
-		{
-			_gpuMesher.Remove( coordinate );
-			_renderPreparedChunks.Remove( coordinate );
-		}
-
-		if ( !incremental )
-		{
-			var previousRenderDesired = _renderDesiredChunks;
-			_renderDesiredChunks = _nextRenderDesiredChunks;
-			_nextRenderDesiredChunks = previousRenderDesired;
-		}
-		var drawCommit = _gpuMesher.CommitDrawCommands();
-
-		var prioritizationStart = Stopwatch.GetTimestamp();
-		_coordinateBuffer.Clear();
-		_coordinateSetBuffer.Clear();
-		if ( incremental )
-		{
-			foreach ( var coordinate in _pendingChunks )
-			{
-				if ( _desiredChunks.Contains( coordinate ) && !_loadedChunks.ContainsKey( coordinate ) &&
-					_coordinateSetBuffer.Add( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-			foreach ( var coordinate in _gameplayEnteringBuffer )
-			{
-				if ( !_loadedChunks.ContainsKey( coordinate ) && _coordinateSetBuffer.Add( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-		else
-		{
-			foreach ( var coordinate in _desiredChunks )
-			{
-				if ( !_loadedChunks.ContainsKey( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
+			if ( !_loadedChunks.ContainsKey( coordinate ) ) _coordinateBuffer.Add( coordinate );
 		}
 		SortNearestFirst( _coordinateBuffer, center );
-
+		_generationCancellation?.Cancel();
 		_pendingChunks.Clear();
-		foreach ( var coordinate in _coordinateBuffer )
-		{
-			_pendingChunks.Enqueue( coordinate );
-		}
-
-		_warmCoordinateBuffer.Clear();
-		_coordinateSetBuffer.Clear();
-		if ( incremental )
-		{
-			foreach ( var coordinate in _pendingWarmChunks )
-			{
-				if ( _renderDesiredChunks.Contains( coordinate ) && !_desiredChunks.Contains( coordinate ) &&
-					!_renderPreparedChunks.Contains( coordinate ) && _coordinateSetBuffer.Add( coordinate ) )
-				{
-					_warmCoordinateBuffer.Add( coordinate );
-				}
-			}
-			foreach ( var coordinate in _renderEnteringBuffer )
-			{
-				if ( !_desiredChunks.Contains( coordinate ) && !_renderPreparedChunks.Contains( coordinate ) &&
-					_coordinateSetBuffer.Add( coordinate ) )
-				{
-					_warmCoordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-		else
-		{
-			foreach ( var coordinate in _renderDesiredChunks )
-			{
-				if ( !_desiredChunks.Contains( coordinate ) && !_renderPreparedChunks.Contains( coordinate ) )
-				{
-					_warmCoordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-		_warmGenerationCancellation?.Cancel();
-		_warmGenerationRevision++;
-		_pendingWarmChunks.Clear();
-		_completedWarmChunks.Clear();
-		SortNearestFirst( _warmCoordinateBuffer, center );
-
-		foreach ( var coordinate in _warmCoordinateBuffer )
-		{
-			_pendingWarmChunks.Enqueue( coordinate );
-		}
-		var prioritizationMilliseconds = (float)Stopwatch.GetElapsedTime( prioritizationStart ).TotalMilliseconds;
+		_completedChunks.Clear();
+		foreach ( var coordinate in _coordinateBuffer ) _pendingChunks.Enqueue( coordinate );
 
 		_generatedThisStream = 0;
-		_retainedThisStream = _loadedChunks.Count;
-		_unloadedThisStream = unloadedCount;
+		_retainedThisStream = _loadedChunks.Count( pair => _desiredChunks.Contains( pair.Key ) );
+		_unloadedThisStream = 0;
 		_staleDiscardedThisStream = 0;
 		_generationMillisecondsThisStream = 0f;
 		_integrationMillisecondsThisStream = 0f;
@@ -1876,20 +1853,18 @@ public sealed class VoxelManager : Component
 		_streamStartedTimestamp = Stopwatch.GetTimestamp();
 		_streamInProgress = true;
 
-		if ( VerboseLogging )
+		ScheduleClipLevel( selection, _pendingClipMinimumLod, placementRevision );
+		if ( adjacent )
 		{
-			Log.Info(
-				$"[VoxelWorld] stream.begin center=C[{center.x},{center.y},{center.z}] reason=\"{reason}\" " +
-				$"loadRadius={LoadRadius} retained={_loadedChunks.Count} " +
-				$"unloaded={unloadedCount} queued={_pendingChunks.Count} desired={_desiredChunks.Count}" );
+			for ( var lod = selection.MaximumLod; lod > 0; lod-- )
+			{
+				ScheduleClipLevel( selection, lod, placementRevision );
+			}
 		}
-		RefreshReadableStatus();
 
 		if ( _pendingChunks.Count == 0 )
 		{
-			_generationCancellation?.Cancel();
 			_streamRevision++;
-			_completedChunks.Clear();
 			_workerCompleted = true;
 			CompleteStream();
 		}
@@ -1898,129 +1873,172 @@ public sealed class VoxelManager : Component
 			StartBackgroundGeneration( _coordinateBuffer.ToArray() );
 		}
 
-		StartWarmGeneration( _warmCoordinateBuffer.ToArray() );
-
 		var totalMilliseconds = (float)Stopwatch.GetElapsedTime( synchronousStart ).TotalMilliseconds;
-		var gameplayTouched = incremental
-			? _gameplayEnteringBuffer.Count + _gameplayLeavingBuffer.Count
-			: _desiredChunks.Count;
-		var renderTouched = incremental
-			? _renderEnteringBuffer.Count + _renderLeavingBuffer.Count
-			: _renderDesiredChunks.Count;
 		if ( _playerFigureEightTestRunning )
 		{
-			if ( incremental )
-			{
-				_performanceStreaming.IncrementalUpdates++;
-			}
-			else
-			{
-				_performanceStreaming.FullUpdates++;
-			}
+			_performanceStreaming.IncrementalUpdates++;
 			_performanceStreaming.TotalSynchronousMilliseconds += totalMilliseconds;
 			_performanceStreaming.MaximumSynchronousMilliseconds = Math.Max(
-				_performanceStreaming.MaximumSynchronousMilliseconds,
-				totalMilliseconds );
-			_performanceStreaming.TotalDesiredUpdateMilliseconds += desiredUpdateMilliseconds;
-			_performanceStreaming.TotalPrioritizationMilliseconds += prioritizationMilliseconds;
-			_performanceStreaming.TotalDrawCommitMilliseconds += drawCommit.Milliseconds;
-			_performanceStreaming.DrawRebuilds += drawCommit.Rebuilt ? 1 : 0;
-			_performanceStreaming.GameplayCoordinatesTouched += gameplayTouched;
-			_performanceStreaming.RenderCoordinatesTouched += renderTouched;
+				_performanceStreaming.MaximumSynchronousMilliseconds, totalMilliseconds );
+			_performanceStreaming.TotalDesiredUpdateMilliseconds += desiredMilliseconds;
+			_performanceStreaming.GameplayCoordinatesTouched += _desiredChunks.Count;
+			_performanceStreaming.RenderCoordinatesTouched +=
+				selection.ResidentRegularCount + selection.LogicalTransitionFaceCount;
 		}
 
 		if ( VerboseLogging )
 		{
 			Log.Info(
-				$"[VoxelWorld] stream.window mode={(incremental ? "incremental" : "full")} " +
-				$"center=C[{center.x},{center.y},{center.z}] " +
-				$"previous=C[{previousCenter.x},{previousCenter.y},{previousCenter.z}] " +
-				$"delta=C[{delta.x},{delta.y},{delta.z}] reason=\"{reason}\" " +
-				$"totalMs={totalMilliseconds:0.0000} desiredMs={desiredUpdateMilliseconds:0.0000} " +
-				$"prioritizeMs={prioritizationMilliseconds:0.0000} drawCommitMs={drawCommit.Milliseconds:0.0000} " +
-				$"drawRebuilt={drawCommit.Rebuilt} gameplayEntering={_gameplayEnteringBuffer.Count} " +
-				$"gameplayLeaving={_gameplayLeavingBuffer.Count} renderEntering={_renderEnteringBuffer.Count} " +
-				$"renderLeaving={_renderLeavingBuffer.Count} " +
-				$"gameplayTouched={gameplayTouched} renderTouched={renderTouched} " +
-				$"gameplayQueued={_pendingChunks.Count} warmQueued={_pendingWarmChunks.Count} " +
-				$"generationBatchSize={GenerationBatchSize}" );
+				$"[VoxelWorld] clip.request center=C[{center.x},{center.y},{center.z}] reason=\"{reason}\" " +
+				$"placementRevision={placementRevision} adjacent={adjacent} maximumLod={selection.MaximumLod} " +
+				$"viewRadius={ViewRadiusChunks} fullDetailRadius={FullDetailRadiusChunks} " +
+				$"residentRegular={selection.ResidentRegularCount} activeRegular={selection.ActiveRegularCount} " +
+				$"transitionFaces={selection.LogicalTransitionFaceCount} gameplayQueued={_pendingChunks.Count} " +
+				$"selectionMs={selectionMilliseconds:0.0000} totalMs={totalMilliseconds:0.0000}" );
 		}
+		RefreshReadableStatus();
 	}
 
-	private static int GetCubeCoordinateCount( int radius )
+	private void ScheduleClipLevel(
+		VoxelClipBoxSelection selection,
+		int lod,
+		int placementRevision )
 	{
-		var side = checked( radius * 2 + 1 );
-		return checked( side * side * side );
-	}
-
-	private static void SlideDesiredWindow(
-		HashSet<Vector3Int> coordinates,
-		Vector3Int previousCenter,
-		Vector3Int center,
-		int radius,
-		List<Vector3Int> entering,
-		List<Vector3Int> leaving )
-	{
-		var delta = center - previousCenter;
-		for ( var axis = 0; axis < 3; axis++ )
+		if ( lod == 0 )
 		{
-			var axisDelta = axis == 0 ? delta.x : axis == 1 ? delta.y : delta.z;
-			if ( axisDelta == 0 )
+			foreach ( var pair in _loadedChunks )
 			{
-				continue;
-			}
-
-			var sign = Math.Sign( axisDelta );
-			var previousAxis = axis == 0 ? previousCenter.x : axis == 1 ? previousCenter.y : previousCenter.z;
-			var centerAxis = axis == 0 ? center.x : axis == 1 ? center.y : center.z;
-			ApplyWindowFace(
-				coordinates, previousCenter, center, radius, axis,
-				previousAxis - sign * radius, false, leaving );
-			ApplyWindowFace(
-				coordinates, center, previousCenter, radius, axis,
-				centerAxis + sign * radius, true, entering );
-		}
-	}
-
-	private static void ApplyWindowFace(
-		HashSet<Vector3Int> coordinates,
-		Vector3Int center,
-		Vector3Int comparisonCenter,
-		int radius,
-		int axis,
-		int fixedCoordinate,
-		bool add,
-		List<Vector3Int> changed )
-	{
-		for ( var second = -radius; second <= radius; second++ )
-		{
-			for ( var first = -radius; first <= radius; first++ )
-			{
-				var coordinate = axis switch
-				{
-					0 => new Vector3Int( fixedCoordinate, center.y + first, center.z + second ),
-					1 => new Vector3Int( center.x + first, fixedCoordinate, center.z + second ),
-					_ => new Vector3Int( center.x + first, center.y + second, fixedCoordinate )
-				};
-				if ( IsInsideCube( coordinate, comparisonCenter, radius ) )
-				{
-					continue;
-				}
-
-				var changedSet = add ? coordinates.Add( coordinate ) : coordinates.Remove( coordinate );
-				if ( changedSet )
-				{
-					changed.Add( coordinate );
-				}
+				if ( !_desiredChunks.Contains( pair.Key ) ) continue;
+				_gpuMesher.Schedule(
+					pair.Value,
+					_terrainContentRevision,
+					placementRevision,
+					_playerFigureEightRouteDistance,
+					GpuMeshResidency.Fallback );
 			}
 		}
+		else
+		{
+			foreach ( var key in selection.ResidentRegular
+				.Where( key => key.Lod == lod )
+				.OrderBy( key => key.Coordinate.z )
+				.ThenBy( key => key.Coordinate.y )
+				.ThenBy( key => key.Coordinate.x ) )
+			{
+				_gpuMesher.Schedule(
+					GpuSdfDescriptor.ForRenderRegion(
+						key,
+						CellsPerAxis,
+						CellSize,
+						CurrentTerrainSettings,
+						_terrainContentRevision,
+						placementRevision ),
+					_playerFigureEightRouteDistance );
+			}
+		}
+
+		var coarseTransitionLod = lod + 1;
+		foreach ( var key in selection.TransitionFaces
+			.Where( key => key.Lod == coarseTransitionLod )
+			.OrderBy( key => key.Face )
+			.ThenBy( key => key.Coordinate.z )
+			.ThenBy( key => key.Coordinate.y )
+			.ThenBy( key => key.Coordinate.x ) )
+		{
+			_gpuMesher.Schedule(
+				GpuSdfDescriptor.ForRenderRegion(
+					key,
+					CellsPerAxis,
+					CellSize,
+					CurrentTerrainSettings,
+					_terrainContentRevision,
+					placementRevision ),
+				_playerFigureEightRouteDistance );
+		}
 	}
 
-	private static bool IsInsideCube( Vector3Int coordinate, Vector3Int center, int radius )
+	private void TryAdvanceClipCoverage()
 	{
-		return Math.Abs( coordinate.x - center.x ) <= radius &&
-			Math.Abs( coordinate.y - center.y ) <= radius &&
-			Math.Abs( coordinate.z - center.z ) <= radius;
+		if ( _pendingClipSelection is null || _gpuMesher is null ) return;
+		var committedSelection = _pendingClipSelection;
+		var committedMinimumLod = _pendingClipMinimumLod;
+		if ( !_gpuMesher.IsClipCoverageReady(
+			committedSelection,
+			committedMinimumLod,
+			_terrainContentRevision,
+			_clipPlacementRevision,
+			out var missingRegions ) )
+		{
+			_clipFallbackFrames++;
+			ClipBoxStatus =
+				$"Refining LOD {_pendingClipMinimumLod}; {missingRegions:N0} regions or seams pending";
+			return;
+		}
+		var integrationStart = Stopwatch.GetTimestamp();
+		_gpuMesher.CommitClipCoverage(
+			committedSelection,
+			committedMinimumLod,
+			_clipPlacementRevision );
+		var milliseconds = (float)Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds;
+		_maximumClipIntegrationMilliseconds = Math.Max( _maximumClipIntegrationMilliseconds, milliseconds );
+		if ( milliseconds > MainThreadIntegrationBudgetMilliseconds )
+		{
+			_clipIntegrationBudgetViolations++;
+			Log.Warning(
+				$"[VoxelWorld] clip.integration.over_budget milliseconds={milliseconds:0.0000} " +
+				$"budget={MainThreadIntegrationBudgetMilliseconds:0.0000}" );
+		}
+		_gpuMesher.RetireCommittedClipCoverage();
+
+		if ( _pendingClipMinimumLod > 0 )
+		{
+			_pendingClipMinimumLod--;
+			ScheduleClipLevel(
+				_pendingClipSelection,
+				_pendingClipMinimumLod,
+				_clipPlacementRevision );
+			ClipBoxStatus = $"Fallback committed; refining LOD {_pendingClipMinimumLod}";
+		}
+		else
+		{
+			_activeClipSelection = _pendingClipSelection;
+			_pendingClipSelection = null;
+			_coordinateBuffer.Clear();
+			foreach ( var coordinate in _loadedChunks.Keys )
+			{
+				if ( !_desiredChunks.Contains( coordinate ) ) _coordinateBuffer.Add( coordinate );
+			}
+			foreach ( var coordinate in _coordinateBuffer )
+			{
+				_loadedChunks.Remove( coordinate );
+				_unloadedThisStream++;
+			}
+			ClipBoxStatus =
+				$"LOD0-{EffectiveMaximumLod}; {_activeClipSelection.ResidentRegularCount:N0} resident; " +
+				$"{_activeClipSelection.ActiveRegularCount:N0} active; " +
+				$"{_activeClipSelection.LogicalTransitionFaceCount:N0} transitions";
+		}
+		var expectedRegular = committedSelection.GetExpectedActiveRegularCount( committedMinimumLod );
+		var expectedTransitions = committedSelection.GetExpectedActiveTransitionCount( committedMinimumLod );
+		var activeRegularCount = _gpuMesher.ActiveRegularCount;
+		var activeTransitionCount = _gpuMesher.ActiveTransitionCount;
+		if ( activeRegularCount != expectedRegular ||
+			activeTransitionCount != expectedTransitions )
+		{
+			_clipCoverageMismatches++;
+			Log.Error(
+				$"[VoxelWorld] clip.coverage.mismatch expectedRegular={expectedRegular} " +
+				$"actualRegular={activeRegularCount} expectedTransitions={expectedTransitions} " +
+				$"actualTransitions={activeTransitionCount}" );
+		}
+		var adjacencyViolations = committedSelection.CountAdjacencyViolations( committedMinimumLod );
+		_clipAdjacencyViolations += adjacencyViolations;
+		if ( adjacencyViolations > 0 )
+		{
+			Log.Error( $"[VoxelWorld] clip.adjacency.violation count={adjacencyViolations}" );
+		}
+
+		RefreshReadableStatus();
 	}
 
 	private static void SortNearestFirst( List<Vector3Int> coordinates, Vector3Int center )
@@ -2213,166 +2231,6 @@ public sealed class VoxelManager : Component
 		}
 	}
 
-	private void StartWarmGeneration( Vector3Int[] coordinates )
-	{
-		_warmGenerationCancellation?.Cancel();
-		var cancellation = new CancellationTokenSource();
-		_warmGenerationCancellation = cancellation;
-		var revision = ++_warmGenerationRevision;
-		_warmWorkerCompleted = coordinates.Length == 0;
-		_completedWarmChunks.Clear();
-		if ( coordinates.Length == 0 )
-		{
-			_pendingWarmChunks.Clear();
-			return;
-		}
-
-		var previousTerrainTask = _generationTask ?? System.Threading.Tasks.Task.CompletedTask;
-		var previousWarmTask = _warmGenerationTask ?? System.Threading.Tasks.Task.CompletedTask;
-		_warmGenerationTask = GenerateWarmChunksInBackground(
-			previousTerrainTask,
-			previousWarmTask,
-			coordinates,
-			CellsPerAxis,
-			CellSize,
-			CurrentTerrainSettings,
-			revision,
-			cancellation.Token );
-	}
-
-	private async System.Threading.Tasks.Task GenerateWarmChunksInBackground(
-		System.Threading.Tasks.Task previousTerrainTask,
-		System.Threading.Tasks.Task previousWarmTask,
-		Vector3Int[] coordinates,
-		int cellsPerAxis,
-		float cellSize,
-		ProceduralTerrainSettings terrainSettings,
-		int revision,
-		CancellationToken cancellationToken )
-	{
-		try
-		{
-			await previousTerrainTask;
-			await previousWarmTask;
-			if ( cancellationToken.IsCancellationRequested )
-			{
-				return;
-			}
-
-			var rejectedSolid = 0;
-			var rejectedAir = 0;
-			var potential = 0;
-			var constructed = 0;
-			for ( var offset = 0; offset < coordinates.Length; offset += GenerationBatchSize )
-			{
-				var batchOffset = offset;
-				var batchCount = Math.Min( GenerationBatchSize, coordinates.Length - batchOffset );
-				var batch = await Task.RunInThreadAsync( () =>
-				{
-					var results = new List<WarmChunkResult>( batchCount );
-					for ( var index = 0; index < batchCount; index++ )
-					{
-						if ( cancellationToken.IsCancellationRequested )
-						{
-							break;
-						}
-
-						var coordinate = coordinates[batchOffset + index];
-						var boundsStart = Stopwatch.GetTimestamp();
-						var densityRange = VoxelChunk.ClassifyDensityRange(
-							coordinate, cellsPerAxis, cellSize, terrainSettings );
-						var boundsMilliseconds = (float)Stopwatch.GetElapsedTime(
-							boundsStart ).TotalMilliseconds;
-						var chunk = densityRange.Classification ==
-							ChunkDensityClassification.PotentiallySurfaceContaining
-							? new VoxelChunk(
-								coordinate,
-								cellsPerAxis,
-								cellSize,
-								terrainSettings,
-								densityRange )
-							: null;
-						results.Add( new WarmChunkResult(
-							coordinate,
-							densityRange.Classification,
-							chunk,
-							boundsMilliseconds ) );
-					}
-					return results;
-				} );
-
-				await Task.MainThread();
-				if ( cancellationToken.IsCancellationRequested || revision != _warmGenerationRevision )
-				{
-					if ( _playerFigureEightTestRunning )
-					{
-						_performanceBounds.StaleOrCancelledQueries += batch.Count;
-					}
-					return;
-				}
-
-				foreach ( var result in batch )
-				{
-					if ( _playerFigureEightTestRunning )
-					{
-						RecordBoundsQuery(
-							result.Classification,
-							result.BoundsMilliseconds,
-							true );
-					}
-					_completedWarmChunks.Enqueue( result );
-					switch ( result.Classification )
-					{
-						case ChunkDensityClassification.DefinitelySolid:
-							rejectedSolid++;
-							break;
-						case ChunkDensityClassification.DefinitelyAir:
-							rejectedAir++;
-							break;
-						default:
-							potential++;
-							constructed++;
-							break;
-					}
-				}
-			}
-
-			_warmWorkerCompleted = true;
-			if ( _playerFigureEightTestRunning )
-			{
-				_performanceStreaming.WarmCoordinatesClassified +=
-					rejectedSolid + rejectedAir + potential;
-				_performanceStreaming.WarmRejectedSolid += rejectedSolid;
-				_performanceStreaming.WarmRejectedAir += rejectedAir;
-				_performanceStreaming.WarmPotentiallySurfaceContaining += potential;
-				_performanceStreaming.WarmTransientChunksConstructed += constructed;
-			}
-			if ( VerboseLogging )
-			{
-				Log.Info(
-					$"[VoxelWorld] render.warm.generation revision={revision} candidates={coordinates.Length} " +
-					$"rejectedSolid={rejectedSolid} rejectedAir={rejectedAir} potential={potential} " +
-					$"constructed={constructed}" );
-			}
-		}
-		catch ( System.Threading.Tasks.TaskCanceledException )
-		{
-		}
-		catch ( Exception exception )
-		{
-			await Task.MainThread();
-			if ( revision == _warmGenerationRevision )
-			{
-				_pendingWarmChunks.Clear();
-				_completedWarmChunks.Clear();
-				_warmWorkerCompleted = true;
-				Log.Error(
-					exception,
-					$"[VoxelWorld] render.warm.failed revision={revision} error=\"{exception.Message}\"" );
-			}
-		}
-	}
-
 	private bool IntegrateCompletedChunks()
 	{
 		var integrationStart = Stopwatch.GetTimestamp();
@@ -2395,12 +2253,12 @@ public sealed class VoxelManager : Component
 					_integratedBeforeWorkerCompleted = !_workerCompleted;
 				}
 				_loadedChunks.Add( chunk.Coordinate, chunk );
-				_renderPreparedChunks.Add( chunk.Coordinate );
 				_gpuMesher.Schedule(
 					chunk,
 					_terrainContentRevision,
+					_clipPlacementRevision,
 					_playerFigureEightRouteDistance,
-					GpuMeshResidency.Gameplay );
+					GpuMeshResidency.Fallback );
 				integratedCount++;
 				_generatedThisStream++;
 
@@ -2428,49 +2286,6 @@ public sealed class VoxelManager : Component
 		}
 
 		return integratedCount > 0;
-	}
-
-	private bool IntegrateCompletedWarmChunks()
-	{
-		var integrationStart = Stopwatch.GetTimestamp();
-		var processedCount = 0;
-		while ( _completedWarmChunks.TryDequeue( out var result ) )
-		{
-			if ( !_pendingWarmChunks.TryDequeue( out var pendingCoordinate ) ||
-				pendingCoordinate != result.Coordinate )
-			{
-				Log.Error(
-					$"[VoxelWorld] render.warm.integration.invalid chunk=C[{result.Coordinate.x}," +
-					$"{result.Coordinate.y},{result.Coordinate.z}] " +
-					"reason=\"pending order mismatch\"" );
-				continue;
-			}
-
-			if ( _renderDesiredChunks.Contains( result.Coordinate ) )
-			{
-				_renderPreparedChunks.Add( result.Coordinate );
-				if ( result.Chunk is not null )
-				{
-					var residency = _loadedChunks.ContainsKey( result.Coordinate )
-						? GpuMeshResidency.Gameplay
-						: GpuMeshResidency.Warm;
-					_gpuMesher.Schedule(
-						result.Chunk,
-						_terrainContentRevision,
-						_playerFigureEightRouteDistance,
-						residency );
-				}
-				processedCount++;
-			}
-
-			if ( Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds >=
-				MainThreadIntegrationBudgetMilliseconds )
-			{
-				break;
-			}
-		}
-
-		return processedCount > 0;
 	}
 
 	private void CompleteStream()
@@ -2512,10 +2327,11 @@ public sealed class VoxelManager : Component
 				probeChunk.TryGetSample( Vector3Int.OneZ, out oneCellUpProbeDensity, out oneCellUpProbeMaterialId );
 			}
 
+			var lod0Bounds = _activeClipSelection?.Boxes[0];
 			Log.Info(
 				$"[VoxelWorld] stream.complete center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " +
-				$"rangeMin=C[{_streamingCenterCoordinate.x - LoadRadius},{_streamingCenterCoordinate.y - LoadRadius},{_streamingCenterCoordinate.z - LoadRadius}] " +
-				$"rangeMax=C[{_streamingCenterCoordinate.x + LoadRadius},{_streamingCenterCoordinate.y + LoadRadius},{_streamingCenterCoordinate.z + LoadRadius}] " +
+				$"rangeMin=C[{lod0Bounds?.Minimum.x ?? 0},{lod0Bounds?.Minimum.y ?? 0},{lod0Bounds?.Minimum.z ?? 0}] " +
+				$"rangeMaxExclusive=C[{lod0Bounds?.Maximum.x ?? 0},{lod0Bounds?.Maximum.y ?? 0},{lod0Bounds?.Maximum.z ?? 0}] " +
 				$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} retained={_retainedThisStream} " +
 				$"unloaded={_unloadedThisStream} generated={_generatedThisStream} staleDiscarded={_staleDiscardedThisStream} " +
 				$"settleMs={LastStreamSettleMilliseconds:0.###} workerMs={LastBackgroundWorkerMilliseconds:0.###} " +
@@ -2558,10 +2374,11 @@ public sealed class VoxelManager : Component
 		StreamingPerformance = LastStreamSettleMilliseconds > 0f
 			? $"{LastEffectiveChunksPerSecond:N1} chunks/sec; {LastStreamSettleMilliseconds:N3} ms last stream"
 			: "No stream completed";
-		LoadedChunkRange = _hasStreamingCenter
-			? $"X {_streamingCenterCoordinate.x - LoadRadius} through {_streamingCenterCoordinate.x + LoadRadius}; " +
-				$"Y {_streamingCenterCoordinate.y - LoadRadius} through {_streamingCenterCoordinate.y + LoadRadius}; " +
-				$"Z {_streamingCenterCoordinate.z - LoadRadius} through {_streamingCenterCoordinate.z + LoadRadius}"
+		var displayedBounds = (_pendingClipSelection ?? _activeClipSelection)?.Boxes[0];
+		LoadedChunkRange = displayedBounds is { } bounds
+			? $"X {bounds.Minimum.x} through {bounds.Maximum.x - 1}; " +
+				$"Y {bounds.Minimum.y} through {bounds.Maximum.y - 1}; " +
+				$"Z {bounds.Minimum.z} through {bounds.Maximum.z - 1} (half-open)"
 			: "Not initialized";
 		RefreshPlayerChunkStatus();
 	}
@@ -2592,9 +2409,3 @@ public sealed class VoxelManager : Component
 	}
 
 }
-
-internal readonly record struct WarmChunkResult(
-	Vector3Int Coordinate,
-	ChunkDensityClassification Classification,
-	VoxelChunk Chunk,
-	float BoundsMilliseconds );

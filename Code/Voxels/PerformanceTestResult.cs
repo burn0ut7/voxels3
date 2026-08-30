@@ -16,7 +16,46 @@ internal sealed class PerformanceTestResult
 	public PerformanceSubmissionMetrics Submission { get; init; }
 	public PerformanceStreamingMetrics Streaming { get; init; }
 	public PerformanceBoundsMetrics Bounds { get; init; }
+	public PerformanceClipBoxMetrics ClipBoxes { get; init; }
 	public PerformanceProfilerMetrics Profiler { get; init; }
+}
+
+internal sealed class PerformanceClipBoxMetrics
+{
+	public int MaximumLod { get; init; }
+	public int ResidentRegular { get; init; }
+	public int ActiveRegular { get; init; }
+	public int LogicalTransitionFaces { get; init; }
+	public int FallbackFrames { get; init; }
+	public int CoverageMismatches { get; init; }
+	public int TransitionMaskMismatches { get; init; }
+	public int AdjacencyViolations { get; init; }
+	public int StalePublications { get; init; }
+	public int SelectionBudgetViolations { get; init; }
+	public float MaximumSelectionMilliseconds { get; init; }
+	public int IntegrationBudgetViolations { get; init; }
+	public float MaximumIntegrationMilliseconds { get; init; }
+	public int ArenaSubmissions { get; init; }
+	public IReadOnlyList<PerformanceClipLevelMetrics> Levels { get; init; } =
+		System.Array.Empty<PerformanceClipLevelMetrics>();
+}
+
+internal sealed class PerformanceClipLevelMetrics
+{
+	public int Lod { get; init; }
+	public int DesiredRegular { get; init; }
+	public int ResidentRegular { get; init; }
+	public int ActiveRegular { get; init; }
+	public int FallbackRegular { get; init; }
+	public int DesiredTransitions { get; init; }
+	public int ResidentTransitions { get; init; }
+	public int ActiveTransitions { get; init; }
+	public long RegularTriangles { get; init; }
+	public long TransitionTriangles { get; init; }
+	public long RegularBytes { get; init; }
+	public long TransitionBytes { get; init; }
+	public string TopologyDigest { get; init; }
+	public string PositionDigest { get; init; }
 }
 
 internal sealed class PerformanceBoundsMetrics
@@ -108,7 +147,9 @@ internal sealed class PerformanceWorldContext
 	public string Scene { get; init; }
 	public int CellsPerAxis { get; init; }
 	public float CellSize { get; init; }
-	public int LoadRadius { get; init; }
+	public int ViewRadiusChunks { get; init; }
+	public int FullDetailRadiusChunks { get; init; }
+	public int EffectiveMaximumLod { get; init; }
 	public string Generator { get; init; }
 	public int WorldSeed { get; init; }
 	public int GeneratorVersion { get; init; }

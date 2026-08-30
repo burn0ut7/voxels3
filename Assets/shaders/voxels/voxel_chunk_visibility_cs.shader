@@ -35,6 +35,8 @@ CS
 	int VisibilityPass < Attribute( "VisibilityPass" ); >;
 	int MeasureVisibility < Attribute( "MeasureVisibility" ); >;
 	int CaptureSettledDiagnostics < Attribute( "CaptureSettledDiagnostics" ); >;
+	int ClipPublicationBank < Attribute( "ClipPublicationBank" ); >;
+	int ClipMinimumLod < Attribute( "ClipMinimumLod" ); >;
 
 	bool IsDefinitelyOutsideFrustum( float3 minimum, float3 maximum )
 	{
@@ -112,12 +114,23 @@ CS
 			return;
 		}
 
-		float4 minimumAndActive = VisibilityBounds[slot * 2];
-		float4 maximumAndCellCount = VisibilityBounds[slot * 2 + 1];
+		float4 minimumAndActive = VisibilityBounds[slot * 5];
+		float4 maximumAndCellCount = VisibilityBounds[slot * 5 + 1];
+		float4 extentAndLod = VisibilityBounds[slot * 5 + 3];
+		float4 identity = VisibilityBounds[slot * 5 + 4];
 		IndexedArguments source = SourceIndirectArguments[slot];
 		float3 maximum = maximumAndCellCount.xyz;
 		uint activeCellCount = (uint)round( maximumAndCellCount.w );
-		bool active = minimumAndActive.w > 0.5;
+		uint lod = (uint)round( extentAndLod.w );
+		uint coverageBits = asuint( identity.z );
+		uint meshKind = asuint( identity.w );
+		uint publicationBank = (uint)clamp( ClipPublicationBank, 0, 1 );
+		bool residentMember = (coverageBits & (1u << publicationBank)) != 0u;
+		bool targetActive = (coverageBits & (1u << (publicationBank + 2u))) != 0u;
+		bool active = meshKind == 0u
+			? residentMember && (lod == (uint)ClipMinimumLod ||
+				(lod > (uint)ClipMinimumLod && targetActive))
+			: lod > (uint)ClipMinimumLod && targetActive;
 		bool warm = minimumAndActive.w > 1.5;
 		bool visible = active && source.IndexCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
