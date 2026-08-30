@@ -67,9 +67,13 @@ viewer position + validated radii
   The outermost half-extent is widened to
   `ceil(ViewRadiusChunks / 2^EffectiveMaximumLod)` when required, and the
   snapped effective bounds are exposed in diagnostics.
-- Every child placement is snapped to complete parent-region boundaries.
-  Integer world-to-level conversion uses checked mathematical floor division,
-  including at negative coordinates.
+- Every child placement is snapped to complete parent-region boundaries. The
+  containing viewer chunk center selects the nearest valid aligned box center;
+  the selector does not always bias toward the negative grid direction. Level
+  `L` therefore remains within `2^L - 0.5` LOD0 chunks of the viewer chunk
+  center on each axis while retaining the same `2^(L+1)`-chunk placement
+  cadence. Integer world-to-level conversion uses checked mathematical floor
+  division, including at negative coordinates.
 - A render identity contains `(LOD, level-grid coordinate, mesh kind, face)`.
   All of those fields participate in equality, revisions, stale checks, and
   deterministic diagnostic digests.
@@ -158,6 +162,10 @@ level and never iterates per-region gizmos.
 - Crossfading and geomorphing were deferred because they address popping, not
   topological watertightness, and are not required to validate the canonical
   transition path.
+- Following the viewer continuously or snapping the outer level twice as often
+  was rejected because either choice increases mesh invalidation without
+  improving coverage. Nearest parent-aligned placement removes the directional
+  bias while preserving the existing slab cardinality and update cadence.
 
 ## Source Provenance
 

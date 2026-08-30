@@ -125,9 +125,9 @@ internal sealed class VoxelClipBoxSelection
 				? DivideRoundUp( viewRadiusChunks, scale )
 				: fullDetailRadiusChunks;
 			var center = new Vector3Int(
-				checked( FloorDivide( lod0ViewerCoordinate.x, scale * 2 ) * 2 ),
-				checked( FloorDivide( lod0ViewerCoordinate.y, scale * 2 ) * 2 ),
-				checked( FloorDivide( lod0ViewerCoordinate.z, scale * 2 ) * 2 ) );
+				SnapToNearestAlignedCenter( lod0ViewerCoordinate.x, scale ),
+				SnapToNearestAlignedCenter( lod0ViewerCoordinate.y, scale ),
+				SnapToNearestAlignedCenter( lod0ViewerCoordinate.z, scale ) );
 			var minimum = center - new Vector3Int( halfExtent );
 			var maximum = center + new Vector3Int( halfExtent );
 			selection._boxes[lod] = new VoxelClipBoxBounds( lod, minimum, maximum );
@@ -253,6 +253,15 @@ internal sealed class VoxelClipBoxSelection
 
 	private static int DivideRoundUp( int value, int divisor ) =>
 		checked( (value + divisor - 1) / divisor );
+
+	private static int SnapToNearestAlignedCenter( int lod0ViewerCoordinate, int scale )
+	{
+		var alignment = checked( scale * 2L );
+		var shifted = (long)lod0ViewerCoordinate + scale;
+		var quotient = shifted / alignment;
+		if ( shifted % alignment < 0 ) quotient--;
+		return checked( (int)(quotient * 2L) );
+	}
 
 	private void CalculateCoverageCounts()
 	{

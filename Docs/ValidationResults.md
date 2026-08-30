@@ -4778,3 +4778,40 @@ Record an approved extraordinary change here before adding the new version:
   counters begin and every subsequent production selection is `0.0031-0.0540
   ms`; this startup-only JIT cost is recorded here rather than hidden. No
   exception to a timed candidate gate was required.
+
+### TRANSVOXEL-CLIP-CENTERING-001/v1 - Unbiased aligned clip placement
+
+- Status: fixed regression scenario recorded on 2026-08-30 before changing the
+  clip-box placement formula.
+- Defect evidence: the production selector at revision `6d7bd52` rounds every
+  level center downward to a multiple of two level regions. With view radius
+  `16`, full-detail radius `4`, and viewer chunk `[-1,-1,0]` or `[7,7,0]`, the
+  LOD2 box center trails the viewer chunk center by `7.5` LOD0 chunks on both X
+  and Y. The viewer is therefore `23.5/32` of the way across the outer box on
+  both affected axes, which presents as a strong corner bias even though
+  coverage still contains the viewer.
+- Production path and locked workload: `Assets/scenes/basic_example.scene`;
+  s&box `26.08.19`; Vulkan; one local player; generator v5; seed `1337`;
+  `CellsPerAxis=32`; `CellSize=16`; full-detail radius `4`; view radius `16`;
+  HZB disabled; the unchanged one-loop figure-eight at world Z `0`, speed
+  `2500`, X reach `50000`, Y reach `25000`, complete queue settlement, two
+  render advances, and the exact ten-second stationary window.
+- Placement contract: every level keeps its existing two-level-region snapping
+  interval so placement-change frequency, entering slab size, resident counts,
+  and transition topology remain unchanged. The containing viewer chunk center,
+  rather than its minimum coordinate, selects the nearest aligned center. For
+  level `L`, the per-axis distance between the viewer chunk center and the box
+  center must therefore be no greater than `2^L - 0.5` LOD0 chunks. At viewer
+  chunks `[-1,-1,0]` and `[7,7,0]`, all default level centers must become world
+  chunk boundary `0` and `8` respectively. Negative and positive placements
+  must be mirror-symmetric and every fine boundary must remain parent-aligned.
+- Correctness gates: the default settled structure remains exactly
+  `1,536/1,408/192`; coverage, transition-mask, adjacency, and stale-publication
+  counters remain zero; queues settle; repeated topology and position digests
+  match; no crack, gap, overlap, or missing terrain appears during face, edge,
+  corner, turnaround, or backtrack movement.
+- Performance gates: the unchanged snap interval must not increase placement
+  frequency or slab cardinality. Clip selection and atomic publication remain
+  below `0.500 ms`; terrain submissions remain below `25`; and moving and
+  stationary CPU/GPU p95 and p99 may not regress from the latest accepted
+  default clip-box candidate beyond the greater of `5%` or `0.25 ms`.
