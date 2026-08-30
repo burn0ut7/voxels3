@@ -4124,3 +4124,160 @@ Record an approved extraordinary change here before adding the new version:
   non-empty surface meshes, `2,684,737` active cells, `29` shared slabs, zero
   geometry readbacks, and one bounded visibility scalar readback. Formal GPU
   range is `4.724697..4.991302 ms`; FPS range is `185.4475..210.14006`.
+
+### PERSISTENT-GEOMETRY-THROUGHPUT-001/v1 - Triple-lane remesh throughput
+
+- Definition recorded on 2026-08-29 before throughput telemetry, the formal
+  single-lane baseline, and the triple-lane implementation.
+- Production path and moving workload inherit `PERSISTENT-GEOMETRY-001/v1`
+  unchanged: `Assets/scenes/basic_example.scene`; engine `26.08.19`; one local
+  player; main camera `1280x720`; `CellsPerAxis=32`; `CellSize=16`;
+  `LoadRadius=16`; one render-warm chunk; generator version `4` and its locked
+  seed, surface, noodle, cheese, density-scale, and depth-envelope parameters;
+  fixed world Z `0`; speed `2500`; figure-eight X distance `50000` and Y reach
+  `25000`; exactly one loop; frame capacity `524,288`; per-update frame/GPU
+  sampling; one-second memory sampling; and nearest-rank percentiles.
+- The moving figure-eight input, route, prioritization, SDF, renderer, geometry
+  arenas, indexed-indirect drawing, and exact CPU range allocation remain
+  unchanged. Count/readback/allocation/emit overlap is the sole throughput
+  variable. Count batches contain at most `8` regions in both runs.
+- The baseline uses one scratch lane. The candidate uses exactly three
+  independent scratch lanes, admits at most one count batch and one emit batch
+  per render tick, and does not reuse a lane until its emitted geometry crosses
+  the publication render-sequence boundary.
+- Moving-window measurements: regions scheduled/count-submitted/published per
+  second; batches submitted/completed per second; batch occupancy histogram and
+  average/minimum/maximum; count submission, submit-to-readback-callback,
+  callback-to-consumption, CPU allocation, emit submission, and
+  emit-to-publication p50/p95/p99/maximum; gameplay/warm/total queue
+  average/p50/p95/p99/maximum; schedule-to-renderable p50/p95/p99/maximum;
+  cancelled and superseded work; and player route distance travelled from
+  schedule to publication in world units and `512`-unit chunks.
+- After the loop stops, wait for gameplay/warm generation queues and every mesh
+  lane to settle to zero, then wait for two further render-sequence advances.
+  Keep the player stationary at the completed route position and measure one
+  exact `10`-second production-render window. Record its FPS, CPU frame p95/p99,
+  GPU average/p95/p99/maximum, memory, visibility, and settled geometry in the
+  same result. This phase supplements and does not replace or extend the moving
+  figure-eight measurement window.
+- Execute exactly one telemetry-enabled single-lane baseline and exactly one
+  triple-lane candidate. Stop after the candidate regardless of result; do not
+  continue into allocator, GPU-driven allocation, shader/SDF, LOD, collision,
+  networking, deformation, or further renderer work.
+- Pass criteria fixed before execution:
+  - candidate published regions/second is at least `2.0x` baseline;
+  - moving schedule-to-renderable p95 and player-route-lag p95 are each at
+    least `50%` lower than baseline;
+  - queue p95 and post-loop drain time materially improve, and final gameplay,
+    warm, and in-flight lane backlogs are all zero;
+  - moving CPU-frame p95 is at most `16.67 ms`, p99 is at most `25 ms`, and
+    neither tail regresses by more than the greater of `5%` or `0.25 ms`;
+  - average and tail GPU time show no material regression and no new count,
+    allocation, emit, update, or render hitch appears;
+  - settled topology/position digests, geometry counts, and visible terrain
+    remain equivalent; geometry readbacks and ordinary-render SDF evaluations
+    remain zero; and revision-safe local replacement remains intact.
+
+#### Single-lane telemetry baseline 2026-08-29
+
+- The first start attempt hotloaded the telemetry change into an already-live
+  manager whose pre-change mesher had no lane array. It produced null-reference
+  errors during emit finalization and shutdown and saved no result. The run was
+  stopped, null-safe hotload teardown was added, and play was restarted from a
+  fully stopped editor before the formal baseline. This failed attempt is not
+  performance evidence.
+- Formal baseline run `e245dbfcee3741d88d6d406b7d911cca`, revision
+  `c474480+throughput-telemetry-single-lane-rerun`, used schema `10`, one scratch
+  lane, and completed the unchanged moving window in `121.94336 s`. It recorded
+  `239.39377 FPS`, CPU-frame p95/p99 `4.9864/5.3846 ms`, and GPU
+  average/p95/p99/maximum `0.4353171/0.5633831/0.6542206/8.967161 ms`.
+- The lane scheduled `308,371` regions (`2528.8052/s`), submitted counts for
+  `58,392` (`478.84528/s`), and published `58,384` (`478.77966/s`). It submitted
+  `7,299` and completed `7,298` batches at `59.85566/59.847458 batches/s`.
+  Every submitted batch contained exactly `8` regions: average/minimum/maximum
+  occupancy `8/8/8`, with all `7,299` samples in histogram bucket `8`.
+- Count-submission average/p50/p95/p99/maximum was
+  `0.14394467/0.1302/0.2285/0.2859/1.1067 ms`; submit-to-readback-callback was
+  `4.5296903/4.4355/5.6734/7.9582/18.2577 ms`; callback-to-consumption was
+  `3.7435095/3.71/4.8313/7.0283/34.4313 ms`; CPU allocation was
+  `0.003965977/0.0037/0.0066/0.0089/0.1402 ms`; emit submission was
+  `0.017497327/0.0161/0.0303/0.0374/0.2638 ms`; and emit-to-publication was
+  `7.863271/7.8638/8.77/11.154/19.723 ms`.
+- Gameplay-queue average/p50/p95/p99/maximum was
+  `5852.8345/5887/6365/6387/6414`; warm queue was
+  `637.4615/663/701/747/804`; and total queue was
+  `6490.296/6533/7044/7070/7105`. Post-loop drain took `13378.274 ms`; all
+  queues and the lane settled to zero.
+- Schedule-to-renderable p50/p95/p99/maximum was
+  `6751.4253/8619.109/12514.805/18508.912 ms`. Player-route render lag in world
+  units was `15273.518/16606.988/18594.469/18950.531/19211.008`, corresponding
+  to `29.831089/32.435524/36.31732/37.012756/37.5215` chunks. Work recorded
+  `240,516` supersessions and zero cancellations.
+- The settled `10.002362 s` stationary window recorded `239.84465 FPS`, CPU
+  p95/p99 `4.9814/5.2401 ms`, GPU average/p95/p99/maximum
+  `0.6112832/0.616312/0.80251694/2.7549267 ms`, and constant visibility of
+  `738` regions. Settled production geometry contained `3,012` gameplay and
+  `300` warm surface meshes, `2,693,715` active cells, `2,887,878` unique
+  vertices, `16,169,910` indices, and `5,389,970` triangles in `12` arenas.
+  Topology digest was `74C5D43BB236DA08`; position digest was
+  `C2E5AF7D4C20CAB5`. Geometry readbacks and ordinary-render SDF evaluations
+  were both zero.
+
+#### Triple-lane throughput candidate 2026-08-29 - rejected
+
+- Candidate run `b7885c77aebe4a63846536d61ffabbcf`, revision
+  `c474480+triple-lane-throughput-candidate`, used schema `10`, three scratch
+  lanes, and completed the unchanged moving window in `121.945984 s`. No
+  compiler, runtime, shader, or console error occurred. It recorded
+  `239.04561 FPS`, CPU-frame p95/p99 `5.0215/5.5013 ms`, and GPU
+  average/p95/p99/maximum `0.83670837/1.014471/1.1622906/2.4104118 ms`.
+- The lanes scheduled `164,692` regions (`1350.5323/s`), submitted counts for
+  `157,435` (`1291.0225/s`), and published `157,170` (`1288.8494/s`). Published
+  throughput was `2.691x` the baseline. They submitted `19,827` and completed
+  `19,825` batches at `162.58838/162.57198 batches/s`. Occupancy
+  average/minimum/maximum was `7.940435/1/8`; buckets `1..8` contained
+  `43/37/34/46/55/47/45/19520` batches.
+- Count-submission average/p50/p95/p99/maximum was
+  `0.124174654/0.1137/0.2011/0.2765/0.8141 ms`; submit-to-readback-callback was
+  `4.690246/4.6042/5.7754/8.7073/20.0661 ms`; callback-to-consumption was
+  `3.6183608/3.5416/4.6942/7.6039/18.8153 ms`; CPU allocation was
+  `0.0043171854/0.0041/0.0071/0.0097/0.2618 ms`; emit submission was
+  `0.016888373/0.0162/0.0315/0.0449/0.281 ms`; and emit-to-publication was
+  `7.8584557/7.8449/8.8331/12.0351/25.2896 ms`.
+- Gameplay-queue average/p50/p95/p99/maximum was `1.1685362/0/1/38/75`; warm
+  queue was `162.05972/163/334/379/418`; and total queue was
+  `163.22826/163/335/379/418`. Total-queue p95 fell `95.24%` from `7,044` to
+  `335`; post-loop drain fell `97.55%` from `13378.274` to `327.1954 ms`; all
+  queues and lanes settled to zero.
+- Schedule-to-renderable p50/p95/p99/maximum was
+  `116.9043/230.1775/262.6106/294.7766 ms`; p95 fell `97.33%`. Player-route
+  render lag in world units was
+  `298.52612/292.07812/573.03125/656.2656/737.125`, corresponding to
+  `0.58305883/0.5704651/1.1192017/1.2817688/1.4396973` chunks; p95 fell
+  `96.92%`. Work recorded `3,429` supersessions and `243` cancellations.
+- Moving CPU tails passed: p95 changed by `+0.0351 ms` (`+0.70%`) and p99 by
+  `+0.1167 ms` (`+2.17%`), both below their absolute limits and allowed relative
+  regression. Average visible terrain increased from `63.99387` to
+  `684.78625` regions, demonstrating that the candidate kept representative
+  terrain near the moving player instead of measuring mostly absent geometry.
+- Settled correctness matched exactly: `3,012` gameplay and `300` warm surface
+  meshes, `2,693,715` active cells, `2,887,878` unique vertices, `16,169,910`
+  indices, `5,389,970` triangles, topology digest `74C5D43BB236DA08`, and
+  position digest `C2E5AF7D4C20CAB5`. Geometry readbacks and ordinary-render
+  SDF evaluations remained zero. Revision rejection remained active with the
+  recorded cancellations and supersessions.
+- The fixed `10.001664 s` stationary window recorded `239.66145 FPS`, CPU
+  p95/p99 `4.9986/5.4124 ms`, and GPU average/p95/p99/maximum
+  `0.76329714/0.9338856/1.0323524/7.558584 ms`. Against the single-lane settled
+  window, GPU average regressed `24.87%`, p95 `51.52%`, and p99 `28.58%` despite
+  identical geometry and constant visibility of `738` regions. The candidate
+  also committed `13` arenas (`436,207,616` vertex and `218,103,808` index
+  bytes) instead of `12` (`402,653,184` and `201,326,592`), with fragmentation
+  increasing from `0.8573552%` to `4.283048%`.
+- Outcome: throughput, schedule latency, player lag, queues, drain, moving frame
+  pacing, correctness, stale-result rejection, geometry-readback, and
+  ordinary-render-SDF gates **pass**. The fixed no-material-settled-GPU-regression
+  gate **fails**, and the extra arena commitment is an additional memory
+  regression. The candidate is therefore **rejected**. Per the pre-recorded
+  stop rule, no allocator, GPU-driven allocation, or further renderer change is
+  attempted, and this performance-sensitive change is not committed or pushed.

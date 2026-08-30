@@ -8,6 +8,7 @@ internal sealed class PerformanceTestResult
 	public PerformanceTestDefinition Test { get; init; }
 	public PerformanceWorldContext World { get; init; }
 	public PerformanceFrameMetrics Frame { get; init; }
+	public PerformanceStationaryMetrics Stationary { get; init; }
 	public PerformanceMemoryMetrics Memory { get; init; }
 	public PerformanceChunkMetrics Chunks { get; init; }
 	public PerformanceMeshingMetrics Meshing { get; init; }
@@ -126,6 +127,17 @@ internal sealed class PerformanceFrameMetrics
 	public float P95Milliseconds { get; init; }
 	public float P99Milliseconds { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
+	public float P95GpuMilliseconds { get; init; }
+	public float P99GpuMilliseconds { get; init; }
+	public float MaximumGpuMilliseconds { get; init; }
+}
+
+internal sealed class PerformanceStationaryMetrics
+{
+	public float DurationSeconds { get; init; }
+	public PerformanceFrameMetrics Frame { get; init; }
+	public PerformanceMemoryMetrics Memory { get; init; }
+	public PerformanceVisibilityMetrics Visibility { get; init; }
 }
 
 internal sealed class PerformanceMemoryMetrics
@@ -205,6 +217,60 @@ internal sealed class PerformanceMeshingMetrics
 	public float AverageGpuMilliseconds { get; init; }
 	public float MaximumGpuMilliseconds { get; init; }
 	public PerformanceLatencyMetrics ScheduleToRenderable { get; init; }
+	public PerformanceMeshingThroughputMetrics Throughput { get; init; }
+}
+
+internal sealed class PerformanceMeshingThroughputMetrics
+{
+	public int ScratchLanes { get; init; }
+	public long RegionsScheduled { get; init; }
+	public long RegionsCountSubmitted { get; init; }
+	public long RegionsPublished { get; init; }
+	public float RegionsScheduledPerSecond { get; init; }
+	public float RegionsCountSubmittedPerSecond { get; init; }
+	public float RegionsPublishedPerSecond { get; init; }
+	public long BatchesSubmitted { get; init; }
+	public long BatchesCompleted { get; init; }
+	public float BatchesSubmittedPerSecond { get; init; }
+	public float BatchesCompletedPerSecond { get; init; }
+	public float AverageBatchOccupancy { get; init; }
+	public int MinimumBatchOccupancy { get; init; }
+	public int MaximumBatchOccupancy { get; init; }
+	public IReadOnlyList<int> BatchOccupancyHistogram { get; init; } = System.Array.Empty<int>();
+	public PerformanceDistributionMetrics CountSubmissionMilliseconds { get; init; }
+	public PerformanceDistributionMetrics CountReadbackMilliseconds { get; init; }
+	public PerformanceDistributionMetrics CountCallbackWaitMilliseconds { get; init; }
+	public PerformanceDistributionMetrics CpuAllocationMilliseconds { get; init; }
+	public PerformanceDistributionMetrics EmitSubmissionMilliseconds { get; init; }
+	public PerformanceDistributionMetrics EmitToPublicationMilliseconds { get; init; }
+	public PerformanceQueueDepthMetrics GameplayQueue { get; init; }
+	public PerformanceQueueDepthMetrics WarmQueue { get; init; }
+	public PerformanceQueueDepthMetrics TotalQueue { get; init; }
+	public PerformanceDistributionMetrics PlayerRouteLagWorldUnits { get; init; }
+	public PerformanceDistributionMetrics PlayerRouteLagChunks { get; init; }
+	public float PostLoopDrainMilliseconds { get; init; }
+}
+
+internal sealed class PerformanceDistributionMetrics
+{
+	public int Samples { get; init; }
+	public int TruncatedSamples { get; init; }
+	public float Average { get; init; }
+	public float P50 { get; init; }
+	public float P95 { get; init; }
+	public float P99 { get; init; }
+	public float Maximum { get; init; }
+}
+
+internal sealed class PerformanceQueueDepthMetrics
+{
+	public int Samples { get; init; }
+	public int TruncatedSamples { get; init; }
+	public float Average { get; init; }
+	public float P50 { get; init; }
+	public float P95 { get; init; }
+	public float P99 { get; init; }
+	public int Maximum { get; init; }
 }
 
 internal sealed class PerformanceLatencyMetrics

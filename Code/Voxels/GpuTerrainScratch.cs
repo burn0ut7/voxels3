@@ -35,6 +35,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 	private int _completedCount;
 	private int _batchSize;
 	private long _readbackTimestamp;
+	private long _readbackReadyTimestamp;
 	private ScratchState _state;
 	private bool _disposed;
 
@@ -142,16 +143,21 @@ internal sealed class GpuTerrainScratch : IDisposable
 		return true;
 	}
 
-	public bool TryTakeCounts( out GpuTerrainCountResult[] counts, out int count, out double readbackMilliseconds )
+	public bool TryTakeCounts( out GpuTerrainCountResult[] counts, out int count,
+		out double readbackMilliseconds, out double callbackWaitMilliseconds )
 	{
 		lock ( _stateLock )
 		{
 			if ( _state != ScratchState.CountReady )
 			{
-				counts = null; count = 0; readbackMilliseconds = 0; return false;
+				counts = null; count = 0; readbackMilliseconds = 0;
+				callbackWaitMilliseconds = 0; return false;
 			}
 			counts = _completedCounts; count = _completedCount; _completedCounts = null; _completedCount = 0;
-			readbackMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime( _readbackTimestamp ).TotalMilliseconds;
+			readbackMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime(
+				_readbackTimestamp, _readbackReadyTimestamp ).TotalMilliseconds;
+			callbackWaitMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime(
+				_readbackReadyTimestamp ).TotalMilliseconds;
 			_state = ScratchState.EmitReady;
 			return true;
 		}
@@ -196,6 +202,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 			counts.CopyTo( _completedBuffer );
 			_completedCounts = _completedBuffer;
 			_completedCount = counts.Length;
+			_readbackReadyTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
 			_state = ScratchState.CountReady;
 		}
 	}

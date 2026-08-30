@@ -11,12 +11,21 @@ using System.Threading;
 /// </summary>
 public sealed class VoxelManager : Component
 {
+	private enum PerformanceCompletionPhase
+	{
+		None,
+		AwaitingMovingSettle,
+		AwaitingStationaryRenderAdvance,
+		MeasuringStationary,
+		AwaitingStationaryVisibility
+	}
+
 	private const float MainThreadIntegrationBudgetMilliseconds = 0.5f;
 	private const float PerformanceWindowSeconds = 10f;
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 9;
+	private const int PerformanceResultSchemaVersion = 10;
 	private const int RenderWarmShellChunks = 1;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
@@ -46,6 +55,8 @@ public sealed class VoxelManager : Component
 	private readonly HashSet<Vector3Int> _coordinateSetBuffer = new();
 	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
+	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
+	private readonly float[] _sortedPerformanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private GpuVoxelMesher _gpuMesher;
 
 	private bool _hasStreamingCenter;
@@ -91,6 +102,8 @@ public sealed class VoxelManager : Component
 	private Rigidbody _playerFigureEightBody;
 	private Vector2 _playerFigureEightCenter;
 	private float _playerFigureEightParameter;
+	private float _playerFigureEightRouteDistance;
+	private Vector2 _playerFigureEightPreviousPosition;
 	private bool _playerFigureEightTestRunning;
 	private bool _playerFigureEightTestCompletionReady;
 	private int _playerFigureEightCompletedLoops;
@@ -119,7 +132,11 @@ public sealed class VoxelManager : Component
 	private bool _performanceSnapshotReady;
 	private bool _performanceVisibilityPending;
 	private bool _performanceSettledCaptureRequested;
+	private PerformanceCompletionPhase _performanceCompletionPhase;
+	private long _performanceStationaryRenderSequenceTarget;
 	private GpuVisibilityMeasurement _lastPerformanceVisibility;
+	private GpuVisibilityMeasurement _lastStationaryVisibility;
+	private PerformanceStationaryMetrics _lastStationaryMetrics = new();
 	private float _lastPerformanceWindowSeconds;
 	private int _lastPerformanceFrameSampleCount;
 	private int _lastPerformanceTruncatedFrameSampleCount;
@@ -127,6 +144,9 @@ public sealed class VoxelManager : Component
 	private float _lastP95FrameMilliseconds;
 	private float _lastP99FrameMilliseconds;
 	private float _lastAverageGpuFrameMilliseconds;
+	private float _lastP95GpuFrameMilliseconds;
+	private float _lastP99GpuFrameMilliseconds;
+	private float _lastMaximumGpuFrameMilliseconds;
 	private ulong _lastAverageProcessMemoryBytes;
 	private ulong _lastPeakProcessMemoryBytes;
 	private ulong _lastStartProcessMemoryBytes;
@@ -165,6 +185,7 @@ public sealed class VoxelManager : Component
 	private PerformanceBoundsMetrics _performanceBounds = new();
 	private PerformanceBoundsMetrics _lastPerformanceBounds = new();
 	private GpuMeshScheduleLatencyMeasurement _lastPerformanceScheduleLatency;
+	private GpuMeshThroughputMeasurement _lastPerformanceThroughput;
 	private PerformanceProfilerMetrics _lastPerformanceProfiler = new();
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 	private ProceduralTerrainSettings CurrentTerrainSettings => new(
@@ -523,6 +544,8 @@ public sealed class VoxelManager : Component
 		_playerFigureEightBody = player.Body;
 		_playerFigureEightCenter = new Vector2( start.x, start.y );
 		_playerFigureEightParameter = 0f;
+		_playerFigureEightRouteDistance = 0f;
+		_playerFigureEightPreviousPosition = new Vector2( start.x, start.y );
 		_playerFigureEightEnabled = true;
 		SetFigureEightPosition( start.x, start.y );
 	}
@@ -562,13 +585,17 @@ public sealed class VoxelManager : Component
 		_playerFigureEightTestRunning = true;
 		_performanceSnapshotReady = false;
 		_performanceVisibilityPending = false;
+		_performanceCompletionPhase = PerformanceCompletionPhase.None;
 		_lastPerformanceVisibility = default;
+		_lastStationaryVisibility = default;
+		_lastStationaryMetrics = new PerformanceStationaryMetrics();
 		FramePerformance = $"Figure-eight test running: 0 of {loopCount} loops";
 		ProcessMemoryUsage = "Collecting figure-eight test window";
 		ResetPerformanceWindow();
 		SamplePerformanceMemory();
 		_gpuMesher?.BeginVisibilityMeasurement();
 		_gpuMesher?.BeginScheduleLatencyMeasurement();
+		_gpuMesher?.BeginThroughputMeasurement( CellsPerAxis * CellSize );
 		Log.Info( string.Concat(
 			FormattableString.Invariant(
 				$"[VoxelWorld] performance.test.begin task=\"{EscapeLogValue( _playerFigureEightTestTask )}\" " ),
@@ -667,8 +694,12 @@ public sealed class VoxelManager : Component
 				AverageFps = _lastAverageFramesPerSecond,
 				P95Milliseconds = _lastP95FrameMilliseconds,
 				P99Milliseconds = _lastP99FrameMilliseconds,
-				AverageGpuMilliseconds = _lastAverageGpuFrameMilliseconds
+				AverageGpuMilliseconds = _lastAverageGpuFrameMilliseconds,
+				P95GpuMilliseconds = _lastP95GpuFrameMilliseconds,
+				P99GpuMilliseconds = _lastP99GpuFrameMilliseconds,
+				MaximumGpuMilliseconds = _lastMaximumGpuFrameMilliseconds
 			},
+			Stationary = _lastStationaryMetrics,
 			Memory = new PerformanceMemoryMetrics
 			{
 				StartProcessBytes = _lastStartProcessMemoryBytes,
@@ -761,22 +792,10 @@ public sealed class VoxelManager : Component
 					MaximumMilliseconds = _lastPerformanceScheduleLatency.MaximumMilliseconds,
 					Cancelled = _lastPerformanceScheduleLatency.Cancelled,
 					Superseded = _lastPerformanceScheduleLatency.Superseded
-				}
+				},
+				Throughput = CreateThroughputMetrics( _lastPerformanceThroughput )
 			},
-			Visibility = new PerformanceVisibilityMetrics
-			{
-				Samples = _lastPerformanceVisibility.FrameCount,
-				AverageResidentMeshChunks = _lastPerformanceVisibility.AverageResident,
-				AverageVisibleMeshChunks = _lastPerformanceVisibility.AverageVisible,
-				AverageWarmMeshChunks = _lastPerformanceVisibility.AverageWarm,
-				MinimumVisibleMeshChunks = _lastPerformanceVisibility.MinimumVisible,
-				MaximumVisibleMeshChunks = _lastPerformanceVisibility.MaximumVisible,
-				AverageNonZeroIndirectDraws = _lastPerformanceVisibility.AverageVisible,
-				AverageCulledDraws = _lastPerformanceVisibility.AverageCulled,
-				CulledDrawPercentage = _lastPerformanceVisibility.CulledPercent,
-				LogicalBufferBytes = _lastPerformanceVisibility.LogicalBufferBytes,
-				ScalarReadbacks = _lastPerformanceVisibility.ScalarReadbacks
-			},
+			Visibility = CreateVisibilityMetrics( _lastPerformanceVisibility ),
 			Submission = _lastPerformanceSubmission,
 			Streaming = _lastPerformanceStreaming,
 			Bounds = _lastPerformanceBounds,
@@ -882,9 +901,15 @@ public sealed class VoxelManager : Component
 
 		var sine = MathF.Sin( _playerFigureEightParameter );
 		var cosine = MathF.Cos( _playerFigureEightParameter );
-		SetFigureEightPosition(
+		var nextPosition = new Vector2(
 			_playerFigureEightCenter.x + distance * sine,
 			_playerFigureEightCenter.y + distance * sine * cosine );
+		var routeDelta = nextPosition - _playerFigureEightPreviousPosition;
+		_playerFigureEightRouteDistance += MathF.Sqrt(
+			routeDelta.x * routeDelta.x + routeDelta.y * routeDelta.y );
+		_playerFigureEightPreviousPosition = nextPosition;
+		_gpuMesher?.SetPlayerRouteDistance( _playerFigureEightRouteDistance );
+		SetFigureEightPosition( nextPosition.x, nextPosition.y );
 	}
 
 	private void SetFigureEightPosition( float x, float y )
@@ -908,11 +933,13 @@ public sealed class VoxelManager : Component
 
 		_playerFigureEightTestCompletionReady = false;
 		CompletePerformanceWindow();
+		_gpuMesher?.EndMovingThroughputWindow( _lastPerformanceWindowSeconds );
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTarget = null;
 		_playerFigureEightBody = null;
 		_gpuMesher?.StopVisibilityMeasurement();
 		_performanceVisibilityPending = true;
+		_performanceCompletionPhase = PerformanceCompletionPhase.AwaitingMovingSettle;
 		_performanceSettledCaptureRequested = false;
 		if ( !_performanceSnapshotReady )
 		{
@@ -932,31 +959,66 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
-		// The measured loop is already complete. Wait for its final derived mesh work
-		// to settle so the saved resident/backlog snapshot represents availability at
-		// the completed route, without extending or changing the measured frame window.
-		if ( _pendingWarmChunks.Count > 0 ||
-			_completedWarmChunks.Count > 0 ||
-			!_warmWorkerCompleted ||
-			_gpuMesher.PendingCount > 0 )
+		if ( _performanceCompletionPhase == PerformanceCompletionPhase.AwaitingMovingSettle )
 		{
+			if ( _pendingWarmChunks.Count > 0 ||
+				_completedWarmChunks.Count > 0 ||
+				!_warmWorkerCompleted ||
+				_gpuMesher.PendingCount > 0 )
+			{
+				return;
+			}
+			_gpuMesher.MarkThroughputSettled();
+
+			if ( !_performanceSettledCaptureRequested )
+			{
+				_performanceSettledCaptureRequested = true;
+				_gpuMesher.CaptureSettledVisibilityMeasurement();
+				return;
+			}
+
+			if ( !_gpuMesher.TryTakeVisibilityMeasurement( out _lastPerformanceVisibility ) ) return;
+			_performanceStationaryRenderSequenceTarget = _gpuMesher.RenderSequence + 2;
+			_performanceCompletionPhase = PerformanceCompletionPhase.AwaitingStationaryRenderAdvance;
+			FramePerformance += "; terrain settled; awaiting stationary render boundary";
 			return;
 		}
 
-		if ( !_performanceSettledCaptureRequested )
+		if ( _performanceCompletionPhase == PerformanceCompletionPhase.AwaitingStationaryRenderAdvance )
 		{
-			_performanceSettledCaptureRequested = true;
+			if ( _gpuMesher.RenderSequence < _performanceStationaryRenderSequenceTarget ) return;
+			ResetPerformanceWindow();
+			SamplePerformanceMemory();
+			_gpuMesher.BeginVisibilityMeasurement();
+			_performanceCompletionPhase = PerformanceCompletionPhase.MeasuringStationary;
+			FramePerformance += $"; measuring {PerformanceWindowSeconds:0}-second stationary window";
+			return;
+		}
+
+		if ( _performanceCompletionPhase == PerformanceCompletionPhase.MeasuringStationary )
+		{
+			if ( _performanceWindowElapsedSeconds < PerformanceWindowSeconds ) return;
+			CaptureStationaryPerformanceWindow();
+			_gpuMesher.StopVisibilityMeasurement();
 			_gpuMesher.CaptureSettledVisibilityMeasurement();
+			_performanceCompletionPhase = PerformanceCompletionPhase.AwaitingStationaryVisibility;
 			return;
 		}
 
-		if ( !_gpuMesher.TryTakeVisibilityMeasurement( out _lastPerformanceVisibility ) )
+		if ( _performanceCompletionPhase != PerformanceCompletionPhase.AwaitingStationaryVisibility ||
+			!_gpuMesher.TryTakeVisibilityMeasurement( out _lastStationaryVisibility ) ) return;
+
+		_lastStationaryMetrics = new PerformanceStationaryMetrics
 		{
-			return;
-		}
-
+			DurationSeconds = _lastStationaryMetrics.DurationSeconds,
+			Frame = _lastStationaryMetrics.Frame,
+			Memory = _lastStationaryMetrics.Memory,
+			Visibility = CreateVisibilityMetrics( _lastStationaryVisibility )
+		};
 		_performanceVisibilityPending = false;
+		_performanceCompletionPhase = PerformanceCompletionPhase.None;
 		_lastPerformanceScheduleLatency = _gpuMesher.CompleteScheduleLatencyMeasurement();
+		_lastPerformanceThroughput = _gpuMesher.CompleteThroughputMeasurement();
 
 		try
 		{
@@ -999,9 +1061,14 @@ public sealed class VoxelManager : Component
 		{
 			_performanceGpuFrameMillisecondsTotal += gpuFrameMilliseconds;
 			_performanceGpuFrameSampleCount++;
+			if ( _performanceGpuFrameSampleCount <= _performanceGpuMilliseconds.Length )
+			{
+				_performanceGpuMilliseconds[_performanceGpuFrameSampleCount - 1] = gpuFrameMilliseconds;
+			}
 		}
 		if ( _playerFigureEightTestRunning )
 		{
+			_gpuMesher?.SampleThroughputQueueDepth();
 			_performanceStreaming.PeakGameplayMeshBacklog = Math.Max(
 				_performanceStreaming.PeakGameplayMeshBacklog,
 				_gpuMesher?.PendingGameplayCount ?? 0 );
@@ -1082,6 +1149,10 @@ public sealed class VoxelManager : Component
 		_lastAverageGpuFrameMilliseconds = _performanceGpuFrameSampleCount > 0
 			? (float)(_performanceGpuFrameMillisecondsTotal / _performanceGpuFrameSampleCount)
 			: 0f;
+		CaptureGpuPercentiles(
+			out _lastP95GpuFrameMilliseconds,
+			out _lastP99GpuFrameMilliseconds,
+			out _lastMaximumGpuFrameMilliseconds );
 		_lastAverageProcessMemoryBytes = (ulong)(
 			_performanceProcessMemoryBytesTotal / _performanceMemorySampleCount );
 		_lastPeakProcessMemoryBytes = _performancePeakProcessMemoryBytes;
@@ -1142,6 +1213,142 @@ public sealed class VoxelManager : Component
 		RefreshReadableStatus();
 		ResetPerformanceWindow();
 	}
+
+	private void CaptureStationaryPerformanceWindow()
+	{
+		if ( _performanceFrameSampleCount == 0 || _performanceMemorySampleCount == 0 )
+		{
+			throw new InvalidOperationException( "The settled stationary performance window contained no samples." );
+		}
+
+		Array.Copy( _performanceFrameMilliseconds, _sortedPerformanceFrameMilliseconds, _performanceFrameSampleCount );
+		Array.Sort( _sortedPerformanceFrameMilliseconds, 0, _performanceFrameSampleCount );
+		var p95Index = Math.Clamp(
+			(int)Math.Ceiling( _performanceFrameSampleCount * 0.95d ) - 1,
+			0,
+			_performanceFrameSampleCount - 1 );
+		var p99Index = Math.Clamp(
+			(int)Math.Ceiling( _performanceFrameSampleCount * 0.99d ) - 1,
+			0,
+			_performanceFrameSampleCount - 1 );
+		CaptureGpuPercentiles( out var gpuP95, out var gpuP99, out var gpuMaximum );
+		_lastStationaryMetrics = new PerformanceStationaryMetrics
+		{
+			DurationSeconds = _performanceWindowElapsedSeconds,
+			Frame = new PerformanceFrameMetrics
+			{
+				Samples = _performanceObservedFrameCount,
+				TruncatedSamples = _performanceTruncatedFrameSampleCount,
+				AverageFps = (float)(_performanceObservedFrameCount * 1000d / _performanceFrameMillisecondsTotal),
+				P95Milliseconds = _sortedPerformanceFrameMilliseconds[p95Index],
+				P99Milliseconds = _sortedPerformanceFrameMilliseconds[p99Index],
+				AverageGpuMilliseconds = _performanceGpuFrameSampleCount > 0
+					? (float)(_performanceGpuFrameMillisecondsTotal / _performanceGpuFrameSampleCount)
+					: 0f,
+				P95GpuMilliseconds = gpuP95,
+				P99GpuMilliseconds = gpuP99,
+				MaximumGpuMilliseconds = gpuMaximum
+			},
+			Memory = new PerformanceMemoryMetrics
+			{
+				StartProcessBytes = _performanceStartProcessMemoryBytes,
+				EndProcessBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage,
+				AverageProcessBytes = (ulong)(_performanceProcessMemoryBytesTotal / _performanceMemorySampleCount),
+				PeakProcessBytes = _performancePeakProcessMemoryBytes,
+				StartGpuBytes = _performanceStartGpuMemoryBytes,
+				EndGpuBytes = global::Sandbox.Graphics.VideoMemoryUsed,
+				AverageGpuBytes = (ulong)(_performanceGpuMemoryBytesTotal / _performanceMemorySampleCount),
+				PeakGpuBytes = _performancePeakGpuMemoryBytes,
+				GpuBudgetBytes = _performanceGpuMemoryBudgetBytes
+			}
+		};
+	}
+
+	private void CaptureGpuPercentiles( out float p95, out float p99, out float maximum )
+	{
+		var count = Math.Min( _performanceGpuFrameSampleCount, _performanceGpuMilliseconds.Length );
+		if ( count == 0 )
+		{
+			p95 = 0f;
+			p99 = 0f;
+			maximum = 0f;
+			return;
+		}
+		Array.Copy( _performanceGpuMilliseconds, _sortedPerformanceGpuMilliseconds, count );
+		Array.Sort( _sortedPerformanceGpuMilliseconds, 0, count );
+		p95 = _sortedPerformanceGpuMilliseconds[Math.Clamp( (int)Math.Ceiling( count * 0.95d ) - 1, 0, count - 1 )];
+		p99 = _sortedPerformanceGpuMilliseconds[Math.Clamp( (int)Math.Ceiling( count * 0.99d ) - 1, 0, count - 1 )];
+		maximum = _sortedPerformanceGpuMilliseconds[count - 1];
+	}
+
+	private static PerformanceVisibilityMetrics CreateVisibilityMetrics( GpuVisibilityMeasurement visibility ) => new()
+	{
+		Samples = visibility.FrameCount,
+		AverageResidentMeshChunks = visibility.AverageResident,
+		AverageVisibleMeshChunks = visibility.AverageVisible,
+		AverageWarmMeshChunks = visibility.AverageWarm,
+		MinimumVisibleMeshChunks = visibility.MinimumVisible,
+		MaximumVisibleMeshChunks = visibility.MaximumVisible,
+		AverageNonZeroIndirectDraws = visibility.AverageVisible,
+		AverageCulledDraws = visibility.AverageCulled,
+		CulledDrawPercentage = visibility.CulledPercent,
+		LogicalBufferBytes = visibility.LogicalBufferBytes,
+		ScalarReadbacks = visibility.ScalarReadbacks
+	};
+
+	private static PerformanceMeshingThroughputMetrics CreateThroughputMetrics(
+		GpuMeshThroughputMeasurement throughput ) => new()
+	{
+		ScratchLanes = throughput.ScratchLanes,
+		RegionsScheduled = throughput.RegionsScheduled,
+		RegionsCountSubmitted = throughput.RegionsCountSubmitted,
+		RegionsPublished = throughput.RegionsPublished,
+		RegionsScheduledPerSecond = throughput.RegionsScheduledPerSecond,
+		RegionsCountSubmittedPerSecond = throughput.RegionsCountSubmittedPerSecond,
+		RegionsPublishedPerSecond = throughput.RegionsPublishedPerSecond,
+		BatchesSubmitted = throughput.BatchesSubmitted,
+		BatchesCompleted = throughput.BatchesCompleted,
+		BatchesSubmittedPerSecond = throughput.BatchesSubmittedPerSecond,
+		BatchesCompletedPerSecond = throughput.BatchesCompletedPerSecond,
+		AverageBatchOccupancy = throughput.AverageBatchOccupancy,
+		MinimumBatchOccupancy = throughput.MinimumBatchOccupancy,
+		MaximumBatchOccupancy = throughput.MaximumBatchOccupancy,
+		BatchOccupancyHistogram = throughput.BatchOccupancyHistogram ?? Array.Empty<int>(),
+		CountSubmissionMilliseconds = CreateDistributionMetrics( throughput.CountSubmissionMilliseconds ),
+		CountReadbackMilliseconds = CreateDistributionMetrics( throughput.CountReadbackMilliseconds ),
+		CountCallbackWaitMilliseconds = CreateDistributionMetrics( throughput.CountCallbackWaitMilliseconds ),
+		CpuAllocationMilliseconds = CreateDistributionMetrics( throughput.CpuAllocationMilliseconds ),
+		EmitSubmissionMilliseconds = CreateDistributionMetrics( throughput.EmitSubmissionMilliseconds ),
+		EmitToPublicationMilliseconds = CreateDistributionMetrics( throughput.EmitToPublicationMilliseconds ),
+		GameplayQueue = CreateQueueDepthMetrics( throughput.GameplayQueue ),
+		WarmQueue = CreateQueueDepthMetrics( throughput.WarmQueue ),
+		TotalQueue = CreateQueueDepthMetrics( throughput.TotalQueue ),
+		PlayerRouteLagWorldUnits = CreateDistributionMetrics( throughput.PlayerRouteLagWorldUnits ),
+		PlayerRouteLagChunks = CreateDistributionMetrics( throughput.PlayerRouteLagChunks ),
+		PostLoopDrainMilliseconds = throughput.PostLoopDrainMilliseconds
+	};
+
+	private static PerformanceDistributionMetrics CreateDistributionMetrics( GpuMetricDistribution distribution ) => new()
+	{
+		Samples = distribution.Samples,
+		TruncatedSamples = distribution.TruncatedSamples,
+		Average = distribution.Average,
+		P50 = distribution.P50,
+		P95 = distribution.P95,
+		P99 = distribution.P99,
+		Maximum = distribution.Maximum
+	};
+
+	private static PerformanceQueueDepthMetrics CreateQueueDepthMetrics( GpuQueueDepthMeasurement queue ) => new()
+	{
+		Samples = queue.Samples,
+		TruncatedSamples = queue.TruncatedSamples,
+		Average = queue.Average,
+		P50 = queue.P50,
+		P95 = queue.P95,
+		P99 = queue.P99,
+		Maximum = queue.Maximum
+	};
 
 	private void SamplePerformanceMemory()
 	{
@@ -2192,6 +2399,7 @@ public sealed class VoxelManager : Component
 				_gpuMesher.Schedule(
 					chunk,
 					_terrainContentRevision,
+					_playerFigureEightRouteDistance,
 					GpuMeshResidency.Gameplay );
 				integratedCount++;
 				_generatedThisStream++;
@@ -2249,6 +2457,7 @@ public sealed class VoxelManager : Component
 					_gpuMesher.Schedule(
 						result.Chunk,
 						_terrainContentRevision,
+						_playerFigureEightRouteDistance,
 						residency );
 				}
 				processedCount++;

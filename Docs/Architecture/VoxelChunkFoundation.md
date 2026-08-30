@@ -27,8 +27,9 @@ persistence, and network replication remain later slices.
   peers can reconstruct the same base field; a later edit slice must route
   authoritative mutations through this single chunk state rather than creating a
   second copy.
-- `VoxelManager` owns the GPU mesher that derives transient render data from an
-  immutable chunk/SDF descriptor. `VoxelChunk` remains free of engine resources,
+- `VoxelManager` owns the GPU mesher that derives transient extraction scratch
+  and persistent indexed render geometry from an immutable chunk/SDF
+  descriptor. `VoxelChunk` remains free of engine resources,
   GPU buffers, render objects, and mesh lifetime state.
 - The renderer stores each completed region as revisioned disposable indexed
   geometry. A remesh evaluates generator v4 once over a transient `35^3`
@@ -257,8 +258,8 @@ Serious alternatives considered:
   guarantee a frame-time budget and unnecessarily stretches cheap workloads
   across many frames.
 - One task per chunk would increase scheduler pressure and make cancellation
-  storms more likely. Increasing the global GPU dispatch cap would move the
-  hitch rather than eliminate avoidable coordinate and construction work.
+  storms more likely. GPU remesh throughput is controlled independently by
+  bounded scratch batches and does not change this CPU streaming policy.
 - Keeping full rebuild and incremental movement as separate streaming systems
   would duplicate ownership. Both modes instead feed the same queues, revisions,
   generation batches, integration budget, and GPU scheduler.
@@ -384,7 +385,12 @@ no geometry readback. Schema version 9 additionally records persistent unique
 vertices, indices, triangles, used/committed geometry bytes, arena free ranges
 and fragmentation, transient scratch bytes, bounded count-metadata readback
 bytes and latency, count/emit submission CPU time, topology/position digests,
-and the ordinary-render SDF evaluation count. The manager exposes the resolved
+and the ordinary-render SDF evaluation count. Schema version 10 adds scratch
+lane count; scheduled, count-submitted, and published throughput; batch rate
+and occupancy; stage timing distributions; queue distributions; direct
+player-route render lag; post-loop drain time; and a separate fixed 10-second
+stationary frame/GPU/memory/visibility window after full settlement and two
+render-sequence advances. The manager exposes the resolved
 results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`
