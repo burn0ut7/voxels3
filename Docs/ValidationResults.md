@@ -4281,3 +4281,120 @@ Record an approved extraordinary change here before adding the new version:
   regression. The candidate is therefore **rejected**. Per the pre-recorded
   stop rule, no allocator, GPU-driven allocation, or further renderer change is
   attempted, and this performance-sensitive change is not committed or pushed.
+
+### CAVE-DEPTH-001/v1 - Full-radius underground caves
+
+- Definition recorded on 2026-08-29 before implementation or the first run.
+  The human user explicitly approved changing the generator's locked depth
+  parameters so cave topology begins approximately one `512`-unit chunk below
+  the local exterior surface and continues to the full sixteen-chunk streaming
+  radius. Historical cave scenarios and results remain immutable and are not
+  treated as same-generator comparisons.
+- Production path: `Assets/scenes/basic_example.scene`; engine build `26.08.19`;
+  one local player; main camera `1280x720`; LOD0 regular-cell Transvoxel;
+  persistent indexed geometry; zero geometry readbacks and zero ordinary-render
+  SDF evaluations.
+- Fixed world parameters: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  one render-warm chunk; at most `8` regions per GPU mesh batch; `0.500 ms`
+  main-thread integration budget; `WorldSeed=1337`; `SurfaceBaseHeight=0`;
+  `SurfaceFrequency=0.0005`; `SurfaceAmplitude=128`; noodle wavelengths
+  `6144/6912`; thickness wavelength `16384`; cheese wavelength `8192`; noodle
+  threshold `0.056+0.016*thicknessNoise`; cheese threshold
+  `0.48-0.12*thicknessNoise`; and density scale `512`.
+- Generator version `5` changes only the relative-depth envelope. Let
+  `depth=-surface`, `minimumDepth=512`, `maximumDepth=8192`, and
+  `envelope=min(depth-minimumDepth,maximumDepth-depth)`. The existing 3D noodle
+  and cheese union is clipped by that envelope and composed with the exterior
+  surface through the existing canonical SDF path. CPU sampling, conservative
+  bounds, and the GPU shader must implement the identical expression.
+- Selected design: one surface-relative band preserves terrain-following
+  overburden and exposes more than a full vertical period of each primary cave
+  field. An absolute world-Z band was rejected because it would detach caves
+  from hills and valleys. New domain warps, additional cave layers, and a second
+  carver were rejected because the current fields are already volumetric and
+  the requested slice does not justify another generator path or added samples.
+- Fixed correctness journey: begin at `(0,0,0)`, inspect the intact exterior,
+  then descend through the production player/controller path at the same X/Y to
+  relative depths `256`, `512`, `2048`, `4096`, `6144`, `7936`, and `8192`,
+  pausing at each depth until gameplay and warm mesh queues settle. At depths
+  `2048`, `4096`, and `6144`, traverse at least eight chunks in X, reverse for
+  two chunks, then continue; finish by returning to the starting surface.
+  Preserve these positions, order, and traversal distances on every comparable
+  run.
+- Correctness pass criteria: deterministic repeated CPU samples; identical
+  shared chunk-face samples; sampled densities remain inside conservative
+  closed-AABB bounds; CPU/GPU generator parity; no cave air or internal surface
+  shallower than `512` units; cave passages or chambers observed in each of the
+  depth ranges `512..3072`, `3072..5632`, and `5632..8192`; meaningful Z change
+  in encountered topology rather than one repeated horizontal sheet; intact
+  exterior terrain; no seam, stale flash, missing mesh, shader/runtime error,
+  or non-settling backlog.
+- Performance acceptance uses the unchanged canonical figure-eight route at
+  world Z `0`, speed `2500`, X distance `50000`, Y reach `25000`, and one loop,
+  followed by the existing settled ten-second render window. Record FPS,
+  CPU-frame p95/p99, GPU average/p95/p99/maximum, process/GPU memory, streaming
+  and mesh queues, schedule-to-renderable latency, geometry totals, visibility,
+  readbacks, and ordinary-render SDF evaluations. Because v5 changes topology,
+  historical v4 measurements are context rather than a same-workload baseline.
+  Reject unexplained frame pacing, memory-growth, streaming, correctness, or
+  settlement failures; performance degradation must not be hidden by a topology
+  count change.
+
+#### Full-depth v5 candidate 2026-08-29 - rejected
+
+- Run `923fd9fbfe4a46f6bbd0e0372e3ae508`, revision
+  `cave-depth-v5-candidate`, completed the unchanged figure-eight in
+  `121.94285 s` with generator version `5`. The CPU compiler settled with zero
+  errors or warnings, the renamed v5 SDF compiled into the production compute
+  shader, the exterior rendered after a clean play restart, and the run saved a
+  complete schema-10 result. Gameplay and warm generation/mesh queues and all
+  lanes settled to zero before the terminal save.
+- Moving frame performance was `239.32149 FPS`; CPU-frame p95/p99 was
+  `4.9984/5.44 ms`; GPU average/p95/p99/maximum was
+  `0.5204407/0.6747246/0.75149536/1.396656 ms`. Process memory grew from
+  `2,922,577,920` to `3,100,577,792` bytes and peaked at `3,100,319,744`.
+  Moving GPU memory grew from `2,422,149,422` to `2,472,481,070` bytes. The
+  stationary GPU-memory values underflowed the engine counter and are invalid;
+  no stationary GPU-memory conclusion is drawn from them.
+- The settled ten-second window recorded `239.68019 FPS`, CPU p95/p99
+  `4.9927/5.3044 ms`, and GPU average/p95/p99/maximum
+  `0.6683634/0.6747246/0.6804466/0.92196465 ms`, with `905` visible regions.
+  Geometry readbacks and ordinary-render SDF evaluations remained zero.
+- The candidate settled `6,275` gameplay and `657` warm surface meshes with
+  `6,196,009` active cells, `6,621,908` unique vertices, `12,402,710`
+  triangles, and `37,208,130` indices in `25` arenas. Topology and position
+  digests were `945207C457C6FFD8` and `D952B7C7F3A6A81E`. Relative to the
+  current v4 renderer workload's `3,012` gameplay and `300` warm meshes,
+  `2,693,715` active cells, and `13` arenas, full-depth occupancy produced
+  approximately `2.08x` gameplay surfaces, `2.19x` warm surfaces, `2.30x`
+  active cells, and `1.92x` arena commitment.
+- Meshing published `175,144` regions at `1,436.2794/s`, but the moving total
+  queue averaged `19,569.904` and reached p95/p99/maximum
+  `21,436/21,523/21,570`. Schedule-to-renderable p50/p95/p99/maximum was
+  `6679.814/8865.937/13148.413/20837.586 ms`; player-route lag p95 was
+  `18,372.906` units or `35.884583` chunks; and post-loop drain took
+  `13,487.8125 ms`. The current v4 triple-lane workload recorded total-queue
+  p95 `335`, schedule p95 `230.1775 ms`, route-lag p95 `573.03125` units, and
+  drain `327.1954 ms`, so the v5 traversal workload materially regresses every
+  streaming-responsiveness dimension despite acceptable settled frame pacing.
+- Bounds completed `852,720` gameplay and `957,926` warm queries in
+  `5,500.573 ms` total with a `0.5901 ms` maximum. The wider band intentionally
+  changed all below-surface definitely-solid classifications to potential;
+  gameplay classified `416,971` air and `435,749` potential, while warm
+  classified `468,808` air and `489,118` potential. No rejected chunk was later
+  reported as containing a GPU surface.
+- Direct underground player-driven visual coverage was **not run**. The live
+  registry exposes no player input route, and its generic transform mutation
+  addresses the authored scene rather than the running clone; that attempted
+  mutation was restored to `(0,0,0)` without retaining a scene source change.
+  The increased production geometry proves substantial additional internal
+  topology but does not by itself prove the required distribution across all
+  three depth bands or subjective three-dimensional quality.
+- Outcome: **rejected**. Compilation, shader parity by identical expressions,
+  exterior rendering, fixed-route completion, settlement, frame pacing,
+  geometry-readback, and ordinary-render-SDF gates pass. The approximately
+  `36`-chunk p95 render lag, multi-second availability delay, queue growth,
+  doubled geometry, and unrun underground journey fail responsiveness and
+  feature-acceptance gates. Do not commit or push this full-occupancy candidate.
+  A sparser depth-distributed recipe or an explicitly accepted product-level
+  streaming tradeoff requires a new human-approved scenario version.

@@ -227,7 +227,7 @@ float SampleVoxelSdfWorld(
 	float cheeseThreshold = 0.48 - 0.12 * thickness;
 	float cheeseDensity = 512.0 * (cheese - cheeseThreshold);
 	float depth = -surfaceDensity;
-	float envelope = min( depth, 2048.0 - depth );
+	float envelope = min( depth - 512.0, 8192.0 - depth );
 	float caveDensity = min( max( tunnelDensity, cheeseDensity ), envelope );
 	return max( surfaceDensity, caveDensity );
 }

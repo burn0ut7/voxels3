@@ -11,7 +11,7 @@ FEATURES
 COMMON
 {
 	#include "system.fxc"
-	#include "shaders/voxels/voxel_sdf_v4.hlsl"
+	#include "shaders/voxels/voxel_sdf_v5.hlsl"
 	#include "shaders/voxels/transvoxel_regular_tables.hlsl"
 }
 

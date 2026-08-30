@@ -4,7 +4,7 @@
 
 LOD0 regular-cell Transvoxel is the sole terrain render path. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; indexed meshes are
-derived, GPU-resident, revisioned, disposable caches. Generator version 4 owns
+derived, GPU-resident, revisioned, disposable caches. Generator version 5 owns
 the exterior surface, noodle tunnels, and cheese caverns. This slice excludes
 transition cells, other LODs, collision, edits, networking, generator changes,
 and allocator redesign.
@@ -31,7 +31,7 @@ The mesher owns:
 - coordinate-to-resident-geometry and candidate replacement state;
 - shared compute shaders, indexed-indirect draw resources, and visibility data.
 
-A remesh evaluates the canonical `voxel_sdf_v4.hlsl` field once into a haloed
+A remesh evaluates the canonical `voxel_sdf_v5.hlsl` field once into a haloed
 `35^3` density lattice, classifies the `32^3` regular cells from cached corners,
 counts compact region-local edge vertices and indices, and scans those counts.
 The count stage returns only bounded metadata to the CPU. It never returns

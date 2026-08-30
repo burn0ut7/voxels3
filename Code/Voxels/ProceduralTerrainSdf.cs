@@ -9,13 +9,13 @@ public readonly record struct ProceduralTerrainSettings(
 public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 
 /// <summary>
-/// Canonical deterministic version-4 volumetric terrain field. The GPU mirror
+/// Canonical deterministic version-5 volumetric terrain field. The GPU mirror
 /// uses the same integer hash, simplex recipes, and constructive composition.
 /// </summary>
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 4;
+	public const int CurrentVersion = 5;
 	public const int DefaultWorldSeed = 1337;
 	public const float DefaultSurfaceBaseHeight = 0f;
 	public const float DefaultSurfaceFrequency = 0.0005f;
@@ -25,7 +25,8 @@ internal static class ProceduralTerrainSdf
 	public const float ThicknessWavelength = 16384f;
 	public const float CheeseWavelength = 8192f;
 	public const float CaveDensityScale = 512f;
-	public const float CaveMaximumDepth = 2048f;
+	public const float CaveMinimumDepth = 512f;
+	public const float CaveMaximumDepth = 8192f;
 	public const float NoodleBaseThreshold = 0.056f;
 	public const float NoodleThicknessVariation = 0.016f;
 	public const float CheeseBaseThreshold = 0.48f;
@@ -81,7 +82,7 @@ internal static class ProceduralTerrainSdf
 		var cheeseThreshold = CheeseBaseThreshold - CheeseThresholdVariation * thickness;
 		var cheeseDensity = CaveDensityScale * (cheese - cheeseThreshold);
 		var depth = -surfaceDensity;
-		var envelope = MathF.Min( depth, CaveMaximumDepth - depth );
+		var envelope = MathF.Min( depth - CaveMinimumDepth, CaveMaximumDepth - depth );
 		var caveDensity = MathF.Min( MathF.Max( tunnelDensity, cheeseDensity ), envelope );
 		return MathF.Max( surfaceDensity, caveDensity );
 	}
@@ -223,11 +224,16 @@ internal static class ProceduralTerrainSdf
 			MathF.Max( tunnel.Maximum, cavern.Maximum ) );
 		var minimumDepth = -surface.Maximum;
 		var maximumDepth = -surface.Minimum;
-		var envelopeAtMinimum = MathF.Min( minimumDepth, CaveMaximumDepth - minimumDepth );
-		var envelopeAtMaximum = MathF.Min( maximumDepth, CaveMaximumDepth - maximumDepth );
-		var envelopeMaximum = minimumDepth <= CaveMaximumDepth * 0.5f &&
-			maximumDepth >= CaveMaximumDepth * 0.5f
-			? CaveMaximumDepth * 0.5f
+		var envelopeAtMinimum = MathF.Min(
+			minimumDepth - CaveMinimumDepth,
+			CaveMaximumDepth - minimumDepth );
+		var envelopeAtMaximum = MathF.Min(
+			maximumDepth - CaveMinimumDepth,
+			CaveMaximumDepth - maximumDepth );
+		var envelopeMidpoint = (CaveMinimumDepth + CaveMaximumDepth) * 0.5f;
+		var envelopeMaximum = minimumDepth <= envelopeMidpoint &&
+			maximumDepth >= envelopeMidpoint
+			? (CaveMaximumDepth - CaveMinimumDepth) * 0.5f
 			: MathF.Max( envelopeAtMinimum, envelopeAtMaximum );
 		var envelope = new DensityInterval(
 			MathF.Min( envelopeAtMinimum, envelopeAtMaximum ),

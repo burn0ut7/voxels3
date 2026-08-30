@@ -16,7 +16,7 @@ persistence, and network replication remain later slices.
   `(CellsPerAxis + 1)^3` logical density samples. Negative density is solid,
   positive density is air, and zero is the surface.
 - The current unedited base field is deterministic volumetric generator version
-  `4`, identified by explicit generation settings and evaluated only from
+  `5`, identified by explicit generation settings and evaluated only from
   absolute coordinates. Shared chunk-boundary samples therefore receive
   identical integer lattice inputs.
 - The same canonical sample query derives one semantic material ID from density:
@@ -66,13 +66,13 @@ persistence, and network replication remain later slices.
   client. It refuses to choose among multiple locally controlled players and
   logs that multi-origin server interest management is still required.
 
-## Procedural Generator Version 4
+## Procedural Generator Version 5
 
 `ProceduralTerrainSdf` owns the single unedited base field. The serialized,
 user-facing settings remain `WorldSeed`, `SurfaceBaseHeight`,
 `SurfaceFrequency`, and `SurfaceAmplitude`. Defaults are respectively `1337`,
 `0`, `0.0005`, and `128`; the authored stress scene uses those same settings.
-Generator version `4`, the 2D/3D gradient tables, hashes, seed salts, and cave
+Generator version `5`, the 2D/3D gradient tables, hashes, seed salts, and cave
 recipe are backend-owned. There is no inspector-selectable generator variation
 or alternate implementation.
 
@@ -83,7 +83,7 @@ retains the complete settings value used to construct it. The GPU SDF descriptor
 copies that value, so descriptor equality and stale-result rejection include
 every field-shaping input.
 
-The CPU owner and `voxel_sdf_v4.hlsl` use the same unchecked 32-bit integer
+The CPU owner and `voxel_sdf_v5.hlsl` use the same unchecked 32-bit integer
 hashes, fixed gradient tables, seed salts, simplex skew/unskew constants, and
 operation order. Negative coordinates use explicit floor operations. Simplex
 outputs are clamped to `[-1,1]`, making their conservative range contractual
@@ -102,13 +102,13 @@ tunnel = 512 * (noodleThreshold - max(
 cheeseThreshold = 0.48 - 0.12 * thicknessNoise
 cheese = 512 * (simplex3D(world / 8192, cheeseSeed) - cheeseThreshold)
 depth = -surface
-cave = min(max(tunnel, cheese), min(depth, 2048 - depth))
+cave = min(max(tunnel, cheese), min(depth - 512, 8192 - depth))
 density = max(surface, cave)
 ```
 
 The surface term remains the exterior terrain. Intersecting near-zero regions of
 two independent 3D fields form long noodle passages; a slowly varying third
-field changes their thickness. Version 4 uses `6144/6912` noodle wavelengths,
+field changes their thickness. Version 5 uses `6144/6912` noodle wavelengths,
 doubling physical passage scale and halving encounter frequency relative to the
 rejected v6 recipe without changing normalized occupancy. That same slow field
 lowers the cheese cutoff
@@ -116,9 +116,11 @@ where noodles are wider, producing cave-rich zones with broad chambers and
 natural tunnel intersections. Its opposite phase leaves quieter regions with
 thinner passages and a higher cavern cutoff. The effective cheese threshold
 spans `0.36..0.60` without another noise sample. The relative-depth envelope
-admits entrances and confines topology to the first `2048` units below the
-exterior surface. This is an intentional volumetric performance workload, not
-final world-generation art.
+preserves one `512`-unit chunk of solid overburden and confines topology to the
+next fifteen chunks, ending `8192` units below the local exterior surface. This
+band spans more than one vertical period of each primary cave field, so tunnels
+and chambers vary materially with Z instead of being clipped into a shallow
+horizontal slice.
 
 Conservative classification remains a full closed-AABB contract. The existing
 tight 2D surface interval first proves exterior air or solid. Underground solid
@@ -131,12 +133,14 @@ made background batches run for seconds without yielding. Non-finite input and
 remaining uncertainty also stay potential; no heightfield assumption can reject
 a cave.
 
-Rejected alternatives are domain warping, explicit worm carvers, room graphs,
-fBm/octave controls, a selectable generator menu, a general noise graph,
-exposing hashes or salts, dense CPU sample arrays, and any allocator or meshing
-optimization bundled with this generator change. Unwarped fields plus thickness
-modulation supply the required topology while keeping evaluation and bounds
-small enough to understand and measure.
+Rejected alternatives are an absolute world-Z cave band, domain warping,
+additional depth layers, explicit worm carvers, room graphs, fBm/octave
+controls, a selectable generator menu, a general noise graph, exposing hashes
+or salts, dense CPU sample arrays, and any allocator or meshing optimization
+bundled with this generator change. The surface-relative band keeps consistent
+overburden under hills and valleys. Existing unwarped 3D fields now have enough
+vertical range to supply the requested topology without another field or
+parallel generation path.
 
 ## Selected Dimensions
 
