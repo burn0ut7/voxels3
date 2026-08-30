@@ -4398,3 +4398,58 @@ Record an approved extraordinary change here before adding the new version:
   feature-acceptance gates. Do not commit or push this full-occupancy candidate.
   A sparser depth-distributed recipe or an explicitly accepted product-level
   streaming tradeoff requires a new human-approved scenario version.
+
+#### Full-depth v5 product acceptance 2026-08-30
+
+- The human user explicitly accepted the complete current worktree, including
+  generator v5 cave depth, persistent indexed geometry, and triple scratch
+  lanes, as the production state for subsequent renderer experiments. This is
+  a product-level acceptance of the previously measured streaming tradeoff; it
+  does not rewrite or erase the rejected candidate result above.
+- The accepted source state is the authoritative pre-HZB workload. The HZB
+  experiment must not alter its generator, cave topology, meshing throughput,
+  geometry allocation, LOD, Transvoxel topology, materials, deformation, or
+  networking.
+
+### TERRAIN-HZB-001/v1 - Conservative region occlusion experiment
+
+- Definition recorded on 2026-08-30 before the fresh frame-cap baselines and
+  before any renderer or visibility implementation change.
+- Production path: `Assets/scenes/basic_example.scene`; s&box `26.08.19`; one
+  local player; main camera `1280x720`; `fps_max=1000`; generator version `5`
+  with its accepted seed, surface, noodle, cheese, density-scale, and full-depth
+  envelope parameters; LOD0 regular-cell Transvoxel; persistent indexed
+  geometry; exactly three scratch lanes; zero geometry readbacks and zero
+  ordinary-render SDF evaluations.
+- Fixed workload: `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`; one
+  render-warm chunk; at most `8` regions per GPU mesh batch; figure-eight world
+  Z `0`; speed `2500`; X distance `50000`; Y reach `25000`; exactly one loop;
+  frame capacity `524,288`; per-update frame/GPU sampling; one-second memory
+  sampling; nearest-rank percentiles; unchanged queue settlement; two further
+  render-sequence advances; then one exact ten-second stationary window.
+- Execute exactly two unchanged-renderer baselines before renderer edits and
+  exactly two HZB candidates afterward. Use clean play starts and identical
+  graphics, camera, resolution, world, warmup, and measurement boundaries.
+- Record moving and stationary resident regions, frustum rejects, frustum
+  survivors, HZB tests, HZB occlusions and percentage, final non-zero draws,
+  indirect API submissions and records, total GPU average/p95/p99/maximum,
+  ordinary frame p95/p99, terrain/HZB profiler timings when exposed, memory,
+  queues, geometry totals, digests, and readbacks.
+- HZB may affect indexed-indirect instance counts only. It must never affect
+  meshing, residency, streaming, or authoritative terrain. Near-plane crossing,
+  partial off-screen projection, invalid depth, first frame, camera motion or
+  cut, resize, publication/removal, and other uncertainty remain visible.
+- Keep criteria fixed before execution:
+  - each stationary candidate rejects at least `15%` of frustum survivors;
+  - both candidate GPU averages beat both baselines, while candidate median GPU
+    average and p95 improve by more than the greater of `5%` or the observed
+    two-baseline spread;
+  - GPU p99 and ordinary frame p95/p99 do not regress beyond the greater of the
+    baseline spread, `5%`, or `0.25 ms`;
+  - geometry, residency, topology/position digests, final queues, readbacks,
+    indirect submission shape, and player-visible terrain remain equivalent;
+  - no synchronous readback, synchronization stall, recurring allocation,
+    meaningful CPU cost, temporal hole, delayed reveal, or flicker is allowed.
+- Hard stop: if any gate fails, remove the HZB runtime path and retain only the
+  result documentation. Do not tune terrain, workload, unrelated rendering, or
+  acceptance thresholds after observing the candidate.
