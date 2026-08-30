@@ -35,6 +35,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly List<GeometryArena> _arenas = new();
 	private readonly List<VoxelRenderRegionKey> _preparedResidentRemovals = new();
 	private readonly HashSet<VoxelRenderRegionKey> _preparedCoverageChanges = new();
+	private readonly List<VoxelRenderRegionKey> _preparedCoverageApplyQueue = new();
 	private ScratchLane[] _scratchLanes;
 	private readonly HashSet<InFlightIdentity> _cancelledInFlight = new();
 	private readonly List<VisibilityBuffers> _retiredVisibilityBuffers = new();
@@ -61,6 +62,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private VoxelClipBoxSelection _publishedClipSelection;
 	private VoxelClipBoxDelta _preparedClipDelta;
 	private int _preparedClipPlacementRevision;
+	private int _preparedMinimumLod = MaximumClipLevels;
+	private int _publishedMinimumLod = MaximumClipLevels;
+	private bool _preparedProgressiveRefinement;
 	private int _preparedClipBank = 1;
 	private int _publishedClipBank;
 	private int _stalePublicationCount;
@@ -92,6 +96,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private bool _disposed;
 
 	public int ResidentCount => _resident.Count;
+	public int GeometryResidentCount => _resident.Count( pair => pair.Value.Handle is not null );
 	public int PendingCount => PendingGameplayCount + PendingWarmCount;
 	public int PendingGameplayCount => _pendingGameplayCount + CountInFlight( GpuMeshResidency.Gameplay );
 	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Clip );
@@ -155,10 +160,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		sizeof( uint ) * (VisibilityFrameCounterCount + VisibilityAggregateCounterCount);
 
 	public GpuPublishedCoverageValidation ValidatePublishedCoverage(
-		VoxelClipBoxSelection selection )
+		VoxelClipBoxSelection selection,
+		int minimumLod )
 	{
-		var expectedRegular = selection.ActiveRegularCount;
-		var expectedTransitions = selection.LogicalTransitionFaceCount;
+		var expectedRegular = selection.GetActiveRegularCount( minimumLod );
+		var expectedTransitions = selection.GetTransitionFaceCount( minimumLod );
 		var actualRegular = 0;
 		var actualTransitions = 0;
 		var matchedRegular = 0;
@@ -173,13 +179,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 			if ( key.MeshKind == VoxelRenderMeshKind.Regular )
 			{
 				actualRegular++;
-				expected = selection.ActiveRegular.Contains( key );
+				expected = selection.ContainsPublishedActiveRegular( key, minimumLod );
 				if ( expected ) matchedRegular++;
 			}
 			else
 			{
 				actualTransitions++;
-				expected = selection.TransitionFaces.Contains( key );
+				expected = selection.ContainsPublishedTransitionFace( key, minimumLod );
 				if ( expected ) matchedTransitions++;
 			}
 
@@ -247,14 +253,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 		AttachToMainCamera();
 	}
 
-	public void PrepareClipCoverage( VoxelClipBoxSelection selection, int placementRevision )
+	public void PrepareClipCoverage(
+		VoxelClipBoxSelection selection,
+		VoxelClipBoxDelta delta,
+		int placementRevision,
+		int minimumLod,
+		bool progressiveRefinement )
 	{
 		_preparedClipSelection = selection ?? throw new ArgumentNullException( nameof( selection ) );
-		var delta = VoxelClipBoxDelta.Build( _publishedClipSelection, selection );
+		if ( minimumLod < 0 || minimumLod > selection.MaximumLod )
+			throw new ArgumentOutOfRangeException( nameof( minimumLod ) );
+		delta ??= VoxelClipBoxDelta.Build( _publishedClipSelection, selection );
 		_preparedClipDelta = delta;
 		_preparedClipPlacementRevision = placementRevision;
+		_preparedMinimumLod = minimumLod;
+		_preparedProgressiveRefinement = progressiveRefinement;
 		_preparedClipBank = 1 - _publishedClipBank;
 		_preparedResidentRemovals.Clear();
+		_preparedCoverageChanges.Clear();
+		_preparedCoverageApplyQueue.Clear();
 		foreach ( var key in delta.EnumerateLeavingRegular( 0 ) )
 		{
 			AddPreparedRemovalFamily( key );
@@ -264,11 +281,47 @@ internal sealed class GpuVoxelMesher : IDisposable
 			foreach ( var key in delta.EnumerateLeavingRegular( lod ) ) AddPreparedRemovalFamily( key );
 		}
 
-		foreach ( var key in delta.EnumerateCoverageChanges() ) _preparedCoverageChanges.Add( key );
-		foreach ( var key in _preparedCoverageChanges )
+		foreach ( var key in delta.EnumerateCoverageChanges() )
 		{
-			if ( _resident.TryGetValue( key, out var resident ) ) ApplyPreparedCoverage( resident );
+			if ( progressiveRefinement && key.Lod < minimumLod ) continue;
+			if ( _resident.TryGetValue( key, out var resident ) && resident.Handle is not null )
+				_preparedCoverageChanges.Add( key );
 		}
+		if ( progressiveRefinement )
+		{
+			foreach ( var resident in _resident.Values )
+			{
+				if ( resident.Handle is null ) continue;
+				var key = resident.Descriptor.Key;
+				var oldRegularActive = _publishedClipSelection is not null &&
+					_publishedClipSelection.ContainsPublishedActiveRegular( key, _publishedMinimumLod );
+				var newRegularActive = selection.ContainsPublishedActiveRegular( key, minimumLod );
+				var oldTransitionActive = _publishedClipSelection is not null &&
+					_publishedClipSelection.ContainsPublishedTransitionFace( key, _publishedMinimumLod );
+				var newTransitionActive = selection.ContainsPublishedTransitionFace( key, minimumLod );
+				if ( oldRegularActive != newRegularActive || oldTransitionActive != newTransitionActive )
+					_preparedCoverageChanges.Add( key );
+			}
+		}
+		_preparedCoverageApplyQueue.AddRange( _preparedCoverageChanges );
+	}
+
+	public int ProcessPreparedClipCoverage( float budgetMilliseconds )
+	{
+		if ( _preparedCoverageApplyQueue.Count == 0 || budgetMilliseconds <= 0f ) return 0;
+		var start = Stopwatch.GetTimestamp();
+		var processed = 0;
+		while ( _preparedCoverageApplyQueue.Count > 0 )
+		{
+			var last = _preparedCoverageApplyQueue.Count - 1;
+			var key = _preparedCoverageApplyQueue[last];
+			_preparedCoverageApplyQueue.RemoveAt( last );
+			if ( _resident.TryGetValue( key, out var resident ) ) ApplyPreparedCoverage( resident );
+			processed++;
+			if ( (processed & 31) == 0 &&
+				Stopwatch.GetElapsedTime( start ).TotalMilliseconds >= budgetMilliseconds ) break;
+		}
+		return processed;
 	}
 
 	private void AddPreparedRemovalFamily( VoxelRenderRegionKey regular )
@@ -286,23 +339,38 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void ApplyPreparedCoverage( ResidentMesh resident )
 	{
-		if ( _preparedClipSelection is null ) return;
+		if ( _preparedClipSelection is null || resident.Handle is null ) return;
 		var key = resident.Descriptor.Key;
 		var regularOwner = VoxelRenderRegionKey.Regular( key.Lod, key.Coordinate );
-		var residentMember = _preparedClipSelection.ResidentRegular.Contains( regularOwner );
+		var residentMember = _preparedClipSelection.ContainsPublishedResidentRegular(
+			regularOwner, _preparedMinimumLod );
 		var targetActive = key.MeshKind == VoxelRenderMeshKind.Regular
-			? residentMember && _preparedClipSelection.ActiveRegular.Contains( key )
-			: residentMember && _preparedClipSelection.TransitionFaces.Contains( key );
-		var transitionMask = _preparedClipSelection.TryGetTransitionMask( regularOwner, out var mask )
+			? residentMember && _preparedClipSelection.ContainsPublishedActiveRegular(
+				key, _preparedMinimumLod )
+			: residentMember && _preparedClipSelection.ContainsPublishedTransitionFace(
+				key, _preparedMinimumLod );
+		var transitionMask = _preparedClipSelection.TryGetTransitionMask(
+			regularOwner, _preparedMinimumLod, out var mask )
 			? mask
 			: 0u;
 		resident.SetCoverageBank( _preparedClipBank, residentMember, targetActive, transitionMask );
 		_preparedCoverageChanges.Add( key );
-		SetVisibilityRecord( resident );
+		SetVisibilityCoverageRecord( resident );
 	}
 
 	private bool IsPublishedActive( ResidentMesh resident )
 	{
+		if ( resident.Handle is null )
+		{
+			if ( _publishedClipSelection is null ) return false;
+			var key = resident.Descriptor.Key;
+			var regularOwner = VoxelRenderRegionKey.Regular( key.Lod, key.Coordinate );
+			if ( !_publishedClipSelection.ContainsPublishedResidentRegular(
+				regularOwner, _publishedMinimumLod ) ) return false;
+			return key.MeshKind == VoxelRenderMeshKind.Regular
+				? _publishedClipSelection.ContainsPublishedActiveRegular( key, _publishedMinimumLod )
+				: _publishedClipSelection.ContainsPublishedTransitionFace( key, _publishedMinimumLod );
+		}
 		var residentMember = resident.GetCoverageResident( _publishedClipBank );
 		var targetActive = resident.GetCoverageActive( _publishedClipBank );
 		return residentMember && targetActive;
@@ -375,7 +443,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			if ( pair.Key.MeshKind != VoxelRenderMeshKind.Regular ||
 				!IsPublishedActive( pair.Value ) ) continue;
-			var mask = pair.Value.GetTransitionMask( _publishedClipBank );
+			var mask = pair.Value.Handle is null && _publishedClipSelection is not null
+				? _publishedClipSelection.TryGetTransitionMask(
+					VoxelRenderRegionKey.Regular( pair.Key.Lod, pair.Key.Coordinate ),
+					_publishedMinimumLod,
+					out var logicalMask ) ? logicalMask : 0u
+				: pair.Value.GetTransitionMask( _publishedClipBank );
 			for ( var face = VoxelTransitionFace.NegativeX;
 				face <= VoxelTransitionFace.PositiveZ; face++ )
 			{
@@ -405,6 +478,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 		float playerRouteDistance,
 		GpuMeshResidency residency = GpuMeshResidency.Clip )
 	{
+		var extent = descriptor.CellsPerAxis * descriptor.CellSize;
+		var origin = new Vector3(
+			descriptor.RegionCoordinate.x * extent,
+			descriptor.RegionCoordinate.y * extent,
+			descriptor.RegionCoordinate.z * extent );
+		if ( ProceduralTerrainSdf.TryClassifyGlobalVerticalRange(
+			new SdfWorldAabb( origin, origin + new Vector3( extent ) ),
+			descriptor.TerrainSettings,
+			out _ ) )
+		{
+			PublishEmpty( descriptor, residency );
+			return;
+		}
 		if ( _resident.TryGetValue( descriptor.Key, out var resident ) &&
 			GeometryEquivalent( resident.Descriptor, descriptor ) )
 		{
@@ -560,6 +646,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public bool IsClipCoverageReady(
 		VoxelClipBoxSelection selection,
+		int minimumLod,
 		int contentRevision,
 		int placementRevision,
 		out int missingRegions )
@@ -567,10 +654,30 @@ internal sealed class GpuVoxelMesher : IDisposable
 		missingRegions = 0;
 		if ( !ReferenceEquals( selection, _preparedClipSelection ) ||
 			placementRevision != _preparedClipPlacementRevision ||
+			minimumLod != _preparedMinimumLod ||
 			_preparedClipDelta is null )
 		{
 			missingRegions = selection.ResidentRegularCount + selection.LogicalTransitionFaceCount;
 			return false;
+		}
+		if ( _preparedCoverageApplyQueue.Count > 0 )
+		{
+			missingRegions = _preparedCoverageApplyQueue.Count;
+			return false;
+		}
+		if ( _preparedProgressiveRefinement )
+		{
+			foreach ( var key in selection.EnumerateResidentRegular( minimumLod ) )
+			{
+				if ( !_resident.TryGetValue( key, out var resident ) ||
+					resident.Descriptor.ContentRevision != contentRevision ) missingRegions++;
+			}
+			foreach ( var key in selection.EnumerateTransitionFaces( minimumLod + 1 ) )
+			{
+				if ( !_resident.TryGetValue( key, out var resident ) ||
+					resident.Descriptor.ContentRevision != contentRevision ) missingRegions++;
+			}
+			return missingRegions == 0;
 		}
 		for ( var lod = 0; lod <= _preparedClipDelta.MaximumLod; lod++ )
 		{
@@ -591,28 +698,44 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return missingRegions == 0;
 	}
 
-	public void CommitClipCoverage(
+	public GpuClipCommitResult CommitClipCoverage(
 		VoxelClipBoxSelection selection,
+		int minimumLod,
 		int placementRevision )
 	{
 		if ( !ReferenceEquals( selection, _preparedClipSelection ) ||
-			placementRevision != _preparedClipPlacementRevision )
+			placementRevision != _preparedClipPlacementRevision ||
+			minimumLod != _preparedMinimumLod ||
+			_preparedCoverageApplyQueue.Count > 0 )
 		{
 			_stalePublicationCount++;
 			throw new InvalidOperationException( "Stale clip-box placement cannot be published." );
 		}
 		_publishedClipBank = _preparedClipBank;
 		_publishedClipSelection = selection;
+		_publishedMinimumLod = minimumLod;
 		var synchronizedBank = 1 - _publishedClipBank;
+		var coverageStart = Stopwatch.GetTimestamp();
+		var changedRecords = 0;
+		var changedGeometryRecords = 0;
 		foreach ( var key in _preparedCoverageChanges )
 		{
 			if ( !_resident.TryGetValue( key, out var resident ) ) continue;
+			changedRecords++;
+			if ( resident.Handle is not null ) changedGeometryRecords++;
 			resident.CopyCoverageBank( _publishedClipBank, synchronizedBank );
-			SetVisibilityRecord( resident );
+			SetVisibilityCoverageRecord( resident );
 		}
+		var coverageMilliseconds =
+			(float)Stopwatch.GetElapsedTime( coverageStart ).TotalMilliseconds;
 		_preparedCoverageChanges.Clear();
 		_drawCommandsDirty = true;
-		CommitDrawCommands();
+		var drawCommit = CommitDrawCommands();
+		return new GpuClipCommitResult(
+			coverageMilliseconds,
+			drawCommit.Milliseconds,
+			changedRecords,
+			changedGeometryRecords );
 	}
 
 	public void RetireCommittedClipCoverage()
@@ -663,7 +786,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 		var targetLane = _scratchLanes.FirstOrDefault( lane => lane.IsIdle );
 		if ( targetLane is null ) return;
-		var requests = new GpuTerrainRequest[MaximumDispatchesPerUpdate];
+		var requests = targetLane.Requests;
 		var processed = 0;
 		VoxelRenderMeshKind? batchKind = null;
 		while ( processed < _maximumDispatchesRequested && TryDequeuePending( batchKind, out var pending ) )
@@ -1026,7 +1149,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_drawCommands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
 			_drawCommands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
 			_drawCommands.Attributes.Set( "ClipPublicationBank", _publishedClipBank );
-			_drawCommands.Attributes.Set( "ClipMinimumLod", 0 );
+			_drawCommands.Attributes.Set( "ClipMinimumLod", _publishedMinimumLod );
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.Bounds, ResourceState.GenericRead );
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.SourceArguments, ResourceState.GenericRead );
 			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.UnorderedAccess );
@@ -1221,6 +1344,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_visibilityDescriptorsDirty = true;
 	}
 
+	private void SetVisibilityCoverageRecord( ResidentMesh resident )
+	{
+		if ( resident.Handle is null ) return;
+		var descriptorIndex = resident.Handle.GlobalSlot * VisibilityVectorsPerRecord +
+			DescriptorVectorOffset + 2;
+		_visibilityBoundsData[descriptorIndex] = new Vector4(
+			BitConverter.UInt32BitsToSingle( resident.GetTransitionMask( 0 ) ),
+			BitConverter.UInt32BitsToSingle( resident.GetTransitionMask( 1 ) ),
+			BitConverter.UInt32BitsToSingle( resident.CoverageBits ),
+			BitConverter.UInt32BitsToSingle( (uint)resident.Descriptor.MeshKind ) );
+		_visibilityDescriptorsDirty = true;
+	}
+
 	private void ClearVisibilityRecord( int slot )
 	{
 		var index = slot * VisibilityVectorsPerRecord;
@@ -1244,9 +1380,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_preparedClipDelta = null;
 		_preparedResidentRemovals.Clear();
 		_preparedCoverageChanges.Clear();
+		_preparedCoverageApplyQueue.Clear();
 		_preparedClipPlacementRevision = 0;
 		_publishedClipBank = 0;
 		_preparedClipBank = 1;
+		_preparedMinimumLod = MaximumClipLevels;
+		_publishedMinimumLod = MaximumClipLevels;
+		_preparedProgressiveRefinement = false;
 		if ( _scheduleLatencyMeasurementActive )
 			_scheduleLatencyCancelledCount += _pending.Count + (_scratchLanes?.Sum( lane =>
 				lane.CountInFlight.Count + lane.EmitInFlight.Count ) ?? 0);
@@ -1564,6 +1704,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private sealed class ScratchLane
 	{
 		public GpuTerrainScratch Scratch { get; }
+		public GpuTerrainRequest[] Requests { get; } = new GpuTerrainRequest[MaximumRegionsPerBatch];
 		public List<InFlightMesh> CountInFlight { get; } = new( MaximumRegionsPerBatch );
 		public List<CandidateMesh> EmitInFlight { get; } = new( MaximumRegionsPerBatch );
 		public long SubmittedRenderSequence { get; set; }
@@ -1696,6 +1837,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 }
 
 internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Milliseconds );
+internal readonly record struct GpuClipCommitResult(
+	float CoverageMilliseconds,
+	float DrawCommandMilliseconds,
+	int ChangedRecords,
+	int ChangedGeometryRecords );
 internal readonly record struct GpuClipLevelMeasurement(
 	int Lod,
 	int DesiredRegular,

@@ -59,14 +59,18 @@ viewer position + validated radii
 - Boxes are half open. Full-detail radius four covers eight LOD0 regions on
   every axis.
 - `CellsPerAxis` is even and lies in `4..64`; odd sizes are rejected.
-- `EffectiveMaximumLod` is
-  `floor(log2(ViewRadiusChunks / FullDetailRadiusChunks))`.
+- `EffectiveMaximumLod` is zero when full detail reaches the view boundary.
+  Otherwise it retains enough coarse levels for the outer box to use the
+  canonical four-region clip half-extent. Expanding LOD0 therefore cannot
+  multiply every coarse box by the same cubic factor.
 - Level `L` cell spacing is `CellSize * 2^L` and its region extent is
   `CellsPerAxis * CellSize * 2^L`.
-- Normal boxes have a half-extent of `FullDetailRadiusChunks` level regions.
-  The outermost half-extent is widened to
-  `ceil(ViewRadiusChunks / 2^EffectiveMaximumLod)` when required, and the
-  snapped effective bounds are exposed in diagnostics.
+- LOD0 has half-extent `FullDetailRadiusChunks`. Each parent has the smallest
+  even half-extent that contains the complete child boundary, leaves at least
+  one parent-region transition shell, and is no smaller than the canonical
+  four-region coarse half-extent. The outermost level is widened when required
+  to cover `ViewRadiusChunks`; snapped effective bounds are exposed in
+  diagnostics.
 - Every child placement is snapped to complete parent-region boundaries. The
   containing viewer chunk center selects the nearest valid aligned box center;
   the selector does not always bias toward the negative grid direction. Level
@@ -86,13 +90,17 @@ logical transition faces.
 
 ## Coverage and Movement
 
-Every level retains its complete resident box. LOD0 is active as a filled cube
-and each coarser level is active as a hollow shell. There is no coarse-only
-publication mode. Startup prepares the complete hierarchy before its first
-publication. Every later placement, including a teleport, keeps the previously
-published hierarchy unchanged until the complete target hierarchy and all its
-seams are ready, then replaces it in one atomic commit. Entering and leaving
-slabs are diffed so unchanged region meshes remain cached.
+Every level retains its complete resident box. The finest published level is
+active as a filled cube and each published coarser level is active as a hollow
+shell. Startup and non-overlapping teleports schedule the outermost box first
+and publish it as soon as that complete coarse coverage is ready. Refinement
+then proceeds one adjacent level inward: one atomic commit activates the new
+fine filled coverage, hollows its coarse parent, and activates their transition
+faces. There is still one clip hierarchy and one publication path; partially
+refined coverage is a valid state of that hierarchy, not a second fallback
+renderer. Overlapping movement keeps the previous published hierarchy until
+replacement coverage is ready. Entering and leaving slabs are diffed so
+unchanged region meshes remain cached.
 
 Placement changes use a geometry-clipmap delta rather than replaying the
 resident hierarchy. For each level, the selector decomposes `new - old` and
@@ -123,6 +131,15 @@ faces, and selects matching deformation masks without a synchronous bulk GPU
 upload. Empty, solid, and air results are ready coverage. Stale placement or
 content revisions never publish. Active neighbors may differ by at most one
 level.
+
+Coverage preparation is itself incremental. A placement request records only
+geometry-bearing records named by its dirty slabs, then applies their inactive-
+bank coverage vectors under a bounded `0.250 ms` per-frame budget while the
+previous bank remains published. Empty and solid residents have no GPU record;
+their logical activity is derived directly from the published selection rather
+than copied through GPU coverage banks. Readiness includes completion of this
+preparation queue, so the atomic flip cannot expose a partially prepared
+hierarchy.
 
 One coarse block has one reusable regular mesh and up to six cached transition
 face meshes. Same-level adjacency disables a transition. Coarse/fine adjacency

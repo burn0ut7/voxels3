@@ -97,7 +97,7 @@ internal sealed class VoxelClipBoxDelta
 	private readonly List<VoxelClipBoxBounds>[] _leavingRegularSlabs;
 	private readonly List<VoxelRenderRegionKey>[] _enteringTransitions;
 	private readonly List<VoxelRenderRegionKey>[] _leavingTransitions;
-	private readonly List<VoxelRenderRegionKey> _coverageChanges = new();
+	private readonly HashSet<VoxelRenderRegionKey> _coverageChanges = new();
 
 	public VoxelClipBoxSelection Previous { get; }
 	public VoxelClipBoxSelection Current { get; }
@@ -192,7 +192,7 @@ internal sealed class VoxelClipBoxDelta
 
 	private void BuildCoverageChanges()
 	{
-		var changes = new HashSet<VoxelRenderRegionKey>();
+		var changes = _coverageChanges;
 		for ( var lod = 0; lod <= MaximumLod; lod++ )
 		{
 			foreach ( var key in EnumerateEnteringRegular( lod ) ) changes.Add( key );
@@ -228,8 +228,6 @@ internal sealed class VoxelClipBoxDelta
 			}
 		}
 
-		_coverageChanges.AddRange( changes );
-		_coverageChanges.Sort( CompareKeys );
 	}
 
 	private bool IsValidLod( int lod ) => lod >= 0 && lod <= MaximumLod;
@@ -324,23 +322,11 @@ internal sealed class VoxelClipBoxDelta
 		return count;
 	}
 
-	private static int CompareKeys( VoxelRenderRegionKey left, VoxelRenderRegionKey right )
-	{
-		var comparison = left.Lod.CompareTo( right.Lod );
-		if ( comparison != 0 ) return comparison;
-		comparison = left.MeshKind.CompareTo( right.MeshKind );
-		if ( comparison != 0 ) return comparison;
-		comparison = left.Face.CompareTo( right.Face );
-		if ( comparison != 0 ) return comparison;
-		comparison = left.Coordinate.z.CompareTo( right.Coordinate.z );
-		if ( comparison != 0 ) return comparison;
-		comparison = left.Coordinate.y.CompareTo( right.Coordinate.y );
-		return comparison != 0 ? comparison : left.Coordinate.x.CompareTo( right.Coordinate.x );
-	}
 }
 
 internal sealed class VoxelClipBoxSelection
 {
+	private const int CoarseClipHalfExtentRegions = 4;
 	private readonly VoxelClipBoxBounds[] _boxes;
 	private readonly VoxelClipLevelCounts[] _levelCounts;
 
@@ -355,6 +341,65 @@ internal sealed class VoxelClipBoxSelection
 	public int ResidentRegularCount => GetSetCount( VoxelClipSetKind.ResidentRegular );
 	public int ActiveRegularCount => GetSetCount( VoxelClipSetKind.ActiveRegular );
 	public int LogicalTransitionFaceCount => GetSetCount( VoxelClipSetKind.TransitionFaces );
+
+	public int GetResidentRegularCount( int minimumLod )
+	{
+		var count = 0;
+		for ( var lod = Math.Clamp( minimumLod, 0, MaximumLod ); lod <= MaximumLod; lod++ )
+			count = checked( count + _levelCounts[lod].ResidentRegular );
+		return count;
+	}
+
+	public int GetActiveRegularCount( int minimumLod )
+	{
+		minimumLod = Math.Clamp( minimumLod, 0, MaximumLod );
+		var count = _levelCounts[minimumLod].ResidentRegular;
+		for ( var lod = minimumLod + 1; lod <= MaximumLod; lod++ )
+			count = checked( count + _levelCounts[lod].ActiveRegular );
+		return count;
+	}
+
+	public int GetTransitionFaceCount( int minimumLod )
+	{
+		var count = 0;
+		for ( var lod = Math.Clamp( minimumLod + 1, 1, MaximumLod + 1 );
+			lod <= MaximumLod; lod++ )
+			count = checked( count + _levelCounts[lod].TransitionFaces );
+		return count;
+	}
+
+	public bool ContainsPublishedResidentRegular( VoxelRenderRegionKey key, int minimumLod ) =>
+		key.Lod >= minimumLod && ContainsResidentRegular( key );
+
+	public bool ContainsPublishedActiveRegular( VoxelRenderRegionKey key, int minimumLod ) =>
+		ContainsPublishedResidentRegular( key, minimumLod ) &&
+		(key.Lod == minimumLod || !IsCoveredByChild( key ));
+
+	public bool ContainsPublishedTransitionFace( VoxelRenderRegionKey key, int minimumLod ) =>
+		key.Lod > minimumLod && ContainsTransitionFace( key );
+
+	public IEnumerable<VoxelRenderRegionKey> EnumerateResidentRegular( int lod )
+	{
+		if ( lod < 0 || lod > MaximumLod ) yield break;
+		var bounds = _boxes[lod];
+		for ( var z = bounds.Minimum.z; z < bounds.Maximum.z; z++ )
+		{
+			for ( var y = bounds.Minimum.y; y < bounds.Maximum.y; y++ )
+			{
+				for ( var x = bounds.Minimum.x; x < bounds.Maximum.x; x++ )
+					yield return VoxelRenderRegionKey.Regular( lod, new Vector3Int( x, y, z ) );
+			}
+		}
+	}
+
+	public IEnumerable<VoxelRenderRegionKey> EnumerateTransitionFaces( int lod )
+	{
+		if ( lod <= 0 || lod > MaximumLod ) yield break;
+		foreach ( var key in EnumerateTransitionFaces() )
+		{
+			if ( key.Lod == lod ) yield return key;
+		}
+	}
 
 	private VoxelClipBoxSelection( int maximumLod )
 	{
@@ -375,12 +420,24 @@ internal sealed class VoxelClipBoxSelection
 
 		var maximumLod = CalculateMaximumLod( fullDetailRadiusChunks, viewRadiusChunks );
 		var selection = new VoxelClipBoxSelection( maximumLod );
+		var halfExtents = new int[maximumLod + 1];
+		halfExtents[0] = fullDetailRadiusChunks;
+		for ( var lod = 1; lod <= maximumLod; lod++ )
+		{
+			var scale = checked( 1 << lod );
+			var childHalfExtent = DivideRoundUp( halfExtents[lod - 1], 2 );
+			var viewHalfExtent = lod == maximumLod
+				? DivideRoundUp( viewRadiusChunks, scale )
+				: 0;
+			var halfExtent = Math.Max(
+				CoarseClipHalfExtentRegions,
+				Math.Max( checked( childHalfExtent + 2 ), viewHalfExtent ) );
+			halfExtents[lod] = checked( (halfExtent + 1) & ~1 );
+		}
 		for ( var lod = 0; lod <= maximumLod; lod++ )
 		{
 			var scale = checked( 1 << lod );
-			var halfExtent = lod == maximumLod
-				? DivideRoundUp( viewRadiusChunks, scale )
-				: fullDetailRadiusChunks;
+			var halfExtent = halfExtents[lod];
 			var center = new Vector3Int(
 				SnapToNearestAlignedCenter( lod0ViewerCoordinate.x, scale ),
 				SnapToNearestAlignedCenter( lod0ViewerCoordinate.y, scale ),
@@ -397,16 +454,25 @@ internal sealed class VoxelClipBoxSelection
 
 	public bool TryGetTransitionMask( VoxelRenderRegionKey key, out uint mask )
 	{
+		return TryGetTransitionMask( key, 0, out mask );
+	}
+
+	public bool TryGetTransitionMask(
+		VoxelRenderRegionKey key,
+		int minimumLod,
+		out uint mask )
+	{
 		mask = 0;
-		if ( !ContainsActiveRegular( key ) || key.Lod == 0 ) return false;
+		if ( !ContainsPublishedActiveRegular( key, minimumLod ) || key.Lod <= minimumLod )
+			return false;
 
 		for ( var face = VoxelTransitionFace.NegativeX;
 			face <= VoxelTransitionFace.PositiveZ; face++ )
 		{
-			if ( ContainsTransitionFace( VoxelRenderRegionKey.Transition(
+			if ( ContainsPublishedTransitionFace( VoxelRenderRegionKey.Transition(
 				key.Lod,
 				key.Coordinate,
-				face ) ) )
+				face ), minimumLod ) )
 			{
 				mask |= FaceBit( face );
 			}
@@ -414,16 +480,17 @@ internal sealed class VoxelClipBoxSelection
 		return mask != 0;
 	}
 
-	public int CountAdjacencyViolations()
+	public int CountAdjacencyViolations( int minimumLod = 0 )
 	{
 		var violations = 0;
 		var observedFaces = new int[MaximumLod + 1];
 		foreach ( var transition in TransitionFaces )
 		{
+			if ( transition.Lod <= minimumLod ) continue;
 			observedFaces[transition.Lod]++;
 			var owner = VoxelRenderRegionKey.Regular( transition.Lod, transition.Coordinate );
-			if ( !ContainsActiveRegular( owner ) ) violations++;
-			if ( !TryGetTransitionMask( owner, out var mask ) ||
+			if ( !ContainsPublishedActiveRegular( owner, minimumLod ) ) violations++;
+			if ( !TryGetTransitionMask( owner, minimumLod, out var mask ) ||
 				(mask & FaceBit( transition.Face )) == 0 ) violations++;
 
 			for ( var second = 0; second < 2; second++ )
@@ -436,11 +503,11 @@ internal sealed class VoxelClipBoxSelection
 						first,
 						second );
 					var fine = VoxelRenderRegionKey.Regular( transition.Lod - 1, fineCoordinate );
-					if ( !ContainsActiveRegular( fine ) ) violations++;
+					if ( !ContainsPublishedActiveRegular( fine, minimumLod ) ) violations++;
 				}
 			}
 		}
-		for ( var lod = 1; lod <= MaximumLod; lod++ )
+		for ( var lod = minimumLod + 1; lod <= MaximumLod; lod++ )
 			violations += Math.Abs( observedFaces[lod] - _levelCounts[lod].TransitionFaces );
 		return violations;
 	}
@@ -476,14 +543,15 @@ internal sealed class VoxelClipBoxSelection
 
 	public static int CalculateMaximumLod( int fullDetailRadiusChunks, int viewRadiusChunks )
 	{
-		var ratio = viewRadiusChunks / fullDetailRadiusChunks;
+		if ( viewRadiusChunks <= fullDetailRadiusChunks ) return 0;
+		var ratio = viewRadiusChunks / CoarseClipHalfExtentRegions;
 		var lod = 0;
 		while ( ratio >= 2 )
 		{
 			ratio >>= 1;
 			lod++;
 		}
-		return lod;
+		return Math.Max( 1, lod );
 	}
 
 	public static int FloorDivide( int value, int divisor )

@@ -5024,3 +5024,90 @@ Record an approved extraordinary change here before adding the new version:
   beyond the existing greater-of-`5%`-or-`0.25 ms` tolerance. No incremental
   clip movement, allocation, batch, morph, crossfade, publication, centering, or
   LOD-policy change is permitted.
+
+### CLIP-PROGRESSIVE-STARTUP-001/v1 - Expanded LOD0 startup refinement
+
+- Status: fixed regression scenario recorded on 2026-08-30 before changing
+  clip selection and publication staging.
+- Defect evidence: in `basic_example`, generator v5, seed `1337`,
+  `CellsPerAxis=32`, `CellSize=16`, `FullDetailRadiusChunks=16`, and
+  `ViewRadiusChunks=128`, the production camera shows no terrain while status
+  remains `Preparing clip hierarchy; 95,318 regions or seams pending`. Frame
+  rate loses roughly ninety percent and no visible LOD refinement occurs.
+- Canonical behavior: retain one hierarchy and one coverage-bank publication
+  path. Schedule its outermost complete box first, publish that filled coarse
+  coverage immediately, and refine exactly one adjacent level inward per
+  atomic commit. Each refinement simultaneously fills the child, hollows its
+  parent, activates their seams, and updates the parent's six-bit deformation
+  mask. A placement or content revision may never publish stale geometry.
+- Selection gate: expanding LOD0 must not apply the same 16-region half-extent
+  to every coarse level. Parents use the smallest even bounds that contain the
+  child plus a complete one-region transition-owner shell, with a four-region
+  coarse minimum and outer view coverage. The default full-detail-4 structural
+  counts remain exactly `3,072/2,752/480` at view radius 128.
+- Startup gates: the first visible terrain is the complete outer coarse box;
+  pending work then decreases level by level and status reports the current
+  finest published and refining LOD. Screenshots are required after the first
+  coarse publication, during at least two refinement commits, and after LOD0
+  settles. No blank frame may occur after first publication.
+- Correctness gates: zero coverage mismatches, transition-mask mismatches,
+  adjacency violations, stale publications, geometry readbacks, and ordinary
+  render SDF evaluations. Active neighbors differ by at most one LOD and every
+  refinement preserves watertight face, edge, and corner seams.
+- Performance gates: main-thread selection and each atomic publication remain
+  within `0.500 ms`; fresh logs contain no shader, dispatch, managed, or render
+  errors; moving and stationary CPU/GPU tails do not regress beyond the
+  canonical greater-of-`5%`-or-`0.25 ms` tolerance. The unchanged default and
+  radius-128 figure-eight scenarios remain required after the expanded-LOD0
+  startup regression settles.
+
+### CLIP-STREAMING-PERFORMANCE-001/v1 - Expanded LOD0 streaming diagnosis
+
+- Status: **implementation improved; clean-restart acceptance pending**.
+  Diagnostic and candidate runs used `basic_example`, s&box `26.08.19`, Vulkan,
+  `1280x720`, `fps_max=1000`, one local player, generator v5, seed `1337`,
+  `CellsPerAxis=32`, `CellSize=16`, `FullDetailRadiusChunks=16`,
+  `ViewRadiusChunks=128`, and the unchanged one-loop figure-eight at Z `0`,
+  speed `2500`, X reach `50000`, Y reach `25000`, followed by settlement, two
+  render advances, and the fixed ten-second stationary window.
+- Baseline diagnostic `0868ba037f724afd89e0c7fded4cb74e` identified the
+  streaming failure: average `500.626 FPS`; moving CPU p95/p99
+  `2.6477/4.1463 ms`; GPU average/p95/p99 `1.5723/2.4667/2.8114 ms`; mesh
+  schedule p95/p99 `1190.49/1525.89 ms`; route-lag p95/p99
+  `5.968/7.613` chunks; queue p95/p99 `3162/3467`; drain `880.60 ms`; clip
+  rebuild synchronous maximum `120.8601 ms` and total `3285.4233 ms`;
+  publication maximum `1.6079 ms`; `61` arenas; zero coverage, mask,
+  adjacency, or stale-publication errors.
+- Phase logging proved the original synchronous placement cost was dominated
+  by dirty-delta construction (`7-21 ms`, including a redundant sort), followed
+  by coverage preparation (`3-5 ms`) and a full desired-chunk rescan/sort
+  (`2-3 ms`). Draw-command commit was only about `0.07-0.12 ms` and was not the
+  bottleneck. Logical empty/solid residents accounted for most coverage-bank
+  records despite owning no GPU slot.
+- The rejected three-lane burst run `2e89d6c6a8944459994339a769a9326b`
+  changed the configured per-update admission from `8` to `24`. It did not
+  improve schedule or queue tails, increased GPU p99 from `2.8114` to
+  `3.1521 ms`, and tripled transient scratch memory from `34,310,016` to
+  `102,930,048` bytes. The experiment was fully reverted; shipping batch size,
+  lane count, and total admission remain unchanged.
+- The candidate removes coverage work for handle-null residents, reuses the
+  manager's already-built placement delta, keeps coverage changes as an
+  unordered set, queues only entering missing LOD0 chunks, reuses scratch
+  request arrays, writes only the changed GPU coverage vector, and prepares
+  geometry coverage under a bounded `0.250 ms` per-frame budget while old
+  coverage remains published. Live phase telemetry fell to approximately
+  `5-7 ms` per ordinary diagonal placement, with the missing-chunk queue phase
+  reduced to `0.3-0.7 ms`. Screenshots showed continuous terrain throughout
+  movement and fresh logs contained no coverage, adjacency, publication,
+  shader, dispatch, managed, or rendering errors.
+- Full candidate `893e170927b143a78d3528c1f7d80137` produced exact settled
+  structure `50,048` resident regular, `44,008` active regular, and `2,952`
+  logical transitions, with zero correctness counters. Synchronous clip work
+  improved to maximum `17.9294 ms` and total `572.3183 ms`; drain improved to
+  `324.08 ms`. However moving CPU p95/p99 were `3.0034/4.3516 ms`, GPU
+  average/p95/p99 were `1.6707/2.7683/3.2866 ms`, schedule p95/p99 were
+  `1302.45/1591.15 ms`, and route-lag p95/p99 were `6.385/7.796` chunks.
+  These tails exceed the acceptance tolerance. The editor process began this
+  late hot-load run at `3,241,304,064` bytes versus the earlier baseline's
+  `2,513,629,184` bytes, so a clean editor restart and two repeated candidates
+  are required before attributing the tail difference or accepting the change.
