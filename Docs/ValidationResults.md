@@ -4046,3 +4046,81 @@ Record an approved extraordinary change here before adding the new version:
   review**, as required before commit. No allocator, bounds, meshing, renderer,
   or draw-SDF optimization is included; the p95/maximum latency continues to
   nominate meshing throughput after topology acceptance.
+
+### PERSISTENT-GEOMETRY-001/v1 - Persistent indexed terrain proof
+
+- Definition recorded on 2026-08-29 before the first formal baseline run and
+  before any renderer implementation. The human request authorizes
+  `CAVE-STRESS-001/v7` as the accepted primary workload; the historical v7
+  candidate record and its then-pending visual-review statement remain
+  immutable.
+- Production path and every workload parameter are inherited unchanged from
+  v7: `Assets/scenes/basic_example.scene`; engine `26.08.19`; one local player;
+  main camera `1280x720`; `CellsPerAxis=32`; `CellSize=16`; `LoadRadius=16`;
+  one render-warm chunk; at most `8` GPU mesh jobs per update; `0.500 ms`
+  main-thread integration budget; generator version `4`; `WorldSeed=1337`;
+  `SurfaceBaseHeight=0`; `SurfaceFrequency=0.0005`;
+  `SurfaceAmplitude=128`; noodle wavelengths `6144/6912`; thickness wavelength
+  `16384`; cheese wavelength `8192`; noodle threshold
+  `0.056+0.016*thicknessNoise`; cheese threshold
+  `0.48-0.12*thicknessNoise`; density scale `512`; and depth envelope `2048`.
+- The locked player journey starts and centers at `(0,0,0)`, holds world Z at
+  `0`, moves at speed `2500` around the existing figure-eight with maximum X
+  distance `50000` and Y reach `25000`, and completes exactly one loop. Frame
+  capacity `524,288`, per-update frame/GPU sampling, one-second memory sampling,
+  nearest-rank p95/p99, final gameplay/warm backlog settlement, and the existing
+  bounded end-of-run scalar diagnostic remain unchanged.
+- The candidate changes only derived rendering: evaluate the canonical SDF once
+  into transient haloed GPU scratch during remesh, extract compact persistent
+  Transvoxel positions, smooth normals, and indexed topology, and repeatedly
+  render shared arena buffers through batched indexed-indirect submission.
+  Procedural SDF state and future authoritative edits remain world truth.
+- Correctness gates are unchanged topology and interpolated positions, seam-free
+  smooth shading across chunk boundaries and negative coordinates, zero
+  ordinary-render SDF evaluation, zero geometry readbacks, revision-safe
+  replacement, zero final backlogs, no visible stale/missing terrain, and
+  batched submissions proportional to shared arenas rather than chunks.
+- Required evidence is FPS, p95/p99, average and terrain-profiled GPU time;
+  unique vertices, indices, triangles, used/committed geometry bytes, scratch
+  bytes, arena fragmentation and memory; remesh stage and count-readback cost;
+  schedule-to-renderable latency; revisions, cancellations, supersession and
+  backlogs; process/GPU memory; scalar and geometry readbacks; and recovered GPU
+  gap relative to the accepted v7 control with the earlier `~0.703 ms`
+  shared-slab simplex result retained only as a directional headroom reference.
+- Stop after three formal unchanged-renderer baselines and three persistent
+  geometry candidates. Performance succeeds only when steady-state terrain GPU
+  and gameplay frame results improve beyond baseline variation without shifting
+  the cost into hitches, delayed or missing geometry, backlog growth, allocation
+  churn, readback stalls, or unacceptable memory growth. Mixed evidence fails
+  or remains inconclusive; parameters must not be tuned after observing results.
+
+#### Persistent-geometry unchanged-renderer diagnostic 2026-08-29
+
+- Pre-definition diagnostic run `4a78a8bf6ddb412fa8485ac17c2067fe`
+  (`persistent-geometry-baseline-1`) completed the v7 route in `121.94374 s`.
+  It is retained as diagnostic evidence, not one of the three formal controls.
+- It recorded `210.30861 FPS`, p95 `6.1952 ms`, p99 `7.0938 ms`, and average
+  GPU time `4.716522 ms`. Gameplay/warm backlogs settled to `0/0`; schedule
+  latency was p50/p95/p99/max `81.8068/189.6896/230.2336/327.1434 ms`.
+
+#### Persistent-geometry formal baselines 2026-08-29
+
+- Baseline 1, run `cb13bce9ba6b4863b7d88a0dce034f21`, completed in
+  `121.94868 s` with `185.4475 FPS`, p95/p99 `9.7717/13.2555 ms`, and
+  `4.850358 ms` average GPU. Schedule latency was
+  `100.6922/2362.4534/2862.4412/3184.418 ms`; gameplay/warm backlog peaked at
+  `3090/604` and settled to `0/0`.
+- Baseline 2, run `5c341d2f14c1441ead6e43802f126aa8`, completed in
+  `121.94674 s` with `210.14006 FPS`, p95/p99 `6.3429/7.3266 ms`, and
+  `4.724697 ms` average GPU. Schedule latency was
+  `81.8735/192.9249/239.706/488.0577 ms`; backlog peaked at `175/420` and
+  settled to `0/0`.
+- Baseline 3, run `d8b6d5b463b24e63bc9ad04393793f00`, completed in
+  `121.94518 s` with `199.23589 FPS`, p95/p99 `6.6581/7.6134 ms`, and
+  `4.991302 ms` average GPU. Schedule latency was
+  `87.9995/206.5386/257.0351/480.7904 ms`; backlog peaked at `175/420` and
+  settled to `0/0`.
+- All three controls finished with `7,201` resident candidates, `2,998`
+  non-empty surface meshes, `2,684,737` active cells, `29` shared slabs, zero
+  geometry readbacks, and one bounded visibility scalar readback. Formal GPU
+  range is `4.724697..4.991302 ms`; FPS range is `185.4475..210.14006`.

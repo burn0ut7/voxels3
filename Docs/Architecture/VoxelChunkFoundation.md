@@ -30,6 +30,27 @@ persistence, and network replication remain later slices.
 - `VoxelManager` owns the GPU mesher that derives transient render data from an
   immutable chunk/SDF descriptor. `VoxelChunk` remains free of engine resources,
   GPU buffers, render objects, and mesh lifetime state.
+- The renderer stores each completed region as revisioned disposable indexed
+  geometry. A remesh evaluates generator v4 once over a transient `35^3`
+  density lattice, classifies the `32^3` regular cells from cached corners,
+  reuses region-local edge vertices, and emits 24-byte position/normal vertices
+  plus 32-bit indices. Central-difference endpoint gradients use the same
+  one-sample halo; density and classification scratch are discarded after emit.
+- Persistent geometry lives in shared arenas rather than chunk-owned resources.
+  Each arena supplies a 32 MiB vertex buffer, a 16 MiB index buffer, and 256
+  indexed-indirect records. Exact contiguous ranges are allocated only after a
+  bounded count-metadata readback; released ranges coalesce, live ranges never
+  move, and one indexed-indirect API submission draws each active arena.
+- Candidate geometry never becomes authoritative state. The previous resident
+  revision remains visible until the candidate has emitted and crossed a render
+  sequence, after which publication atomically replaces only that coordinate.
+  Empty results carry the same revision lifecycle without consuming an arena.
+  Cancellation, supersession, unload, and configuration reset release derived
+  ranges; no density or geometry is read back and no geometry is replicated.
+- Ordinary terrain drawing consumes only persistent position, normal, index,
+  visibility, and indirect-argument buffers. It does not include or evaluate
+  the canonical SDF. Future edits therefore invalidate affected region
+  revisions and pay field/extraction cost during remesh, not on every frame.
 - A one-chunk render-only warm shell is generated through that same canonical
   SDF constructor but never enters the loaded-chunk dictionary. Its transient
   chunk objects are discarded after GPU scheduling; the shell is a derived
@@ -358,8 +379,13 @@ timing, conservative warm classifications/constructions, and peak gameplay/warm
 mesh backlog. Schema version 5 adds one settled GPU scalar snapshot containing
 non-empty surface/warm mesh counts and total/average/maximum active-cell usage,
 plus reserved capacity, utilization, and configured/observed dispatch limits.
-It reuses the existing single end-of-run scalar readback and performs no geometry
-readback. The manager exposes the resolved results path as inspector status.
+It reuses the existing single end-of-run visibility scalar readback and performs
+no geometry readback. Schema version 9 additionally records persistent unique
+vertices, indices, triangles, used/committed geometry bytes, arena free ranges
+and fragmentation, transient scratch bytes, bounded count-metadata readback
+bytes and latency, count/emit submission CPU time, topology/position digests,
+and the ordinary-render SDF evaluation count. The manager exposes the resolved
+results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`
 context rejects the run before movement begins.

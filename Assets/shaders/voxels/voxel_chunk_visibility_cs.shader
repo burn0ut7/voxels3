@@ -9,7 +9,7 @@ FEATURES
 
 COMMON
 {
-	// Slab visibility preserves each record's vertex and instance offsets.
+	// Indexed visibility preserves each arena record's index and vertex offsets.
 	#include "system.fxc"
 }
 
@@ -17,9 +17,18 @@ CS
 {
 	#include "common.fxc"
 
+	struct IndexedArguments
+	{
+		uint IndexCount;
+		uint InstanceCount;
+		uint FirstIndex;
+		int BaseVertex;
+		uint FirstInstance;
+	};
+
 	StructuredBuffer<float4> VisibilityBounds < Attribute( "VisibilityBounds" ); >;
-	StructuredBuffer<uint4> SourceIndirectArguments < Attribute( "SourceIndirectArguments" ); >;
-	RWStructuredBuffer<uint4> VisibleIndirectArguments < Attribute( "VisibleIndirectArguments" ); >;
+	StructuredBuffer<IndexedArguments> SourceIndirectArguments < Attribute( "SourceIndirectArguments" ); >;
+	RWStructuredBuffer<IndexedArguments> VisibleIndirectArguments < Attribute( "VisibleIndirectArguments" ); >;
 	RWStructuredBuffer<uint> VisibilityFrameCounters < Attribute( "VisibilityFrameCounters" ); >;
 	RWStructuredBuffer<uint> VisibilityAggregateCounters < Attribute( "VisibilityAggregateCounters" ); >;
 	int VisibilitySlotCount < Attribute( "VisibilitySlotCount" ); >;
@@ -84,6 +93,7 @@ CS
 					VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
 					VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
 				}
+
 				if ( CaptureSettledDiagnostics != 0 )
 				{
 					VisibilityAggregateCounters[6] = resident;
@@ -103,21 +113,18 @@ CS
 		}
 
 		float4 minimumAndActive = VisibilityBounds[slot * 2];
-		float3 maximum = VisibilityBounds[slot * 2 + 1].xyz;
-		uint4 sourceArguments = SourceIndirectArguments[slot];
-		uint activeCellCount = sourceArguments.y;
-		uint firstVertex = sourceArguments.z;
+		float4 maximumAndCellCount = VisibilityBounds[slot * 2 + 1];
+		IndexedArguments source = SourceIndirectArguments[slot];
+		float3 maximum = maximumAndCellCount.xyz;
+		uint activeCellCount = (uint)round( maximumAndCellCount.w );
 		bool active = minimumAndActive.w > 0.5;
 		bool warm = minimumAndActive.w > 1.5;
-		bool visible = active && activeCellCount > 0 &&
+		bool visible = active && source.IndexCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
-		VisibleIndirectArguments[slot] = uint4(
-			15,
-			visible ? activeCellCount : 0,
-			firstVertex,
-			sourceArguments.w );
-		if ( active && activeCellCount > 0 )
+		source.InstanceCount = visible ? 1 : 0;
+		VisibleIndirectArguments[slot] = source;
+		if ( active && source.IndexCount > 0 )
 		{
 			InterlockedAdd( VisibilityFrameCounters[0], 1 );
 			InterlockedAdd( VisibilityFrameCounters[3], activeCellCount );
@@ -126,6 +133,7 @@ CS
 			{
 				InterlockedAdd( VisibilityFrameCounters[2], 1 );
 			}
+
 			if ( visible )
 			{
 				InterlockedAdd( VisibilityFrameCounters[1], 1 );

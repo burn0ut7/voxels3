@@ -180,6 +180,27 @@ internal sealed class PerformanceMeshingMetrics
 	public long? GameThreadAllocatedBytes { get; init; }
 	public long ScalarReadbacks { get; init; }
 	public long GeometryReadbacks { get; init; }
+	public long OrdinaryRenderSdfEvaluations { get; init; }
+	public long UniqueVertices { get; init; }
+	public long Triangles { get; init; }
+	public long Indices { get; init; }
+	public long UsedVertexBytes { get; init; }
+	public long UsedIndexBytes { get; init; }
+	public long CommittedVertexBytes { get; init; }
+	public long CommittedIndexBytes { get; init; }
+	public int ArenaCount { get; init; }
+	public int FreeRangeCount { get; init; }
+	public int LargestFreeVertexRange { get; init; }
+	public int LargestFreeIndexRange { get; init; }
+	public float FragmentationPercent { get; init; }
+	public long TransientScratchBytes { get; init; }
+	public long AllocationCountReadbacks { get; init; }
+	public long AllocationCountReadbackBytes { get; init; }
+	public double AllocationCountReadbackMilliseconds { get; init; }
+	public double CountStageSubmissionMilliseconds { get; init; }
+	public double EmitStageSubmissionMilliseconds { get; init; }
+	public string TopologyDigest { get; init; }
+	public string PositionDigest { get; init; }
 	public string GpuProfilerPath { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
 	public float MaximumGpuMilliseconds { get; init; }
