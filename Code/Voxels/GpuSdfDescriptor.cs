@@ -6,6 +6,20 @@ internal enum GpuMeshLevel
 
 internal readonly record struct GpuMeshRegionKey( GpuMeshLevel Level, Vector3Int Coordinate );
 
+internal enum Lod0Lod1TransitionFace
+{
+	NegativeX,
+	PositiveX,
+	NegativeY,
+	PositiveY,
+	NegativeZ,
+	PositiveZ
+}
+
+internal readonly record struct Lod0Lod1TransitionKey(
+	Vector3Int Lod1Coordinate,
+	Lod0Lod1TransitionFace Face );
+
 internal readonly record struct GpuSdfDescriptor(
 	GpuMeshRegionKey Key,
 	int CellsPerAxis,
@@ -29,3 +43,12 @@ internal readonly record struct GpuSdfDescriptor(
 			sourceRevision );
 	}
 }
+
+internal readonly record struct GpuTransitionDescriptor(
+	Lod0Lod1TransitionKey Key,
+	int CellsPerAxis,
+	float FineCellSize,
+	float CoarseCellSize,
+	ProceduralTerrainSettings TerrainSettings,
+	int GeneratorVersion,
+	int SourceRevision );

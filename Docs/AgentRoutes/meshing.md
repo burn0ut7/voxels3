@@ -55,6 +55,14 @@ Treat the following as hard requirements for terrain compute shaders:
 - Keep persistent vertex and index writes in their dedicated shader resources.
   Do not merge them into `voxel_persistent_geometry_cs.shader` merely to reduce
   the shader count.
+- This rule remains absolute for the regular terrain pipeline. The fixed
+  LOD0/LOD1 transition pipeline is a measured engine-specific exception: on
+  s&box 26.08.19, dispatching a second transition compute resource beside its
+  topology resource terminates the editor natively even when the second shader
+  is a freshly compiled zero-work kernel with no reflected resources. Its final
+  vertex and index stages therefore share one transition resource capped at the
+  engine's 16-storage-buffer limit. Do not apply this exception to regular
+  terrain or other shaders without reproducing the same native failure.
 - Give each dedicated output shader only the declarations, helpers, and tables
   it actually consumes. Do not create several wrappers that all include the
   complete multi-stage program.

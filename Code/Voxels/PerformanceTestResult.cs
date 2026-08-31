@@ -18,6 +18,65 @@ internal sealed class PerformanceTestResult
 	public PerformanceBoundsMetrics Bounds { get; init; }
 	public PerformanceProfilerMetrics Profiler { get; init; }
 	public PerformanceClipboxMetrics Clipbox { get; init; }
+	public PerformanceTransitionMetrics Transitions { get; init; }
+}
+
+internal sealed class PerformanceTransitionMetrics
+{
+	public int Desired { get; init; }
+	public int Ready { get; init; }
+	public int Drawable { get; init; }
+	public int Pending { get; init; }
+	public int LastEntered { get; init; }
+	public int LastLeft { get; init; }
+	public int LastRetained { get; init; }
+	public long Entered { get; init; }
+	public long Left { get; init; }
+	public long Scheduled { get; init; }
+	public long Published { get; init; }
+	public long Cancelled { get; init; }
+	public long Stale { get; init; }
+	public long ActiveCells { get; init; }
+	public long Vertices { get; init; }
+	public long Indices { get; init; }
+	public long Triangles { get; init; }
+	public long UsedVertexBytes { get; init; }
+	public long UsedIndexBytes { get; init; }
+	public long TransientScratchBytes { get; init; }
+	public string TopologyDigest { get; init; }
+	public string PositionDigest { get; init; }
+	public uint FineFaceMismatchCount { get; init; }
+	public uint CoarseFaceMismatchCount { get; init; }
+	public uint LateralEdgeDigest { get; init; }
+	public uint LateralMismatchCount { get; init; }
+	public uint InvalidTableCount { get; init; }
+	public IReadOnlyList<PerformanceTransitionFaceMetrics> Faces { get; init; } =
+		System.Array.Empty<PerformanceTransitionFaceMetrics>();
+	public PerformanceDistributionMetrics ScheduleToPublication { get; init; }
+}
+
+internal sealed class PerformanceTransitionFaceMetrics
+{
+	public PerformanceVector3Int Lod1Coordinate { get; init; }
+	public string Face { get; init; }
+	public uint Generation { get; init; }
+	public int Arena { get; init; }
+	public int Slot { get; init; }
+	public int VertexOffset { get; init; }
+	public int VertexCount { get; init; }
+	public int IndexOffset { get; init; }
+	public int IndexCount { get; init; }
+	public uint ActiveCells { get; init; }
+	public float ScheduleToPublicationMilliseconds { get; init; }
+	public string TopologyDigest { get; init; }
+	public string PositionDigest { get; init; }
+	public uint FineFaceMismatchCount { get; init; }
+	public uint CoarseFaceMismatchCount { get; init; }
+	public uint MinimumUDigest { get; init; }
+	public uint MaximumUDigest { get; init; }
+	public uint MinimumVDigest { get; init; }
+	public uint MaximumVDigest { get; init; }
+	public uint InvalidTableCount { get; init; }
 }
 
 internal sealed class PerformanceClipboxMetrics

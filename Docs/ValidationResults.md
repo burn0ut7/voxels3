@@ -4717,3 +4717,466 @@ Record an approved extraordinary change here before adding the new version:
   candidate 1's unmatched `370`-region view remain recorded. No failed or
   excluded run was deleted, no renderer or workload parameter was tuned, and
   the accepted implementation remains the current fixed LOD0/LOD1 source.
+
+### CLIPBOX-TRANSITION-001/v1 - Fixed LOD0/LOD1 transition faces
+
+- Definition recorded on 2026-08-30 before transition runtime changes. The
+  accepted source baseline is commit `92870c9`.
+- Production path and locked workload are unchanged from `CLIPBOX-LOD-001/v2`:
+  `Assets/scenes/basic_example.scene`; s&box `26.08.19`; one local player; main
+  camera `1280x720`; `fps_max=1000`; generator version `5`, seed `1337`; LOD0
+  `32^3` cells at `16` units/cell with `729/512` gameplay/active regions; LOD1
+  `32^3` cells at `32` units/cell with `4096/4032` cached/active regions; three
+  regular scratch lanes; at most eight regular regions per batch; speed `2500`;
+  X reach `50000`; Y reach `25000`; world Z `0`; one loop; unchanged settlement
+  boundary; two render-sequence advances; exact ten-second stationary window;
+  frame capacity `524288`; per-update CPU/GPU sampling; one-second memory
+  sampling; nearest-rank percentiles.
+- Transition layout is fixed to the single existing LOD0/LOD1 interface. The
+  LOD1 hole owns exactly `96` desired face pieces: `16` for each of the six
+  faces. Each piece is one LOD1-region face containing `32x32` zero-width 2:1
+  Transvoxel transition cells on the shared boundary plane. Transition identity
+  is the owning LOD1 coordinate plus face; regular region identity is unchanged.
+  Transition count batches contain at most eight faces and use three independent
+  transition scratch lanes after regular scheduling has run for the render tick.
+- Fixed boundary journey is unchanged: through the production streaming target,
+  visit `+511`, `+513`, `-511`, and `-513` independently on X, Y, and Z, settle
+  after each position, and backtrack to origin. A no-anchor-change move changes
+  zero transition identities. Each axial one-anchor move retains exactly `32`
+  transition identities and enters/leaves exactly `64`; retained identities must
+  preserve their generation and resident allocation.
+- Correctness gates: every settled checkpoint retains the accepted regular
+  `729/512` and `4096/4032` counts and the accepted per-level topology/position
+  digests; has exactly `96` desired and ready transition identities; has zero
+  transition pending/in-flight work, duplicate identities, stale publications,
+  fine-face seam mismatches, coarse-face seam mismatches, and unmatched lateral
+  edges; and restores identical transition topology/position digests after
+  backtracking. Geometry readbacks and ordinary-render SDF evaluations remain
+  exactly zero. Visual inspection must cover all six faces, negative coordinates,
+  caves, overhangs, face intersections, edges, and corners with no settled crack,
+  hole, stale flash, winding error, or visibility false negative.
+- Responsiveness gates: regular LOD1 schedule-to-renderable p95 remains below
+  `409.6 ms`; regular post-loop drain remains no worse than `500 ms`; transition
+  schedule-to-publication p95 remains below `409.6 ms`; and all transition work
+  settles inside the same `500 ms` drain ceiling. Transition readiness never
+  blocks regular Clipbox placement or publication.
+- Performance gates: capture one clean pre-change baseline from the untouched
+  `92870c9` runtime, then compare the candidate using the exact locked workload
+  and controlled camera. Moving and stationary CPU/GPU average and tail metrics
+  must not regress by more than the greater of `5%` or `0.25 ms`; process and GPU
+  memory remain bounded; backtracking shows no progressive range or process
+  memory growth; and total terrain arenas increase by no more than one.
+- Shader acceptance requires a successful live shader compile followed by a
+  complete editor-process restart. The editor must remain alive, the Sentry
+  `last_crash` marker must not advance, and fresh logs must contain no HLSL
+  parser, failed shader load, missing compute pipeline, dispatch, or managed
+  exception errors.
+
+#### Untouched `92870c9` baseline
+
+- Run `f1d9c0e6452349aeb3f78d37f4b1c50a`, source label
+  `92870c9-transition-v1-baseline`, completed the locked production route in
+  `121.914536 s` on s&box `26.08.19`, Vulkan, NVIDIA GeForce RTX 5090, driver
+  `610.88.0.0`. The fixed scenario parameters were unchanged.
+- Correctness reproduced the accepted prototype: `729/512` LOD0 gameplay/active
+  coordinates, `4096/4032` LOD1 cached/active coordinates, zero final pending
+  work, eight arenas, `268/1300` settled LOD0/LOD1 surface meshes, zero geometry
+  readbacks and ordinary-render SDF evaluations, and LOD0 digests
+  `9DE2CF2E6C8DD619/79C6E1E39E760E62` plus LOD1 digests
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`.
+- Responsiveness baseline: schedule-to-renderable p50/p95/p99/max
+  `29.9178/76.7875/103.3101/126.4158 ms`; total queue p95/p99/max
+  `66/125/126`; post-loop drain `27.6914 ms`.
+- Moving performance: CPU p95/p99 `1.217/2.1921 ms`; GPU
+  average/p95/p99/max `0.721421/1.0230541/1.4212132/8.684635 ms`.
+  Stationary performance: CPU p95/p99 `1.0807/1.8811 ms`; GPU
+  average/p95/p99/max `0.68569106/0.88214874/1.1422634/1.9860268 ms`.
+- Process memory started/ended/peaked at
+  `4,036,792,320/4,038,483,968/4,039,966,720` bytes; GPU memory
+  started/ended/peaked at
+  `1,525,500,854/1,575,832,502/1,575,832,502` bytes. Outcome: **baseline
+  accepted** for the transition candidate comparison; transition metrics are
+  absent by definition in schema 11.
+
+#### Candidate clean-start attempt 1 - editor bootstrap blocked
+
+- On 2026-08-30 the project was opened with the registered editor executable,
+  `sbox-dev.exe -project "C:/users/gray/documents/s&box projects/voxels3/voxels3.sbproj"`.
+  This was an editor launch, not a launch of `sbox.exe` or Sandbox the Game.
+- The process reached editor version `26.08.19`, initialized Vulkan on the fixed
+  NVIDIA GeForce RTX 5090 driver `610.88.0.0`, started the MCP server, mounted
+  `local.voxels3`, and began the editor menu bootstrap. It then exited with a
+  native access violation before the Voxels3 scene or managed world entry point
+  loaded. The Sentry `last_crash` marker advanced to
+  `2026-08-31T01:59:50.785853Z`.
+- Fresh `sbox-dev.log` evidence contains no `[VoxelWorld]` entry, transition
+  dispatch, managed exception, HLSL parser failure, missing transition compute
+  pipeline, or project shader-load error. It does report an engine-content
+  warning before project mount: `textures/dev/blue_noise_256.vtex` has invalid
+  header version `8736 != 12`, followed by missing base/menu resources during
+  bootstrap. Outcome: **blocked before candidate execution**. No candidate
+  correctness or performance measurements exist, and the candidate is not
+  accepted, committed, or pushed.
+
+#### Candidate static preflight 1 - pass
+
+- `dotnet build ./voxels3.slnx --no-restore` completed after the transition
+  lifecycle changes with exit code `0`, zero warnings, and zero errors.
+- Numeric comparison against the official upstream transition tables found
+  exact equality for all `512/512` case-class values, `56/56` geometry-count
+  values, `2016/2016` zero-padded triangulation indices, and `6144/6144`
+  zero-padded transition-vertex values.
+- Independent set-math evaluation of the fixed six-face, `4x4`-piece boundary
+  produced exactly `96` old and new identities. A one-anchor +X move retained
+  `32`, entered `64`, and left `64`. Outcome: **static preflight passed**. This
+  does not substitute for shader compilation or the required production-world
+  correctness, visual, journey, and figure-eight runs.
+
+#### Candidate native transition-dispatch diagnosis - resolved locally
+
+- The editor-native exit was bisected through the production transition path
+  with bounded phase logs. Count stages `0..7`, all UAV barriers, bounded count
+  readback callbacks, and exact arena allocation completed without an exit.
+  Returned face metadata was bounded (observed maximum `220` vertices and `648`
+  indices) with `invalidTableCount=0`.
+- A separate transition vertex `ComputeShader.Dispatch` was the first call that
+  did not return. Replacing its HLSL with a freshly live-compiled zero-work
+  kernel, setting its batch size to zero, removing all reflected resources, and
+  reducing transition scratch to one lane each reproduced the native exit. This
+  rules out transition density data, table access, output stride, individual
+  descriptors, and the three-lane scheduler as causes.
+- s&box also reported a distinct invalid candidate composition with `17`
+  storage buffers against a maximum of `16`. Packing active/invalid and
+  fine/coarse audit counters reduced the topology resource to `15`; unbound
+  final-stage descriptors were replaced with valid scratch bindings during all
+  count dispatches.
+- Final vertex and index emission were then placed in stages `9` and `8` of the
+  single transition resource. Adding the vertex output produces exactly `16`
+  storage buffers. The live editor compiled one shader combo successfully, both
+  emit dispatches returned across all three lanes, and the editor remained alive
+  for a `20`-second production play observation while transition batches drained.
+- Native artifact limitation: `sbox-dev.log` ends at the failing dispatch and
+  contains no managed exception or native stack. Sentry produced a minidump, but
+  WinDbg, CDB, dumpchk, and minidump-stackwalk are unavailable on this machine;
+  Windows Application Error/Windows Error Reporting contained no matching event.
+  This diagnosis is dispatch-boundary evidence, not a symbolized engine stack.
+- Outcome: the reproducible native dispatch failure is resolved locally. This is
+  not transition correctness or performance acceptance; clean-start, settled
+  counters, seam audits, visual inspection, movement/backtracking, and the locked
+  figure-eight remain required.
+
+#### Candidate figure-eight diagnostic - invalid start center
+
+- Date: 2026-08-31. Source state: `92870c9+transition-candidate`. Engine:
+  s&box `26.08.19`. Scenario invocation used the locked speed `2500`, distance
+  `50000`, and one loop through the production `run_performance_test` tool.
+  Result ID: `3bedc276ab6a4c8b97d46fd69af40fa8`.
+- The recorded start center was `[-8.727985,-1.1910571]`, not the locked
+  `[0,0]` baseline center. This run is retained as diagnostic evidence and is
+  **not comparable figure-eight acceptance evidence**. No workload parameter or
+  pass criterion is changed; a fresh run from the existing authored origin is
+  required.
+- Regular settled state was LOD0 gameplay/active `729/512`, LOD1
+  cached/active `4096/4032`, LOD1 pending `0`, and LOD1 resident `4096`.
+  Regular LOD1 topology/position digests were
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`. Regular schedule latency p95 was
+  `172.5267 ms`; drain was `0.3704 ms`.
+- Transition settled state was desired `96`, ready `96`, drawable `51`, pending
+  `0`, scheduled `18588`, published `17976`, cancelled `164`, and stale `0`.
+  Geometry totals were `1582` active cells, `4880` vertices, and `14268`
+  indices. Fine-face, coarse-face, lateral-edge, and invalid-table counters were
+  all zero. Schedule-to-publication latency was p50/p95/p99/max
+  `17.3662/36.8216/62.1939/141.9815 ms`.
+- CPU frame p95/p99 was `3.6405/6.171 ms`; GPU frame
+  average/p95/p99/max was `0.7986055/1.1951923/1.6410351/26.814938 ms`.
+  Stationary CPU p95/p99 was `3.3378/5.6436 ms`; stationary GPU
+  average/p95/p99/max was `0.767704/0.94389915/1.3029575/1.842022 ms`.
+  Process memory start/end/peak was
+  `4128223232/4156268544/4157370368` bytes; arenas were `8`; transition scratch
+  was `4692564` bytes. Geometry readbacks and ordinary-render SDF evaluations
+  were both zero.
+- Outcome: **invalid for acceptance because the locked start center differed**.
+  The run nevertheless provides production-path evidence that all `96`
+  transition identities settled independently with zero reported seam, table,
+  or stale-publication errors.
+
+#### Candidate figure-eight - correct origin, performance failed
+
+- Date: 2026-08-31. Source state: `92870c9+transition-candidate-origin`.
+  Engine: s&box `26.08.19`. Result ID:
+  `f913a20b22834a8c80072af19c9a7c84`. The production tool used the unchanged
+  `basic_example` scene, generator v5, seed `1337`, start center `[0,0]`, speed
+  `2500`, distance `50000`, one loop, and ten-second stationary window. Duration
+  was `121.920204 s`.
+- Settled regular state was LOD0 gameplay/active `729/512`, LOD1
+  cached/active `4096/4032`, LOD1 pending `0`, and LOD1 resident `4096`.
+  Regular LOD0 topology/position digests were
+  `9DE2CF2E6C8DD619/79C6E1E39E760E62`; LOD1 digests were
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`, exactly matching the accepted baseline.
+  Regular schedule p95 was `95.3787 ms`; post-loop drain was `26.9643 ms`.
+- Transition settled state was desired `96`, ready `96`, drawable `51`, pending
+  `0`, scheduled `18516`, published `18137`, cancelled `119`, and stale `0`.
+  Geometry totals were `1582` active cells, `4880` vertices, and `14268`
+  indices. Fine-face, coarse-face, lateral-edge, and invalid-table counters were
+  all zero. Transition schedule-to-publication p50/p95/p99/max was
+  `10.6886/17.6364/23.4727/30.217 ms`.
+- Moving CPU p95/p99 was `1.3781/2.3838 ms`; GPU
+  average/p95/p99/max was `0.7764203/1.281023/1.778841/9.614229 ms`.
+  Stationary CPU p95/p99 was `1.1371/1.9726 ms`; stationary GPU
+  average/p95/p99/max was `0.7183654/0.985384/1.3327599/2.211094 ms`.
+- Accepted `92870c9` baseline moving CPU p95/p99 was `1.217/2.1921 ms`; GPU
+  average/p95/p99/max was `0.721421/1.0230541/1.4212132/8.684635 ms`.
+  Candidate CPU changes `+0.1611/+0.1917 ms` remain within the greater-of-5%-or-
+  `0.25 ms` tolerance. Candidate moving GPU p95 changed `+0.2579689 ms` and p99
+  changed `+0.3576278 ms`; both exceed the locked `0.25 ms` absolute tolerance.
+- Process memory start/end/peak was
+  `4171517952/4166393856/4173185024` bytes. GPU memory was constant at
+  `1584857460` bytes. Arena count remained `8`; transition scratch was
+  `4692564` bytes. Geometry readbacks and ordinary-render SDF evaluations were
+  zero.
+- Outcome: correctness, settlement, regular scheduling, transition latency,
+  drain, and bounded-memory gates passed. **Overall performance acceptance
+  failed** because moving GPU p95 and p99 exceeded the fixed regression
+  tolerance. This run remains in the ledger and will not be replaced or
+  discarded; the measured transition GPU tail is the next optimization target.
+
+#### Candidate boundary-plane halo optimization - rejected
+
+- Date: 2026-08-31. Source state: `92870c9+transition-optimized`. Engine:
+  s&box `26.08.19`. Result ID: `25cc5fc858b04aed9d3560cf362185e1`.
+  The unchanged production scenario ran from `[0,0]` for `121.93458 s`.
+- This candidate temporarily cached only the `69x69` interface plane and sampled
+  the canonical SDF normal gradient only for emitted vertices. Schema 13 also
+  captured `96` deterministic per-face identity/allocation/count/digest records.
+- Correctness remained exact: desired/ready/faces `96/96/96`, pending `0`,
+  drawable `51`, active cells `1582`, vertices `4880`, indices `14268`, stale
+  `0`, and all fine/coarse/lateral/invalid audit counters zero. Transition
+  topology/position digests remained
+  `50A79D6478E7B1BE/BDF8567ED994AFCE`; regular LOD0 and LOD1 digests remained
+  exactly unchanged.
+- Moving CPU p95/p99 was `1.4173/2.3621 ms`. Moving GPU
+  average/p95/p99/max was `0.7975145/1.335144/1.8117428/57.14798 ms`.
+  Stationary CPU p95/p99 was `1.0774/1.915 ms`; stationary GPU
+  average/p95/p99/max was `0.7205839/0.97084045/1.2526512/2.2239685 ms`.
+  Regular schedule p95 was `99.1525 ms`; drain was `29.1199 ms`.
+  Transition p50/p95/p99/max was
+  `10.7062/17.9355/24.6892/147.341 ms`.
+- Process memory start/end/peak was
+  `4230893568/4247232512/4251213824` bytes; GPU memory was constant at
+  `1576064564` bytes; arenas remained `8`. The temporary transition scratch
+  footprint was `2864340` bytes.
+- Outcome: **rejected and reverted**. The reduced halo did not improve transition
+  latency and moving GPU tails were worse than the prior candidate. The official
+  topology, per-face telemetry, and independent lifecycle remain; only this
+  unhelpful sampling experiment was removed.
+
+#### Candidate idle-tick transition scheduling - GPU p99 failed
+
+- Date: 2026-08-31. Source state: `92870c9+transition-opportunistic`. Engine:
+  s&box `26.08.19`. Result ID: `46f23992ff464a1fb51ef5327dddd6dd`.
+  The unchanged production scenario ran from `[0,0]` for `121.91632 s`.
+- Regular compute behavior remained unchanged and ran first. Transition count
+  and emit work used render ticks in which regular meshing submitted no GPU work,
+  preserving local publication while avoiding same-tick overlap.
+- Correctness passed: desired/ready/per-face records `96/96/96`, pending `0`,
+  drawable `51`, stale `0`, and all fine/coarse/lateral/invalid counters zero.
+  Regular LOD0 and LOD1 digests and transition topology/position digests exactly
+  matched the previous settled origin result.
+- Moving CPU p95/p99 was `1.2962/2.2265 ms`. Moving GPU
+  average/p95/p99/max was `0.76686186/1.2476444/1.7385483/9.673119 ms`.
+  Stationary CPU p95/p99 was `1.0681/1.9836 ms`; stationary GPU
+  average/p95/p99/max was `0.69753826/0.90265274/1.2197495/2.2644997 ms`.
+  Regular schedule p95 was `85.3445 ms`; drain was `30.341 ms`.
+  Transition p50/p95/p99/max was
+  `63.5987/113.5584/128.5489/153.8186 ms`.
+- Against the accepted baseline, moving GPU p95 increased `0.2245903 ms` and
+  passed the `0.25 ms` tolerance. Moving GPU p99 increased `0.3173351 ms` and
+  failed the same tolerance by `0.0673351 ms`. All CPU and stationary GPU
+  percentile changes remained within tolerance.
+- Process memory start/end/peak was
+  `4512415744/4537372672/4537151488` bytes; GPU memory was constant at
+  `1583928884` bytes; arenas remained `8`; transition scratch was `4692564`
+  bytes. Geometry readbacks and ordinary-render SDF evaluations remained zero.
+- Outcome: correctness, latency, drain, CPU, memory, and GPU p95 passed.
+  **Overall acceptance still failed on moving GPU p99.** Idle-tick transition
+  scheduling is retained because it materially reduced overlap without changing
+  regular scheduling or violating transition latency budgets.
+
+#### Candidate compact coherent halo - GPU p99 failed
+
+- Date: 2026-08-31. Source state: `92870c9+transition-compact-halo`. Engine:
+  s&box `26.08.19`. Result ID: `d99d33f1224c4780bd5241abd6169c93`.
+  The unchanged production scenario ran from `[0,0]` for `121.91658 s`.
+- The transition density cache retained all five required offsets but stored the
+  interface at `69x69`, fine normal offsets at `65x65`, and coarse normal offsets
+  at `33x33`. SDF evaluations remained coherent GPU sampling; classification,
+  interpolation, gradients, topology, and CPU/GPU ownership were unchanged.
+- Correctness again passed with desired/ready/per-face records `96/96/96`,
+  pending `0`, drawable `51`, stale `0`, all seam/table counters zero, and exact
+  unchanged regular and transition digests.
+- Moving CPU p95/p99 was `1.3022/2.1968 ms`. Moving GPU
+  average/p95/p99/max was `0.76494163/1.2466908/1.7302036/9.393692 ms`.
+  Stationary CPU p95/p99 was `1.1035/1.9526 ms`; stationary GPU
+  average/p95/p99/max was `0.69960517/0.9570122/1.333952/2.033472 ms`.
+  Regular schedule p95 was `84.4404 ms`; drain was `29.8218 ms`.
+  Transition p50/p95/p99/max was
+  `64.4855/116.3553/129.4432/148.2814 ms`.
+- Moving GPU p95 remained within tolerance, but p99 was `0.3089904 ms` above
+  baseline and therefore exceeded the fixed `0.25 ms` tolerance by
+  `0.0589904 ms`. Process memory decreased from `4699852800` to `4504961024`
+  bytes with peak `4705071104`; GPU memory was constant at `1582880308` bytes;
+  arenas remained `8`. Transition scratch decreased to `3884628` bytes.
+- Outcome: compact coherent sampling is retained because it preserves exact
+  results and removes unused work, but **overall acceptance still failed on
+  moving GPU p99**. The next candidate separates transition emit and the next
+  transition count submission across idle ticks.
+
+#### Candidate split transition emit/count ticks - GPU p99 failed
+
+- Date: 2026-08-31. Source state: `92870c9+transition-split-ticks`. Engine:
+  s&box `26.08.19`. Result ID: `cfc2217294dc45e2aa70e85e7def7e4f`.
+  The unchanged production scenario ran from `[0,0]` for `121.916855 s`.
+- A ready transition emit returned before the next count batch was submitted,
+  preventing those two existing transition phases from sharing an idle render
+  tick. Regular scheduling and all batch sizes remained unchanged.
+- Correctness passed with desired/ready/per-face records `96/96/96`, pending
+  `0`, drawable `51`, stale `0`, zero seam/table counters, and exact unchanged
+  regular and transition digests.
+- Moving CPU p95/p99 was `1.3102/2.249 ms`. Moving GPU
+  average/p95/p99/max was `0.76765186/1.2538433/1.686573/10.360241 ms`.
+  Stationary CPU p95/p99 was `1.0728/1.9267 ms`; stationary GPU
+  average/p95/p99/max was `0.68785673/0.8981228/1.1878014/2.0678043 ms`.
+  Regular schedule p95 was `83.9109 ms`; drain was `31.2799 ms`.
+  Transition p50/p95/p99/max was
+  `71.567/128.1879/143.2965/155.1045 ms`.
+- Moving GPU p99 improved materially but remained `0.2653598 ms` above the
+  baseline, exceeding the `0.25 ms` tolerance by `0.0153598 ms`. Process memory
+  start/end/peak was `4579852288/4517928960/4585635840` bytes; GPU memory was
+  constant at `1582880308` bytes; arenas remained `8`; transition scratch was
+  `3884628` bytes.
+- Outcome: all gates except moving GPU p99 passed. **Overall acceptance still
+  failed by `0.0153598 ms`.** The phase separation is retained; the next
+  candidate splits coherent SDF sampling from classification/scan/audit while
+  preserving the same eight-face transition batch.
+
+#### Candidate two-phase transition count - GPU tails failed
+
+- Date: 2026-08-31. Source state: `92870c9+transition-phased-count`. Engine:
+  s&box `26.08.19`. Result ID: `f188481d4a2a44b2a3802c3e800f2a68`.
+  The unchanged production scenario ran from `[0,0]` for `121.91769 s`.
+- Coherent transition SDF sampling ran on one idle tick and
+  classification/scan/audit/readback submission on the next. All batch, queue,
+  table, allocation, and publication contracts remained unchanged.
+- Correctness passed with desired/ready/per-face records `96/96/96`, pending
+  `0`, drawable `51`, stale `0`, zero seam/table counters, and exact unchanged
+  regular and transition digests.
+- Moving CPU p95/p99 was `1.3451/2.3148 ms`. Moving GPU
+  average/p95/p99/max was `0.7719032/1.2617111/1.7080307/8.569717 ms`.
+  Stationary CPU p95/p99 was `1.1762/1.9995 ms`; stationary GPU
+  average/p95/p99/max was `0.70805407/0.9794235/1.471281/2.2251606 ms`.
+  Regular schedule p95 was `85.2968 ms`; drain was `28.1495 ms`.
+  Transition p50/p95/p99/max was
+  `78.8753/142.7509/157.5108/169.7599 ms`.
+- Moving GPU p99 remained `0.2868175 ms` above baseline, and stationary GPU p99
+  was `0.3290178 ms` above baseline. Both exceeded the fixed tolerance. Process
+  memory start/end/peak was `4722757632/4515991552/4725800960` bytes; GPU memory
+  was constant at `1582880308` bytes; arenas remained `8`; transition scratch
+  was `3884628` bytes.
+- Outcome: **performance failed** despite complete correctness and bounded
+  latency. The existing phase split is extended so classification/scans and the
+  full edge audit no longer share an idle tick; no prior run is discarded.
+
+#### Candidate three-phase transition count - accepted performance candidate
+
+- Date: 2026-08-31. Source state:
+  `92870c9+transition-three-phase-count`. Engine: s&box `26.08.19`. Result ID:
+  `ea62da344c4e419b9221ff05b2e0ea2a`. The unchanged production scenario ran
+  from `[0,0]` for `121.91603 s`.
+- Coherent SDF sampling, transition classification/scans, and the full seam
+  audit/count readback were submitted on three separate idle render ticks.
+  Regular scheduling still ran first; transition queues, eight-face batches,
+  allocation, geometry, and local publication contracts were unchanged.
+- Correctness passed with desired/ready/per-face records `96/96/96`, pending
+  `0`, drawable `51`, stale `0`, and all fine/coarse/lateral/invalid audit
+  counters zero. Every transition orientation had exactly `16` unique keys.
+  Of the `45` empty faces, none reserved arena storage. Regular LOD0
+  topology/position digests remained
+  `9DE2CF2E6C8DD619/79C6E1E39E760E62`; LOD1 remained
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`.
+- Moving CPU p95/p99 was `1.28/2.206 ms`. Moving GPU
+  average/p95/p99/max was
+  `0.76750916/1.2271404/1.6467571/8.368969 ms`. Stationary CPU p95/p99 was
+  `1.0918/1.9452 ms`; stationary GPU average/p95/p99/max was
+  `0.7140315/0.97465515/1.26338/2.525568 ms`.
+- Against the accepted `92870c9` baseline, moving GPU p95 increased
+  `0.2040863 ms` and p99 increased `0.2255439 ms`; both passed the fixed
+  `0.25 ms` tolerance. All moving CPU and stationary CPU/GPU percentile
+  changes also remained within tolerance. Regular schedule p95 was
+  `81.565 ms`, and drain was `30.6827 ms`.
+- Transition schedule-to-publication p50/p95/p99/max was
+  `83.4447/144.8663/159.8477/182.8003 ms`, below the `409.6 ms` p95 and
+  `500 ms` drain ceilings. Scheduled/published/cancelled/stale counts were
+  `18516/17530/111/0`.
+- Process memory start/end/peak was
+  `4729409536/3346374656/4732211200` bytes; GPU memory was constant at
+  `1582880308` bytes. Arenas remained `8`, regular meshing scratch remained
+  `34310016` bytes, and transition scratch was `3884628` bytes.
+- Outcome: **accepted as the performance candidate**. It passes the exact
+  figure-eight correctness, latency, CPU, GPU, drain, memory, arena, and
+  deterministic-digest gates. Clean-start, fixed axial boundary movement, and
+  final visual inspection remain separate completion gates.
+
+#### Clean-start and visual inspection - passed with stated coverage
+
+- Date: 2026-08-31. Source state:
+  `92870c9+transition-three-phase-count`. The prior Voxels3 editor process
+  `73212` was stopped after play mode ended. A new editor process `73264` was
+  launched explicitly from `sbox-dev.exe` with
+  `-project "C:\Users\Gray\Documents\s&box projects\voxels3\voxels3.sbproj"`;
+  neither `sbox.exe` nor Sandbox the Game was launched.
+- The clean editor opened project `voxels3` and scene `basic_example`. Runtime
+  and editor compilation completed with zero errors, play mode remained alive
+  after settlement, and the scene remained unmodified. Fresh console searches
+  found zero parser, shader, compute, dispatch, managed-exception, or
+  `Voxel Terrain Indexed Indirect Draws` errors. No new GPU fault, Aftermath,
+  or minidump artifact was created; the newest existing GPU fault/Aftermath
+  artifact remained dated `2026-08-30T12:33:54Z`.
+- Read-only editor-camera inspection viewed the settled terrain toward the
+  `+X`, `-X`, `+Y`, and `-Y` interfaces and from above/below for `+Z`/`-Z`.
+  The four surface-crossing views and overhead view showed continuous terrain
+  with no visible settled crack, hole, stale flash, winding inversion, or
+  false-negative culling. The below-terrain view contained no exposed surface,
+  so it cannot by itself establish cave/overhang appearance. The GPU seam audit
+  remains the measurable six-face evidence: all fine, coarse, lateral, and
+  invalid-table counters were zero.
+- Outcome: **clean-start gate passed**. Visual surface coverage passed for the
+  exposed interfaces inspected. Exact negative-coordinate axial checkpoints
+  and close cave/overhang inspection remain unverified because the current
+  production project exposes no deterministic coordinate movement entry point.
+
+#### Axial transition cardinality gate audit - scenario contradiction
+
+- Date: 2026-08-31. No modified scenario was run. This audit uses the locked
+  `96`-piece layout, the implemented and specified key
+  `(owning LOD1 coordinate, face)`, and the exact `AddTransitionFaces` half-open
+  `4x4x4` hole definition.
+- Independent set enumeration for origin versus every signed one-anchor move
+  (`+X/-X/+Y/-Y/+Z/-Z`) produced the same exact cardinalities: desired `96`,
+  retained `48`, entering `48`, and leaving `48`. For `+X`, retained pieces by
+  orientation were `PositiveX=0`, `NegativeX=0`, `PositiveY=12`,
+  `NegativeY=12`, `PositiveZ=12`, and `NegativeZ=12`.
+- The result follows directly from face-local identity. Both faces normal to
+  the move are on new planes, replacing `32` pieces. Each of the four side
+  faces retains the overlapping `3x4=12` pieces and replaces one four-piece
+  strip. Therefore another `16` pieces enter/leave and `48` remain unchanged.
+- The v1 gate requiring retained/entered/left `32/64/64` is impossible under
+  the same v1 identity and coverage rules. Reaching `64` entering/leaving would
+  require deliberately invalidating `16` unchanged side-face pieces, violating
+  the locked requirement that only changed boundary pieces regenerate.
+- Outcome: **v1 acceptance is blocked by an internally inconsistent expected
+  cardinality, not by observed transition behavior**. Per the locked-scenario
+  rule, the expected count will not be rewritten and no altered scenario will
+  be run without explicit human approval. The proposed correction is a new
+  scenario version that changes only the axial expected counts to
+  `48/48/48`; route, implementation, workload, thresholds, and all other gates
+  remain unchanged.

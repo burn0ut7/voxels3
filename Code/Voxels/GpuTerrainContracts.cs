@@ -49,6 +49,42 @@ internal struct GpuTerrainAllocationDescriptor
 	public Vector4 Reserved1;
 }
 
+[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 112 )]
+internal struct GpuTransitionRequest
+{
+	public Vector4 OriginAndFineCellSize;
+	public Vector4 Terrain;
+	public Vector4 BasisUAndCoarseCellSize;
+	public Vector4 BasisVAndCellsPerAxis;
+	public Vector4 NormalAndFace;
+	public uint Generation;
+	public uint RequestIndex;
+	public uint Reserved0;
+	public uint Reserved1;
+	public Vector4 Reserved2;
+}
+
+[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 64 )]
+internal struct GpuTransitionCountResult
+{
+	public uint VertexCount;
+	public uint IndexCount;
+	public uint Generation;
+	public uint RequestIndex;
+	public uint ActiveCells;
+	public uint TopologyDigest;
+	public uint PositionDigest;
+	public uint FineFaceMismatchCount;
+	public uint CoarseFaceMismatchCount;
+	public uint MinimumUDigest;
+	public uint MaximumUDigest;
+	public uint MinimumVDigest;
+	public uint MaximumVDigest;
+	public uint InvalidTableCount;
+	public uint Reserved0;
+	public uint Reserved1;
+}
+
 internal readonly record struct GpuTerrainRange( int Offset, int Count )
 {
 	public bool IsEmpty => Count == 0;

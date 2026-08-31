@@ -26,7 +26,7 @@ public sealed class VoxelManager : Component
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
 	private const int GameplayLoadRadius = 4;
-	private const int PerformanceResultSchemaVersion = 11;
+	private const int PerformanceResultSchemaVersion = 13;
 	private const int RenderWarmShellChunks = 1;
 	private const int Lod0ActiveHalfExtent = 4;
 	private const int Lod1CacheHalfExtent = 8;
@@ -65,6 +65,11 @@ public sealed class VoxelManager : Component
 	private readonly HashSet<Vector3Int> _nextLod1Active = new();
 	private readonly List<Vector3Int> _lod1EnteringBuffer = new();
 	private readonly List<Vector3Int> _lod1LeavingBuffer = new();
+	private readonly HashSet<Lod0Lod1TransitionKey> _transitionDesired = new();
+	private readonly HashSet<Lod0Lod1TransitionKey> _nextTransitionDesired = new();
+	private readonly List<Lod0Lod1TransitionKey> _transitionEnteringBuffer = new();
+	private readonly List<Lod0Lod1TransitionKey> _transitionLeavingBuffer = new();
+	private readonly List<Lod0Lod1TransitionKey> _transitionRetainedBuffer = new();
 	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
@@ -197,6 +202,12 @@ public sealed class VoxelManager : Component
 	private PerformanceBoundsMetrics _lastPerformanceBounds = new();
 	private GpuMeshScheduleLatencyMeasurement _lastPerformanceScheduleLatency;
 	private GpuMeshThroughputMeasurement _lastPerformanceThroughput;
+	private GpuTransitionMeasurement _lastPerformanceTransitions;
+	private int _lastTransitionEntered;
+	private int _lastTransitionLeft;
+	private int _lastTransitionRetained;
+	private long _transitionEntered;
+	private long _transitionLeft;
 	private PerformanceProfilerMetrics _lastPerformanceProfiler = new();
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 	private ProceduralTerrainSettings CurrentTerrainSettings => new(
@@ -597,6 +608,7 @@ public sealed class VoxelManager : Component
 		_gpuMesher?.BeginVisibilityMeasurement();
 		_gpuMesher?.BeginScheduleLatencyMeasurement();
 		_gpuMesher?.BeginThroughputMeasurement( CellsPerAxis * CellSize );
+		_gpuMesher?.BeginTransitionMeasurement();
 		Log.Info( string.Concat(
 			FormattableString.Invariant(
 				$"[VoxelWorld] performance.test.begin task=\"{EscapeLogValue( _playerFigureEightTestTask )}\" " ),
@@ -808,6 +820,62 @@ public sealed class VoxelManager : Component
 			Streaming = _lastPerformanceStreaming,
 			Bounds = _lastPerformanceBounds,
 			Profiler = _lastPerformanceProfiler,
+			Transitions = new PerformanceTransitionMetrics
+			{
+				Desired = _lastPerformanceTransitions.Desired,
+				Ready = _lastPerformanceTransitions.Ready,
+				Drawable = _lastPerformanceTransitions.Drawable,
+				Pending = _lastPerformanceTransitions.Pending,
+				LastEntered = _lastTransitionEntered,
+				LastLeft = _lastTransitionLeft,
+				LastRetained = _lastTransitionRetained,
+				Entered = _transitionEntered,
+				Left = _transitionLeft,
+				Scheduled = _lastPerformanceTransitions.Scheduled,
+				Published = _lastPerformanceTransitions.Published,
+				Cancelled = _lastPerformanceTransitions.Cancelled,
+				Stale = _lastPerformanceTransitions.Stale,
+				ActiveCells = _lastPerformanceTransitions.ActiveCells,
+				Vertices = _lastPerformanceTransitions.Vertices,
+				Indices = _lastPerformanceTransitions.Indices,
+				Triangles = _lastPerformanceTransitions.Indices / 3,
+				UsedVertexBytes = _lastPerformanceTransitions.Vertices * GpuVoxelMesher.TerrainVertexBytes,
+				UsedIndexBytes = _lastPerformanceTransitions.Indices * sizeof( uint ),
+				TransientScratchBytes = _gpuMesher?.TransitionTransientScratchBytes ?? 0,
+				TopologyDigest = _lastPerformanceTransitions.TopologyDigest,
+				PositionDigest = _lastPerformanceTransitions.PositionDigest,
+				FineFaceMismatchCount = _lastPerformanceTransitions.FineFaceMismatchCount,
+				CoarseFaceMismatchCount = _lastPerformanceTransitions.CoarseFaceMismatchCount,
+				LateralEdgeDigest = _lastPerformanceTransitions.LateralEdgeDigest,
+				LateralMismatchCount = _lastPerformanceTransitions.LateralMismatchCount,
+				InvalidTableCount = _lastPerformanceTransitions.InvalidTableCount,
+				Faces = _lastPerformanceTransitions.Faces.Select( face =>
+					new PerformanceTransitionFaceMetrics
+					{
+						Lod1Coordinate = ToPerformanceVector( face.Key.Lod1Coordinate ),
+						Face = face.Key.Face.ToString(),
+						Generation = face.Generation,
+						Arena = face.Arena,
+						Slot = face.Slot,
+						VertexOffset = face.VertexOffset,
+						VertexCount = face.VertexCount,
+						IndexOffset = face.IndexOffset,
+						IndexCount = face.IndexCount,
+						ActiveCells = face.ActiveCells,
+						ScheduleToPublicationMilliseconds = face.ScheduleToPublicationMilliseconds,
+						TopologyDigest = face.TopologyDigest.ToString( "X8" ),
+						PositionDigest = face.PositionDigest.ToString( "X8" ),
+						FineFaceMismatchCount = face.FineFaceMismatchCount,
+						CoarseFaceMismatchCount = face.CoarseFaceMismatchCount,
+						MinimumUDigest = face.MinimumUDigest,
+						MaximumUDigest = face.MaximumUDigest,
+						MinimumVDigest = face.MinimumVDigest,
+						MaximumVDigest = face.MaximumVDigest,
+						InvalidTableCount = face.InvalidTableCount
+					} ).ToArray(),
+				ScheduleToPublication = CreateDistributionMetrics(
+					_lastPerformanceTransitions.ScheduleToPublication )
+			},
 			Clipbox = new PerformanceClipboxMetrics
 			{
 				Lod0GameplayRadius = LoadRadius,
@@ -1048,6 +1116,7 @@ public sealed class VoxelManager : Component
 		_performanceCompletionPhase = PerformanceCompletionPhase.None;
 		_lastPerformanceScheduleLatency = _gpuMesher.CompleteScheduleLatencyMeasurement();
 		_lastPerformanceThroughput = _gpuMesher.CompleteThroughputMeasurement();
+		_lastPerformanceTransitions = _gpuMesher.CompleteTransitionMeasurement();
 
 		try
 		{
@@ -1674,6 +1743,8 @@ public sealed class VoxelManager : Component
 		_lod1Clipbox.Clear();
 		_nextLod1Cache.Clear();
 		_nextLod1Active.Clear();
+		_transitionDesired.Clear();
+		_nextTransitionDesired.Clear();
 		_pendingChunks.Clear();
 		_completedChunks.Clear();
 		_pendingWarmChunks.Clear();
@@ -2069,6 +2140,66 @@ public sealed class VoxelManager : Component
 			_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, GpuMeshResidency.Lod1 );
 		}
 
+		_nextTransitionDesired.Clear();
+		AddTransitionFaces( _nextTransitionDesired, holeMinimum, holeMaximum );
+		_transitionEnteringBuffer.Clear();
+		_transitionLeavingBuffer.Clear();
+		foreach ( var key in _transitionDesired )
+		{
+			if ( !_nextTransitionDesired.Contains( key ) ) _transitionLeavingBuffer.Add( key );
+		}
+		foreach ( var key in _nextTransitionDesired )
+		{
+			if ( !_transitionDesired.Contains( key ) ) _transitionEnteringBuffer.Add( key );
+		}
+		_lastTransitionEntered = _transitionEnteringBuffer.Count;
+		_lastTransitionLeft = _transitionLeavingBuffer.Count;
+		_lastTransitionRetained = _nextTransitionDesired.Count - _transitionEnteringBuffer.Count;
+		GpuTransitionIdentitySnapshot retainedBefore = default;
+		if ( VerboseLogging )
+		{
+			_transitionRetainedBuffer.Clear();
+			foreach ( var key in _nextTransitionDesired )
+			{
+				if ( _transitionDesired.Contains( key ) ) _transitionRetainedBuffer.Add( key );
+			}
+			retainedBefore = _gpuMesher.CaptureTransitionIdentity( _transitionRetainedBuffer );
+		}
+		_transitionEntered += _lastTransitionEntered;
+		_transitionLeft += _lastTransitionLeft;
+		foreach ( var key in _transitionLeavingBuffer ) _gpuMesher.RemoveTransition( key );
+		SortTransitionsNearestFirst( _transitionEnteringBuffer, anchor );
+		foreach ( var key in _transitionEnteringBuffer )
+		{
+			_gpuMesher.SetTransitionActive( key, true );
+			_gpuMesher.ScheduleTransition(
+				new GpuTransitionDescriptor(
+					key,
+					CellsPerAxis,
+					CellSize,
+					Lod1CellSize,
+					CurrentTerrainSettings,
+					ProceduralTerrainSdf.CurrentVersion,
+					_terrainContentRevision ),
+				_playerFigureEightRouteDistance );
+		}
+		_transitionDesired.Clear();
+		_transitionDesired.UnionWith( _nextTransitionDesired );
+		if ( VerboseLogging )
+		{
+			var retainedAfter = _gpuMesher.CaptureTransitionIdentity( _transitionRetainedBuffer );
+			Log.Info(
+				$"[VoxelWorld] transition.update anchor=[{anchor.x},{anchor.y},{anchor.z}] " +
+				$"desired={_transitionDesired.Count} entered={_lastTransitionEntered} " +
+				$"left={_lastTransitionLeft} retained={_lastTransitionRetained} " +
+				$"residentRetained={retainedAfter.Count} " +
+				$"identityBefore={retainedBefore.Digest:X16} " +
+				$"identityAfter={retainedAfter.Digest:X16} " +
+				$"identityPreserved={retainedBefore == retainedAfter} " +
+				$"ready={_gpuMesher.TransitionReadyCount} " +
+				$"pending={_gpuMesher.TransitionPendingCount}" );
+		}
+
 		_lod1Clipbox.RecordUpdate(
 			anchor, outerMinimum, outerMaximum, holeMinimum, holeMaximum,
 			_lod1EnteringBuffer.Count, _lod1LeavingBuffer.Count,
@@ -2079,10 +2210,61 @@ public sealed class VoxelManager : Component
 		_lod1Clipbox.Active.UnionWith( _nextLod1Active );
 	}
 
+	private static void AddTransitionFaces( HashSet<Lod0Lod1TransitionKey> keys,
+		Vector3Int minimum, Vector3Int maximum )
+	{
+		for ( var z = minimum.z; z < maximum.z; z++ )
+		for ( var y = minimum.y; y < maximum.y; y++ )
+		{
+			keys.Add( new Lod0Lod1TransitionKey(
+				new Vector3Int( minimum.x - 1, y, z ), Lod0Lod1TransitionFace.PositiveX ) );
+			keys.Add( new Lod0Lod1TransitionKey(
+				new Vector3Int( maximum.x, y, z ), Lod0Lod1TransitionFace.NegativeX ) );
+		}
+		for ( var z = minimum.z; z < maximum.z; z++ )
+		for ( var x = minimum.x; x < maximum.x; x++ )
+		{
+			keys.Add( new Lod0Lod1TransitionKey(
+				new Vector3Int( x, minimum.y - 1, z ), Lod0Lod1TransitionFace.PositiveY ) );
+			keys.Add( new Lod0Lod1TransitionKey(
+				new Vector3Int( x, maximum.y, z ), Lod0Lod1TransitionFace.NegativeY ) );
+		}
+		for ( var y = minimum.y; y < maximum.y; y++ )
+		for ( var x = minimum.x; x < maximum.x; x++ )
+		{
+			keys.Add( new Lod0Lod1TransitionKey(
+				new Vector3Int( x, y, minimum.z - 1 ), Lod0Lod1TransitionFace.PositiveZ ) );
+			keys.Add( new Lod0Lod1TransitionKey(
+				new Vector3Int( x, y, maximum.z ), Lod0Lod1TransitionFace.NegativeZ ) );
+		}
+	}
+
 	private static bool IsAdjacent( Vector3Int first, Vector3Int second )
 	{
 		var delta = second - first;
 		return Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1;
+	}
+
+	private static void SortTransitionsNearestFirst( List<Lod0Lod1TransitionKey> keys,
+		Vector3Int center )
+	{
+		keys.Sort( ( left, right ) =>
+		{
+			var leftCoordinate = left.Lod1Coordinate;
+			var rightCoordinate = right.Lod1Coordinate;
+			var leftDistance = Math.Abs( leftCoordinate.x - center.x ) +
+				Math.Abs( leftCoordinate.y - center.y ) + Math.Abs( leftCoordinate.z - center.z );
+			var rightDistance = Math.Abs( rightCoordinate.x - center.x ) +
+				Math.Abs( rightCoordinate.y - center.y ) + Math.Abs( rightCoordinate.z - center.z );
+			var comparison = leftDistance.CompareTo( rightDistance );
+			if ( comparison != 0 ) return comparison;
+			comparison = leftCoordinate.z.CompareTo( rightCoordinate.z );
+			if ( comparison != 0 ) return comparison;
+			comparison = leftCoordinate.y.CompareTo( rightCoordinate.y );
+			if ( comparison != 0 ) return comparison;
+			comparison = leftCoordinate.x.CompareTo( rightCoordinate.x );
+			return comparison != 0 ? comparison : left.Face.CompareTo( right.Face );
+		} );
 	}
 
 	private static bool IsInsideHalfOpenBox( Vector3Int coordinate, Vector3Int minimum, Vector3Int maximum ) =>

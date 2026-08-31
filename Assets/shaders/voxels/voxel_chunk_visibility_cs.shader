@@ -125,7 +125,8 @@ CS
 		uint activeCellCount = (uint)round( maximumAndCellCount.w );
 		bool active = minimumAndActive.w > 0.5;
 		bool warm = minimumAndActive.w > 1.5 && minimumAndActive.w < 2.5;
-		bool lod1 = minimumAndActive.w > 2.5;
+		bool lod1 = minimumAndActive.w > 2.5 && minimumAndActive.w < 3.5;
+		bool transition = minimumAndActive.w > 3.5;
 		bool visible = active && source.IndexCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
@@ -144,7 +145,7 @@ CS
 			{
 				InterlockedAdd( VisibilityFrameCounters[6], 1 );
 			}
-			else
+			else if ( !transition )
 			{
 				InterlockedAdd( VisibilityFrameCounters[5], 1 );
 			}
@@ -155,7 +156,7 @@ CS
 				{
 					InterlockedAdd( VisibilityFrameCounters[8], 1 );
 				}
-				else if ( !warm )
+				else if ( !warm && !transition )
 				{
 					InterlockedAdd( VisibilityFrameCounters[7], 1 );
 				}

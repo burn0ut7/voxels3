@@ -2,12 +2,12 @@
 
 ## Production Slice
 
-LOD0 regular-cell Transvoxel is the sole terrain render path. The authoritative
+LOD0 and LOD1 regular-cell Transvoxel meshes remain the terrain render levels. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; indexed meshes are
 derived, GPU-resident, revisioned, disposable caches. Generator version 5 owns
-the exterior surface, noodle tunnels, and cheese caverns. This slice excludes
-transition cells, other LODs, collision, edits, networking, generator changes,
-and allocator redesign.
+the exterior surface, noodle tunnels, and cheese caverns. A dedicated transition
+cache closes only their fixed 2:1 interface. This slice excludes other LODs,
+collision, edits, networking, generator changes, and allocator redesign.
 
 Logical chunks are streaming, SDF-input, and revision units, not GPU allocation
 or draw-call units. Persistent geometry lives in shared arenas. Each arena owns
@@ -30,6 +30,54 @@ The mesher owns:
 - persistent indexed geometry arenas and their CPU range allocators;
 - coordinate-to-resident-geometry and candidate replacement state;
 - shared compute shaders, indexed-indirect draw resources, and visibility data.
+
+## Fixed LOD0/LOD1 Transition
+
+Clipbox placement owns where the boundary exists; Transvoxel owns its geometry.
+For each of the 16 LOD1 regions on each of the six faces of the LOD0 hole, the
+manager derives a separate `(Lod1Coordinate, Face)` identity. The face direction
+points from its owning LOD1 region toward the hole. The 96 desired identities are
+diffed when the snapped LOD1 anchor changes, so retained faces keep their
+generation and allocation while only entering and leaving pieces are scheduled
+or removed.
+
+A transition is a thin, zero-width face-local volume-cell mesh, not a heightfield
+trim, a partial coarse block, or a modification of either regular mesh. Its
+`32x32` transition cells sample a compact five-offset halo from the same canonical
+SDF at LOD0 spacing: `69x69` on the interface plane, `65x65` on each fine normal
+offset, and `33x33` on each coarse normal offset. This retains every classification,
+interpolation, and fine/coarse gradient sample while avoiding unused off-plane
+positions. The official 512 transition cases, 56 geometry classes, inversion
+bit, vertex reuse data, and triangulations produce ordinary indexed triangle
+lists. Fine-layer intersections use LOD0-equivalent interpolation and gradients;
+coarse-layer intersections use LOD1-equivalent interpolation and gradients.
+
+Transitions have three independent scratch lanes and isolated pending,
+in-flight, cancellation, and resident state. Regular work always schedules and
+consumes first. Transition GPU work uses ticks where regular meshing submitted no
+GPU work and advances at most one existing batch phase per tick. Coherent SDF
+sampling, classification/scan/audit plus count readback, and emission are separate
+phases of the same at-most-eight-face batch, preventing their costs from stacking
+in one frame without changing transition identity or publication. Count readback
+contains bounded scalar metadata only. Exact allocations use the unchanged shared-arena range allocator. Final
+vertex and index stages in the same transition compute resource write the existing
+24-byte vertex and 32-bit index formats. Packed audit counters keep that resource
+at s&box's 16-storage-buffer limit; valid dummy output descriptors remain bound
+during count stages and are replaced with arena buffers only for emission.
+
+Publication is face-local. A ready face becomes visible without waiting for the
+other 95 faces and never participates in clipbox settlement or regular-mesh
+publication. A dirty resident remains visible until its validated replacement
+publishes. Removed or superseded work releases candidates and cannot publish a
+stale callback; empty faces complete without arena ranges. Visibility uses a
+conservative one-fine-cell-expanded face slab through the existing GPU path.
+
+GPU diagnostics compare transition fine and coarse contour intersections against
+the corresponding regular-grid sign-changing edges. Each face also reports four
+world-position boundary digests; bounded CPU metadata comparison counts unmatched
+edges between adjacent face pieces. Production results include a bounded record
+for every resident face: key, generation, arena ranges, latency, counts, digests,
+and audit counters. No geometry is read back for these audits.
 
 A remesh evaluates the canonical `voxel_sdf_v5.hlsl` field once into a haloed
 `35^3` density lattice, classifies the `32^3` regular cells from cached corners,
