@@ -4597,3 +4597,123 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: **rejected**. Correctness and responsiveness pass, but the fixed GPU
   improvement gate fails. Per the hard stop, remove the Clipbox runtime path,
   do not tune any locked parameter, and do not commit or push it.
+
+### CLIPBOX-LOD-001/v2 - Human-reviewed continuation
+
+- Definition recorded on 2026-08-30 before the first v2 measurement. The human
+  owner explicitly continued the fixed two-level prototype after reviewing the
+  v1 comparison and directed that a failed gate must preserve the implementation
+  and evidence for human acceptance or denial. This supersedes v1's automatic
+  removal instruction without rewriting its definition or result.
+- Purpose: determine whether the fixed LOD0/LOD1 implementation is correct,
+  responsive, and acceptably priced when compared under controlled execution
+  state. Do not change terrain, radii, batching, allocation, meshing, generator,
+  visibility, rendering features, or workload to improve a measurement.
+- Production path and workload remain exactly those recorded by
+  `CLIPBOX-LOD-001/v1`: `Assets/scenes/basic_example.scene`; s&box `26.08.19`;
+  one player; `1280x720`; `fps_max=1000`; generator v5 and seed `1337`; three
+  lanes; batches of at most eight regions; speed `2500`; X reach `50000`; Y
+  reach `25000`; world Z `0`; one loop; settlement, two render advances, and
+  one exact ten-second stationary window.
+- Comparison protocol: capture two fresh no-LOD radius-16 baselines from
+  revision `03ee3ed` and two fixed Clipbox candidates from the current
+  two-level tree. Restart the complete editor process before every run and hold
+  hardware, driver, graphics, resolution, camera, frame cap, scene, and run
+  boundaries fixed. Record arena count, active terrain-buffer groups, indirect
+  submissions, process/GPU memory, settled geometry and digests alongside frame
+  timings. Do not treat runs with different terrain digests as comparable; if
+  equal terrain settles into different arena counts, report the allocation
+  strata instead of hiding them in a single timing conclusion.
+- Correctness and responsiveness gates remain those recorded by v1, including
+  exact LOD0/LOD1 cache and active counts, level-aware identity and digests,
+  negative-coordinate snapping, incremental face counts, zero final backlog,
+  zero geometry readbacks and ordinary-render SDF evaluations, LOD1
+  schedule-to-renderable p95 below `409.6 ms`, and drain no worse than `500 ms`.
+- Performance is evidence for human review, not an automatic source-removal
+  trigger. Report both baseline spread and each candidate result, including
+  moving and stationary GPU distribution, CPU tails, arena/submission shape,
+  memory, responsiveness, and visibly farther coverage. Any failed or
+  inconclusive dimension pauses further architecture work with all prototype
+  code and audit history intact until the human owner accepts, declines, or
+  directs a bounded follow-up.
+
+#### Candidate run 1 - feature pass, comparison withheld
+
+- Run `f1d2732c97fa4eb095648870cef651ec`, revision
+  `1d715f0-clipbox-v2-candidate-1`, completed the fixed production route in
+  `121.935684 s` after a complete editor-process restart. Runtime and editor
+  compilers reported zero errors and warnings.
+- Correctness repeated exactly: `729` LOD0 gameplay and `512` active
+  coordinates; `4096` LOD1 cached/resident and `4032` active coordinates; zero
+  final pending work; eight arenas; zero geometry readbacks and ordinary-render
+  SDF evaluations. Settled LOD0/LOD1 surfaces were `268/1300`, and all combined
+  and per-level topology/position digests exactly matched v1 candidate 1.
+- Responsiveness passed: schedule-to-renderable p50/p95/p99/max was
+  `37.8889/106.258/146.345/317.6252 ms`; total queue p95/p99/max was
+  `110/125/147`; post-loop drain was `35.2091 ms`.
+- Moving GPU average/p95/p99/max was
+  `0.8358761/1.3873577/1.7004013/2.9232502 ms`; stationary GPU was
+  `0.93407875/1.4591217/1.7390251/2.7782917 ms`. Stationary CPU p95/p99 was
+  `1.5003/2.3392 ms`; process/GPU memory ended at
+  `4,146,941,952/1,575,832,502` bytes and remained bounded.
+- The stationary view contained `370` visible regions (`93` LOD0 and `277`
+  LOD1), versus `266` (`76/190`) in v1 candidate 1 despite identical geometry,
+  digests, arena count, resolution, and settled coordinate counts. Screenshots
+  also show a different view direction. The GPU timing is therefore retained
+  but not compared as a same-camera result. This is a measurement-control
+  failure, not evidence of a Clipbox correctness failure; the implementation
+  remains intact pending a repeat clean-start candidate and human review.
+
+#### Candidate run 2 - matched-view pass
+
+- Run `b5ddef71b9f0409bb25d58b51edfdff1`, revision
+  `1d715f0-clipbox-v2-candidate-2`, completed the fixed route in `121.912895 s`
+  after another complete editor-process restart. It reproduced v1 candidate 1's
+  stationary view exactly: `266` visible regions (`76` LOD0 and `190` LOD1),
+  eight arenas, `268/1300` settled LOD0/LOD1 surfaces, and identical combined
+  and per-level topology/position digests.
+- Moving CPU p95/p99 was `1.1946/2.1981 ms`; moving GPU average/p95/p99 was
+  `0.72167015/1.0168552/1.4123917 ms`. Stationary CPU p95/p99 was
+  `1.1763/1.9486 ms`; stationary GPU average/p95/p99 was
+  `0.69710416/0.8955002/1.2190342 ms`.
+- Correctness and responsiveness passed again: exact `729/512` LOD0 gameplay
+  and active counts, exact `4096/4032` LOD1 cached and active counts, zero final
+  pending work, zero geometry readbacks and ordinary-render SDF evaluations,
+  schedule-to-renderable p95 `98.1069 ms`, total-queue p95/p99 `78/126`, and
+  post-loop drain `28.4077 ms`. Process/GPU memory ended at
+  `4,128,120,832/1,525,500,854` bytes and remained bounded.
+
+#### Fresh no-LOD baseline 1
+
+- Run `3697faabccbe4335aa2c3d4412ba63bf`, detached accepted revision
+  `03ee3ed-no-lod-v2-baseline-1`, completed the identical route in
+  `121.9371 s` after a complete editor-process restart. It retained radius 16,
+  settled with zero pending work, rendered `905` stationary regions from `27`
+  arenas, and reproduced topology/position digests
+  `945207C457C6FFD8/D952B7C7F3A6A81E`.
+- Moving CPU p95/p99 was `1.7648/3.2635 ms`; moving GPU average/p95/p99 was
+  `1.0534191/1.6050339/1.9938946 ms`. Stationary CPU p95/p99 was
+  `1.2305/2.0271 ms`; stationary GPU average/p95/p99 was
+  `0.84094745/1.2686253/1.5592575 ms`.
+- Schedule-to-renderable p95 was `1074.5209 ms`; total-queue p95/p99/maximum was
+  `5428/15847/21719`; post-loop drain was `466.8754 ms`. Process/GPU memory
+  ended at `4,418,752,512/2,555,838,836` bytes. Geometry readbacks and
+  ordinary-render SDF evaluations remained zero.
+
+#### Human prototype acceptance 2026-08-30
+
+- After reviewing the camera-control mismatch and the matched-view repeat, the
+  human owner directed the team to move on and accepted the fixed two-level
+  prototype. Candidate runs with the same `266`-region view measured stationary
+  GPU averages `0.69292134/0.69710416 ms` and p95 values
+  `0.88500977/0.8955002 ms`, with identical eight-arena geometry and digests.
+- Against fresh no-LOD baseline 1, matched candidate 2 improved stationary GPU
+  average by `17.10%` and p95 by `29.41%`, while reducing moving GPU average by
+  `31.49%` and moving p95 by `36.64%`. It also rendered significantly farther
+  terrain, reduced arenas `27 -> 8`, reduced schedule p95
+  `1074.5209 -> 98.1069 ms`, and reduced drain `466.8754 -> 28.4077 ms`.
+- This is a product-level prototype acceptance, not a claim that v2's planned
+  second fresh no-LOD baseline was captured. That statistical limitation and
+  candidate 1's unmatched `370`-region view remain recorded. No failed or
+  excluded run was deleted, no renderer or workload parameter was tuned, and
+  the accepted implementation remains the current fixed LOD0/LOD1 source.
