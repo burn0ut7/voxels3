@@ -16,6 +16,7 @@ internal sealed class PerformanceTestResult
 	public PerformanceSubmissionMetrics Submission { get; init; }
 	public PerformanceStreamingMetrics Streaming { get; init; }
 	public PerformanceBoundsMetrics Bounds { get; init; }
+	public PerformanceClipBoxMetrics ClipBoxes { get; init; }
 	public PerformanceProfilerMetrics Profiler { get; init; }
 	public PerformanceClipboxMetrics Clipbox { get; init; }
 }
@@ -40,6 +41,58 @@ internal sealed class PerformanceClipboxMetrics
 	public long LeftRegions { get; init; }
 	public int LastEnteredRegions { get; init; }
 	public int LastLeftRegions { get; init; }
+}
+
+internal sealed class PerformanceClipBoxMetrics
+{
+	public int MaximumLod { get; init; }
+	public int ResidentRegular { get; init; }
+	public int ActiveRegular { get; init; }
+	public int LogicalTransitionFaces { get; init; }
+	public int PublicationWaitFrames { get; init; }
+	public int CoverageMismatches { get; init; }
+	public int TransitionMaskMismatches { get; init; }
+	public int AdjacencyViolations { get; init; }
+	public int StalePublications { get; init; }
+	public int SelectionBudgetViolations { get; init; }
+	public float MaximumSelectionMilliseconds { get; init; }
+	public int IntegrationBudgetViolations { get; init; }
+	public float MaximumIntegrationMilliseconds { get; init; }
+	public int ArenaSubmissions { get; init; }
+	public IReadOnlyList<PerformanceClipLevelMetrics> Levels { get; init; } =
+		System.Array.Empty<PerformanceClipLevelMetrics>();
+	public IReadOnlyList<PerformanceClipMovementLevelMetrics> MovementLevels { get; init; } =
+		System.Array.Empty<PerformanceClipMovementLevelMetrics>();
+}
+
+internal sealed class PerformanceClipMovementLevelMetrics
+{
+	public int Lod { get; init; }
+	public long EnteringRegular { get; init; }
+	public long LeavingRegular { get; init; }
+	public long EnteringTransitions { get; init; }
+	public long LeavingTransitions { get; init; }
+	public long CoverageRecordsChanged { get; init; }
+	public int MaximumEnteringRegularPerUpdate { get; init; }
+	public int MaximumEnteringTransitionsPerUpdate { get; init; }
+}
+
+internal sealed class PerformanceClipLevelMetrics
+{
+	public int Lod { get; init; }
+	public int DesiredRegular { get; init; }
+	public int ResidentRegular { get; init; }
+	public int ActiveRegular { get; init; }
+	public int InactiveRegular { get; init; }
+	public int DesiredTransitions { get; init; }
+	public int ResidentTransitions { get; init; }
+	public int ActiveTransitions { get; init; }
+	public long RegularTriangles { get; init; }
+	public long TransitionTriangles { get; init; }
+	public long RegularBytes { get; init; }
+	public long TransitionBytes { get; init; }
+	public string TopologyDigest { get; init; }
+	public string PositionDigest { get; init; }
 }
 
 internal sealed class PerformanceBoundsMetrics
@@ -89,6 +142,9 @@ internal sealed class PerformanceStreamingMetrics
 {
 	public int FullUpdates { get; set; }
 	public int IncrementalUpdates { get; set; }
+	public int OverlappingPlacementChanges { get; set; }
+	public int NonOverlappingPlacementChanges { get; set; }
+	public int MaximumViewerChunkDelta { get; set; }
 	public float TotalSynchronousMilliseconds { get; set; }
 	public float MaximumSynchronousMilliseconds { get; set; }
 	public float TotalDesiredUpdateMilliseconds { get; set; }
@@ -97,6 +153,9 @@ internal sealed class PerformanceStreamingMetrics
 	public int DrawRebuilds { get; set; }
 	public long GameplayCoordinatesTouched { get; set; }
 	public long RenderCoordinatesTouched { get; set; }
+	public long RenderCoordinatesLeft { get; set; }
+	public long CoverageCoordinatesTouched { get; set; }
+	public int MaximumRenderCoordinatesTouched { get; set; }
 	public int GenerationBatches { get; set; }
 	public int MaximumGenerationBatchSize { get; set; }
 	public float MaximumFirstGameplayBatchMilliseconds { get; set; }
@@ -131,7 +190,9 @@ internal sealed class PerformanceWorldContext
 	public string Scene { get; init; }
 	public int CellsPerAxis { get; init; }
 	public float CellSize { get; init; }
-	public int LoadRadius { get; init; }
+	public int ViewRadiusChunks { get; init; }
+	public int FullDetailRadiusChunks { get; init; }
+	public int EffectiveMaximumLod { get; init; }
 	public string Generator { get; init; }
 	public int WorldSeed { get; init; }
 	public int GeneratorVersion { get; init; }

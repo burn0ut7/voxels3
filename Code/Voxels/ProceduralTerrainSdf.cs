@@ -130,12 +130,44 @@ internal static class ProceduralTerrainSdf
 				float.PositiveInfinity,
 				ChunkDensityClassification.PotentiallySurfaceContaining );
 		}
+		if ( TryClassifyGlobalVerticalRange( worldAabb, settings, out var verticalRange ) )
+			return verticalRange;
 
 		var bound = BoundDensityAabb( worldAabb, minimumSubdivisionSize, settings );
 		return new ChunkDensityRange(
 			MathF.BitDecrement( bound.Minimum ),
 			MathF.BitIncrement( bound.Maximum ),
 			bound.Classification );
+	}
+
+	public static bool TryClassifyGlobalVerticalRange(
+		SdfWorldAabb worldAabb,
+		ProceduralTerrainSettings settings,
+		out ChunkDensityRange range )
+	{
+		var minimumSurfaceHeight = settings.SurfaceBaseHeight - settings.SurfaceAmplitude;
+		var maximumSurfaceHeight = settings.SurfaceBaseHeight + settings.SurfaceAmplitude;
+		if ( worldAabb.Minimum.z > maximumSurfaceHeight )
+		{
+			range = new ChunkDensityRange(
+				MathF.BitDecrement( worldAabb.Minimum.z - maximumSurfaceHeight ),
+				float.MaxValue,
+				ChunkDensityClassification.DefinitelyAir );
+			return true;
+		}
+
+		var deepestPossibleCave = minimumSurfaceHeight - CaveMaximumDepth;
+		if ( worldAabb.Maximum.z <= deepestPossibleCave )
+		{
+			range = new ChunkDensityRange(
+				-float.MaxValue,
+				0f,
+				ChunkDensityClassification.DefinitelySolid );
+			return true;
+		}
+
+		range = default;
+		return false;
 	}
 
 	private static DensityBound BoundDensityAabb(
