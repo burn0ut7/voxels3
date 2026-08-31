@@ -79,6 +79,31 @@ For ordinary s&box component, scene, editor, or settings work that does not touc
 one of these domains, this file is sufficient. Keep editor-only dependencies out
 of `Code/`.
 
+## Research Reference Library
+
+[`Docs/smooth_procedural_voxel_terrain_resources.md`](Docs/smooth_procedural_voxel_terrain_resources.md)
+is the curated routing index for external smooth-terrain, voxel, SDF, meshing,
+LOD, streaming, and large-world research.
+
+- Treat every catalog entry as research evidence, not as an adopted design,
+  requirement, recommendation, or source of repository truth. An entry can be
+  useful even when its architecture is incompatible with Voxels3.
+- Route by the problem being investigated and read the entry's transfer limits
+  before applying an idea. In particular, CPU-first systems such as Godot Voxel
+  can inform algorithms, ownership, streaming, or failure modes without being a
+  template for Voxels3's GPU-first production path.
+- When a durable external source materially helps Voxels3 research, add it to
+  the reference library in the same change. Catalog it under the narrowest
+  applicable topic and state what it is, when it is useful, and which assumptions
+  or design constraints do not transfer.
+- Do not add raw links, generic inspiration, duplicate sources, or sources with
+  no clear research question. The library is a routing table, not a bookmark
+  dump, bibliography, implementation backlog, or substitute for a design note.
+- When a source affects an implementation decision, cite it in the relevant
+  design note and separately record what Voxels3 adopts, rejects, or changes and
+  why. Current repository evidence, route constraints, measured results, and
+  verified s&box behavior take precedence over external examples.
+
 ## Development Rules
 
 - Do not add speculative abstractions, general-purpose helpers, or extra

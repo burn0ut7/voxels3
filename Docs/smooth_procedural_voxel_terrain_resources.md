@@ -1,102 +1,106 @@
-# Smooth Procedural Voxel Terrain Reference Library
+# Smooth Procedural Voxel Terrain Research Index
 
-Use this as a standing research index for large, smooth, procedural voxel/SDF terrain work. Before major architecture changes, compare the proposed design against the closest relevant references below and note intentional differences.
+This document routes Voxels3 research to durable external sources. It is not a
+list of approved designs. Inclusion means that a source can help answer a
+specific question; it does not mean its architecture, tradeoffs, or code should
+be copied.
 
-## Closest Open-Source Implementations
+Voxels3 has a GPU-first terrain and meshing direction. Many valuable references,
+including Godot Voxel, are primarily CPU-oriented or are built around another
+engine's ownership and threading model. Use those sources to study algorithms,
+data flow, scheduling problems, production failure modes, or alternative
+tradeoffs. Translate every finding through the current Voxels3 architecture,
+the applicable agent routes, verified s&box behavior, and measured project data.
 
-### [Zylann/godot_voxel](https://github.com/Zylann/godot_voxel)
-Mature volumetric terrain system for Godot with infinite chunk paging, procedural generators, smooth SDF terrain, LOD, and Transvoxel transitions. **Strengths:** excellent reference for block LOD, transition meshes, streaming, editing, and practical engine integration. **Weaknesses:** CPU-heavy architecture in places and not a direct model for our GPU-first meshing path.
+## How to Use and Maintain This Index
 
-### [bw2012/UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain)
-Active Unreal smooth voxel terrain plugin with procedural landscapes/caves, runtime modification, LOD, materials, and multiplayer. **Strengths:** close to a game-oriented large procedural terrain system and useful for understanding production-style ownership and streaming. **Weaknesses:** Unreal-specific architecture and less documentation than Godot Voxel.
+1. Start with the research-question router below, then open only the catalog
+   entries relevant to the current decision.
+2. Read each entry's transfer limits before treating its implementation as
+   applicable to Voxels3.
+3. In the relevant design note, distinguish observed source facts from ideas
+   Voxels3 adopts, rejects, or adapts. A reference never silently becomes a
+   project requirement.
+4. Add a source only when it is durable, materially useful to a recurring
+   Voxels3 research question, and not already represented by a better source.
+5. Every new entry must identify what the source is, when to route to it, and
+   its important compatibility limits. Do not add unlabeled links, generic
+   inspiration, duplicates, or implementation tasks.
 
-### [bw2012/UE4VoxelTerrain](https://github.com/bw2012/UE4VoxelTerrain)
-Older but highly inspectable smooth procedural voxel terrain implementation using Transvoxel concepts, per-chunk LOD, caves, foliage, runtime editing, and significant CUDA code. **Strengths:** especially useful for studying CPU/GPU division and GPU terrain generation. **Weaknesses:** discontinued UE4-era implementation with architectural decisions tied to older Unreal/CUDA constraints.
+Prefer primary papers, official algorithm material, maintained source code, and
+measured production writeups. Clearly label community analysis, demos, legacy
+code, and closed-source examples because they provide different kinds of
+evidence.
 
-### [bw2012/UE5VoxelTerrainDemo](https://github.com/bw2012/UE5VoxelTerrainDemo)
-UE5 continuation/example for the UnrealSandbox terrain family. **Strengths:** useful for seeing how the older terrain concepts were adapted to a more current Unreal environment. **Weaknesses:** more of an example/demo than a deeply documented research implementation.
+## Research-Question Router
 
-### [VoxelPlugin/VoxelPluginFreeLegacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy)
-Legacy open-source Unreal Voxel Plugin for fully volumetric, destructible, effectively infinite worlds. **Strengths:** large production-oriented codebase covering streaming, procedural generation, editing, rendering, and engine integration. **Weaknesses:** very large and complex, and the current commercial Voxel Plugin has evolved beyond this public legacy code.
+| Research question | Start with | Why route here |
+| --- | --- | --- |
+| Regular-cell isosurface topology and interpolation | [Marching Cubes paper](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf) | Primary description of the baseline surface-extraction algorithm. |
+| Crack-free 2:1 voxel LOD transitions | [Transvoxel site](https://transvoxel.org/), [official tables](https://github.com/EricLengyel/Transvoxel), [dissertation](https://transvoxel.org/) | Authoritative theory, diagrams, and lookup data for regular and transition cells. |
+| Practical chunk LOD, transitions, streaming, and editing | [Godot Voxel](https://github.com/Zylann/godot_voxel), [UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain), [Voxel Plugin Legacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy) | Mature or production-oriented systems expose ownership, paging, invalidation, and integration concerns. Their architectures are not Voxels3 templates. |
+| GPU-first generation or meshing work division | [UE4VoxelTerrain](https://github.com/bw2012/UE4VoxelTerrain), [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry) | Concrete GPU-oriented examples for minimizing CPU work and reusing persistent GPU data. |
+| Bounded viewer-centered LOD and incremental updates | [Geometry Clipmaps](https://hhoppe.com/geomclipmap.pdf), [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry) | Foundational cache, snapping, and exposed-region update concepts, though the geometry is heightfield-specific. |
+| Alternative sharp-feature surface extraction | [Dual Contouring paper](https://www.cs.rice.edu/~jwarren/papers/dualcontour.pdf) | Primary comparison point for Hermite data, QEFs, and feature preservation. |
+| Sparse large-world volume representation | [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb), [Efficient Sparse Voxel Octrees](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees), [HashDAG](https://github.com/Phyronnaz/HashDAG) | Contrasting hierarchical and compressed representations for storage and traversal research. |
+| Compact implementations for algorithm inspection | [stoyannk/voxels](https://github.com/stoyannk/voxels), [Marching-Cubes-Terrain](https://github.com/Eldemarkki/Marching-Cubes-Terrain), [Fast Unity Marching Cubes](https://github.com/Fobri/Fast-Unity-Marching-Cubes), [Scrawk/Marching-Cubes](https://github.com/Scrawk/Marching-Cubes) | Smaller codebases make topology, chunking, threading, and hot-path details easier to isolate. |
+| Shipped-game behavior and production failure modes | [Planet Nomads](https://planet-nomads.com/), [No Man's Sky community analysis](https://github.com/gistya/nomansterrain), Astroneer talks and postmortems | Useful for forming questions about scale and player experience; closed or inferred implementations are not architectural evidence. |
 
-### [EricLengyel/Transvoxel](https://github.com/EricLengyel/Transvoxel)
-Official Transvoxel lookup-table repository. **Strengths:** authoritative source for transition-cell tables and case data; use this rather than copying third-party tables. **Weaknesses:** not a terrain engine or streaming architecture.
+## Open-Source Terrain Systems
 
-### [stoyannk/voxels](https://github.com/stoyannk/voxels)
-Compact voxel terrain codebase with Transvoxel-related implementation details, compression, LOD, and dynamic editing. **Strengths:** easier to inspect than a full engine when debugging algorithm details. **Weaknesses:** smaller and less production-proven than Godot Voxel or Voxel Plugin.
+| Reference | What it is | Route here when | Transfer limits for Voxels3 |
+| --- | --- | --- | --- |
+| [Zylann/godot_voxel](https://github.com/Zylann/godot_voxel) | Maintained Godot module for blocky and smooth voxel terrain, paging, generators, editing, LOD, and Transvoxel transitions. | Investigating mature chunk ownership, LOD, transitions, streaming, editing, or engine integration. | Primarily CPU-oriented and shaped by Godot APIs. Study responsibilities and failure modes; do not treat its CPU work division as the GPU-first Voxels3 design. |
+| [bw2012/UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain) | Active Unreal smooth-terrain plugin with procedural landscapes and caves, runtime edits, LOD, materials, and multiplayer concerns. | Investigating game-oriented terrain ownership, streaming, editing, or integration at production scale. | Unreal-specific lifecycle and rendering assumptions do not directly transfer; public documentation is limited. |
+| [bw2012/UE4VoxelTerrain](https://github.com/bw2012/UE4VoxelTerrain) | Discontinued but inspectable UE4 smooth-terrain implementation using per-chunk LOD, Transvoxel concepts, and substantial CUDA work. | Studying CPU/GPU separation, GPU terrain generation, transition implementation, caves, foliage, or edits. | Legacy UE4 and CUDA constraints differ from current s&box compute and resource ownership. Treat it as a design case study, not a compatibility target. |
+| [bw2012/UE5VoxelTerrainDemo](https://github.com/bw2012/UE5VoxelTerrainDemo) | UE5 example continuing concepts from the UnrealSandbox terrain family. | Checking how older terrain ideas were adapted to a newer Unreal environment. | A demo rather than a deeply documented or complete production architecture. |
+| [VoxelPlugin/VoxelPluginFreeLegacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy) | Legacy open-source Unreal Voxel Plugin for large volumetric, editable procedural worlds. | Researching broad production responsibilities across generation, streaming, editing, rendering, and engine integration. | Very large legacy codebase; current commercial versions have diverged, and Unreal ownership patterns are not s&box contracts. |
+| [stoyannk/voxels](https://github.com/stoyannk/voxels) | Compact terrain implementation containing Transvoxel-related code, compression, LOD, and dynamic editing. | Isolating algorithm details without navigating a full engine plugin. | Smaller and less production-proven; implementation choices are not evidence of scalability or compatibility. |
 
-## Core Algorithms and Papers
+## Primary Algorithms and Papers
 
-### [The Transvoxel Algorithm](https://transvoxel.org/)
-Eric Lengyel's official reference for crack-free transitions between voxel meshes sampled at 2:1 resolutions. **Strengths:** essential for transition-cell topology, lookup tables, diagrams, and links to the dissertation. **Weaknesses:** solves LOD seams, not streaming, scheduling, allocation, or GPU architecture.
+| Reference | What it is | Route here when | Transfer limits for Voxels3 |
+| --- | --- | --- | --- |
+| [The Transvoxel Algorithm](https://transvoxel.org/) | Eric Lengyel's official explanation of crack-free transitions between voxel meshes sampled at 2:1 resolutions. | Researching transition-cell topology, case construction, lookup data, or LOD seam behavior. | Solves topology across LOD boundaries, not Voxels3 streaming, scheduling, allocation, GPU resource ownership, or engine integration. |
+| [EricLengyel/Transvoxel](https://github.com/EricLengyel/Transvoxel) | Official Transvoxel lookup-table repository. | Needing canonical regular- or transition-cell tables and case data. | Tables are authoritative inputs to an algorithm, not a terrain system or implementation plan. |
+| [Voxel-Based Terrain for Real-Time Virtual Simulations](https://transvoxel.org/) | Lengyel's dissertation covering smooth volumetric terrain and multiresolution transitions. | Needing the deeper theory and implementation context behind Transvoxel. | CPU-era assumptions require explicit translation to the Voxels3 GPU-first pipeline. |
+| [Marching Cubes paper](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf) | Lorensen and Cline's foundational isosurface-extraction paper. | Verifying regular-cell topology, edge interpolation, and the baseline algorithm. | Does not provide adaptive LOD, streaming, scheduling, or crack handling between resolutions. |
+| [Geometry Clipmaps paper](https://hhoppe.com/geomclipmap.pdf) | Losasso and Hoppe's viewer-centered nested-grid terrain cache. | Studying bounded complexity, snapped levels, persistent caches, and incremental exposed-region updates. | Designed for 2D heightfields; ring and trim geometry cannot represent arbitrary volumetric SDF surfaces or caves. |
+| [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry) | NVIDIA's GPU-oriented geometry-clipmap implementation. | Studying persistent GPU resources, reusable geometry, and reduced CPU involvement. | Heightfield-specific topology and update rules must not be copied directly into volumetric terrain. |
+| [Dual Contouring of Hermite Data](https://www.cs.rice.edu/~jwarren/papers/dualcontour.pdf) | Primary paper for a QEF-based surface extractor designed to preserve sharp features. | Comparing Marching Cubes or Transvoxel quality against another extraction family. | Robust adaptive LOD, crack handling, and GPU production integration are separate problems and may be more complex. |
 
-### [Voxel-Based Terrain for Real-Time Virtual Simulations](https://transvoxel.org/)
-Lengyel's dissertation is the deepest theoretical and implementation reference behind Transvoxel and multiresolution voxel terrain. **Strengths:** foundational treatment of smooth volumetric terrain and multiresolution transitions. **Weaknesses:** older CPU-era assumptions must be translated carefully into modern GPU workflows.
+## Sparse Volume and Large-World Structures
 
-### [Marching Cubes: A High Resolution 3D Surface Construction Algorithm](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf)
-The foundational isosurface extraction paper by Lorensen and Cline. **Strengths:** canonical reference for regular-cell topology and interpolation. **Weaknesses:** no native adaptive LOD, streaming, or crack handling between resolutions.
+| Reference | What it is | Route here when | Transfer limits for Voxels3 |
+| --- | --- | --- | --- |
+| [AcademySoftwareFoundation/openvdb](https://github.com/AcademySoftwareFoundation/openvdb) | Industry-standard sparse hierarchical volume data structure with a very large 3D index space. | Researching sparse volume hierarchy, storage, traversal, or large dataset organization. | Optimized largely for VFX and data processing, not low-latency game terrain streaming or the current procedural-SDF-plus-derived-mesh model. |
+| [Efficient Sparse Voxel Octrees](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees) | NVIDIA research on compact GPU sparse-octree representation and traversal. | Investigating hierarchical occupancy, compact GPU storage, or traversal at enormous scale. | Targets voxel representation and ray traversal more than editable polygonized smooth terrain. |
+| [Phyronnaz/HashDAG](https://github.com/Phyronnaz/HashDAG) | Research implementation of compressed sparse voxel DAGs with interactive modification. | Investigating persistent edited-world storage when memory measurements justify it. | Fundamentally different from Voxels3's current procedural SDF and mesh-cache ownership; compression complexity is not currently a requirement. |
 
-### [Geometry Clipmaps: Terrain Rendering Using Nested Regular Grids](https://hhoppe.com/geomclipmap.pdf)
-Losasso and Hoppe's foundational clipmap paper for persistent viewer-centered nested LOD caches. **Strengths:** critical for understanding incremental updates, bounded complexity, snapped levels, and why only exposed regions should change. **Weaknesses:** designed for 2D heightfields rather than arbitrary volumetric SDF surfaces.
+## Small Algorithm Implementations
 
-### [GPU-Based Geometry Clipmaps — GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry)
-NVIDIA's GPU-oriented evolution of geometry clipmaps. **Strengths:** excellent reference for minimizing CPU involvement, persistent GPU resources, reusable geometry, and incremental updates. **Weaknesses:** heightfield-specific ring/trim geometry should not be copied directly for caves or arbitrary SDF topology.
+| Reference | What it is | Route here when | Transfer limits for Voxels3 |
+| --- | --- | --- | --- |
+| [Eldemarkki/Marching-Cubes-Terrain](https://github.com/Eldemarkki/Marching-Cubes-Terrain) | Unity smooth infinite-terrain example using Marching Cubes, Jobs, and Burst. | Inspecting clear chunk generation, parallel work organization, or procedural-terrain basics. | Lacks the mature multilevel LOD and transition system needed for large view distances and follows Unity's CPU job model. |
+| [Fobri/Fast-Unity-Marching-Cubes](https://github.com/Fobri/Fast-Unity-Marching-Cubes) | Performance-focused Unity Marching Cubes implementation using raw mesh buffers and threaded work. | Studying mesh-generation hot paths and practical CPU optimization tradeoffs. | Not a complete large-world LOD architecture and not a model for Voxels3 GPU resource ownership. |
+| [Scrawk/Marching-Cubes](https://github.com/Scrawk/Marching-Cubes) | Straightforward Marching Cubes and Marching Tetrahedra example. | Performing algorithm sanity checks or comparing basic topology. | Educational reference, not a production terrain streamer or performance baseline. |
 
-### [Dual Contouring of Hermite Data](https://www.cs.rice.edu/~jwarren/papers/dualcontour.pdf)
-Alternative smooth surface-extraction method focused on preserving sharp features using Hermite samples and QEFs. **Strengths:** valuable comparison point if Marching Cubes/Transvoxel quality or feature preservation becomes limiting. **Weaknesses:** adaptive crack-free LOD and robust production implementation are more complex than our current path.
+## Production and Observational References
 
-## Sparse Volume and Large-World References
+| Reference | What it is | Route here when | Transfer limits for Voxels3 |
+| --- | --- | --- | --- |
+| [Planet Nomads](https://planet-nomads.com/) | Shipped game built around procedural smooth voxel terrain, caves, traversal, and dynamic LOD. | Looking for developer-reported terrain streaming, LOD, and player-experience problems from a shipped game. | Source is closed; articles and demos can reveal problems and outcomes, not verified internal architecture. |
+| [No Man's Sky terrain community analysis](https://github.com/gistya/nomansterrain) | Community reverse-engineering of a shipped procedural planetary-terrain system. | Forming research questions about density fields, caves, runtime generation, or planetary scale. | Community inference is not authoritative and must not be cited as confirmed implementation fact. |
+| Astroneer talks and postmortems | Public observations and developer material about a shipped smooth, editable, procedural planetary world. | Studying player-facing editing, traversal, visual behavior, and production constraints. | No canonical source is cataloged yet and implementation details are closed; add a specific durable link before relying on a claim. |
 
-### [AcademySoftwareFoundation/openvdb](https://github.com/AcademySoftwareFoundation/openvdb)
-Industry-standard sparse hierarchical volume structure with effectively infinite 3D index space and compact storage. **Strengths:** excellent reference for sparse volume representation, hierarchy, and large datasets. **Weaknesses:** designed primarily for VFX/data processing rather than low-latency game terrain streaming.
+## Recording a Research Outcome
 
-### [Efficient Sparse Voxel Octrees — NVIDIA](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees)
-GPU-oriented sparse voxel octree research focused on compact representation and efficient traversal. **Strengths:** useful for future work on enormous sparse worlds, GPU traversal, and hierarchical occupancy. **Weaknesses:** targets voxel representation/ray traversal more than editable polygonized smooth terrain.
+When a source materially affects a design decision, record the outcome in the
+smallest relevant Voxels3 design note:
 
-### [Phyronnaz/HashDAG](https://github.com/Phyronnaz/HashDAG)
-Research implementation for compressed sparse voxel DAGs with interactive modification. **Strengths:** useful if persistent edited-world storage becomes a dominant memory problem. **Weaknesses:** substantially different from our current procedural-SDF-plus-mesh-cache architecture.
-
-## Smaller Reference Implementations
-
-### [Eldemarkki/Marching-Cubes-Terrain](https://github.com/Eldemarkki/Marching-Cubes-Terrain)
-Unity smooth infinite terrain example using Marching Cubes, Jobs, and Burst. **Strengths:** clean reference for chunk generation, parallel work, and straightforward procedural terrain organization. **Weaknesses:** lacks the mature multilevel LOD/transition architecture required for very large view distances.
-
-### [Fobri/Fast-Unity-Marching-Cubes](https://github.com/Fobri/Fast-Unity-Marching-Cubes)
-Performance-focused Unity Marching Cubes implementation emphasizing raw mesh buffers and threaded work. **Strengths:** useful for studying mesh-generation hot paths and practical optimization tradeoffs. **Weaknesses:** not a complete large-world LOD architecture.
-
-### [Scrawk/Marching-Cubes](https://github.com/Scrawk/Marching-Cubes)
-Straightforward Marching Cubes and Marching Tetrahedra reference implementation. **Strengths:** useful for algorithm sanity checks and simple topology comparison. **Weaknesses:** not intended as a production terrain streamer.
-
-## Production / Closed-Source Systems Worth Studying
-
-### [Planet Nomads](https://planet-nomads.com/)
-Commercial game built around completely procedural smooth voxel terrain, caves, traversal, and dynamic LOD. **Strengths:** especially relevant because its developers documented terrain-streaming and LOD problems encountered while building a real game. **Weaknesses:** source is not public, so architecture must be inferred from development articles and demos.
-
-### [No Man's Sky terrain reverse-engineering](https://github.com/gistya/nomansterrain)
-Large procedural volumetric planetary terrain is a valuable production-scale conceptual reference. **Strengths:** demonstrates enormous procedural worlds with caves, density fields, and runtime generation. **Weaknesses:** implementation is closed and community reverse-engineering is not authoritative.
-
-### Astroneer
-Production example of smooth, editable, procedural planetary voxel terrain. **Strengths:** demonstrates that highly interactive smooth volumetric worlds can ship at game scale. **Weaknesses:** implementation details are closed, so use talks and postmortems for concepts rather than concrete code decisions.
-
-## Recommended Recurring Review Set
-
-For major terrain changes, always review at least:
-
-1. [godot_voxel](https://github.com/Zylann/godot_voxel)
-2. [UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain)
-3. [UE4VoxelTerrain](https://github.com/bw2012/UE4VoxelTerrain)
-4. [VoxelPluginFreeLegacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy)
-5. [Transvoxel](https://transvoxel.org/)
-6. [Geometry Clipmaps](https://hhoppe.com/geomclipmap.pdf)
-7. [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry)
-8. [Marching Cubes](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf)
-
-## Project Rule of Thumb
-
-Before implementing a major terrain subsystem, identify the closest references above and explicitly document:
-- what problem they solve;
-- what architecture they use;
-- what we are borrowing;
-- what we are intentionally doing differently and why.
-
-This is especially important for LOD placement, transition ownership, streaming granularity, CPU/GPU separation, mesh caching, scheduling, and large-world storage.
+- the question being answered;
+- the fact or technique observed in the source;
+- the source's architecture and evidence type;
+- what Voxels3 adopts, rejects, or adapts;
+- why that choice fits the canonical Voxels3 path and verified s&box constraints;
+- measurements still required before making correctness or performance claims.
