@@ -17,7 +17,7 @@ internal struct GpuTerrainRequest
 	public int CellsPerAxis;
 	public uint Generation;
 	public uint RequestIndex;
-	public uint PackedIdentity;
+	public uint Reserved0;
 	public Vector4 Reserved1;
 }
 

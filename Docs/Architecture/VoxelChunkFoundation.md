@@ -31,8 +31,8 @@ persistence, and network replication remain later slices.
   and persistent indexed render geometry from an immutable chunk/SDF
   descriptor. `VoxelChunk` remains free of engine resources,
   GPU buffers, render objects, and mesh lifetime state.
-- The renderer stores each completed regular or Transvoxel transition region as revisioned disposable indexed
-  geometry. A regular remesh evaluates generator v5 once over a transient `35^3`
+- The renderer stores each completed region as revisioned disposable indexed
+  geometry. A remesh evaluates generator v4 once over a transient `35^3`
   density lattice, classifies the `32^3` regular cells from cached corners,
   reuses region-local edge vertices, and emits 24-byte position/normal vertices
   plus 32-bit indices. Central-difference endpoint gradients use the same
@@ -52,16 +52,15 @@ persistence, and network replication remain later slices.
   visibility, and indirect-argument buffers. It does not include or evaluate
   the canonical SDF. Future edits therefore invalidate affected region
   revisions and pay field/extraction cost during remesh, not on every frame.
-- Nested render-only clip boxes sample that same canonical SDF directly but
-  never enter the loaded-chunk dictionary. Complete coarse boxes remain
-  resident fallback coverage beneath finer levels; LOD0 authoritative chunks
-  exist only in the full-detail box. The exact spatial and seam contract is
-  documented in `TransvoxelClipBoxLod.md`.
-- Streaming target movement owns one gameplay desired set and one clip-box
-  render selection. Adjacent movement retains the previous published coverage
-  while exact entering slabs and their seams are prepared; initialization and
-  teleports publish the outer box first and refine coarse-to-fine. Missing
-  gameplay coordinates are ordered nearest-first with deterministic tie breaks.
+- A one-chunk render-only warm shell is generated through that same canonical
+  SDF constructor but never enters the loaded-chunk dictionary. Its transient
+  chunk objects are discarded after GPU scheduling; the shell is a derived
+  latency cache rather than gameplay residency or world existence.
+- Streaming target movement owns one gameplay desired set and one render-desired
+  set. An adjacent move slides both sets in place by their exact entering and
+  leaving slabs; initialization, configuration changes, large jumps, and failed
+  set-integrity guards use the same owner's full rebuild path. Missing gameplay
+  coordinates are ordered nearest-first with deterministic tie breaks.
 - An explicitly assigned `StreamingTarget` is authoritative. Without one, the
   manager resolves exactly one active non-proxy `PlayerController` for the local
   client. It refuses to choose among multiple locally controlled players and

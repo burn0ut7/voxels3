@@ -3,7 +3,6 @@ using System;
 internal sealed class GpuTerrainScratch : IDisposable
 {
 	public const int MaximumBatchSize = GpuVoxelMesher.MaximumDispatchesPerUpdate;
-	private const int TransitionSampleLayerCount = 3;
 	private readonly object _stateLock = new();
 	// Do not fold the two output writers into the multi-stage shader. On s&box 26.08.19,
 	// that composition crashes the native VFX variable parser during a cold resource load.
@@ -11,9 +10,6 @@ internal sealed class GpuTerrainScratch : IDisposable
 	private readonly ComputeShader _shader = new( "shaders/voxels/voxel_persistent_geometry_cs.shader" );
 	private readonly ComputeShader _emitVertices = new( "shaders/voxels/voxel_emit_vertices_cs.shader" );
 	private readonly ComputeShader _emitIndices = new( "shaders/voxels/voxel_emit_indices_cs.shader" );
-	private readonly ComputeShader _transitionShader = new( "shaders/voxels/voxel_transition_count_cs.shader" );
-	private readonly ComputeShader _transitionEmitVertices = new( "shaders/voxels/voxel_transition_emit_vertices_cs.shader" );
-	private readonly ComputeShader _transitionEmitIndices = new( "shaders/voxels/voxel_transition_emit_indices_cs.shader" );
 	private readonly GpuBuffer<GpuTerrainRequest> _requests;
 	private readonly GpuBuffer<float> _densitySamples;
 	private readonly GpuBuffer<GpuCellData> _cells;
@@ -35,18 +31,12 @@ internal sealed class GpuTerrainScratch : IDisposable
 	private readonly int _edgeSlotCount;
 	private readonly int _edgeGroupCount;
 	private readonly int _cellGroupCount;
-	private readonly int _transitionSampleSize;
-	private readonly int _transitionSampleCount;
-	private readonly int _transitionSampleStride;
-	private readonly int _transitionCellCount;
-	private readonly int _transitionGroupCount;
 	private GpuTerrainCountResult[] _completedCounts;
 	private int _completedCount;
 	private int _batchSize;
 	private long _readbackTimestamp;
 	private long _readbackReadyTimestamp;
 	private ScratchState _state;
-	private VoxelRenderMeshKind _meshKind;
 	private bool _disposed;
 
 	public long CapacityBytes { get; }
@@ -62,14 +52,8 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_edgeSlotCount = checked( _sampleSize * _sampleSize * _sampleSize * 3 );
 		_edgeGroupCount = (_edgeSlotCount + 255) / 256;
 		_cellGroupCount = (_cellCount + 255) / 256;
-		_transitionSampleSize = checked( chunkSize * 2 + 1 );
-		_transitionSampleCount = checked( _transitionSampleSize * _transitionSampleSize );
-		_transitionSampleStride = checked( _transitionSampleCount * TransitionSampleLayerCount );
-		_transitionCellCount = checked( chunkSize * chunkSize );
-		_transitionGroupCount = (_transitionCellCount + 255) / 256;
 		_requests = new GpuBuffer<GpuTerrainRequest>( MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Requests" );
-		var densitySamplesPerRequest = Math.Max( _haloSampleCount, _transitionSampleStride );
-		_densitySamples = new GpuBuffer<float>( checked( densitySamplesPerRequest * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Density" );
+		_densitySamples = new GpuBuffer<float>( checked( _haloSampleCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Density" );
 		_cells = new GpuBuffer<GpuCellData>( checked( _cellCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Cells" );
 		_edgeFlags = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Flags" );
 		_edgeVertexIds = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge IDs" );
@@ -103,10 +87,9 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_emitIndices.Attributes.Set( "EdgeSlotCount", _edgeSlotCount );
 		_emitIndices.Attributes.Set( "EdgeGroupCount", _edgeGroupCount );
 		_emitIndices.Attributes.Set( "CellGroupCount", _cellGroupCount );
-		BindTransitionAttributes();
 		CapacityBytes =
 			(long)MaximumBatchSize * 64 +
-			(long)densitySamplesPerRequest * MaximumBatchSize * sizeof( float ) +
+			(long)_haloSampleCount * MaximumBatchSize * sizeof( float ) +
 			(long)_cellCount * MaximumBatchSize * 12 +
 			(long)_edgeSlotCount * MaximumBatchSize * sizeof( uint ) * 2 +
 			(long)(_edgeGroupCount + _cellGroupCount) * MaximumBatchSize * sizeof( uint ) +
@@ -124,22 +107,10 @@ internal sealed class GpuTerrainScratch : IDisposable
 			}
 			_state = ScratchState.CountSubmitted;
 			_batchSize = count;
-			_meshKind = (VoxelRenderMeshKind)(requests[0].PackedIdentity & 0x01u);
-		}
-		for ( var index = 1; index < count; index++ )
-		{
-			if ( (VoxelRenderMeshKind)(requests[index].PackedIdentity & 0x01u) != _meshKind )
-				throw new InvalidOperationException( "A voxel terrain scratch batch mixed regular and transition requests." );
 		}
 		var start = System.Diagnostics.Stopwatch.GetTimestamp();
 		_requests.SetData( new Span<GpuTerrainRequest>( requests, 0, count ) );
 		SetBatchSize( count );
-		if ( _meshKind == VoxelRenderMeshKind.Transition )
-		{
-			SubmitTransitionCount( count );
-			submissionMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
-			return true;
-		}
 		foreach ( var buffer in new GpuBuffer[] { _densitySamples, _cells, _edgeFlags, _edgeVertexIds, _edgeGroupSums, _cellGroupSums, _blockCounts, _activeCellCounts, _digests, _countResults } )
 			Graphics.ResourceBarrierTransition( buffer, Sandbox.Rendering.ResourceState.UnorderedAccess );
 		_shader.Attributes.Set( "PersistentStage", 0 );
@@ -170,36 +141,6 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_countResults.GetDataAsync<GpuTerrainCountResult>( OnCountsRead, 0, count );
 		submissionMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
 		return true;
-	}
-
-	private void SubmitTransitionCount( int count )
-	{
-		foreach ( var buffer in new GpuBuffer[] { _densitySamples, _cells, _edgeFlags, _edgeVertexIds,
-			_edgeGroupSums, _cellGroupSums, _blockCounts, _activeCellCounts, _digests, _countResults } )
-			Graphics.ResourceBarrierTransition( buffer, Sandbox.Rendering.ResourceState.UnorderedAccess );
-		_transitionShader.Attributes.Set( "TransitionStage", 0 );
-		_transitionShader.Dispatch( _transitionCellCount * count, 1, 1 );
-		Barrier( _cells, _edgeFlags, _edgeVertexIds, _activeCellCounts, _digests );
-		_transitionShader.Attributes.Set( "TransitionStage", 1 );
-		_transitionShader.Dispatch( _transitionSampleStride * count, 1, 1 );
-		Barrier( _densitySamples );
-		_transitionShader.Attributes.Set( "TransitionStage", 2 );
-		_transitionShader.Dispatch( _transitionCellCount * count, 1, 1 );
-		Barrier( _cells, _edgeFlags, _activeCellCounts, _digests );
-		_transitionShader.Attributes.Set( "TransitionStage", 3 );
-		_transitionShader.Dispatch( _transitionGroupCount * 256 * count, 1, 1 );
-		Barrier( _edgeVertexIds, _edgeGroupSums );
-		_transitionShader.Attributes.Set( "TransitionStage", 4 );
-		_transitionShader.Dispatch( _transitionGroupCount * 256 * count, 1, 1 );
-		Barrier( _cells, _cellGroupSums );
-		_transitionShader.Attributes.Set( "TransitionStage", 5 );
-		_transitionShader.Dispatch( 256 * count, 1, 1 );
-		Barrier( _edgeGroupSums, _cellGroupSums, _blockCounts );
-		_transitionShader.Attributes.Set( "TransitionStage", 6 );
-		_transitionShader.Dispatch( count, 1, 1 );
-		Barrier( _countResults );
-		_readbackTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
-		_countResults.GetDataAsync<GpuTerrainCountResult>( OnCountsRead, 0, count );
 	}
 
 	public bool TryTakeCounts( out GpuTerrainCountResult[] counts, out int count,
@@ -236,20 +177,9 @@ internal sealed class GpuTerrainScratch : IDisposable
 		Graphics.ResourceBarrierTransition( indices, Sandbox.Rendering.ResourceState.UnorderedAccess );
 		_emitVertices.Attributes.Set( "OutputVertices", vertices );
 		_emitIndices.Attributes.Set( "OutputIndices", indices );
-		if ( _meshKind == VoxelRenderMeshKind.Transition )
-		{
-			_transitionEmitVertices.Attributes.Set( "OutputVertices", vertices );
-			_transitionEmitIndices.Attributes.Set( "OutputIndices", indices );
-			_transitionEmitVertices.Dispatch( _transitionCellCount * count, 1, 1 );
-			Barrier( vertices );
-			_transitionEmitIndices.Dispatch( _transitionCellCount * count, 1, 1 );
-		}
-		else
-		{
-			_emitVertices.Dispatch( _edgeSlotCount * count, 1, 1 );
-			Barrier( vertices );
-			_emitIndices.Dispatch( _cellCount * count, 1, 1 );
-		}
+		_emitVertices.Dispatch( _edgeSlotCount * count, 1, 1 );
+		Barrier( vertices );
+		_emitIndices.Dispatch( _cellCount * count, 1, 1 );
 		Barrier( indices );
 		return System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
 	}
@@ -301,41 +231,11 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_shader.Attributes.Set( "CellGroupCount", _cellGroupCount );
 	}
 
-	private void BindTransitionAttributes()
-	{
-		foreach ( var shader in new[] { _transitionShader, _transitionEmitVertices, _transitionEmitIndices } )
-		{
-			shader.Attributes.Set( "Requests", _requests );
-			shader.Attributes.Set( "Cells", _cells );
-			shader.Attributes.Set( "EdgeVertexIds", _edgeVertexIds );
-			shader.Attributes.Set( "EdgeGroupSums", _edgeGroupSums );
-			shader.Attributes.Set( "Allocations", _allocations );
-			shader.Attributes.Set( "ChunkSize", _chunkSize );
-			shader.Attributes.Set( "TransitionSampleSize", _transitionSampleSize );
-			shader.Attributes.Set( "TransitionSampleCount", _transitionSampleCount );
-			shader.Attributes.Set( "TransitionSampleStride", _transitionSampleStride );
-			shader.Attributes.Set( "TransitionCellCount", _transitionCellCount );
-			shader.Attributes.Set( "TransitionGroupCount", _transitionGroupCount );
-		}
-		_transitionShader.Attributes.Set( "DensitySamples", _densitySamples );
-		_transitionShader.Attributes.Set( "EdgeFlags", _edgeFlags );
-		_transitionShader.Attributes.Set( "CellGroupSums", _cellGroupSums );
-		_transitionShader.Attributes.Set( "BlockCounts", _blockCounts );
-		_transitionShader.Attributes.Set( "ActiveCellCounts", _activeCellCounts );
-		_transitionShader.Attributes.Set( "Digests", _digests );
-		_transitionShader.Attributes.Set( "CountResults", _countResults );
-		_transitionEmitVertices.Attributes.Set( "DensitySamples", _densitySamples );
-		_transitionEmitIndices.Attributes.Set( "CellGroupSums", _cellGroupSums );
-	}
-
 	private void SetBatchSize( int count )
 	{
 		_shader.Attributes.Set( "BatchSize", count );
 		_emitVertices.Attributes.Set( "BatchSize", count );
 		_emitIndices.Attributes.Set( "BatchSize", count );
-		_transitionShader.Attributes.Set( "BatchSize", count );
-		_transitionEmitVertices.Attributes.Set( "BatchSize", count );
-		_transitionEmitIndices.Attributes.Set( "BatchSize", count );
 	}
 
 	private static void Barrier( params GpuBuffer[] buffers )

@@ -1,4 +1,4 @@
-// Canonical GPU mirror of ProceduralTerrainSdf version 5.
+// Canonical GPU mirror of ProceduralTerrainSdf version 4.
 static const float VoxelSimplexF2 = 0.3660254037844386;
 static const float VoxelSimplexG2 = 0.21132486540518713;
 static const float VoxelSimplexF3 = 1.0 / 3.0;

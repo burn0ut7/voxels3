@@ -1,7 +1,3 @@
-#if !VOXEL_PACKED_RECORD_IDENTITY
-	#error Regular terrain vertex emission requires the packed record-identity layout.
-#endif
-
 struct TerrainRequest
 {
 	float4 OriginAndCellSize;
@@ -88,19 +84,6 @@ float3 SafeNormalize( float3 value )
 	return lengthSquared > 1e-12 ? value * rsqrt( lengthSquared ) : float3( 0, 0, 1 );
 }
 
-float2 EncodeTerrainNormal( float3 normal )
-{
-	normal /= abs( normal.x ) + abs( normal.y ) + abs( normal.z );
-	if ( normal.z < 0.0 )
-	{
-		float2 signValue = float2(
-			normal.x >= 0.0 ? 1.0 : -1.0,
-			normal.y >= 0.0 ? 1.0 : -1.0 );
-		normal.xy = (1.0 - abs( normal.yx )) * signValue;
-	}
-	return normal.xy;
-}
-
 [numthreads(256,1,1)]
 void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 {
@@ -156,14 +139,13 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 		Gradient( block, int3( firstPoint ) ),
 		Gradient( block, int3( secondPoint ) ),
 		interpolation ) );
-	float2 encodedNormal = EncodeTerrainNormal( outputNormal );
 
 	TerrainVertexWords output;
 	output.First = uint4(
 		asuint( outputPosition.x ),
 		asuint( outputPosition.y ),
 		asuint( outputPosition.z ),
-		asuint( (float)allocation.Reserved ) );
-	output.Second = uint2( asuint( encodedNormal.x ), asuint( encodedNormal.y ) );
+		asuint( outputNormal.x ) );
+	output.Second = uint2( asuint( outputNormal.y ), asuint( outputNormal.z ) );
 	OutputVertices[allocation.VertexOffset + localVertex] = output;
 }
