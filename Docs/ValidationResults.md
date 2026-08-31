@@ -4453,3 +4453,147 @@ Record an approved extraordinary change here before adding the new version:
 - Hard stop: if any gate fails, remove the HZB runtime path and retain only the
   result documentation. Do not tune terrain, workload, unrelated rendering, or
   acceptance thresholds after observing the candidate.
+
+### LOAD-RADIUS-LIMIT-001/v1 - Radius-128 configuration contract
+
+- Superseded before execution on 2026-08-30 by `CLIPBOX-LOD-001/v1`. The
+  approved two-level proof fixes gameplay radius at `4` and deliberately removes
+  the general radius knob. This definition remains as immutable history; no run
+  was executed and none of its radius-128 claims apply to the Clipbox slice.
+
+- Definition recorded on 2026-08-30 before changing the runtime validation
+  ceiling. Historical radius-4 and radius-16 workloads remain unchanged.
+- Purpose: verify that the existing single-resolution cubic streamer accepts
+  the inspector's already-advertised `LoadRadius=128` upper bound without
+  changing the default, authored scene, warm-shell policy, generation pipeline,
+  meshing path, or renderer.
+- Production path: `Assets/scenes/basic_example.scene`; s&box `26.08.19`; one
+  local player at chunk `C[0,0,0]`; generator version `5`, seed `1337`;
+  `CellsPerAxis=32`; `CellSize=16`; default and authored `LoadRadius=16`;
+  one render-warm shell; canonical manager configuration and streaming update.
+- Radius-128 contract: inclusive gameplay coordinates `-128..128` on every
+  axis, exactly `257^3 = 16,974,593` desired gameplay chunks; render-warm radius
+  `129`, exactly `259^3 = 17,373,979` desired render coordinates. Cubic growth
+  is intentional baseline behavior and no LOD, filtering, reduced vertical
+  extent, alternate loader, or performance workaround is permitted.
+- Execution:
+  1. Build and hotload the shipping project with the authored radius still 16.
+  2. Through the live production `VoxelManager`, change the runtime radius
+     `16 -> 128`, observe configuration acceptance and the exact desired counts,
+     then restore `128 -> 16`.
+  3. Run the unchanged canonical radius-16 figure-eight once with speed `2500`,
+     X reach `50000`, Y reach `25000`, Z `0`, and one loop, including its
+     unchanged settlement and stationary-window boundaries.
+- Correctness gates: runtime and inspector bounds both read `0..128`; radius 128
+  emits no configuration, overflow, managed, GPU-dispatch, or rendering error;
+  desired counts and inclusive bounds are exact; restoring radius 16 converges
+  to the unchanged `35,937` gameplay chunks; default/authored radius remains 16.
+- Performance gates: the radius-16 figure-eight must remain comparable to the
+  latest accepted result because only validation changes. Radius-128 settlement
+  and frame-rate acceptance are deliberately not required in this contract:
+  it is a `472.3x` gameplay-residency stress input whose purpose is to permit a
+  later measured baseline, not to claim that the legacy no-LOD streamer is
+  practical at that scale. Record radius-128 selection time, peak observed
+  process memory, and queue counts before restoration.
+
+### CLIPBOX-LOD-001/v1 - Fixed two-level Clipbox proof
+
+- Definition recorded on 2026-08-30 before Clipbox behavior changes.
+- Production path: `Assets/scenes/basic_example.scene`; s&box `26.08.19`; one
+  local player; production `VoxelManager` streaming target and existing GPU
+  count/scan/compaction/emit path; main camera `1280x720`; `fps_max=1000`;
+  generator version `5`, seed `1337`; exactly three scratch lanes and at most
+  eight regions per batch.
+- Fixed layout: LOD0 is `32^3` cells at `16` units/cell and `512` units/region,
+  with inclusive fixed gameplay radius `4` (`729` chunks), one hidden warm
+  shell, and active half-open box `[2A-4,2A+4)` (`512` regions). LOD1 is `32^3`
+  cells at `32` units/cell and `1024` units/region, with anchor
+  `floor((viewer+512)/1024)`, persistent half-open cache `[A-8,A+8)` (`4096`
+  regions), and hidden hole `[A-2,A+2)` (`64` regions), leaving `4032` active.
+- Fixed figure-eight: speed `2500`; X reach `50000`; Y reach `25000`; world Z
+  `0`; exactly one loop; unchanged settlement boundary; two render-sequence
+  advances; exact ten-second stationary window; frame capacity `524288`;
+  per-update CPU/GPU sampling; one-second memory sampling; nearest-rank
+  percentiles. Capture exactly two radius-16 single-resolution schema-11
+  baselines after level-aware identity/telemetry lands and before spatial
+  behavior changes, then exactly two Clipbox candidates.
+- Fixed boundary journey: through the production streaming target, visit `+511`,
+  `+513`, `-511`, and `-513` independently on X, Y, and Z, settling after each
+  position and backtracking to origin. Record both anchors/bounds and entering,
+  leaving, activation, and deactivation counts for each move.
+- Correctness gates: cold start has exactly `729` LOD0 gameplay coordinates,
+  `512` active LOD0 regions, `4096` cached LOD1 regions, `4032` active LOD1
+  regions, no LOD1 draw inside the hole, no duplicate level keys, and final
+  zero queues/in-flight lanes. Every axial LOD1 cache move enters and leaves
+  exactly `256` regions; each hole face toggles `16`; each aligned LOD0 box face
+  toggles `128`; negative snapping and backtracking restore exact counts and
+  per-level topology/position digests. Geometry readbacks and ordinary-render
+  SDF evaluations remain exactly zero. Visually require continuous spatial
+  coverage, significantly farther coarse terrain, stable movement/backtracking,
+  and no stale flash; prototype boundary cracks and popping are recorded but do
+  not fail.
+- Responsiveness gates: LOD1 schedule-to-renderable p95 is below `409.6 ms`;
+  queues remain bounded and end at zero; post-loop drain is no worse than
+  `500 ms`.
+- Performance gates: both candidate stationary GPU averages and p95 values beat
+  both baselines by more than the greater of `20%` or the two-baseline spread.
+  Moving CPU/GPU p95 and p99 do not regress beyond the greater of `5%` or
+  `0.25 ms`; process and GPU memory remain bounded; LOD0 responsiveness,
+  coverage, and streaming work remain correct. Candidate repeats produce
+  identical settled per-level counts and level-aware digests.
+- Hard stop: reject the proof without changing radii, batching, allocation,
+  meshing, generator, or acceptance thresholds if a correctness or performance
+  gate fails.
+
+#### Candidate run 1 - incomplete hotload state
+
+- Executor: Codex (Sol), live s&box production figure-eight.
+- Source label: `clipbox-candidate-1`; engine `26.08.19`; fixed parameters were
+  unchanged.
+- The run began at `2026-08-30 20:33:33 EDT` and was stopped after more than
+  six minutes without a terminal result. No JSON record was appended.
+- The fresh console retained hotload migration errors for the removed
+  `VoxelManager.LoadRadius` accessor, so the active component state could not be
+  trusted as the fixed-radius candidate even though compilation had settled.
+- Outcome: **incomplete**. This is not one of the two required clean candidates.
+  A clean play/editor state is required before the next run.
+
+#### Clean candidate 1 - rejected
+
+- Run ID `7dd08f674aae4bf5b47cdc586de513b7`, source label
+  `clipbox-clean-candidate-1`, engine `26.08.19`; fixed scenario parameters were
+  unchanged. The production figure-eight completed in `121.93302 s` and the
+  terminal queues and lanes settled.
+- Correctness: `729` LOD0 gameplay coordinates, `512` active LOD0 coordinates,
+  `4096` cached/resident LOD1 coordinates, `4032` active LOD1 coordinates, zero
+  final pending work, schema `11`, and zero geometry readbacks/ordinary-render
+  SDF evaluations. Final anchor/bounds were `A[0,0,0]`, outer
+  `[-8,-8,-8]..[8,8,8)`, and hole `[-2,-2,-2]..[2,2,2)`. Settled non-empty
+  surfaces were `268` LOD0 and `1300` LOD1. Level digests were LOD0
+  `9DE2CF2E6C8DD619/79C6E1E39E760E62` and LOD1
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`.
+- Responsiveness: combined schedule-to-renderable p50/p95/p99/max was
+  `33.6948/87.5512/113.3693/152.6387 ms`; total queue p95/p99/max was
+  `73/125/126`; post-loop drain was `33.9579 ms`. These pass the locked
+  `409.6 ms` p95 and `500 ms` drain ceilings, though this candidate did not yet
+  split publication latency by level.
+- Moving performance: `901.34143 FPS`; CPU p95/p99 `1.7043/3.0582 ms`; GPU
+  average/p95/p99/max `0.7469685/1.1217594/1.496315/11.987686 ms`.
+  Stationary performance: `939.56055 FPS`; CPU p95/p99 `1.4476/2.4454 ms`;
+  GPU average/p95/p99/max `0.69292134/0.88500977/1.1196136/1.8186569 ms`.
+  Process memory ended at `8,929,480,704` bytes and GPU memory at
+  `1,599,949,750` bytes; both remained bounded during the run.
+- Visual observation at `1280x720`: the detailed inner terrain and visibly much
+  farther coarse terrain rendered continuously; the accepted prototype-level
+  coarse facets/boundary disagreement were visible and no stale flash was
+  observed.
+- Performance decision: the available clean radius-16 schema-10 baseline
+  (`cd093202f0694fed9240cc51ef20915e`) recorded stationary GPU average/p95
+  `0.7573081/0.9624958 ms`. The candidate improved those values by only
+  `8.50%/8.05%`, below the locked requirement to beat both baselines by more
+  than `20%` (before considering spread). One failed comparison is sufficient
+  to make the conjunctive gate impossible; a second candidate cannot change
+  this run's failure.
+- Outcome: **rejected**. Correctness and responsiveness pass, but the fixed GPU
+  improvement gate fails. Per the hard stop, remove the Clipbox runtime path,
+  do not tune any locked parameter, and do not commit or push it.

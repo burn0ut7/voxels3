@@ -151,6 +151,11 @@ parallel generation path.
 - Density samples per chunk: `35,937`
 - Production load radius: `16` chunks in X/Y/Z around the player's current chunk
   (`33x33x33 = 35,937` chunks)
+- Supported load-radius range: `0..128` chunks. The default and authored
+  production scene remain `16`; the upper bound exists for intentionally
+  expensive single-resolution baselines and is not a recommended production
+  configuration. Radius `128` requests an inclusive `257^3 = 16,974,593`
+  gameplay-chunk cube and a `259^3 = 17,373,979` render-warm cube.
 - Background generation concurrency: one serialized worker pipeline
 - Main-thread integration budget: `0.500 ms` per update, independent of chunk
   count

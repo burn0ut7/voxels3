@@ -92,6 +92,10 @@ CS
 					VisibilityAggregateCounters[3] = min( VisibilityAggregateCounters[3], visible );
 					VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
 					VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
+					VisibilityAggregateCounters[10] += VisibilityFrameCounters[5];
+					VisibilityAggregateCounters[11] += VisibilityFrameCounters[6];
+					VisibilityAggregateCounters[12] += VisibilityFrameCounters[7];
+					VisibilityAggregateCounters[13] += VisibilityFrameCounters[8];
 				}
 
 				if ( CaptureSettledDiagnostics != 0 )
@@ -100,6 +104,8 @@ CS
 					VisibilityAggregateCounters[7] = VisibilityFrameCounters[2];
 					VisibilityAggregateCounters[8] = VisibilityFrameCounters[3];
 					VisibilityAggregateCounters[9] = VisibilityFrameCounters[4];
+					VisibilityAggregateCounters[14] = VisibilityFrameCounters[5];
+					VisibilityAggregateCounters[15] = VisibilityFrameCounters[6];
 				}
 			}
 
@@ -118,7 +124,8 @@ CS
 		float3 maximum = maximumAndCellCount.xyz;
 		uint activeCellCount = (uint)round( maximumAndCellCount.w );
 		bool active = minimumAndActive.w > 0.5;
-		bool warm = minimumAndActive.w > 1.5;
+		bool warm = minimumAndActive.w > 1.5 && minimumAndActive.w < 2.5;
+		bool lod1 = minimumAndActive.w > 2.5;
 		bool visible = active && source.IndexCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
@@ -133,10 +140,25 @@ CS
 			{
 				InterlockedAdd( VisibilityFrameCounters[2], 1 );
 			}
-
+			else if ( lod1 )
+			{
+				InterlockedAdd( VisibilityFrameCounters[6], 1 );
+			}
+			else
+			{
+				InterlockedAdd( VisibilityFrameCounters[5], 1 );
+			}
 			if ( visible )
 			{
 				InterlockedAdd( VisibilityFrameCounters[1], 1 );
+				if ( lod1 )
+				{
+					InterlockedAdd( VisibilityFrameCounters[8], 1 );
+				}
+				else if ( !warm )
+				{
+					InterlockedAdd( VisibilityFrameCounters[7], 1 );
+				}
 			}
 		}
 	}

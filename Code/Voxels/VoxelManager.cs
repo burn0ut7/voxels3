@@ -25,8 +25,13 @@ public sealed class VoxelManager : Component
 	private const float MemorySampleIntervalSeconds = 1f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
-	private const int PerformanceResultSchemaVersion = 10;
+	private const int GameplayLoadRadius = 4;
+	private const int PerformanceResultSchemaVersion = 11;
 	private const int RenderWarmShellChunks = 1;
+	private const int Lod0ActiveHalfExtent = 4;
+	private const int Lod1CacheHalfExtent = 8;
+	private const int Lod1HoleHalfExtent = 2;
+	private const float Lod1CellSize = 32f;
 	private const int GenerationBatchSize = 256;
 	private const string PerformanceResultsDirectory = "performance";
 	private const string PerformanceResultsPath = "performance/results-v1.jsonl";
@@ -53,6 +58,13 @@ public sealed class VoxelManager : Component
 	private readonly List<Vector3Int> _renderEnteringBuffer = new();
 	private readonly List<Vector3Int> _renderLeavingBuffer = new();
 	private readonly HashSet<Vector3Int> _coordinateSetBuffer = new();
+	private HashSet<Vector3Int> _lod0RenderActive = new();
+	private HashSet<Vector3Int> _nextLod0RenderActive = new();
+	private readonly Lod1ClipboxState _lod1Clipbox = new();
+	private readonly HashSet<Vector3Int> _nextLod1Cache = new();
+	private readonly HashSet<Vector3Int> _nextLod1Active = new();
+	private readonly List<Vector3Int> _lod1EnteringBuffer = new();
+	private readonly List<Vector3Int> _lod1LeavingBuffer = new();
 	private readonly float[] _performanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceFrameMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
@@ -81,7 +93,6 @@ public sealed class VoxelManager : Component
 	private bool _integratedBeforeWorkerCompleted;
 	private int _appliedCellsPerAxis;
 	private float _appliedCellSize;
-	private int _appliedLoadRadius;
 	private int _appliedWorldSeed;
 	private float _appliedSurfaceBaseHeight;
 	private float _appliedSurfaceFrequency;
@@ -200,8 +211,7 @@ public sealed class VoxelManager : Component
 	[Property, Category( "Chunk Configuration" ), Range( 1f, 128f )]
 	public float CellSize { get; set; } = 16f;
 
-	[Property, Category( "Chunk Configuration" ), Range( 0, 128 )]
-	public int LoadRadius { get; set; } = 16;
+	public const int LoadRadius = GameplayLoadRadius;
 
 	[Property, Category( "Terrain Generation" )]
 	public int WorldSeed { get; set; } = ProceduralTerrainSdf.DefaultWorldSeed;
@@ -408,20 +418,11 @@ public sealed class VoxelManager : Component
 		}
 		else
 		{
-			if ( LoadRadius != _appliedLoadRadius )
+			var targetPosition = ActiveStreamingTarget.WorldPosition;
+			var targetCoordinate = WorldToChunkCoordinate( targetPosition );
+			if ( !_hasStreamingCenter || targetCoordinate != _streamingCenterCoordinate )
 			{
-				_appliedLoadRadius = LoadRadius;
-				var targetPosition = ActiveStreamingTarget.WorldPosition;
-				RebuildDesiredChunks( WorldToChunkCoordinate( targetPosition ), "load radius changed" );
-			}
-			else
-			{
-				var targetPosition = ActiveStreamingTarget.WorldPosition;
-				var targetCoordinate = WorldToChunkCoordinate( targetPosition );
-				if ( !_hasStreamingCenter || targetCoordinate != _streamingCenterCoordinate )
-				{
-					RebuildDesiredChunks( targetCoordinate, "streaming target crossed a chunk boundary" );
-				}
+				RebuildDesiredChunks( targetCoordinate, "streaming target crossed a chunk boundary" );
 			}
 		}
 
@@ -731,9 +732,12 @@ public sealed class VoxelManager : Component
 				Resident = _gpuMesher?.ResidentCount ?? 0,
 				GameplayResident = (_gpuMesher?.ResidentCount ?? 0) - (_gpuMesher?.WarmResidentCount ?? 0),
 				WarmResident = _gpuMesher?.WarmResidentCount ?? 0,
+				Lod0Resident = _gpuMesher?.Lod0ResidentCount ?? 0,
+				Lod1Resident = _gpuMesher?.Lod1ResidentCount ?? 0,
 				Pending = _gpuMesher?.PendingCount ?? 0,
 				GameplayPending = _gpuMesher?.PendingGameplayCount ?? 0,
 				WarmPending = _gpuMesher?.PendingWarmCount ?? 0,
+				Lod1Pending = _gpuMesher?.PendingLod1Count ?? 0,
 				PoolAvailable = _gpuMesher?.PoolCount ?? 0,
 				LogicalCapacityBytes = _gpuMesher?.LogicalCapacityBytes ?? 0,
 				ReservedActiveCellCapacity = _gpuMesher?.ReservedActiveCellCapacity ?? 0,
@@ -779,6 +783,10 @@ public sealed class VoxelManager : Component
 				EmitStageSubmissionMilliseconds = _gpuMesher?.EmitSubmissionMilliseconds ?? 0,
 				TopologyDigest = _gpuMesher?.TopologyDigest ?? string.Empty,
 				PositionDigest = _gpuMesher?.PositionDigest ?? string.Empty,
+				Lod0TopologyDigest = _gpuMesher?.Lod0TopologyDigest ?? string.Empty,
+				Lod0PositionDigest = _gpuMesher?.Lod0PositionDigest ?? string.Empty,
+				Lod1TopologyDigest = _gpuMesher?.Lod1TopologyDigest ?? string.Empty,
+				Lod1PositionDigest = _gpuMesher?.Lod1PositionDigest ?? string.Empty,
 				GpuProfilerPath = meshingGpuProfilerPath,
 				AverageGpuMilliseconds = meshingGpuSmoothedMilliseconds,
 				MaximumGpuMilliseconds = meshingGpuMaximumMilliseconds,
@@ -799,7 +807,28 @@ public sealed class VoxelManager : Component
 			Submission = _lastPerformanceSubmission,
 			Streaming = _lastPerformanceStreaming,
 			Bounds = _lastPerformanceBounds,
-			Profiler = _lastPerformanceProfiler
+			Profiler = _lastPerformanceProfiler,
+			Clipbox = new PerformanceClipboxMetrics
+			{
+				Lod0GameplayRadius = LoadRadius,
+				Lod0GameplayCoordinates = _desiredChunks.Count,
+				Lod0ActiveCoordinates = _lod0RenderActive.Count,
+				Lod1Anchor = ToPerformanceVector( _lod1Clipbox.Anchor ),
+				Lod1OuterMinimum = ToPerformanceVector( _lod1Clipbox.OuterMinimum ),
+				Lod1OuterMaximum = ToPerformanceVector( _lod1Clipbox.OuterMaximum ),
+				Lod1HoleMinimum = ToPerformanceVector( _lod1Clipbox.HoleMinimum ),
+				Lod1HoleMaximum = ToPerformanceVector( _lod1Clipbox.HoleMaximum ),
+				Lod1CachedCoordinates = _lod1Clipbox.DesiredCache.Count,
+				Lod1ActiveCoordinates = _lod1Clipbox.Active.Count,
+				Lod1Pending = _gpuMesher?.PendingLod1Count ?? 0,
+				Lod1Resident = _gpuMesher?.Lod1ResidentCount ?? 0,
+				FullUpdates = _lod1Clipbox.FullUpdates,
+				IncrementalUpdates = _lod1Clipbox.IncrementalUpdates,
+				EnteredRegions = _lod1Clipbox.EnteredRegions,
+				LeftRegions = _lod1Clipbox.LeftRegions,
+				LastEnteredRegions = _lod1Clipbox.LastEnteredRegions,
+				LastLeftRegions = _lod1Clipbox.LastLeftRegions
+			}
 		};
 
 		var json = JsonSerializer.Serialize( result, PerformanceJsonOptions );
@@ -1287,6 +1316,12 @@ public sealed class VoxelManager : Component
 		AverageResidentMeshChunks = visibility.AverageResident,
 		AverageVisibleMeshChunks = visibility.AverageVisible,
 		AverageWarmMeshChunks = visibility.AverageWarm,
+		AverageLod0ResidentMeshChunks = visibility.AverageLod0Resident,
+		AverageLod1ResidentMeshChunks = visibility.AverageLod1Resident,
+		AverageLod0VisibleMeshChunks = visibility.AverageLod0Visible,
+		AverageLod1VisibleMeshChunks = visibility.AverageLod1Visible,
+		SettledLod0SurfaceMeshes = visibility.SettledLod0SurfaceMeshes,
+		SettledLod1SurfaceMeshes = visibility.SettledLod1SurfaceMeshes,
 		MinimumVisibleMeshChunks = visibility.MinimumVisible,
 		MaximumVisibleMeshChunks = visibility.MaximumVisible,
 		AverageNonZeroIndirectDraws = visibility.AverageVisible,
@@ -1294,6 +1329,13 @@ public sealed class VoxelManager : Component
 		CulledDrawPercentage = visibility.CulledPercent,
 		LogicalBufferBytes = visibility.LogicalBufferBytes,
 		ScalarReadbacks = visibility.ScalarReadbacks
+	};
+
+	private static PerformanceVector3Int ToPerformanceVector( Vector3Int value ) => new()
+	{
+		X = value.x,
+		Y = value.y,
+		Z = value.z
 	};
 
 	private static PerformanceMeshingThroughputMetrics CreateThroughputMetrics(
@@ -1560,12 +1602,6 @@ public sealed class VoxelManager : Component
 			return false;
 		}
 
-		if ( LoadRadius < 0 || LoadRadius > 16 )
-		{
-			error = "Load Radius must be between 0 and 16 chunks.";
-			return false;
-		}
-
 		if ( WorldSeed < -16777216 || WorldSeed > 16777216 )
 		{
 			error = "World Seed must be between -16,777,216 and 16,777,216 for exact GPU transport.";
@@ -1617,7 +1653,6 @@ public sealed class VoxelManager : Component
 
 		_appliedCellsPerAxis = CellsPerAxis;
 		_appliedCellSize = CellSize;
-		_appliedLoadRadius = LoadRadius;
 		_appliedWorldSeed = WorldSeed;
 		_appliedSurfaceBaseHeight = SurfaceBaseHeight;
 		_appliedSurfaceFrequency = SurfaceFrequency;
@@ -1634,6 +1669,11 @@ public sealed class VoxelManager : Component
 		_renderDesiredChunks.Clear();
 		_nextRenderDesiredChunks.Clear();
 		_renderPreparedChunks.Clear();
+		_lod0RenderActive.Clear();
+		_nextLod0RenderActive.Clear();
+		_lod1Clipbox.Clear();
+		_nextLod1Cache.Clear();
+		_nextLod1Active.Clear();
 		_pendingChunks.Clear();
 		_completedChunks.Clear();
 		_pendingWarmChunks.Clear();
@@ -1652,6 +1692,16 @@ public sealed class VoxelManager : Component
 			(int)MathF.Floor( worldPosition.x / chunkWorldSize ),
 			(int)MathF.Floor( worldPosition.y / chunkWorldSize ),
 			(int)MathF.Floor( worldPosition.z / chunkWorldSize ) );
+	}
+
+	private static Vector3Int WorldToLod1Anchor( Vector3 worldPosition )
+	{
+		const float regionSize = 32f * Lod1CellSize;
+		const float halfRegion = regionSize * 0.5f;
+		return new Vector3Int(
+			(int)MathF.Floor( (worldPosition.x + halfRegion) / regionSize ),
+			(int)MathF.Floor( (worldPosition.y + halfRegion) / regionSize ),
+			(int)MathF.Floor( (worldPosition.z + halfRegion) / regionSize ) );
 	}
 
 	private void RebuildDesiredChunks( Vector3Int center, string reason )
@@ -1731,11 +1781,11 @@ public sealed class VoxelManager : Component
 		{
 			if ( (incremental ? _renderDesiredChunks : _nextRenderDesiredChunks).Contains( coordinate ) )
 			{
-				_gpuMesher.SetResidency( coordinate, GpuMeshResidency.Warm );
+				_gpuMesher.SetResidency( new GpuMeshRegionKey( GpuMeshLevel.Lod0, coordinate ), GpuMeshResidency.Warm );
 			}
 			else
 			{
-				_gpuMesher.Remove( coordinate );
+				_gpuMesher.Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod0, coordinate ) );
 				_renderPreparedChunks.Remove( coordinate );
 			}
 			if ( _loadedChunks.Remove( coordinate ) )
@@ -1762,7 +1812,7 @@ public sealed class VoxelManager : Component
 
 		foreach ( var coordinate in _coordinateBuffer )
 		{
-			_gpuMesher.Remove( coordinate );
+			_gpuMesher.Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod0, coordinate ) );
 			_renderPreparedChunks.Remove( coordinate );
 		}
 
@@ -1772,6 +1822,7 @@ public sealed class VoxelManager : Component
 			_renderDesiredChunks = _nextRenderDesiredChunks;
 			_nextRenderDesiredChunks = previousRenderDesired;
 		}
+		UpdateClipboxPlacement( ActiveStreamingTarget.WorldPosition );
 		var drawCommit = _gpuMesher.CommitDrawCommands();
 
 		var prioritizationStart = Stopwatch.GetTimestamp();
@@ -1946,6 +1997,109 @@ public sealed class VoxelManager : Component
 				$"generationBatchSize={GenerationBatchSize}" );
 		}
 	}
+
+	private void UpdateClipboxPlacement( Vector3 viewerPosition )
+	{
+		var anchor = WorldToLod1Anchor( viewerPosition );
+		if ( _lod1Clipbox.HasAnchor && anchor == _lod1Clipbox.Anchor ) return;
+
+		_nextLod0RenderActive.Clear();
+		AddHalfOpenBox( _nextLod0RenderActive,
+			anchor * 2 - new Vector3Int( Lod0ActiveHalfExtent ),
+			anchor * 2 + new Vector3Int( Lod0ActiveHalfExtent ) );
+		foreach ( var coordinate in _lod0RenderActive )
+		{
+			if ( !_nextLod0RenderActive.Contains( coordinate ) )
+				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod0, coordinate ), false );
+		}
+		foreach ( var coordinate in _nextLod0RenderActive )
+		{
+			if ( !_lod0RenderActive.Contains( coordinate ) )
+				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod0, coordinate ), true );
+		}
+		SwapSets( ref _lod0RenderActive, ref _nextLod0RenderActive );
+
+		_nextLod1Cache.Clear();
+		_nextLod1Active.Clear();
+		var outerMinimum = anchor - new Vector3Int( Lod1CacheHalfExtent );
+		var outerMaximum = anchor + new Vector3Int( Lod1CacheHalfExtent );
+		var holeMinimum = anchor - new Vector3Int( Lod1HoleHalfExtent );
+		var holeMaximum = anchor + new Vector3Int( Lod1HoleHalfExtent );
+		AddHalfOpenBox( _nextLod1Cache, outerMinimum, outerMaximum );
+		foreach ( var coordinate in _nextLod1Cache )
+		{
+			if ( !IsInsideHalfOpenBox( coordinate, holeMinimum, holeMaximum ) )
+				_nextLod1Active.Add( coordinate );
+		}
+
+		_lod1EnteringBuffer.Clear();
+		_lod1LeavingBuffer.Clear();
+		foreach ( var coordinate in _lod1Clipbox.DesiredCache )
+		{
+			if ( !_nextLod1Cache.Contains( coordinate ) ) _lod1LeavingBuffer.Add( coordinate );
+		}
+		foreach ( var coordinate in _nextLod1Cache )
+		{
+			if ( !_lod1Clipbox.DesiredCache.Contains( coordinate ) ) _lod1EnteringBuffer.Add( coordinate );
+		}
+
+		foreach ( var coordinate in _lod1Clipbox.Active )
+		{
+			if ( !_nextLod1Active.Contains( coordinate ) )
+				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod1, coordinate ), false );
+		}
+		foreach ( var coordinate in _nextLod1Active )
+		{
+			if ( !_lod1Clipbox.Active.Contains( coordinate ) )
+				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod1, coordinate ), true );
+		}
+		foreach ( var coordinate in _lod1LeavingBuffer )
+			_gpuMesher.Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod1, coordinate ) );
+
+		SortNearestFirst( _lod1EnteringBuffer, anchor );
+		foreach ( var coordinate in _lod1EnteringBuffer )
+		{
+			var descriptor = new GpuSdfDescriptor(
+				new GpuMeshRegionKey( GpuMeshLevel.Lod1, coordinate ),
+				CellsPerAxis,
+				Lod1CellSize,
+				CurrentTerrainSettings,
+				ProceduralTerrainSdf.CurrentVersion,
+				_terrainContentRevision );
+			_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, GpuMeshResidency.Lod1 );
+		}
+
+		_lod1Clipbox.RecordUpdate(
+			anchor, outerMinimum, outerMaximum, holeMinimum, holeMaximum,
+			_lod1EnteringBuffer.Count, _lod1LeavingBuffer.Count,
+			_lod1Clipbox.HasAnchor && IsAdjacent( _lod1Clipbox.Anchor, anchor ) );
+		_lod1Clipbox.DesiredCache.Clear();
+		_lod1Clipbox.DesiredCache.UnionWith( _nextLod1Cache );
+		_lod1Clipbox.Active.Clear();
+		_lod1Clipbox.Active.UnionWith( _nextLod1Active );
+	}
+
+	private static bool IsAdjacent( Vector3Int first, Vector3Int second )
+	{
+		var delta = second - first;
+		return Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1;
+	}
+
+	private static bool IsInsideHalfOpenBox( Vector3Int coordinate, Vector3Int minimum, Vector3Int maximum ) =>
+		coordinate.x >= minimum.x && coordinate.x < maximum.x &&
+		coordinate.y >= minimum.y && coordinate.y < maximum.y &&
+		coordinate.z >= minimum.z && coordinate.z < maximum.z;
+
+	private static void AddHalfOpenBox( HashSet<Vector3Int> coordinates, Vector3Int minimum, Vector3Int maximum )
+	{
+		for ( var z = minimum.z; z < maximum.z; z++ )
+		for ( var y = minimum.y; y < maximum.y; y++ )
+		for ( var x = minimum.x; x < maximum.x; x++ )
+			coordinates.Add( new Vector3Int( x, y, z ) );
+	}
+
+	private static void SwapSets( ref HashSet<Vector3Int> first, ref HashSet<Vector3Int> second ) =>
+		(first, second) = (second, first);
 
 	private static int GetCubeCoordinateCount( int radius )
 	{
@@ -2401,6 +2555,9 @@ public sealed class VoxelManager : Component
 					_terrainContentRevision,
 					_playerFigureEightRouteDistance,
 					GpuMeshResidency.Gameplay );
+				_gpuMesher.SetRenderActive(
+					new GpuMeshRegionKey( GpuMeshLevel.Lod0, chunk.Coordinate ),
+					_lod0RenderActive.Contains( chunk.Coordinate ) );
 				integratedCount++;
 				_generatedThisStream++;
 
@@ -2459,6 +2616,9 @@ public sealed class VoxelManager : Component
 						_terrainContentRevision,
 						_playerFigureEightRouteDistance,
 						residency );
+					_gpuMesher.SetRenderActive(
+						new GpuMeshRegionKey( GpuMeshLevel.Lod0, result.Coordinate ),
+						residency == GpuMeshResidency.Gameplay && _lod0RenderActive.Contains( result.Coordinate ) );
 				}
 				processedCount++;
 			}
@@ -2598,3 +2758,56 @@ internal readonly record struct WarmChunkResult(
 	ChunkDensityClassification Classification,
 	VoxelChunk Chunk,
 	float BoundsMilliseconds );
+
+internal sealed class Lod1ClipboxState
+{
+	public bool HasAnchor { get; private set; }
+	public Vector3Int Anchor { get; private set; }
+	public Vector3Int OuterMinimum { get; private set; }
+	public Vector3Int OuterMaximum { get; private set; }
+	public Vector3Int HoleMinimum { get; private set; }
+	public Vector3Int HoleMaximum { get; private set; }
+	public HashSet<Vector3Int> DesiredCache { get; } = new();
+	public HashSet<Vector3Int> Active { get; } = new();
+	public int FullUpdates { get; private set; }
+	public int IncrementalUpdates { get; private set; }
+	public long EnteredRegions { get; private set; }
+	public long LeftRegions { get; private set; }
+	public int LastEnteredRegions { get; private set; }
+	public int LastLeftRegions { get; private set; }
+
+	public void RecordUpdate( Vector3Int anchor, Vector3Int outerMinimum, Vector3Int outerMaximum,
+		Vector3Int holeMinimum, Vector3Int holeMaximum, int entered, int left, bool incremental )
+	{
+		HasAnchor = true;
+		Anchor = anchor;
+		OuterMinimum = outerMinimum;
+		OuterMaximum = outerMaximum;
+		HoleMinimum = holeMinimum;
+		HoleMaximum = holeMaximum;
+		LastEnteredRegions = entered;
+		LastLeftRegions = left;
+		EnteredRegions += entered;
+		LeftRegions += left;
+		if ( incremental ) IncrementalUpdates++;
+		else FullUpdates++;
+	}
+
+	public void Clear()
+	{
+		HasAnchor = false;
+		Anchor = default;
+		OuterMinimum = default;
+		OuterMaximum = default;
+		HoleMinimum = default;
+		HoleMaximum = default;
+		DesiredCache.Clear();
+		Active.Clear();
+		FullUpdates = 0;
+		IncrementalUpdates = 0;
+		EnteredRegions = 0;
+		LeftRegions = 0;
+		LastEnteredRegions = 0;
+		LastLeftRegions = 0;
+	}
+}
