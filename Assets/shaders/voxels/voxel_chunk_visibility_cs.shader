@@ -96,6 +96,8 @@ CS
 					VisibilityAggregateCounters[11] += VisibilityFrameCounters[6];
 					VisibilityAggregateCounters[12] += VisibilityFrameCounters[7];
 					VisibilityAggregateCounters[13] += VisibilityFrameCounters[8];
+					VisibilityAggregateCounters[16] += VisibilityFrameCounters[9];
+					VisibilityAggregateCounters[17] += VisibilityFrameCounters[10];
 				}
 
 				if ( CaptureSettledDiagnostics != 0 )
@@ -106,6 +108,7 @@ CS
 					VisibilityAggregateCounters[9] = VisibilityFrameCounters[4];
 					VisibilityAggregateCounters[14] = VisibilityFrameCounters[5];
 					VisibilityAggregateCounters[15] = VisibilityFrameCounters[6];
+					VisibilityAggregateCounters[18] = VisibilityFrameCounters[9];
 				}
 			}
 
@@ -126,7 +129,8 @@ CS
 		bool active = minimumAndActive.w > 0.5;
 		bool warm = minimumAndActive.w > 1.5 && minimumAndActive.w < 2.5;
 		bool lod1 = minimumAndActive.w > 2.5 && minimumAndActive.w < 3.5;
-		bool transition = minimumAndActive.w > 3.5;
+		bool transition = minimumAndActive.w > 3.5 && minimumAndActive.w < 4.5;
+		bool lod2 = minimumAndActive.w > 4.5;
 		bool visible = active && source.IndexCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
@@ -145,6 +149,10 @@ CS
 			{
 				InterlockedAdd( VisibilityFrameCounters[6], 1 );
 			}
+			else if ( lod2 )
+			{
+				InterlockedAdd( VisibilityFrameCounters[9], 1 );
+			}
 			else if ( !transition )
 			{
 				InterlockedAdd( VisibilityFrameCounters[5], 1 );
@@ -155,6 +163,10 @@ CS
 				if ( lod1 )
 				{
 					InterlockedAdd( VisibilityFrameCounters[8], 1 );
+				}
+				else if ( lod2 )
+				{
+					InterlockedAdd( VisibilityFrameCounters[10], 1 );
 				}
 				else if ( !warm && !transition )
 				{

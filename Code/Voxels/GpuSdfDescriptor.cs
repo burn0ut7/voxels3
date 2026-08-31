@@ -1,7 +1,8 @@
 internal enum GpuMeshLevel
 {
 	Lod0,
-	Lod1
+	Lod1,
+	Lod2
 }
 
 internal readonly record struct GpuMeshRegionKey( GpuMeshLevel Level, Vector3Int Coordinate );

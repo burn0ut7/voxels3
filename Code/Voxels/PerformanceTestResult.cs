@@ -19,6 +19,20 @@ internal sealed class PerformanceTestResult
 	public PerformanceProfilerMetrics Profiler { get; init; }
 	public PerformanceClipboxMetrics Clipbox { get; init; }
 	public PerformanceTransitionMetrics Transitions { get; init; }
+	public PerformanceLod2Metrics Lod2 { get; init; }
+}
+
+internal sealed class PerformanceLod2Metrics
+{
+	public long Scheduled { get; init; }
+	public long Published { get; init; }
+	public long Cancelled { get; init; }
+	public long Superseded { get; init; }
+	public long OpportunisticServices { get; init; }
+	public long ForcedServices { get; init; }
+	public float MaximumEligibleServiceGapMilliseconds { get; init; }
+	public PerformanceQueueDepthMetrics QueueDepth { get; init; }
+	public PerformanceLatencyMetrics ScheduleToRenderable { get; init; }
 }
 
 internal sealed class PerformanceTransitionMetrics
@@ -99,6 +113,26 @@ internal sealed class PerformanceClipboxMetrics
 	public long LeftRegions { get; init; }
 	public int LastEnteredRegions { get; init; }
 	public int LastLeftRegions { get; init; }
+	public PerformanceVector3Int Lod2Anchor { get; init; }
+	public PerformanceVector3Int Lod2OuterMinimum { get; init; }
+	public PerformanceVector3Int Lod2OuterMaximum { get; init; }
+	public PerformanceVector3Int Lod2NearCoverageMinimum { get; init; }
+	public PerformanceVector3Int Lod2NearCoverageMaximum { get; init; }
+	public int Lod2NominalHoleHalfExtent { get; init; }
+	public int Lod2CachedCoordinates { get; init; }
+	public int Lod2ActiveCoordinates { get; init; }
+	public int Lod2Pending { get; init; }
+	public int Lod2Resident { get; init; }
+	public int Lod2FullUpdates { get; init; }
+	public int Lod2IncrementalUpdates { get; init; }
+	public long Lod2EnteredRegions { get; init; }
+	public long Lod2LeftRegions { get; init; }
+	public long Lod2ActivatedRegions { get; init; }
+	public long Lod2DeactivatedRegions { get; init; }
+	public int Lod2LastEnteredRegions { get; init; }
+	public int Lod2LastLeftRegions { get; init; }
+	public int Lod2LastActivatedRegions { get; init; }
+	public int Lod2LastDeactivatedRegions { get; init; }
 }
 
 internal sealed class PerformanceBoundsMetrics
@@ -257,10 +291,13 @@ internal sealed class PerformanceMeshingMetrics
 	public int WarmResident { get; init; }
 	public int Lod0Resident { get; init; }
 	public int Lod1Resident { get; init; }
+	public int Lod2Resident { get; init; }
 	public int Pending { get; init; }
+	public int AllPending { get; init; }
 	public int GameplayPending { get; init; }
 	public int WarmPending { get; init; }
 	public int Lod1Pending { get; init; }
+	public int Lod2Pending { get; init; }
 	public int PoolAvailable { get; init; }
 	public long LogicalCapacityBytes { get; init; }
 	public long ReservedActiveCellCapacity { get; init; }
@@ -291,6 +328,7 @@ internal sealed class PerformanceMeshingMetrics
 	public int LargestFreeIndexRange { get; init; }
 	public float FragmentationPercent { get; init; }
 	public long TransientScratchBytes { get; init; }
+	public long Lod2TransientScratchBytes { get; init; }
 	public long AllocationCountReadbacks { get; init; }
 	public long AllocationCountReadbackBytes { get; init; }
 	public double AllocationCountReadbackMilliseconds { get; init; }
@@ -302,6 +340,8 @@ internal sealed class PerformanceMeshingMetrics
 	public string Lod0PositionDigest { get; init; }
 	public string Lod1TopologyDigest { get; init; }
 	public string Lod1PositionDigest { get; init; }
+	public string Lod2TopologyDigest { get; init; }
+	public string Lod2PositionDigest { get; init; }
 	public string GpuProfilerPath { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
 	public float MaximumGpuMilliseconds { get; init; }
@@ -382,10 +422,13 @@ internal sealed class PerformanceVisibilityMetrics
 	public float AverageWarmMeshChunks { get; init; }
 	public float AverageLod0ResidentMeshChunks { get; init; }
 	public float AverageLod1ResidentMeshChunks { get; init; }
+	public float AverageLod2ResidentMeshChunks { get; init; }
 	public float AverageLod0VisibleMeshChunks { get; init; }
 	public float AverageLod1VisibleMeshChunks { get; init; }
+	public float AverageLod2VisibleMeshChunks { get; init; }
 	public uint SettledLod0SurfaceMeshes { get; init; }
 	public uint SettledLod1SurfaceMeshes { get; init; }
+	public uint SettledLod2SurfaceMeshes { get; init; }
 	public uint MinimumVisibleMeshChunks { get; init; }
 	public uint MaximumVisibleMeshChunks { get; init; }
 	public float AverageNonZeroIndirectDraws { get; init; }

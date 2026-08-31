@@ -5180,3 +5180,242 @@ Record an approved extraordinary change here before adding the new version:
   scenario version that changes only the axial expected counts to
   `48/48/48`; route, implementation, workload, thresholds, and all other gates
   remain unchanged.
+
+### CLIPBOX-LOD2-001/v1 - Fixed regular LOD2 proof
+
+- Definition recorded on 2026-08-31 before the untouched `5ffcc63` baseline and
+  before any LOD2 runtime change. The source baseline is commit `5ffcc63`; the
+  existing authored `Assets/scenes/basic_example.scene` state must remain byte-for-byte
+  identical between baseline and candidate and is not part of this change.
+- Production path and moving workload remain those accepted by
+  `CLIPBOX-TRANSITION-001/v1`: s&box `26.08.19`; one local player; main camera
+  `1280x720`; `fps_max=1000`; generator version `5`, seed `1337`; speed `2500`;
+  X reach `50000`; Y reach `25000`; world Z `0`; exactly one loop; the existing
+  foreground settlement boundary; two render-sequence advances; one exact
+  ten-second stationary window; frame capacity `524288`; per-update CPU/GPU
+  sampling; one-second memory sampling; nearest-rank percentiles.
+- Fixed placement: LOD0 remains `32^3` cells at `16` units/cell with gameplay
+  radius `4` and active half-extent `4`. LOD1 remains `32^3` at `32` units/cell,
+  cache half-extent `8`, and hole half-extent `2`. LOD2 is `32^3` at `64`
+  units/cell, independently snapped to its `2048`-unit world grid, with cache
+  half-extent `8` and nominal hole half-extent `4`. Its desired cache contains
+  exactly `4096` coordinates and reaches `16384` units from its snapped center.
+- LOD2 active exclusion uses whole regular regions only. An LOD2 region is
+  hidden only when its complete world AABB is contained by the current LOD1
+  outer coverage box, whose center is filled by unchanged LOD0. Partially
+  overlapping regions remain visible to avoid holes. Aligned centers therefore
+  exclude exactly `512` regions and leave `3584` active; offset centers have a
+  smaller contained exclusion. The partial overlap and unclosed LOD1/LOD2 seam
+  are accepted limitations, not transition acceptance evidence.
+- Scheduling is fixed to one isolated LOD2 regular scratch lane and unchanged
+  batches of at most eight regions. Existing Gameplay, LOD1, Warm, and
+  transition work runs first. LOD2 advances opportunistically when that work
+  submits nothing; after `250 ms` continuously eligible without service, one
+  supplemental LOD2 phase may run after foreground work. LOD2 never participates
+  in foreground settlement or a cross-level publication barrier.
+- Boundary journey: retain every existing `+/-511` and `+/-513` LOD1 checkpoint.
+  Additionally visit `+/-1023`, `+/-1025`, `+/-1535`, and `+/-1537`
+  independently on X, Y, and Z through the production streaming target,
+  settling after each checkpoint and backtracking to origin. Record both anchors,
+  world bounds, cache/active counts, entering/leaving counts, activation changes,
+  residents, pending work, and per-level digests.
+- Correctness gates: LOD0 remains exactly `729/512` gameplay/active, LOD1 remains
+  `4096/4032` cached/active, transitions remain exactly `96` desired/ready with
+  all accepted audit counters zero, and their accepted topology/position digests
+  do not change. LOD2 remains exactly `4096` cached; aligned origin is `3584`
+  active; a one-anchor axial LOD2 cache move enters and leaves exactly `256`;
+  LOD1-only movement changes only LOD2 activation; negative snapping and
+  backtracking restore exact counts and LOD2 digests. Final queues and lanes are
+  zero with no stale publication, geometry readback, or ordinary-render SDF
+  evaluation.
+- Responsiveness gates: regular LOD1 and transition schedule p95 remain below
+  `409.6 ms`; foreground post-loop drain remains at most `500 ms`; LOD2
+  schedule-to-renderable p95 is below `4096 ms`; continuously eligible LOD2 work
+  has maximum observed service gap at most `300 ms`; and LOD2 pending work is
+  zero by the end of the fixed stationary window.
+- Performance gates: capture one clean `5ffcc63` baseline before runtime edits
+  and compare one clean candidate with identical scene, camera, hardware, driver,
+  graphics, and workload. Moving and stationary CPU/GPU tails may not regress by
+  more than the greater of `5%` or `0.25 ms`. LOD0/LOD1 scheduling, streaming,
+  transitions, and digests remain stable. Process/GPU memory, arena count,
+  queues, allocation, and repeated-backtrack residency must settle without
+  progressive growth.
+- Visual and clean-start gates: verify substantially farther coarse coverage,
+  offset-boundary coverage without holes, no stale flash or false-negative
+  culling, and record the accepted overlap/seam limitation. Compile the changed
+  visibility shader live, restart the complete editor process, confirm the crash
+  marker did not advance, and find no fresh parser, shader-load, compute,
+  dispatch, draw-command, or managed-exception error.
+
+#### Untouched `5ffcc63` near-field baseline
+
+- Date: 2026-08-31. Executor: Codex (Sol) through the production
+  `run_performance_test` tool. Run ID `b5f4179d76dd4d3ea950f4288ad278b4`,
+  source label `5ffcc63-lod2-baseline`, schema `13`; every locked parameter above
+  was unchanged. The active authored scene state was preserved for the candidate.
+- Duration was `121.93514 s`. Moving CPU p95/p99 was
+  `2.5648/3.4865 ms`; moving GPU average/p95/p99/max was
+  `0.6374323/1.3494492/2.6302338/8.13508 ms`. Stationary CPU p95/p99 was
+  `2.3331/3.3114 ms`; stationary GPU average/p95/p99/max was
+  `0.56367797/0.8735657/2.0537376/3.4787655 ms`.
+- Regular schedule-to-renderable p50/p95/p99/max was
+  `41.4438/113.7328/146.9164/173.3859 ms`; foreground drain was `40.1495 ms`;
+  transition p95 was `193.6142 ms`.
+- Settled regular state contained `4806` residents: `710` LOD0 and `4096` LOD1,
+  with eight arenas and `96` ready transitions. LOD0 topology/position digest was
+  `9DE2CF2E6C8DD619/79C6E1E39E760E62`; LOD1 was
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`; transitions were
+  `50A79D6478E7B1BE/BDF8567ED994AFCE`.
+- Process memory start/end/peak was
+  `1747742720/1618272256/1772535808` bytes. GPU memory was constant at
+  `1488328015` bytes. Geometry readbacks and ordinary-render SDF evaluations
+  were zero. Fresh error-level console output was empty.
+- Outcome: **accepted as the required pre-change baseline**. It establishes the
+  exact near-field correctness and performance comparison for the LOD2 candidate.
+
+#### Schema-14 candidate `833bec3493124b7eb1cb624dd8ed1846`
+
+- Date: 2026-08-31. Source label `lod2-candidate-working-tree`; schema `14`;
+  outcome `completed`. The production `run_performance_test` path used every
+  locked `CLIPBOX-LOD2-001/v1` parameter unchanged. Runtime/editor compilation
+  completed with zero errors and warnings before play. The result was appended
+  to `performance/results-v1.jsonl` after `121.9` seconds of moving, foreground
+  drain, render-boundary, and stationary measurement.
+- Final placement was LOD0 `729/512` gameplay/active, LOD1 `4096/4032`
+  cached/active, and LOD2 `4096/3584` cached/active. LOD2 anchor was `[0,0,0]`,
+  outer bounds were `[-8,-8,-8]..[8,8,8]`, near-coverage bounds were
+  `[-8,-8,-8]..[8,8,8]`, nominal hole half-extent was `4`, and final pending
+  work was zero. LOD0/LOD1/LOD2 residents were `710/4096/4096`; all regular
+  pending work was zero.
+- LOD0 topology/position digest remained exactly
+  `9DE2CF2E6C8DD619/79C6E1E39E760E62`; LOD1 remained exactly
+  `97D4F8ABEC98BA72/38BDCEF3C88127E6`. LOD2 settled to
+  `081C4C044EB32D11/CB9BAA33014E72B8`. Transitions remained `96` desired and
+  ready with topology/position digest
+  `50A79D6478E7B1BE/BDF8567ED994AFCE`; fine, coarse, lateral, invalid-table,
+  and stale-publication counts were all zero. Geometry readbacks and
+  ordinary-render SDF evaluations remained zero.
+- LOD2 scheduled/published/cancelled/superseded counts were
+  `49072/48726/346/0`. Schedule-to-renderable p50/p95/p99/max was
+  `112.2029/236.1555/341.9747/499.4369 ms`, passing the `4096 ms` p95 gate.
+  Queue depth average/p50/p95/p99/max was `47.612743/0/256/400/496`.
+  Opportunistic/forced service counts were `12192/0`; the maximum continuously
+  eligible service gap was `177.3831 ms`, passing the `300 ms` gate without a
+  forced phase being required by this run. LOD2 had zero pending work at the end
+  of the stationary window.
+- Foreground schedule-to-renderable p50/p95/p99/max was
+  `30.8039/80.8059/107.8511/134.0205 ms`; foreground post-loop drain was
+  `28.0285 ms`. Transition p95 was `143.1058 ms`. These pass the respective
+  `409.6/500/409.6 ms` gates and preserve the accepted near-field response.
+- Moving CPU p95/p99 was `1.2411/2.1999 ms`; moving GPU p95/p99 was
+  `1.1329651/1.7092228 ms`. Stationary CPU p95/p99 was
+  `1.0278/1.8877 ms`; stationary GPU p95/p99 was
+  `0.9381771/1.409769 ms`. Against the clean baseline, every tail delta passed
+  its `max(5%, 0.25 ms)` tolerance; the only positive delta was stationary GPU
+  p95 at `+0.0646114 ms`.
+- Process memory start/end/peak was
+  `4120371200/4139835392/4139626496` bytes. GPU memory was constant at
+  `1799760780` bytes. Thirteen shared arenas, zero pending work, and zero pool
+  allocations remained at capture; `52836` released ranges were reused. The
+  LOD2 scratch lane accounted for `11436672` transient bytes in addition to the
+  unchanged `34310016` regular scratch bytes. The fixed run demonstrates
+  bounded within-run memory and queue convergence. The final repeat below
+  independently checks progressive-growth behavior.
+- The visibility shader compiled through the live asset pipeline at
+  `2026-08-31 16:27:00 -04:00`; its compiled artifact updated one second later.
+  After the final scheduler change, a clean editor process (PID `40060`, start
+  `16:49:04 -04:00`) compiled both project assemblies cleanly and completed the
+  candidate with an empty error-level console. The existing crash marker reads
+  `2026-08-31T20:47:12.577285Z`, predating that final process. During diagnosis,
+  two earlier clean processes reproduced a native failure when a new full LOD2
+  count submission was stacked after a foreground count submission. The final
+  scheduler starts LOD2 count batches only on foreground-idle ticks; its 250 ms
+  supplemental path may advance an already-started count phase. No crash marker
+  advance occurred during the final clean run.
+- A read-only `1280x720` main-camera capture showed settled coarse terrain
+  continuously rendered to the visible horizon with no observed hole, stale
+  flash, or false-negative culling in that view. Its coarse patch boundaries and
+  the unclosed LOD1-to-LOD2 seam remain accepted limitations. The single view
+  does not independently prove exact doubled distance or every offset boundary.
+- The figure-eight exercised repeated positive/negative X/Y snapping and
+  backtracking and restored all final anchors, counts, and per-level digests.
+  The exact requested `+/-1023`, `+/-1025`, `+/-1535`, and `+/-1537` axial
+  checkpoints, especially Z, were not separately driven because the production
+  project exposes no deterministic coordinate-movement entry point and project
+  rules forbid adding a test-only path. Whole-AABB containment and axial cache
+  differences are implemented directly, but those exact checkpoint readbacks
+  remain unverified in-world.
+- Outcome: **the bounded acceptance question passes with stated coverage**. One
+  fixed independent LOD2 level doubled nominal coarse reach while measured
+  LOD0, LOD1, transition correctness, responsiveness, publication, allocation,
+  visibility, and scheduling remained bounded. Exact fixed axial checkpoint
+  readbacks and repeated-run growth are the remaining unverified gates; the
+  LOD1-to-LOD2 seam and partial overlap are intentionally accepted in this slice.
+
+#### Final clean repeat `305dba6cbf024e4ca80747350bd5cf85`
+
+- Date: 2026-08-31. Source label `lod2-candidate-final-repeat`; schema `14`;
+  outcome `completed`. This is the final source state after the immutable
+  authoritative-gameplay-radius input was wired into streaming calculations and
+  reset now recreates the isolated LOD2 scratch lane. A fresh editor process
+  (PID `480`, start `17:03:24 -04:00`) compiled with zero diagnostics, started
+  `basic_example`, and ran every locked parameter unchanged.
+- Final placement and residency reproduced exactly: LOD0 `729/512`, LOD1
+  `4096/4032/4096`, LOD2 `4096/3584/4096`, all pending counts zero, LOD2 anchor
+  `[0,0,0]`, and both LOD2 outer and near-coverage bounds
+  `[-8,-8,-8]..[8,8,8]`. LOD0, LOD1, LOD2, and transition topology/position
+  digests were byte-for-byte identical to the first completed candidate. All
+  transition fine/coarse/lateral mismatches were zero; transition p95 was
+  `143.6557 ms`.
+- Foreground schedule p50/p95/p99/max was
+  `30.9659/79.9107/108.026/131.6836 ms`; drain was `29.9601 ms`. LOD2 p50/p95/
+  p99/max was `112.3721/236.8397/409.7536/508.1634 ms`; maximum eligible service
+  gap was `177.3518 ms`; opportunistic/forced services were `12192/0`; final
+  LOD2 pending work was zero. All latency and responsiveness gates passed again.
+- Moving CPU p95/p99 was `1.2599/2.1794 ms`; moving GPU p95/p99 was
+  `1.1572838/1.6522408 ms`. Stationary CPU p95/p99 was
+  `1.0458/1.9243 ms`; stationary GPU p95/p99 was
+  `0.9171963/1.3420582 ms`. Every baseline tail comparison again passed the
+  `max(5%, 0.25 ms)` tolerance.
+- Process memory start/end/peak was
+  `4022378496/4062330880/4062740480` bytes; GPU memory stayed constant at
+  `1858655796` bytes. Arena count remained exactly `13`, resident count `8902`,
+  logical geometry capacity `151546176` bytes, and fragmentation `4.4404044%`.
+  The repeat peak was lower than the first candidate peak, with no arena,
+  residency, queue, or allocation growth. Geometry readbacks and ordinary-render
+  SDF evaluations remained zero.
+- The final error-level console was empty. The crash marker remained
+  `2026-08-31T20:47:12.577285Z`, about sixteen minutes before the final process
+  start, and did not advance. A fresh read-only `1280x720` main-camera image again
+  showed settled rendered terrain without an observed hole, stale flash, or
+  false-negative culling in that view. Play was stopped cleanly after capture;
+  shutdown emitted no error-level console entry.
+- Outcome: **repeat passed**. Exact final counts/digests, zero queues, latency,
+  frame tails, arenas, and memory remained bounded across clean candidate runs.
+
+#### Development validation attempts before the accepted candidate
+
+- A hotload-only smoke invocation failed before movement because the surviving
+  component still owned the old 16-element visibility aggregate buffer while
+  the new code wrote 20 elements. Exact locked movement parameters were supplied,
+  but no run began and no measurements were produced. This prompted the required
+  clean editor restart.
+- Two clean play startups with the first scheduler revision advanced the crash
+  marker at `20:41:24Z` and `20:43:22Z`. A diagnostic build with LOD2 placement
+  disabled started cleanly, isolating the failure from shared resource creation.
+  A second diagnostic build with the LOD2 anti-starvation delay temporarily set
+  to 60 seconds settled LOD2 cleanly; a locked-parameter performance invocation
+  was immediately stopped without saving a result. These diagnostics isolated
+  the native failure to stacking a new full LOD2 count submission behind a
+  foreground count submission.
+- A one-region stacked submission reproduced the same native failure at the
+  final pre-fix crash-marker time `20:47:12.577285Z`, showing that submission
+  overlap, not occupancy, was causal. The accepted scheduler therefore begins
+  LOD2 count work only on foreground-idle ticks and permits the 250 ms
+  supplemental path to advance only an already-started count phase.
+- One final-repeat attempt using every locked parameter was stopped before a
+  result was saved when review found that same-dimension configuration reset
+  needed to recreate the isolated LOD2 scratch state. The reset fix was applied,
+  the editor was restarted, and the completed final repeat above supersedes that
+  aborted attempt. No aborted or diagnostic attempt is presented as performance
+  acceptance evidence.

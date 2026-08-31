@@ -2,12 +2,14 @@
 
 ## Production Slice
 
-LOD0 and LOD1 regular-cell Transvoxel meshes remain the terrain render levels. The authoritative
+LOD0, LOD1, and one fixed regular LOD2 Transvoxel level are the terrain render levels. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; indexed meshes are
 derived, GPU-resident, revisioned, disposable caches. Generator version 5 owns
 the exterior surface, noodle tunnels, and cheese caverns. A dedicated transition
-cache closes only their fixed 2:1 interface. This slice excludes other LODs,
-collision, edits, networking, generator changes, and allocator redesign.
+cache closes only the fixed LOD0-to-LOD1 2:1 interface. The LOD1-to-LOD2 seam is
+intentionally visible in this proof. This slice excludes LOD3, morphing,
+generalized level hierarchies, collision, edits, networking, generator changes,
+and allocator redesign.
 
 Logical chunks are streaming, SDF-input, and revision units, not GPU allocation
 or draw-call units. Persistent geometry lives in shared arenas. Each arena owns
@@ -26,10 +28,55 @@ and source-revision descriptors.
 The mesher owns:
 
 - gameplay-first pending queues and coordinate/revision validation;
-- three independent transient `GpuTerrainScratch` lanes;
+- the three existing transient `GpuTerrainScratch` lanes plus one isolated LOD2 lane;
 - persistent indexed geometry arenas and their CPU range allocators;
 - coordinate-to-resident-geometry and candidate replacement state;
 - shared compute shaders, indexed-indirect draw resources, and visibility data.
+
+## Fixed Independent LOD2 Cache
+
+Placement uses immutable private proof inputs whose responsibilities remain
+separate: authoritative gameplay radius, LOD0 visual extent and LOD cutovers,
+fixed per-level cache extents, and maximum enabled visual level. They are not
+runtime settings. Their defaults keep LOD0 at `32^3 @ 16` with gameplay and
+visual half-extent `4`, LOD1 at `32^3 @ 32` with cache half-extent `8` and hole
+half-extent `2`, and enable LOD2 at `32^3 @ 64` with cache half-extent `8` and
+nominal hole half-extent `4`. Future view-distance presets can omit outer levels
+without enlarging the authoritative LOD0 gameplay volume.
+
+LOD2 snaps directly from the current streaming target to its own 2,048-unit
+region grid. Its desired cache is the half-open cube `[anchor-8, anchor+8)`, or
+4,096 identities. The current LOD1 outer world box, including the LOD0-filled
+center, defines near-field coverage. An LOD2 region is inactive only when its
+entire world AABB is contained by that box; partial intersections remain active
+to prevent holes. Aligned anchors therefore exclude 512 regions and leave 3,584
+active. Offset anchors retain accepted overlap.
+
+The LOD0/LOD1/transition placement path runs only when the LOD1 anchor changes.
+LOD2 placement runs independently when either its own anchor or the LOD1
+coverage boundary changes. Each level owns its desired, active, entering,
+leaving, resident, pending, and digest state. Leaving LOD2 identities are removed
+immediately; retained residents and arena ranges remain unchanged. There is no
+hierarchy-wide pending state, catch-up center, transaction, settlement barrier,
+or cross-level publication gate.
+
+LOD2 uses the canonical GPU SDF and unchanged regular-mesh compute contract. It
+has one private at-most-eight-region scratch lane and queue, but publishes through
+the same region-local candidate validation, shared CPU range allocator, arenas,
+visibility path, and indexed-indirect drawing. Existing regular dequeue order
+remains Gameplay, LOD1, Warm, followed by the existing transition decision.
+LOD2 advances opportunistically only when neither foreground path submits work.
+LOD2 count batches begin only on those foreground-idle ticks. After 250 ms
+without eligible service, an already-started LOD2 count phase may advance after
+that tick's foreground work; it never consumes or replaces a foreground lane or
+stacks a second full count submission behind one. Level-aware descriptor
+validation cancels stale or superseded work.
+
+Foreground settlement, movement, publication, and performance-window progression
+continue to depend only on existing gameplay, LOD1, warm, and transition work.
+LOD2 converges independently and cannot hold that boundary. Schema 14 appends
+LOD2 placement, residency, visibility, digest, queue, latency, cancellation, and
+service-gap telemetry without changing existing field meanings.
 
 ## Fixed LOD0/LOD1 Transition
 
@@ -165,8 +212,8 @@ persistent rendering. The moving window records:
   world units and 512-unit chunks;
 - frame, GPU, memory, arena, readback, visibility, and correctness metrics.
 
-After the moving loop, the player stops and the manager waits for all queues and
-all scratch lanes to settle. After two further render-sequence advances it
+After the moving loop, the player stops and the manager waits for the unchanged
+foreground queues and lanes to settle; LOD2 does not hold this boundary. After two further render-sequence advances it
 measures a fixed 10-second stationary window using the same production terrain.
 Stationary FPS, CPU tails, GPU distribution, memory, visibility, and settled
 geometry are stored separately in the same result.
@@ -183,3 +230,9 @@ geometry are stored separately in the same result.
 - CPU density arrays, CPU topology decoding, or geometry readback would create
   a second terrain/geometry path.
 - Rebuilding meshes every frame discards their persistent-cache value.
+- Sharing an existing regular scratch lane would degrade accepted near-field
+  responsiveness; coupling anchors or adding hierarchy publication would let
+  stale outer work block newer movement.
+- CPU density fields or coarse voxel buffers would violate the canonical GPU SDF
+  contract. A generalized N-level hierarchy and an LOD1-to-LOD2 transition are
+  premature for this bounded proof.
