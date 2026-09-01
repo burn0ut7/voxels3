@@ -51,7 +51,7 @@ public sealed class VoxelManager : Component
 		Lod1HoleHalfExtent,
 		Lod2CacheHalfExtent,
 		Lod2NominalHoleHalfExtent,
-		GpuMeshLevel.Lod2 );
+		GpuMeshLevel.Lod1 );
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
@@ -802,7 +802,7 @@ public sealed class VoxelManager : Component
 				PoolReuses = _lastPerformanceMeshPoolReuses,
 				GameThreadAllocatedBytes = null,
 				ScalarReadbacks = _lastPerformanceMeshScalarReadbacks,
-				GeometryReadbacks = GpuVoxelMesher.GeometryReadbackCount,
+				GeometryReadbacks = _gpuMesher?.GeometryReadbackCount ?? 0,
 				OrdinaryRenderSdfEvaluations = GpuVoxelMesher.OrdinaryRenderSdfEvaluationCount,
 				UniqueVertices = _gpuMesher?.UniqueVertexCount ?? 0,
 				Triangles = _gpuMesher?.TriangleCount ?? 0,
@@ -1003,6 +1003,18 @@ public sealed class VoxelManager : Component
 		if ( TryGetActiveManager( "lod.inspect", out var manager ) )
 		{
 			manager.LogLodPlacement( "command" );
+		}
+	}
+
+	[ConCmd( "voxel_mesh_audit" )]
+	public static void LogMeshAuditCommand( int regionsPerLevel = 8, string selection = "nearest" )
+	{
+		if ( TryGetActiveManager( "mesh.audit", out var manager ) )
+		{
+			manager._gpuMesher?.RequestMeshAudit(
+				manager.ActiveStreamingTarget.WorldPosition,
+				regionsPerLevel,
+				selection );
 		}
 	}
 

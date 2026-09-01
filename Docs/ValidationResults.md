@@ -5494,3 +5494,573 @@ Record an approved extraordinary change here before adding the new version:
   fault dump. Outcome: **epoch invariant implemented; crash acceptance failed**.
   The epoch change must not be described as the crash fix without a passing
   production reproduction.
+
+#### Dedicated LOD2 scratch isolation - native root cause reproduced
+
+- Date: 2026-09-01. Every camera-handoff probe used the production
+  `basic_example` scene, one player, generator version `5`, seed `1337`, and the
+  `EDITOR-CAMERA-LOD-001/v1` F8 journey. Diagnostic source changes altered only
+  which already-scheduled GPU phase could execute; the world, route, placement,
+  batch size, camera timing, and shader inputs were unchanged.
+- The first current-source reproduction began the fixed performance operation at
+  `10:58:33.3494`, ejected at `10:58:38.3781`, and ended the native log at
+  `10:58:38.4855`. Sentry event
+  `e19390c9-f8af-4512-e571-458f28c1747c` reported native exception
+  `0xC0000005`. Dump disassembly mapped the fault to
+  `rendersystemvulkan.dll+0x53314`, instruction
+  `test byte ptr [rdi+0xB0],0x60`, with invalid `rdi=0x0000000800000000`.
+- Count/classification with bounded scalar readback survived. Regular emission
+  on the established three `GpuTerrainScratch` lanes survived. Transition-only
+  emission on its established resources survived. LOD2-only emission on the
+  dedicated fourth `GpuTerrainScratch` crashed after the `11:33:01.3086`
+  performance begin and `11:33:10.4991` camera bind; the log ended at
+  `11:33:10.6157` and event `5f7af94c-...` reported the same native fault.
+  Redirecting that emit to temporary staging output buffers still crashed.
+- These results isolate the native failure to the dedicated fourth regular-mesh
+  scratch resource instance/lifetime, not the SDF, count readback, emit shaders,
+  persistent arena target, visibility compute, transition resources, or the
+  camera callback alone. The failed diagnostic phase gates and staging path were
+  removed after the bisection.
+- The candidate removes the fourth scratch instance. LOD2 now uses the same
+  three regular lanes in level-homogeneous batches. A ready LOD2 emit owns an
+  exclusive render tick; a new count batch receives an exclusive tick after the
+  unchanged `250 ms` starvation threshold; otherwise it starts only on a
+  foreground-idle tick. Reset recreates all three shared lanes so asynchronous
+  pre-reset state is not reused. `Lod2TransientScratchBytes` consequently reports
+  zero and the already-owned regular scratch allocation remains unchanged.
+
+#### Shared-scratch crash candidates and pre-change baseline
+
+- The unchanged current-HEAD performance baseline is run
+  `c64a3200e8e940e296fda8be1b4113b6`, captured before the shared-lane change with
+  every locked `PERFORMANCE-OVERVIEW-001/v4` world and route parameter. It did
+  not perform the crashing F8 handoff, because an exact pre-change handoff cannot
+  complete. Duration was `121.943214 s`; moving CPU p95/p99 was
+  `1.4424/1.8512 ms`, moving GPU p95/p99 `1.2900829/1.6019344 ms`, stationary
+  CPU p95/p99 `1.3452/1.6416 ms`, and stationary GPU p95/p99
+  `0.48828125/0.692606 ms`. Final resident/pending/arena counts were
+  `8902/0/13`, drain was `27.7837 ms`, and regular/transition/LOD2 p95 latency
+  was `71.0455/136.9566/197.0139 ms`. Regular and dedicated LOD2 scratch were
+  `34310016/11436672` bytes.
+- That pre-change run already produced current-HEAD geometry digests
+  `FF00208E5D308EDE/BBB1CCCD2EA49AFB`. Its per-level digests were LOD0
+  `60C89421FF1B19BD/7E9C783F3C60468C`, LOD1
+  `97D4F8ABEC98BA72/A580C20007E621C3`, LOD2
+  `081C4C044EB32D11/60AD76F21522FDB4`, and transition
+  `50A79D6478E7B1BE/EA4C06D88807EB23`. These differed from the older accepted
+  `305dba6c` record before this task began, so `c64a3200` is the required
+  unchanged-revision baseline for this regression rather than presenting that
+  pre-existing digest change as a candidate result.
+- Shared-scratch runs `e7c1125561cb47959e5def87b8838c10`,
+  `1ecd439c83464762aacb75c7862aa075`, and
+  `5eb94969ae794708b20a50109e85ee2c` each completed the fixed `121.9 s` route
+  after ejection at five seconds and return after 30 detached seconds. All ended
+  at `8902` residents, zero pending work, `13` arenas, the exact baseline
+  digests above, `34310016` regular scratch bytes, and zero dedicated LOD2
+  scratch bytes. Their moving CPU p95/p99 values were respectively
+  `1.3419/1.6621`, `1.2811/1.5403`, and `1.2613/1.52 ms`; moving GPU p95/p99
+  was `0.5829334/0.7658005`, `0.5824566/0.76436996`, and
+  `0.5764961/0.7572174 ms`. Drain was `26.4071`, `26.9599`, and `32.7395 ms`.
+  All fixed tail, drain, regular, transition, LOD2, count, residency, arena, and
+  memory gates passed. No crash marker advanced after the final dedicated-lane
+  failure at `2026-09-01T15:33:35.534950Z`.
+- These runs establish the native-crash repair and performance behavior, but
+  they are not final visual acceptance: subsequent screenshots exposed the
+  coarse checker treatment described below.
+
+#### Terrain fan-appearance visual bisection
+
+- Read-only `1280x720` game- and editor-camera captures after settled production
+  play showed long bright/dark wedges across the exterior terrain and cave
+  surfaces. Placement itself was exact: LOD0 gameplay/active was `729/512`, LOD1
+  cached/active/resident/pending `4096/4032/4096/0`, LOD2
+  `4096/3584/4096/0`, and transitions `96/96/51/0`.
+- Five one-variable production-path probes used a clean play start and at least
+  `15 s` of settlement before the same `1280x720` captures. Temporarily limiting
+  the maximum visual level to LOD1 left the wedges unchanged. Drawing directly
+  from source indirect arguments instead of visibility output left them
+  unchanged. A fixed `(0,0,1)` vertex-shader normal left them unchanged. Writing
+  arena-global indices with `BaseVertex=0` left them unchanged. These results
+  exclude LOD2 sharing, frustum compute, normal data, and local-index/base-vertex
+  addressing as causes. Every temporary probe was removed.
+- Replacing only the pixel shader's 256-unit two-color world-space checker with
+  one constant grass albedo removed every fan-like color wedge. The same main
+  camera then showed a continuous rolling surface; the same detached underground
+  editor view showed continuous tunnel/chamber silhouettes without the apparent
+  ribs. Vertex/index formats, emit shaders, geometry buffers, indirect arguments,
+  SDF settings, normals, lighting, visibility, and placement were unchanged.
+- Outcome: the reported visual regression was real at the rendered-material
+  level but was not malformed meshing. The coarse diagnostic checker projected
+  large regions over the curved surface and resembled corrupted triangles. The
+  production terrain shader now retains standard normal lighting with uniform
+  grass albedo. This restores an unambiguous terrain presentation without a
+  second material or mesh path.
+
+#### Final camera-ejection candidate `79dad11b667741f191f7e85daac65fae`
+
+- The exact fixed journey completed in `121.93147 s`; the camera ejected at
+  `12:20:08`, returned at `12:20:38`, and the result saved at `12:22:15`.
+  Process and GPU start/end/peak memory was
+  `5420748800/5424250880/5426286592` and
+  `1660415199/1661463775/1661910898` bytes. Final counts, queues, arenas, scratch,
+  digests, transition audits, and ordinary-render readbacks were exact.
+- Moving CPU p95/p99 was `1.6679/2.2697 ms`; GPU p95/p99 was
+  `0.64229965/0.98371506 ms`. Stationary CPU p95/p99 was
+  `1.3005/1.594 ms`; stationary GPU p95/p99 was
+  `0.60367584/0.9279251 ms`. Regular/transition/LOD2 p95 latency was
+  `85.2798/154.9736/289.1239 ms`, drain `29.5941 ms`, and maximum LOD2 service
+  gap `251.2252 ms`.
+- Outcome: **crash, correctness, responsiveness, memory, and visual gates
+  passed; performance acceptance rejected**. Moving CPU p99 increased
+  `0.4185 ms` over the pre-change baseline, exceeding the fixed
+  `max(5%,0.25 ms)` tolerance. Inspection found two independently running
+  Voxels3 editor processes from the diagnostic session. Both were stopped and
+  the unchanged candidate was repeated from one clean editor process; this run
+  is preserved and not presented as acceptance evidence.
+
+#### Final clean candidate `33bbf31f321b449a8fa7127dbf14b8cf` - pass
+
+- PID `32960` was the only Voxels3 editor process when the locked run began.
+  s&box `26.08.19` opened `basic_example` fresh and compiled the runtime and
+  shader source successfully with zero errors. The exact test began at
+  `12:27:31`, bound/ejected the third camera at `12:27:36`, returned at
+  `12:28:06`, completed in `121.91849 s`, and saved at `12:29:43`. No warning or
+  error occurred in that window and the process remained responsive.
+- Moving CPU p95/p99 improved from `1.4424/1.8512` to
+  `1.3029/1.6052 ms`. Moving GPU p95/p99 improved from
+  `1.2900829/1.6019344` to `0.5927086/0.7805824 ms`. Stationary CPU p95/p99
+  improved from `1.3452/1.6416` to `1.0736/1.3799 ms`. Stationary GPU p95/p99
+  was `0.42963028/0.7224083 ms`; its `0.0298023 ms` p99 increase remains well
+  inside the fixed `0.25 ms` tolerance. Samples were `115306` moving and `9938`
+  stationary with zero truncation.
+- Process start/end/peak was
+  `4326760448/4352356352/4353310720` bytes. Its final stationary window changed
+  by `-2711552` bytes. GPU start/end was unchanged at `1660535199` bytes and
+  peak was `1660572259`; stationary GPU memory was constant. Memory is bounded
+  with no stationary growth.
+- Final loaded/pending chunks were `729/0`; residents were `8902` total,
+  `710/4096/4096` for LOD0/1/2; all regular and per-level queues were zero;
+  arenas remained `13`; regular/dedicated-LOD2 scratch was
+  `34310016/0` bytes. Geometry readbacks and ordinary-render SDF evaluations
+  were zero. All overall, per-level, and transition digests exactly matched the
+  pre-change current-HEAD baseline.
+- Regular schedule-to-renderable p50/p95/p99/max was
+  `30.428/73.5266/96.8378/118.246 ms`; drain was `27.2548 ms`.
+  Transition desired/ready/drawable/pending was `96/96/51/0`; publication
+  p50/p95/p99/max was `81.4961/139.0265/153.5458/183.4382 ms`, with all fine,
+  coarse, lateral, and invalid-table counts zero. LOD2 published `48720` of
+  `49104` scheduled requests, cancelled `384` stale movement requests, and
+  superseded zero; p50/p95/p99/max latency was
+  `109.6645/226.1373/311.8555/513.3294 ms`, and maximum eligible service gap
+  was `211.5812 ms` with no forced service required. Every fixed responsiveness
+  ceiling passed.
+- Fresh post-run `1280x720` main- and editor-camera captures showed the solid
+  grass presentation, continuous exterior contours, and continuous underground
+  tunnel/chamber surfaces without fan-like wedges, holes, stale flashes, or
+  false-negative culling in those views. The exact geometry digests and all 96
+  transition face audits provide the measurable topology evidence.
+- Managed validation `dotnet build voxels3.slnx` completed in `4.82 s` with zero
+  warnings and zero errors. Live s&box compilation also completed with zero
+  errors. Generated scene status and compiled shader output were excluded from
+  the source change.
+- Outcome: **pass and accepted**. The native editor-camera crash is repaired by
+  removing the dedicated LOD2 scratch lifetime; the visual fan appearance is
+  repaired independently by removing the coarse debug checker; fixed
+  correctness, latency, frame-tail, drain, memory, arena, scratch, transition,
+  LOD2, clean-start, and camera-handoff gates all pass.
+
+## Transvoxel Secondary-Position Regression
+
+### Scenario `TRANSVOXEL-SECONDARY-POSITION-001/v1`
+
+- Defined before the first candidate run on 2026-09-01. This scenario
+  supersedes only the preceding record's visual-geometry acceptance: the
+  uniform material had hidden, not repaired, malformed transition corners.
+  The native camera-ejection crash and its measured performance result remain
+  separate evidence.
+- Production scene `scenes/basic_example.scene`; s&box `26.08.19`; one local
+  player; generator version `5`; seed `1337`; surface base height `0`, frequency
+  `0.0005`, amplitude `128`; `32` cells per region; LOD0/LOD1/LOD2 cell sizes
+  `16/32/64`; unchanged half-open LOD0 and LOD1 clipboxes; checker material;
+  editor camera ejected only after a `20 s` stationary generation window.
+- Fixed geometry audit: editor camera and streaming target at world `(0,0,0)`,
+  angles `(0,0,0)`; invoke `voxel_mesh_audit 32` once after every regular and
+  transition queue reaches zero. Audit exactly the nearest `32` non-empty,
+  active residents per regular level and the nearest `32` LOD0-to-LOD1
+  transition residents.
+- Geometry pass criteria: every audited local index is in range; index counts
+  are divisible by three; all positions and normals are finite; normals remain
+  within `[0.8,1.2]` length; positions remain inside their owning regular
+  region or canonical transition boundary-cell slab; no audited edge exceeds
+  `1.75` cells; all audited transition triangles have nonzero area; all GPU
+  fine-face, coarse-face, lateral-edge, and invalid-table mismatch counts are
+  zero. A checker screenshot is supporting evidence only and must show no
+  pinched fans, hard rectangular transition cuts, or collapsed corners.
+- Performance acceptance remains the unchanged canonical
+  `PERFORMANCE-OVERVIEW-001/v4` figure eight: center `(0,0,0)`, world Z `0`,
+  speed `2500`, X distance `50000`, Y reach `25000`, one loop, followed by the
+  locked stationary completion window and editor-camera ejection check. All
+  existing frame-tail, latency, queue, residency, memory, allocation, topology,
+  transition, LOD2-service, and no-crash criteria remain unchanged.
+
+#### Pre-change reproduction
+
+- A settled `1280x720` checker capture at editor-camera world `(0,0,0)`, angles
+  `(0,0,0)`, reproduced hard rectangular cuts and pinched striped corners.
+  Disabling LOD2 in one clean comparison did not remove the defect, isolating
+  it from the known unclosed LOD1-to-LOD2 seam.
+- Audit `2` sampled eight residents per regular level plus eight transitions.
+  It found zero invalid indices, non-finite values, out-of-bounds positions,
+  abnormal normals, or oversized edges, but counted `579` degenerate triangles.
+  The nearest transition faces alone commonly contained `59-67` degenerate
+  triangles out of roughly `91-103`, proving that the prior audit's `pass`
+  status omitted the visible transition failure.
+- Source inspection found that transition low-resolution endpoints `9-12`
+  shared the boundary-plane positions of high-resolution corners `0,2,6,8`,
+  while neither those low-resolution transition vertices nor the owning coarse
+  regular boundary vertices received Transvoxel secondary positions. This
+  collapses the transition cell width to zero. Subsequent comparison with the
+  official tables and maintained Godot Voxel implementation established that
+  the high-resolution boundary vertices make space for transition cells: the
+  fine/full-resolution side receives tangent-plane-projected secondary
+  positions while the half-resolution transition side remains fixed.
+
+#### Source comparison and candidate bisection
+
+- The official Transvoxel overview, official lookup tables, Lengyel voxel-terrain
+  dissertation, and maintained Godot Voxel implementation were compared before
+  changing ownership. All four support one transition-cell construction from
+  the high-resolution block toward its low-resolution neighbor. In Godot's
+  implementation, a transition vertex is on the full-resolution side whenever
+  either endpoint index is below `9`; those vertices receive secondary
+  positions, while vertices formed exclusively from half-resolution endpoints
+  `9-12` remain primary. Regular high-resolution boundary vertices use the same
+  secondary-position rule.
+- Voxels3 keeps that work split on its established ownership boundary. CPU code
+  computes clipbox placement, six-bit face masks, stable face identities,
+  scheduling, arena allocation, and bounded scalar count readback. GPU code
+  performs canonical SDF sampling, case/table lookup, interpolation, gradient
+  normals, tangent-plane secondary positions, scans, and vertex/index emission.
+  No CPU geometry extractor or alternate Marching Cubes path was introduced.
+- Reversing the construction by deforming LOD1 and the half-resolution
+  transition side was rejected. Besides conflicting with the sources, that
+  candidate doubled the intended displacement scale and measured `269`
+  degenerate transition triangles.
+- The canonical fine-side candidate without endpoint clamping reduced the full
+  `voxel_mesh_audit 32` result to `303` degenerate triangles. Applying Godot's
+  default `[0.02,0.98]` interpolation clamp reduced it to `62`. Packing the four
+  adjacent fine-region face masks into every transition request made transition
+  edge/corner selection match regular LOD0 and reduced it to `57`. That packed
+  mask is selected per `16x16` fine quadrant entirely on GPU.
+
+#### Rejected transition-compaction experiments
+
+- A first transition-only GPU cull reconstructed density interpolation,
+  gradients, and all local vertex positions during classification. It compiled,
+  but a fresh production play at `13:57:55` caused `VK_ERROR_DEVICE_LOST`, an
+  instruction-pointer fault, and an invalid write. NVIDIA Aftermath wrote
+  `core_20.nv-gpudmp`; s&box wrote `gpu_crash_dumps/device_fault_15.bin`. The
+  register-heavy reconstruction was removed completely.
+- A second design emitted vertices first, read only those persistent positions
+  in a new transition stage, marked nonzero-area triangles, rescanned surviving
+  index counts, and returned a second bounded scalar count readback to CPU. It
+  preserved deterministic GPU compaction and did not reconstruct SDF geometry.
+  A clean editor/play restart still failed at `14:16:18`: repeated render-command
+  buffer type-cast faults preceded Vulkan fence timeouts, `VK_ERROR_DEVICE_LOST`,
+  an instruction-pointer fault, and invalid write range
+  `0x000000188835A000-0x000000188835AFFF`. Aftermath wrote
+  `core_21.nv-gpudmp(.json)`. This entire phase and state-machine change was
+  removed; a clean editor restart confirmed the source-backed pipeline remained
+  stable.
+- Atomic index append, duplicate replacement indices, CPU triangle filtering,
+  and a second transition compute resource were not adopted: they respectively
+  lose deterministic order, preserve invalid topology, violate GPU geometry
+  ownership, or conflict with the measured s&box storage/resource failure
+  boundary.
+
+#### Current source-backed candidate - correctness fail
+
+- Date 2026-09-01; clean editor PID `29016`; s&box `26.08.19`; fixed scenario
+  parameters above. The production scene settled with transition expected and
+  drawable counts both `51` and zero visibility mismatches. Managed compilation
+  completed with zero warnings and zero errors. Ten seconds of clean production
+  play produced no warning, error, exception, crash, or device loss.
+- `voxel_mesh_audit 32` selected and completed `128` meshes: `96` regular and
+  `32` transition residents. It measured zero invalid indices, index remainders,
+  non-finite positions, out-of-bounds positions, non-finite/abnormal normals, or
+  oversized triangles. Maximum edge length was `1.709` cells. It issued exactly
+  `256` explicit diagnostic geometry readbacks totaling `4,608,360` bytes in
+  `137.282 ms`; ordinary rendering still performs no geometry readback.
+- Twenty-four transition residents contained `57` triangles at or below the
+  fixed area threshold. Their ordinary edge lengths were approximately
+  `1.0-1.32` coarse cells; no giant or escaped triangle was present. The
+  remaining triangles occur at the canonical secondary-position taper where a
+  vertex also lies on an unselected fine-block border. This matches the official
+  discussion of zero-area output and the maintained Godot transition path,
+  which emits the transition table triangles without a transition-area cull.
+- A `1280x720` main-camera capture with the old 256-unit XY checker still looked
+  like large triangular wedges while the audit simultaneously proved zero
+  oversized geometry. The diagnostic material is therefore changed to a
+  64-unit three-axis world-space checker so albedo boundaries no longer resemble
+  triangle fans on curved or vertical surfaces. This changes pixel albedo only.
+- Outcome: **fail under the locked scenario** because the scenario requires
+  zero degenerate transition triangles and measured `57`. The source-backed
+  ownership/orientation, boundary masks, interpolation clamp, stability, bounds,
+  and edge-length gates pass. The canonical figure-eight was not rerun because
+  correctness has not passed, and this candidate is not accepted or committed.
+
+#### Exact degenerate-triangle diagnostics
+
+- The explicit audit was extended to report at most four examples per failing
+  mesh, including local indices, all three positions, squared area, and maximum
+  squared edge. This bounded logging runs only after the user invokes
+  `voxel_mesh_audit`; it does not add an ordinary-render readback or test-only
+  geometry path. Managed and live compilation both completed with zero errors.
+- A clean editor restart was required after the code edit because s&box hotload
+  retained an old `GpuBuffer<TerrainVertex>` type identity and repeatedly warned
+  that the old assembly type could not cast to the new assembly type. PID
+  `36240` started cleanly, settled the production scene, and completed the fixed
+  audit without that warning.
+- All `24` failing transition records showed the same concrete pattern. In the
+  overwhelming majority, two different local vertex indices had exactly equal
+  positions, producing `area2=0`; for example Negative-X coarse region
+  `[2,0,0]`, triangle `0`, indices `[1,2,67]`, had first and third positions both
+  `[2048,0,71.2153]`. A few pairs differed by only floating-point interpolation
+  noise and remained below the fixed threshold, for example Positive-Y region
+  `[0,-3,-1]` triangle `1` with `area2=0.00003315`. Their maximum squared edges
+  remained ordinary cell-scale values, not escaped geometry.
+- This confirms the remaining count is not malformed corners, invalid indices,
+  or long triangles. It is the canonical transition table retaining a triangle
+  after its distinct fine/coarse vertex identities converge to the same
+  boundary position at the secondary-position taper. Rasterization contributes
+  no pixels for these triangles. The clean `1280x720` capture with the new
+  64-unit three-axis checker shows a continuous rolling surface and regular
+  cubic pattern; no large fan or malformed corner is visible in that view.
+
+### Scenario `PERFORMANCE-OUTER-MESH-AUDIT-001/v1`
+
+- Defined on 2026-09-01 before its first run to diagnose the malformed outer
+  clipbox visible from the detached editor camera. Production scene, engine,
+  generator, seed, cells per region, LOD sizes, clipboxes, performance route,
+  speed, distance, loop count, and ejection timing are exactly those locked by
+  `PERFORMANCE-OVERVIEW-001/v4`: start the one-loop `2500` speed, `50000`
+  distance route after settlement and eject the editor camera at five seconds.
+- Pause ten seconds after ejection. At the paused streaming target, invoke
+  `voxel_mesh_audit 32 farthest`. The command deterministically selects the `32`
+  most distant non-empty active residents from each of LOD0, LOD1, LOD2, plus
+  the `32` most distant active transition residents. It uses the existing
+  explicit diagnostic readback and unchanged per-mesh correctness thresholds.
+- Pass criteria: `128` meshes complete with zero stale selections, invalid
+  indices, index remainders, non-finite positions/normals, out-of-bounds
+  positions, abnormal normals, oversized triangles, and transition table/audit
+  mismatches; maximum edge remains at most `1.75` owning cells. Degenerate
+  transition triangles remain reported independently under the still-unaccepted
+  `TRANSVOXEL-SECONDARY-POSITION-001/v1` criterion.
+- This diagnostic does not replace or alter canonical figure-eight acceptance.
+  It covers the outer residents that the fixed nearest audit omits and must not
+  be compared as though it sampled the same meshes.
+
+### Scenario `PERFORMANCE-MESH-COVERAGE-001/v1`
+
+- Defined on 2026-09-01 before its first run after the nearest and farthest
+  diagnostics left the middle radial bands unsampled. Reuse every production,
+  performance-route, settlement, five-second ejection, ten-second pause, mesh
+  count, and correctness parameter from `PERFORMANCE-OUTER-MESH-AUDIT-001/v1`.
+- Invoke `voxel_mesh_audit 32 coverage`. For each regular LOD and the transition
+  set independently, active non-empty residents are ordered by squared distance
+  from the paused streaming target. The command deterministically selects `32`
+  inclusive distance quantiles, covering the nearest resident, farthest
+  resident, and evenly spaced radial ranks between them.
+- Pass criteria are identical to `PERFORMANCE-OUTER-MESH-AUDIT-001/v1`. This is
+  a complementary diagnostic sample, not a replacement for nearest, farthest,
+  or canonical figure-eight acceptance.
+
+#### Outer audit result
+
+- Clean sole editor PID `38752`; task revision `outer-mesh-audit-v1`; the fixed
+  performance test started after a `20 s` settlement window, the editor camera
+  ejected at five seconds, and play paused ten seconds later. The audit target
+  was `[49999.08,303.1873,0]`.
+- `voxel_mesh_audit 32 farthest` selected every available far transition plus
+  `32` residents from each regular LOD: `109` total (`96` regular, `13`
+  transition). All `109` completed with zero stale selections, invalid indices,
+  index remainders, non-finite positions/normals, out-of-bounds positions,
+  abnormal normals, or oversized triangles. Maximum edge was `1.709` cells.
+  The ten failures were transition-only and contained `22` already-characterized
+  repeated-position degenerate triangles. The explicit diagnostic issued `218`
+  readbacks totaling `4,419,804` bytes in `124.224 ms`.
+- Outcome: outer regular-mesh topology and bounds **pass**. The overview defect
+  is not explained by malformed geometry in the farthest regular residents;
+  middle radial coverage remains the next diagnostic.
+
+#### Coverage audit result
+
+- Clean sole editor PID `37000`; task revision `mesh-coverage-v1`; the fixed
+  performance test started after a `20 s` settlement window, the editor camera
+  ejected at five seconds, and play paused ten seconds later. The audit target
+  was `[28963.9,23609.34,0]`.
+- `voxel_mesh_audit 32 coverage` selected `128` meshes (`96` regular and `32`
+  transition). All completed with zero stale selections, invalid indices,
+  index remainders, non-finite positions/normals, out-of-bounds positions,
+  abnormal normals, or oversized triangles. Maximum edge was `1.709` cells.
+  The `21` geometry failures were transition-only and contained `75`
+  already-characterized repeated-position degenerate triangles. The explicit
+  diagnostic issued `256` readbacks totaling `4,544,400` bytes in `140.594 ms`.
+- The same audit found a separate render-state failure: `2,506` regular meshes
+  were expected active while `2,620` had non-zero indirect draw arguments,
+  producing `114` mismatches. Every reported mismatch was an inactive LOD0
+  gameplay/warm resident left drawable. Transition visibility matched exactly
+  (`40` expected and `40` drawable).
+- Outcome: sampled regular geometry bounds and topology **pass**, but the
+  scenario **fails** because inactive regular meshes remain drawable. This is a
+  concrete explanation for overlapping or stale LOD geometry in the malformed
+  detached-camera frame and requires a render-activity invariant fix.
+
+#### Visibility invariant candidate
+
+- Candidate revision `mesh-visibility-fix-v1` changes residency updates to
+  preserve the canonical `_renderActive` membership instead of unconditionally
+  restoring a non-zero indirect draw. `dotnet build voxels3.slnx` passed with
+  zero warnings and zero errors in `2.57 s`.
+- Clean sole editor PID `9992`; unchanged settlement, route, speed, distance,
+  ejection, pause, and `voxel_mesh_audit 32 coverage` parameters. The audit
+  target was `[28973.09,23613.05,0]`. Visibility became exact: `2,506` regular
+  expected active and `2,506` drawable, `40` transitions expected and drawable,
+  and zero mismatches. All `128` meshes completed with zero invalid indices,
+  non-finite positions, out-of-bounds positions, or oversized triangles;
+  maximum edge was `1.709` cells. The `21` transition-only failures contained
+  `75` previously characterized repeated-position degenerates. The audit used
+  `256` readbacks, `4,976,088` bytes, and `153.281 ms`.
+- Outcome: the active/drawable invariant fix **passes**, but the detached editor
+  screenshot from the same paused frame still contains the large sheet/ribbon
+  presentation. The visibility defect was real but was not the complete visible
+  regression. Historical LOD isolation is required before acceptance.
+
+#### Historical isolation and LOD2 recovery candidate
+
+- An isolated detached worktree at `5ffcc63ba2f5c7a7c68133580eb2667219f4e681`
+  (`LOD PASS`) was run through the same settled performance route, five-second
+  editor-camera ejection, ten-second pause, origin camera position, zero angles,
+  `60` degree field of view, and `1280x720` capture. The historical LOD0/LOD1
+  production path showed a clean empty origin view; no large sheets, torn
+  boundaries, or malformed corners were visible. The temporary worktree and its
+  ejection-tool instrumentation were removed after capture.
+- Candidate `lod2-disabled-candidate-v1` changes the immutable maximum production
+  visual level from LOD2 to LOD1. This rejects the regular LOD2 proof that had no
+  LOD1-to-LOD2 Transvoxel transition, explicitly accepted a visible seam, and
+  retained partial cross-level overlap for offset anchors. Build passed with zero
+  warnings and errors in `3.83 s`.
+- Clean sole editor PID `38164`; unchanged scene, `20 s` settlement, route,
+  speed, distance, one loop, five-second ejection, ten-second pause, origin
+  camera, and `1280x720` capture. The candidate view matched the historical clean
+  reference and contained none of the malformed outer LOD2 population.
+- `voxel_mesh_audit 32 coverage` at target `[28972.38,23612.77,0]` selected all
+  `32` requested LOD0, LOD1, and transition samples (`96` total). All completed
+  with zero stale selections, invalid indices, non-finite positions,
+  out-of-bounds positions, or oversized triangles; maximum edge was `1.709`
+  cells. Visibility matched exactly: `1,481` regular expected/drawable, `40`
+  transitions expected/drawable, zero mismatches. The `21` transition-only
+  failures contained `76` previously characterized repeated-position
+  degenerates. Diagnostic cost was `192` readbacks, `3,371,172` bytes, and
+  `104.357 ms`.
+- Outcome: the exact visual-regression reproduction and bounded mesh/visibility
+  audit **pass**. Canonical uninterrupted figure-eight acceptance remains
+  required before this recovery can be accepted.
+
+#### Root-cause correction and final visual candidate
+
+- The mid-route empty-origin comparison above isolated the distant population
+  but did not compare nearby surface shape. A second isolated `5ffcc63` run used
+  a settled center target and the exact exterior editor camera
+  `[0,0,2048]`, angles `[45,0,0]`, FOV `60`, `1280x720`. It showed the historical
+  smooth 256-unit XY checker surface. The temporary worktree was again removed.
+- The current candidate at the identical camera proved two recent experiments
+  were responsible for the apparent mutation. Baked persistent secondary
+  positions plus packed multi-face masks produced real holes, pinched fans, and
+  warped sheets. The replacement 64-unit XYZ checker independently added dense
+  diagonal Z-phase bands that made curved surfaces resemble torn triangles.
+  Both experiments were removed. Primary Transvoxel positions and the exact
+  historical 256-unit XY checker were restored; the identical candidate capture
+  then matched the historical smooth surface.
+- The exact reported moving frame was rerun after a clean restart: `20 s`
+  settlement, `PERFORMANCE-OVERVIEW-001/v4`, speed `2500`, distance `50000`, one
+  loop, ejection at five seconds, pause ten seconds later, origin editor camera,
+  FOV `60`, `1280x720`. The capture was clean and contained no distant ribbons,
+  malformed corners, holes, or errors. LOD2 remains disabled because its regular
+  proof has no LOD1-to-LOD2 Transvoxel transition and explicitly accepted a
+  visible seam and partial overlap.
+- A settled center `voxel_mesh_audit 32 coverage` selected `96` LOD0, LOD1, and
+  transition meshes. All completed with zero stale selections, invalid indices,
+  non-finite positions, out-of-bounds positions, or oversized triangles;
+  maximum edge was `1.727` cells. Expected/drawable visibility matched exactly:
+  `1,524` regular and `51` transitions, zero mismatches. It reported `940`
+  historical primary-position transition-table degenerates across `27` sampled
+  transitions. These zero-area table triangles remain a reported limitation;
+  they do not explain the removed fan/hole regression.
+
+#### Final figure-eight candidate `df28fb77d7bd4ea38f0a285b6a6cd05d`
+
+- Clean sole editor PID `35552`; revision label
+  `transvoxel-rollback-acceptance-v1`; exact locked world, route, speed,
+  distance, and one-loop parameters. The editor camera ejected at five seconds,
+  remained detached for ten seconds, captured a clean `1280x720` origin frame,
+  then returned to the game camera. The production result completed in
+  `121.90817 s` with no error-level console output.
+- Moving samples/FPS were `118,614/972.6582`; CPU p95/p99
+  `1.2023/1.4976 ms`; GPU p95/p99/max
+  `0.58960915/0.7786751/10.623693 ms`. Stationary samples/FPS were
+  `9,963/996.277`; CPU p95/p99 `1.0039/1.229 ms`; GPU p95/p99/max
+  `0.4043579/0.6132126/7.093668 ms`. Every locked CPU/GPU p95/p99 comparison
+  passes `max(5%,0.25 ms)` against both accepted current-code references.
+- Regular schedule-to-renderable p95/p99/max was
+  `70.6095/93.6575/116.333 ms`; transition p95/p99/max was
+  `135.0991/147.2082/177.7901 ms`; drain was `27.0877 ms`. All fixed latency and
+  drain ceilings pass. Gameplay queue remained zero; warm/total p95/p99/max was
+  `66/124/126`; every final queue was zero.
+- Final LOD0/LOD1 residents were `710/4096`; transitions were
+  `96/96/51/0` desired/ready/drawable/pending; arenas were `8`; pool allocations,
+  geometry readbacks, and ordinary-render SDF evaluations were zero. Moving and
+  stationary visibility samples were `118,602/9,962`. LOD0, LOD1, and transition
+  topology/position digests exactly match accepted current run
+  `33bbf31f321b449a8fa7127dbf14b8cf`; the aggregate difference is exactly the
+  removed LOD2 digest contribution.
+- Process start/end/peak was
+  `4,084,109,312/4,067,938,304/4,087,099,392` bytes; full-window growth was
+  `-16,171,008` bytes. GPU start/end/peak was
+  `1,431,945,631/1,431,945,631/1,431,982,691` bytes. The stationary window rose
+  `10,969,088` bytes, so an identical same-process repeat was required before
+  memory acceptance.
+
+#### Same-process memory repeats
+
+- Repeat `4994e55cfd9343229f8626e43b310055` completed the identical route and
+  ejection journey. Process start/end/peak was
+  `4,140,179,456/4,118,745,088/4,154,793,984` bytes; full-run growth was
+  `-21,434,368` and stationary growth `-1,134,592` bytes. It established a
+  one-time retained-floor step after the first run but did not establish whether
+  that floor would continue upward.
+- Immediate third run `dfc9bb63efa94f989729451952dde8e3` completed in
+  `121.91132 s` without intervening screenshots or diagnostics. Process
+  start/end/peak was `4,116,750,336/4,116,615,168/4,117,647,360` bytes;
+  full-run growth was `-135,168` and stationary growth `-708,608` bytes. Its
+  start and end were `1,994,752/2,129,920` bytes below the preceding run's end,
+  proving the retained floor stabilized rather than ratcheting upward. GPU
+  start/end/peak remained exactly
+  `1,431,945,631/1,431,945,631/1,431,982,691` across all three runs.
+- Third-run moving CPU p95/p99 was `1.0921/1.277 ms`, GPU p95/p99
+  `0.5366802/0.72455406 ms`; stationary CPU was `1.0017/1.1037 ms`, GPU
+  `0.3938675/0.40125847 ms`. Regular p95/p99/max was
+  `72.3964/94.971/170.1672 ms`; transition p95/p99/max was
+  `134.1652/147.522/250.239 ms`; drain was `25.8582 ms`. All fixed tail,
+  responsiveness, and drain gates pass. Final queues were zero.
+- All three candidate runs have exact aggregate, LOD0, LOD1, and transition
+  digests, residents `710/4096`, settled surface count `1,575`, zero LOD2
+  residents, zero final pending work, zero transition audit mismatches, and `257`
+  stationary non-zero draws. No error-level console entry occurred.
+- Outcome: **accepted**. The camera-ejection crash is removed by rejecting the
+  dedicated fourth LOD2 scratch lifetime; the malformed-mesh regression is
+  removed by rejecting baked persistent secondary positions and the 64-unit XYZ
+  checker; the incomplete seam/overlap LOD2 proof is disabled. The retained
+  LOD0/LOD1 Transvoxel geometry exactly matches the accepted current geometry,
+  the exact reported frame and same-position historical comparison are clean,
+  performance passes, queues settle, and memory stabilizes across repeated runs.

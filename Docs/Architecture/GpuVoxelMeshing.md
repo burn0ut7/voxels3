@@ -2,12 +2,12 @@
 
 ## Production Slice
 
-LOD0, LOD1, and one fixed regular LOD2 Transvoxel level are the terrain render levels. The authoritative
+LOD0 and LOD1 are the terrain render levels. The authoritative
 world remains the implicit SDF represented by `VoxelChunk`; indexed meshes are
 derived, GPU-resident, revisioned, disposable caches. Generator version 5 owns
 the exterior surface, noodle tunnels, and cheese caverns. A dedicated transition
-cache closes only the fixed LOD0-to-LOD1 2:1 interface. The LOD1-to-LOD2 seam is
-intentionally visible in this proof. This slice excludes LOD3, morphing,
+cache closes the fixed LOD0-to-LOD1 2:1 interface. This slice excludes LOD2,
+LOD3, morphing,
 generalized level hierarchies, collision, edits, networking, generator changes,
 and allocator redesign.
 
@@ -28,64 +28,41 @@ and source-revision descriptors.
 The mesher owns:
 
 - gameplay-first pending queues and coordinate/revision validation;
-- the three existing transient `GpuTerrainScratch` lanes plus one isolated LOD2 lane;
+- three transient `GpuTerrainScratch` lanes for regular terrain batches;
 - persistent indexed geometry arenas and their CPU range allocators;
 - coordinate-to-resident-geometry and candidate replacement state;
 - shared compute shaders, indexed-indirect draw resources, and visibility data.
 
-## Fixed Independent LOD2 Cache
+## Rejected Incomplete LOD2 Proof
 
-Placement uses immutable private proof inputs whose responsibilities remain
-separate: authoritative gameplay radius, LOD0 visual extent and LOD cutovers,
-fixed per-level cache extents, and maximum enabled visual level. They are not
-runtime settings. Their defaults keep LOD0 at `32^3 @ 16` with gameplay and
-visual half-extent `4`, LOD1 at `32^3 @ 32` with cache half-extent `8` and hole
-half-extent `2`, and enable LOD2 at `32^3 @ 64` with cache half-extent `8` and
-nominal hole half-extent `4`. Future view-distance presets can omit outer levels
-without enlarging the authoritative LOD0 gameplay volume.
+The fixed regular LOD2 proof is disabled in production. It introduced a regular
+`32^3 @ 64` cache without the required LOD1-to-LOD2 Transvoxel transition layer.
+Its placement deliberately retained partially overlapping LOD1 and LOD2 regions
+when their snapped grids were offset, and its architecture explicitly accepted a
+visible seam. The detached performance-test camera exposed that incomplete outer
+population as large checker-textured sheets, torn boundaries, and malformed
+corners. The same fixed reproduction at historical revision `5ffcc63` and with
+the production maximum visual level restored to LOD1 contains none of those
+surfaces.
 
-LOD2 snaps directly from the current streaming target to its own 2,048-unit
-region grid. Its desired cache is the half-open cube `[anchor-8, anchor+8)`, or
-4,096 identities. The current LOD1 outer world box, including the LOD0-filled
-center, defines near-field coverage. An LOD2 region is inactive only when its
-entire world AABB is contained by that box; partial intersections remain active
-to prevent holes. Aligned anchors therefore exclude 512 regions and leave 3,584
-active. Offset anchors retain accepted overlap.
+The LOD2 proof also introduced a dedicated fourth `GpuTerrainScratch` instance.
+Its LOD2 emit reproduced native Vulkan page faults during editor-camera ejection,
+including with output redirected to staging buffers. The same shaders and output
+arenas survived when dispatched through the established three regular lanes.
+That dedicated resource lifetime and publication path are rejected.
 
-The LOD0/LOD1/transition placement path runs only when the LOD1 anchor changes.
-LOD2 placement runs independently when either its own anchor or the LOD1
-coverage boundary changes. Each level owns its desired, active, entering,
-leaving, resident, pending, and digest state. Leaving LOD2 identities are removed
-immediately; retained residents and arena ranges remain unchanged. There is no
-hierarchy-wide pending state, catch-up center, transaction, settlement barrier,
-or cross-level publication gate.
+An outer level may return only as one canonical GPU-first feature that includes
+its LOD1-to-LOD2 Transvoxel transition ownership, aligned non-overlapping clipbox
+placement, regular fine-side secondary positions, and unchanged correctness and
+figure-eight acceptance. A regular LOD2 cache with an intentionally visible seam
+or accepted cross-level overlap is not a production alternative.
 
-LOD2 uses the canonical GPU SDF and unchanged regular-mesh compute contract. It
-has one private at-most-eight-region scratch lane and queue, but publishes through
-the same region-local candidate validation, shared CPU range allocator, arenas,
-visibility path, and indexed-indirect drawing. Existing regular dequeue order
-remains Gameplay, LOD1, Warm, followed by the existing transition decision.
-LOD2 advances opportunistically only when neither foreground path submits work.
-LOD2 count batches begin only on those foreground-idle ticks. After 250 ms
-without eligible service, an already-started LOD2 count phase may advance after
-that tick's foreground work; it never consumes or replaces a foreground lane or
-stacks a second full count submission behind one. Level-aware descriptor
-validation cancels stale or superseded work.
-
-Foreground settlement, movement, publication, and performance-window progression
-continue to depend only on existing gameplay, LOD1, warm, and transition work.
-LOD2 converges independently and cannot hold that boundary. Schema 14 appends
-LOD2 placement, residency, visibility, digest, queue, latency, cancellation, and
-service-gap telemetry without changing existing field meanings.
-
-Placement diagnostics read this owned state without affecting convergence.
+Placement diagnostics read owned state without affecting convergence.
 `voxel_lod_info` emits an immediate structured snapshot of the streaming target,
-LOD0 gameplay and visual boxes, the LOD1 outer box and hole, the LOD0-to-LOD1
-transition state, and the LOD2 outer box, nominal hole, effective near-coverage
-exclusion, and residency counts. Region and world bounds are reported as
-half-open intervals. Enabling the existing `VerboseLogging` property emits the
-same snapshot only when a placement boundary changes; it does not add per-frame
-logging or a second placement model.
+LOD0 gameplay and visual boxes, the LOD1 outer box and hole, and the LOD0-to-LOD1
+transition state. Region and world bounds are half-open intervals. Enabling the
+existing `VerboseLogging` property emits the same snapshot only when a placement
+boundary changes; it does not add per-frame logging or a second placement model.
 
 ## Fixed LOD0/LOD1 Transition
 
@@ -97,16 +74,34 @@ diffed when the snapped LOD1 anchor changes, so retained faces keep their
 generation and allocation while only entering and leaving pieces are scheduled
 or removed.
 
-A transition is a thin, zero-width face-local volume-cell mesh, not a heightfield
-trim, a partial coarse block, or a modification of either regular mesh. Its
-`32x32` transition cells sample a compact five-offset halo from the same canonical
-SDF at LOD0 spacing: `69x69` on the interface plane, `65x65` on each fine normal
-offset, and `33x33` on each coarse normal offset. This retains every classification,
-interpolation, and fine/coarse gradient sample while avoiding unused off-plane
-positions. The official 512 transition cases, 56 geometry classes, inversion
-bit, vertex reuse data, and triangulations produce ordinary indexed triangle
-lists. Fine-layer intersections use LOD0-equivalent interpolation and gradients;
-coarse-layer intersections use LOD1-equivalent interpolation and gradients.
+A transition is a face-local Transvoxel volume-cell mesh, not a heightfield trim
+or a partial coarse block. Its `32x32` transition cells sample a compact
+five-offset halo from the same canonical SDF at LOD0 spacing: `69x69` on the
+interface plane, `65x65` on each fine normal offset, and `33x33` on each coarse
+normal offset. This retains every classification, interpolation, and fine/coarse
+gradient sample while avoiding unused off-plane positions. The official 512
+transition cases, 56 geometry classes, inversion bit, vertex reuse data, and
+triangulations produce ordinary indexed triangle lists. Fine-layer intersections
+use LOD0-equivalent interpolation and gradients; coarse-layer intersections use
+LOD1-equivalent interpolation and gradients.
+
+Production emission currently preserves the table-derived primary positions on
+both sides of the transition. The recent attempt to bake Godot-style secondary
+positions directly into persistent LOD0 and transition geometry is rejected. It
+regenerated mask-changing fine regions and packed four adjacent fine-face masks
+into each transition request, but same-position camera comparison against
+historical revision `5ffcc63` showed holes, pinched fans, and warped sheets.
+Restoring primary emission restored the historical smooth surface. If secondary
+positions return, they require a complete render-time ownership design and the
+same fixed visual comparison; they cannot be accepted from table-derived
+degenerate-count improvement alone.
+
+This still follows the official Transvoxel classification and topology tables.
+The CPU owns clipbox placement, work identity, bounded count readback, and
+allocation. The GPU owns SDF sampling, table classification, interpolation,
+normals, scans, and final geometry emission. Moving extraction or vertex
+generation to the CPU remains rejected because it would duplicate the canonical
+GPU production path.
 
 Transitions have three independent scratch lanes and isolated pending,
 in-flight, cancellation, and resident state. Regular work always schedules and
@@ -135,6 +130,15 @@ edges between adjacent face pieces. Production results include a bounded record
 for every resident face: key, generation, arena ranges, latency, counts, digests,
 and audit counters. No geometry is read back for these audits.
 
+The table output may contain zero-area transition triangles with repeated
+positions. The maintained Godot implementation emits transition indices directly
+as well; the official dissertation also calls out zero-area output as a possible
+table consequence. Voxels3 currently preserves that table topology. Attempts to
+reconstruct or compact transition triangles in an additional GPU phase caused
+reproducible Vulkan invalid-write device loss on s&box `26.08.19`, so those paths
+are rejected rather than retained as a fallback. Explicit `voxel_mesh_audit`
+geometry readback remains diagnostic-only and never participates in rendering.
+
 A remesh evaluates the canonical `voxel_sdf_v5.hlsl` field once into a haloed
 `35^3` density lattice, classifies the `32^3` regular cells from cached corners,
 counts compact region-local edge vertices and indices, and scans those counts.
@@ -146,6 +150,15 @@ index ranges. The emit stage writes 24-byte position/normal vertices, 32-bit
 indices, and indexed-indirect arguments directly into persistent arena buffers.
 Ordinary drawing reads only persistent position, normal, index, visibility, and
 indirect-argument buffers. It never evaluates the procedural SDF.
+
+The production terrain material shades emitted normals with the historical
+256-unit XY world-space green checker. The checker changes only albedo, not
+material IDs, topology, positions, normals, visibility, or meshing work. A
+recent 64-unit three-axis variant is rejected: its Z-dependent phase bands made
+smooth curved and vertical surfaces resemble torn triangle fans in same-position
+comparison. Geometry correctness is still decided by fixed digests, transition
+audits, settled counts, and direct camera inspection; the checker is supporting
+visual evidence rather than a substitute for those measurements.
 
 The infinite-bounds custom scene object is only a render-thread rendezvous. Each
 normal manager update publishes one monotonically increasing epoch after
@@ -173,7 +186,8 @@ new count batch and consumes at most one count-ready batch for allocation and
 emit. The batch size and dispatch shape are unchanged.
 
 Three independent lanes overlap unrelated batch chains. Each lane owns its
-requests, count results, candidate allocations, timestamps, and lifecycle:
+requests, count results, candidate allocations, timestamps, and lifecycle. A
+lane may serve a foreground or LOD2 regular batch, but never both at once:
 
 `Idle -> CountPending -> CountReady -> EmitSubmitted -> Published`
 
@@ -251,9 +265,11 @@ geometry are stored separately in the same result.
 - CPU density arrays, CPU topology decoding, or geometry readback would create
   a second terrain/geometry path.
 - Rebuilding meshes every frame discards their persistent-cache value.
-- Sharing an existing regular scratch lane would degrade accepted near-field
-  responsiveness; coupling anchors or adding hierarchy publication would let
-  stale outer work block newer movement.
+- A dedicated fourth regular scratch instance was rejected after its LOD2-only
+  emit path reproducibly crashed native Vulkan resource access during editor
+  camera ejection. Mixing foreground and LOD2 requests in one batch, or allowing
+  outer work to participate in foreground settlement, would still let stale
+  outer work block newer movement and remains rejected.
 - CPU density fields or coarse voxel buffers would violate the canonical GPU SDF
   contract. A generalized N-level hierarchy and an LOD1-to-LOD2 transition are
   premature for this bounded proof.

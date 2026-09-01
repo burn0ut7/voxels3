@@ -5,9 +5,10 @@ collision geometry, normals, seams, LOD, and mesh scheduling.
 
 ## Decision Status
 
-LOD0 rendering uses the production regular-cell Transvoxel GPU path documented
-in `Docs/Architecture/GpuVoxelMeshing.md`. Transition cells, other LODs, and
-collision meshing remain unselected. Before implementing those responsibilities,
+LOD0 and LOD1 rendering use the production regular-cell Transvoxel GPU path, and
+the fixed LOD0-to-LOD1 boundary uses the production Transvoxel transition-cell
+path documented in `Docs/Architecture/GpuVoxelMeshing.md`. LOD2 and collision
+meshing remain unselected. Before implementing those responsibilities,
 compare viable algorithms and execution locations against smoothness, topology,
 edit latency, collision needs, s&box API limits, hardware targets, memory
 movement, and measured throughput.
