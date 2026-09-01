@@ -22,7 +22,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly Scene _scene;
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
 	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_terrain.shader" );
-	private readonly Sandbox.Rendering.CommandList _drawCommands = new( "Voxel Terrain Indexed Indirect Draws" );
 	private readonly Dictionary<GpuMeshRegionKey, ResidentMesh> _resident = new();
 	private readonly Dictionary<GpuMeshRegionKey, PendingMesh> _pending = new();
 	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();
@@ -34,6 +33,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private ScratchLane _lod2ScratchLane;
 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
 	private readonly HashSet<GpuMeshRegionKey> _renderActive = new();
+	private readonly HashSet<CameraComponent> _currentRenderCameras = new();
+	private readonly HashSet<CameraComponent> _leavingRenderCameras = new();
+	private readonly Dictionary<CameraComponent, RenderCameraState> _renderCameraStates = new();
+	private readonly List<RenderCameraState> _retiredRenderCameraStates = new();
+	private readonly object _renderCameraLock = new();
 	private readonly Dictionary<Lod0Lod1TransitionKey, ResidentTransition> _transitionResident = new();
 	private readonly Dictionary<Lod0Lod1TransitionKey, GpuTransitionDescriptor> _transitionDesiredDescriptors = new();
 	private readonly Dictionary<Lod0Lod1TransitionKey, PendingTransition> _transitionPending = new();
@@ -41,11 +45,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly HashSet<uint> _transitionCancelledGenerations = new();
 	private readonly HashSet<Lod0Lod1TransitionKey> _transitionRenderActive = new();
 	private TransitionScratchLane[] _transitionScratchLanes;
-	private readonly List<VisibilityBuffers> _retiredVisibilityBuffers = new();
 	private readonly object _visibilityLock = new();
+	private readonly object _visibilityDescriptorLock = new();
 	private readonly ReadbackSceneObject _readbackObject;
-	private readonly GpuBuffer<uint> _visibilityAggregateCounters = new( 20, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Aggregate Counters" );
 	private CameraComponent _camera;
+	private RenderCameraState _visibilityReadbackState;
 	private int _cellsPerAxis;
 	private int _visibilityCapacity;
 	private int _pendingGameplayCount;
@@ -58,9 +62,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private uint _nextGeneration;
 	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
 	private GpuBuffer.IndirectDrawIndexedArguments[] _sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
-	private VisibilityBuffers _visibilityBuffers;
-	private bool _drawCommandsDirty;
-	private bool _visibilityDescriptorsDirty;
 	private bool _visibilityMeasurementActive;
 	private bool _visibilitySettledCaptureActive;
 	private bool _visibilityReadbackPending;
@@ -78,6 +79,24 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private double _emitSubmissionMilliseconds;
 	private long _visibilityScalarReadbackCount;
 	private long _renderSequence;
+	private long _updateEpoch;
+	private long _claimedRenderEpoch;
+	private int _renderTickInProgress;
+	private long _suppressedRenderCallbackCount;
+	private long _busyRenderCallbackCount;
+	private long _reportedSuppressedRenderCallbackCount;
+	private long _lastRenderDiagnosticTimestamp;
+	private int _renderDiagnosticReportCount;
+	private long _drawCommandResetCount;
+	private long _visibilityDescriptorUploadCount;
+	private int _drawCommandDiagnosticReportCount;
+	private int _cameraBindingDiagnosticCount;
+	private long _drawCommitStopwatchTicks;
+	private int _drawCommitRebuildCount;
+	private int _renderViewKind;
+	private int _renderHandoffTraceBudget;
+	private long _renderHandoffCount;
+	private int _nextRenderCameraStateId;
 	private int _maximumDispatchesRequested = MaximumDispatchesPerUpdate;
 	private int _processedRenderDispatches;
 	private ulong _topologyDigest;
@@ -232,7 +251,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_lod2LastServiceTimestamp = Stopwatch.GetTimestamp();
 		_readbackObject = new ReadbackSceneObject( scene.SceneWorld, this );
 		Sandbox.Diagnostics.GpuProfilerStats.Enabled = true;
-		AttachToMainCamera();
+		RefreshRenderCameras();
 	}
 
 	public void BeginThroughputMeasurement( float chunkWorldSize )
@@ -343,7 +362,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var changed = active ? _transitionRenderActive.Add( key ) : _transitionRenderActive.Remove( key );
 		if ( !changed || !_transitionResident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
 		SetTransitionVisibilityActive( resident, active );
-		_drawCommandsDirty = true;
+		MarkDrawCommandsDirty();
 	}
 
 	public void RemoveTransition( Lod0Lod1TransitionKey key )
@@ -364,7 +383,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( !_transitionResident.Remove( key, out var resident ) ) return;
 		ReleaseTransitionResident( resident );
-		_drawCommandsDirty = true;
+		MarkDrawCommandsDirty();
 	}
 
 	public GpuTransitionIdentitySnapshot CaptureTransitionIdentity(
@@ -608,7 +627,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
 		if ( !changed || !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
 		SetVisibilityActive( resident, active );
-		_drawCommandsDirty = true;
+		MarkDrawCommandsDirty();
 	}
 
 	public bool Contains( GpuMeshRegionKey key ) => _resident.ContainsKey( key ) || _pending.ContainsKey( key ) ||
@@ -636,7 +655,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( !_resident.Remove( key, out var resident ) ) return;
 		ReleaseResident( resident );
-		_drawCommandsDirty = true;
+		MarkDrawCommandsDirty();
 	}
 
 	public void Reset( int cellsPerAxis )
@@ -655,21 +674,134 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionScratchLanes = CreateTransitionScratchLanes();
 	}
 
-	public int ProcessPending( int maximumDispatches )
+	public int ProcessPending( int maximumDispatches, long updateEpoch )
 	{
-		AttachToMainCamera();
+		RefreshRenderCameras();
 		FinalizeEmits();
 		FinalizeLod2Emit();
 		FinalizeTransitionEmits();
 		_maximumDispatchesRequested = Math.Clamp( maximumDispatches, 0, MaximumDispatchesPerUpdate );
+		System.Threading.Interlocked.Exchange( ref _updateEpoch, updateEpoch );
 		var processed = System.Threading.Interlocked.Exchange( ref _processedRenderDispatches, 0 );
-		CommitDrawCommands();
+		ReportSuppressedRenderCallbacks();
 		return processed;
+	}
+
+	public DrawCommandCommitResult DrainDrawCommandCommitResult()
+	{
+		var ticks = System.Threading.Interlocked.Exchange( ref _drawCommitStopwatchTicks, 0 );
+		var rebuilds = System.Threading.Interlocked.Exchange( ref _drawCommitRebuildCount, 0 );
+		return new DrawCommandCommitResult(
+			rebuilds > 0,
+			(float)(ticks * 1000.0 / Stopwatch.Frequency) );
+	}
+
+	private bool TryBeginGpuRenderTick()
+	{
+		var updateEpoch = System.Threading.Interlocked.Read( ref _updateEpoch );
+		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
+		{
+			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
+			return false;
+		}
+
+		if ( System.Threading.Interlocked.CompareExchange( ref _renderTickInProgress, 1, 0 ) != 0 )
+		{
+			System.Threading.Interlocked.Increment( ref _busyRenderCallbackCount );
+			return false;
+		}
+
+		updateEpoch = System.Threading.Interlocked.Read( ref _updateEpoch );
+		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
+		{
+			System.Threading.Interlocked.Exchange( ref _renderTickInProgress, 0 );
+			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
+			return false;
+		}
+
+		System.Threading.Interlocked.Exchange( ref _claimedRenderEpoch, updateEpoch );
+		return true;
+	}
+
+	private void ObserveRenderView()
+	{
+		var mainCameraPosition = _camera.IsValid() ? _camera.WorldPosition : Vector3.Zero;
+		var renderCameraPosition = Graphics.CameraPosition;
+		var viewKind = _camera.IsValid() && renderCameraPosition.AlmostEqual( mainCameraPosition, 0.25f ) ? 1 : 2;
+		var previousKind = System.Threading.Interlocked.Exchange( ref _renderViewKind, viewKind );
+		if ( previousKind == 0 || previousKind == viewKind ) return;
+
+		var handoff = System.Threading.Interlocked.Increment( ref _renderHandoffCount );
+		if ( handoff > 8 ) return;
+		System.Threading.Interlocked.Exchange( ref _renderHandoffTraceBudget, 48 );
+		Log.Info(
+			$"[VoxelWorld] gpu.render.view_handoff total={handoff} " +
+			$"from={(previousKind == 1 ? "main" : "other")} to={(viewKind == 1 ? "main" : "other")} " +
+			$"renderCamera={renderCameraPosition} mainCamera={mainCameraPosition} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+	}
+
+	private void CommitDrawCommandsForView( RenderCameraState requestedState )
+	{
+		lock ( _renderCameraLock )
+		{
+			if ( requestedState.Camera.IsValid() &&
+				_renderCameraStates.TryGetValue( requestedState.Camera, out var currentState ) &&
+				ReferenceEquals( requestedState, currentState ) )
+			{
+				if ( _visibilityMeasurementActive || _visibilitySettledCaptureActive )
+					_visibilityReadbackState = requestedState;
+				CommitDrawCommandsLocked( requestedState );
+			}
+		}
+	}
+
+	private void TraceRenderHandoffPhase( string phase )
+	{
+		var remaining = System.Threading.Interlocked.Decrement( ref _renderHandoffTraceBudget );
+		if ( remaining < 0 ) return;
+		Log.Info(
+			$"[VoxelWorld] gpu.render.handoff_phase phase=\"{phase}\" remaining={remaining} " +
+			$"view={(_renderViewKind == 1 ? "main" : "other")} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )} " +
+			$"regularPending={PendingCount} lod2Pending={PendingLod2Count} " +
+			$"transitionPending={TransitionPendingCount}" );
+	}
+
+	private void EndGpuRenderTick()
+	{
+		System.Threading.Interlocked.Exchange( ref _renderTickInProgress, 0 );
+	}
+
+	private void ReportSuppressedRenderCallbacks()
+	{
+		var suppressed = System.Threading.Interlocked.Read( ref _suppressedRenderCallbackCount );
+		if ( suppressed == _reportedSuppressedRenderCallbackCount || _renderDiagnosticReportCount >= 10 ) return;
+
+		var now = Stopwatch.GetTimestamp();
+		if ( _lastRenderDiagnosticTimestamp != 0 &&
+			Stopwatch.GetElapsedTime( _lastRenderDiagnosticTimestamp, now ).TotalSeconds < 1.0 ) return;
+
+		var newlySuppressed = suppressed - _reportedSuppressedRenderCallbackCount;
+		_reportedSuppressedRenderCallbackCount = suppressed;
+		_lastRenderDiagnosticTimestamp = now;
+		_renderDiagnosticReportCount++;
+		Log.Info(
+			$"[VoxelWorld] gpu.render.extra_views suppressedTotal={suppressed} suppressedSinceLast={newlySuppressed} " +
+			$"busyTotal={System.Threading.Interlocked.Read( ref _busyRenderCallbackCount )} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
 	}
 
 	private void ProcessGpuRenderTick()
 	{
 		if ( _disposed || _scratchLanes is null ) return;
+		TraceRenderHandoffPhase( "gpu.begin" );
 		var regularGpuWorkSubmitted = false;
 		foreach ( var lane in _scratchLanes )
 		{
@@ -715,7 +847,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		var transitionGpuWorkSubmitted = !regularGpuWorkSubmitted && ProcessTransitionGpuRenderTick();
+		TraceRenderHandoffPhase(
+			$"gpu.foreground.end regularSubmitted={regularGpuWorkSubmitted} transitionSubmitted={transitionGpuWorkSubmitted}" );
 		ProcessLod2AfterForeground( regularGpuWorkSubmitted || transitionGpuWorkSubmitted );
+		TraceRenderHandoffPhase( "gpu.lod2.end" );
 	}
 
 	private bool ProcessTransitionGpuRenderTick()
@@ -1051,8 +1186,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( changed )
 		{
-			_drawCommandsDirty = true;
-			CommitDrawCommands();
+		MarkDrawCommandsDirty();
 		}
 	}
 
@@ -1108,8 +1242,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		lane.EmitInFlight.Clear();
 		if ( changed )
 		{
-			_drawCommandsDirty = true;
-			CommitDrawCommands();
+			MarkDrawCommandsDirty();
 		}
 	}
 
@@ -1231,8 +1364,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( changed )
 		{
-			_drawCommandsDirty = true;
-			CommitDrawCommands();
+			MarkDrawCommandsDirty();
 		}
 	}
 
@@ -1310,7 +1442,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		EnsureVisibilityCapacity( _arenas.Count * RegionsPerSlab );
 		if ( !created.TryAcquire( vertexCount, indexCount, generation, out var allocation ) )
 			throw new InvalidOperationException( "A new terrain geometry arena rejected a valid allocation." );
-		_drawCommandsDirty = true;
+		MarkDrawCommandsDirty();
 		return allocation;
 	}
 
@@ -1545,51 +1677,113 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( resident.Handle is not null ) SetVisibilityActive( resident, true );
 	}
 
-	public DrawCommandCommitResult CommitDrawCommands()
+	private void MarkDrawCommandsDirty()
+	{
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values ) state.CommandsDirty = true;
+		}
+	}
+
+	private void MarkVisibilityDescriptorsDirty()
+	{
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				state.DescriptorsDirty = true;
+				state.CommandsDirty = true;
+			}
+		}
+	}
+
+	private void EnsureVisibilityBuffers( RenderCameraState state )
+	{
+		if ( _visibilityCapacity == 0 || state.VisibilityCapacity == _visibilityCapacity ) return;
+		if ( state.Visibility is not null ) state.RetiredVisibility.Add( state.Visibility );
+		var bounds = new GpuBuffer<Vector4>( _visibilityCapacity * 2,
+			GpuBuffer.UsageFlags.Structured, "Voxel View Visibility Bounds" );
+		var source = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
+			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
+			"Voxel View Source Indexed Arguments" );
+		var visible = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
+			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
+			"Voxel View Visible Indexed Arguments" );
+		var frame = new GpuBuffer<uint>( 11, GpuBuffer.UsageFlags.Structured,
+			"Voxel View Visibility Frame Counters" );
+		state.Visibility = new VisibilityBuffers( bounds, source, visible, frame );
+		state.VisibilityCapacity = _visibilityCapacity;
+		state.DescriptorsDirty = true;
+		state.CommandsDirty = true;
+	}
+
+	private DrawCommandCommitResult CommitDrawCommandsLocked( RenderCameraState state )
 	{
 		var start = Stopwatch.GetTimestamp();
-		UploadVisibilityDescriptors();
-		if ( !_drawCommandsDirty )
-			return new DrawCommandCommitResult( false, (float)Stopwatch.GetElapsedTime( start ).TotalMilliseconds );
-		_drawCommands.Reset();
+		EnsureVisibilityBuffers( state );
+		if ( state.AggregateResetPending )
+		{
+			Span<uint> counters = stackalloc uint[20];
+			counters[3] = uint.MaxValue;
+			state.AggregateCounters.SetData( counters );
+			state.AggregateResetPending = false;
+		}
+		UploadVisibilityDescriptors( state );
+		if ( !state.CommandsDirty )
+			return new DrawCommandCommitResult( false, 0f );
+		var commands = state.Commands;
+		var visibility = state.Visibility;
+		commands.Reset();
+		_drawCommandResetCount++;
+		if ( _drawCommandDiagnosticReportCount < 32 )
+		{
+			_drawCommandDiagnosticReportCount++;
+			Log.Info(
+				$"[VoxelWorld] gpu.render.command_list_reset total={_drawCommandResetCount} " +
+				$"descriptorUploads={_visibilityDescriptorUploadCount} arenas={_arenas.Count} " +
+				$"visibilityCapacity={_visibilityCapacity} measurement={_visibilityMeasurementActive} " +
+				$"settledCapture={_visibilitySettledCaptureActive} " +
+				$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+				$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+		}
 		if ( _visibilityCapacity > 0 )
 		{
-			_drawCommands.Attributes.Set( "VisibilityBounds", _visibilityBuffers.Bounds );
-			_drawCommands.Attributes.Set( "SourceIndirectArguments", _visibilityBuffers.SourceArguments );
-			_drawCommands.Attributes.Set( "VisibleIndirectArguments", _visibilityBuffers.VisibleArguments );
-			_drawCommands.Attributes.Set( "VisibilityFrameCounters", _visibilityBuffers.FrameCounters );
-			_drawCommands.Attributes.Set( "VisibilityAggregateCounters", _visibilityAggregateCounters );
-			_drawCommands.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
-			_drawCommands.Attributes.Set( "VisibilityPass", 0 );
-			_drawCommands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
-			_drawCommands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
-			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.Bounds, ResourceState.GenericRead );
-			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.SourceArguments, ResourceState.GenericRead );
-			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.UnorderedAccess );
-			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.UnorderedAccess );
-			_drawCommands.Clear( _visibilityBuffers.FrameCounters, 0 );
-			_drawCommands.DispatchCompute( _visibilityShader, _visibilityCapacity, 1, 1 );
-			_drawCommands.UavBarrier( _visibilityBuffers.VisibleArguments );
-			_drawCommands.UavBarrier( _visibilityBuffers.FrameCounters );
+			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
+			commands.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
+			commands.Attributes.Set( "VisibleIndirectArguments", visibility.VisibleArguments );
+			commands.Attributes.Set( "VisibilityFrameCounters", visibility.FrameCounters );
+			commands.Attributes.Set( "VisibilityAggregateCounters", state.AggregateCounters );
+			commands.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
+			commands.Attributes.Set( "VisibilityPass", 0 );
+			commands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
+			commands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
+			commands.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
+			commands.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
+			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.UnorderedAccess );
+			commands.ResourceBarrierTransition( visibility.FrameCounters, ResourceState.UnorderedAccess );
+			commands.Clear( visibility.FrameCounters, 0 );
+			commands.DispatchCompute( _visibilityShader, _visibilityCapacity, 1, 1 );
+			commands.UavBarrier( visibility.VisibleArguments );
+			commands.UavBarrier( visibility.FrameCounters );
 			if ( _visibilityMeasurementActive || _visibilitySettledCaptureActive )
 			{
-				_drawCommands.ResourceBarrierTransition( _visibilityBuffers.FrameCounters, ResourceState.GenericRead );
-				_drawCommands.ResourceBarrierTransition( _visibilityAggregateCounters, ResourceState.UnorderedAccess );
-				_drawCommands.Attributes.Set( "VisibilityPass", 1 );
-				_drawCommands.DispatchCompute( _visibilityShader, 1, 1, 1 );
-				_drawCommands.UavBarrier( _visibilityAggregateCounters );
+				commands.ResourceBarrierTransition( visibility.FrameCounters, ResourceState.GenericRead );
+				commands.ResourceBarrierTransition( state.AggregateCounters, ResourceState.UnorderedAccess );
+				commands.Attributes.Set( "VisibilityPass", 1 );
+				commands.DispatchCompute( _visibilityShader, 1, 1, 1 );
+				commands.UavBarrier( state.AggregateCounters );
 			}
-			_drawCommands.ResourceBarrierTransition( _visibilityBuffers.VisibleArguments, ResourceState.IndirectArgument );
+			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.IndirectArgument );
 			foreach ( var arena in _arenas )
 			{
 				if ( arena.ActiveResidentCount == 0 ) continue;
-				_drawCommands.ResourceBarrierTransition( arena.Vertices, ResourceState.VertexOrIndexBuffer );
-				_drawCommands.ResourceBarrierTransition( arena.Indices, ResourceState.VertexOrIndexBuffer );
-				_drawCommands.DrawIndexedInstancedIndirect(
+				commands.ResourceBarrierTransition( arena.Vertices, ResourceState.VertexOrIndexBuffer );
+				commands.ResourceBarrierTransition( arena.Indices, ResourceState.VertexOrIndexBuffer );
+				commands.DrawIndexedInstancedIndirect(
 					arena.Vertices,
 					arena.Indices,
 					_material,
-					_visibilityBuffers.VisibleArguments,
+					visibility.VisibleArguments,
 					(uint)(arena.Index * RegionsPerSlab),
 					null,
 					Graphics.PrimitiveType.Triangles,
@@ -1597,8 +1791,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 					IndirectArgumentStride );
 			}
 		}
-		_drawCommandsDirty = false;
-		return new DrawCommandCommitResult( true, (float)Stopwatch.GetElapsedTime( start ).TotalMilliseconds );
+		state.CommandsDirty = false;
+		var elapsedTicks = Stopwatch.GetTimestamp() - start;
+		System.Threading.Interlocked.Add( ref _drawCommitStopwatchTicks, elapsedTicks );
+		System.Threading.Interlocked.Increment( ref _drawCommitRebuildCount );
+		return new DrawCommandCommitResult(
+			true,
+			(float)(elapsedTicks * 1000.0 / Stopwatch.Frequency) );
 	}
 
 	public void BeginVisibilityMeasurement()
@@ -1609,27 +1808,28 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_visibilityReadbackPending = false;
 			_visibilityReadbackInFlight = false;
 		}
-		Span<uint> counters = stackalloc uint[20];
-		counters[3] = uint.MaxValue;
-		_visibilityAggregateCounters.SetData( counters );
 		_visibilityMeasurementActive = true;
 		_visibilitySettledCaptureActive = false;
-		_drawCommandsDirty = true;
-		CommitDrawCommands();
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				state.AggregateResetPending = true;
+				state.CommandsDirty = true;
+			}
+		}
 	}
 
 	public void StopVisibilityMeasurement()
 	{
 		_visibilityMeasurementActive = false;
-		_drawCommandsDirty = true;
-		CommitDrawCommands();
+		MarkDrawCommandsDirty();
 	}
 
 	public void CaptureSettledVisibilityMeasurement()
 	{
 		_visibilitySettledCaptureActive = true;
-		_drawCommandsDirty = true;
-		CommitDrawCommands();
+		MarkDrawCommandsDirty();
 		lock ( _visibilityLock )
 		{
 			_visibilityReadbackPending = true;
@@ -1649,8 +1849,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			measurement = completed;
 			_completedVisibilityMeasurement = null;
 			_visibilitySettledCaptureActive = false;
-			_drawCommandsDirty = true;
-			CommitDrawCommands();
+			MarkDrawCommandsDirty();
 			return true;
 		}
 	}
@@ -1662,10 +1861,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		lock ( _visibilityLock )
 		{
 			if ( !_visibilityReadbackPending || _visibilityReadbackInFlight ||
-				System.Threading.Interlocked.Read( ref _renderSequence ) <= _visibilityReadbackRequestedRenderSequence + 1 ) return;
+				System.Threading.Interlocked.Read( ref _renderSequence ) <= _visibilityReadbackRequestedRenderSequence + 1 ||
+				_visibilityReadbackState is null ) return;
 			_visibilityReadbackPending = false;
 			_visibilityReadbackInFlight = true;
-			counters = _visibilityAggregateCounters;
+			counters = _visibilityReadbackState.AggregateCounters;
 			logicalBytes = LogicalVisibilityBytes;
 			_visibilityScalarReadbackCount++;
 			_scalarReadbackCount++;
@@ -1705,10 +1905,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void EnsureVisibilityCapacity( int requiredCapacity )
 	{
+		lock ( _visibilityDescriptorLock )
+		{
+			if ( requiredCapacity <= _visibilityCapacity ) return;
+			EnsureVisibilityCapacityLocked( requiredCapacity );
+		}
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	private void EnsureVisibilityCapacityLocked( int requiredCapacity )
+	{
 		if ( requiredCapacity <= _visibilityCapacity ) return;
 		var newCapacity = Math.Max( RegionsPerSlab, _visibilityCapacity );
 		while ( newCapacity < requiredCapacity ) newCapacity = checked( newCapacity * 2 );
-		if ( _visibilityBuffers is not null ) _retiredVisibilityBuffers.Add( _visibilityBuffers );
 		var oldBounds = _visibilityBoundsData;
 		var oldArguments = _sourceArgumentData;
 		_visibilityCapacity = newCapacity;
@@ -1716,20 +1925,16 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_sourceArgumentData = new GpuBuffer.IndirectDrawIndexedArguments[newCapacity];
 		oldBounds.CopyTo( _visibilityBoundsData, 0 );
 		oldArguments.CopyTo( _sourceArgumentData, 0 );
-		var bounds = new GpuBuffer<Vector4>( newCapacity * 2, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Bounds" );
-		var source = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( newCapacity,
-			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Source Indexed Arguments" );
-		var visible = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( newCapacity,
-			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Visible Indexed Arguments" );
-		var frame = new GpuBuffer<uint>( 11, GpuBuffer.UsageFlags.Structured, "Voxel Visibility Frame Counters" );
-		source.SetData( _sourceArgumentData );
-		visible.SetData( _sourceArgumentData );
-		_visibilityBuffers = new VisibilityBuffers( bounds, source, visible, frame );
-		_visibilityDescriptorsDirty = true;
-		_drawCommandsDirty = true;
 	}
 
 	private void SetVisibilityActive( ResidentMesh resident, bool active )
+	{
+		if ( resident.Handle is null ) return;
+		lock ( _visibilityDescriptorLock ) SetVisibilityActiveLocked( resident, active );
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	private void SetVisibilityActiveLocked( ResidentMesh resident, bool active )
 	{
 		if ( resident.Handle is null ) return;
 		var descriptor = resident.Descriptor;
@@ -1762,10 +1967,16 @@ internal sealed class GpuVoxelMesher : IDisposable
 				FirstInstance = 0
 			}
 			: default;
-		_visibilityDescriptorsDirty = true;
 	}
 
 	private void SetTransitionVisibilityActive( ResidentTransition resident, bool active )
+	{
+		if ( resident.Handle is null ) return;
+		lock ( _visibilityDescriptorLock ) SetTransitionVisibilityActiveLocked( resident, active );
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	private void SetTransitionVisibilityActiveLocked( ResidentTransition resident, bool active )
 	{
 		if ( resident.Handle is null ) return;
 		var descriptor = resident.Descriptor;
@@ -1812,15 +2023,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 				FirstInstance = 0
 			}
 			: default;
-		_visibilityDescriptorsDirty = true;
 	}
 
-	private void UploadVisibilityDescriptors()
+	private void UploadVisibilityDescriptors( RenderCameraState state )
 	{
-		if ( !_visibilityDescriptorsDirty || _visibilityBuffers is null ) return;
-		_visibilityBuffers.Bounds.SetData( _visibilityBoundsData );
-		_visibilityBuffers.SourceArguments.SetData( _sourceArgumentData );
-		_visibilityDescriptorsDirty = false;
+		lock ( _visibilityDescriptorLock )
+		{
+			if ( !state.DescriptorsDirty || state.Visibility is null ) return;
+			state.Visibility.Bounds.SetData( _visibilityBoundsData );
+			state.Visibility.SourceArguments.SetData( _sourceArgumentData );
+			state.Visibility.VisibleArguments.SetData( _sourceArgumentData );
+			_visibilityDescriptorUploadCount++;
+			state.DescriptorsDirty = false;
+		}
 	}
 
 	public void Clear()
@@ -1885,8 +2100,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionInvalidTableCount = 0;
 		_lod2EligibleSinceTimestamp = 0;
 		_lod2LastServiceTimestamp = Stopwatch.GetTimestamp();
-		_drawCommandsDirty = true;
-		CommitDrawCommands();
+		MarkDrawCommandsDirty();
 	}
 
 	public void Dispose()
@@ -1894,17 +2108,33 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( _disposed ) return;
 		_disposed = true;
 		Clear();
-		if ( _camera is not null )
+		lock ( _renderCameraLock )
 		{
-			_camera.RemoveCommandList( _drawCommands );
-			_camera = null;
+			var commitTags = _renderCameraStates.Values.Select( state => state.CommitTag ).ToArray();
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				if ( state.Camera.IsValid() )
+				{
+					foreach ( var commitTag in commitTags )
+					{
+						if ( commitTag is not null ) state.Camera.RenderExcludeTags.Remove( commitTag );
+					}
+					state.Camera.RemoveCommandList( state.Commands );
+				}
+				state.Dispose();
+			}
+			foreach ( var state in _retiredRenderCameraStates ) state.Dispose();
+			_renderCameraStates.Clear();
+			_retiredRenderCameraStates.Clear();
 		}
+		_currentRenderCameras.Clear();
+		_leavingRenderCameras.Clear();
+		_camera = null;
 		DisposeArenas();
 		DisposeVisibilityBuffers();
 		DisposeScratchLanes();
 		DisposeLod2ScratchLane();
 		DisposeTransitionScratchLanes();
-		_visibilityAggregateCounters.Dispose();
 		_readbackObject?.Delete();
 	}
 
@@ -1926,23 +2156,74 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var lane in _transitionScratchLanes ) lane.Scratch.Dispose();
 	}
 
-	private void AttachToMainCamera()
+	private void RefreshRenderCameras()
 	{
-		CameraComponent selected = null;
-		foreach ( var candidate in _scene.GetAllComponents<CameraComponent>() )
+		lock ( _renderCameraLock )
 		{
-			selected ??= candidate;
-			if ( candidate.IsMainCamera ) { selected = candidate; break; }
-		}
-		if ( selected == _camera ) return;
-		if ( _camera is not null )
-		{
-			_camera.RemoveCommandList( _drawCommands );
-		}
-		_camera = selected;
-		if ( _camera is not null )
-		{
-			_camera.AddCommandList( _drawCommands, Sandbox.Rendering.Stage.AfterOpaque, 0 );
+			_currentRenderCameras.Clear();
+			CameraComponent selected = null;
+			foreach ( var candidate in _scene.GetAllComponents<CameraComponent>() )
+			{
+				_currentRenderCameras.Add( candidate );
+				selected ??= candidate;
+				if ( candidate.IsMainCamera ) selected = candidate;
+			}
+			_camera = selected;
+
+			_leavingRenderCameras.Clear();
+			_leavingRenderCameras.UnionWith( _renderCameraStates.Keys );
+			_leavingRenderCameras.ExceptWith( _currentRenderCameras );
+			var leavingCount = _leavingRenderCameras.Count;
+			foreach ( var camera in _leavingRenderCameras )
+			{
+				var state = _renderCameraStates[camera];
+				foreach ( var currentCamera in _currentRenderCameras )
+				{
+					if ( currentCamera.IsValid() ) currentCamera.RenderExcludeTags.Remove( state.CommitTag );
+				}
+				if ( camera.IsValid() )
+				{
+					foreach ( var otherState in _renderCameraStates.Values )
+					{
+						if ( !ReferenceEquals( state, otherState ) )
+							camera.RenderExcludeTags.Remove( otherState.CommitTag );
+					}
+					camera.RemoveCommandList( state.Commands );
+				}
+				state.DetachCommitObject();
+				_renderCameraStates.Remove( camera );
+				_retiredRenderCameraStates.Add( state );
+			}
+
+			_currentRenderCameras.ExceptWith( _renderCameraStates.Keys );
+			var enteringCount = _currentRenderCameras.Count;
+			foreach ( var camera in _currentRenderCameras )
+			{
+				var state = new RenderCameraState(
+					camera,
+					new DrawCommitSceneObject(
+						_scene.SceneWorld,
+						this,
+						$"voxel_view_commit_{++_nextRenderCameraStateId}" ) );
+				foreach ( var otherState in _renderCameraStates.Values )
+				{
+					camera.RenderExcludeTags.Add( otherState.CommitTag );
+					if ( otherState.Camera.IsValid() )
+						otherState.Camera.RenderExcludeTags.Add( state.CommitTag );
+				}
+				camera.AddCommandList( state.Commands, Sandbox.Rendering.Stage.AfterOpaque, 0 );
+				_renderCameraStates.Add( camera, state );
+			}
+			_visibilityReadbackState = _camera.IsValid() && _renderCameraStates.TryGetValue( _camera, out var mainState )
+				? mainState
+				: null;
+			if ( (enteringCount > 0 || leavingCount > 0) && _cameraBindingDiagnosticCount < 16 )
+			{
+				_cameraBindingDiagnosticCount++;
+				Log.Info(
+					$"[VoxelWorld] gpu.render.camera_bindings attached={_renderCameraStates.Count} " +
+					$"entered={enteringCount} left={leavingCount} mainCameraValid={_camera.IsValid()}" );
+			}
 		}
 	}
 
@@ -1954,14 +2235,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void DisposeVisibilityBuffers()
 	{
-		_visibilityBuffers?.Dispose();
-		_visibilityBuffers = null;
-		foreach ( var retired in _retiredVisibilityBuffers ) retired.Dispose();
-		_retiredVisibilityBuffers.Clear();
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values ) state.DisposeVisibility();
+			foreach ( var state in _retiredRenderCameraStates ) state.DisposeVisibility();
+		}
 		_visibilityCapacity = 0;
 		_visibilityBoundsData = Array.Empty<Vector4>();
 		_sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
-		_visibilityDescriptorsDirty = false;
 	}
 
 	private sealed class ThroughputRecorder
@@ -2295,6 +2576,54 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); }
 	}
 
+	private sealed class RenderCameraState : IDisposable
+	{
+		public CameraComponent Camera { get; }
+		public DrawCommitSceneObject CommitObject { get; private set; }
+		public string CommitTag => CommitObject?.CommitTag;
+		public Sandbox.Rendering.CommandList Commands { get; } =
+			new( "Voxel Terrain Indexed Indirect Draws" );
+		public List<VisibilityBuffers> RetiredVisibility { get; } = new();
+		public GpuBuffer<uint> AggregateCounters { get; } = new(
+			20, GpuBuffer.UsageFlags.Structured, "Voxel View Visibility Aggregate Counters" );
+		public VisibilityBuffers Visibility { get; set; }
+		public int VisibilityCapacity { get; set; }
+		public bool CommandsDirty { get; set; } = true;
+		public bool DescriptorsDirty { get; set; } = true;
+		public bool AggregateResetPending { get; set; } = true;
+
+		public RenderCameraState( CameraComponent camera, DrawCommitSceneObject commitObject )
+		{
+			Camera = camera;
+			CommitObject = commitObject;
+			commitObject.State = this;
+		}
+
+		public void DetachCommitObject()
+		{
+			CommitObject?.Delete();
+			CommitObject = null;
+		}
+
+		public void DisposeVisibility()
+		{
+			Visibility?.Dispose();
+			Visibility = null;
+			foreach ( var retired in RetiredVisibility ) retired.Dispose();
+			RetiredVisibility.Clear();
+			VisibilityCapacity = 0;
+			CommandsDirty = true;
+			DescriptorsDirty = true;
+		}
+
+		public void Dispose()
+		{
+			DetachCommitObject();
+			DisposeVisibility();
+			AggregateCounters.Dispose();
+		}
+	}
+
 	private sealed class VisibilityBuffers : IDisposable
 	{
 		public GpuBuffer<Vector4> Bounds { get; }
@@ -2317,13 +2646,49 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_owner = owner;
 			Bounds = BBox.FromPositionAndSize( Vector3.Zero, Vector3.One * 1_000_000_000f );
 		}
+
 		public override void RenderSceneObject()
 		{
-			System.Threading.Interlocked.Increment( ref _owner._renderSequence );
-			_owner.ProcessGpuRenderTick();
-			_owner.ProcessVisibilityReadback();
+			_owner.ObserveRenderView();
+			if ( _owner.TryBeginGpuRenderTick() )
+			{
+				try
+				{
+					System.Threading.Interlocked.Increment( ref _owner._renderSequence );
+					_owner.TraceRenderHandoffPhase( "callback.claimed" );
+					_owner.ProcessGpuRenderTick();
+					_owner.TraceRenderHandoffPhase( "visibility.readback.begin" );
+					_owner.ProcessVisibilityReadback();
+					_owner.TraceRenderHandoffPhase( "visibility.readback.end" );
+				}
+				finally
+				{
+					_owner.EndGpuRenderTick();
+				}
+			}
 		}
 	}
+
+	private sealed class DrawCommitSceneObject : SceneCustomObject
+	{
+		private readonly GpuVoxelMesher _owner;
+		public string CommitTag { get; }
+		public RenderCameraState State { get; set; }
+
+		public DrawCommitSceneObject( SceneWorld world, GpuVoxelMesher owner, string commitTag ) : base( world )
+		{
+			_owner = owner;
+			CommitTag = commitTag;
+			Tags.Add( commitTag );
+			Bounds = BBox.FromPositionAndSize( Vector3.Zero, Vector3.One * 1_000_000_000f );
+		}
+
+		public override void RenderSceneObject()
+		{
+			if ( State is not null ) _owner.CommitDrawCommandsForView( State );
+		}
+	}
+
 }
 
 internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Milliseconds );

@@ -91,6 +91,7 @@ public sealed class VoxelManager : Component
 	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private GpuVoxelMesher _gpuMesher;
+	private long _gpuRenderUpdateEpoch;
 
 	private bool _hasStreamingCenter;
 	private bool _streamInProgress;
@@ -467,7 +468,9 @@ public sealed class VoxelManager : Component
 		{
 			RefreshPlayerChunkStatus();
 		}
-		var meshDispatches = _gpuMesher.ProcessPending( GpuVoxelMesher.MaximumDispatchesPerUpdate );
+		var meshDispatches = _gpuMesher.ProcessPending(
+			GpuVoxelMesher.MaximumDispatchesPerUpdate,
+			++_gpuRenderUpdateEpoch );
 		if ( _playerFigureEightTestRunning )
 		{
 			_performancePeakMeshDispatchesPerUpdate = Math.Max(
@@ -2087,7 +2090,7 @@ public sealed class VoxelManager : Component
 			_nextRenderDesiredChunks = previousRenderDesired;
 		}
 		UpdateClipboxPlacement( ActiveStreamingTarget.WorldPosition );
-		var drawCommit = _gpuMesher.CommitDrawCommands();
+		var drawCommit = _gpuMesher.DrainDrawCommandCommitResult();
 
 		var prioritizationStart = Stopwatch.GetTimestamp();
 		_coordinateBuffer.Clear();

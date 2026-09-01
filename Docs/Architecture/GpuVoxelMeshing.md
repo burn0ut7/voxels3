@@ -147,6 +147,18 @@ indices, and indexed-indirect arguments directly into persistent arena buffers.
 Ordinary drawing reads only persistent position, normal, index, visibility, and
 indirect-argument buffers. It never evaluates the procedural SDF.
 
+The infinite-bounds custom scene object is only a render-thread rendezvous. Each
+normal manager update publishes one monotonically increasing epoch after
+placement, finalization, and the dispatch budget are current. Exactly one render
+callback may claim that epoch and advance regular, transition, LOD2, and
+visibility-readback state. Additional game, editor, or dependent views still
+render the same `SceneWorld`, but their rendezvous callbacks cannot advance the
+terrain GPU lifecycle again for that update epoch. A reentrancy guard also
+rejects an overlapping callback while the claimed epoch is executing. This keeps
+one canonical GPU scheduler without excluding cameras, pausing mesh updates, or
+changing the persistent terrain draw path. Bounded diagnostics aggregate the
+suppressed extra-view callbacks without logging every frame.
+
 The installed s&box 26.08.19 API exposes public indexed-indirect drawing,
 indirect dispatch, append counters, asynchronous buffer readback, and multiple
 independent GPU buffers. It does not expose a clean public GPU-owned

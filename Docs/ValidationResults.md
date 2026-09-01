@@ -5419,3 +5419,78 @@ Record an approved extraordinary change here before adding the new version:
   the editor was restarted, and the completed final repeat above supersedes that
   aborted attempt. No aborted or diagnostic attempt is presented as performance
   acceptance evidence.
+
+### EDITOR-CAMERA-LOD-001/v1 - Multi-view GPU scheduler regression
+
+- Definition recorded on 2026-09-01 before the first candidate run. The source
+  failure is the native crash observed from commit `88e0578` while the unchanged
+  `PERFORMANCE-OVERVIEW-001/v4` production figure-eight was running and the play
+  camera was ejected into the editor scene view.
+- Preserve every `PERFORMANCE-OVERVIEW-001/v4` parameter: s&box `26.08.19`, one
+  player, `1280x720`, `fps_max=1000`, generator version `5`, seed `1337`, speed
+  `2500`, X/Y reach `50000/25000`, Z `0`, one loop, unchanged foreground
+  settlement, two render advances, and the ten-second stationary window.
+- Reproduction journey: start the production performance operation, leave the
+  player-controlled figure-eight running, press the editor's F8 eject action
+  five seconds after `performance.test.begin`, retain the ejected camera at the
+  game-camera transform copied by the editor for 30 seconds, and then press F8
+  to return to the game camera. This is an editor integration action; no direct
+  mesher call or alternate workload may substitute for it.
+- Correctness gates: the process remains alive; the Sentry crash marker does not
+  advance; fresh logs contain no access violation, device loss, managed
+  exception, compute, or readback failure; no update epoch advances mutable GPU
+  state more than once even when game and editor views both render; mesh work
+  continues through the active views; after possession returns, the performance
+  run completes with all regular, transition, and LOD2 queues settled and the
+  accepted placement counts and geometry digests unchanged.
+- Responsiveness and performance gates remain those of
+  `CLIPBOX-LOD2-001/v1` and `PERFORMANCE-OVERVIEW-001/v4`. The candidate must be
+  compared with the most recent accepted compatible run using the unchanged
+  `max(5%, 0.25 ms)` CPU/GPU tail tolerance. Extra-view diagnostics are bounded
+  to at most ten aggregate messages per mesher lifetime and must add no
+  per-frame log stream after that bound.
+- Pre-fix evidence: `sbox-dev-2026-09-01.3.log` recorded
+  `performance.test.begin` at `00:45:12.9639` and then ended abruptly. The Sentry
+  marker advanced at `00:46:20` and event
+  `5ae9d299-eaaa-486d-4459-7e8d97dd2184` reported native exception
+  `0xC0000005`. No managed exception or new Vulkan device-fault dump was
+  produced. Outcome: **failed before candidate implementation**.
+- First candidate evidence: the once-per-update token guard suppressed six
+  explicit editor-camera screenshot views during active regular, transition,
+  and LOD2 work, but the real F8 ejection still advanced the Sentry marker at
+  `01:02:24` with event `e1feee27-0405-495f-3839-2d6c2de4befa` and the same
+  native `0xC0000005` access violation. This disproved duplicate callbacks as
+  the complete cause. Engine source shows ejection replaces the game viewport
+  with a `CameraComponent` created by `CreateSceneEditorCamera()` and that such
+  cameras exclude the standard `hidden` tag. Camera exclusion was investigated
+  next but is not part of the accepted design because editor views must keep
+  rendering and servicing the same terrain system.
+- Second candidate evidence: applying the standard `hidden` exclusion produced
+  ten bounded `gpu.render.waiting` records with a frozen claimed/render sequence
+  while CPU placement continued following the figure-eight target. The editor
+  nevertheless crashed at `01:09:01`; Sentry event
+  `8bf28bc5-e774-450a-af1f-4a17a7f62b74` again reported native `0xC0000005`.
+  With scheduler callbacks excluded, this isolated the remaining native work to
+  work performed outside the excluded render callback. This disproved camera
+  exclusion as a root-cause fix.
+- Third candidate evidence: deferring descriptor uploads and command-list resets
+  survived approximately 84 seconds in the ejected view, then resumed at
+  `01:22:42` and crashed three seconds later. Sentry event
+  `69d2bf4e-b1c8-4deb-2444-c155293c9948` reported the same native
+  `0xC0000005`. This was a containment path, not the requested invariant, and is
+  removed. The bounded slice is now solely the manager-issued epoch claim that
+  prevents multi-view reentrancy while leaving every view and normal update path
+  active.
+- Epoch-only diagnostic evidence: the clean-process candidate with a mesher-owned
+  epoch crashed at `01:26:37`, before the attempted F8 input, with Sentry event
+  `99d5e897-386c-40d0-def7-34799e125a25`. Moving epoch ownership explicitly to
+  `VoxelManager` survived 25 seconds of stationary play, then the ejected moving
+  workload crashed after `performance.test.begin` at `01:29:01`. The only
+  suppressed callback in either process was the pre-update startup callback
+  (`updateEpoch=1`, `claimedEpoch=0`, `renderSequence=0`); there was no measured
+  duplicate callback during movement. Native dump inspection maps the original
+  and all four candidates to the identical fault,
+  `rendersystemvulkan.dll+0x53314`, exception `0xC0000005`, with no new device
+  fault dump. Outcome: **epoch invariant implemented; crash acceptance failed**.
+  The epoch change must not be described as the crash fix without a passing
+  production reproduction.
