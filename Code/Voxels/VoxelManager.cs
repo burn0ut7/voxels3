@@ -994,6 +994,15 @@ public sealed class VoxelManager : Component
 		}
 	}
 
+	[ConCmd( "voxel_lod_info" )]
+	public static void LogLodInfoCommand()
+	{
+		if ( TryGetActiveManager( "lod.inspect", out var manager ) )
+		{
+			manager.LogLodPlacement( "command" );
+		}
+	}
+
 	private static bool TryGetActiveManager( string operation, out VoxelManager manager )
 	{
 		manager = null;
@@ -1691,6 +1700,102 @@ public sealed class VoxelManager : Component
 			$"positiveYFaceDensity={positiveYDensity} positiveZFaceDensity={positiveZDensity}" );
 	}
 
+	private void LogLodPlacement( string reason )
+	{
+		var targetPosition = ActiveStreamingTarget.WorldPosition;
+		Log.Info(
+			$"[VoxelWorld] lod.inspect reason=\"{reason}\" target={FormatWorldPosition( targetPosition )} " +
+			$"cellsPerAxis={CellsPerAxis} maximumVisualLevel={PlacementInputs.MaximumVisualLevel}" );
+
+		if ( !_hasStreamingCenter || !_lod1Clipbox.HasAnchor )
+		{
+			Log.Info(
+				$"[VoxelWorld] lod.inspect.pending gameplayCenterReady={_hasStreamingCenter} " +
+				$"lod1AnchorReady={_lod1Clipbox.HasAnchor} lod2AnchorReady={_lod2Clipbox.HasAnchor}" );
+			return;
+		}
+
+		var gameplayMinimum = _streamingCenterCoordinate - new Vector3Int( AuthoritativeGameplayRadius );
+		var gameplayMaximum = _streamingCenterCoordinate + new Vector3Int( AuthoritativeGameplayRadius + 1 );
+		var lod0Anchor = _lod1Clipbox.Anchor * 2;
+		var lod0Minimum = lod0Anchor - new Vector3Int( PlacementInputs.Lod0VisualHalfExtent );
+		var lod0Maximum = lod0Anchor + new Vector3Int( PlacementInputs.Lod0VisualHalfExtent );
+		Log.Info(
+			$"[VoxelWorld] lod.inspect.level level=Lod0 cellSize={CellSize:0.###} " +
+			$"regionSize={CellsPerAxis * CellSize:0.###} gameplayAnchor={FormatRegionCoordinate( _streamingCenterCoordinate )} " +
+			$"gameplayRegions={FormatRegionBox( gameplayMinimum, gameplayMaximum )} " +
+			$"gameplayWorld={FormatWorldBox( gameplayMinimum, gameplayMaximum, CellSize )} " +
+			$"gameplayDesired={_desiredChunks.Count} loaded={_loadedChunks.Count} " +
+			$"visualAnchor={FormatRegionCoordinate( lod0Anchor )} " +
+			$"visualRegions={FormatRegionBox( lod0Minimum, lod0Maximum )} " +
+			$"visualWorld={FormatWorldBox( lod0Minimum, lod0Maximum, CellSize )} " +
+			$"visualActive={_lod0RenderActive.Count} residentIncludingWarm={_gpuMesher?.Lod0ResidentCount ?? 0} " +
+			$"pendingGameplay={_gpuMesher?.PendingGameplayCount ?? 0} pendingWarm={_gpuMesher?.PendingWarmCount ?? 0}" );
+
+		Log.Info(
+			$"[VoxelWorld] lod.inspect.level level=Lod1 cellSize={Lod1CellSize:0.###} " +
+			$"regionSize={CellsPerAxis * Lod1CellSize:0.###} anchor={FormatRegionCoordinate( _lod1Clipbox.Anchor )} " +
+			$"outerRegions={FormatRegionBox( _lod1Clipbox.OuterMinimum, _lod1Clipbox.OuterMaximum )} " +
+			$"outerWorld={FormatWorldBox( _lod1Clipbox.OuterMinimum, _lod1Clipbox.OuterMaximum, Lod1CellSize )} " +
+			$"holeRegions={FormatRegionBox( _lod1Clipbox.HoleMinimum, _lod1Clipbox.HoleMaximum )} " +
+			$"holeWorld={FormatWorldBox( _lod1Clipbox.HoleMinimum, _lod1Clipbox.HoleMaximum, Lod1CellSize )} " +
+			$"cached={_lod1Clipbox.DesiredCache.Count} active={_lod1Clipbox.Active.Count} " +
+			$"resident={_gpuMesher?.Lod1ResidentCount ?? 0} pending={_gpuMesher?.PendingLod1Count ?? 0} " +
+			$"lastEnter={_lod1Clipbox.LastEnteredRegions} lastLeave={_lod1Clipbox.LastLeftRegions}" );
+
+		Log.Info(
+			$"[VoxelWorld] lod.inspect.transition levels=Lod0-Lod1 desired={_transitionDesired.Count} " +
+			$"ready={_gpuMesher?.TransitionReadyCount ?? 0} pending={_gpuMesher?.TransitionPendingCount ?? 0} " +
+			$"lastEnter={_lastTransitionEntered} lastLeave={_lastTransitionLeft}" );
+
+		if ( !_lod2Clipbox.HasAnchor )
+		{
+			Log.Info( "[VoxelWorld] lod.inspect.level level=Lod2 state=disabled-or-pending" );
+			return;
+		}
+
+		var lod2NominalHoleMinimum = _lod2Clipbox.Anchor -
+			new Vector3Int( PlacementInputs.Lod2NominalHoleHalfExtent );
+		var lod2NominalHoleMaximum = _lod2Clipbox.Anchor +
+			new Vector3Int( PlacementInputs.Lod2NominalHoleHalfExtent );
+		Log.Info(
+			$"[VoxelWorld] lod.inspect.level level=Lod2 cellSize={Lod2CellSize:0.###} " +
+			$"regionSize={CellsPerAxis * Lod2CellSize:0.###} anchor={FormatRegionCoordinate( _lod2Clipbox.Anchor )} " +
+			$"outerRegions={FormatRegionBox( _lod2Clipbox.OuterMinimum, _lod2Clipbox.OuterMaximum )} " +
+			$"outerWorld={FormatWorldBox( _lod2Clipbox.OuterMinimum, _lod2Clipbox.OuterMaximum, Lod2CellSize )} " +
+			$"nominalHoleRegions={FormatRegionBox( lod2NominalHoleMinimum, lod2NominalHoleMaximum )} " +
+			$"nominalHoleWorld={FormatWorldBox( lod2NominalHoleMinimum, lod2NominalHoleMaximum, Lod2CellSize )} " +
+			$"nearCoverageLod1Regions={FormatRegionBox( _lod2Clipbox.NearCoverageMinimum, _lod2Clipbox.NearCoverageMaximum )} " +
+			$"nearCoverageWorld={FormatWorldBox( _lod2Clipbox.NearCoverageMinimum, _lod2Clipbox.NearCoverageMaximum, Lod1CellSize )} " +
+			$"cached={_lod2Clipbox.DesiredCache.Count} active={_lod2Clipbox.Active.Count} " +
+			$"excluded={_lod2Clipbox.DesiredCache.Count - _lod2Clipbox.Active.Count} " +
+			$"resident={_gpuMesher?.Lod2ResidentCount ?? 0} pending={_gpuMesher?.PendingLod2Count ?? 0} " +
+			$"lastEnter={_lod2Clipbox.LastEnteredRegions} lastLeave={_lod2Clipbox.LastLeftRegions} " +
+			$"lastActivate={_lod2Clipbox.LastActivatedRegions} lastDeactivate={_lod2Clipbox.LastDeactivatedRegions}" );
+	}
+
+	private static string FormatRegionCoordinate( Vector3Int coordinate )
+	{
+		return $"C[{coordinate.x},{coordinate.y},{coordinate.z}]";
+	}
+
+	private static string FormatRegionBox( Vector3Int minimum, Vector3Int maximum )
+	{
+		return $"[{FormatRegionCoordinate( minimum )},{FormatRegionCoordinate( maximum )})";
+	}
+
+	private string FormatWorldBox( Vector3Int minimum, Vector3Int maximum, float cellSize )
+	{
+		var regionSize = CellsPerAxis * cellSize;
+		return $"[{FormatWorldPosition( new Vector3( minimum.x, minimum.y, minimum.z ) * regionSize )}," +
+			$"{FormatWorldPosition( new Vector3( maximum.x, maximum.y, maximum.z ) * regionSize )})";
+	}
+
+	private static string FormatWorldPosition( Vector3 position )
+	{
+		return $"W[{position.x:0.###},{position.y:0.###},{position.z:0.###}]";
+	}
+
 	private void ResolveStreamingTarget()
 	{
 		if ( StreamingTarget is not null )
@@ -2160,11 +2265,16 @@ public sealed class VoxelManager : Component
 	private void UpdateClipboxPlacement( Vector3 viewerPosition )
 	{
 		var anchor = WorldToLod1Anchor( viewerPosition );
-		if ( !_lod1Clipbox.HasAnchor || anchor != _lod1Clipbox.Anchor )
+		var lod0Lod1Changed = !_lod1Clipbox.HasAnchor || anchor != _lod1Clipbox.Anchor;
+		if ( lod0Lod1Changed )
 		{
 			UpdateLod0Lod1Placement( anchor );
 		}
-		UpdateLod2Placement( viewerPosition );
+		var lod2Changed = UpdateLod2Placement( viewerPosition );
+		if ( VerboseLogging && (lod0Lod1Changed || lod2Changed) )
+		{
+			LogLodPlacement( "placement.update" );
+		}
 	}
 
 	private void UpdateLod0Lod1Placement( Vector3Int anchor )
@@ -2306,15 +2416,15 @@ public sealed class VoxelManager : Component
 		_lod1Clipbox.Active.UnionWith( _nextLod1Active );
 	}
 
-	private void UpdateLod2Placement( Vector3 viewerPosition )
+	private bool UpdateLod2Placement( Vector3 viewerPosition )
 	{
-		if ( PlacementInputs.MaximumVisualLevel != GpuMeshLevel.Lod2 || !_lod1Clipbox.HasAnchor ) return;
+		if ( PlacementInputs.MaximumVisualLevel != GpuMeshLevel.Lod2 || !_lod1Clipbox.HasAnchor ) return false;
 		var anchor = WorldToLod2Anchor( viewerPosition );
 		var nearMinimum = _lod1Clipbox.OuterMinimum;
 		var nearMaximum = _lod1Clipbox.OuterMaximum;
 		if ( _lod2Clipbox.HasAnchor && anchor == _lod2Clipbox.Anchor &&
 			nearMinimum == _lod2Clipbox.NearCoverageMinimum &&
-			nearMaximum == _lod2Clipbox.NearCoverageMaximum ) return;
+			nearMaximum == _lod2Clipbox.NearCoverageMaximum ) return false;
 
 		var outerMinimum = anchor - new Vector3Int( PlacementInputs.Lod2CacheHalfExtent );
 		var outerMaximum = anchor + new Vector3Int( PlacementInputs.Lod2CacheHalfExtent );
@@ -2385,6 +2495,7 @@ public sealed class VoxelManager : Component
 		_lod2Clipbox.DesiredCache.UnionWith( _nextLod2Cache );
 		_lod2Clipbox.Active.Clear();
 		_lod2Clipbox.Active.UnionWith( _nextLod2Active );
+		return true;
 	}
 
 	private bool IsLod2RegionContainedByNearCoverage( Vector3Int coordinate,

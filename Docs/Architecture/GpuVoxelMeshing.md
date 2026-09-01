@@ -78,6 +78,15 @@ LOD2 converges independently and cannot hold that boundary. Schema 14 appends
 LOD2 placement, residency, visibility, digest, queue, latency, cancellation, and
 service-gap telemetry without changing existing field meanings.
 
+Placement diagnostics read this owned state without affecting convergence.
+`voxel_lod_info` emits an immediate structured snapshot of the streaming target,
+LOD0 gameplay and visual boxes, the LOD1 outer box and hole, the LOD0-to-LOD1
+transition state, and the LOD2 outer box, nominal hole, effective near-coverage
+exclusion, and residency counts. Region and world bounds are reported as
+half-open intervals. Enabling the existing `VerboseLogging` property emits the
+same snapshot only when a placement boundary changes; it does not add per-frame
+logging or a second placement model.
+
 ## Fixed LOD0/LOD1 Transition
 
 Clipbox placement owns where the boundary exists; Transvoxel owns its geometry.
