@@ -172,6 +172,28 @@ one canonical GPU scheduler without excluding cameras, pausing mesh updates, or
 changing the persistent terrain draw path. Bounded diagnostics aggregate the
 suppressed extra-view callbacks without logging every frame.
 
+The rendezvous never records or resets a camera-attached command list. Command
+recording and descriptor upload are manager-update responsibilities after emit
+publication is finalized. The single list is attached to the selected main
+camera; s&box propagates it to dependent editor views, so transient editor-camera
+components do not acquire duplicate terrain state. This boundary is required by
+the command-list lifecycle and prevents camera switching from replacing an
+executing list or its indirect buffers.
+
+The scheduler rendezvous retains `SceneCustomObject`'s native infinite bounds.
+Giving the scheduler a merely large finite box makes it eligible for per-view
+culling and can stop GPU work when a detached editor camera moves beyond that
+box. A transition-based health report emits one error if pending regular or
+transition work exists without a GPU render tick for `500 ms`, followed by one
+recovery record when ticks resume.
+
+Detached editor views depend on the camera component belonging to the live game
+scene: the engine copies the main camera's post-processing and command-list
+execution into that dependent view. The editor-only smoke controls validate this
+relationship and recreate a stale ejected camera whose own scene no longer has a
+main camera. This repairs the view dependency; it does not create a second
+terrain command list, visibility buffer set, scheduler, or mesh owner.
+
 The installed s&box 26.08.19 API exposes public indexed-indirect drawing,
 indirect dispatch, append counters, asynchronous buffer readback, and multiple
 independent GPU buffers. It does not expose a clean public GPU-owned
@@ -221,16 +243,21 @@ and future edits invalidate only affected coordinate revisions.
 
 ## Persistent Drawing and Visibility
 
-One persistent camera-attached terrain command list issues indexed-indirect
-drawing per active shared arena. Visibility is a conservative GPU derivative of
-resident region bounds. It may retain false positives but must not create false
-negatives. Removal marks the resident record inactive; stale candidates never
-enter visibility state.
+One persistent main-camera-attached terrain command list issues indexed-indirect
+drawing per active shared arena and is inherited by dependent editor views. The
+CPU owns bounds and source indirect arguments; the visibility compute pass is
+the sole writer of visible indirect arguments after attachment. CPU descriptor
+updates never write the visible buffer consumed by drawing. Visibility is a
+conservative GPU derivative of resident region bounds. It may retain false
+positives but must not create false negatives. Removal marks the resident record
+inactive; stale candidates never enter visibility state.
 
 Normal production performs zero geometry readbacks and zero ordinary-render SDF
 evaluations. Performance diagnostics may perform bounded scalar readbacks for
 visibility and settled aggregate counts; gameplay and rendering never consume
-those diagnostics.
+those diagnostics. Explicit `voxel_mesh_audit` additionally reads both indirect
+argument buffers and verifies every GPU source record against the canonical CPU
+descriptor plus every draw-enabled visible record against its source layout.
 
 ## Performance Contract
 

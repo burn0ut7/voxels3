@@ -4,6 +4,19 @@ using System;
 [McpToolset( "voxels3", "Voxels3 production smoke controls" )]
 public static class VoxelMcpTools
 {
+	[EditorEvent.Frame]
+	public static void RepairEjectedRenderCamera()
+	{
+		if ( !Game.IsPlaying ) return;
+		var sceneView = Editor.SceneViewWidget.Current;
+		if ( sceneView?.CurrentView != Editor.SceneViewWidget.ViewMode.GameEjected ) return;
+		if ( TryRepairEjectedCamera( sceneView ) )
+		{
+			Log.Info(
+				"[VoxelWorld] editor.camera.recreated reason=\"ejected camera scene has no main camera\"" );
+		}
+	}
+
 	/// <summary>
 	/// Open a project scene so production smoke runs do not depend on editor focus or keyboard input.
 	/// </summary>
@@ -72,13 +85,107 @@ public static class VoxelMcpTools
 			sceneView.ToggleEject();
 		}
 
+		var recreatedStaleCamera = ejected && sceneView.CurrentView == desiredView &&
+			TryRepairEjectedCamera( sceneView );
+
 		if ( sceneView.CurrentView != desiredView )
 		{
 			throw new InvalidOperationException(
 				$"Editor camera mode did not change to {desiredView}; current mode is {sceneView.CurrentView}." );
 		}
 
-		return $"Editor camera mode is {sceneView.CurrentView}.";
+		return $"Editor camera mode is {sceneView.CurrentView}; " +
+			$"recreatedStaleCamera={recreatedStaleCamera}.";
+	}
+
+	/// <summary>
+	/// Position the actual detached game viewport camera. The stock editor-camera MCP tools target
+	/// Application.Editor.Camera, which is intentionally null while the scene view is GameEjected.
+	/// </summary>
+	/// <param name="position">World position as 'x,y,z'.</param>
+	/// <param name="angles">View angles as 'pitch,yaw,roll'.</param>
+	/// <param name="fieldOfView">Perspective vertical field of view in degrees.</param>
+	[McpTool( "set_ejected_camera" )]
+	public static object SetEjectedCamera(
+		string position,
+		string angles,
+		[Sandbox.Range( 10f, 140f )] float fieldOfView = 60f )
+	{
+		var viewport = GetEjectedViewport();
+		var state = viewport.State;
+		state.View = Editor.SceneViewportWidget.ViewMode.Perspective;
+		state.CameraPosition = Vector3.Parse( position );
+		state.CameraRotation = Rotation.From( Angles.Parse( angles ) );
+
+		var camera = viewport.Renderer.Camera;
+		camera.WorldPosition = state.CameraPosition;
+		camera.WorldRotation = state.CameraRotation;
+		camera.FieldOfView = fieldOfView;
+		var rendererScene = viewport.Renderer.Scene;
+		return new
+		{
+			Position = camera.WorldPosition,
+			Angles = camera.WorldRotation.Angles(),
+			camera.FieldOfView,
+			CameraSceneIsGameScene = ReferenceEquals( camera.Scene, Game.ActiveScene ),
+			CameraSceneCameraValid = camera.Scene.IsValid() && camera.Scene.Camera.IsValid(),
+			CameraSceneCameraIsGameSceneCamera = camera.Scene.IsValid() &&
+				ReferenceEquals( camera.Scene.Camera, Game.ActiveScene.Camera ),
+			RendererSceneIsGameScene = ReferenceEquals( rendererScene, Game.ActiveScene ),
+			RendererSceneCameraIsGameSceneCamera = rendererScene.IsValid() &&
+				ReferenceEquals( rendererScene.Camera, Game.ActiveScene.Camera ),
+			RendererSceneCameraValid = rendererScene.IsValid() && rendererScene.Camera.IsValid()
+		};
+	}
+
+	/// <summary>
+	/// Render the actual detached game viewport camera, including inherited runtime camera command lists.
+	/// </summary>
+	[McpTool.ReadOnly( "ejected_camera_screenshot" )]
+	public static object EjectedCameraScreenshot(
+		[Sandbox.Range( 16, 4096 )] int width = 1280,
+		[Sandbox.Range( 16, 4096 )] int height = 720 )
+	{
+		var viewport = GetEjectedViewport();
+		var bitmap = new Bitmap( width, height );
+		viewport.Renderer.Camera.RenderToBitmap( bitmap, false );
+		return bitmap;
+	}
+
+	private static Editor.SceneViewportWidget GetEjectedViewport()
+	{
+		if ( !Game.IsPlaying )
+		{
+			throw new InvalidOperationException( "Start play mode before using the ejected camera." );
+		}
+
+		var sceneView = Editor.SceneViewWidget.Current
+			?? throw new InvalidOperationException( "No active scene view is available." );
+		if ( sceneView.CurrentView != Editor.SceneViewWidget.ViewMode.GameEjected )
+		{
+			throw new InvalidOperationException( "The scene view must be in GameEjected mode." );
+		}
+
+		var viewport = sceneView.GetGameTarget()
+			?? throw new InvalidOperationException( "No detached game viewport is available." );
+		if ( !viewport.Renderer.Camera.IsValid() )
+		{
+			throw new InvalidOperationException( "The detached game viewport has no valid camera." );
+		}
+
+		return viewport;
+	}
+
+	private static bool TryRepairEjectedCamera( Editor.SceneViewWidget sceneView )
+	{
+		var viewport = sceneView.GetGameTarget();
+		var camera = viewport?.Renderer?.Camera;
+		if ( !camera.IsValid() || (camera.Scene.IsValid() && camera.Scene.Camera.IsValid()) ) return false;
+
+		camera.GameObject.DestroyImmediate();
+		sceneView.ToggleEject();
+		sceneView.ToggleEject();
+		return true;
 	}
 
 	private static VoxelManager FindManager()

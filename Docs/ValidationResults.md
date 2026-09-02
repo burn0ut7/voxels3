@@ -6064,3 +6064,288 @@ Record an approved extraordinary change here before adding the new version:
   LOD0/LOD1 Transvoxel geometry exactly matches the accepted current geometry,
   the exact reported frame and same-position historical comparison are clean,
   performance passes, queues settle, and memory stabilizes across repeated runs.
+
+### 2026-09-02 current-engine camera draw corruption reproduction
+
+#### Unchanged production baseline `6f7c0687252e4985866f33818a94515c`
+
+- Before making source changes, revision `ec742cb` was restarted cleanly in
+  `basic_example.scene` on s&box `26.09.01a`. The canonical
+  `PERFORMANCE-OVERVIEW-001/v4` workload ran with generator version `5`, seed
+  `1337`, one player, speed `2500`, X/Y reach `50000/25000`, Z `0`, and one
+  loop. The editor camera ejected at five seconds. During motion, the streaming
+  target was queried and the detached camera was repeatedly recentered above it;
+  the diagnostic frame used target `[3397.701,-3389.847,0]`, camera
+  `[3397.701,-3389.847,15000]`, angles `[80,0,0]`, FOV `60`, and `1280x720`.
+- The moving top-down capture reproduced the reported failure: long triangular
+  ribbons and spikes crossed otherwise smooth terrain while the player route
+  continued below the camera. Switching render cameras created a temporarily
+  clean view, then streaming mutations caused the corruption to recur. No
+  source file had been changed when this frame was captured.
+- A simultaneous `voxel_mesh_audit 32 coverage` at target
+  `[-45556.16,18775.25,0]` selected `80` active meshes (`64` regular and `16`
+  transitions). All `80` completed with zero stale selections, invalid indices,
+  non-finite positions, out-of-bounds positions, or oversized triangles;
+  maximum edge was `1.721` cells. CPU visibility was exact at `1295/1295`
+  regular and `16/16` transition expected/drawable, with zero mismatches. The
+  `15` transition-only failures contained `775` already-characterized
+  repeated-position, zero-area table triangles. The audit used `160` readbacks,
+  `3,168,216` bytes, and `92.915 ms`.
+- The completed performance result preserved the accepted geometry exactly:
+  aggregate topology/position digests were
+  `F71C6C8A1383A3CF/DB1CBA3F3B86674F`; LOD0 was
+  `60C89421FF1B19BD/7E9C783F3C60468C`; LOD1 was
+  `97D4F8ABEC98BA72/A580C20007E621C3`; and transitions were
+  `50A79D6478E7B1BE/EA4C06D88807EB23`. Final residents were unchanged at
+  `710/4096` LOD0/LOD1 and transitions were `96/96/51/0`
+  desired/ready/drawable/pending.
+- Render-state telemetry failed independently of geometry. Moving and
+  stationary visibility samples were both `0`, average non-zero draws were `0`,
+  and settled surface meshes were `0`, despite visible terrain and correct final
+  residents. The current run rebuilt camera command lists `762` times. Moving
+  FPS was `644.2268`, CPU p95/p99 was `2.0277/3.9226 ms`, and GPU p95/p99 was
+  `0.9930134/0.9930134 ms`; stationary FPS was `184.21461`, CPU p95/p99 was
+  `6.5178/6.9086 ms`, and GPU p95/p99 was `0.9930134/0.9930134 ms`. These are
+  not acceptance results; they establish the unchanged current-engine failure.
+- Diagnosis: canonical mesh data, arena geometry, CPU indirect descriptors, and
+  deterministic topology all remained valid while the camera-specific GPU draw
+  path failed. Revision history isolates the lifecycle change to `50b3dcb`,
+  which began resetting and recording camera-attached command lists from a
+  render callback and began CPU-uploading the GPU-written visible indirect
+  argument buffer during streaming. The candidate must restore update-owned
+  command recording, make source versus visible argument ownership explicit,
+  and extend the existing production mesh audit to read back both GPU argument
+  buffers before visual or performance acceptance.
+
+#### Camera draw-lifecycle candidate
+
+- Candidate `camera-draw-lifecycle-v2` restores one main-camera-attached terrain
+  command list, records and resets it from the normal manager update, and relies
+  on the engine's documented dependent-view propagation for the detached editor
+  view. CPU updates write only bounds and source indirect arguments; the
+  visibility compute pass is the sole writer of the visible indirect buffer
+  consumed by drawing. Transient editor-camera components no longer allocate
+  duplicate terrain states. `dotnet build voxels3.slnx` passed with zero warnings
+  and zero errors in `1.48 s`.
+- The production `voxel_mesh_audit` now reads every active camera state's GPU
+  source and visible indirect buffers. It requires every source record to equal
+  the canonical CPU descriptor and every draw-enabled visible record to retain
+  that source record's index count, first index, base vertex, and first instance.
+  The complete result reports a separate `mutationFailures` count so the
+  already-documented non-rasterizing transition-table degenerates remain visible
+  without being confused with the reported sheets and spikes.
+
+#### Moving detached-camera audit and visual result
+
+- After a clean restart and the unchanged `20 s` settlement window, the exact
+  one-loop, speed-`2500`, distance-`50000` production performance test ran with
+  the editor camera detached. The camera was recentered on the live player
+  target `12` times over `6 s`, ending at target
+  `[11664.77,11342.89,0]`, camera `[11664.77,11342.89,10000]`, angles
+  `[80,0,0]`, FOV `60`, and `1280x720`. The capture was taken while the player
+  and streaming route were still moving. It showed continuous smooth terrain
+  and the centered player marker with no long ribbons, spikes, torn fans, holes,
+  or camera-switch reset.
+- The simultaneous `voxel_mesh_audit 32 coverage` at
+  `[11812.97,11478.55,0]` selected `79` active meshes (`64` regular and `15`
+  transitions). CPU visibility was exact at `1354/1354` regular and `15/15`
+  transition expected/drawable. The single canonical camera had `1369` matching
+  GPU source draws and `1279` visible draws; source and visible argument
+  mismatches were both zero. All `79` meshes completed with zero stale
+  selections, invalid indices, non-finite positions, out-of-bounds positions,
+  or oversized triangles; maximum edge was `1.726` cells. The result was
+  `mutationFailures=0` and `drawArgumentFailures=0`. Twelve transition samples
+  contained `483` known repeated-position zero-area table triangles, preserved
+  as a separately reported limitation. The diagnostic used `160` readbacks,
+  `3,168,908` bytes, and `87.378 ms`.
+- Top-down run `0e41205e74da46fea0aa6f4793e17e4d` completed in
+  `121.94435 s` with no warnings or errors during its measured window. Moving
+  visibility recovered from the unchanged baseline's zero samples to `81,403`
+  samples and `155.5163` average non-zero draws. Stationary visibility was
+  `6,734` samples and exactly `195` non-zero draws from the detached overview.
+  Moving/stationary FPS was `667.54584/673.364`; CPU p95/p99 was
+  `1.8914/2.4239 ms` moving and `1.8405/2.1316 ms` stationary. All geometry
+  digests and final residents matched the unchanged baseline.
+
+#### Clean uninterrupted figure-eight `c0ed1fc89527491ea6a497d5cf7d31fc`
+
+- Play restarted again to clear the explicit audit counters, settled for the
+  unchanged `20 s`, and ran `PERFORMANCE-OVERVIEW-001/v4` with task
+  `PERFORMANCE-OVERVIEW-001`, revision `camera-draw-lifecycle-v2-clean`, one
+  player, generator version `5`, seed `1337`, speed `2500`, distance `50000`,
+  and one loop. No screenshots, camera changes, or diagnostics occurred inside
+  the `121.91084 s` run. The measured window emitted only the structured save
+  event and no warning or error.
+- Moving samples/FPS were `118,148/968.8335`; CPU p95/p99 was
+  `1.1654/2.1102 ms`; GPU p95/p99/max was
+  `0.8711815/1.2173653/3.042221 ms`. Stationary samples/FPS were
+  `9,852/985.19794`; CPU p95/p99 was `1.0268/1.8884 ms`; GPU p95/p99/max was
+  `0.6096363/0.8251667/1.6648769 ms`.
+- Moving/stationary visibility samples were `118,148/9,852`. Moving average
+  resident/visible meshes was `1436.7584/250.64133`; stationary values were
+  exactly `1575/257`. Stationary minimum and maximum visible draws were both
+  `257`. Final residents were `710/4096/0` LOD0/LOD1/LOD2; transitions were
+  `96/96/51/0` desired/ready/drawable/pending; every final queue was zero.
+- Regular schedule-to-renderable p50/p95/p99/max was
+  `29.3434/73.6484/97.8209/113.8468 ms`; warm/total queue p95/p99/max was
+  `66/124/126`; gameplay queue was zero throughout. Draw commands rebuilt `765`
+  times in `466.42563 ms` total (`0.6097 ms` average); maximum synchronous
+  streaming work was `11.6909 ms`.
+- Process start/end/peak was
+  `4,541,763,584/2,501,390,336/4,543,102,976` bytes, a full-window decrease of
+  `2,040,373,248` bytes. Stationary start/end/peak was
+  `2,501,390,336/2,500,947,968/2,501,496,832` bytes, a `442,368` byte decrease.
+  GPU start/end/peak stayed bounded at
+  `1,711,691,356/1,711,691,356/1,711,691,356` bytes.
+- Normal production geometry readbacks were zero. Scalar/count/visibility
+  readbacks were `18,878/19,495/1`; all count batches completed. Final geometry
+  contained `1,892,976` unique vertices and `3,537,042` triangles. Fine,
+  coarse, and lateral transition mismatches and invalid table counts were all
+  zero.
+- Aggregate topology/position digests were
+  `F71C6C8A1383A3CF/DB1CBA3F3B86674F`; LOD0 was
+  `60C89421FF1B19BD/7E9C783F3C60468C`; LOD1 was
+  `97D4F8ABEC98BA72/A580C20007E621C3`; and transition digests remained the
+  accepted `50A79D6478E7B1BE/EA4C06D88807EB23`. These exactly match the
+  unchanged current-engine reproduction and the accepted current geometry.
+- Outcome: **accepted**. Against same-engine unchanged run
+  `6f7c0687252e4985866f33818a94515c`, moving and stationary CPU tails improve;
+  moving GPU p95 improves and its p99 increase is `0.2243519 ms`, inside the
+  fixed `0.25 ms` absolute tolerance; stationary GPU tails improve. Visibility
+  telemetry recovers from zero to the complete moving and stationary windows,
+  work and residents complete, memory decreases, all mutation diagnostics pass,
+  geometry is unchanged, and the exact moving top-down frame is clean.
+
+#### Post-acceptance falsification of `camera-draw-lifecycle-v2`
+
+- The preceding acceptance was invalidated immediately after it was recorded.
+  When the editor view was popped out again, no terrain meshes rendered. This
+  directly violated the required detached-camera result even though the clean
+  game-camera performance record itself remained valid. The v2 outcome above is
+  retained as immutable history but is **revoked and not an accepted fix**.
+- Runtime state was not empty: the production world remained settled at `710`
+  LOD0 residents, `4096` LOD1 residents, and `96/96/0`
+  desired/ready/pending transitions. Attaching a second terrain draw state to
+  the detached camera produced valid visibility work but left the view blank,
+  ruling out residency, culling, and a missing per-camera terrain state.
+- Direct viewport telemetry isolated the editor failure. The detached renderer's
+  `Scene` was the live game scene and its main camera was valid, but the actual
+  ejected `CameraComponent.Scene` was not the live game scene and had no main
+  camera. s&box renders the ejected viewport through that camera's own scene and
+  only inherits the game camera's post-processing command lists when that scene
+  has a valid main camera. The cached editor camera survived the handoff because
+  it was still a valid object, despite belonging to a stale scene.
+- Destroying that stale camera immediately and recreating the ejected view made
+  all six camera/renderer scene-identity checks true. The same main-camera-owned
+  command list then rendered the overview correctly; the experimental second
+  terrain state was removed. The final candidate performs this narrow editor
+  camera repair automatically and keeps one canonical runtime terrain state.
+
+#### Camera draw-lifecycle candidate v3
+
+- The mesh-mutation root cause remains the camera command lifecycle reproduced
+  above: revision `50b3dcb` began resetting and rebuilding a camera-attached
+  `CommandList` from its render callback while streaming changed arenas, and the
+  CPU also uploaded the visible indirect-argument buffer written by the GPU
+  visibility pass. Valid mesh buffers and valid deterministic digests therefore
+  produced corrupt rendered triangles when camera handoffs changed execution
+  timing. The final runtime restores manager-update-owned command recording and
+  single-writer indirect buffers. It also retains the scheduler object's native
+  infinite bounds and reports a pending-work/no-render-tick stall after `500 ms`.
+- The editor-only production smoke controls now operate on the exact detached
+  viewport camera, expose its camera/renderer scene relationships, render its
+  real output to a bitmap, and recreate only a stale ejected camera whose own
+  scene lacks a main camera. They do not add runtime mesh, draw, visibility, or
+  scheduler ownership. `dotnet build Code/voxels3.csproj --no-restore` passed in
+  `0.45 s` with zero warnings and zero errors.
+
+#### Stationary detached-camera audit
+
+- After a clean restart and settlement on s&box `26.09.01a`, the detached camera
+  was placed at `[0,0,10000]`, angles `[80,0,0]`, FOV `60`, and `1280x720`.
+  Camera and renderer scenes both identified the live game scene and its main
+  camera. The exact detached-camera bitmap showed a continuous smooth checker
+  surface with the player centered and no ribbons, spikes, torn fans, holes, or
+  missing terrain.
+- `voxel_mesh_audit 32 coverage` selected `96` live meshes (`64` regular and
+  `32` transitions). All completed with zero stale selections, invalid indices,
+  out-of-bounds or non-finite positions, non-finite or abnormal normals, and
+  oversized triangles; maximum edge was `1.727` cells. The one canonical camera
+  reported `1575` GPU source draws and `1127` visible draws with zero source or
+  visible argument mismatches. Final `mutationFailures=0` and
+  `drawArgumentFailures=0`.
+- The audit separately retained `943` known repeated-position, zero-area
+  transition-table triangles in `27` transition samples. They stay on their
+  expected seam planes with bounded edges and do not rasterize; they are not
+  counted as mutation failures and are not the reported cross-world sheets.
+  The audit used `194` readbacks, `3,432,716` bytes, and `161.321 ms`.
+
+#### Moving top-down reproduction scenario `c01dcf76c1544adca51952cabbd98ca9`
+
+- The locked `PERFORMANCE-OVERVIEW-001/v4` production path ran from center
+  `[0,0,0]`, Z `0`, speed `2500`, X/Y reach `50000/25000`, and one loop. The
+  detached camera remained `10000` units above the queried live streaming target
+  at angles `[80,0,0]`, FOV `60`, `1280x720`, and was recentered through both
+  positive and negative route extremes while the player and streaming remained
+  active. Captures at targets `[49816.94,-4259.021,0]` and
+  `[-49664.1,-5747.075,0]` showed smooth continuous terrain and the centered
+  player, with no mutation, ribbon, spike, missing slab, or camera-switch reset.
+- A simultaneous moving `voxel_mesh_audit 32 coverage` at
+  `[39051.68,-24387.35,0]` completed all `96` selected meshes with zero stale
+  selections, invalid indices, out-of-bounds/non-finite positions, oversized
+  triangles, mutation failures, or draw-argument failures. Maximum edge was
+  `1.718` cells; the diagnostic used `194` readbacks, `2,819,360` bytes, and
+  `148.088 ms`. Known transition-table degenerates remained separately reported.
+- Run `c01dcf76c1544adca51952cabbd98ca9`, revision
+  `camera-draw-lifecycle-v3-topdown`, completed in `121.94581 s`. Moving CPU
+  p95/p99 was `1.6112/3.3241 ms`; stationary CPU was `1.4237/3.1604 ms`.
+  Moving GPU timing was `0.36764145 ms`; stationary non-zero draws averaged
+  `1126`, matching the high overview. Final pending work was zero; residents,
+  geometry digests, and all transition mismatch counters matched the accepted
+  geometry. No scheduler-stall, error, or exception occurred in the run window.
+
+#### Clean uninterrupted figure-eight `6090c87469e54fc181915d83ae91e9e1`
+
+- Play restarted, returned to the normal game view, settled for the unchanged
+  `20 s`, and ran the locked scenario with revision
+  `camera-draw-lifecycle-v3-clean`. No screenshots, camera changes, audits, or
+  console probes occurred inside the measured loop. Run
+  `6090c87469e54fc181915d83ae91e9e1` completed in `121.90832 s`; its exact JSONL
+  line is `56,957` UTF-8 bytes with SHA-256
+  `A702435301EA6C43DD0E58010EF2A8C33EF13DA78A3505EFDAAF91DEE3978406`.
+- Moving samples/FPS were `116636/956.4404`; CPU p95/p99 was
+  `1.2374/2.6045 ms`; GPU p95/p99/max was
+  `0.58174133/0.7696152/2.6853085 ms`. Stationary FPS was `966.5197`; CPU
+  p95/p99 was `1.0205/2.4336 ms`; GPU p95/p99/max was
+  `0.42796135/0.43439865/0.6709099 ms`.
+- Moving visibility averaged `1436.7273` resident and `250.68716` visible meshes,
+  with `250.68716` non-zero draws. Stationary visible/non-zero draws were exactly
+  `257/257`. Final LOD0/LOD1/LOD2 residents were `710/4096/0`; transitions were
+  `96/96/51/0` desired/ready/drawable/pending; every final queue was zero.
+- Regular schedule-to-renderable p50/p95/p99/max was
+  `29.3946/73.3316/97.2384/116.4722 ms`; transition p95/p99/max was
+  `138.1681/150.6302/163.9707 ms`; post-loop drain was `27.8962 ms`. Draw
+  commands rebuilt `765` times in `481.88376 ms` total (`0.6299134 ms` each);
+  maximum synchronous streaming work was `3.8117 ms`.
+- Process start/end/peak was
+  `2,560,475,136/2,538,840,064/2,560,716,800` bytes, a `21,635,072` byte
+  decrease. Stationary growth was `630,784` bytes. GPU memory remained exactly
+  `1,586,979,667` bytes with zero growth. Normal geometry readbacks were zero.
+- Aggregate topology/position digests were
+  `F71C6C8A1383A3CF/DB1CBA3F3B86674F`; LOD0 was
+  `60C89421FF1B19BD/7E9C783F3C60468C`; LOD1 was
+  `97D4F8ABEC98BA72/A580C20007E621C3`; transition digests were
+  `50A79D6478E7B1BE/EA4C06D88807EB23`. Fine, coarse, and lateral transition
+  mismatches and invalid table counts were all zero.
+- No warning, error, exception, or `gpu.scheduler` event occurred from the clean
+  run's `16:48:52` start through its `16:51:04` save. Against unchanged
+  current-engine reproduction `6f7c0687252e4985866f33818a94515c`, every moving
+  and stationary CPU/GPU tail improved, visibility recovered from zero to the
+  complete measurement windows, work settled, geometry remained exact, and
+  memory stayed bounded.
+- Outcome: **accepted**. The root render-command race and indirect-buffer writer
+  conflict are removed without changing mesh generation, the stale detached
+  editor-camera dependency is repaired without duplicating terrain state, both
+  stationary and moving audits report zero mutation/draw-argument failures, the
+  top-down moving captures are clean, and the unchanged production performance
+  scenario passes.
