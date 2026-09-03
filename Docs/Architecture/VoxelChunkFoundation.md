@@ -4,8 +4,8 @@
 
 This decision covers the first production chunk slice: integer chunk identity,
 implicit SDF data, deterministic volumetric terrain, bounded streaming,
-and runtime/editor diagnostics. LOD0, LOD1, LOD2, and both fixed 2:1 transition
-boundaries are now implemented by the sole GPU path documented in
+and runtime/editor diagnostics. The default level-indexed LOD0-through-LOD2
+clipbox and both adjacent 2:1 transition boundaries are implemented by the sole GPU path documented in
 `GpuVoxelMeshing.md`. Collision, live edits,
 persistence, and network replication remain later slices.
 
@@ -50,9 +50,9 @@ persistence, and network replication remain later slices.
   Cancellation, supersession, unload, and configuration reset release derived
   ranges; no density or geometry is read back and no geometry is replicated.
 - Coordinate-local resident publication does not partially change clipbox
-  coverage. `VoxelManager` retains the committed LOD0, LOD1, LOD2, and transition
-  active sets while their one staged replacement becomes resident through the
-  same mesher. It commits all active sets together only after exact readiness;
+  coverage. `VoxelManager` retains every committed level and adjacent-pair active
+  set while one staged replacement becomes resident through the same mesher. It
+  commits all changed active sets together only after exact readiness;
   the initial bootstrap is the sole case with no previous coverage to retain.
 - Ordinary terrain drawing consumes only persistent position, normal, index,
   visibility, and indirect-argument buffers. It does not include or evaluate
@@ -416,8 +416,11 @@ stationary frame/GPU/memory/visibility window after full settlement and two
 render-sequence advances. Schema version 15 adds the canonical LOD2 hole and
 outer-anchor fields and level-aware transition-face identities. Schema version
 17 adds whole-placement request, commit, supersession, readiness, rejection,
-and pending-state counters plus LOD1/LOD2 broad-phase classification counts and
-timing. The manager exposes the resolved results path as inspector status.
+and pending-state counters plus coarse broad-phase classification counts and
+timing. Schema version 18 replaces fixed-level result fields with ordered
+`levels[]` and adjacent `transitionPairs[]` records while keeping hierarchy-wide
+placement, queue, arena, memory, scratch, drain, and combined metrics singular.
+The manager exposes the resolved results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`
 context rejects the run before movement begins.

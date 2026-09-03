@@ -92,12 +92,14 @@ CS
 					VisibilityAggregateCounters[3] = min( VisibilityAggregateCounters[3], visible );
 					VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
 					VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
-					VisibilityAggregateCounters[10] += VisibilityFrameCounters[5];
-					VisibilityAggregateCounters[11] += VisibilityFrameCounters[6];
-					VisibilityAggregateCounters[12] += VisibilityFrameCounters[7];
-					VisibilityAggregateCounters[13] += VisibilityFrameCounters[8];
-					VisibilityAggregateCounters[16] += VisibilityFrameCounters[9];
-					VisibilityAggregateCounters[17] += VisibilityFrameCounters[10];
+					[unroll]
+					for ( uint level = 0; level < 3; level++ )
+					{
+						uint frameIndex = 5 + level * 2;
+						uint aggregateIndex = 10 + level * 3;
+						VisibilityAggregateCounters[aggregateIndex] += VisibilityFrameCounters[frameIndex];
+						VisibilityAggregateCounters[aggregateIndex + 1] += VisibilityFrameCounters[frameIndex + 1];
+					}
 				}
 
 				if ( CaptureSettledDiagnostics != 0 )
@@ -106,9 +108,13 @@ CS
 					VisibilityAggregateCounters[7] = VisibilityFrameCounters[2];
 					VisibilityAggregateCounters[8] = VisibilityFrameCounters[3];
 					VisibilityAggregateCounters[9] = VisibilityFrameCounters[4];
-					VisibilityAggregateCounters[14] = VisibilityFrameCounters[5];
-					VisibilityAggregateCounters[15] = VisibilityFrameCounters[6];
-					VisibilityAggregateCounters[18] = VisibilityFrameCounters[9];
+					[unroll]
+					for ( uint level = 0; level < 3; level++ )
+					{
+						uint frameIndex = 5 + level * 2;
+						uint aggregateIndex = 10 + level * 3;
+						VisibilityAggregateCounters[aggregateIndex + 2] = VisibilityFrameCounters[frameIndex];
+					}
 				}
 			}
 
@@ -126,11 +132,11 @@ CS
 		IndexedArguments source = SourceIndirectArguments[slot];
 		float3 maximum = maximumAndCellCount.xyz;
 		uint activeCellCount = (uint)round( maximumAndCellCount.w );
-		bool active = minimumAndActive.w > 0.5;
-		bool warm = minimumAndActive.w > 1.5 && minimumAndActive.w < 2.5;
-		bool lod1 = minimumAndActive.w > 2.5 && minimumAndActive.w < 3.5;
-		bool transition = minimumAndActive.w > 3.5 && minimumAndActive.w < 4.5;
-		bool lod2 = minimumAndActive.w > 4.5;
+		uint category = (uint)round( minimumAndActive.w );
+		bool active = category > 0;
+		bool transition = category >= 100;
+		uint level = transition ? category - 100 : (category - 1) / 2;
+		bool warm = !transition && ((category - 1) & 1) != 0;
 		bool visible = active && source.IndexCount > 0 &&
 			!IsDefinitelyOutsideFrustum( minimumAndActive.xyz, maximum );
 
@@ -145,32 +151,16 @@ CS
 			{
 				InterlockedAdd( VisibilityFrameCounters[2], 1 );
 			}
-			else if ( lod1 )
+			if ( !transition && level < 3 )
 			{
-				InterlockedAdd( VisibilityFrameCounters[6], 1 );
-			}
-			else if ( lod2 )
-			{
-				InterlockedAdd( VisibilityFrameCounters[9], 1 );
-			}
-			else if ( !transition )
-			{
-				InterlockedAdd( VisibilityFrameCounters[5], 1 );
+				InterlockedAdd( VisibilityFrameCounters[5 + level * 2], 1 );
 			}
 			if ( visible )
 			{
 				InterlockedAdd( VisibilityFrameCounters[1], 1 );
-				if ( lod1 )
+				if ( !transition && level < 3 )
 				{
-					InterlockedAdd( VisibilityFrameCounters[8], 1 );
-				}
-				else if ( lod2 )
-				{
-					InterlockedAdd( VisibilityFrameCounters[10], 1 );
-				}
-				else if ( !warm && !transition )
-				{
-					InterlockedAdd( VisibilityFrameCounters[7], 1 );
+					InterlockedAdd( VisibilityFrameCounters[6 + level * 2], 1 );
 				}
 			}
 		}

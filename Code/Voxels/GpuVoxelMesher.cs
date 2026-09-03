@@ -23,7 +23,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private const int MaximumScheduleLatencySamples = 524288;
 	private const int MaximumThroughputBatchSamples = 65536;
 	private const int DefaultMeshAuditRegionsPerLevel = 8;
-	private const double Lod2MaximumServiceDelayMilliseconds = 250.0;
+	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
+	private const int VisibilityFrameCounterCount = 5 + SupportedVisualLevelCount * 2;
+	private const int VisibilityAggregateCounterCount = 11 + SupportedVisualLevelCount * 3;
+	private const double OuterMaximumServiceDelayMilliseconds = 250.0;
 	private const double GpuSchedulerStallThresholdMilliseconds = 500.0;
 	private const double SlowDrawCommandCommitThresholdMilliseconds = 500.0;
 
@@ -33,9 +36,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly Dictionary<GpuMeshRegionKey, ResidentMesh> _resident = new();
 	private readonly Dictionary<GpuMeshRegionKey, PendingMesh> _pending = new();
 	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();
-	private readonly Queue<PendingMesh> _lod1DispatchQueue = new();
+	private readonly Queue<PendingMesh> _nearVisualDispatchQueue = new();
 	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
-	private readonly Queue<PendingMesh> _lod2DispatchQueue = new();
+	private readonly Queue<PendingMesh> _outerVisualDispatchQueue = new();
 	private readonly List<GeometryArena> _arenas = new();
 	private ScratchLane[] _scratchLanes;
 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
@@ -61,12 +64,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private int _cellsPerAxis;
 	private int _visibilityCapacity;
 	private int _pendingGameplayCount;
-	private int _pendingLod1Count;
 	private int _pendingWarmCount;
-	private int _pendingLod2Count;
+	private readonly int[] _pendingLevelCounts = new int[SupportedVisualLevelCount];
 	private int _warmResidentCount;
-	private int _lod1ResidentCount;
-	private int _lod2ResidentCount;
+	private readonly int[] _residentLevelCounts = new int[SupportedVisualLevelCount];
 	private uint _nextGeneration;
 	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
 	private GpuBuffer.IndirectDrawIndexedArguments[] _sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
@@ -112,24 +113,33 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private int _processedRenderDispatches;
 	private ulong _topologyDigest;
 	private ulong _positionDigest;
-	private ulong _lod0TopologyDigest;
-	private ulong _lod0PositionDigest;
-	private ulong _lod1TopologyDigest;
-	private ulong _lod1PositionDigest;
-	private ulong _lod2TopologyDigest;
-	private ulong _lod2PositionDigest;
+	private readonly ulong[] _levelTopologyDigests = new ulong[SupportedVisualLevelCount];
+	private readonly ulong[] _levelPositionDigests = new ulong[SupportedVisualLevelCount];
 	private float[] _scheduleLatencyMilliseconds = Array.Empty<float>();
 	private int _scheduleLatencySampleCount;
 	private int _scheduleLatencyTruncatedCount;
 	private int _scheduleLatencyCancelledCount;
 	private int _scheduleLatencySupersededCount;
 	private bool _scheduleLatencyMeasurementActive;
+	private readonly long[] _levelScheduledCounts = new long[SupportedVisualLevelCount];
+	private readonly long[] _levelPublishedCounts = new long[SupportedVisualLevelCount];
+	private readonly long[] _levelCancelledCounts = new long[SupportedVisualLevelCount];
+	private readonly long[] _levelSupersededCounts = new long[SupportedVisualLevelCount];
+	private readonly float[][] _levelLatencyMilliseconds = new float[SupportedVisualLevelCount][];
+	private readonly int[] _levelLatencySampleCounts = new int[SupportedVisualLevelCount];
+	private readonly int[] _levelLatencyTruncatedCounts = new int[SupportedVisualLevelCount];
+	private GpuLevelScheduleMeasurement[] _completedLevelScheduleMeasurements =
+		Array.Empty<GpuLevelScheduleMeasurement>();
 	private ThroughputRecorder _throughput;
 	private float _currentPlayerRouteDistance;
 	private long _transitionScheduledCount;
 	private long _transitionPublishedCount;
 	private long _transitionCancelledCount;
 	private long _transitionStaleCount;
+	private readonly long[] _transitionScheduledByCoarseLevel = new long[SupportedVisualLevelCount];
+	private readonly long[] _transitionPublishedByCoarseLevel = new long[SupportedVisualLevelCount];
+	private readonly long[] _transitionCancelledByCoarseLevel = new long[SupportedVisualLevelCount];
+	private readonly long[] _transitionStaleByCoarseLevel = new long[SupportedVisualLevelCount];
 	private ulong _transitionTopologyDigest;
 	private ulong _transitionPositionDigest;
 	private uint _transitionFineFaceMismatchCount;
@@ -139,21 +149,24 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private float[] _transitionLatencyMilliseconds = Array.Empty<float>();
 	private int _transitionLatencySampleCount;
 	private int _transitionLatencyTruncatedCount;
+	private readonly float[][] _transitionLatencyByCoarseLevel = new float[SupportedVisualLevelCount][];
+	private readonly int[] _transitionLatencySampleCountByCoarseLevel = new int[SupportedVisualLevelCount];
+	private readonly int[] _transitionLatencyTruncatedByCoarseLevel = new int[SupportedVisualLevelCount];
 	private bool _transitionMeasurementActive;
-	private long _lod2LastServiceTimestamp;
-	private long _lod2EligibleSinceTimestamp;
-	private long _lod2ScheduledCount;
-	private long _lod2PublishedCount;
-	private long _lod2CancelledCount;
-	private long _lod2SupersededCount;
-	private long _lod2OpportunisticServiceCount;
-	private long _lod2ForcedServiceCount;
-	private float _lod2MaximumServiceGapMilliseconds;
-	private float[] _lod2LatencyMilliseconds = Array.Empty<float>();
-	private int _lod2LatencySampleCount;
-	private int _lod2LatencyTruncatedCount;
-	private MetricSamples _lod2QueueDepth;
-	private bool _lod2MeasurementActive;
+	private long _outerLastServiceTimestamp;
+	private long _outerEligibleSinceTimestamp;
+	private long _outerScheduledCount;
+	private long _outerPublishedCount;
+	private long _outerCancelledCount;
+	private long _outerSupersededCount;
+	private long _outerOpportunisticServiceCount;
+	private long _outerForcedServiceCount;
+	private float _outerMaximumServiceGapMilliseconds;
+	private float[] _outerLatencyMilliseconds = Array.Empty<float>();
+	private int _outerLatencySampleCount;
+	private int _outerLatencyTruncatedCount;
+	private MetricSamples _outerQueueDepth;
+	private bool _outerMeasurementActive;
 	private MeshAuditRequest _requestedMeshAudit;
 	private bool _meshAuditInFlight;
 	private long _nextMeshAuditId;
@@ -162,24 +175,33 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private bool _disposed;
 
 	public int ResidentCount => _resident.Count;
-	public int PendingCount => PendingGameplayCount + PendingLod1Count + PendingWarmCount;
-	public int AllPendingCount => PendingCount + PendingLod2Count;
+	public int PendingCount => PendingGameplayCount + PendingNearVisualCount + PendingWarmCount;
+	public int AllPendingCount => PendingCount + PendingOuterVisualCount;
 	public int PendingGameplayCount => _pendingGameplayCount + CountInFlight( GpuMeshResidency.Gameplay );
-	public int PendingLod1Count => _pendingLod1Count + CountInFlight( GpuMeshResidency.Lod1 );
 	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Warm );
-	public int PendingLod2Count => _pendingLod2Count + CountInFlight( GpuMeshResidency.Lod2 );
+	public int PendingNearVisualCount => PendingLevelCount( 1 );
+	public int PendingOuterVisualCount => Enumerable.Range( 2, SupportedVisualLevelCount - 2 )
+		.Sum( PendingLevelCount );
 	public int WarmResidentCount => _warmResidentCount;
-	public int Lod1ResidentCount => _lod1ResidentCount;
-	public int Lod2ResidentCount => _lod2ResidentCount;
-	public int Lod0ResidentCount => ResidentCount - Lod1ResidentCount - Lod2ResidentCount;
-	public int Lod0ActiveCount => _renderActive.Count( key => key.Level == GpuMeshLevel.Lod0 );
-	public int Lod1ActiveCount => _renderActive.Count( key => key.Level == GpuMeshLevel.Lod1 );
-	public int Lod2ActiveCount => _renderActive.Count( key => key.Level == GpuMeshLevel.Lod2 );
+	public int GameplayResidentCount => _resident.Count( pair =>
+		pair.Value.Residency == GpuMeshResidency.Gameplay );
+	public int ResidentLevelCount( int level ) => _residentLevelCounts[level];
+	public int PendingLevelCount( int level ) =>
+		_pendingLevelCounts[level] + CountInFlight( level );
+	public int ActiveLevelCount( int level ) => _renderActive.Count( key => key.Level == level );
 	public int TransitionDesiredCount => _transitionRenderActive.Count;
 	public int TransitionReadyCount => _transitionResident.Count;
 	public int TransitionDrawableCount => _transitionResident.Count( value => value.Value.Handle is not null );
 	public int TransitionPendingCount => _transitionPending.Count + (_transitionScratchLanes?.Sum( lane =>
 		lane.CountInFlight.Count + lane.EmitInFlight.Count ) ?? 0);
+	public int TransitionDesiredCountForPair( int coarseLevel ) =>
+		_transitionRenderActive.Count( key => key.CoarseLevel == coarseLevel );
+	public int TransitionReadyCountForPair( int coarseLevel ) =>
+		_transitionResident.Count( pair => pair.Key.CoarseLevel == coarseLevel );
+	public int TransitionDrawableCountForPair( int coarseLevel ) =>
+		_transitionResident.Count( pair => pair.Key.CoarseLevel == coarseLevel && pair.Value.Handle is not null );
+	public int TransitionPendingCountForCoarseLevel( int coarseLevel ) =>
+		TransitionPendingCountForPair( coarseLevel );
 	public long TransitionScheduledCount => _transitionScheduledCount;
 	public long TransitionPublishedCount => _transitionPublishedCount;
 	public long TransitionCancelledCount => _transitionCancelledCount;
@@ -224,7 +246,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public long CommittedIndexBytes => (long)_arenas.Count * IndexArenaBytes;
 	public long TransientScratchBytes => _scratchLanes?.Sum( lane => lane.Scratch.CapacityBytes ) ?? 0;
 	public long TransitionTransientScratchBytes => _transitionScratchLanes?.Sum( lane => lane.Scratch.CapacityBytes ) ?? 0;
-	public long Lod2TransientScratchBytes => 0;
+	public long DedicatedOuterTransientScratchBytes => 0;
 	private long TransitionAllocatedVertexCount => TransitionUniqueVertexCount +
 		(_transitionScratchLanes?.Sum( lane => lane.EmitInFlight.Sum(
 			value => (long)(value.Handle?.Vertices.Count ?? 0) ) ) ?? 0);
@@ -264,15 +286,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 	}
 	public string TopologyDigest => _topologyDigest.ToString( "X16" );
 	public string PositionDigest => _positionDigest.ToString( "X16" );
-	public string Lod0TopologyDigest => _lod0TopologyDigest.ToString( "X16" );
-	public string Lod0PositionDigest => _lod0PositionDigest.ToString( "X16" );
-	public string Lod1TopologyDigest => _lod1TopologyDigest.ToString( "X16" );
-	public string Lod1PositionDigest => _lod1PositionDigest.ToString( "X16" );
-	public string Lod2TopologyDigest => _lod2TopologyDigest.ToString( "X16" );
-	public string Lod2PositionDigest => _lod2PositionDigest.ToString( "X16" );
+	public string LevelTopologyDigest( int level ) => _levelTopologyDigests[level].ToString( "X16" );
+	public string LevelPositionDigest( int level ) => _levelPositionDigests[level].ToString( "X16" );
 	public long RenderSequence => System.Threading.Interlocked.Read( ref _renderSequence );
 	public long LogicalVisibilityBytes => _visibilityCapacity == 0 ? 0 :
-		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) + sizeof( uint ) * 31;
+		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) +
+			sizeof( uint ) * (VisibilityFrameCounterCount + VisibilityAggregateCounterCount);
 
 	public GpuVoxelMesher( Scene scene, int cellsPerAxis )
 	{
@@ -280,7 +299,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_cellsPerAxis = cellsPerAxis;
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
 		_transitionScratchLanes = CreateTransitionScratchLanes();
-		_lod2LastServiceTimestamp = Stopwatch.GetTimestamp();
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
 		_lastGpuRenderTickTimestamp = Stopwatch.GetTimestamp();
 		_readbackObject = new ReadbackSceneObject( scene.SceneWorld, this );
 		Sandbox.Diagnostics.GpuProfilerStats.Enabled = true;
@@ -301,7 +320,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public void SampleThroughputQueueDepth()
 	{
 		_throughput?.SampleQueueDepth( PendingGameplayCount, PendingWarmCount );
-		if ( _lod2MeasurementActive ) _lod2QueueDepth?.Record( PendingLod2Count );
+		if ( _outerMeasurementActive ) _outerQueueDepth?.Record( PendingOuterVisualCount );
 	}
 
 	public void EndMovingThroughputWindow( float durationSeconds )
@@ -346,7 +365,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	{
 		if ( chunk.DensityClassification != ChunkDensityClassification.PotentiallySurfaceContaining )
 		{
-			Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod0, chunk.Coordinate ) );
+			Remove( new GpuMeshRegionKey( 0, chunk.Coordinate ) );
 			return;
 		}
 		var descriptor = GpuSdfDescriptor.FromChunk( chunk, sourceRevision );
@@ -360,13 +379,17 @@ internal sealed class GpuVoxelMesher : IDisposable
 			SetResidency( resident, residency );
 			return;
 		}
-		if ( residency == GpuMeshResidency.Lod2 )
+		if ( descriptor.Key.Level >= 2 )
 		{
-			if ( _lod2MeasurementActive ) _lod2ScheduledCount++;
+			if ( _outerMeasurementActive ) _outerScheduledCount++;
 		}
 		else
 		{
 			_throughput?.RecordScheduled();
+		}
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			_levelScheduledCounts[descriptor.Key.Level]++;
 		}
 		QueuePending( new PendingMesh(
 			descriptor,
@@ -412,6 +435,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionPending[descriptor.Key] = pending;
 		_transitionDispatchQueue.Enqueue( pending );
 		_transitionScheduledCount++;
+		_transitionScheduledByCoarseLevel[descriptor.Key.CoarseLevel]++;
 	}
 
 	public void SetTransitionActive( GpuTransitionKey key, bool active )
@@ -480,6 +504,17 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
 		_transitionLatencySampleCount = 0;
 		_transitionLatencyTruncatedCount = 0;
+		Array.Clear( _transitionScheduledByCoarseLevel );
+		Array.Clear( _transitionPublishedByCoarseLevel );
+		Array.Clear( _transitionCancelledByCoarseLevel );
+		Array.Clear( _transitionStaleByCoarseLevel );
+		Array.Clear( _transitionLatencySampleCountByCoarseLevel );
+		Array.Clear( _transitionLatencyTruncatedByCoarseLevel );
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			_transitionLatencyByCoarseLevel[coarseLevel] =
+				new float[MaximumScheduleLatencySamples];
+		}
 		_transitionMeasurementActive = true;
 	}
 
@@ -487,6 +522,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 	{
 		_transitionMeasurementActive = false;
 		Array.Sort( _transitionLatencyMilliseconds, 0, _transitionLatencySampleCount );
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			Array.Sort(
+				_transitionLatencyByCoarseLevel[coarseLevel],
+				0,
+				_transitionLatencySampleCountByCoarseLevel[coarseLevel] );
+		}
+		var faces = CreateTransitionFaceMeasurements();
 		var result = new GpuTransitionMeasurement(
 			TransitionDesiredCount,
 			TransitionReadyCount,
@@ -506,7 +549,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_transitionLateralEdgeDigest,
 			TransitionLateralMismatchCount,
 			_transitionInvalidTableCount,
-			CreateTransitionFaceMeasurements(),
+			faces,
+			CreateTransitionPairMeasurements( faces ),
 			new GpuMetricDistribution(
 				_transitionLatencySampleCount,
 				_transitionLatencyTruncatedCount,
@@ -516,6 +560,70 @@ internal sealed class GpuVoxelMesher : IDisposable
 				GetTransitionLatencyPercentile( 0.99 ),
 				_transitionLatencySampleCount > 0 ? _transitionLatencyMilliseconds[_transitionLatencySampleCount - 1] : 0 ) );
 		_transitionLatencyMilliseconds = Array.Empty<float>();
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			_transitionLatencyByCoarseLevel[coarseLevel] = Array.Empty<float>();
+		}
+		return result;
+	}
+
+	private GpuTransitionPairMeasurement[] CreateTransitionPairMeasurements(
+		GpuTransitionFaceMeasurement[] faces )
+	{
+		var result = new GpuTransitionPairMeasurement[SupportedVisualLevelCount - 1];
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			var pairFaces = faces.Where( face => face.Key.CoarseLevel == coarseLevel ).ToArray();
+			var residents = _transitionResident
+				.Where( pair => pair.Key.CoarseLevel == coarseLevel )
+				.Select( pair => pair.Value )
+				.ToArray();
+			ulong topologyDigest = 0;
+			ulong positionDigest = 0;
+			uint lateralEdgeDigest = 0;
+			foreach ( var resident in residents )
+			{
+				topologyDigest ^= TransitionCoordinateDigest(
+					resident.Descriptor.Key,
+					resident.Counts.TopologyDigest );
+				positionDigest ^= TransitionCoordinateDigest(
+					resident.Descriptor.Key,
+					resident.Counts.PositionDigest );
+				lateralEdgeDigest ^= TransitionCombinedLateralDigest( resident.Counts );
+			}
+			var sampleCount = _transitionLatencySampleCountByCoarseLevel[coarseLevel];
+			var samples = _transitionLatencyByCoarseLevel[coarseLevel];
+			result[coarseLevel - 1] = new GpuTransitionPairMeasurement(
+				coarseLevel - 1,
+				coarseLevel,
+				_transitionRenderActive.Count( key => key.CoarseLevel == coarseLevel ),
+				residents.Length,
+				residents.Count( resident => resident.Handle is not null ),
+				TransitionPendingCountForPair( coarseLevel ),
+				_transitionScheduledByCoarseLevel[coarseLevel],
+				_transitionPublishedByCoarseLevel[coarseLevel],
+				_transitionCancelledByCoarseLevel[coarseLevel],
+				_transitionStaleByCoarseLevel[coarseLevel],
+				residents.Sum( resident => (long)resident.Counts.ActiveCells ),
+				residents.Sum( resident => (long)(resident.Handle?.Vertices.Count ?? 0) ),
+				residents.Sum( resident => (long)(resident.Handle?.Indices.Count ?? 0) ),
+				topologyDigest.ToString( "X16" ),
+				positionDigest.ToString( "X16" ),
+				(uint)residents.Sum( resident => (long)resident.Counts.FineFaceMismatchCount ),
+				(uint)residents.Sum( resident => (long)resident.Counts.CoarseFaceMismatchCount ),
+				lateralEdgeDigest,
+				CountTransitionLateralMismatches( coarseLevel ),
+				(uint)residents.Sum( resident => (long)resident.Counts.InvalidTableCount ),
+				pairFaces,
+				new GpuMetricDistribution(
+					sampleCount,
+					_transitionLatencyTruncatedByCoarseLevel[coarseLevel],
+					sampleCount > 0 ? samples.Take( sampleCount ).Average() : 0,
+					GetTransitionLatencyPercentile( samples, sampleCount, 0.50 ),
+					GetTransitionLatencyPercentile( samples, sampleCount, 0.95 ),
+					GetTransitionLatencyPercentile( samples, sampleCount, 0.99 ),
+					sampleCount > 0 ? samples[sampleCount - 1] : 0 ) );
+		}
 		return result;
 	}
 
@@ -555,11 +663,30 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private float GetTransitionLatencyPercentile( double percentile )
 	{
-		if ( _transitionLatencySampleCount == 0 ) return 0;
-		var index = Math.Clamp( (int)Math.Ceiling( _transitionLatencySampleCount * percentile ) - 1,
-			0, _transitionLatencySampleCount - 1 );
-		return _transitionLatencyMilliseconds[index];
+		return GetTransitionLatencyPercentile(
+			_transitionLatencyMilliseconds,
+			_transitionLatencySampleCount,
+			percentile );
 	}
+
+	private static float GetTransitionLatencyPercentile(
+		float[] samples,
+		int sampleCount,
+		double percentile )
+	{
+		if ( sampleCount == 0 ) return 0;
+		var index = Math.Clamp(
+			(int)Math.Ceiling( sampleCount * percentile ) - 1,
+			0,
+			sampleCount - 1 );
+		return samples[index];
+	}
+
+	private int TransitionPendingCountForPair( int coarseLevel ) =>
+		_transitionPending.Count( pair => pair.Key.CoarseLevel == coarseLevel ) +
+		(_transitionScratchLanes?.Sum( lane =>
+			lane.CountInFlight.Count( value => value.Descriptor.Key.CoarseLevel == coarseLevel ) +
+			lane.EmitInFlight.Count( value => value.Descriptor.Key.CoarseLevel == coarseLevel ) ) ?? 0);
 
 	public void BeginScheduleLatencyMeasurement()
 	{
@@ -568,6 +695,17 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_scheduleLatencyTruncatedCount = 0;
 		_scheduleLatencyCancelledCount = 0;
 		_scheduleLatencySupersededCount = 0;
+		Array.Clear( _levelScheduledCounts );
+		Array.Clear( _levelPublishedCounts );
+		Array.Clear( _levelCancelledCounts );
+		Array.Clear( _levelSupersededCounts );
+		Array.Clear( _levelLatencySampleCounts );
+		Array.Clear( _levelLatencyTruncatedCounts );
+		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+		{
+			_levelLatencyMilliseconds[level] = new float[MaximumScheduleLatencySamples];
+		}
+		_completedLevelScheduleMeasurements = Array.Empty<GpuLevelScheduleMeasurement>();
 		_scheduleLatencyMeasurementActive = true;
 	}
 
@@ -575,6 +713,29 @@ internal sealed class GpuVoxelMesher : IDisposable
 	{
 		_scheduleLatencyMeasurementActive = false;
 		Array.Sort( _scheduleLatencyMilliseconds, 0, _scheduleLatencySampleCount );
+		_completedLevelScheduleMeasurements = new GpuLevelScheduleMeasurement[SupportedVisualLevelCount];
+		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+		{
+			var samples = _levelLatencyMilliseconds[level];
+			var sampleCount = _levelLatencySampleCounts[level];
+			Array.Sort( samples, 0, sampleCount );
+			_completedLevelScheduleMeasurements[level] = new GpuLevelScheduleMeasurement(
+				level,
+				_levelScheduledCounts[level],
+				_levelPublishedCounts[level],
+				_levelCancelledCounts[level],
+				_levelSupersededCounts[level],
+				new GpuMeshScheduleLatencyMeasurement(
+					sampleCount,
+					_levelLatencyTruncatedCounts[level],
+					GetLatencyPercentile( samples, sampleCount, 0.50 ),
+					GetLatencyPercentile( samples, sampleCount, 0.95 ),
+					GetLatencyPercentile( samples, sampleCount, 0.99 ),
+					GetLatencyPercentile( samples, sampleCount, 1.0 ),
+					(int)Math.Min( int.MaxValue, _levelCancelledCounts[level] ),
+					(int)Math.Min( int.MaxValue, _levelSupersededCounts[level] ) ) );
+			_levelLatencyMilliseconds[level] = Array.Empty<float>();
+		}
 		var result = new GpuMeshScheduleLatencyMeasurement(
 			_scheduleLatencySampleCount,
 			_scheduleLatencyTruncatedCount,
@@ -588,57 +749,75 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return result;
 	}
 
-	public void BeginLod2Measurement()
+	public void BeginOuterLevelMeasurement()
 	{
-		_lod2ScheduledCount = 0;
-		_lod2PublishedCount = 0;
-		_lod2CancelledCount = 0;
-		_lod2SupersededCount = 0;
-		_lod2OpportunisticServiceCount = 0;
-		_lod2ForcedServiceCount = 0;
-		_lod2MaximumServiceGapMilliseconds = 0f;
-		_lod2LatencyMilliseconds = new float[MaximumScheduleLatencySamples];
-		_lod2LatencySampleCount = 0;
-		_lod2LatencyTruncatedCount = 0;
-		_lod2QueueDepth = new MetricSamples( MaximumScheduleLatencySamples );
-		_lod2MeasurementActive = true;
+		_outerScheduledCount = 0;
+		_outerPublishedCount = 0;
+		_outerCancelledCount = 0;
+		_outerSupersededCount = 0;
+		_outerOpportunisticServiceCount = 0;
+		_outerForcedServiceCount = 0;
+		_outerMaximumServiceGapMilliseconds = 0f;
+		_outerLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
+		_outerLatencySampleCount = 0;
+		_outerLatencyTruncatedCount = 0;
+		_outerQueueDepth = new MetricSamples( MaximumScheduleLatencySamples );
+		_outerMeasurementActive = true;
 	}
 
-	public GpuLod2Measurement CompleteLod2Measurement()
+	public GpuOuterLevelMeasurement CompleteOuterLevelMeasurement()
 	{
-		_lod2MeasurementActive = false;
-		Array.Sort( _lod2LatencyMilliseconds, 0, _lod2LatencySampleCount );
-		var result = new GpuLod2Measurement(
-			_lod2ScheduledCount,
-			_lod2PublishedCount,
-			_lod2CancelledCount,
-			_lod2SupersededCount,
-			_lod2OpportunisticServiceCount,
-			_lod2ForcedServiceCount,
-			_lod2MaximumServiceGapMilliseconds,
-			_lod2QueueDepth?.CompleteQueue() ?? default,
+		_outerMeasurementActive = false;
+		Array.Sort( _outerLatencyMilliseconds, 0, _outerLatencySampleCount );
+		var result = new GpuOuterLevelMeasurement(
+			_outerScheduledCount,
+			_outerPublishedCount,
+			_outerCancelledCount,
+			_outerSupersededCount,
+			_outerOpportunisticServiceCount,
+			_outerForcedServiceCount,
+			_outerMaximumServiceGapMilliseconds,
+			_outerQueueDepth?.CompleteQueue() ?? default,
 			new GpuMeshScheduleLatencyMeasurement(
-				_lod2LatencySampleCount,
-				_lod2LatencyTruncatedCount,
-				GetLod2LatencyPercentile( 0.50 ),
-				GetLod2LatencyPercentile( 0.95 ),
-				GetLod2LatencyPercentile( 0.99 ),
-				GetLod2LatencyPercentile( 1.0 ),
-				(int)Math.Min( int.MaxValue, _lod2CancelledCount ),
-				(int)Math.Min( int.MaxValue, _lod2SupersededCount ) ) );
-		_lod2LatencyMilliseconds = Array.Empty<float>();
-		_lod2QueueDepth = null;
+				_outerLatencySampleCount,
+				_outerLatencyTruncatedCount,
+				GetOuterLatencyPercentile( 0.50 ),
+				GetOuterLatencyPercentile( 0.95 ),
+				GetOuterLatencyPercentile( 0.99 ),
+				GetOuterLatencyPercentile( 1.0 ),
+				(int)Math.Min( int.MaxValue, _outerCancelledCount ),
+				(int)Math.Min( int.MaxValue, _outerSupersededCount ) ) );
+		_outerLatencyMilliseconds = Array.Empty<float>();
+		_outerQueueDepth = null;
 		return result;
 	}
 
-	private float GetLod2LatencyPercentile( double percentile )
+	public GpuLevelScheduleMeasurement LevelScheduleMeasurement( int level ) =>
+		level >= 0 && level < _completedLevelScheduleMeasurements.Length
+			? _completedLevelScheduleMeasurements[level]
+			: default;
+
+	private static float GetLatencyPercentile(
+		float[] samples,
+		int sampleCount,
+		double percentile )
 	{
-		if ( _lod2LatencySampleCount == 0 ) return 0f;
+		if ( sampleCount == 0 ) return 0;
 		var index = Math.Clamp(
-			(int)Math.Ceiling( _lod2LatencySampleCount * percentile ) - 1,
+			(int)Math.Ceiling( sampleCount * percentile ) - 1,
 			0,
-			_lod2LatencySampleCount - 1 );
-		return _lod2LatencyMilliseconds[index];
+			sampleCount - 1 );
+		return samples[index];
+	}
+
+	private float GetOuterLatencyPercentile( double percentile )
+	{
+		if ( _outerLatencySampleCount == 0 ) return 0f;
+		var index = Math.Clamp(
+			(int)Math.Ceiling( _outerLatencySampleCount * percentile ) - 1,
+			0,
+			_outerLatencySampleCount - 1 );
+		return _outerLatencyMilliseconds[index];
 	}
 
 	private float GetScheduleLatencyPercentile( double percentile )
@@ -718,7 +897,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		var targets = new List<MeshAuditTarget>();
-		foreach ( var level in Enum.GetValues<GpuMeshLevel>() )
+		foreach ( var level in Enumerable.Range( 0, SupportedVisualLevelCount ) )
 		{
 			var candidates = _resident.Values
 				.Where( resident => resident.Descriptor.Key.Level == level && resident.Handle is not null &&
@@ -726,7 +905,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				.Select( resident => CreateRegularMeshAuditTarget( resident, target ) );
 			targets.AddRange( SelectMeshAuditTargets( candidates, regionsPerLevel, selection ) );
 		}
-		foreach ( var coarseLevel in new[] { GpuMeshLevel.Lod1, GpuMeshLevel.Lod2 } )
+		foreach ( var coarseLevel in Enumerable.Range( 1, SupportedVisualLevelCount - 1 ) )
 		{
 			var transitionCandidates = _transitionResident.Values
 				.Where( resident => resident.Descriptor.Key.CoarseLevel == coarseLevel &&
@@ -983,10 +1162,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public void Remove( GpuMeshRegionKey key )
 	{
 		_renderActive.Remove( key );
-		if ( _lod2MeasurementActive && _pending.TryGetValue( key, out var pending ) &&
-			pending.Residency == GpuMeshResidency.Lod2 )
+		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( key ) )
 		{
-			_lod2CancelledCount++;
+			_levelCancelledCounts[key.Level]++;
+		}
+		if ( _outerMeasurementActive && key.Level >= 2 && _pending.ContainsKey( key ) )
+		{
+			_outerCancelledCount++;
 		}
 		RemovePending( key );
 		if ( _scratchLanes.Any( lane =>
@@ -1005,7 +1187,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		Clear();
 		DisposeScratchLanes();
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
-		_lod2LastServiceTimestamp = Stopwatch.GetTimestamp();
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
 		if ( cellsPerAxis == _cellsPerAxis ) return;
 		DisposeArenas();
 		DisposeVisibilityBuffers();
@@ -1512,15 +1694,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private void ProcessGpuRenderTick()
 	{
 		if ( _disposed || _scratchLanes is null ) return;
-		var lod2ServiceGap = ObserveLod2ServiceGap();
-		if ( TryEmitReadyLod2() )
+		var outerServiceGap = ObserveOuterServiceGap();
+		if ( TryEmitReadyOuter() )
 		{
-			RecordLod2Service( lod2ServiceGap, lod2ServiceGap >= Lod2MaximumServiceDelayMilliseconds );
+			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
 			return;
 		}
-		if ( lod2ServiceGap >= Lod2MaximumServiceDelayMilliseconds && TrySubmitLod2Count() )
+		if ( outerServiceGap >= OuterMaximumServiceDelayMilliseconds && TrySubmitOuterCount() )
 		{
-			RecordLod2Service( lod2ServiceGap, true );
+			RecordOuterService( outerServiceGap, true );
 			return;
 		}
 
@@ -1528,7 +1710,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var lane in _scratchLanes )
 		{
 			if ( lane.CountInFlight.Count > 0 &&
-				lane.CountInFlight[0].Descriptor.Key.Level != GpuMeshLevel.Lod2 &&
+				lane.CountInFlight[0].Descriptor.Key.Level < 2 &&
 				lane.Scratch.TryTakeCounts(
 				out var counts,
 				out var count,
@@ -1571,9 +1753,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 
 		var transitionGpuWorkSubmitted = !regularGpuWorkSubmitted && ProcessTransitionGpuRenderTick();
-		if ( !regularGpuWorkSubmitted && !transitionGpuWorkSubmitted && TrySubmitLod2Count() )
+		if ( !regularGpuWorkSubmitted && !transitionGpuWorkSubmitted && TrySubmitOuterCount() )
 		{
-			RecordLod2Service( lod2ServiceGap, false );
+			RecordOuterService( outerServiceGap, false );
 		}
 	}
 
@@ -1619,40 +1801,40 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return true;
 	}
 
-	private double ObserveLod2ServiceGap()
+	private double ObserveOuterServiceGap()
 	{
-		if ( PendingLod2Count == 0 )
+		if ( PendingOuterVisualCount == 0 )
 		{
-			_lod2EligibleSinceTimestamp = 0;
+			_outerEligibleSinceTimestamp = 0;
 			return 0;
 		}
 
 		var now = Stopwatch.GetTimestamp();
-		if ( _lod2EligibleSinceTimestamp == 0 ) _lod2EligibleSinceTimestamp = now;
-		var serviceGapStart = Math.Max( _lod2LastServiceTimestamp, _lod2EligibleSinceTimestamp );
+		if ( _outerEligibleSinceTimestamp == 0 ) _outerEligibleSinceTimestamp = now;
+		var serviceGapStart = Math.Max( _outerLastServiceTimestamp, _outerEligibleSinceTimestamp );
 		return Stopwatch.GetElapsedTime( serviceGapStart, now ).TotalMilliseconds;
 	}
 
-	private void RecordLod2Service( double serviceGap, bool forced )
+	private void RecordOuterService( double serviceGap, bool forced )
 	{
-		if ( _lod2MeasurementActive )
+		if ( _outerMeasurementActive )
 		{
-			_lod2MaximumServiceGapMilliseconds = Math.Max(
-				_lod2MaximumServiceGapMilliseconds,
+			_outerMaximumServiceGapMilliseconds = Math.Max(
+				_outerMaximumServiceGapMilliseconds,
 				(float)serviceGap );
-			if ( forced ) _lod2ForcedServiceCount++;
-			else _lod2OpportunisticServiceCount++;
+			if ( forced ) _outerForcedServiceCount++;
+			else _outerOpportunisticServiceCount++;
 		}
-		_lod2LastServiceTimestamp = Stopwatch.GetTimestamp();
-		_lod2EligibleSinceTimestamp = 0;
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
+		_outerEligibleSinceTimestamp = 0;
 	}
 
-	private bool TryEmitReadyLod2()
+	private bool TryEmitReadyOuter()
 	{
 		foreach ( var lane in _scratchLanes )
 		{
 			if ( lane.CountInFlight.Count == 0 ||
-				lane.CountInFlight[0].Descriptor.Key.Level != GpuMeshLevel.Lod2 ) continue;
+				lane.CountInFlight[0].Descriptor.Key.Level < 2 ) continue;
 			if ( !lane.Scratch.TryTakeCounts(
 				out var counts,
 				out var count,
@@ -1664,14 +1846,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return false;
 	}
 
-	private bool TrySubmitLod2Count()
+	private bool TrySubmitOuterCount()
 	{
-		if ( _pendingLod2Count == 0 || CountInFlight( GpuMeshResidency.Lod2 ) > 0 ) return false;
+		if ( PendingOuterVisualCount == 0 || CountOuterInFlight() > 0 ) return false;
 		var lane = _scratchLanes.FirstOrDefault( value => value.IsIdle );
 		if ( lane is null ) return false;
 		var requests = new GpuTerrainRequest[MaximumDispatchesPerUpdate];
 		var processed = 0;
-		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingLod2( out var pending ) )
+		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( out var pending ) )
 		{
 			var generation = ++_nextGeneration;
 			var inFlight = new InFlightMesh(
@@ -1686,7 +1868,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( processed == 0 ) return false;
 		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _ ) )
-			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle LOD2 count batch." );
+			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle outer count batch." );
 		return true;
 	}
 
@@ -1783,10 +1965,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 		double readbackMilliseconds, double callbackWaitMilliseconds )
 	{
 		if ( count != lane.CountInFlight.Count ) throw new InvalidOperationException( "Voxel terrain count batch length changed." );
-		var lod2 = lane.CountInFlight[0].Descriptor.Key.Level == GpuMeshLevel.Lod2;
+		var outer = lane.CountInFlight[0].Descriptor.Key.Level >= 2;
 		if ( lane.CountInFlight.Any( value =>
-			(value.Descriptor.Key.Level == GpuMeshLevel.Lod2) != lod2 ) )
-			throw new InvalidOperationException( "A terrain scratch batch mixed foreground and LOD2 requests." );
+			(value.Descriptor.Key.Level >= 2) != outer ) )
+			throw new InvalidOperationException( "A terrain scratch batch mixed foreground and outer requests." );
 		_countReadbackCount++;
 		_scalarReadbackCount++;
 		_countReadbackBytes += count * 32;
@@ -1806,7 +1988,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					checked( (int)result.VertexCount ),
 					checked( (int)result.IndexCount ),
 					source.Generation,
-					!lod2 );
+					!outer );
 				arenas.Add( handle.Arena );
 			}
 			lane.EmitInFlight.Add( new CandidateMesh(
@@ -1847,7 +2029,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		lane.Scratch.CompleteEmit();
 		lane.SubmittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
 		lane.EmitSubmittedTimestamp = Stopwatch.GetTimestamp();
-		if ( !lod2 )
+		if ( !outer )
 		{
 			_throughput?.RecordBatchCompleted(
 				(float)readbackMilliseconds,
@@ -1865,8 +2047,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var lane in _scratchLanes )
 		{
 			if ( lane.EmitInFlight.Count == 0 || renderSequence <= lane.SubmittedRenderSequence ) continue;
-			var lod2Batch = lane.EmitInFlight[0].Descriptor.Key.Level == GpuMeshLevel.Lod2;
-			if ( !lod2Batch )
+			var outerBatch = lane.EmitInFlight[0].Descriptor.Key.Level >= 2;
+			if ( !outerBatch )
 			{
 				_throughput?.RecordEmitPublished(
 					(float)Stopwatch.GetElapsedTime( lane.EmitSubmittedTimestamp ).TotalMilliseconds );
@@ -1874,12 +2056,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 			foreach ( var completed in lane.EmitInFlight )
 			{
 				var key = completed.Descriptor.Key;
-				var lod2 = key.Level == GpuMeshLevel.Lod2;
+				var outer = key.Level >= 2;
 				if ( _cancelledInFlight.Remove( key ) )
 				{
-					if ( lod2 )
+					if ( _scheduleLatencyMeasurementActive ) _levelCancelledCounts[key.Level]++;
+					if ( outer )
 					{
-						if ( _lod2MeasurementActive ) _lod2CancelledCount++;
+						if ( _outerMeasurementActive ) _outerCancelledCount++;
 					}
 					else if ( _scheduleLatencyMeasurementActive ) _scheduleLatencyCancelledCount++;
 					Release( completed.Handle );
@@ -1890,9 +2073,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 				{
 					if ( replacement.Descriptor != completed.Descriptor )
 					{
-						if ( lod2 )
+						if ( _scheduleLatencyMeasurementActive ) _levelSupersededCounts[key.Level]++;
+						if ( outer )
 						{
-							if ( _lod2MeasurementActive ) _lod2SupersededCount++;
+							if ( _outerMeasurementActive ) _outerSupersededCount++;
 						}
 						else if ( _scheduleLatencyMeasurementActive ) _scheduleLatencySupersededCount++;
 						Release( completed.Handle );
@@ -1902,10 +2086,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 					RemovePending( key );
 				}
 				PublishResident( completed.Descriptor, residency, completed.Handle, completed.Counts );
-				if ( lod2 )
+				if ( _scheduleLatencyMeasurementActive )
 				{
-					RecordLod2Latency( completed.ScheduledTimestamp );
-					if ( _lod2MeasurementActive ) _lod2PublishedCount++;
+					_levelPublishedCounts[key.Level]++;
+					RecordLevelScheduleLatency( key.Level, completed.ScheduledTimestamp );
+				}
+				if ( outer )
+				{
+					RecordOuterLatency( completed.ScheduledTimestamp );
+					if ( _outerMeasurementActive ) _outerPublishedCount++;
 				}
 				else
 				{
@@ -1935,8 +2124,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var resident = new ResidentMesh( descriptor, residency, handle, counts );
 		_resident.Add( key, resident );
 		if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
-		if ( residency == GpuMeshResidency.Lod1 ) _lod1ResidentCount++;
-		if ( residency == GpuMeshResidency.Lod2 ) _lod2ResidentCount++;
+		_residentLevelCounts[key.Level]++;
 		if ( handle is not null )
 		{
 			handle.Arena.ActiveResidentCount++;
@@ -1944,21 +2132,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		_topologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
 		_positionDigest ^= CoordinateDigest( key, counts.PositionDigest );
-		if ( key.Level == GpuMeshLevel.Lod0 )
-		{
-			_lod0TopologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
-			_lod0PositionDigest ^= CoordinateDigest( key, counts.PositionDigest );
-		}
-		else if ( key.Level == GpuMeshLevel.Lod1 )
-		{
-			_lod1TopologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
-			_lod1PositionDigest ^= CoordinateDigest( key, counts.PositionDigest );
-		}
-		else
-		{
-			_lod2TopologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
-			_lod2PositionDigest ^= CoordinateDigest( key, counts.PositionDigest );
-		}
+		_levelTopologyDigests[key.Level] ^= CoordinateDigest( key, counts.TopologyDigest );
+		_levelPositionDigests[key.Level] ^= CoordinateDigest( key, counts.PositionDigest );
 		_residentPublicationRevision++;
 	}
 
@@ -2030,6 +2205,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				if ( _transitionCancelledGenerations.Remove( completed.Generation ) )
 				{
 					_transitionCancelledCount++;
+					_transitionCancelledByCoarseLevel[key.CoarseLevel]++;
 					Release( completed.Handle );
 					continue;
 				}
@@ -2037,6 +2213,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					desired != completed.Descriptor )
 				{
 					_transitionStaleCount++;
+					_transitionStaleByCoarseLevel[key.CoarseLevel]++;
 					Release( completed.Handle );
 					continue;
 				}
@@ -2045,6 +2222,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					if ( replacement.Descriptor != completed.Descriptor )
 					{
 						_transitionStaleCount++;
+						_transitionStaleByCoarseLevel[key.CoarseLevel]++;
 						Release( completed.Handle );
 						continue;
 					}
@@ -2068,8 +2246,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 				_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
 				_transitionInvalidTableCount += completed.Counts.InvalidTableCount;
 				_transitionPublishedCount++;
+				_transitionPublishedByCoarseLevel[key.CoarseLevel]++;
 				_residentPublicationRevision++;
-				RecordTransitionLatency( latencyMilliseconds );
+				RecordTransitionLatency( key.CoarseLevel, latencyMilliseconds );
 				changed = true;
 			}
 			lane.EmitInFlight.Clear();
@@ -2093,13 +2272,24 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return value ^ (value >> 31);
 	}
 
-	private void RecordTransitionLatency( float milliseconds )
+	private void RecordTransitionLatency( int coarseLevel, float milliseconds )
 	{
 		if ( !_transitionMeasurementActive ) return;
 		if ( _transitionLatencySampleCount < _transitionLatencyMilliseconds.Length )
 			_transitionLatencyMilliseconds[_transitionLatencySampleCount++] = milliseconds;
 		else
 			_transitionLatencyTruncatedCount++;
+		var pairSamples = _transitionLatencyByCoarseLevel[coarseLevel];
+		var pairSampleCount = _transitionLatencySampleCountByCoarseLevel[coarseLevel];
+		if ( pairSampleCount < pairSamples.Length )
+		{
+			pairSamples[pairSampleCount] = milliseconds;
+			_transitionLatencySampleCountByCoarseLevel[coarseLevel]++;
+		}
+		else
+		{
+			_transitionLatencyTruncatedByCoarseLevel[coarseLevel]++;
+		}
 	}
 
 	private static ulong CoordinateDigest( GpuMeshRegionKey key, uint digest )
@@ -2125,14 +2315,30 @@ internal sealed class GpuVoxelMesher : IDisposable
 			_scheduleLatencyTruncatedCount++;
 	}
 
-	private void RecordLod2Latency( long scheduledTimestamp )
+	private void RecordLevelScheduleLatency( int level, long scheduledTimestamp )
 	{
-		if ( !_lod2MeasurementActive ) return;
 		var milliseconds = (float)Stopwatch.GetElapsedTime( scheduledTimestamp ).TotalMilliseconds;
-		if ( _lod2LatencySampleCount < _lod2LatencyMilliseconds.Length )
-			_lod2LatencyMilliseconds[_lod2LatencySampleCount++] = milliseconds;
+		var samples = _levelLatencyMilliseconds[level];
+		var sampleCount = _levelLatencySampleCounts[level];
+		if ( sampleCount < samples.Length )
+		{
+			samples[sampleCount] = milliseconds;
+			_levelLatencySampleCounts[level]++;
+		}
 		else
-			_lod2LatencyTruncatedCount++;
+		{
+			_levelLatencyTruncatedCounts[level]++;
+		}
+	}
+
+	private void RecordOuterLatency( long scheduledTimestamp )
+	{
+		if ( !_outerMeasurementActive ) return;
+		var milliseconds = (float)Stopwatch.GetElapsedTime( scheduledTimestamp ).TotalMilliseconds;
+		if ( _outerLatencySampleCount < _outerLatencyMilliseconds.Length )
+			_outerLatencyMilliseconds[_outerLatencySampleCount++] = milliseconds;
+		else
+			_outerLatencyTruncatedCount++;
 	}
 
 	private GeometryHandle Acquire( int vertexCount, int indexCount, uint generation,
@@ -2169,25 +2375,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private void ReleaseResident( ResidentMesh resident )
 	{
 		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
-		if ( resident.Residency == GpuMeshResidency.Lod1 ) _lod1ResidentCount--;
-		if ( resident.Residency == GpuMeshResidency.Lod2 ) _lod2ResidentCount--;
+		_residentLevelCounts[resident.Descriptor.Key.Level]--;
 		_topologyDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
 		_positionDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
-		if ( resident.Descriptor.Key.Level == GpuMeshLevel.Lod0 )
-		{
-			_lod0TopologyDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
-			_lod0PositionDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
-		}
-		else if ( resident.Descriptor.Key.Level == GpuMeshLevel.Lod1 )
-		{
-			_lod1TopologyDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
-			_lod1PositionDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
-		}
-		else
-		{
-			_lod2TopologyDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
-			_lod2PositionDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
-		}
+		_levelTopologyDigests[resident.Descriptor.Key.Level] ^=
+			CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
+		_levelPositionDigests[resident.Descriptor.Key.Level] ^=
+			CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
 		if ( resident.Handle is null ) return;
 		SetVisibilityActive( resident, false );
 		resident.Handle.Arena.ActiveResidentCount--;
@@ -2210,11 +2404,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 		Release( resident.Handle );
 	}
 
-	private uint CountTransitionLateralMismatches()
+	private uint CountTransitionLateralMismatches( int? coarseLevel = null )
 	{
 		uint mismatches = 0;
 		foreach ( var pair in _transitionResident )
 		{
+			if ( coarseLevel.HasValue && pair.Key.CoarseLevel != coarseLevel.Value ) continue;
 			GetTransitionFaceAxes( pair.Key.Face, out var u, out var v );
 			var uNeighborKey = pair.Key with { CoarseCoordinate = pair.Key.CoarseCoordinate + u };
 			if ( _transitionResident.TryGetValue( uNeighborKey, out var uNeighbor ) &&
@@ -2261,9 +2456,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 	{
 		if ( _pending.ContainsKey( pending.Descriptor.Key ) )
 		{
-			if ( pending.Residency == GpuMeshResidency.Lod2 )
+			if ( pending.Descriptor.Key.Level >= 2 )
 			{
-				if ( _lod2MeasurementActive ) _lod2SupersededCount++;
+				if ( _outerMeasurementActive ) _outerSupersededCount++;
 			}
 			else if ( _scheduleLatencyMeasurementActive )
 			{
@@ -2272,20 +2467,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		RemovePending( pending.Descriptor.Key );
 		_pending[pending.Descriptor.Key] = pending;
+		_pendingLevelCounts[pending.Descriptor.Key.Level]++;
 		if ( pending.Residency == GpuMeshResidency.Gameplay )
 		{
 			_pendingGameplayCount++;
 			_gameplayDispatchQueue.Enqueue( pending );
 		}
-		else if ( pending.Residency == GpuMeshResidency.Lod1 )
+		else if ( pending.Residency == GpuMeshResidency.Visual &&
+			pending.Descriptor.Key.Level < 2 )
 		{
-			_pendingLod1Count++;
-			_lod1DispatchQueue.Enqueue( pending );
+			_nearVisualDispatchQueue.Enqueue( pending );
 		}
-		else if ( pending.Residency == GpuMeshResidency.Lod2 )
+		else if ( pending.Residency == GpuMeshResidency.Visual )
 		{
-			_pendingLod2Count++;
-			_lod2DispatchQueue.Enqueue( pending );
+			_outerVisualDispatchQueue.Enqueue( pending );
 		}
 		else
 		{
@@ -2296,35 +2491,27 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private bool TryDequeuePending( out PendingMesh pending )
 	{
-		while ( _gameplayDispatchQueue.TryDequeue( out var gameplay ) )
+		if ( TryDequeuePendingFrom( _gameplayDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePendingFrom( _nearVisualDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePendingFrom( _warmDispatchQueue, out pending ) ) return true;
+		pending = default;
+		return false;
+	}
+
+	private bool TryDequeuePendingFrom( Queue<PendingMesh> queue, out PendingMesh pending )
+	{
+		while ( queue.TryDequeue( out var queued ) )
 		{
-			if ( _pending.TryGetValue( gameplay.Descriptor.Key, out var current ) && current == gameplay )
+			if ( !_pending.TryGetValue( queued.Descriptor.Key, out var current ) || current != queued )
 			{
-				_pending.Remove( gameplay.Descriptor.Key );
-				_pendingGameplayCount--;
-				pending = gameplay;
-				return true;
+				continue;
 			}
-		}
-		while ( _lod1DispatchQueue.TryDequeue( out var lod1 ) )
-		{
-			if ( _pending.TryGetValue( lod1.Descriptor.Key, out var current ) && current == lod1 )
-			{
-				_pending.Remove( lod1.Descriptor.Key );
-				_pendingLod1Count--;
-				pending = lod1;
-				return true;
-			}
-		}
-		while ( _warmDispatchQueue.TryDequeue( out var warm ) )
-		{
-			if ( _pending.TryGetValue( warm.Descriptor.Key, out var current ) && current == warm )
-			{
-				_pending.Remove( warm.Descriptor.Key );
-				_pendingWarmCount--;
-				pending = warm;
-				return true;
-			}
+			_pending.Remove( queued.Descriptor.Key );
+			_pendingLevelCounts[queued.Descriptor.Key.Level]--;
+			if ( queued.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
+			else if ( queued.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
+			pending = queued;
+			return true;
 		}
 		pending = default;
 		return false;
@@ -2333,26 +2520,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private void RemovePending( GpuMeshRegionKey key )
 	{
 		if ( !_pending.Remove( key, out var pending ) ) return;
+		_pendingLevelCounts[key.Level]--;
 		if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
-		else if ( pending.Residency == GpuMeshResidency.Lod1 ) _pendingLod1Count--;
-		else if ( pending.Residency == GpuMeshResidency.Lod2 ) _pendingLod2Count--;
-		else _pendingWarmCount--;
+		else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
 	}
 
-	private bool TryDequeuePendingLod2( out PendingMesh pending )
+	private bool TryDequeuePendingOuter( out PendingMesh pending )
 	{
-		while ( _lod2DispatchQueue.TryDequeue( out var lod2 ) )
-		{
-			if ( _pending.TryGetValue( lod2.Descriptor.Key, out var current ) && current == lod2 )
-			{
-				_pending.Remove( lod2.Descriptor.Key );
-				_pendingLod2Count--;
-				pending = lod2;
-				return true;
-			}
-		}
-		pending = default;
-		return false;
+		return TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
 	}
 
 	private bool TryDequeuePendingTransition( out PendingTransition pending )
@@ -2378,15 +2553,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 			lane.EmitInFlight.Count( value => value.Residency == residency ) ) ?? 0;
 	}
 
+	private int CountInFlight( int level )
+	{
+		return _scratchLanes?.Sum( lane =>
+			lane.CountInFlight.Count( value => value.Descriptor.Key.Level == level ) +
+			lane.EmitInFlight.Count( value => value.Descriptor.Key.Level == level ) ) ?? 0;
+	}
+
+	private int CountOuterInFlight()
+	{
+		return _scratchLanes?.Sum( lane =>
+			lane.CountInFlight.Count( value => value.Descriptor.Key.Level >= 2 ) +
+			lane.EmitInFlight.Count( value => value.Descriptor.Key.Level >= 2 ) ) ?? 0;
+	}
+
 	private void SetResidency( ResidentMesh resident, GpuMeshResidency residency )
 	{
 		if ( resident.Residency == residency ) return;
 		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
-		if ( resident.Residency == GpuMeshResidency.Lod1 ) _lod1ResidentCount--;
-		if ( resident.Residency == GpuMeshResidency.Lod2 ) _lod2ResidentCount--;
 		if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
-		if ( residency == GpuMeshResidency.Lod1 ) _lod1ResidentCount++;
-		if ( residency == GpuMeshResidency.Lod2 ) _lod2ResidentCount++;
 		resident.Residency = residency;
 		if ( resident.Handle is not null )
 			SetVisibilityActive( resident, _renderActive.Contains( resident.Descriptor.Key ) );
@@ -2420,7 +2605,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var visible = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
 			"Voxel View Visible Indexed Arguments" );
-		var frame = new GpuBuffer<uint>( 11, GpuBuffer.UsageFlags.Structured,
+		var frame = new GpuBuffer<uint>( VisibilityFrameCounterCount, GpuBuffer.UsageFlags.Structured,
 			"Voxel View Visibility Frame Counters" );
 		state.Visibility = new VisibilityBuffers( bounds, source, visible, frame );
 		state.VisibilityCapacity = _visibilityCapacity;
@@ -2583,30 +2768,38 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		counters.GetDataAsync<uint>( data =>
 		{
-			var frames = data.Length >= 20 ? data[0] : 0;
-			var minimum = data.Length >= 20 && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
+			var valid = data.Length >= VisibilityAggregateCounterCount;
+			var frames = valid ? data[0] : 0;
+			var minimum = valid && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
+			var levelResidentTotals = new uint[SupportedVisualLevelCount];
+			var levelVisibleTotals = new uint[SupportedVisualLevelCount];
+			var settledLevelSurfaceMeshes = new uint[SupportedVisualLevelCount];
+			if ( valid )
+			{
+				for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+				{
+					var index = 10 + level * 3;
+					levelResidentTotals[level] = data[index];
+					levelVisibleTotals[level] = data[index + 1];
+					settledLevelSurfaceMeshes[level] = data[index + 2];
+				}
+			}
 			lock ( _visibilityLock )
 			{
 				_completedVisibilityMeasurement = new GpuVisibilityMeasurement(
 					frames,
-					data.Length >= 20 ? data[1] : 0,
-					data.Length >= 20 ? data[2] : 0,
+					valid ? data[1] : 0,
+					valid ? data[2] : 0,
 					minimum,
-					data.Length >= 20 ? data[4] : 0,
-					data.Length >= 20 ? data[5] : 0,
-					data.Length >= 20 ? data[6] : 0,
-					data.Length >= 20 ? data[7] : 0,
-					data.Length >= 20 ? data[8] : 0,
-					data.Length >= 20 ? data[9] : 0,
-					data.Length >= 20 ? data[10] : 0,
-					data.Length >= 20 ? data[11] : 0,
-					data.Length >= 20 ? data[12] : 0,
-					data.Length >= 20 ? data[13] : 0,
-					data.Length >= 20 ? data[14] : 0,
-					data.Length >= 20 ? data[15] : 0,
-					data.Length >= 20 ? data[16] : 0,
-					data.Length >= 20 ? data[17] : 0,
-					data.Length >= 20 ? data[18] : 0,
+					valid ? data[4] : 0,
+					valid ? data[5] : 0,
+					valid ? data[6] : 0,
+					valid ? data[7] : 0,
+					valid ? data[8] : 0,
+					valid ? data[9] : 0,
+					levelResidentTotals,
+					levelVisibleTotals,
+					settledLevelSurfaceMeshes,
 					logicalBytes,
 					1 );
 				_visibilityReadbackInFlight = false;
@@ -2657,13 +2850,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var padding = new Vector3( descriptor.CellSize );
 		var slot = resident.Handle.GlobalSlot;
 		var index = slot * 2;
-		var activeResidency = resident.Residency switch
-		{
-			GpuMeshResidency.Warm => 2f,
-			GpuMeshResidency.Lod1 => 3f,
-			GpuMeshResidency.Lod2 => 5f,
-			_ => 1f
-		};
+		var activeResidency = 1f + descriptor.Key.Level * 2f +
+			(resident.Residency == GpuMeshResidency.Warm ? 1f : 0f);
 		_visibilityBoundsData[index] = new Vector4( origin - padding, active ? activeResidency : 0 );
 		_visibilityBoundsData[index + 1] = new Vector4(
 			origin + new Vector3( size ) + padding,
@@ -2720,7 +2908,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		var slot = resident.Handle.GlobalSlot;
 		var index = slot * 2;
-		_visibilityBoundsData[index] = new Vector4( minimum - new Vector3( padding ), active ? 4f : 0f );
+		_visibilityBoundsData[index] = new Vector4(
+			minimum - new Vector3( padding ),
+			active ? 100f + descriptor.Key.CoarseLevel : 0f );
 		_visibilityBoundsData[index + 1] = new Vector4(
 			maximum + new Vector3( padding ), active ? resident.Counts.ActiveCells : 0 );
 		_sourceArgumentData[slot] = active
@@ -2751,16 +2941,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 	{
 		if ( _scheduleLatencyMeasurementActive )
 			_scheduleLatencyCancelledCount += PendingCount;
-		if ( _lod2MeasurementActive ) _lod2CancelledCount += PendingLod2Count;
+		if ( _outerMeasurementActive ) _outerCancelledCount += PendingOuterVisualCount;
 		_pending.Clear();
 		_gameplayDispatchQueue.Clear();
-		_lod1DispatchQueue.Clear();
+		_nearVisualDispatchQueue.Clear();
 		_warmDispatchQueue.Clear();
-		_lod2DispatchQueue.Clear();
+		_outerVisualDispatchQueue.Clear();
 		_pendingGameplayCount = 0;
-		_pendingLod1Count = 0;
 		_pendingWarmCount = 0;
-		_pendingLod2Count = 0;
+		Array.Clear( _pendingLevelCounts );
 		_cancelledInFlight.Clear();
 		foreach ( var lane in _scratchLanes ?? Array.Empty<ScratchLane>() )
 		{
@@ -2785,24 +2974,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionResident.Clear();
 		_transitionRenderActive.Clear();
 		_warmResidentCount = 0;
-		_lod1ResidentCount = 0;
-		_lod2ResidentCount = 0;
+		Array.Clear( _residentLevelCounts );
 		_topologyDigest = 0;
 		_positionDigest = 0;
-		_lod0TopologyDigest = 0;
-		_lod0PositionDigest = 0;
-		_lod1TopologyDigest = 0;
-		_lod1PositionDigest = 0;
-		_lod2TopologyDigest = 0;
-		_lod2PositionDigest = 0;
+		Array.Clear( _levelTopologyDigests );
+		Array.Clear( _levelPositionDigests );
 		_transitionTopologyDigest = 0;
 		_transitionPositionDigest = 0;
 		_transitionFineFaceMismatchCount = 0;
 		_transitionCoarseFaceMismatchCount = 0;
 		_transitionLateralEdgeDigest = 0;
 		_transitionInvalidTableCount = 0;
-		_lod2EligibleSinceTimestamp = 0;
-		_lod2LastServiceTimestamp = Stopwatch.GetTimestamp();
+		_outerEligibleSinceTimestamp = 0;
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
 		MarkDrawCommandsDirty();
 	}
 
@@ -3327,7 +3511,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 			new( "Voxel Terrain Indexed Indirect Draws" );
 		public List<VisibilityBuffers> RetiredVisibility { get; } = new();
 		public GpuBuffer<uint> AggregateCounters { get; } = new(
-			20, GpuBuffer.UsageFlags.Structured, "Voxel View Visibility Aggregate Counters" );
+			VisibilityAggregateCounterCount,
+			GpuBuffer.UsageFlags.Structured,
+			"Voxel View Visibility Aggregate Counters" );
 		public VisibilityBuffers Visibility { get; set; }
 		public int VisibilityCapacity { get; set; }
 		public bool CommandsDirty { get; set; } = true;
@@ -3410,7 +3596,14 @@ internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Mil
 internal readonly record struct GpuMeshScheduleLatencyMeasurement(
 	int Samples, int TruncatedSamples, float P50Milliseconds, float P95Milliseconds,
 	float P99Milliseconds, float MaximumMilliseconds, int Cancelled, int Superseded );
-internal readonly record struct GpuLod2Measurement(
+internal readonly record struct GpuLevelScheduleMeasurement(
+	int Level,
+	long Scheduled,
+	long Published,
+	long Cancelled,
+	long Superseded,
+	GpuMeshScheduleLatencyMeasurement ScheduleToRenderable );
+internal readonly record struct GpuOuterLevelMeasurement(
 	long Scheduled,
 	long Published,
 	long Cancelled,
@@ -3432,6 +3625,30 @@ internal readonly record struct GpuTransitionMeasurement(
 	long Vertices,
 	long Indices,
 	long ActiveCells,
+	string TopologyDigest,
+	string PositionDigest,
+	uint FineFaceMismatchCount,
+	uint CoarseFaceMismatchCount,
+	uint LateralEdgeDigest,
+	uint LateralMismatchCount,
+	uint InvalidTableCount,
+	GpuTransitionFaceMeasurement[] Faces,
+	GpuTransitionPairMeasurement[] Pairs,
+	GpuMetricDistribution ScheduleToPublication );
+internal readonly record struct GpuTransitionPairMeasurement(
+	int FineLevel,
+	int CoarseLevel,
+	int Desired,
+	int Ready,
+	int Drawable,
+	int Pending,
+	long Scheduled,
+	long Published,
+	long Cancelled,
+	long Stale,
+	long ActiveCells,
+	long Vertices,
+	long Indices,
 	string TopologyDigest,
 	string PositionDigest,
 	uint FineFaceMismatchCount,
@@ -3501,21 +3718,20 @@ internal readonly record struct GpuMeshThroughputMeasurement(
 internal readonly record struct GpuVisibilityMeasurement(
 	uint FrameCount, uint ResidentTotal, uint VisibleTotal, uint MinimumVisible, uint MaximumVisible,
 	uint WarmTotal, uint SettledSurfaceMeshes, uint SettledWarmSurfaceMeshes, uint SettledActiveCells,
-	uint SettledMaximumActiveCells, uint Lod0ResidentTotal, uint Lod1ResidentTotal,
-	uint Lod0VisibleTotal, uint Lod1VisibleTotal, uint SettledLod0SurfaceMeshes,
-	uint SettledLod1SurfaceMeshes, uint Lod2ResidentTotal, uint Lod2VisibleTotal,
-	uint SettledLod2SurfaceMeshes, long LogicalBufferBytes, long ScalarReadbacks )
+	uint SettledMaximumActiveCells, IReadOnlyList<uint> LevelResidentTotals,
+	IReadOnlyList<uint> LevelVisibleTotals, IReadOnlyList<uint> SettledLevelSurfaceMeshes,
+	long LogicalBufferBytes, long ScalarReadbacks )
 {
 	public float AverageResident => FrameCount > 0 ? (float)ResidentTotal / FrameCount : 0;
 	public float AverageVisible => FrameCount > 0 ? (float)VisibleTotal / FrameCount : 0;
 	public float AverageWarm => FrameCount > 0 ? (float)WarmTotal / FrameCount : 0;
-	public float AverageLod0Resident => FrameCount > 0 ? (float)Lod0ResidentTotal / FrameCount : 0;
-	public float AverageLod1Resident => FrameCount > 0 ? (float)Lod1ResidentTotal / FrameCount : 0;
-	public float AverageLod2Resident => FrameCount > 0 ? (float)Lod2ResidentTotal / FrameCount : 0;
-	public float AverageLod0Visible => FrameCount > 0 ? (float)Lod0VisibleTotal / FrameCount : 0;
-	public float AverageLod1Visible => FrameCount > 0 ? (float)Lod1VisibleTotal / FrameCount : 0;
-	public float AverageLod2Visible => FrameCount > 0 ? (float)Lod2VisibleTotal / FrameCount : 0;
+	public float AverageLevelResident( int level ) => FrameCount > 0
+		? (float)LevelResidentTotals[level] / FrameCount
+		: 0;
+	public float AverageLevelVisible( int level ) => FrameCount > 0
+		? (float)LevelVisibleTotals[level] / FrameCount
+		: 0;
 	public float AverageCulled => MathF.Max( 0, AverageResident - AverageVisible );
 	public float CulledPercent => AverageResident > 0 ? AverageCulled * 100 / AverageResident : 0;
 }
-internal enum GpuMeshResidency { Gameplay, Lod1, Lod2, Warm }
+internal enum GpuMeshResidency { Gameplay, Visual, Warm }

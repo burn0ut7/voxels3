@@ -2,14 +2,15 @@
 
 ## Production Slice
 
-LOD0, LOD1, and LOD2 are the terrain render levels. The authoritative
-world remains the implicit SDF represented by `VoxelChunk`; indexed meshes are
-derived, GPU-resident, revisioned, disposable caches. Generator version 5 owns
-the exterior surface, noodle tunnels, and cheese caverns. One level-pair-aware
-transition cache closes both fixed 2:1 interfaces. This slice excludes LOD3,
-morphing,
-generalized level hierarchies, collision, edits, networking, generator changes,
-and allocator redesign.
+One integer-indexed clipbox hierarchy owns the enabled terrain render levels.
+The shipping configuration enables levels 0 through 2; level 3 is rejected by
+the validated configuration and creates no identity or work in this slice. The
+authoritative world remains the implicit SDF represented by `VoxelChunk`;
+indexed meshes are derived, GPU-resident, revisioned, disposable caches.
+Generator version 5 owns the exterior surface, noodle tunnels, and cheese
+caverns. One adjacent-pair-aware transition cache closes every enabled 2:1
+interface. This slice excludes enabling LOD3, morphing, collision, edits,
+networking, generator changes, and allocator redesign.
 
 Logical chunks are streaming, SDF-input, and revision units, not GPU allocation
 or draw-call units. Persistent geometry lives in shared arenas. Each arena owns
@@ -41,25 +42,33 @@ The mesher owns:
 - coordinate-to-resident-geometry and candidate replacement state;
 - shared compute shaders, indexed-indirect draw resources, and visibility data.
 
-## Canonical Fixed Three-Level Placement
+## Canonical Level-Indexed Placement
 
-The fixed three-level hierarchy keeps one near-field anchor and one aligned outer
-anchor. The LOD0 visual box and LOD1 inner hole follow the nearest LOD1-region
-anchor at the existing 1024-unit cadence. The LOD1 outer cache follows the LOD2
-anchor expressed in LOD1 coordinates, so every outer LOD1 face lies on a complete
-LOD2-region boundary. The LOD2 hole is exactly the LOD1 outer box converted to
-LOD2 coordinates. It is neither an independently snapped approximation nor a
-whole-region containment test. At the production dimensions this preserves the
-existing 4096-region LOD1 cache and adds a 4096-region LOD2 cache with an exact
-8x8x8 hole: 3584 LOD2 regions are active, with no cross-level overlap or gap.
+`VoxelManager` owns an ordinary record for every supported integer level and an
+ordinary record for every adjacent pair. Cell size is `BaseCellSize * 2^level`;
+every regular region remains `32^3` cells. Each enabled level snaps with the
+existing nearest-region rule, including at negative coordinates. LOD0 remains
+centered on the level-1 cadence even when it is the only visual level. A
+non-outermost coarse cache is centered at twice its next-coarser anchor; the
+outermost cache uses its own anchor. Each coarse hole is exactly the finer
+coverage bounds divided by two, so every boundary is complete and 2:1 aligned.
+The lowest enabled level fills its center and has no hole.
 
-`VoxelManager` computes both regular boxes and both transition boundaries in one
-placement update. Each transition identity
-contains its coarse level, coarse coordinate, and face. The same identity,
+The default applied snapshot is `MinimumVisualLod=0`, `MaximumVisualLod=2`,
+`Lod0VisualHalfExtent=4`, and `LodCacheHalfExtent=8`. It produces 512 active
+LOD0 coordinates; a 4096-coordinate level-1 cache with a 64-coordinate hole and
+4032 active coordinates; and a 4096-coordinate level-2 cache with a
+512-coordinate hole and 3584 active coordinates. Its adjacent transition pairs
+contain 96 and 384 face identities. `GameplayRadius=4` independently owns 729
+authoritative gameplay coordinates.
+
+`VoxelManager` computes the changed regular boxes and adjacent transition
+boundaries in one placement update. Each transition identity contains its fine
+level, coarse level, coarse coordinate, and face. The same identity,
 descriptor, queue, scratch pipeline, resident cache, allocator, visibility path,
-and draw path serve LOD0-to-LOD1 and LOD1-to-LOD2. Near transitions dequeue
-before outer transitions, but they are priority classes inside one scheduler
-rather than separate meshers.
+and draw path serve every enabled pair. Transition work is ordered by coarse
+level and then distance to that pair's hole center; it remains one queue rather
+than one queue or mesher per level.
 
 Regular and transition compute emit their final table-derived primary positions.
 The terrain vertex shader only applies the engine's high-precision world offset
@@ -90,38 +99,43 @@ path.
 
 Placement diagnostics read owned state without affecting convergence.
 `voxel_lod_info` emits an immediate structured snapshot of the streaming target,
-the LOD0 gameplay and visual boxes, both LOD1 anchors, the LOD1 outer box and
-hole, the exact LOD2 box and hole, and both transition-boundary states. Region
-and world bounds are half-open intervals. Enabling the existing `VerboseLogging`
-property emits the same snapshot only when a placement boundary changes; it does
-not add per-frame logging or a second placement model.
+the independent gameplay box, every represented level record, and every enabled
+adjacent-pair record. Region and world bounds are half-open intervals. Enabling
+the existing `VerboseLogging` property emits the same snapshot only when a
+placement boundary changes; it does not add per-frame logging or a second
+placement model.
 
 ### Atomic Clipbox Handoff
 
 The 2026-09-03 [GPU voxel terrain streaming research](../Research/GpuVoxelTerrainStreaming.md)
 informed the implemented requested-versus-resident separation. `VoxelManager`
-owns one committed drawable placement, the latest target anchors, and at most one
-staged replacement. While the replacement is incomplete, the committed LOD0,
-LOD1, LOD2, and transition active sets remain unchanged and continue to cover the
-world. A newer viewer target is coalesced without cancelling the in-flight stage;
+owns one committed drawable placement, the latest target anchors and validated
+configuration revision, and at most one staged replacement. While the
+replacement is incomplete, every committed level and pair active set remains
+unchanged and continues to cover the world. A newer viewer or configuration
+target is coalesced without cancelling the in-flight stage;
 after commit, the manager immediately stages the latest target if it moved again.
 
 The staged placement uses the same mesher queues and resident caches as ordinary
-terrain. Its exact dependencies are newly required LOD0 coordinates, regular
-LOD1 and LOD2 descriptors, and transition descriptors. A conservative known-empty
+terrain. Its exact dependencies are newly required LOD0 coordinates, active
+coarse descriptors, and transition descriptors for changed adjacent pairs. A
+conservative known-empty
 regular result is a resident descriptor with no arena allocation and therefore
 satisfies the same readiness contract. Readiness is reconsidered only when the
 mesher publishes a resident descriptor or the manager's prepared LOD0 set changes;
 settled frames do not rescan the staged sets. Once every dependency is resident,
-the manager changes all four active sets, releases leaving residents, and records
-the new anchors in one main-thread commit. Preparation records the exact entering,
-leaving, activation, and readiness deltas; commit touches only those deltas and
-swaps the already-built placement sets instead of scanning or copying the full
-clipboxes a second time. The initial bootstrap has no prior coverage to retain
+the manager changes all changed active sets, releases leaving residents, and
+records the new anchors and applied configuration revision in one main-thread
+commit. Preparation records the exact entering, leaving, activation, and
+readiness deltas only for levels and pairs whose bounds or enablement changed;
+commit touches only those deltas and swaps the already-built placement sets
+instead of scanning or copying the hierarchy. A request that returns to the
+committed configuration cancels its uncommitted stage. The initial bootstrap has
+no prior coverage to retain
 and therefore activates its first placement immediately while that placement
 fills through the same production queues.
 
-LOD1 and LOD2 preparation first applies a constant-time conservative vertical
+Every coarse-level preparation first applies a constant-time conservative vertical
 support bound owned by the canonical generator. Regions wholly above the maximum
 possible exterior surface are definitely air; regions wholly below both the
 minimum exterior surface and maximum cave depth are definitely solid. All
@@ -129,15 +143,16 @@ uncertain regions remain potential and enter the GPU mesher. This broad phase
 does not sample, approximate, or duplicate the SDF and cannot reject a possible
 surface.
 
-This design retains the fixed three-level volumetric SDF, Transvoxel topology,
-and single GPU mesher. A second fallback terrain renderer, CPU mesher, generalized
-LOD hierarchy, or independently mutable placement model remains rejected.
+This design retains the volumetric SDF, Transvoxel topology, and single GPU
+mesher while removing fixed per-level ownership. A recursive tree, octree,
+hierarchy-wide rebuild, second renderer, CPU mesher, per-level queue, or
+independently mutable publication model remains rejected.
 
-## Fixed 2:1 Transitions
+## Adjacent 2:1 Transitions
 
 Clipbox placement owns where the boundary exists; Transvoxel owns its geometry.
 For each coarse region on a hole face, the manager derives a separate
-`(CoarseLevel, CoarseCoordinate, Face)` identity. The face direction points from
+`(FineLevel, CoarseLevel, CoarseCoordinate, Face)` identity. The face direction points from
 the owning coarse region toward the hole. The inner boundary owns 96 identities;
 the outer boundary owns 384. The combined 480-key set is diffed by the one
 placement update. Retained faces keep their generation and allocation while
@@ -246,7 +261,7 @@ visual evidence rather than a substitute for those measurements.
 The infinite-bounds custom scene object is only a render-thread rendezvous. Each
 normal manager update publishes one monotonically increasing epoch after
 placement, finalization, and the dispatch budget are current. Exactly one render
-callback may claim that epoch and advance regular, transition, LOD2, and
+callback may claim that epoch and advance foreground regular, transition, outer, and
 visibility-readback state. Additional game, editor, or dependent views still
 render the same `SceneWorld`, but their rendezvous callbacks cannot advance the
 terrain GPU lifecycle again for that update epoch. A reentrancy guard also
@@ -296,7 +311,7 @@ emit. The batch size and dispatch shape are unchanged.
 
 Three independent lanes overlap unrelated batch chains. Each lane owns its
 requests, count results, candidate allocations, timestamps, and lifecycle. A
-lane may serve a foreground or LOD2 regular batch, but never both at once:
+lane may serve a foreground or outer regular batch, but never both at once:
 
 `Idle -> CountPending -> CountReady -> EmitSubmitted -> Published`
 
@@ -326,7 +341,7 @@ Empty results follow the same revision lifecycle without consuming an arena.
 
 Coordinate-local publication is separate from manager-visible clipbox placement.
 Incoming residents may publish inactive in any completion order, but the committed
-LOD0, LOD1, LOD2, and transition active sets change only through the atomic
+level and adjacent-pair active sets change only through the atomic
 whole-placement handoff described above. There is no partial active-set mutation
 and no second renderer masking an incomplete placement.
 
@@ -386,12 +401,12 @@ geometry are stored separately in the same result.
 - CPU density arrays, CPU topology decoding, or geometry readback would create
   a second terrain/geometry path.
 - Rebuilding meshes every frame discards their persistent-cache value.
-- A dedicated fourth regular scratch instance was rejected after its LOD2-only
+- A dedicated fourth regular scratch instance was rejected after its outer-only
   emit path reproducibly crashed native Vulkan resource access during editor
-  camera ejection. Mixing foreground and LOD2 requests in one batch, or allowing
+  camera ejection. Mixing foreground and outer requests in one batch, or allowing
   outer work to participate in foreground settlement, would still let stale
   outer work block newer movement and remains rejected.
 - CPU density fields or coarse voxel buffers would violate the canonical GPU SDF
-  contract. A generalized N-level hierarchy remains outside this fixed LOD2
-  slice because it would reintroduce configuration, publication, and ownership
-  machinery not required by the selected three-level product layout.
+  contract. Enabling another visual level is deliberately deferred until the
+  accepted three-level implementation proves identical through the generic
+  records, queues, publication handoff, and telemetry arrays.

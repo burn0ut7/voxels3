@@ -63,6 +63,51 @@ public static class VoxelMcpTools
 	}
 
 	/// <summary>
+	/// Request terrain configuration changes through the running component's normal validated properties.
+	/// </summary>
+	/// <param name="gameplayRadius">Authoritative gameplay radius.</param>
+	/// <param name="minimumVisualLod">Lowest enabled visual level.</param>
+	/// <param name="maximumVisualLod">Highest enabled visual level.</param>
+	/// <param name="lod0VisualHalfExtent">LOD0 visual half extent in regions.</param>
+	/// <param name="lodCacheHalfExtent">Shared coarse cache half extent in regions.</param>
+	/// <param name="cellsPerAxis">Regular region cell count; only 32 is supported.</param>
+	/// <param name="baseCellSize">LOD0 cell size; only 16 is supported.</param>
+	[McpTool( "set_terrain_configuration" )]
+	public static object SetTerrainConfiguration(
+		int gameplayRadius = 4,
+		int minimumVisualLod = 0,
+		int maximumVisualLod = 2,
+		int lod0VisualHalfExtent = 4,
+		int lodCacheHalfExtent = 8,
+		int cellsPerAxis = 32,
+		float baseCellSize = 16f )
+	{
+		if ( !Game.IsPlaying )
+		{
+			throw new InvalidOperationException( "Start play mode before changing terrain configuration." );
+		}
+
+		var manager = FindManager();
+		manager.GameplayRadius = gameplayRadius;
+		manager.MinimumVisualLod = minimumVisualLod;
+		manager.MaximumVisualLod = maximumVisualLod;
+		manager.Lod0VisualHalfExtent = lod0VisualHalfExtent;
+		manager.LodCacheHalfExtent = lodCacheHalfExtent;
+		manager.CellsPerAxis = cellsPerAxis;
+		manager.CellSize = baseCellSize;
+		return new
+		{
+			manager.GameplayRadius,
+			manager.MinimumVisualLod,
+			manager.MaximumVisualLod,
+			manager.Lod0VisualHalfExtent,
+			manager.LodCacheHalfExtent,
+			manager.CellsPerAxis,
+			manager.CellSize
+		};
+	}
+
+	/// <summary>
 	/// Set whether the running game is viewed through the detached editor camera.
 	/// </summary>
 	/// <param name="ejected">True to detach into the editor camera; false to return to the game camera.</param>

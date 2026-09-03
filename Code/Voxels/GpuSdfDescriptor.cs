@@ -1,11 +1,10 @@
-internal enum GpuMeshLevel
+internal static class TerrainClipboxLimits
 {
-	Lod0,
-	Lod1,
-	Lod2
+	public const int MaximumSupportedVisualLod = 2;
+	public const int SupportedVisualLevelCount = MaximumSupportedVisualLod + 1;
 }
 
-internal readonly record struct GpuMeshRegionKey( GpuMeshLevel Level, Vector3Int Coordinate );
+internal readonly record struct GpuMeshRegionKey( int Level, Vector3Int Coordinate );
 
 internal enum GpuTransitionFace
 {
@@ -18,7 +17,8 @@ internal enum GpuTransitionFace
 }
 
 internal readonly record struct GpuTransitionKey(
-	GpuMeshLevel CoarseLevel,
+	int FineLevel,
+	int CoarseLevel,
 	Vector3Int CoarseCoordinate,
 	GpuTransitionFace Face );
 
@@ -37,7 +37,7 @@ internal readonly record struct GpuSdfDescriptor(
 		int sourceRevision )
 	{
 		return new GpuSdfDescriptor(
-			new GpuMeshRegionKey( GpuMeshLevel.Lod0, chunk.Coordinate ),
+			new GpuMeshRegionKey( 0, chunk.Coordinate ),
 			chunk.CellsPerAxis,
 			chunk.CellSize,
 			chunk.TerrainSettings,

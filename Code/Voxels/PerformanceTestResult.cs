@@ -17,12 +17,15 @@ internal sealed class PerformanceTestResult
 	public PerformanceStreamingMetrics Streaming { get; init; }
 	public PerformanceBoundsMetrics Bounds { get; init; }
 	public PerformanceProfilerMetrics Profiler { get; init; }
-	public PerformanceClipboxMetrics Clipbox { get; init; }
-	public PerformanceTransitionMetrics Transitions { get; init; }
-	public PerformanceLod2Metrics Lod2 { get; init; }
+	public PerformanceHierarchyMetrics Hierarchy { get; init; }
+	public IReadOnlyList<PerformanceLevelMetrics> Levels { get; init; } =
+		System.Array.Empty<PerformanceLevelMetrics>();
+	public IReadOnlyList<PerformanceTransitionPairMetrics> TransitionPairs { get; init; } =
+		System.Array.Empty<PerformanceTransitionPairMetrics>();
+	public PerformanceOuterWorkMetrics OuterWork { get; init; }
 }
 
-internal sealed class PerformanceLod2Metrics
+internal sealed class PerformanceOuterWorkMetrics
 {
 	public long Scheduled { get; init; }
 	public long Published { get; init; }
@@ -35,8 +38,10 @@ internal sealed class PerformanceLod2Metrics
 	public PerformanceLatencyMetrics ScheduleToRenderable { get; init; }
 }
 
-internal sealed class PerformanceTransitionMetrics
+internal sealed class PerformanceTransitionPairMetrics
 {
+	public int FineLevel { get; init; }
+	public int CoarseLevel { get; init; }
 	public int Desired { get; init; }
 	public int Ready { get; init; }
 	public int Drawable { get; init; }
@@ -56,7 +61,6 @@ internal sealed class PerformanceTransitionMetrics
 	public long Triangles { get; init; }
 	public long UsedVertexBytes { get; init; }
 	public long UsedIndexBytes { get; init; }
-	public long TransientScratchBytes { get; init; }
 	public string TopologyDigest { get; init; }
 	public string PositionDigest { get; init; }
 	public uint FineFaceMismatchCount { get; init; }
@@ -71,7 +75,8 @@ internal sealed class PerformanceTransitionMetrics
 
 internal sealed class PerformanceTransitionFaceMetrics
 {
-	public string CoarseLevel { get; init; }
+	public int FineLevel { get; init; }
+	public int CoarseLevel { get; init; }
 	public PerformanceVector3Int CoarseCoordinate { get; init; }
 	public string Face { get; init; }
 	public uint Generation { get; init; }
@@ -94,64 +99,82 @@ internal sealed class PerformanceTransitionFaceMetrics
 	public uint InvalidTableCount { get; init; }
 }
 
-internal sealed class PerformanceClipboxMetrics
+internal sealed class PerformanceHierarchyMetrics
 {
 	public bool PlacementPending { get; init; }
+	public long RequestedVisualConfigurationRevision { get; init; }
+	public long StagedVisualConfigurationRevision { get; init; }
+	public long AppliedVisualConfigurationRevision { get; init; }
 	public long PlacementRequests { get; init; }
 	public long PlacementCommits { get; init; }
 	public long PlacementSuperseded { get; init; }
 	public long PlacementDeferredUpdates { get; init; }
 	public long PlacementReadinessBlocks { get; init; }
 	public long PlacementUnsafeCommits { get; init; }
-	public long Lod1ClassificationQueries { get; init; }
-	public long Lod1RejectedSolid { get; init; }
-	public long Lod1RejectedAir { get; init; }
-	public long Lod1PotentiallySurfaceContaining { get; init; }
-	public long Lod2ClassificationQueries { get; init; }
-	public long Lod2RejectedSolid { get; init; }
-	public long Lod2RejectedAir { get; init; }
-	public long Lod2PotentiallySurfaceContaining { get; init; }
 	public float ClassificationMilliseconds { get; init; }
 	public float MaximumClassificationMilliseconds { get; init; }
-	public int Lod0GameplayRadius { get; init; }
-	public int Lod0GameplayCoordinates { get; init; }
-	public int Lod0ActiveCoordinates { get; init; }
-	public PerformanceVector3Int Lod1Anchor { get; init; }
-	public PerformanceVector3Int Lod1OuterAnchor { get; init; }
-	public PerformanceVector3Int Lod1OuterMinimum { get; init; }
-	public PerformanceVector3Int Lod1OuterMaximum { get; init; }
-	public PerformanceVector3Int Lod1HoleMinimum { get; init; }
-	public PerformanceVector3Int Lod1HoleMaximum { get; init; }
-	public int Lod1CachedCoordinates { get; init; }
-	public int Lod1ActiveCoordinates { get; init; }
-	public int Lod1Pending { get; init; }
-	public int Lod1Resident { get; init; }
+	public int GameplayCoordinates { get; init; }
+	public int GameplayPending { get; init; }
+	public int TransitionDesired { get; init; }
+	public int TransitionReady { get; init; }
+	public int TransitionDrawable { get; init; }
+	public int TransitionPending { get; init; }
+	public long TransitionActiveCells { get; init; }
+	public long TransitionVertices { get; init; }
+	public long TransitionIndices { get; init; }
+	public string TransitionTopologyDigest { get; init; }
+	public string TransitionPositionDigest { get; init; }
+	public uint TransitionFineFaceMismatchCount { get; init; }
+	public uint TransitionCoarseFaceMismatchCount { get; init; }
+	public uint TransitionLateralMismatchCount { get; init; }
+	public uint TransitionInvalidTableCount { get; init; }
+	public long TransitionEntered { get; init; }
+	public long TransitionLeft { get; init; }
+	public int LastTransitionEntered { get; init; }
+	public int LastTransitionLeft { get; init; }
+	public int LastTransitionRetained { get; init; }
+}
+
+internal sealed class PerformanceLevelMetrics
+{
+	public int Level { get; init; }
+	public bool VisualEnabled { get; init; }
+	public float CellSize { get; init; }
+	public float RegionSize { get; init; }
+	public PerformanceVector3Int Anchor { get; init; }
+	public PerformanceVector3Int OuterAnchor { get; init; }
+	public PerformanceVector3Int OuterMinimum { get; init; }
+	public PerformanceVector3Int OuterMaximum { get; init; }
+	public PerformanceVector3Int HoleMinimum { get; init; }
+	public PerformanceVector3Int HoleMaximum { get; init; }
+	public int CachedCoordinates { get; init; }
+	public int ActiveCoordinates { get; init; }
+	public int Resident { get; init; }
+	public int Pending { get; init; }
 	public int FullUpdates { get; init; }
 	public int IncrementalUpdates { get; init; }
 	public long EnteredRegions { get; init; }
 	public long LeftRegions { get; init; }
+	public long ActivatedRegions { get; init; }
+	public long DeactivatedRegions { get; init; }
 	public int LastEnteredRegions { get; init; }
 	public int LastLeftRegions { get; init; }
-	public PerformanceVector3Int Lod2Anchor { get; init; }
-	public PerformanceVector3Int Lod2OuterMinimum { get; init; }
-	public PerformanceVector3Int Lod2OuterMaximum { get; init; }
-	public PerformanceVector3Int Lod2HoleMinimum { get; init; }
-	public PerformanceVector3Int Lod2HoleMaximum { get; init; }
-	public int Lod2NominalHoleHalfExtent { get; init; }
-	public int Lod2CachedCoordinates { get; init; }
-	public int Lod2ActiveCoordinates { get; init; }
-	public int Lod2Pending { get; init; }
-	public int Lod2Resident { get; init; }
-	public int Lod2FullUpdates { get; init; }
-	public int Lod2IncrementalUpdates { get; init; }
-	public long Lod2EnteredRegions { get; init; }
-	public long Lod2LeftRegions { get; init; }
-	public long Lod2ActivatedRegions { get; init; }
-	public long Lod2DeactivatedRegions { get; init; }
-	public int Lod2LastEnteredRegions { get; init; }
-	public int Lod2LastLeftRegions { get; init; }
-	public int Lod2LastActivatedRegions { get; init; }
-	public int Lod2LastDeactivatedRegions { get; init; }
+	public int LastActivatedRegions { get; init; }
+	public int LastDeactivatedRegions { get; init; }
+	public long ClassificationQueries { get; init; }
+	public long RejectedSolid { get; init; }
+	public long RejectedAir { get; init; }
+	public long PotentiallySurfaceContaining { get; init; }
+	public long Scheduled { get; init; }
+	public long Published { get; init; }
+	public long Cancelled { get; init; }
+	public long Superseded { get; init; }
+	public PerformanceLatencyMetrics ScheduleToRenderable { get; init; }
+	public float AverageResidentMeshChunks { get; init; }
+	public float AverageVisibleMeshChunks { get; init; }
+	public uint SettledSurfaceMeshes { get; init; }
+	public string TopologyDigest { get; init; }
+	public string PositionDigest { get; init; }
 }
 
 internal sealed class PerformanceBoundsMetrics
@@ -242,8 +265,13 @@ internal sealed class PerformanceWorldContext
 {
 	public string Scene { get; init; }
 	public int CellsPerAxis { get; init; }
-	public float CellSize { get; init; }
-	public int LoadRadius { get; init; }
+	public float BaseCellSize { get; init; }
+	public int GameplayRadius { get; init; }
+	public int MinimumVisualLod { get; init; }
+	public int MaximumVisualLod { get; init; }
+	public int Lod0VisualHalfExtent { get; init; }
+	public int LodCacheHalfExtent { get; init; }
+	public long VisualConfigurationRevision { get; init; }
 	public string Generator { get; init; }
 	public int WorldSeed { get; init; }
 	public int GeneratorVersion { get; init; }
@@ -308,15 +336,12 @@ internal sealed class PerformanceMeshingMetrics
 	public int Resident { get; init; }
 	public int GameplayResident { get; init; }
 	public int WarmResident { get; init; }
-	public int Lod0Resident { get; init; }
-	public int Lod1Resident { get; init; }
-	public int Lod2Resident { get; init; }
 	public int Pending { get; init; }
 	public int AllPending { get; init; }
 	public int GameplayPending { get; init; }
 	public int WarmPending { get; init; }
-	public int Lod1Pending { get; init; }
-	public int Lod2Pending { get; init; }
+	public int NearVisualPending { get; init; }
+	public int OuterVisualPending { get; init; }
 	public int PoolAvailable { get; init; }
 	public long LogicalCapacityBytes { get; init; }
 	public long ReservedActiveCellCapacity { get; init; }
@@ -347,7 +372,8 @@ internal sealed class PerformanceMeshingMetrics
 	public int LargestFreeIndexRange { get; init; }
 	public float FragmentationPercent { get; init; }
 	public long TransientScratchBytes { get; init; }
-	public long Lod2TransientScratchBytes { get; init; }
+	public long DedicatedOuterTransientScratchBytes { get; init; }
+	public long TransitionTransientScratchBytes { get; init; }
 	public long AllocationCountReadbacks { get; init; }
 	public long AllocationCountReadbackBytes { get; init; }
 	public double AllocationCountReadbackMilliseconds { get; init; }
@@ -355,12 +381,6 @@ internal sealed class PerformanceMeshingMetrics
 	public double EmitStageSubmissionMilliseconds { get; init; }
 	public string TopologyDigest { get; init; }
 	public string PositionDigest { get; init; }
-	public string Lod0TopologyDigest { get; init; }
-	public string Lod0PositionDigest { get; init; }
-	public string Lod1TopologyDigest { get; init; }
-	public string Lod1PositionDigest { get; init; }
-	public string Lod2TopologyDigest { get; init; }
-	public string Lod2PositionDigest { get; init; }
 	public string GpuProfilerPath { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
 	public float MaximumGpuMilliseconds { get; init; }
@@ -439,15 +459,6 @@ internal sealed class PerformanceVisibilityMetrics
 	public float AverageResidentMeshChunks { get; init; }
 	public float AverageVisibleMeshChunks { get; init; }
 	public float AverageWarmMeshChunks { get; init; }
-	public float AverageLod0ResidentMeshChunks { get; init; }
-	public float AverageLod1ResidentMeshChunks { get; init; }
-	public float AverageLod2ResidentMeshChunks { get; init; }
-	public float AverageLod0VisibleMeshChunks { get; init; }
-	public float AverageLod1VisibleMeshChunks { get; init; }
-	public float AverageLod2VisibleMeshChunks { get; init; }
-	public uint SettledLod0SurfaceMeshes { get; init; }
-	public uint SettledLod1SurfaceMeshes { get; init; }
-	public uint SettledLod2SurfaceMeshes { get; init; }
 	public uint MinimumVisibleMeshChunks { get; init; }
 	public uint MaximumVisibleMeshChunks { get; init; }
 	public float AverageNonZeroIndirectDraws { get; init; }

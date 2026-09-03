@@ -7272,3 +7272,345 @@ Record an approved extraordinary change here before adding the new version:
   scenario. The audit used `322` explicit readbacks, `4678096` bytes, and
   `252.502 ms`; ordinary production rendering remains at zero geometry
   readbacks.
+
+### CLIPBOX-NLEVEL-DEFAULT-001/v1 - Generic hierarchy equivalence
+
+- Definition recorded on 2026-09-03 at source commit `969425a`, before the
+  schema-17 baseline and before implementation. The production scene is the
+  current read-only `Assets/scenes/basic_example.scene`, whose exact SHA-256 is
+  `4A07B38542627BFFC89289D09A93CF9CEC8C6CE8A4A8454B578AF18701493AAA`.
+  This is a new same-scene comparison; neither its baseline nor its candidate
+  is labeled as a rerun of an older locked scene revision. The scene file and
+  its pre-existing working-tree diff must remain byte-identical before and
+  after every run.
+- Locked world and journey are the existing one-loop production figure-eight:
+  s&box `26.09.01a`; one local player; generator version `5`; seed `1337`;
+  surface base height `0`, frequency `0.0005`, amplitude `128`; `32` cells per
+  region; base cell size `16`; gameplay radius `4`; minimum/maximum visual LOD
+  `0/2`; LOD0 visual half extent `4`; coarse cache half extent `8`; main camera
+  `1280x720`; `fps_max=1000`; start and final center `(0,0,0)` at world Z `0`;
+  speed `2500`; X reach `50000`; Y reach `25000`; exactly one loop; the
+  unchanged foreground drain boundary, two render-sequence advances, and exact
+  ten-second stationary window; `524288` CPU/GPU samples; one-second memory
+  sampling; and nearest-rank percentiles. Only run identity, timestamp, task,
+  revision, and the required schema version may differ.
+- The pre-change baseline is the unmodified schema-17 runtime at `969425a`.
+  The candidate is schema `18` and must express the same accepted hierarchy
+  through ordered `levels[]` and `transitionPairs[]` records without emitting
+  legacy fixed-level telemetry. Comparison translates the baseline's fixed
+  LOD0/LOD1/LOD2 and transition fields directly to candidate array entries;
+  metric meaning, sampling, and units remain unchanged.
+- Placement and correctness gates at restored defaults are gameplay/LOD0
+  `729/512`, LOD1 cache/active/resident `4096/4032/4096`, LOD2
+  `4096/3584/4096`, and transition desired/ready/drawable/pending
+  `480/480/187/0`, split `96` for `0->1` and `384` for `1->2`. LOD0, LOD1, and
+  LOD2 topology/position digests are respectively
+  `60C89421FF1B19BD/7E9C783F3C60468C`,
+  `97D4F8ABEC98BA72/A580C20007E621C3`, and
+  `081C4C044EB32D11/60AD76F21522FDB4`; combined transition digests are
+  `CE624B2A1C469A41/5A444911199CC773`.
+- All regular and transition queues and lanes settle to zero. Unsafe commits,
+  stale publications, seam mismatches, invalid-table use, ordinary geometry
+  readback, and render-time SDF evaluation remain zero. The implementation owns
+  exactly three regular scratch lanes (`34310016` bytes), unchanged transition
+  scratch (`3884628` bytes), one mesher, one arena pool, and no dedicated
+  outer-level scratch or per-level draw path. No level `3` identity or work may
+  appear.
+- Responsiveness gates are foreground regular p95 and each transition-pair p95
+  below `409.6 ms`, foreground drain at most `500 ms`, outer regular p95 below
+  `4096 ms`, and maximum eligible outer service gap below `300 ms`. Moving and
+  stationary CPU/GPU p95 and p99 may not regress from this scenario's fresh
+  schema-17 same-scene baseline by more than the greater of `5%` or `0.25 ms`.
+  Queue tails, streaming completion, arena count/capacity, used geometry,
+  memory growth, allocations, scratch capacity, and visibility remain within
+  the existing accepted regression bounds.
+- Run `voxel_mesh_audit 32 coverage`, positive and negative boundary traversal,
+  backtracking, moving and stationary captures, and an overhead observation
+  while an atomic handoff is pending through the production player path. Build
+  runtime and editor with `--no-restore`, compile every changed shader live,
+  then restart the complete editor. The Sentry crash marker must not advance,
+  and fresh logs must contain no shader, compute, device-loss, draw, readback,
+  or managed error. Any failed gate rejects the candidate; no parameter or
+  threshold may change to obtain a pass.
+
+### CLIPBOX-NLEVEL-CONFIG-001/v1 - Validated runtime configuration
+
+- Definition recorded on 2026-09-03 at source commit `969425a`, before
+  implementation. It uses the same engine, current read-only production scene,
+  generator, seed, start position, camera, and scene SHA-256 as
+  `CLIPBOX-NLEVEL-DEFAULT-001/v1`. All mutations use the normal validated
+  runtime component properties; the scene is never serialized. Begin fully
+  settled at `GameplayRadius=4`, `MinimumVisualLod=0`,
+  `MaximumVisualLod=2`, `Lod0VisualHalfExtent=4`,
+  `LodCacheHalfExtent=8`, `CellsPerAxis=32`, and `CellSize=16`.
+- Apply this fixed valid sequence, waiting after each visual request until its
+  one atomic placement commit has completed and all queues and scratch lanes
+  have settled: maximum visual LOD `2 -> 1 -> 0 -> 2`; minimum visual LOD
+  `0 -> 1 -> 2 -> 0`; LOD0/coarse half extents `4/8 -> 2/6 -> 4/8`.
+  Every pending handoff keeps the preceding committed hierarchy visible, and a
+  newer request may coalesce preparation without an unsafe or partial commit.
+- Set gameplay radius `4 -> 3 -> 4` without waiting for visual settlement.
+  Radius `3` must produce exactly `343` authoritative gameplay coordinates and
+  radius `4` exactly `729`; visual placement, visual configuration revision,
+  active visual sets, and transition identities must not change.
+- From the restored default, independently attempt maximum visual LOD `3`,
+  minimum visual LOD above maximum, each odd or misaligned visual/cache extent,
+  `CellsPerAxis` other than `32`, and `CellSize` other than `16`. Each invalid
+  combination must report rejection and leave the applied configuration
+  revision, requested/staged/committed placement, active sets, resident
+  geometry, and gameplay state unchanged. Restore the raw inspector value after
+  each attempt before continuing.
+- Level behavior gates are: `0..2` matches the default scenario; `0..1` has a
+  full-center LOD0 plus one LOD1 ring and only pair `0->1`; `0..0` has one
+  full-center LOD0 and no transition; `1..2` keeps LOD0 gameplay data but emits
+  full-center LOD1 plus surrounding LOD2 and only pair `1->2`; `2..2` keeps LOD0
+  gameplay data but emits one full active LOD2 cache and no transition. Levels
+  below the minimum have no visual geometry after the replacement commit.
+- Reduced valid extents use the same generic placement, scheduling,
+  publication, visibility, allocator, and draw paths. Every valid step must
+  converge with zero pending queues/lanes, missing committed dependencies,
+  unsafe commits, stale publications, seam mismatches, invalid-table use,
+  ordinary geometry readbacks, or render-time SDF evaluations. The final
+  restored state must satisfy every exact count, digest, memory-shape, and
+  performance gate in `CLIPBOX-NLEVEL-DEFAULT-001/v1`.
+
+#### Schema-17 same-scene baseline - 2026-09-03
+
+- Run `8a315881b41a4c1cb2b54781e148e59c`, revision
+  `969425a-schema17-readonly-scene`, completed the production figure-eight at
+  untouched source HEAD `969425afc25da57bfb2b827b9e4dfaabe2351f8f` on
+  s&box `26.09.01a`. It used speed `2500`, distance `50000`, one loop,
+  generator v5/seed `1337`, `32` cells, cell sizes `16/32/64`, gameplay radius
+  `4`, and the existing `121.944084`-second moving plus `10.000488`-second
+  stationary windows. The saved start/target was the production path's float
+  position `[0.000034845787,-0.000065263834,0]`, yielding final gameplay center
+  `[0,-1,0]`; this exact observed path is retained for the schema-18 comparison.
+- Moving CPU samples/FPS/p95/p99 were `69965/573.7538/2.5061/4.5786 ms`.
+  Moving GPU average/p95/p99/max were all `0.6110668 ms`. Stationary CPU
+  samples/FPS/p95/p99 were `6317/631.6773/1.8555/3.9312 ms`; stationary GPU
+  average/p95/p99/max were all `0.6110668 ms`.
+- Foreground regular schedule-to-renderable samples/p50/p95/p99/max were
+  `104630/32.0115/99.4605/131.7281/198.2204 ms`, with `88` cancelled and zero
+  superseded. Transition schedule-to-publication samples/p50/p95/p99/max were
+  `47966/161.2084/304.2554/390.7865/495.3172 ms`. Outer regular samples
+  p50/p95/p99/max were `18408/325.3335/421.6105/628.7831/676.9129 ms`; maximum
+  eligible service gap was `258.0916 ms`, and post-loop drain was `188.814 ms`.
+  Gameplay/warm/total queue p95 was `0/66/66`, with maximum `0/126/126`.
+- Gameplay loaded/pending was `729/0`. Final regular residents were
+  `710/4096/4096` for levels `0/1/2`, all regular queues were zero, and final
+  cache/active counts were `512`, `4096/4032`, and `4096/3584`.
+  Transitions were `480/480/187/0` desired/ready/drawable/pending, with
+  `47966/47966/0/0` scheduled/published/cancelled/stale. Transition geometry was
+  `5622` active cells, `17388` vertices, and `50712` indices; every fine,
+  coarse, lateral, and invalid-table mismatch counter was zero.
+- Level topology/position digests were
+  `597E03691573DDB3/1E4BA9E08C46665F`,
+  `97D4F8ABEC98BA72/A580C20007E621C3`, and
+  `081C4C044EB32D11/60AD76F21522FDB4`. Combined transition digests were
+  `CE624B2A1C469A41/5A444911199CC773`. The same-scene baseline's level-0 digest
+  differs from the older accepted origin-centered digest named in the scenario
+  gate because its final gameplay/warm center is Y `-1`; the level-1, level-2,
+  and transition digests match the locked gate. This discrepancy is recorded,
+  not normalized or relabeled.
+- Placement requests/commits/superseded were `570/463/339`; deferred/readiness
+  blocks were `51289/21989`; unsafe commits were zero. Level `1/2`
+  broadphase queries were `98048/49088`, rejected air `42896/21476`, rejected
+  solid `0/9204`, and potentially surface-containing `55152/18408`; total and
+  maximum classification time was `10.3476/0.1449 ms`.
+- The final eight arenas committed `268435456/134217728` vertex/index bytes and
+  used `78140664/72672384` bytes. Regular scratch was exactly `34310016` bytes,
+  dedicated outer scratch `0`, and transition scratch `3884628`. Pool
+  allocations/reuses were `0/52654`; ordinary geometry readbacks and render SDF
+  evaluations were both zero. Moving process memory start/end/peak was
+  `2435981312/2411610112/2460655616` bytes; GPU was
+  `2500031320/2550362968/2550362968`. Stationary process start/end/peak was
+  `2412167168/2411831296/2412298240`; stationary GPU remained `2550362968`.
+- Settled surface meshes were `224/1300/1017` by level and `2728` total.
+  Moving average resident/visible meshes were `2605.0076/1926.3469`; stationary
+  both were `2728`. Logical visibility storage was `295036` bytes. The run
+  logged no errors. Before and after the run the scene SHA-256 remained
+  `4A07B38542627BFFC89289D09A93CF9CEC8C6CE8A4A8454B578AF18701493AAA` and its
+  pre-existing binary diff hash remained
+  `a54d37dd0adf55d73f47b17b3e854b384d86c65c`.
+
+#### Implementation diagnostics and recovery - 2026-09-03
+
+- The first live visibility-shader revision used a runtime-bounded loop for the
+  level counters. The shader hot load first raised a managed
+  `InvalidCastException`, then the Vulkan device was lost at `10:48`. The
+  engine wrote `gpu_crash_dumps/device_fault_19.bin` and
+  `aftermath_dumps/core_24.nv-gpudmp`; the Sentry marker advanced to
+  `2026-09-03T15:59:00.800327Z`. This is a failed intermediate implementation,
+  not clean validation evidence. It directly explains the observed period in
+  which no terrain rendered during the performance test.
+- Replacing that loop with a compile-time-unrolled loop over the same three
+  dynamically indexed counter records compiled live and restored terrain
+  rendering. The source still derives each counter address from `level`; frame
+  and aggregate buffers remain `11` and `20` uints, and no draw, scratch, or
+  shader resource was added per level. The final clean candidate start did not
+  advance its pre-start Sentry marker and emitted no shader, compute,
+  device-loss, draw, readback, or managed error.
+- An early completed schema-18 diagnostic, run
+  `7c109cf028c946dd9a278aee3467ab8b`, exposed unbounded retained regular and
+  transition residents after repeated placements and was rejected. It ended at
+  `59` arenas with regular residents `9108/4096/34352` and pair-ready counts
+  `6466/23504`, despite zero pending queues, unsafe commits, stale results, seam
+  mismatches, readbacks, and render SDF evaluations. Its moving CPU/GPU p95/p99
+  was `1.8639/2.7650` and `1.5969/2.0843 ms`; stationary CPU/GPU was
+  `1.6164/2.4734` and `1.5526/2.1534 ms`. A later
+  interrupted diagnostic reached `31` arenas, regular residents
+  `4288/4608/18884`, and transitions `3048` ready of `10552` desired before it
+  was stopped. Neither run is acceptance evidence.
+- Publication/removal tracing showed that releases themselves were correct.
+  Unchanged level and pair stages were rescheduling from their already-swapped
+  `Next` buffers instead of the committed desired sets. Scheduling and
+  readiness now select committed sets for unchanged records and staged sets
+  only for changed records. A ten-second moving production diagnostic then
+  remained bounded at eight arenas with no hierarchy-wide reset or alternate
+  publication path. Temporary tracing and the abandoned tombstone experiment
+  were removed before validation.
+
+#### Runtime configuration sequence - 2026-09-03
+
+- `CLIPBOX-NLEVEL-CONFIG-001/v1` ran through the normal live component
+  properties. Every accepted visual change retained the preceding hierarchy
+  while its replacement was pending, committed all changed levels and pairs in
+  one update, then settled every queue and lane with unsafe commits and stale
+  publications both zero.
+- Maximum level `2 -> 1 -> 0 -> 2` produced, respectively, the default three
+  levels, LOD0 plus a `4096/4032` LOD1 cache/ring and `96` faces for pair
+  `0->1`, one full `512`-region LOD0 box with no transition, and the restored
+  default. Applied visual revisions advanced through `3`, `4`, and `5`.
+- Minimum level `0 -> 1 -> 2 -> 0` retained all `729` authoritative LOD0
+  gameplay coordinates. At `1..2`, LOD0 visual activity was zero, LOD1 was a
+  full-center `4096`-region box, LOD2 retained its `3584`-region ring, and only
+  the `384` faces for pair `1->2` existed. At `2..2`, only a full active
+  `4096`-region LOD2 cache existed and there were no transitions. Restoring
+  `0..2` restored the accepted hierarchy; applied revisions were `6`, `7`, and
+  `8`.
+- Extents `4/8 -> 2/6` produced cache/active counts `64/64`, `1728/1720`, and
+  `1728/1512`, with transition-pair counts `24` and `216`. Restoring `4/8`
+  restored the exact default counts and digests; applied revisions were `9`
+  and `10`.
+- Gameplay radius `4 -> 3 -> 4` changed authoritative gameplay coordinates
+  `729 -> 343 -> 729` immediately without changing visual revision `10`, visual
+  bounds, active sets, or transition identities.
+- Maximum level `3`, minimum level `3` above maximum `2`, odd extents `3` and
+  `7`, containment-invalid extents `12/6`, `31` cells per axis, and base cell
+  size `15` were each rejected. Every rejection retained applied revision `10`
+  and the active hierarchy. The restored default settled with no pending
+  handoff, queue, or lane and with no shader or managed error. The production
+  scene hash and its pre-existing diff hash remained exact throughout.
+
+#### Mesh and handoff audits - 2026-09-03
+
+- Production command `voxel_mesh_audit 32 coverage` selected and completed
+  `160/160` regular and transition meshes. Stale results, mutation failures,
+  invalid indices, out-of-bounds or non-finite positions, record identity
+  mismatches, oversized triangles, draw-argument failures, and visibility
+  mismatches were all zero. Maximum edge length was `1.727` cells. The reported
+  `55` failed regions contain only `1558` separately tracked repeated-position
+  Transvoxel table degenerates already accepted by the seam scenario. The audit
+  used `322` explicit readbacks, `4890076` bytes, and `302.337 ms`; ordinary
+  production rendering remained at zero geometry readbacks.
+- The fixed configuration traversal exercised maximum and minimum level
+  replacement, reduced extents, positive and negative region boundaries, and
+  backtracking while the old placement remained drawable. The restored state
+  had no partial commit, missing dependency, seam mismatch, invalid table,
+  stale publication, or render-time SDF evaluation.
+
+#### Schema-18 candidates and camera-controlled comparison - 2026-09-03
+
+- Candidate run `566b23e51aa14199b15c56bb8f27f3b1`, revision
+  `969425a-schema18-generic-candidate-r5`, was the first bounded completed run
+  after the staged-set fix. It produced exact requested counts and digests,
+  zero pending work and correctness failures, pair p95 values
+  `45.3394/156.1087 ms`, outer p95 `211.6812 ms`, service gap `250.519 ms`, and
+  drain `28.0967 ms`. It used seven arenas with the same used geometry bytes.
+  Its moving GPU p95/p99 was `0.9978/1.4629 ms`; this run was retained as
+  correctness evidence but not used for the frame comparison because it
+  inherited a detached-editor-camera state.
+- The first nominal schema-17 baseline
+  `8a315881b41a4c1cb2b54781e148e59c` was likewise not camera-comparable: its
+  stationary visibility reported all `2728` meshes visible and its GPU samples
+  were a constant `0.6110668 ms`. Source inspection confirmed that the
+  performance runner does not set camera orientation and selecting an editor
+  view does not normalize it. Applying the locked tolerance to that row would
+  therefore compare different rendered workloads. The row remains recorded
+  above and was not rewritten or relabeled.
+- Corrective baseline `72ed4baf9218496191f6f79472f50971`, revision
+  `969425a-schema17-game-camera-corrective`, ran the immutable `969425a` source
+  in a detached worktree with the exact same read-only scene bytes and explicit
+  Game camera. It used every locked journey parameter, started and ended at
+  `[0,0,0]`, and produced moving resident/visible averages
+  `2605.038/486.629` and stationary `2728/490`, matching the candidate's
+  workload. Moving CPU p95/p99 was `1.1809/2.2700 ms`, moving GPU was
+  `0.9928/1.4327 ms`, stationary CPU was `1.0039/1.9037 ms`, and stationary GPU
+  was `0.7875/0.9024 ms`.
+- That corrective baseline also reproduced the exact default counts and all
+  requested regular and transition digests, used eight arenas,
+  `268435456/134217728` committed and `78517560/73028568` used vertex/index
+  bytes, `34310016/0/3884628` regular/dedicated-outer/transition scratch bytes,
+  outer p95 `222.9487 ms`, maximum service gap `250.4772 ms`, and drain
+  `27.0922 ms`. Unsafe commits, seam mismatches, ordinary geometry readbacks,
+  and render-time SDF evaluations were zero.
+- Final candidate `d1d3e774a9a541ddb8f8a0424c72544e`, revision
+  `969425a-schema18-generic-candidate-final`, ran from a clean editor start with
+  the explicit Game camera. Moving CPU p95/p99 was `1.1169/2.1698 ms`, moving
+  GPU was `0.9749/1.3766 ms`, stationary CPU was `1.0078/1.8327 ms`, and
+  stationary GPU was `0.7935/0.8256 ms`. Against the corrective baseline, the
+  respective locked upper limits are `1.4309/2.5200`, `1.2428/1.6827`,
+  `1.2539/2.1537`, and `1.0375/1.1524 ms`; all frame gates pass.
+- The final candidate's foreground level p95 values were
+  `58.5465/52.5705 ms`; pair p95 values were `45.1694/156.6407 ms`; outer
+  p95/p99 was `212.7238/358.7442 ms`; maximum outer service gap was
+  `250.3449 ms`; aggregate schedule p95/p99 was `56.9695/77.6109 ms`; total
+  queue p95/max was `65/126`; and drain was `27.4866 ms`. All responsiveness
+  gates pass.
+- Final counts were gameplay `729`, level cache/active/resident
+  `512/512/710`, `4096/4032/4096`, and `4096/3584/4096`. Pairs `0->1` and
+  `1->2` were `96/96/51/0` and `384/384/136/0`
+  desired/ready/drawable/pending. The combined total was the required
+  `480/480/187/0`; every requested digest was exact; unsafe commits, stale
+  publications, seam and table mismatches, ordinary geometry readbacks, and
+  render-time SDF evaluations were zero.
+- The final resource shape was exactly three regular lanes and
+  `34310016/0/3884628` regular/dedicated-outer/transition scratch bytes, eight
+  arenas, `268435456/134217728` committed and `78517560/73028568` used
+  vertex/index bytes. No level-3 record or work and no legacy fixed-level JSON
+  field was emitted. Schema `18` contains ordered `levels[]` and
+  `transitionPairs[]` records.
+- Unchanged repeat `c6bc79bc8abd4847a175bf4f54137865` reproduced the same
+  result: moving CPU/GPU p95/p99 `1.2134/2.3208` and
+  `0.9995/1.4527 ms`, stationary CPU/GPU `1.0968/1.9017` and
+  `0.6835/0.8729 ms`, pair p95 `46.9574/159.9575 ms`, outer p95
+  `223.2908 ms`, service gap `250.9185 ms`, and drain `28.1696 ms`. Counts,
+  digests, arenas, capacity, scratch, correctness counters, schema shape,
+  camera visibility, and scene integrity were identical. It independently
+  passes every frame and responsiveness limit.
+- The isolated `969425a` baseline process saved its completed row normally, but
+  its later editor shutdown reported a mimalloc double free followed by a
+  Windows `0xC0000005` access violation. The Sentry envelope identifies baseline
+  PID `16260`, has `shutdown_crash=true`, and advanced the marker to
+  `2026-09-03T17:10:29.314792Z`; no GPU dump or runtime validation error
+  accompanied it. This post-result old-revision shutdown failure is recorded
+  separately and is not attributed to the candidate.
+- A subsequent clean restart of the candidate opened the production scene,
+  compiled runtime/editor code and the visibility shader, started play with the
+  explicit Game camera, and visibly rendered terrain. It settled at gameplay
+  `729`, regular cache/active/resident `512/512/710`, `4096/4032/4096`, and
+  `4096/3584/4096`, pair ready/drawable `96/51` and `384/136`, no pending
+  handoff, unsafe commit, queue, or level-3 identity. The candidate then shut
+  down normally, emitted none of the prohibited log errors, and left the
+  pre-start Sentry marker exactly unchanged.
+- Final `--no-restore` runtime and editor builds completed with zero warnings and
+  zero errors. The live shader compile completed without error, `git diff
+  --check` passed, and the forbidden fixed-level production symbol search was
+  empty. All intended text files have CRLF and a final newline. The scene
+  SHA-256 and pre-existing binary diff hash remained
+  `4A07B38542627BFFC89289D09A93CF9CEC8C6CE8A4A8454B578AF18701493AAA` and
+  `a54d37dd0adf55d73f47b17b3e854b384d86c65c`.
+- Decision: the exact accepted three-level terrain runs through the one generic
+  level-indexed implementation with no correctness, memory-shape, scheduling,
+  or performance regression. Level `3` remains rejected and disabled. The next
+  slice may enable `MaximumVisualLod=3`; it is not part of this result.
