@@ -6,17 +6,21 @@ networking, or persistence.
 
 ## Current State
 
-The first voxel-world foundation is established in `Code/Voxels/VoxelManager.cs`
-and `Code/Voxels/VoxelChunk.cs`. `VoxelManager` owns one canonical loaded-chunk
-dictionary and bounded desired/load queues; each `VoxelChunk` owns the parameters
-for its implicit flat SDF and derives Grass/Air material IDs without sample
-arrays. The current deterministic base field is a flat world-space plane. Read
-`Docs/Architecture/VoxelChunkFoundation.md` before changing these boundaries or
-dimensions.
+The voxel-world foundation is established in `Code/Voxels/VoxelManager.cs` and
+`Code/Voxels/VoxelChunk.cs`. `VoxelManager` owns one canonical loaded-chunk
+dictionary, bounded desired/load queues, fixed LOD0/LOD1/LOD2 clipbox placement,
+both 2:1 transition boundaries, and one `GpuVoxelMesher`. Each `VoxelChunk` owns
+the immutable parameters for the deterministic volumetric generator-v5 SDF and
+derives Grass/Air material IDs without sample arrays. The GPU mesher derives
+persistent regular and transition render geometry from that same SDF contract;
+table-derived primary positions are final, and one transition kernel closes both
+LOD boundaries with cull-compatible indices. Read `Docs/Architecture/VoxelChunkFoundation.md` and
+`Docs/Architecture/GpuVoxelMeshing.md` before changing these boundaries,
+dimensions, placement, or rendering contracts.
 
-There is no surface mesher, collision generation, live-edit pipeline,
-persistence, multi-origin interest manager, or voxel network protocol yet. Do
-not infer those systems from the chunk foundation.
+There is no collision generation, live-edit pipeline, persistence,
+multi-origin interest manager, or voxel network protocol yet. Do not infer
+those systems from the implemented render-meshing path.
 
 ## Required Shape
 

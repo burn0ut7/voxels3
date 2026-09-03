@@ -6569,3 +6569,282 @@ Record an approved extraordinary change here before adding the new version:
   previously reproduced transient LOD2 deformation is fixed through the one
   canonical terrain-render path. No fallback mesher, duplicate transition
   implementation, compatibility layer, or secondary identity system was added.
+
+### CLIPBOX-LOD-SEAM-001/v1 - Unified render-space seam transform
+
+- Definition recorded on 2026-09-02 after the visual regression was reported
+  and before changing its implementation. Use engine `26.09.01a`, scene
+  `scenes/basic_example.scene`, one player at target `[0,0,0.04]`, generator v5,
+  seed `1337`, base height `0`, frequency `0.0005`, amplitude `128`, `32` cells
+  per region, LOD cell sizes `16/32/64`, and the canonical settled counts from
+  `CLIPBOX-LOD2-002/v1`. Start from a clean editor process, render once to start
+  the production command lists, and wait for every regular and transition queue
+  to reach zero before pausing play.
+- Capture the paused production terrain at `1920x1080` without UI through the
+  ejected game camera. The LOD0-to-LOD1 negative-X plane is inspected from
+  position `[-2300,0,300]`, angles `[20,0,0]`, vertical field of view `50`,
+  looking across boundary `x=-2048`. The LOD1-to-LOD2 negative-X plane is
+  inspected from position `[-8500,0,500]`, angles `[15,0,0]`, vertical field of
+  view `50`, looking across boundary `x=-8192`. The camera may move only after
+  play is paused so it cannot change the streaming target or resident sets.
+- Correctness gate: the production `voxel_mesh_audit 32 coverage` must retain
+  zero invalid indices, non-finite positions/normals, out-of-bounds positions,
+  oversized triangles, record-identity mismatches, descriptor mismatches,
+  mutation failures, and draw-argument failures. Fine-face, coarse-face,
+  lateral, and transition-table mismatch counters remain zero.
+- Architecture gate: regular coarse vertices and low-resolution transition
+  vertices must use one canonical secondary-position function in the terrain
+  vertex shader. Transition compute emits primary geometry and an explicit
+  per-vertex eligibility bit; it must not bake a second implementation of the
+  same displacement. Full-resolution transition vertices remain primary.
+- Visual gate: both fixed camera views must show a continuous checker surface
+  across the complete boundary plane. No sky/background pixel line, open crack,
+  ridge, overlap, displaced strip, or checker-coordinate discontinuity is
+  permitted at face interiors, adjacent coarse-region borders, or boundary
+  corners. The intentional 256-unit green checker color changes are not seams.
+- Performance gate: rerun `CLIPBOX-LOD2-002/v1` without changed parameters.
+  Every correctness, queue, latency, frame-tail, memory, readback, digest,
+  cold-start, and clean-log threshold remains unchanged; the seam fix is rejected
+  if it introduces a second terrain system or weakens any prior gate.
+- Pre-fix reproduction on commit `8f1df3b`: the clean origin state settled at
+  LOD0/Lod1/Lod2 active `512/4032/3584`, resident `710/4096/4096`, transition
+  desired/ready/pending `480/480/0`, and every queue at zero. The fixed
+  LOD0-to-LOD1 camera showed checker-coordinate discontinuities along the
+  transition plane. The fixed LOD1-to-LOD2 camera showed open blue-background
+  cracks on both sides of the view plus displaced strips along the transition
+  plane. These artifacts remained while play was paused.
+- The matching pre-fix `voxel_mesh_audit 32 coverage` completed `160/160`
+  selected meshes with source/visible/record descriptor mismatches `0/0/0`,
+  per-vertex record-identity mismatches `0`, and zero invalid indices,
+  non-finite or out-of-bounds positions, oversized triangles, stale handles,
+  mutation failures, or draw-argument failures. Maximum edge was `1.727` cells.
+  This confirms the cracks are introduced after persistent geometry emission by
+  the split render/compute secondary-position transforms.
+
+#### Unified coarse-side candidate - fail
+
+- Source state: uncommitted candidate based on `8f1df3b`; fresh editor PID
+  `38116`; engine `26.09.01a`; all fixed world, camera, and settlement parameters
+  above were unchanged. Settled active regular counts were exactly
+  `512/4032/3584`, resident counts were `710/4096/4096`, and transitions were
+  desired/ready/pending `480/480/0`.
+- The candidate removed the transition-compute copy of the deformation and made
+  coarse regular plus half-resolution transition vertices use one terrain
+  vertex-shader function. The fixed views no longer showed the pre-change giant
+  displaced strips. The closer deterministic boundary views at
+  `[-2300,0,500]`, angles `[60,0,0]`, FOV `60`, and `[-8500,0,700]`, angles
+  `[65,0,0]`, FOV `60`, exposed a jagged boundary cut and an open blue-background
+  gap, respectively. Outcome: **fail**; the v1 coarse-side architecture gate is
+  rejected.
+- Audit `1` selected and completed `160/160` production meshes. Visibility was
+  exact at regular `2541/2541` and transition `187/187`; source, visible, and
+  record-descriptor mismatches were `0/0/0`. Invalid indices, non-finite or
+  out-of-bounds positions, record-identity mismatches, oversized triangles,
+  mutation failures, and draw-argument failures were all zero. Maximum edge was
+  `1.727` cells. The `1673` reported degenerates are the separately documented
+  transition-table output. This again isolates the visible failure to the
+  render-space position rule rather than emitted topology, allocation, or draw
+  state.
+- The fresh process logged one startup `gpu.scheduler.stalled` event at age
+  `2779.256 ms` while the editor view was not continuously rendering; the same
+  session subsequently settled and produced the exact audit above. It remains
+  recorded and must not appear in the final continuously rendered cold-start
+  check.
+
+### CLIPBOX-LOD-SEAM-001/v2 - Unified fine-side boundary transform
+
+- Definition recorded on 2026-09-02 before implementing the corrected
+  transform. All v1 scene, engine, player, generator, seed, density, region,
+  LOD, settlement, audit, performance, and fixed-camera parameters remain
+  unchanged. The two closer views recorded above are added as fixed face-detail
+  checks; they do not replace either v1 camera.
+- Corrected architecture gate: the manager publishes the exact world AABB and
+  cell size of the LOD0 and LOD1 fine clipbox boundaries. One terrain
+  vertex-shader function derives the complete three-axis, tangent-plane-projected
+  secondary position from those bounds. Fine regular boundary vertices and
+  full-resolution transition vertices select the same fine-level descriptor;
+  coarse regular and half-resolution transition vertices remain primary.
+  Transition compute emits only primary table geometry plus the eligibility bit.
+- Superseded alternatives are forbidden: no coarse-side or half-resolution
+  deformation, per-coarse-record face masks, baked transition positions,
+  per-fine-quadrant compute transform, mesh regeneration for placement changes,
+  CPU geometry path, crossfade, skirt, overlap, or fallback renderer may remain.
+  This selection follows the repository's 2026-09-01 bisection and the official
+  Transvoxel/Godot fine-side construction while translating it to the fixed
+  three-level GPU clipbox as one dynamic render-space rule.
+- Visual gate: all four fixed views show continuous terrain with no
+  sky/background line, crack, ridge, overlap, displaced strip, pinched taper, or
+  checker-coordinate discontinuity. The unchanged audit has zero mutation and
+  draw-state failures, every queue settles, and the complete unchanged
+  `CLIPBOX-LOD2-002/v1` figure-eight and clean-start gates pass before acceptance.
+
+#### Unified fine-side candidate - fail
+
+- Source state: uncommitted candidate based on `8f1df3b`; fresh editor PID
+  `39268`; engine `26.09.01a`; all locked world and camera parameters were
+  unchanged. The origin state settled exactly at regular active counts
+  `512/4032/3584`, resident counts `710/4096/4096`, transition
+  desired/ready/pending `480/480/0`, and every queue at zero.
+- The candidate removed all per-coarse masks and published one world AABB and
+  fine cell size for each clipbox boundary. The terrain vertex shader applied
+  the same fine-side transform to regular fine vertices and eligible
+  full-resolution transition vertices; coarse regular and half-resolution
+  transition vertices remained primary. The close LOD1-to-LOD2 view at
+  `[-8500,0,700]`, angles `[65,0,0]`, FOV `60`, still showed an open
+  blue-background gap along the boundary. Outcome: **fail**; shared fine-side
+  deformation is correct Transvoxel theory but is not a correct translation for
+  this project's face-local primary transition geometry.
+- Audit `1` selected and completed `160/160` production meshes. Visibility was
+  exact at regular `2541/2541` and transition `187/187`; source, visible,
+  record, and shared-boundary descriptor mismatches were `0/0/0/0`. Invalid
+  indices, non-finite or out-of-bounds positions, record-identity mismatches,
+  oversized triangles, mutation failures, and draw-argument failures were all
+  zero. Maximum edge was `1.727` cells; `1673` known transition-table
+  degenerates remained separately reported. The visual failure is therefore
+  isolated to applying a secondary position after the valid primary topology.
+- This startup logged one recovered `gpu.scheduler.stalled` event at
+  `3090.47 ms` while the editor view was not continuously rendering. Recovery
+  took `18.197 ms`; the world then fully settled. This run is diagnostic only
+  and does not satisfy the final clean-start gate.
+
+### CLIPBOX-LOD-SEAM-001/v3 - Canonical primary transition geometry
+
+- Definition recorded on 2026-09-02 before implementing the next candidate.
+  All v1 world, engine, seed, generator, density, region, LOD, settlement,
+  audit, performance, and four fixed-camera parameters remain unchanged.
+- Architecture gate: regular and transition compute emission owns the sole
+  final world position. Both use primary table-derived geometry from the same
+  canonical SDF, and the terrain vertex shader performs no LOD deformation.
+  Stable per-vertex arena-record identity remains only for stale-allocation
+  auditing and encoded normals; it must not address a second position source.
+  Per-record boundary masks, global boundary descriptors, eligibility bits,
+  baked secondary positions, and every coarse-side or fine-side deformation
+  path are removed rather than retained dormant.
+- Selection evidence: the accepted historical LOD0/LOD1 path at `5ffcc63` and
+  the later primary-position rollback showed continuous fixed views. The
+  coarse-side v1 and fine-side v2 render-space candidates both retained valid
+  primary topology and exact draw records but opened visible boundary gaps.
+  The primary-only design keeps the one face-local Transvoxel topology system
+  that already spans the high- and low-resolution contours and removes the
+  independently failing post-emission mutation system.
+- Acceptance remains the v2 four-view visual gate, the exact coverage audit,
+  a continuously rendered clean start with no scheduler event, and the complete
+  unchanged `CLIPBOX-LOD2-002/v1` figure-eight comparison. Known zero-area table
+  triangles remain reported separately; no skirt, overlap, crossfade, fallback
+  renderer, alternate mesher, or weakened threshold is permitted.
+
+#### Canonical primary candidate - pass
+
+- Final source state: uncommitted candidate based on `8f1df3b`; engine
+  `26.09.01a`; final visual/audit editor PID `35400`; clean performance editor
+  PID `38268`. The scene and all locked v1/v2 parameters remained unchanged:
+  generator v5, seed `1337`, base height `0`, surface frequency `0.0005`,
+  amplitude `128`, `32` cells per region, and LOD cell sizes `16/32/64`.
+- Root-cause bisection used the locked close LOD1-to-LOD2 view. With all
+  post-emission position changes removed, the former large displaced strip
+  collapsed to a thin background-pixel line under `CullMode BACK`. Replacing
+  the checker with a temporary solid magenta albedo preserved that line, proving
+  it was geometry rather than checker phase. Temporary `CullMode NONE` closed
+  it completely, proving the primary vertices and triangles existed and
+  isolating the residual gap to index winding. The final shader restores the
+  checker and `CullMode BACK`; it interprets the Transvoxel class inversion bit
+  for Voxels3's negative-density-solid sign convention when ordering indices.
+- Architecture result: **pass**. Regular and transition compute emission now
+  provide the sole final primary positions. Terrain rendering performs no
+  LOD-dependent position transform. Per-record face masks, boundary descriptors,
+  eligibility bits, compute-baked secondary positions, and their GPU record
+  buffer were removed. Both LOD pairs still use one transition descriptor,
+  scheduler, scratch pipeline, cache, allocator, visibility path, and draw path.
+  The transition request shrank from `112` to `96` bytes; settled logical
+  visibility storage fell from `426108` to `295036` bytes. No fallback, skirt,
+  overlap, crossfade, duplicate mesher, or alternate position source remains.
+- Final cold origin settlement was exact: LOD0/Lod1/Lod2 active
+  `512/4032/3584`, resident `710/4096/4096`, transition
+  desired/ready/pending `480/480/0`, and every regular queue at zero. The fresh
+  process emitted no project error, scheduler-stall event, or slow-command-commit
+  warning. Scheduler health is now sampled before current command-list work, so
+  a long commit cannot report its own elapsed time as a missing render tick; the
+  separate bounded slow-commit warning retains the exact duration and state if
+  that operation actually exceeds `500 ms`.
+- Visual result: **pass**. All four fixed `1920x1080` views were captured after
+  settlement while play was paused. The LOD0-to-LOD1 views at
+  `[-2300,0,300]`, angles `[20,0,0]`, FOV `50`, and `[-2300,0,500]`, angles
+  `[60,0,0]`, FOV `60`, plus the LOD1-to-LOD2 views at `[-8500,0,500]`, angles
+  `[15,0,0]`, FOV `50`, and `[-8500,0,700]`, angles `[65,0,0]`, FOV `60`, all
+  showed continuous terrain. No background-pixel seam, crack, displaced strip,
+  ridge, overlap, pinched taper, or checker-coordinate discontinuity was present.
+- Final production audit `1`, `voxel_mesh_audit 32 coverage`, selected and
+  completed `160/160` meshes with `0` stale results and `0` mutation failures.
+  Invalid indices, index remainders, non-finite positions/normals, out-of-bounds
+  positions, abnormal normals, record-identity mismatches, oversized triangles,
+  visibility mismatches, source/visible argument mismatches, and draw-argument
+  failures were all zero. Visibility was exact at regular `2541/2541` and
+  transition `187/187`; source/visible draws were `2728/1481`. Maximum edge was
+  `1.727` cells. The separately documented table output contained `1672`
+  zero-area transition triangles across `52` selected transition records.
+  Audit readback was `322` operations, `4614928` bytes, and `297.198 ms`.
+- Diagnostic figure-eight run `3f09354657fc43398b70931f46f6be71`
+  used the exact locked loop, speed, distance, world, and generator parameters
+  but began after the geometry audit in the same process. Its persisted
+  `geometryReadbacks=322` violates the zero-diagnostic-readback gate, so the run
+  is recorded but excluded from comparison. It completed in `121.94582 s` with
+  moving CPU/GPU p95/p99 `2.0445/2.8108` and
+  `0.5438328/0.5438328 ms`, stationary CPU/GPU p95/p99 `2.2799/2.682` and
+  `0.5438328/0.5438328 ms`, regular/transition/LOD2 p95
+  `190.0979/481.3908/2327.5442 ms`, maximum LOD2 service gap `256.9852 ms`, and
+  drain `46.189 ms`. Outcome: **invalid**, not an acceptance result.
+- Clean unchanged `CLIPBOX-LOD2-002/v1` comparison: run
+  `26a239da1b50471692f897bd80960b22`, captured
+  `2026-09-03T04:10:50.1298951+00:00`, task
+  `CLIPBOX-LOD-SEAM-001/v3`, revision
+  `8f1df3b+primary-winding-clean`. It used scene `basic_example`, one loop,
+  speed `2500`, distance `50000`, world height `0`, seed `1337`, frequency
+  `0.0005`, amplitude `128`, and completed in `121.90819 s`. Moving samples/FPS
+  were `117535/963.82794`; stationary samples/FPS were `9796/979.5828`; neither
+  sample set truncated.
+- Clean moving CPU p95/p99 was `1.1482/2.2072 ms` against the accepted candidate-C
+  baseline `1.2457/2.2663 ms`; moving GPU was
+  `1.0828972/1.5287399 ms` against `1.2123585/1.6663074 ms`. Stationary CPU was
+  `1.0169/2.0403 ms` against `1.0266/2.0165 ms`; stationary GPU was
+  `0.84519386/0.9460449 ms` against `0.8442402/1.0147095 ms`. Every delta is
+  inside the locked greater-of-`5%`-or-`0.25 ms` tolerance.
+- Clean regular and transition schedule-to-publication p95 were
+  `119.1011/280.7909 ms`; LOD2 schedule-to-renderable p95 was `608.6814 ms`;
+  maximum eligible LOD2 service gap was `252.1775 ms`; post-loop drain was
+  `28.5107 ms`. These pass the locked `409.6/4096/300/500 ms` ceilings.
+  LOD0/Lod1/LOD2 residents were `710/4096/4096`; loaded chunks were `729`;
+  every regular and transition pending count was zero. Transitions were
+  desired/ready/drawable/pending `480/480/187/0` with stale, fine-face,
+  coarse-face, lateral, and invalid-table counts all zero.
+- Clean production work retained `14` arenas, `0` pool allocations, `52277`
+  pool reuses, `3271565` unique vertices, `6085714` triangles, and `18257142`
+  indices. Used vertex/index bytes were `78517560/73028568`; committed bytes were
+  `469762048/234881024`. Geometry readbacks and ordinary render SDF evaluations
+  were `0/0`. Process memory started/ended/peaked at
+  `3677560832/3719077888/3719438336` bytes, a `41517056`-byte growth below the
+  accepted candidate-C growth. GPU memory started/ended/peaked at
+  `1940193196/1990524844/1990524844` bytes, exactly matching the accepted final
+  GPU allocation.
+- LOD0 topology/position digests were
+  `60C89421FF1B19BD/7E9C783F3C60468C`; LOD1 were
+  `97D4F8ABEC98BA72/A580C20007E621C3`; LOD2 were
+  `081C4C044EB32D11/60AD76F21522FDB4`; each exactly matched the accepted
+  candidate-C baseline. Transition topology remained
+  `CE624B2A1C469A41`. Transition position became
+  `5A444911199CC773` instead of the prior synthetic
+  `68846A85BEF09A0D`: this is the expected raw primary-position digest after
+  removing the coarse-mask value that had been mixed into the old diagnostic;
+  no transition position changed at emission. The run completed with no project
+  error or exception entries.
+- Final static validation on the same source used
+  `dotnet build Code/voxels3.csproj --no-restore` and
+  `dotnet build Editor/voxels3.editor.csproj --no-restore`; both exited `0` with
+  `0` warnings and `0` errors. `git diff --check` exited `0` with no whitespace
+  errors. The live editor then reported `IsCompiling=false`,
+  `LastCompileSucceeded=true`, `LastCompileErrors=0`, and no error-level console
+  entries before play mode was stopped.
+- Decision: **pass**. The current LOD seams and earlier one-to-two-frame terrain
+  deformation are removed by one canonical primary-position transition system.
+  The fixed procedural frequency was unchanged and all three level digests
+  repeated, excluding generator sampling as the cause. Visual, audit, clean-start,
+  performance, memory, queue, determinism, and correctness gates all pass.

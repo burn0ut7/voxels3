@@ -45,40 +45,31 @@ whole-region containment test. At the production dimensions this preserves the
 existing 4096-region LOD1 cache and adds a 4096-region LOD2 cache with an exact
 8x8x8 hole: 3584 LOD2 regions are active, with no cross-level overlap or gap.
 
-`VoxelManager` computes both regular boxes, both boundaries, and every coarse-region
-transition mask in one placement update. Each transition identity contains its
-coarse level, coarse coordinate, and face. The same identity, descriptor, queue,
-scratch pipeline, resident cache, allocator, visibility path, and draw path serve
-LOD0-to-LOD1 and LOD1-to-LOD2. Near transitions dequeue before outer transitions,
-but they are priority classes inside one scheduler rather than separate meshers.
+`VoxelManager` computes both regular boxes and both transition boundaries in one
+placement update. Each transition identity
+contains its coarse level, coarse coordinate, and face. The same identity,
+descriptor, queue, scratch pipeline, resident cache, allocator, visibility path,
+and draw path serve LOD0-to-LOD1 and LOD1-to-LOD2. Near transitions dequeue
+before outer transitions, but they are priority classes inside one scheduler
+rather than separate meshers.
 
-Regular meshes keep their primary GPU geometry. A per-resident render
-descriptor supplies origin, extent, cell size, and a six-bit active-transition
-mask to the terrain vertex shader. Each emitted 24-byte vertex stores a finite,
-bit-exact signature, its stable arena-record slot, and a two-bit
-allocation-generation token in `Normal.x`; `Normal.yz` contain the octahedrally
-encoded unit normal. Indirect instance state is not a second identity source.
-The shader validates the signature and record-buffer capacity, addresses the
-descriptor from that persistent vertex identity, and verifies the generation
-token and descriptor extent before deriving
-Lengyel's
-tangent-plane-projected secondary position only when the vertex's boundary cell
-touches an active face and every block face containing the vertex is active.
-The per-axis displacement is clamped to one quarter of the owning cell size, so
-a stale or mismatched descriptor cannot create cross-world geometry. Changing
-placement therefore changes a small descriptor, not the regular mesh.
-Half-resolution transition vertices use the same rule and their owning coarse
-region's mask; full-resolution transition vertices remain at their primary
-position. Transition candidates bake that final position because their identity
-already includes the coarse mask and stale candidates are rejected.
+Regular and transition compute emit their final table-derived primary positions.
+The terrain vertex shader only applies the engine's high-precision world offset
+and decodes the emitted normal; it performs no LOD-dependent position change.
+Each emitted 24-byte vertex stores a finite, bit-exact signature, its stable
+arena-record slot, and a two-bit allocation-generation token in `Normal.x` for
+explicit geometry audits; `Normal.yz` contain the octahedrally encoded unit
+normal. Visibility therefore owns only conservative bounds and indirect draw
+arguments. There are no boundary masks, render-space boundary descriptors,
+secondary-position eligibility bits, or baked secondary-position paths.
 
 The authoritative input is still the immutable procedural SDF descriptor plus
-the manager-owned placement. Mutable placement, transition masks, scheduling,
-and publication are owned by `VoxelManager` and `GpuVoxelMesher`; shader buffers
-and meshes remain disposable derivatives. GPU work uses the existing render-tick
-rendezvous. CPU work only diffs integer identities, uploads record descriptors,
-and consumes bounded count metadata. Every world position, mask decision, digest,
-and transition request is deterministic from the viewer anchor, source revision,
+the manager-owned placement. Mutable placement, scheduling, and publication are
+owned by `VoxelManager` and `GpuVoxelMesher`; shader buffers and meshes remain
+disposable derivatives. GPU work uses the existing render-tick rendezvous. CPU
+work only diffs integer identities, uploads visibility and indirect-draw data,
+and consumes bounded count metadata. Every world position, digest, and
+transition request is deterministic from the viewer anchor, source revision,
 and terrain settings.
 
 The rejected 2026-08-31 proof remains relevant evidence. It added regular
@@ -104,8 +95,8 @@ For each coarse region on a hole face, the manager derives a separate
 `(CoarseLevel, CoarseCoordinate, Face)` identity. The face direction points from
 the owning coarse region toward the hole. The inner boundary owns 96 identities;
 the outer boundary owns 384. The combined 480-key set is diffed by the one
-placement update, so retained faces keep their generation and allocation unless
-their owning coarse-region mask changes.
+placement update. Retained faces keep their generation and allocation while
+moving anchors replace only the identities that entered or left the boundary.
 
 A transition is a face-local Transvoxel volume-cell mesh, not a heightfield trim
 or a partial coarse block. Its `32x32` transition cells sample a compact
@@ -119,16 +110,27 @@ triangulations produce ordinary indexed triangle lists. Fine-layer intersections
 use the selected fine-level interpolation and gradients; coarse-layer
 intersections use the selected coarse-level interpolation and gradients.
 
-Production keeps table-derived primary regular geometry and applies secondary
-positions for coarse regular boundaries from the manager-owned masks at draw
-time. That closes anchor-moving seams without regenerating regular meshes. Each
-transition request carries its owning coarse-region mask; emission deforms only
-half-resolution-side vertices and leaves full-resolution-side vertices at their
-primary position.
-The rejected earlier baked-regular experiment remains relevant evidence: it
-regenerated mask-changing fine regions and produced holes, pinched fans, and
-warped sheets. Its mesh-rebuild ownership and position selection are not present
-in the canonical descriptor-driven path.
+Production keeps table-derived primary regular and transition geometry as the
+sole final position path. Transition cases set bits for negative-density solid
+samples, while the imported Transvoxel class inversion flag assumes the opposite
+inside sign. The transition kernel therefore inverts that flag when ordering each
+triangle, producing the engine-facing winding required by the material's back-face
+culling. Winding is validated directly from both sides of each fixed boundary;
+the face-plane transition triangles intentionally do not share the 3D gradient
+normal of the surrounding terrain, so those vectors are not a valid winding
+oracle.
+
+Git history records two rejected alternatives. The baked fine-region experiment
+regenerated mask-changing meshes and produced holes, pinched fans, and warped
+sheets. The later coarse-side experiment displaced coarse regular and
+half-resolution transition vertices by the coarse cell size; fixed-camera
+inspection removed its largest strips but still exposed open boundary gaps. Both
+introduced position ownership outside the table-derived topology. A subsequent
+fine-side render-space experiment followed the documented Transvoxel
+full-resolution ownership but still opened the LOD1-to-LOD2 boundary under the
+current face-local zero-width construction. All three deformation paths, their
+mesh-rebuild masks, and their render descriptors are absent from the canonical
+primary-position design.
 
 This still follows the official Transvoxel classification and topology tables.
 The CPU owns clipbox placement, work identity, bounded count readback, and
@@ -218,8 +220,12 @@ The scheduler rendezvous retains `SceneCustomObject`'s native infinite bounds.
 Giving the scheduler a merely large finite box makes it eligible for per-view
 culling and can stop GPU work when a detached editor camera moves beyond that
 box. A transition-based health report emits one error if pending regular or
-transition work exists without a GPU render tick for `500 ms`, followed by one
-recovery record when ticks resume.
+transition work entered the current manager update without a GPU render tick for
+`500 ms`, followed by one recovery record when ticks resume. Health is sampled
+before current command-list work so a slow commit cannot mislabel its own elapsed
+time as a missing render tick. A separate bounded warning records any command-list
+commit over `500 ms` with its duration, arena count, visibility capacity, update
+epoch, and render sequence.
 
 Detached editor views depend on the camera component belonging to the live game
 scene: the engine copies the main camera's post-processing and command-list

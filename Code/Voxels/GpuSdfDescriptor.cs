@@ -53,5 +53,4 @@ internal readonly record struct GpuTransitionDescriptor(
 	float CoarseCellSize,
 	ProceduralTerrainSettings TerrainSettings,
 	int GeneratorVersion,
-	int SourceRevision,
-	uint CoarseMask );
+	int SourceRevision );

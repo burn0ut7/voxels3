@@ -49,7 +49,7 @@ internal struct GpuTerrainAllocationDescriptor
 	public Vector4 Reserved1;
 }
 
-[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 112 )]
+[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 96 )]
 internal struct GpuTransitionRequest
 {
 	public Vector4 OriginAndFineCellSize;
@@ -59,7 +59,6 @@ internal struct GpuTransitionRequest
 	public Vector4 NormalAndFace;
 	public uint Generation;
 	public uint RequestIndex;
-	public Vector4 CoarseOriginAndMask;
 	public uint Reserved0;
 	public uint Reserved1;
 }

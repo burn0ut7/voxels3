@@ -5,7 +5,7 @@ MODES
 
 FEATURES
 {
-	// One level-aware transition kernel owns topology, bounded seam deformation, bit-exact record identity, and audits.
+	// One level-aware transition kernel emits canonical cull-compatible primary topology for both LOD boundaries.
 }
 
 COMMON

@@ -25,6 +25,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private const int DefaultMeshAuditRegionsPerLevel = 8;
 	private const double Lod2MaximumServiceDelayMilliseconds = 250.0;
 	private const double GpuSchedulerStallThresholdMilliseconds = 500.0;
+	private const double SlowDrawCommandCommitThresholdMilliseconds = 500.0;
 
 	private readonly Scene _scene;
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
@@ -39,7 +40,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private ScratchLane[] _scratchLanes;
 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
 	private readonly HashSet<GpuMeshRegionKey> _renderActive = new();
-	private readonly Dictionary<GpuMeshRegionKey, uint> _transitionMasks = new();
 	private readonly HashSet<CameraComponent> _currentRenderCameras = new();
 	private readonly HashSet<CameraComponent> _leavingRenderCameras = new();
 	private readonly Dictionary<CameraComponent, RenderCameraState> _renderCameraStates = new();
@@ -69,7 +69,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private int _lod2ResidentCount;
 	private uint _nextGeneration;
 	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
-	private Vector4[] _terrainRecordData = Array.Empty<Vector4>();
 	private GpuBuffer.IndirectDrawIndexedArguments[] _sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
 	private bool _visibilityMeasurementActive;
 	private bool _visibilitySettledCaptureActive;
@@ -103,6 +102,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private long _drawCommandResetCount;
 	private long _visibilityDescriptorUploadCount;
 	private int _drawCommandDiagnosticReportCount;
+	private int _slowDrawCommandCommitReportCount;
 	private int _cameraBindingDiagnosticCount;
 	private long _drawCommitStopwatchTicks;
 	private int _drawCommitRebuildCount;
@@ -254,7 +254,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public string Lod2PositionDigest => _lod2PositionDigest.ToString( "X16" );
 	public long RenderSequence => System.Threading.Interlocked.Read( ref _renderSequence );
 	public long LogicalVisibilityBytes => _visibilityCapacity == 0 ? 0 :
-		(long)_visibilityCapacity * (sizeof( float ) * 16 + IndirectArgumentStride * 2) + sizeof( uint ) * 31;
+		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) + sizeof( uint ) * 31;
 
 	public GpuVoxelMesher( Scene scene, int cellsPerAxis )
 	{
@@ -370,17 +370,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionPending[descriptor.Key] = pending;
 		_transitionDispatchQueue.Enqueue( pending );
 		_transitionScheduledCount++;
-	}
-
-	public void SetTransitionMask( GpuMeshRegionKey key, uint mask )
-	{
-		_transitionMasks.TryGetValue( key, out var previousMask );
-		if ( previousMask == mask ) return;
-		if ( mask == 0 ) _transitionMasks.Remove( key );
-		else _transitionMasks[key] = mask;
-		if ( !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
-		lock ( _visibilityDescriptorLock ) SetTerrainRecordDescriptorLocked( resident );
-		MarkVisibilityDescriptorsDirty();
 	}
 
 	public void SetTransitionActive( GpuTransitionKey key, bool active )
@@ -511,7 +500,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					resident.Counts.ActiveCells,
 					resident.ScheduleToPublicationMilliseconds,
 					resident.Counts.TopologyDigest,
-					CombinedTransitionPositionDigest( resident.Descriptor, resident.Counts.PositionDigest ),
+					resident.Counts.PositionDigest,
 					resident.Counts.FineFaceMismatchCount,
 					resident.Counts.CoarseFaceMismatchCount,
 					resident.Counts.MinimumUDigest,
@@ -817,9 +806,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			lock ( _visibilityDescriptorLock )
 			{
 				var expected = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
-				var expectedRecords = new Vector4[_visibilityCapacity * 2];
 				_sourceArgumentData.CopyTo( expected, 0 );
-				_terrainRecordData.CopyTo( expectedRecords, 0 );
 				foreach ( var state in _renderCameraStates.Values )
 				{
 					var cameraIndex = cameraCount++;
@@ -836,20 +823,16 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 					var source = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
 					var visible = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
-					var records = new Vector4[_visibilityCapacity * 2];
 					visibility.SourceArguments.GetData<GpuBuffer.IndirectDrawIndexedArguments>(
 						source.AsSpan(), 0, _visibilityCapacity );
 					visibility.VisibleArguments.GetData<GpuBuffer.IndirectDrawIndexedArguments>(
 						visible.AsSpan(), 0, _visibilityCapacity );
-					visibility.Records.GetData<Vector4>( records.AsSpan(), 0, records.Length );
-					_geometryReadbackCount += 3;
-					readbacks += 3;
-					readbackBytes += (long)_visibilityCapacity *
-						(IndirectArgumentStride * 2 + sizeof( float ) * 8);
+					_geometryReadbackCount += 2;
+					readbacks += 2;
+					readbackBytes += (long)_visibilityCapacity * IndirectArgumentStride * 2;
 
 					var sourceMismatches = 0;
 					var visibleMismatches = 0;
-					var recordMismatches = 0;
 					var sourceDraws = 0;
 					var visibleDraws = 0;
 					for ( var slot = 0; slot < _visibilityCapacity; slot++ )
@@ -857,7 +840,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 						var expectedArgument = expected[slot];
 						var sourceArgument = source[slot];
 						var visibleArgument = visible[slot];
-						var recordIndex = slot * 2;
 						if ( sourceArgument.IndexCount > 0 && sourceArgument.InstanceCount > 0 ) sourceDraws++;
 						if ( visibleArgument.IndexCount > 0 && visibleArgument.InstanceCount > 0 ) visibleDraws++;
 
@@ -872,20 +854,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 									$"actual=\"{FormatDrawArguments( sourceArgument )}\"" );
 							}
 						}
-
-						if ( !TerrainRecordEqual( records[recordIndex], expectedRecords[recordIndex] ) ||
-							!TerrainRecordEqual( records[recordIndex + 1], expectedRecords[recordIndex + 1] ) )
-						{
-							recordMismatches++;
-							if ( reportedFailures++ < 32 )
-							{
-								Log.Warning(
-									$"[VoxelWorld] mesh.audit.record_descriptor_mismatch id={auditId} camera={cameraIndex} " +
-									$"slot={slot} expected=\"{FormatTerrainRecord( expectedRecords[recordIndex], expectedRecords[recordIndex + 1] )}\" " +
-									$"actual=\"{FormatTerrainRecord( records[recordIndex], records[recordIndex + 1] )}\"" );
-							}
-						}
-
 						var visibleLayoutMatches = visibleArgument.InstanceCount == 0 ||
 							(visibleArgument.InstanceCount == 1 && expectedArgument.IndexCount > 0 &&
 								visibleArgument.IndexCount == expectedArgument.IndexCount &&
@@ -903,16 +871,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 								$"actual=\"{FormatDrawArguments( visibleArgument )}\"" );
 						}
 					}
-
-					var cameraFailures = sourceMismatches + visibleMismatches + recordMismatches;
+					var cameraFailures = sourceMismatches + visibleMismatches;
 					failures += cameraFailures;
 					Log.Info(
 						$"[VoxelWorld] mesh.audit.draw_state id={auditId} " +
 						$"status={(cameraFailures == 0 ? "pass" : "fail")} camera={cameraIndex} " +
 						$"main={state.Camera.IsMainCamera} capacity={_visibilityCapacity} " +
 						$"sourceDraws={sourceDraws} visibleDraws={visibleDraws} " +
-						$"sourceMismatches={sourceMismatches} visibleMismatches={visibleMismatches} " +
-						$"recordMismatches={recordMismatches}" );
+						$"sourceMismatches={sourceMismatches} visibleMismatches={visibleMismatches}" );
 				}
 			}
 		}
@@ -941,13 +907,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 			left.BaseVertex == right.BaseVertex &&
 			left.FirstInstance == right.FirstInstance;
 	}
-
-	private static bool TerrainRecordEqual( Vector4 left, Vector4 right ) =>
-		left.x == right.x && left.y == right.y && left.z == right.z && left.w == right.w;
-
-	private static string FormatTerrainRecord( Vector4 first, Vector4 second ) =>
-		$"first=[{first.x},{first.y},{first.z},{first.w}]," +
-		$"second=[{second.x},{second.y},{second.z},{second.w}]";
 
 	private static string FormatDrawArguments( GpuBuffer.IndirectDrawIndexedArguments arguments )
 	{
@@ -1002,9 +961,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_maximumDispatchesRequested = Math.Clamp( maximumDispatches, 0, MaximumDispatchesPerUpdate );
 		System.Threading.Interlocked.Exchange( ref _updateEpoch, updateEpoch );
 		var processed = System.Threading.Interlocked.Exchange( ref _processedRenderDispatches, 0 );
+		ReportGpuSchedulerHealth();
 		CommitDrawCommands();
 		TryIssueMeshAuditReadbacks();
-		ReportGpuSchedulerHealth();
 		ReportSuppressedRenderCallbacks();
 		return processed;
 	}
@@ -1078,10 +1037,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void CommitDrawCommands()
 	{
+		var rebuilds = 0;
+		var milliseconds = 0f;
 		lock ( _renderCameraLock )
 		{
-			foreach ( var state in _renderCameraStates.Values ) CommitDrawCommandsLocked( state );
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				var result = CommitDrawCommandsLocked( state );
+				if ( !result.Rebuilt ) continue;
+				rebuilds++;
+				milliseconds += result.Milliseconds;
+			}
 		}
+		if ( milliseconds < SlowDrawCommandCommitThresholdMilliseconds ||
+			_slowDrawCommandCommitReportCount++ >= 8 ) return;
+		Log.Warning(
+			$"[VoxelWorld] gpu.render.command_commit_slow elapsedMs={milliseconds:0.###} " +
+			$"rebuilds={rebuilds} arenas={_arenas.Count} visibilityCapacity={_visibilityCapacity} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
 	}
 
 	private void EndGpuRenderTick()
@@ -1299,9 +1273,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 			case GpuTransitionFace.NegativeZ: maximum.z = minimum.z; break;
 			case GpuTransitionFace.PositiveZ: minimum.z = maximum.z; break;
 		}
-		var secondaryEnvelope = new Vector3( descriptor.CoarseCellSize * 0.25f * MathF.Sqrt( 3f ) );
-		minimum -= secondaryEnvelope;
-		maximum += secondaryEnvelope;
 		return new MeshAuditTarget(
 			$"Transition:{descriptor.Key.CoarseLevel}:{descriptor.Key.Face}:C[{descriptor.Key.CoarseCoordinate.x}," +
 				$"{descriptor.Key.CoarseCoordinate.y},{descriptor.Key.CoarseCoordinate.z}]",
@@ -1743,8 +1714,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			BasisVAndCellsPerAxis = new Vector4( basisV, descriptor.CellsPerAxis ),
 			NormalAndFace = new Vector4( normal, (int)descriptor.Key.Face ),
 			Generation = inFlight.Generation,
-			RequestIndex = (uint)requestIndex,
-			CoarseOriginAndMask = new Vector4( regionOrigin, descriptor.CoarseMask )
+			RequestIndex = (uint)requestIndex
 		};
 	}
 
@@ -2026,8 +1996,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					SetTransitionVisibilityActive( resident, true );
 				}
 				_transitionTopologyDigest ^= TransitionCoordinateDigest( key, completed.Counts.TopologyDigest );
-				_transitionPositionDigest ^= TransitionCoordinateDigest( key,
-					CombinedTransitionPositionDigest( completed.Descriptor, completed.Counts.PositionDigest ) );
+				_transitionPositionDigest ^= TransitionCoordinateDigest( key, completed.Counts.PositionDigest );
 				_transitionFineFaceMismatchCount += completed.Counts.FineFaceMismatchCount;
 				_transitionCoarseFaceMismatchCount += completed.Counts.CoarseFaceMismatchCount;
 				_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
@@ -2056,9 +2025,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		value *= 0x94D049BB133111EBul;
 		return value ^ (value >> 31);
 	}
-
-	private static uint CombinedTransitionPositionDigest( GpuTransitionDescriptor descriptor, uint primaryDigest ) =>
-		primaryDigest ^ descriptor.CoarseMask * 0x9E3779B1u;
 
 	private void RecordTransitionLatency( float milliseconds )
 	{
@@ -2166,8 +2132,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionTopologyDigest ^= TransitionCoordinateDigest(
 			resident.Descriptor.Key, resident.Counts.TopologyDigest );
 		_transitionPositionDigest ^= TransitionCoordinateDigest(
-			resident.Descriptor.Key,
-			CombinedTransitionPositionDigest( resident.Descriptor, resident.Counts.PositionDigest ) );
+			resident.Descriptor.Key, resident.Counts.PositionDigest );
 		_transitionFineFaceMismatchCount -= resident.Counts.FineFaceMismatchCount;
 		_transitionCoarseFaceMismatchCount -= resident.Counts.CoarseFaceMismatchCount;
 		_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( resident.Counts );
@@ -2382,8 +2347,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( state.Visibility is not null ) state.RetiredVisibility.Add( state.Visibility );
 		var bounds = new GpuBuffer<Vector4>( _visibilityCapacity * 2,
 			GpuBuffer.UsageFlags.Structured, "Voxel View Visibility Bounds" );
-		var records = new GpuBuffer<Vector4>( _visibilityCapacity * 2,
-			GpuBuffer.UsageFlags.Structured, "Voxel Terrain Record Descriptors" );
 		var source = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
 			"Voxel View Source Indexed Arguments" );
@@ -2392,7 +2355,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			"Voxel View Visible Indexed Arguments" );
 		var frame = new GpuBuffer<uint>( 11, GpuBuffer.UsageFlags.Structured,
 			"Voxel View Visibility Frame Counters" );
-		state.Visibility = new VisibilityBuffers( bounds, records, source, visible, frame );
+		state.Visibility = new VisibilityBuffers( bounds, source, visible, frame );
 		state.VisibilityCapacity = _visibilityCapacity;
 		state.DescriptorsDirty = true;
 		state.CommandsDirty = true;
@@ -2429,7 +2392,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( _visibilityCapacity > 0 )
 		{
-			commands.Attributes.Set( "TerrainRecordDescriptors", visibility.Records );
 			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
 			commands.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
 			commands.Attributes.Set( "VisibleIndirectArguments", visibility.VisibleArguments );
@@ -2439,7 +2401,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 			commands.Attributes.Set( "VisibilityPass", 0 );
 			commands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
 			commands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
-			commands.ResourceBarrierTransition( visibility.Records, ResourceState.GenericRead );
 			commands.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
 			commands.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
 			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.UnorderedAccess );
@@ -2602,14 +2563,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var newCapacity = Math.Max( RegionsPerSlab, _visibilityCapacity );
 		while ( newCapacity < requiredCapacity ) newCapacity = checked( newCapacity * 2 );
 		var oldBounds = _visibilityBoundsData;
-		var oldRecords = _terrainRecordData;
 		var oldArguments = _sourceArgumentData;
 		_visibilityCapacity = newCapacity;
 		_visibilityBoundsData = new Vector4[newCapacity * 2];
-		_terrainRecordData = new Vector4[newCapacity * 2];
 		_sourceArgumentData = new GpuBuffer.IndirectDrawIndexedArguments[newCapacity];
 		oldBounds.CopyTo( _visibilityBoundsData, 0 );
-		oldRecords.CopyTo( _terrainRecordData, 0 );
 		oldArguments.CopyTo( _sourceArgumentData, 0 );
 	}
 
@@ -2632,7 +2590,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var padding = new Vector3( descriptor.CellSize );
 		var slot = resident.Handle.GlobalSlot;
 		var index = slot * 2;
-		SetTerrainRecordDescriptorLocked( resident );
 		var activeResidency = resident.Residency switch
 		{
 			GpuMeshResidency.Warm => 2f,
@@ -2653,22 +2610,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 				BaseVertex = resident.Handle.Vertices.Offset
 			}
 			: default;
-	}
-
-	private void SetTerrainRecordDescriptorLocked( ResidentMesh resident )
-	{
-		var descriptor = resident.Descriptor;
-		var size = descriptor.CellsPerAxis * descriptor.CellSize;
-		var origin = new Vector3(
-			descriptor.ChunkCoordinate.x * size,
-			descriptor.ChunkCoordinate.y * size,
-			descriptor.ChunkCoordinate.z * size );
-		_transitionMasks.TryGetValue( descriptor.Key, out var mask );
-		var index = resident.Handle.GlobalSlot * 2;
-		_terrainRecordData[index] = new Vector4( origin, descriptor.CellSize );
-		var state = (mask & 63u) |
-			((resident.Handle.Generation & TerrainRecordGenerationTokenMask) << 6);
-		_terrainRecordData[index + 1] = new Vector4( size, size, size, state );
 	}
 
 	private void SetTransitionVisibilityActive( ResidentTransition resident, bool active )
@@ -2712,9 +2653,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		var slot = resident.Handle.GlobalSlot;
 		var index = slot * 2;
-		_terrainRecordData[index] = new Vector4( minimum, descriptor.FineCellSize );
-		var state = (resident.Handle.Generation & TerrainRecordGenerationTokenMask) << 6;
-		_terrainRecordData[index + 1] = new Vector4( size, size, size, state );
 		_visibilityBoundsData[index] = new Vector4( minimum - new Vector3( padding ), active ? 4f : 0f );
 		_visibilityBoundsData[index + 1] = new Vector4(
 			maximum + new Vector3( padding ), active ? resident.Counts.ActiveCells : 0 );
@@ -2735,7 +2673,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			if ( !state.DescriptorsDirty || state.Visibility is null ) return;
 			state.Visibility.Bounds.SetData( _visibilityBoundsData );
-			state.Visibility.Records.SetData( _terrainRecordData );
 			state.Visibility.SourceArguments.SetData( _sourceArgumentData );
 			// The visibility compute pass exclusively owns VisibleArguments once the camera list is attached.
 			_visibilityDescriptorUploadCount++;
@@ -2767,7 +2704,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var resident in _resident.Values ) ReleaseResident( resident );
 		_resident.Clear();
 		_renderActive.Clear();
-		_transitionMasks.Clear();
 		_transitionPending.Clear();
 		_transitionDispatchQueue.Clear();
 		_transitionDesiredDescriptors.Clear();
@@ -3354,19 +3290,18 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private sealed class VisibilityBuffers : IDisposable
 	{
 		public GpuBuffer<Vector4> Bounds { get; }
-		public GpuBuffer<Vector4> Records { get; }
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> SourceArguments { get; }
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> VisibleArguments { get; }
 		public GpuBuffer<uint> FrameCounters { get; }
-		public VisibilityBuffers( GpuBuffer<Vector4> bounds, GpuBuffer<Vector4> records,
+		public VisibilityBuffers( GpuBuffer<Vector4> bounds,
 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source,
 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> visible, GpuBuffer<uint> frame )
 		{
-			Bounds = bounds; Records = records; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
+			Bounds = bounds; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
 		}
 		public void Dispose()
 		{
-			Bounds.Dispose(); Records.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
+			Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
 		}
 	}
 

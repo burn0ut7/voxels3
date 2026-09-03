@@ -7,7 +7,6 @@ struct TransitionRequest
 	float4 NormalAndFace;
 	uint Generation;
 	uint RequestIndex;
-	float4 CoarseOriginAndMask;
 	uint Reserved0;
 	uint Reserved1;
 };
@@ -286,66 +285,6 @@ float2 TransitionEncodeTerrainNormal( float3 normal )
 		normal.xy = (1.0 - abs( normal.yx )) * signValue;
 	}
 	return normal.xy;
-}
-
-float TransitionBoundaryDelta( float position, float extent, float cellSize, bool minimumFace )
-{
-	float width = cellSize * 0.25;
-	if ( minimumFace && position < cellSize ) return saturate( 1.0 - position / cellSize ) * width;
-	if ( !minimumFace && position > extent - cellSize )
-		return -saturate( (position - (extent - cellSize)) / cellSize ) * width;
-	return 0.0;
-}
-
-uint TransitionBoundaryCellMask( float3 localPosition, float extent, float cellSize )
-{
-	uint mask = 0u;
-	if ( localPosition.x < cellSize ) mask |= 1u;
-	if ( localPosition.x > extent - cellSize ) mask |= 2u;
-	if ( localPosition.y < cellSize ) mask |= 4u;
-	if ( localPosition.y > extent - cellSize ) mask |= 8u;
-	if ( localPosition.z < cellSize ) mask |= 16u;
-	if ( localPosition.z > extent - cellSize ) mask |= 32u;
-	return mask;
-}
-
-uint TransitionBoundaryVertexMask( float3 localPosition, float extent, float cellSize )
-{
-	float epsilon = max( cellSize * 0.00001, 0.0001 );
-	uint mask = 0u;
-	if ( abs( localPosition.x ) <= epsilon ) mask |= 1u;
-	if ( abs( localPosition.x - extent ) <= epsilon ) mask |= 2u;
-	if ( abs( localPosition.y ) <= epsilon ) mask |= 4u;
-	if ( abs( localPosition.y - extent ) <= epsilon ) mask |= 8u;
-	if ( abs( localPosition.z ) <= epsilon ) mask |= 16u;
-	if ( abs( localPosition.z - extent ) <= epsilon ) mask |= 32u;
-	return mask;
-}
-
-float3 TransitionSecondaryPosition( TransitionRequest request, float3 primary, float3 normal )
-{
-	float coarseCellSize = request.BasisUAndCoarseCellSize.w;
-	float coarseRegionSize = request.BasisVAndCellsPerAxis.w * coarseCellSize;
-	uint transitionMask = (uint)round( request.CoarseOriginAndMask.w ) & 63u;
-	if ( transitionMask == 0u ) return primary;
-
-	float3 localPosition = primary - request.CoarseOriginAndMask.xyz;
-	float extentTolerance = max( coarseCellSize * 0.001, 0.001 );
-	if ( any( localPosition < -extentTolerance ) ||
-		any( localPosition > coarseRegionSize + extentTolerance ) ) return primary;
-	uint cellBorderMask = TransitionBoundaryCellMask( localPosition, coarseRegionSize, coarseCellSize );
-	uint vertexBorderMask = TransitionBoundaryVertexMask( localPosition, coarseRegionSize, coarseCellSize );
-	if ( (transitionMask & cellBorderMask) == 0u ||
-		(vertexBorderMask & (~transitionMask & 63u)) != 0u ) return primary;
-
-	float3 delta = float3(
-		(transitionMask & 1u) != 0u ? TransitionBoundaryDelta( localPosition.x, coarseRegionSize, coarseCellSize, true ) :
-			((transitionMask & 2u) != 0u ? TransitionBoundaryDelta( localPosition.x, coarseRegionSize, coarseCellSize, false ) : 0.0),
-		(transitionMask & 4u) != 0u ? TransitionBoundaryDelta( localPosition.y, coarseRegionSize, coarseCellSize, true ) :
-			((transitionMask & 8u) != 0u ? TransitionBoundaryDelta( localPosition.y, coarseRegionSize, coarseCellSize, false ) : 0.0),
-		(transitionMask & 16u) != 0u ? TransitionBoundaryDelta( localPosition.z, coarseRegionSize, coarseCellSize, true ) :
-			((transitionMask & 32u) != 0u ? TransitionBoundaryDelta( localPosition.z, coarseRegionSize, coarseCellSize, false ) : 0.0) );
-	return primary + delta - normal * dot( normal, delta );
 }
 
 void TransitionExclusiveScan( uint lane, uint value )
@@ -672,7 +611,9 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			return;
 		}
 		uint topology = (cellClass & 0x7f) * 36;
-		bool flip = (cellClass & 0x80) != 0;
+		// The Transvoxel table flag is defined for the opposite inside sign.
+		// Voxels3 classifies negative density as solid, so invert it for cull-compatible winding.
+		bool flip = (cellClass & 0x80) == 0;
 		for ( uint triangle = 0; triangle < triangleCount; triangle++ )
 		{
 			uint table = topology + triangle * 3;
@@ -721,10 +662,6 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			TransitionGradient( block, int2( first ), gradientStep, request ),
 			TransitionGradient( block, int2( second ), gradientStep, request ),
 			interpolation ) );
-		if ( slot >= 8320 )
-		{
-			position = TransitionSecondaryPosition( request, position, normal );
-		}
 		float2 encodedNormal = TransitionEncodeTerrainNormal( normal );
 		uint recordId = allocation.Reserved & 0x001fffffu;
 		uint generationToken = (allocation.Reserved >> 30u) & 3u;

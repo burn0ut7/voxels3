@@ -81,8 +81,6 @@ public sealed class VoxelManager : Component
 	private readonly List<GpuTransitionKey> _transitionEnteringBuffer = new();
 	private readonly List<GpuTransitionKey> _transitionLeavingBuffer = new();
 	private readonly List<GpuTransitionKey> _transitionRetainedBuffer = new();
-	private readonly Dictionary<GpuMeshRegionKey, uint> _transitionMasks = new();
-	private readonly Dictionary<GpuMeshRegionKey, uint> _nextTransitionMasks = new();
 	private readonly Lod2ClipboxState _lod2Clipbox = new();
 	private readonly HashSet<Vector3Int> _nextLod2Cache = new();
 	private readonly HashSet<Vector3Int> _nextLod2Active = new();
@@ -1942,8 +1940,6 @@ public sealed class VoxelManager : Component
 		_nextLod2Active.Clear();
 		_transitionDesired.Clear();
 		_nextTransitionDesired.Clear();
-		_transitionMasks.Clear();
-		_nextTransitionMasks.Clear();
 		_pendingChunks.Clear();
 		_completedChunks.Clear();
 		_pendingWarmChunks.Clear();
@@ -2420,23 +2416,6 @@ public sealed class VoxelManager : Component
 		_nextTransitionDesired.Clear();
 		AddTransitionFaces( _nextTransitionDesired, GpuMeshLevel.Lod1, holeMinimum, holeMaximum );
 		AddTransitionFaces( _nextTransitionDesired, GpuMeshLevel.Lod2, lod2HoleMinimum, lod2HoleMaximum );
-		_nextTransitionMasks.Clear();
-		foreach ( var key in _nextTransitionDesired )
-		{
-			AddBoundaryMask( _nextTransitionMasks,
-				new GpuMeshRegionKey( key.CoarseLevel, key.CoarseCoordinate ), key.Face );
-		}
-		foreach ( var pair in _transitionMasks )
-		{
-			if ( !_nextTransitionMasks.ContainsKey( pair.Key ) ) _gpuMesher.SetTransitionMask( pair.Key, 0 );
-		}
-		foreach ( var pair in _nextTransitionMasks )
-		{
-			if ( !_transitionMasks.TryGetValue( pair.Key, out var previous ) || previous != pair.Value )
-				_gpuMesher.SetTransitionMask( pair.Key, pair.Value );
-		}
-		_transitionMasks.Clear();
-		foreach ( var pair in _nextTransitionMasks ) _transitionMasks.Add( pair.Key, pair.Value );
 		_transitionEnteringBuffer.Clear();
 		_transitionLeavingBuffer.Clear();
 		foreach ( var key in _transitionDesired )
@@ -2469,8 +2448,6 @@ public sealed class VoxelManager : Component
 		foreach ( var key in _transitionEnteringBuffer )
 		{
 			_gpuMesher.SetTransitionActive( key, true );
-			var coarseKey = new GpuMeshRegionKey( key.CoarseLevel, key.CoarseCoordinate );
-			_nextTransitionMasks.TryGetValue( coarseKey, out var coarseMask );
 			_gpuMesher.ScheduleTransition(
 				new GpuTransitionDescriptor(
 					key,
@@ -2479,8 +2456,7 @@ public sealed class VoxelManager : Component
 					key.CoarseLevel == GpuMeshLevel.Lod1 ? Lod1CellSize : Lod2CellSize,
 					CurrentTerrainSettings,
 					ProceduralTerrainSdf.CurrentVersion,
-					_terrainContentRevision,
-					coarseMask ),
+					_terrainContentRevision ),
 				_playerFigureEightRouteDistance );
 		}
 		_transitionDesired.Clear();
@@ -2555,13 +2531,6 @@ public sealed class VoxelManager : Component
 			keys.Add( new GpuTransitionKey( coarseLevel,
 				new Vector3Int( x, y, maximum.z ), GpuTransitionFace.NegativeZ ) );
 		}
-	}
-
-	private static void AddBoundaryMask( Dictionary<GpuMeshRegionKey, uint> masks,
-		GpuMeshRegionKey key, GpuTransitionFace face )
-	{
-		masks.TryGetValue( key, out var mask );
-		masks[key] = mask | 1u << (int)face;
 	}
 
 	private static bool IsAdjacent( Vector3Int first, Vector3Int second ) =>
