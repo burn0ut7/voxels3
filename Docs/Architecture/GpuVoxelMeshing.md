@@ -13,9 +13,17 @@ and allocator redesign.
 
 Logical chunks are streaming, SDF-input, and revision units, not GPU allocation
 or draw-call units. Persistent geometry lives in shared arenas. Each arena owns
-a 32 MiB vertex buffer, a 16 MiB index buffer, and 256 indexed-indirect records.
+a 32 MiB vertex buffer, a 16 MiB index buffer, and 512 indexed-indirect records.
 The existing CPU range allocator owns exact contiguous ranges; released ranges
 coalesce and live ranges do not move.
+
+The record page is a project sizing choice rather than an engine limit. It was
+raised from 256 to 512 after atomic handoff measurements showed arenas exhausting
+record slots at only `16..36%` vertex and `30..72%` index utilization. The fixed
+vertex/index byte capacities, packed record identity, dynamic visibility capacity,
+and one indexed-indirect submission per active arena are unchanged. At the
+production resident count this retains the same 4096-slot visibility capacity
+while reducing geometry arenas and draw submissions.
 
 ## Ownership and Data Flow
 
@@ -88,23 +96,42 @@ and world bounds are half-open intervals. Enabling the existing `VerboseLogging`
 property emits the same snapshot only when a placement boundary changes; it does
 not add per-frame logging or a second placement model.
 
-### Streaming research direction (not implemented)
+### Atomic Clipbox Handoff
 
 The 2026-09-03 [GPU voxel terrain streaming research](../Research/GpuVoxelTerrainStreaming.md)
-records the intended replacement for whole-placement readiness. The desired
-clipbox and resident drawable placement should become distinct states inside the
-same manager and mesher. Coarse coverage remains drawable until a smaller
-dependency-complete refinement region, including its required transition, is
-resident and can be published atomically. Work remains coarse-to-fine and flows
-through one bounded deadline-aware scheduler.
+informed the implemented requested-versus-resident separation. `VoxelManager`
+owns one committed drawable placement, the latest target anchors, and at most one
+staged replacement. While the replacement is incomplete, the committed LOD0,
+LOD1, LOD2, and transition active sets remain unchanged and continue to cover the
+world. A newer viewer target is coalesced without cancelling the in-flight stage;
+after commit, the manager immediately stages the latest target if it moved again.
 
-That direction adapts requested-versus-resident hierarchy and incremental
-viewer-centered updates from production heightfield and streaming systems while
-retaining the fixed three-level volumetric SDF, Transvoxel topology, and single
-GPU mesher. A second fallback terrain renderer, CPU mesher, generalized LOD
-hierarchy, or independently mutable placement model remains rejected. The
-direction is not production truth until it passes the unchanged figure-eight
-correctness and performance gates.
+The staged placement uses the same mesher queues and resident caches as ordinary
+terrain. Its exact dependencies are newly required LOD0 coordinates, regular
+LOD1 and LOD2 descriptors, and transition descriptors. A conservative known-empty
+regular result is a resident descriptor with no arena allocation and therefore
+satisfies the same readiness contract. Readiness is reconsidered only when the
+mesher publishes a resident descriptor or the manager's prepared LOD0 set changes;
+settled frames do not rescan the staged sets. Once every dependency is resident,
+the manager changes all four active sets, releases leaving residents, and records
+the new anchors in one main-thread commit. Preparation records the exact entering,
+leaving, activation, and readiness deltas; commit touches only those deltas and
+swaps the already-built placement sets instead of scanning or copying the full
+clipboxes a second time. The initial bootstrap has no prior coverage to retain
+and therefore activates its first placement immediately while that placement
+fills through the same production queues.
+
+LOD1 and LOD2 preparation first applies a constant-time conservative vertical
+support bound owned by the canonical generator. Regions wholly above the maximum
+possible exterior surface are definitely air; regions wholly below both the
+minimum exterior surface and maximum cave depth are definitely solid. All
+uncertain regions remain potential and enter the GPU mesher. This broad phase
+does not sample, approximate, or duplicate the SDF and cannot reject a possible
+surface.
+
+This design retains the fixed three-level volumetric SDF, Transvoxel topology,
+and single GPU mesher. A second fallback terrain renderer, CPU mesher, generalized
+LOD hierarchy, or independently mutable placement model remains rejected.
 
 ## Fixed 2:1 Transitions
 
@@ -170,12 +197,14 @@ vertex and index stages in the same transition compute resource write the existi
 at s&box's 16-storage-buffer limit; valid dummy output descriptors remain bound
 during count stages and are replaced with arena buffers only for emission.
 
-Publication is face-local. A ready face becomes visible without waiting for the
-other 95 faces and never participates in clipbox settlement or regular-mesh
-publication. A dirty resident remains visible until its validated replacement
-publishes. Removed or superseded work releases candidates and cannot publish a
-stale callback; empty faces complete without arena ranges. Visibility uses a
-conservative one-fine-cell-expanded face slab through the existing GPU path.
+Mesher publication remains face-local: each completed face becomes an exact
+resident independently and does not wait for the other faces to finish. A face
+staged for a future clipbox remains inactive until the manager's whole-placement
+readiness gate commits that clipbox; a replacement of an already active identity
+retains the previous validated resident until its candidate publishes. Removed or
+superseded work releases candidates and cannot publish a stale callback; empty
+faces complete without arena ranges. Visibility uses a conservative
+one-fine-cell-expanded face slab through the existing GPU path.
 
 GPU diagnostics compare transition fine and coarse contour intersections against
 the corresponding regular-grid sign-changing edges. Each face also reports four
@@ -295,6 +324,12 @@ the previous revision remains visible until successful publication atomically
 changes that coordinate's resident record. Only then are old ranges released.
 Empty results follow the same revision lifecycle without consuming an arena.
 
+Coordinate-local publication is separate from manager-visible clipbox placement.
+Incoming residents may publish inactive in any completion order, but the committed
+LOD0, LOD1, LOD2, and transition active sets change only through the atomic
+whole-placement handoff described above. There is no partial active-set mutation
+and no second renderer masking an incomplete placement.
+
 Dimension or generator-configuration changes clear incompatible resident and
 in-flight derived state. Terrain authority remains the canonical procedural SDF
 and future edits invalidate only affected coordinate revisions.
@@ -332,9 +367,10 @@ persistent rendering. The moving window records:
   world units and 512-unit chunks;
 - frame, GPU, memory, arena, readback, visibility, and correctness metrics.
 
-After the moving loop, the player stops and the manager waits for the unchanged
-foreground queues and lanes to settle; LOD2 does not hold this boundary. After two further render-sequence advances it
-measures a fixed 10-second stationary window using the same production terrain.
+After the moving loop, the player stops and the manager waits for warm generation,
+all regular and transition queues, and any pending whole-placement handoff to
+settle. After two further render-sequence advances it measures a fixed 10-second
+stationary window using the same production terrain.
 Stationary FPS, CPU tails, GPU distribution, memory, visibility, and settled
 geometry are stored separately in the same result.
 

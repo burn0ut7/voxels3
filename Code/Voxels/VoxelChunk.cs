@@ -102,6 +102,19 @@ public sealed class VoxelChunk
 			terrainSettings );
 	}
 
+	public static ChunkDensityClassification ClassifyDensityRangeBroadPhase(
+		Vector3Int coordinate,
+		int cellsPerAxis,
+		float cellSize,
+		ProceduralTerrainSettings terrainSettings )
+	{
+		return ProceduralTerrainSdf.ClassifyDensityRangeBroadPhase(
+			coordinate,
+			cellsPerAxis,
+			cellSize,
+			terrainSettings );
+	}
+
 	public bool TryGetSample( Vector3Int localSample, out float density, out byte materialId )
 	{
 		if ( localSample.x < 0 || localSample.x >= SamplesPerAxis ||

@@ -39,7 +39,7 @@ persistence, and network replication remain later slices.
   plus 32-bit indices. Central-difference endpoint gradients use the same
   one-sample halo; density and classification scratch are discarded after emit.
 - Persistent geometry lives in shared arenas rather than chunk-owned resources.
-  Each arena supplies a 32 MiB vertex buffer, a 16 MiB index buffer, and 256
+  Each arena supplies a 32 MiB vertex buffer, a 16 MiB index buffer, and 512
   indexed-indirect records. Exact contiguous ranges are allocated only after a
   bounded count-metadata readback; released ranges coalesce, live ranges never
   move, and one indexed-indirect API submission draws each active arena.
@@ -49,6 +49,11 @@ persistence, and network replication remain later slices.
   Empty results carry the same revision lifecycle without consuming an arena.
   Cancellation, supersession, unload, and configuration reset release derived
   ranges; no density or geometry is read back and no geometry is replicated.
+- Coordinate-local resident publication does not partially change clipbox
+  coverage. `VoxelManager` retains the committed LOD0, LOD1, LOD2, and transition
+  active sets while their one staged replacement becomes resident through the
+  same mesher. It commits all active sets together only after exact readiness;
+  the initial bootstrap is the sole case with no previous coverage to retain.
 - Ordinary terrain drawing consumes only persistent position, normal, index,
   visibility, and indirect-argument buffers. It does not include or evaluate
   the canonical SDF. Future edits therefore invalidate affected region
@@ -133,6 +138,14 @@ prove a chunk solid or air; otherwise only the depth-banded cave region remains
 made background batches run for seconds without yielding. Non-finite input and
 remaining uncertainty also stay potential; no heightfield assumption can reject
 a cave.
+
+Clipbox preparation uses a cheaper conservative broad phase before GPU meshing.
+The canonical generator proves only the global vertical bands that are wholly
+above its maximum possible exterior surface or wholly below both its minimum
+surface and maximum cave depth. These regions publish exact known-empty resident
+descriptors without geometry; every region inside the possible surface/cave band
+remains `PotentiallySurfaceContaining` and follows the sole GPU meshing path. The
+broad phase and the full classifier share the same vertical-support proof.
 
 Rejected alternatives are an absolute world-Z cave band, domain warping,
 additional depth layers, explicit worm carvers, room graphs, fBm/octave
@@ -401,8 +414,10 @@ and occupancy; stage timing distributions; queue distributions; direct
 player-route render lag; post-loop drain time; and a separate fixed 10-second
 stationary frame/GPU/memory/visibility window after full settlement and two
 render-sequence advances. Schema version 15 adds the canonical LOD2 hole and
-outer-anchor fields and level-aware transition-face identities. The manager exposes the resolved
-results path as inspector status.
+outer-anchor fields and level-aware transition-face identities. Schema version
+17 adds whole-placement request, commit, supersession, readiness, rejection,
+and pending-state counters plus LOD1/LOD2 broad-phase classification counts and
+timing. The manager exposes the resolved results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`
 context rejects the run before movement begins.

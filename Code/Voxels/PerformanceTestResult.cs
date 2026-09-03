@@ -96,6 +96,23 @@ internal sealed class PerformanceTransitionFaceMetrics
 
 internal sealed class PerformanceClipboxMetrics
 {
+	public bool PlacementPending { get; init; }
+	public long PlacementRequests { get; init; }
+	public long PlacementCommits { get; init; }
+	public long PlacementSuperseded { get; init; }
+	public long PlacementDeferredUpdates { get; init; }
+	public long PlacementReadinessBlocks { get; init; }
+	public long PlacementUnsafeCommits { get; init; }
+	public long Lod1ClassificationQueries { get; init; }
+	public long Lod1RejectedSolid { get; init; }
+	public long Lod1RejectedAir { get; init; }
+	public long Lod1PotentiallySurfaceContaining { get; init; }
+	public long Lod2ClassificationQueries { get; init; }
+	public long Lod2RejectedSolid { get; init; }
+	public long Lod2RejectedAir { get; init; }
+	public long Lod2PotentiallySurfaceContaining { get; init; }
+	public float ClassificationMilliseconds { get; init; }
+	public float MaximumClassificationMilliseconds { get; init; }
 	public int Lod0GameplayRadius { get; init; }
 	public int Lod0GameplayCoordinates { get; init; }
 	public int Lod0ActiveCoordinates { get; init; }

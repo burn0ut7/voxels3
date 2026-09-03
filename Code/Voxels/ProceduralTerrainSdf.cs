@@ -31,6 +31,8 @@ internal static class ProceduralTerrainSdf
 	public const float NoodleThicknessVariation = 0.016f;
 	public const float CheeseBaseThreshold = 0.48f;
 	public const float CheeseThresholdVariation = 0.12f;
+	private const float MaximumRawCaveDensity = CaveDensityScale *
+		(1f - CheeseBaseThreshold + CheeseThresholdVariation);
 
 	private const float SimplexF2 = 0.3660254037844386f;
 	private const float SimplexG2 = 0.21132486540518713f;
@@ -105,6 +107,44 @@ internal static class ProceduralTerrainSdf
 	}
 
 	/// <summary>
+	/// Performs the canonical constant-time broad phase used before GPU meshing.
+	/// A definite result is conservative for the complete volumetric field; a
+	/// potential result deliberately leaves the narrow-phase range unresolved.
+	/// </summary>
+	public static ChunkDensityClassification ClassifyDensityRangeBroadPhase(
+		Vector3Int coordinate,
+		int cellsPerAxis,
+		float cellSize,
+		ProceduralTerrainSettings settings )
+	{
+		if ( cellsPerAxis <= 0 || !float.IsFinite( cellSize ) || cellSize <= 0f ||
+			!float.IsFinite( settings.SurfaceBaseHeight ) ||
+			!float.IsFinite( settings.SurfaceFrequency ) ||
+			!float.IsFinite( settings.SurfaceAmplitude ) )
+		{
+			return ChunkDensityClassification.PotentiallySurfaceContaining;
+		}
+
+		var chunkWorldSize = cellsPerAxis * cellSize;
+		var minimum = new Vector3(
+			coordinate.x * chunkWorldSize,
+			coordinate.y * chunkWorldSize,
+			coordinate.z * chunkWorldSize );
+		var maximum = minimum + new Vector3( chunkWorldSize );
+		if ( !float.IsFinite( minimum.x ) || !float.IsFinite( minimum.y ) ||
+			!float.IsFinite( minimum.z ) || !float.IsFinite( maximum.x ) ||
+			!float.IsFinite( maximum.y ) || !float.IsFinite( maximum.z ) )
+		{
+			return ChunkDensityClassification.PotentiallySurfaceContaining;
+		}
+
+		return TryBoundOutsideVerticalSupport(
+			new SdfWorldAabb( minimum, maximum ), settings, out var bound )
+			? bound.Classification
+			: ChunkDensityClassification.PotentiallySurfaceContaining;
+	}
+
+	/// <summary>
 	/// Conservatively bounds the canonical density field over a closed world-space
 	/// AABB. The current generator privately projects XY because its exact formula
 	/// is separable; callers receive a full 3D density interval and never a height.
@@ -145,6 +185,9 @@ internal static class ProceduralTerrainSdf
 	{
 		var minimum = worldAabb.Minimum;
 		var maximum = worldAabb.Maximum;
+		if ( TryBoundOutsideVerticalSupport( worldAabb, settings, out var verticalBound ) )
+			return verticalBound;
+
 		var surfaceRange = BoundSurfaceRectangle(
 			minimum.x,
 			maximum.x,
@@ -188,6 +231,49 @@ internal static class ProceduralTerrainSdf
 			density.Minimum,
 			density.Maximum,
 			ChunkDensityClassification.PotentiallySurfaceContaining );
+	}
+
+	private static bool TryBoundOutsideVerticalSupport(
+		SdfWorldAabb worldAabb,
+		ProceduralTerrainSettings settings,
+		out DensityBound bound )
+	{
+		var minimum = worldAabb.Minimum;
+		var maximum = worldAabb.Maximum;
+		var amplitude = MathF.Abs( settings.SurfaceAmplitude );
+		var minimumSurfaceHeight = settings.SurfaceBaseHeight - amplitude;
+		var maximumSurfaceHeight = settings.SurfaceBaseHeight + amplitude;
+		var minimumPotentialSurfaceHeight = minimumSurfaceHeight - CaveMaximumDepth;
+		if ( float.IsFinite( minimumSurfaceHeight ) &&
+			float.IsFinite( maximumSurfaceHeight ) &&
+			float.IsFinite( minimumPotentialSurfaceHeight ) )
+		{
+			if ( minimum.z > maximumSurfaceHeight )
+			{
+				var minimumSurfaceDensity = minimum.z - maximumSurfaceHeight;
+				var maximumSurfaceDensity = maximum.z - minimumSurfaceHeight;
+				bound = new DensityBound(
+					minimumSurfaceDensity,
+					MathF.Max( maximumSurfaceDensity, MaximumRawCaveDensity ),
+					ChunkDensityClassification.DefinitelyAir );
+				return true;
+			}
+
+			if ( maximum.z < minimumPotentialSurfaceHeight )
+			{
+				var minimumSurfaceDensity = minimum.z - maximumSurfaceHeight;
+				var maximumSurfaceDensity = maximum.z - minimumSurfaceHeight;
+				var minimumDepth = minimumSurfaceHeight - maximum.z;
+				var maximumEnvelope = CaveMaximumDepth - minimumDepth;
+				bound = new DensityBound(
+					minimumSurfaceDensity,
+					MathF.Max( maximumSurfaceDensity, maximumEnvelope ),
+					ChunkDensityClassification.DefinitelySolid );
+				return true;
+			}
+		}
+		bound = default;
+		return false;
 	}
 
 	private static DensityInterval BoundCaveDensity(

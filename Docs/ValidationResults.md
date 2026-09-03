@@ -6848,3 +6848,427 @@ Record an approved extraordinary change here before adding the new version:
   The fixed procedural frequency was unchanged and all three level digests
   repeated, excluding generator sampling as the cause. Visual, audit, clean-start,
   performance, memory, queue, determinism, and correctness gates all pass.
+
+### CLIPBOX-LOD-HANDOFF-001/v1 - Atomic moving-placement coverage
+
+- Definition recorded on 2026-09-03 after reproducing the defect on clean commit
+  `a816ae2` and before implementation. The production world and player journey
+  remain the unchanged `CLIPBOX-LOD2-002/v1` scenario: s&box `26.09.01a`, scene
+  `scenes/basic_example.scene`, one local player, generator v5, seed `1337`, base
+  height `0`, frequency `0.0005`, amplitude `128`, `32` cells per region, LOD
+  cell sizes `16/32/64`, gameplay radius `4`, `fps_max=1000`, start and final
+  center `(0,0,0)` at world Z `0`, speed `2500`, X reach `50000`, Y reach
+  `25000`, exactly one loop, the unchanged foreground drain boundary, two
+  render-sequence advances, fixed ten-second stationary window, `524288`
+  CPU/GPU sample capacity, one-second memory sampling, and nearest-rank
+  percentiles. Only run identity, timestamp, task, and revision may differ.
+- Reproduction journey: press play, allow the origin terrain to settle, eject
+  the game camera, observe from approximately `20000` units above the moving
+  player, and run the production performance benchmark. During active movement,
+  pause as soon as background becomes visible through the terrain. Record
+  `voxel_lod_info`, capture the actual ejected production camera at `1920x1080`,
+  and run `voxel_mesh_audit 32 coverage` against the frozen state. Comparable
+  candidate captures use the camera at `target + [0,0,20000]`, angles
+  `[90,0,0]`, vertical FOV `60`, and no UI.
+- Pre-fix reproduction: the inspector-started canonical benchmark logged task
+  `PERFORMANCE-OVERVIEW-001/v4`, revision `manual-inspector`, speed `2500`,
+  distance `50000`, and center `[0,0,0]`. It was paused with the target at
+  `W[3392.165,3384.349,0]`; the inherited ejected camera was at
+  `W[15169.84,8301.442,23138.7]`. The `1920x1080` production capture showed a
+  large irregular blue-background opening through the central ground plus a
+  second smaller opening. LOD0 had `512` active coordinates and no pending
+  gameplay meshes, while warm work was `124` pending. LOD1 had `3696/4096`
+  resident with `400` pending after an outer-anchor move of `512` entering and
+  `512` leaving regions. LOD2 had `3558/4096` resident with `538` pending after
+  `256` entering and `256` leaving regions. Only `202/480` current transition
+  faces were ready and `278` remained pending.
+- Frozen-state isolation: visibility reported exact expected/drawable counts
+  `2175/2175` regular and `60/60` transition with zero mismatches. The production
+  coverage audit selected and completed `152/152` resident meshes with zero
+  stale results, invalid indices, out-of-bounds or non-finite positions,
+  record-identity mismatches, oversized triangles, mutation failures, or draw
+  argument failures; maximum edge was `1.731` cells. The separately reported
+  `1533` repeated-position Transvoxel table triangles remain known degenerates.
+  The hole therefore exists between valid resident meshes: current clipbox
+  exclusion/active sets are committed before replacement regular and transition
+  residents are ready. It is not partial geometry emission, procedural SDF
+  mutation, or corrupt indirect arguments.
+- Architecture gate: `VoxelManager` remains the sole placement owner and
+  `GpuVoxelMesher` remains the sole regular/transition publication and rendering
+  path. A moving placement may prepare replacement regular regions and transition
+  faces while the last complete placement remains visible, but no active set,
+  exclusion hole, or cache eviction may switch until every exact replacement
+  descriptor has crossed the existing render-sequence publication boundary.
+  The ready placement then commits all three regular levels and both transition
+  boundaries together in one manager update. Superseded preparation is cancelled
+  and released without a second renderer, overlap policy, skirt, fallback mesh,
+  CPU mesher, or duplicate LOD implementation.
+- Correctness and visual gates: individual meshes retain the existing atomic
+  emission/publication audit contract. Every moving-placement commit reports
+  zero missing exact LOD0, LOD1, LOD2, and transition residents; no unsafe commit
+  occurs. While preparation is pending, the previously complete placement stays
+  active. Paused `1920x1080` overview captures during positive and negative route
+  motion show continuous ground with no background opening, missing slab,
+  partial chunk, stale flash, overlap sheet, or regression at either LOD seam.
+  Final settled counts remain LOD0/Lod1/Lod2 active `512/4032/3584`, resident
+  `710/4096/4096`, transition desired/ready/pending `480/480/0`, with every queue
+  zero and the unchanged geometry/visibility audit passing.
+- Performance gate: rerun the exact locked `CLIPBOX-LOD2-002/v1` figure-eight and
+  compare with accepted run `26a239da1b50471692f897bd80960b22`. Moving and
+  stationary CPU/GPU p95 and p99 may not regress by more than the greater of
+  `5%` or `0.25 ms`; regular and transition schedule-to-publication p95 remain
+  below `409.6 ms`; LOD2 p95 remains below `4096 ms`; maximum eligible LOD2
+  service gap remains below `300 ms`; drain remains at most `500 ms`; memory,
+  arenas, allocations, visibility, digests, zero ordinary geometry readbacks,
+  zero render SDF evaluations, cold start, and clean logs retain every existing
+  gate. Temporary replacement residency must stay bounded and must return to the
+  exact settled cache counts without retained-memory growth.
+
+#### Rejected candidate A - whole-placement supersession
+
+- Run `3c4dda235b0d427180afd7192efcd28b` used task
+  `CLIPBOX-LOD-HANDOFF-001/v1`, revision
+  `a816ae2+atomic-handoff-candidate-a`, and every locked parameter above. It
+  completed in `121.90672 s` with `116702/9864` moving/stationary samples and no
+  truncation. Moving CPU p95/p99 were `1.0499/2.2240 ms`, moving GPU p95/p99 were
+  `1.0075569/1.4033318 ms`, stationary CPU p95/p99 were
+  `1.0034/1.8594 ms`, and stationary GPU p95/p99 were
+  `0.8416176/0.86450577 ms`; all passed the locked timing tolerance.
+- Regular/transition publication p95 were `113.3367/273.1912 ms`, LOD2
+  schedule-to-renderable p95 was `595.5427 ms`, maximum eligible LOD2 service
+  gap was `251.7338 ms`, and drain was `100.3975 ms`; all latency gates passed.
+  Final placement counters were pending `false`, requests/commits/superseded
+  `568/270/298`, deferred updates `72789`, readiness blocks `0`, and unsafe
+  commits `0`. Final residents and queues returned to LOD0/Lod1/Lod2
+  `710/4096/4096`, all regular and transition pending counts were zero, and all
+  topology/position digests exactly matched accepted run
+  `26a239da1b50471692f897bd80960b22`.
+- Candidate A is **rejected**. The user reproduced a major streaming failure on
+  the next production run: terrain appeared not to generate or stream. The
+  counters explain the visible failure: each latest target replaced the entire
+  in-flight placement, so `298` of `568` requests superseded preparation and
+  the visible placement could remain behind the moving player until another
+  whole target became ready. The temporary full-placement union also grew the
+  arena pool from the accepted `14` to `16`, added one pool allocation, and
+  raised committed vertex/index memory from `469762048/234881024` to
+  `536870912/268435456` bytes. GPU memory growth was `150994944` bytes versus
+  the baseline `50331648` bytes. Those retained arena and streaming regressions
+  fail the memory and continuous-streaming gates despite good frame timings and
+  zero unsafe commits.
+- Corrected design constraint: the one canonical manager handoff may coalesce
+  the latest requested target, but it must never discard a safe in-flight
+  placement for a newer request. It finishes and atomically commits the one
+  bounded placement already being prepared, then immediately prepares the
+  newest coalesced target. Intermediate requests do not start allocations or
+  cancel useful GPU work. This preserves continuous streaming, limits temporary
+  residency to one in-flight placement, and retains the same sole
+  manager/mesher path and exact readiness gate.
+
+#### Rejected candidate B - unbounded coalesced jump
+
+- Run `edc8313001254bdcb0f8987544326367` used task
+  `CLIPBOX-LOD-HANDOFF-001/v1`, revision
+  `a816ae2+atomic-handoff-candidate-b`, and every locked parameter. It completed
+  with placement pending `false`, requests/commits/superseded `569/480/315`,
+  readiness blocks `0`, and unsafe commits `0`. A separate diagnostic reached
+  the positive route extreme with exact target/committed anchor agreement,
+  empty queues, settled residents `710/4096/4096`, and continuous `1920x1080`
+  ground from the fixed `20000`-unit overhead camera. This confirms continuous
+  streaming was restored after retaining prepared LOD0 state and finishing the
+  current transaction before servicing the newest coalesced target.
+- Candidate B is **rejected**. Moving CPU p95/p99 were
+  `1.2688/2.5222 ms`; p99 regressed `0.3150 ms` over the baseline and failed its
+  `0.25 ms` tolerance. Moving GPU p95/p99 were
+  `1.1179447/1.7178059 ms`. Stationary CPU p95/p99 were
+  `1.1960/2.1367 ms`; stationary GPU p95/p99 were
+  `0.8845329/1.5003681 ms`, whose p99 regressed `0.5543232 ms` and failed its
+  `0.25 ms` tolerance. Regular/transition/LOD2 p95 were
+  `99.2953/210.0373/375.3208 ms`, maximum LOD2 service gap was `251.9057 ms`,
+  and drain was `175.4818 ms`; those gates passed.
+- The unbounded jump to the newest target still required two extra arenas:
+  arenas/allocations/reuses were `16/2/52655` versus baseline `14/0/52277`.
+  Committed vertex/index bytes remained
+  `536870912/268435456` instead of `469762048/234881024`; GPU memory grew
+  `150994944` bytes instead of `50331648`. Final residents, queues,
+  transitions, digests, zero ordinary readbacks/SDF evaluations, and all
+  structural correctness counters passed, but the timing and retained-memory
+  regressions fail acceptance.
+- Candidate C keeps the same transaction and latest-target coalescing, but each
+  in-flight placement advances every differing axis of both clipbox anchors by
+  at most one coordinate (`2` LOD1 coordinates for the LOD2-aligned outer
+  anchor). This preserves adjacent-update semantics, moves both LOD boundaries
+  together rather than serializing them, bounds the temporary entering surface
+  to existing arena headroom, and continues immediately until it reaches the
+  latest target.
+- Candidate C diagnostic `CLIPBOX-LOD-HANDOFF-001/v1-diagnostic-f`, revision
+  `a816ae2+atomic-handoff-adjacent-f`, was interrupted and rejected after the
+  fixed first `10 s` observation. At target inner/LOD2 anchors `C[18,17,0]` and
+  `C[9,8,0]`, only `9` handoffs had committed; committed anchors were
+  `C[7,7,0]` and `C[7,7,0]`, with lag `11/2`. The staged diagonal outer move
+  required `960` LOD1 entrants, `480` pending LOD2 residents, and `332` pending
+  transitions. Coupling both moving boundaries in every adjacent transaction
+  therefore serialized fast inner-boundary progress behind the much larger
+  outer-boundary slab and could not maintain coverage at the locked speed.
+- Candidate D retains one canonical transaction scheduler but chooses one
+  boundary per handoff. Inner-boundary work advances every differing axis by
+  one because it has no LOD1/Lod2 cache slab; outer-boundary work advances one
+  LOD2 axis because its aligned LOD1 cache shifts by two coordinates. The
+  scheduler compares current world-space lag so the two boundaries receive the
+  service they need. This preserves atomic coverage while keeping outer
+  replacement residency to one axis-aligned slab.
+- Candidate D diagnostic `CLIPBOX-LOD-HANDOFF-001/v1-diagnostic-g`, revision
+  `a816ae2+atomic-handoff-bounded-g`, was interrupted and rejected after the
+  fixed first `10 s` observation. It improved to `25` commits, but target versus
+  committed inner/LOD2 anchors still lagged `6/3`. Its pending inner step needed
+  `224` already-retired LOD0 preparations and `22` transitions, demonstrating
+  that walking the fine boundary through historical player positions still
+  consumes work without restoring current-player coverage quickly enough.
+- Candidate E keeps outer LOD1/Lod2 cache movement to one axis-aligned slab,
+  but the inner LOD0/Lod1 boundary moves directly to the latest target already
+  produced by the gameplay streamer. The inner target is clamped so its LOD1
+  hole remains entirely inside the committed outer LOD1 cache; when that safe
+  limit is reached, outer progress wins scheduling until the safe interval moves
+  forward. No second mesh path or visibility fallback is introduced.
+- Candidate E diagnostic `CLIPBOX-LOD-HANDOFF-001/v1-diagnostic-h`, revision
+  `a816ae2+atomic-handoff-safe-inner-h`, was interrupted and rejected after the
+  fixed first `10 s` observation. At target inner/LOD2 anchors `C[18,17,0]` and
+  `C[9,8,0]`, only `11` transactions had committed and LOD2 still lagged five
+  coordinates. The safe inner jump avoided old LOD0 work, but serialized
+  one-axis outer slabs cannot match the canonical route's combined X/Y boundary
+  crossing rate.
+- Candidate F returns to one non-cancelled handoff for the newest coalesced
+  target, which already demonstrated exact catch-up in candidate B. Its
+  readiness proof now examines only entering LOD0, LOD1, LOD2, and transition
+  descriptors because retained committed descriptors are already the proven
+  complete placement, and the proof is passed into the commit instead of
+  rescanned. Once the route is settled, the mesher releases only completely
+  empty trailing geometry arenas and rebuilds the existing indirect command
+  list; active arena indices and resident geometry never move. This targets the
+  two measured candidate-B failures without adding a renderer or mesh path.
+- Candidate F run `f353f47f674948dc85c87ed7984e81d5`, revision
+  `a816ae2+atomic-handoff-candidate-f`, used every locked
+  `CLIPBOX-LOD-HANDOFF-001/v1` parameter and completed with continuous terrain,
+  zero unsafe placement commits, zero missing active resources, final
+  LOD0/Lod1/LOD2 residents `710/4096/4096`, transitions
+  `480/480/0` desired/ready/pending, and exact accepted LOD0/LOD1/LOD2 geometry
+  digests. Placement requests/commits/superseded were `571/473/318`.
+- Candidate F is **rejected**. Moving CPU p95/p99 was
+  `1.3199/2.5284 ms` versus baseline `1.1482/2.2072 ms`; moving GPU was
+  `1.2040138/1.8382072 ms` versus `1.0828972/1.5287399 ms`. Stationary CPU was
+  `1.2282/2.2098 ms` versus `1.0169/2.0403 ms`; stationary GPU was
+  `0.8943/1.329422 ms` versus `0.8452/0.9460 ms`. Moving CPU p99, moving GPU
+  p99, and stationary GPU p99 exceeded the greater-of-`5%`-or-`0.25 ms`
+  tolerance. Regular/transition/LOD2 p95 latency
+  `101.3044/215.3291/381.9989 ms`, maximum LOD2 service gap `251.716 ms`, and
+  drain `133.9247 ms` passed their gates.
+- Candidate F still retained `16` arenas versus baseline `14`, made `2` pool
+  allocations versus `0`, committed `536870912/268435456` vertex/index bytes
+  versus `469762048/234881024`, and grew GPU memory by `150994944` bytes versus
+  `50331648`. Settled trimming could not release those arenas because the
+  remaining active allocations occupied them. Live `voxel_lod_info` then showed
+  arenas `0..12` at all `256` record slots while using only about `16..19%` of
+  vertex capacity and `30..36%` of index capacity; the allocation tail was
+  record-slot-bound rather than geometry-byte-bound. A separate active run
+  reported a `536.601 ms` scheduler stall with regular/transition backlog
+  `1895/396`. This evidence explains both the retained-memory regression and the
+  player's visible ability to outrun whole-placement convergence.
+- Candidate G keeps Candidate F's non-cancelled, atomically published placement
+  transaction but removes work before it enters the GPU. LOD1 and LOD2 regular
+  descriptors must pass the existing canonical full-SDF conservative AABB
+  classifier; definite-air and definite-solid results become resident empty
+  derivatives in the same mesher without count/readback/emit work. Readiness is
+  evaluated only for the staged placement's exact non-resident descriptors and
+  is no longer blocked by unrelated global LOD or transition queue counts.
+  This preserves one SDF, one mesher, one placement owner, and the exact
+  no-partial-publication gate while targeting measured backlog directly.
+- Candidate G diagnostic run `5a37d523a3164d69bade228b1f7403bd`, revision
+  `6bf92f9+surface-rejection-candidate-g`, used the locked one-loop route,
+  speed `2500`, distance `50000`, world, seed, frequency, amplitude, LOD sizes,
+  drain, and stationary window. It also moved the live ejected camera and took
+  overhead captures during the measured window, so its average visible draw
+  count changed from baseline `319.45404` to `901.9761` and its constant
+  `0.5505085 ms` GPU samples are not comparable acceptance evidence. It is
+  retained as diagnostic evidence only. Despite that interference, it finished
+  with unsafe commits `0`, exact accepted final residents and geometry digests,
+  regular dispatches `122834` versus baseline `194577`, and scalar readbacks
+  `15709` versus `24676`.
+- Clean Candidate G run `3fd79e25c20e46458c0fb7737e1bf23c`, revision
+  `6bf92f9+surface-rejection-candidate-g-clean`, restarted the production scene,
+  returned to the game camera, settled all queues, and used every locked
+  parameter without live diagnostic intervention. Final LOD0/Lod1/Lod2
+  residents were `710/4096/4096`; transitions were `480/480/0`; all regular and
+  transition topology/position digests exactly matched accepted run
+  `26a239da1b50471692f897bd80960b22`; unsafe commits, ordinary geometry
+  readbacks, render SDF evaluations, and final pending counts were all zero.
+  Regular/transition/LOD2 p95 latency improved to
+  `92.3902/181.0149/269.5717 ms`, maximum LOD2 service gap was `252.842 ms`, and
+  drain was `32.3455 ms`; all absolute latency gates passed. Arena count and
+  committed vertex/index capacity returned to baseline at
+  `14` and `469762048/234881024` bytes, although the run made one pool allocation
+  and recorded `150994944` bytes of GPU growth versus baseline `50331648`.
+- Candidate G's clean run is **invalid for comparative frame acceptance**.
+  Moving CPU p95/p99 was
+  `2.0579/3.3882 ms` versus baseline `1.1482/2.2072`; moving GPU was
+  `1.465559/2.6333332 ms` versus `1.0828972/1.5287399`. Stationary CPU was
+  `1.5749/2.5093 ms` versus `1.0169/2.0403`; stationary GPU was
+  `1.1303425/2.1336079 ms` versus `0.84519386/0.9460449`. A read-only process
+  audit after the run found `Overwatch.exe` had been running since `01:44:26`,
+  after the accepted baseline and Candidate F measurements but before both
+  Candidate G runs, with thousands of accumulated CPU seconds and a roughly
+  `2.6 GB` working set. That uncontrolled competing game makes the frame and
+  process/GPU-memory comparison non-equivalent; it cannot establish a candidate
+  pass or failure and the external process was not modified. Independent
+  production telemetry remains valid: the manager performed `98112` LOD1 and
+  `49104` LOD2 full recursive range classifications, consuming
+  `1098.7982 ms` with a `0.6707 ms` maximum. Those calls rejected
+  `42960` LOD1 and `30690` LOD2 regions. The global vertical support of the
+  canonical volumetric SDF proves all but `36` of those rejections in constant
+  time, so Candidate G is superseded because its recursive narrow phase adds a
+  measured cost without material GPU-work benefit, not because of the
+  contaminated frame comparison.
+- Candidate H retains the one Candidate G manager, mesher, readiness gate, and
+  resident-empty publication path. `ProceduralTerrainSdf` now owns one shared
+  constant-time broad-phase bound derived from the complete surface-amplitude
+  and cave-depth support of generator v5. Both the existing exact range
+  classifier and clipbox pre-meshing rejection use that bound. Clipbox regions
+  inside the support band remain potentially surface-containing and go directly
+  to the existing GPU mesher; they do not invoke the recursive CPU narrow phase.
+  This is a conservative optimization of the canonical SDF classifier, not a
+  height-field assumption, second generator, CPU mesher, fallback renderer, or
+  duplicate LOD path. Acceptance uses the unchanged full scenario and gates.
+- Candidate H run `6f664e605bc345baba7559cc3c846308`, revision
+  `6bf92f9+surface-broadphase-candidate-h`, used every locked workload parameter
+  and completed with unsafe commits `0`, no pending work, exact accepted
+  residents and all regular/transition geometry digests, zero ordinary geometry
+  readbacks, and zero render SDF evaluations. Broad-phase LOD1/LOD2 queries were
+  `98048/49088`; their total/maximum CPU cost fell to `11.363/0.154 ms` from
+  Candidate G's `1098.7982/0.6707 ms`. Regular/transition/LOD2 p95 latency was
+  `92.3902/181.0149/256.5401 ms`, service gap `251.1588 ms`, and drain
+  `33.6412 ms`; all absolute responsiveness gates passed. The run recorded
+  `529` safe commits from `571` requests, but still made `52557` full readiness
+  scans while dependencies were publishing. Its frame and external memory
+  comparison is invalid for the same still-running `Overwatch.exe` confounder;
+  the run is diagnostic evidence, not acceptance evidence.
+- Candidate I retains Candidate H's single canonical SDF, mesher, placement
+  transaction, and exact dependency proof. The mesher exposes one monotonically
+  increasing resident-publication revision shared by regular and transition
+  publication. While a placement is staged, the manager re-evaluates its exact
+  dependency lists only after that revision or the existing LOD0 prepared-set
+  revision changes. It no longer rescans hundreds of unchanged descriptors on
+  every high-frequency update, and it does not poll placement state at all once
+  the committed anchors match the target. This is an event-versioned readiness
+  check inside the existing scheduler, not a second queue, renderer, mesher, or
+  fallback. Acceptance remains the unchanged scenario after the competing game
+  process is absent.
+- Candidate I moving visual diagnostic used the unchanged production scene,
+  generator, route, speed `2500`, distance `50000`, one loop, and fixed
+  `1920x1080` ejected camera at `target + [0,0,20000]`, angles `[90,0,0]`, FOV
+  `60`. The game was paused before each camera move and allowed two seconds for
+  the inherited render view to settle. At positive target
+  `W[14882.67,14208.09,0]`, the staged placement still lacked `24` exact LOD2
+  residents while the committed placement rendered one continuous ground sheet
+  with no background opening, partial slab, stale flash, or seam. At negative
+  target `W[-8632.371,8502.745,0]`, the stage still lacked `96` LOD2 residents
+  and `174` transitions; the second fixed view was likewise continuous. Both
+  captures had unsafe commits `0`.
+- The frozen positive state ran production command
+  `voxel_mesh_audit 32 coverage`. It selected/completed `160/160` meshes with
+  stale results, mutation failures, invalid indices, out-of-bounds or non-finite
+  positions, identity mismatches, oversized triangles, draw-argument failures,
+  and visibility mismatches all zero. Visibility was exact at regular
+  `2432/2432` and transition `194/194`. Maximum edge was `1.728` cells. The
+  reported `55` region failures contain only the separately tracked `1458`
+  repeated-position Transvoxel table triangles already accepted by the seam
+  scenario; they do not represent missing or mutated geometry. Audit readback
+  was `322` operations, `4974232` bytes, and `564.155 ms`.
+- Event-versioning reduced exact readiness scans without delaying the safe
+  handoff. At the positive capture it recorded `1605` readiness scans across
+  `3904` deferred updates; at the later negative capture it recorded `11960`
+  scans across `28736` deferred updates, about `58%` fewer full dependency
+  scans. The run was intentionally interrupted after the visual/audit evidence
+  and is not performance acceptance evidence.
+- Clean Candidate I run `36efcd8de5ca41259f30cedb0d223ed4`, revision
+  `6bf92f9+publication-revision-candidate-i-clean`, ran after the competing
+  `Overwatch.exe` process exited and used every locked
+  `CLIPBOX-LOD-HANDOFF-001/v1` parameter without camera or diagnostic
+  intervention. It completed with final LOD0/LOD1/LOD2 residents
+  `710/4096/4096`, transitions `480/480/0` desired/ready/pending, exact accepted
+  regular and transition digests, placement pending `false`, unsafe commits
+  `0`, and zero ordinary geometry readbacks or render SDF evaluations.
+- Candidate I greatly improved the intended workload: regular, transition, and
+  LOD2 p95 schedule latency was `59.595/154.7839/217.6233 ms`; maximum LOD2
+  service gap was `250.7554 ms`; drain was `30.8208 ms`; and route-lag
+  p50/p95/p99 was `54.8945/151.1563/177.6406` world units. All responsiveness
+  gates passed, and all three latency distributions were materially faster than
+  accepted baseline `26a239da1b50471692f897bd80960b22`.
+- Candidate I is **rejected**. Moving CPU p95/p99 was
+  `1.2917/2.5408 ms` versus baseline `1.1482/2.2072 ms`; p99 regressed
+  `0.3336 ms`, exceeding the locked `0.25 ms` tolerance by `0.0836 ms`.
+  Moving GPU p95/p99 `1.1057854/1.6553402 ms`, stationary CPU p95/p99
+  `1.1695/2.1304 ms`, and stationary GPU p95/p99
+  `0.8468628/1.1155605 ms` all passed their tolerances.
+- Candidate I also retained `16` arenas versus baseline `14`, committed
+  `536870912/268435456` vertex/index bytes versus
+  `469762048/234881024`, and made one pool allocation. Used geometry and every
+  final geometry count remained unchanged, confirming that the extra capacity
+  was record-slot headroom for atomic staging rather than more terrain. The run
+  made `572` placement requests and `550` commits: preparation and the current
+  full-set commit therefore occupy almost exactly one percent of moving frames,
+  matching the isolated p99 regression. Candidate J will retain the same atomic
+  contract while precomputing commit deltas and increasing the project-chosen
+  arena record page from `256` to `512`; vertex/index arena byte capacity and
+  visibility capacity remain unchanged.
+- Candidate J run `e1b981846c4b4275aef1d6538b592c40`, revision
+  `6bf92f9+delta-commit-512-candidate-j-clean`, used every locked
+  `CLIPBOX-LOD-HANDOFF-001/v1` parameter after a fresh production-scene start,
+  with the game camera active and no measurement-time commands or camera
+  movement. The previously competing game process was absent. The fresh run
+  logged no errors.
+- Candidate J **passes** the frame gates. Moving CPU p95/p99 was
+  `1.2348/2.4271 ms`, only `0.0866/0.2199 ms` above baseline and inside the
+  greater-of-`5%`-or-`0.25 ms` tolerance. Moving GPU p95/p99 was
+  `0.9999275/1.5101433 ms`; stationary CPU was `1.0077/1.9780 ms`; stationary
+  GPU was `0.7894039/0.8258820 ms`. All are within tolerance, and every GPU and
+  stationary tail improved over the accepted baseline.
+- Regular, transition, and LOD2 p95 schedule latency was
+  `59.3939/155.6262/233.3687 ms`; their p99 values were
+  `81.9946/212.8558/364.7733 ms`. Maximum LOD2 service gap was `251.0642 ms`,
+  post-loop drain was `26.2931 ms`, total-queue p95/p99 was `65/122`, and
+  route-lag p95/p99 was `0.296921/0.415559` chunks. Every locked responsiveness
+  gate passed.
+- Final LOD0/LOD1/LOD2 residents were `710/4096/4096`; transitions were
+  `480/480/187/0` desired/ready/drawable/pending; loaded/pending gameplay chunks
+  were `729/0`; placement requests/commits/superseded were `569/545/188`; and
+  placement unsafe commits were `0`. All regular and transition topology and
+  position digests exactly matched baseline. Transition mismatch, stale,
+  invalid-table, ordinary geometry-readback, and render-SDF-evaluation counters
+  were all zero. Candidate J reports `2728` settled surface meshes, including
+  `1017` LOD2 meshes, versus baseline `2711/1000`; identical resident geometry
+  digests and used bytes show that these 17 meshes are the corrected active LOD2
+  coverage that the unsafe baseline omitted, not additional geometry.
+- The 512-record page removed the measured staging-capacity regression. Final
+  arenas were `8` versus baseline `14` and Candidate I `16`; committed
+  vertex/index capacity was `268435456/134217728` bytes versus baseline
+  `469762048/234881024`; pool allocations remained `0`; and used geometry bytes
+  were bit-exact. GPU memory growth was `50331648` bytes, exactly matching the
+  baseline, while the final process-memory change was `-173457408` bytes.
+- A separate Candidate J visual diagnostic used the same production route,
+  speed, distance, generator, and camera contract but was intentionally stopped
+  before it could save a performance record. The game was paused at target
+  `W[5105.648,-5078.959,0]` with a staged handoff still missing `192` LOD1,
+  `96` LOD2, and `160` transition dependencies. Its fixed `1920x1080` camera at
+  target plus `[0,0,20000]`, angles `[90,0,0]`, FOV `60`, showed one continuous
+  terrain sheet with no hole, partial slab, seam, or stale deformation. Unsafe
+  commits remained `0`, the fresh candidate run and visual diagnostic emitted no
+  errors, and the diagnostic was stopped while paused.
+- Fresh Candidate J production command `voxel_mesh_audit 32 coverage` selected
+  and completed `160/160` regular and transition meshes. Stale results, mutation
+  failures, invalid indices, out-of-bounds or non-finite positions, packed record
+  identity mismatches, oversized triangles, draw-argument failures, and
+  visibility mismatches were all zero. Expected/drawable visibility was exact at
+  regular `2541/2541` and transition `187/187`. Maximum edge length was `1.727`
+  cells. The reported `52` failed regions contain only `1673` separately tracked
+  repeated-position Transvoxel table degenerates already accepted by the seam
+  scenario. The audit used `322` explicit readbacks, `4678096` bytes, and
+  `252.502 ms`; ordinary production rendering remains at zero geometry
+  readbacks.

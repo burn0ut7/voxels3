@@ -8,7 +8,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public const int MaximumRegionsPerBatch = 8;
 	public const int MaximumDispatchesPerUpdate = MaximumRegionsPerBatch;
 	public const int ScratchLaneCount = 3;
-	public const int RegionsPerSlab = 256;
+	public const int RegionsPerSlab = 512;
 	public const int TerrainVertexBytes = 24;
 	private const int VertexArenaBytes = 32 * 1024 * 1024;
 	private const int IndexArenaBytes = 16 * 1024 * 1024;
@@ -158,6 +158,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private bool _meshAuditInFlight;
 	private long _nextMeshAuditId;
 	private long _geometryReadbackCount;
+	private long _residentPublicationRevision;
 	private bool _disposed;
 
 	public int ResidentCount => _resident.Count;
@@ -206,6 +207,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public double EmitSubmissionMilliseconds => _emitSubmissionMilliseconds;
 	public long VisibilityScalarReadbackCount => _visibilityScalarReadbackCount;
 	public long GeometryReadbackCount => _geometryReadbackCount;
+	public long ResidentPublicationRevision => _residentPublicationRevision;
 	public const long OrdinaryRenderSdfEvaluationCount = 0;
 	public int TerrainIndirectApiSubmissionCount => _arenas.Count( arena => arena.ActiveResidentCount > 0 );
 	public int IndirectArgumentRecordCount => TerrainIndirectApiSubmissionCount * RegionsPerSlab;
@@ -233,6 +235,22 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public int FreeRangeCount => _arenas.Sum( arena => arena.VertexFreeRangeCount + arena.IndexFreeRangeCount );
 	public int LargestFreeVertexRange => _arenas.Count == 0 ? 0 : _arenas.Max( arena => arena.VertexLargestFree );
 	public int LargestFreeIndexRange => _arenas.Count == 0 ? 0 : _arenas.Max( arena => arena.IndexLargestFree );
+	public string ArenaUsage => string.Join( ";", _arenas.Select( arena =>
+		$"{arena.Index}:slots={arena.AllocatedSlotCount},vertices={arena.VertexUsed},indices={arena.IndexUsed}," +
+		$"largestVertexFree={arena.VertexLargestFree},largestIndexFree={arena.IndexLargestFree}" ) );
+
+	public int TrimEmptyTrailingArenas()
+	{
+		var trimmed = 0;
+		while ( _arenas.Count > 0 && _arenas[^1].IsEmpty )
+		{
+			_arenas[^1].Dispose();
+			_arenas.RemoveAt( _arenas.Count - 1 );
+			trimmed++;
+		}
+		if ( trimmed > 0 ) MarkDrawCommandsDirty();
+		return trimmed;
+	}
 	public float FragmentationPercent
 	{
 		get
@@ -355,6 +373,30 @@ internal sealed class GpuVoxelMesher : IDisposable
 			residency,
 			Stopwatch.GetTimestamp(),
 			playerRouteDistance ) );
+	}
+
+	public void PublishKnownEmpty( GpuSdfDescriptor descriptor, GpuMeshResidency residency )
+	{
+		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
+		{
+			SetResidency( resident, residency );
+			return;
+		}
+
+		RemovePending( descriptor.Key );
+		if ( _scratchLanes.Any( lane =>
+			lane.CountInFlight.Any( value => value.Descriptor.Key == descriptor.Key ) ||
+			lane.EmitInFlight.Any( value => value.Descriptor.Key == descriptor.Key ) ) )
+		{
+			_cancelledInFlight.Add( descriptor.Key );
+		}
+
+		PublishResident(
+			descriptor,
+			residency,
+			null,
+			new GpuTerrainCountResult { Generation = ++_nextGeneration } );
+		MarkDrawCommandsDirty();
 	}
 
 	public void ScheduleTransition( GpuTransitionDescriptor descriptor, float playerRouteDistance )
@@ -914,6 +956,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 			$"firstIndex={arguments.FirstIndex},baseVertex={arguments.BaseVertex}," +
 			$"firstInstance={arguments.FirstInstance}";
 	}
+
+	public bool Contains( GpuSdfDescriptor descriptor )
+	{
+		if ( _resident.TryGetValue( descriptor.Key, out var resident ) &&
+			resident.Descriptor == descriptor ) return true;
+		if ( _pending.TryGetValue( descriptor.Key, out var pending ) &&
+			pending.Descriptor == descriptor ) return true;
+		if ( _cancelledInFlight.Contains( descriptor.Key ) ) return false;
+		return _scratchLanes?.Any( lane =>
+			lane.CountInFlight.Any( value => value.Descriptor == descriptor ) ||
+			lane.EmitInFlight.Any( value => value.Descriptor == descriptor ) ) ?? false;
+	}
+
+	public bool IsResident( GpuSdfDescriptor descriptor ) =>
+		_resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor;
+
+	public bool IsTransitionResident( GpuTransitionDescriptor descriptor ) =>
+		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
+		resident.Descriptor == descriptor;
 
 	public bool Contains( GpuMeshRegionKey key ) => _resident.ContainsKey( key ) || _pending.ContainsKey( key ) ||
 		(_scratchLanes?.Any( lane => lane.CountInFlight.Any( value => value.Descriptor.Key == key ) ||
@@ -1840,34 +1901,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					residency = replacement.Residency;
 					RemovePending( key );
 				}
-				if ( _resident.Remove( key, out var previous ) ) ReleaseResident( previous );
-				var resident = new ResidentMesh( completed.Descriptor, residency, completed.Handle, completed.Counts );
-				_resident.Add( key, resident );
-				if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
-				if ( residency == GpuMeshResidency.Lod1 ) _lod1ResidentCount++;
-				if ( residency == GpuMeshResidency.Lod2 ) _lod2ResidentCount++;
-				if ( completed.Handle is not null )
-				{
-					completed.Handle.Arena.ActiveResidentCount++;
-					SetVisibilityActive( resident, _renderActive.Contains( key ) );
-				}
-				_topologyDigest ^= CoordinateDigest( key, completed.Counts.TopologyDigest );
-				_positionDigest ^= CoordinateDigest( key, completed.Counts.PositionDigest );
-				if ( key.Level == GpuMeshLevel.Lod0 )
-				{
-					_lod0TopologyDigest ^= CoordinateDigest( key, completed.Counts.TopologyDigest );
-					_lod0PositionDigest ^= CoordinateDigest( key, completed.Counts.PositionDigest );
-				}
-				else if ( key.Level == GpuMeshLevel.Lod1 )
-				{
-					_lod1TopologyDigest ^= CoordinateDigest( key, completed.Counts.TopologyDigest );
-					_lod1PositionDigest ^= CoordinateDigest( key, completed.Counts.PositionDigest );
-				}
-				else
-				{
-					_lod2TopologyDigest ^= CoordinateDigest( key, completed.Counts.TopologyDigest );
-					_lod2PositionDigest ^= CoordinateDigest( key, completed.Counts.PositionDigest );
-				}
+				PublishResident( completed.Descriptor, residency, completed.Handle, completed.Counts );
 				if ( lod2 )
 				{
 					RecordLod2Latency( completed.ScheduledTimestamp );
@@ -1888,6 +1922,44 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			MarkDrawCommandsDirty();
 		}
+	}
+
+	private void PublishResident(
+		GpuSdfDescriptor descriptor,
+		GpuMeshResidency residency,
+		GeometryHandle handle,
+		GpuTerrainCountResult counts )
+	{
+		var key = descriptor.Key;
+		if ( _resident.Remove( key, out var previous ) ) ReleaseResident( previous );
+		var resident = new ResidentMesh( descriptor, residency, handle, counts );
+		_resident.Add( key, resident );
+		if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
+		if ( residency == GpuMeshResidency.Lod1 ) _lod1ResidentCount++;
+		if ( residency == GpuMeshResidency.Lod2 ) _lod2ResidentCount++;
+		if ( handle is not null )
+		{
+			handle.Arena.ActiveResidentCount++;
+			SetVisibilityActive( resident, _renderActive.Contains( key ) );
+		}
+		_topologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
+		_positionDigest ^= CoordinateDigest( key, counts.PositionDigest );
+		if ( key.Level == GpuMeshLevel.Lod0 )
+		{
+			_lod0TopologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
+			_lod0PositionDigest ^= CoordinateDigest( key, counts.PositionDigest );
+		}
+		else if ( key.Level == GpuMeshLevel.Lod1 )
+		{
+			_lod1TopologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
+			_lod1PositionDigest ^= CoordinateDigest( key, counts.PositionDigest );
+		}
+		else
+		{
+			_lod2TopologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
+			_lod2PositionDigest ^= CoordinateDigest( key, counts.PositionDigest );
+		}
+		_residentPublicationRevision++;
 	}
 
 	private void AllocateAndEmitTransitions( TransitionScratchLane lane, GpuTransitionCountResult[] counts,
@@ -1978,12 +2050,6 @@ internal sealed class GpuVoxelMesher : IDisposable
 					}
 					RemovePendingTransition( key );
 				}
-				if ( !_transitionRenderActive.Contains( key ) )
-				{
-					_transitionCancelledCount++;
-					Release( completed.Handle );
-					continue;
-				}
 				if ( _transitionResident.Remove( key, out var previous ) ) ReleaseTransitionResident( previous );
 				var latencyMilliseconds = (float)Stopwatch.GetElapsedTime(
 					completed.ScheduledTimestamp ).TotalMilliseconds;
@@ -1993,7 +2059,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				if ( completed.Handle is not null )
 				{
 					completed.Handle.Arena.ActiveResidentCount++;
-					SetTransitionVisibilityActive( resident, true );
+					SetTransitionVisibilityActive( resident, _transitionRenderActive.Contains( key ) );
 				}
 				_transitionTopologyDigest ^= TransitionCoordinateDigest( key, completed.Counts.TopologyDigest );
 				_transitionPositionDigest ^= TransitionCoordinateDigest( key, completed.Counts.PositionDigest );
@@ -2002,6 +2068,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
 				_transitionInvalidTableCount += completed.Counts.InvalidTableCount;
 				_transitionPublishedCount++;
+				_residentPublicationRevision++;
 				RecordTransitionLatency( latencyMilliseconds );
 				changed = true;
 			}
@@ -3197,12 +3264,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public int Index { get; }
 		public int ActiveResidentCount { get; set; }
 		public int FreeSlotCount => _freeSlots.Count;
+		public int AllocatedSlotCount => RegionsPerSlab - _freeSlots.Count;
 		public int VertexUsed => _vertices.UsedCount;
 		public int IndexUsed => _indices.UsedCount;
 		public int VertexFree => _vertices.FreeCount;
 		public int IndexFree => _indices.FreeCount;
 		public int VertexLargestFree => _vertices.LargestFreeRange;
 		public int IndexLargestFree => _indices.LargestFreeRange;
+		public bool IsEmpty => _freeSlots.Count == RegionsPerSlab &&
+			_vertices.UsedCount == 0 && _indices.UsedCount == 0 && ActiveResidentCount == 0;
 		public int VertexFreeRangeCount => _vertices.FreeRangeCount;
 		public int IndexFreeRangeCount => _indices.FreeRangeCount;
 		public GpuBuffer<TerrainVertex> Vertices { get; }
