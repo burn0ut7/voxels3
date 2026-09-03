@@ -40,13 +40,15 @@ meshing, rendering, collision, streaming, editing, and replication must remain
 responsive under real multiplayer load.
 
 The project is currently at an early foundation stage. The s&box project is
-configured as a multiplayer game for 1-64 players at a 50 Hz tick rate. The first
-canonical chunk foundation now provides implicit flat-SDF evaluation with
-Grass/Air material IDs and no sample arrays, bounded single-origin chunk
-streaming, inspector status, structured logs, and debug overlays. Surface
-meshing, collision, live terrain
-edits, persistence, multi-origin interest management, and project-specific
-network replication are not implemented yet. See
+configured as a multiplayer game for 1-64 players at a 50 Hz tick rate. The
+canonical world path now provides deterministic implicit volumetric SDF
+evaluation with Grass/Air material IDs and no sample arrays, bounded
+single-origin chunk streaming, persistent GPU Transvoxel terrain for LOD0,
+LOD1, and LOD2, one level-aware transition pipeline for both fixed 2:1
+boundaries, indirect visibility/drawing, inspector status, structured logs, and
+measurable runtime diagnostics. Collision, live terrain edits, persistence,
+multi-origin interest management, and project-specific network replication are
+not implemented yet. See
 `Docs/Architecture/VoxelChunkFoundation.md` for the exact current design.
 
 ## Repository Facts

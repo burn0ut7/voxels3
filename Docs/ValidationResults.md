@@ -6349,3 +6349,223 @@ Record an approved extraordinary change here before adding the new version:
   stationary and moving audits report zero mutation/draw-argument failures, the
   top-down moving captures are clean, and the unchanged production performance
   scenario passes.
+
+### CLIPBOX-LOD2-002/v1 - Canonical LOD2 and outer transition
+
+- Definition recorded on 2026-09-02 before the unchanged current-code baseline
+  and before implementation. The source baseline is clean commit `facb699` on
+  s&box `26.09.01a`; the authored `Assets/scenes/basic_example.scene` remains
+  unchanged. Production execution is the existing player/controller-driven
+  `run_performance_test` path.
+- Locked world and journey: one local player; generator version `5`; seed `1337`;
+  surface base height `0`, frequency `0.0005`, amplitude `128`; `32` cells per
+  region; LOD0/LOD1/LOD2 cell sizes `16/32/64`; gameplay radius `4`; main camera
+  `1280x720`; `fps_max=1000`; start and final center `(0,0,0)` at world Z `0`;
+  speed `2500`; X reach `50000`; Y reach `25000`; exactly one loop; the unchanged
+  foreground drain boundary, two render-sequence advances, and exact ten-second
+  stationary window; `524288` CPU/GPU samples; one-second memory sampling; and
+  nearest-rank percentiles. Only run identity, timestamp, task, and revision may
+  differ.
+- Fixed placement: LOD0 stays at `729/512` gameplay/active coordinates. LOD1
+  retains a `16^3 = 4096` cache and `4032` active regions around its `4^3` inner
+  hole. Its inner anchor follows the existing nearest 1024-unit cadence; its
+  outer cache anchor is the LOD2 anchor multiplied by two. LOD2 uses a `16^3 =
+  4096` cache with an exact `8^3 = 512` hole equal to the LOD1 outer coverage,
+  leaving `3584` active regions. Every boundary is half open and parent aligned;
+  cross-level overlap and uncovered volume are both zero.
+- One production transition system owns both 2:1 boundaries. LOD0-to-LOD1 has
+  exactly `96` desired/ready faces and LOD1-to-LOD2 has exactly `384`, for `480`
+  total. Identities include coarse level, coarse coordinate, and face. Both
+  boundaries use the same GPU tables, request type, staged scratch pipeline,
+  count readback, arena allocator, visibility, publication, and draw path. The
+  existing three regular scratch lanes service LOD2; a fourth regular scratch
+  resource is forbidden.
+- Secondary-position contract: regular geometry stays primary in the
+  persistent arenas. Each active boundary updates one six-bit per-record mask,
+  selected in the vertex shader through the stable arena-record identity encoded
+  bit-exactly as a finite `Normal.x` value in every emitted vertex. A signature,
+  record-buffer capacity guard, two-bit allocation-generation token, and
+  descriptor extent check reject stale ownership without creating another mesh
+  path.
+  Coarse regular boundary vertices and matching half-resolution transition
+  vertices use the same tangent-plane-projected displacement and face-permission
+  rule; full-resolution transition vertices remain primary. Mask-only movement must
+  not schedule or publish a regular remesh. Primary regular topology/position
+  digests remain unchanged from the baseline.
+- Correctness gates: all three regular caches and both transition boundaries
+  reach the exact counts above and finish with every queue/lane at zero. LOD0 and
+  LOD1 primary digests match the baseline; repeated final LOD2 and per-boundary
+  transition digests match across clean runs. Fine-face, coarse-face, lateral,
+  invalid-table, stale-publication, visibility, and draw-argument mismatch
+  counts are zero. Normal rendering performs zero geometry readbacks and zero SDF
+  evaluations. `voxel_mesh_audit 32 coverage` samples each regular level and each
+  transition boundary and reports zero invalid indices, index remainders,
+  non-finite positions/normals, abnormal normals, out-of-bounds positions,
+  oversized triangles, mutation failures, and draw-argument failures. Known
+  repeated-position Transvoxel table triangles remain separately reported and
+  are not treated as escaped or malformed geometry.
+- Player-experience gates: stationary and moving `1280x720` captures, including
+  the detached high overview used by the accepted camera scenario, show continuous
+  terrain across both boundaries with no crack, overlap sheet, hole, pinched fan,
+  malformed corner, stale flash, culling loss, or camera-handoff loss. The moving
+  route must cross positive and negative inner and outer placement boundaries,
+  turn, backtrack, and restore the exact origin state.
+- Responsiveness gates: foreground regular p95 and each transition-boundary p95
+  remain below `409.6 ms`; foreground post-loop drain is at most `500 ms`; LOD2
+  regular schedule-to-renderable p95 is below `4096 ms`; continuously eligible
+  LOD2 regular work has a maximum service gap of `300 ms`; and all LOD2 regular
+  and outer-transition work is settled by the stationary capture.
+- Performance gates: compare the candidate with the fresh `facb699` baseline and
+  the most recent accepted comparable run. Moving and stationary CPU/GPU p95 and
+  p99 may not regress by more than the greater of `5%` or `0.25 ms`. Queue tails,
+  streaming completion, arena count, logical descriptor memory, process/GPU
+  memory, allocation pressure, and camera command-list behavior must remain
+  bounded. Repeat the identical clean candidate until retained memory and final
+  residency/digests are shown not to ratchet upward.
+- Build and clean-start gates: managed build and every changed shader compile
+  with zero diagnostics. Restart the complete editor after shader compilation;
+  the Sentry `last_crash` marker must not advance, and fresh logs contain no HLSL
+  parser, shader-load, compute, dispatch, draw, readback, device-loss, or managed
+  exception error. A failed correctness, visual, clean-start, memory, or
+  figure-eight gate rejects the candidate; no parameter or threshold may be
+  changed to obtain a pass.
+
+### CLIPBOX-LOD2-DEFORMATION-001/v1 - Transient record-identity deformation
+
+- Definition recorded on 2026-09-02 after reproducing the defect and before its
+  fix. Use the unchanged `CLIPBOX-LOD2-002/v1` world, scene, generator, camera,
+  route, speed `2500`, distance `50000`, and one-loop parameters. Run from a
+  clean editor process, allow all initial queues to settle, then observe and
+  capture the main production camera during active positive and negative route
+  extremes. Pause immediately when malformed terrain appears so the exact GPU
+  state can be audited before it advances.
+- Pre-fix reproduction: revision label `lod2-canonical-v1-candidate-b` was paused
+  near the negative route extreme at target
+  `[-49649.09,5871.808,0]`. The `1280x720` main-camera image retained large
+  stretched terrain triangles and warped sheets across the player view. At that
+  frozen state LOD0/Lod1/Lod2 active counts were exactly
+  `512/4032/3584`, transition desired/ready/pending was `480/480/0`, every
+  regular queue was zero, and LOD2 resident/pending was `4096/0`.
+- The frozen production `voxel_mesh_audit 32 coverage` selected `160` meshes
+  (`96` regular and `64` transitions). Its GPU source and visible indirect
+  records both matched their CPU owners with zero mismatches. All sampled
+  persistent geometry had zero invalid indices, non-finite positions or
+  normals, abnormal normals, out-of-bounds positions, oversized triangles,
+  stale handles, draw-argument failures, or mutation failures; maximum edge was
+  `1.731` cells. The malformed image remained visible after the audit. This
+  isolates the defect to render-time vertex interpretation rather than SDF
+  evaluation, persistent geometry, arena allocation, or indirect-argument
+  construction.
+- Historical falsification: rejected commit `79baf56` also coupled per-record
+  boundary deformation to indirect records and encoded a stable record identity
+  in each emitted vertex. The new candidate had instead indexed descriptors
+  only through `FirstInstance`/`SV_InstanceID` and allowed an unbounded boundary
+  delta when the fetched origin did not own the vertex. The fix must not restore
+  the rejected packed multi-face deformation or any second terrain path.
+- Correctness gates: every emitted regular and transition vertex carries the
+  finite, bit-exact identity of its one arena record without increasing
+  `TerrainVertex` beyond `24` bytes; the production vertex shader validates its
+  signature and buffer capacity before using that identity for the canonical
+  descriptor lookup; descriptor generation-token mismatch or a vertex outside
+  the descriptor extent disables deformation; boundary displacement is clamped
+  to one quarter of the owning cell size. The coverage audit reports zero vertex
+  record-identity mismatches and zero GPU descriptor-buffer mismatches in
+  addition to every existing geometry and indirect-draw invariant.
+- Visual gate: no ribbon, stretched triangle, warped sheet, raised terrain,
+  hole, crack, overlap, or malformed corner may appear in stationary captures
+  or during either direction of the exact figure-eight. A deliberate pause and
+  capture at both route extremes must retain the normal continuous checker
+  surface. Resume, turnaround, backtrack, and final origin settlement must stay
+  clean.
+- Performance, clean-start, memory, queue, LOD2 service, digest, and repeat-run
+  gates remain exactly those of `CLIPBOX-LOD2-002/v1`. Diagnostic readbacks are
+  permitted only for the explicit audit and remain forbidden in ordinary
+  rendering.
+
+#### Results recorded 2026-09-02
+
+- Corrected-path fresh-process audit: after all three LOD bands settled at
+  active `512/4032/3584`, resident `710/4096/4096`, and transition
+  desired/ready/pending `480/480/0`, `voxel_mesh_audit 32 coverage` completed
+  `160/160` selected production meshes. Draw-state source/visible/record
+  mismatches were `0/0/0`; per-vertex record-identity mismatches, invalid
+  indices, non-finite positions, out-of-bounds positions, oversized triangles,
+  stale handles, mutation failures, and draw-argument failures were all zero.
+  Maximum edge was `1.727` cells. The `332` reported transition-table
+  degenerates were the existing explicitly reported table degenerates and did
+  not produce a mutation failure.
+- Instrumented diagnostic run: run
+  `e7fd3c8046194087a837cd9079d26599`, revision
+  `lod2-record-identity-candidate-a`, completed the exact locked route in
+  `121.91196 s`. Main-camera captures were continuous at the positive extreme
+  `[48631.22,11301.05,0]`, negative extreme `[-48601.12,11415.8,0]`, subsequent
+  negative leg `[-45480.34,-18895.72,0]`, and final origin; no reproduced ribbon,
+  spike, warped sheet, hole, crack, overlap, or raised terrain appeared. A
+  deliberate mid-route coverage audit at `[-23317.06,-20626.39,0]` completed
+  `153/153` selected meshes with source/visible/record/vertex-identity
+  mismatches all zero and mutation failures zero. The audit intentionally made
+  this run fail acceptance: cumulative geometry readbacks were `632`, and its
+  blocking readbacks raised maximum eligible LOD2 service gap to `393.7688 ms`
+  against the locked `300 ms` ceiling. Its moving CPU p95/p99 were
+  `1.2548/2.3092 ms`, moving GPU p95/p99 `1.2185574/1.6698837 ms`, stationary CPU
+  p95/p99 `1.0259/1.9595 ms`, and stationary GPU p95/p99
+  `0.83208084/0.98729134 ms`. This run is diagnostic evidence only and is
+  rejected as performance acceptance evidence.
+- Clean candidate B: run `b296e9b25f3d4df9b0e9f297d2514c64`, revision
+  `lod2-record-identity-candidate-b`, ran in a fresh process with no audit,
+  screenshot, or runtime mutation during measurement. It completed in
+  `121.92196 s`; post-loop drain was `35.2589 ms`; regular schedule-to-renderable
+  p95 was `134.6099 ms`; LOD2 schedule-to-renderable p95 was `645.755 ms`; and
+  maximum eligible LOD2 service gap was `251.8721 ms`. Moving CPU p95/p99 were
+  `1.4802/2.4475 ms`, moving GPU p95/p99 `1.2896061/1.7573833 ms`, stationary CPU
+  p95/p99 `1.3525/2.1661 ms`, and stationary GPU p95/p99
+  `0.89502335/1.2981892 ms`. The stationary CPU p95 exceeded its locked
+  `1.3228 ms` ceiling by `0.0297 ms`, so this candidate is rejected despite all
+  other recorded timing gates passing.
+- Candidate B correctness completed at LOD0/Lod1/Lod2 active
+  `512/4032/3584`, resident `710/4096/4096`, zero pending queues, and transition
+  desired/ready/drawable/pending `480/480/187/0`. Transition faces were exactly
+  `96` for coarse LOD1 and `384` for coarse LOD2. Fine-face, coarse-face,
+  lateral, and table mismatches were all zero. Geometry readbacks and ordinary
+  render SDF evaluations were `0/0`; arena count was `14`. LOD2
+  topology/position digests were `081C4C044EB32D11/60AD76F21522FDB4`; transition
+  topology/position digests were `CE624B2A1C469A41/68846A85BEF09A0D`.
+- Clean candidate C: run `7989b085d6714ebc94d45a0beb9c12c4`, revision
+  `lod2-record-identity-candidate-c`, repeated the exact fixed scenario in a new
+  process with no runtime diagnostics during measurement. It completed in
+  `121.91071 s`; post-loop drain was `27.1154 ms`; regular and transition
+  schedule-to-publication p95 were `128.508/287.9955 ms`; LOD2
+  schedule-to-renderable p95 was `623.2989 ms`; and maximum eligible LOD2
+  service gap was `256.8045 ms`. Moving CPU p95/p99 were `1.2457/2.2663 ms`,
+  moving GPU p95/p99 `1.2123585/1.6663074 ms`, stationary CPU p95/p99
+  `1.0266/2.0165 ms`, and stationary GPU p95/p99
+  `0.8442402/1.0147095 ms`. Every locked timing ceiling passed.
+- Candidate C correctness completed at the same active, resident, pending,
+  transition, face, mismatch, readback, SDF, and `14`-arena counts as candidate
+  B. LOD0 topology/position digests were
+  `60C89421FF1B19BD/7E9C783F3C60468C`; LOD1 were
+  `97D4F8ABEC98BA72/A580C20007E621C3`; LOD2 were
+  `081C4C044EB32D11/60AD76F21522FDB4`; and transitions were
+  `CE624B2A1C469A41/68846A85BEF09A0D`. Every aggregate, per-level, and transition
+  digest exactly repeated candidate B. Used vertex/index bytes were
+  `78517560/73028568`; committed vertex/index bytes were
+  `469762048/234881024`; unique vertices/triangles/indices were
+  `3271565/6085714/18257142`.
+- Candidate C process memory started/ended/peaked at
+  `3640508416/3688906752/3688570880` bytes and GPU memory at
+  `1940193196/1990524844/1990524844` bytes. The stationary window changed process
+  memory by `1912832` bytes and GPU memory by `0` bytes. Candidate B used the
+  same final GPU bytes and geometry allocation counts; retained geometry and
+  digests did not ratchet upward. Fresh candidate B and C console intervals had
+  no project error or exception entries.
+- Final runtime and editor builds completed with zero warnings and zero errors;
+  `git diff --check` reported no whitespace errors. The final cold process began
+  at `2026-09-03T02:40:34.1250928Z`; the s&box Sentry `last_crash` marker remained
+  at `2026-09-01T18:16:22.7548934Z`. Its fresh log through candidate C contained
+  no HLSL/parser, project shader-load, missing compute pipeline, command-list,
+  dispatch, readback, device-loss, native-crash, or managed-exception error.
+  Only unrelated base-game missing-resource and font warnings were present.
+- Decision: `CLIPBOX-LOD2-DEFORMATION-001/v1` passes on clean candidate C. The
+  previously reproduced transient LOD2 deformation is fixed through the one
+  canonical terrain-render path. No fallback mesher, duplicate transition
+  implementation, compatibility layer, or secondary identity system was added.

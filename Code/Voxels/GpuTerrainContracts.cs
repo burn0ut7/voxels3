@@ -59,9 +59,9 @@ internal struct GpuTransitionRequest
 	public Vector4 NormalAndFace;
 	public uint Generation;
 	public uint RequestIndex;
+	public Vector4 CoarseOriginAndMask;
 	public uint Reserved0;
 	public uint Reserved1;
-	public Vector4 Reserved2;
 }
 
 [StructLayout( LayoutKind.Sequential, Pack = 4, Size = 64 )]

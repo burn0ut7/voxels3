@@ -5,10 +5,12 @@ collision geometry, normals, seams, LOD, and mesh scheduling.
 
 ## Decision Status
 
-LOD0 and LOD1 rendering use the production regular-cell Transvoxel GPU path, and
-the fixed LOD0-to-LOD1 boundary uses the production Transvoxel transition-cell
-path documented in `Docs/Architecture/GpuVoxelMeshing.md`. LOD2 and collision
-meshing remain unselected. Before implementing those responsibilities,
+LOD0, LOD1, and LOD2 rendering use the same production regular-cell Transvoxel
+GPU path. The LOD0-to-LOD1 and LOD1-to-LOD2 boundaries use the same level-aware
+production Transvoxel transition-cell path documented in
+`Docs/Architecture/GpuVoxelMeshing.md`; there is no LOD-specific fallback or
+parallel mesher. Collision meshing remains unselected. Before implementing that
+responsibility,
 compare viable algorithms and execution locations against smoothness, topology,
 edit latency, collision needs, s&box API limits, hardware targets, memory
 movement, and measured throughput.
@@ -56,8 +58,9 @@ Treat the following as hard requirements for terrain compute shaders:
 - Keep persistent vertex and index writes in their dedicated shader resources.
   Do not merge them into `voxel_persistent_geometry_cs.shader` merely to reduce
   the shader count.
-- This rule remains absolute for the regular terrain pipeline. The fixed
-  LOD0/LOD1 transition pipeline is a measured engine-specific exception: on
+- This rule remains absolute for the regular terrain pipeline. The level-aware
+  transition pipeline serving both LOD boundaries is a measured engine-specific
+  exception: on
   s&box 26.08.19, dispatching a second transition compute resource beside its
   topology resource terminates the editor natively even when the second shader
   is a freshly compiled zero-work kernel with no reflected resources. Its final

@@ -5,7 +5,7 @@ MODES
 
 FEATURES
 {
-	// Dedicated 24-byte vertex emission.
+	// Dedicated 24-byte vertex emission with bit-exact stable record identity.
 }
 
 COMMON

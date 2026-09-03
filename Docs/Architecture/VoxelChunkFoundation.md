@@ -4,8 +4,9 @@
 
 This decision covers the first production chunk slice: integer chunk identity,
 implicit SDF data, deterministic volumetric terrain, bounded streaming,
-and runtime/editor diagnostics. LOD0 surface extraction is now implemented by
-the sole GPU path documented in `GpuVoxelMeshing.md`. Collision, live edits,
+and runtime/editor diagnostics. LOD0, LOD1, LOD2, and both fixed 2:1 transition
+boundaries are now implemented by the sole GPU path documented in
+`GpuVoxelMeshing.md`. Collision, live edits,
 persistence, and network replication remain later slices.
 
 ## Canonical Ownership and Data Flow
@@ -32,7 +33,7 @@ persistence, and network replication remain later slices.
   descriptor. `VoxelChunk` remains free of engine resources,
   GPU buffers, render objects, and mesh lifetime state.
 - The renderer stores each completed region as revisioned disposable indexed
-  geometry. A remesh evaluates generator v4 once over a transient `35^3`
+  geometry. A remesh evaluates the current generator once over a transient `35^3`
   density lattice, classifies the `32^3` regular cells from cached corners,
   reuses region-local edge vertices, and emits 24-byte position/normal vertices
   plus 32-bit indices. Central-difference endpoint gradients use the same
@@ -399,7 +400,8 @@ lane count; scheduled, count-submitted, and published throughput; batch rate
 and occupancy; stage timing distributions; queue distributions; direct
 player-route render lag; post-loop drain time; and a separate fixed 10-second
 stationary frame/GPU/memory/visibility window after full settlement and two
-render-sequence advances. The manager exposes the resolved
+render-sequence advances. Schema version 15 adds the canonical LOD2 hole and
+outer-anchor fields and level-aware transition-face identities. The manager exposes the resolved
 results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`

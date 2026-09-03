@@ -5,7 +5,7 @@ MODES
 
 FEATURES
 {
-	// Transition density, classification, scans, count and output emission, contour audits, and diagnostics.
+	// One level-aware transition kernel owns topology, bounded seam deformation, bit-exact record identity, and audits.
 }
 
 COMMON

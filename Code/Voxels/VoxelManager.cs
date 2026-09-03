@@ -26,7 +26,7 @@ public sealed class VoxelManager : Component
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
 	private const int GameplayLoadRadius = 4;
-	private const int PerformanceResultSchemaVersion = 14;
+	private const int PerformanceResultSchemaVersion = 15;
 	private const int RenderWarmShellChunks = 1;
 	private const int Lod0ActiveHalfExtent = 4;
 	private const int Lod1CacheHalfExtent = 8;
@@ -51,7 +51,7 @@ public sealed class VoxelManager : Component
 		Lod1HoleHalfExtent,
 		Lod2CacheHalfExtent,
 		Lod2NominalHoleHalfExtent,
-		GpuMeshLevel.Lod1 );
+		GpuMeshLevel.Lod2 );
 
 	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
 	private readonly HashSet<Vector3Int> _desiredChunks = new();
@@ -76,11 +76,13 @@ public sealed class VoxelManager : Component
 	private readonly HashSet<Vector3Int> _nextLod1Active = new();
 	private readonly List<Vector3Int> _lod1EnteringBuffer = new();
 	private readonly List<Vector3Int> _lod1LeavingBuffer = new();
-	private readonly HashSet<Lod0Lod1TransitionKey> _transitionDesired = new();
-	private readonly HashSet<Lod0Lod1TransitionKey> _nextTransitionDesired = new();
-	private readonly List<Lod0Lod1TransitionKey> _transitionEnteringBuffer = new();
-	private readonly List<Lod0Lod1TransitionKey> _transitionLeavingBuffer = new();
-	private readonly List<Lod0Lod1TransitionKey> _transitionRetainedBuffer = new();
+	private readonly HashSet<GpuTransitionKey> _transitionDesired = new();
+	private readonly HashSet<GpuTransitionKey> _nextTransitionDesired = new();
+	private readonly List<GpuTransitionKey> _transitionEnteringBuffer = new();
+	private readonly List<GpuTransitionKey> _transitionLeavingBuffer = new();
+	private readonly List<GpuTransitionKey> _transitionRetainedBuffer = new();
+	private readonly Dictionary<GpuMeshRegionKey, uint> _transitionMasks = new();
+	private readonly Dictionary<GpuMeshRegionKey, uint> _nextTransitionMasks = new();
 	private readonly Lod2ClipboxState _lod2Clipbox = new();
 	private readonly HashSet<Vector3Int> _nextLod2Cache = new();
 	private readonly HashSet<Vector3Int> _nextLod2Active = new();
@@ -884,7 +886,8 @@ public sealed class VoxelManager : Component
 				Faces = _lastPerformanceTransitions.Faces.Select( face =>
 					new PerformanceTransitionFaceMetrics
 					{
-						Lod1Coordinate = ToPerformanceVector( face.Key.Lod1Coordinate ),
+						CoarseLevel = face.Key.CoarseLevel.ToString(),
+						CoarseCoordinate = ToPerformanceVector( face.Key.CoarseCoordinate ),
 						Face = face.Key.Face.ToString(),
 						Generation = face.Generation,
 						Arena = face.Arena,
@@ -936,6 +939,7 @@ public sealed class VoxelManager : Component
 				Lod0GameplayCoordinates = _desiredChunks.Count,
 				Lod0ActiveCoordinates = _lod0RenderActive.Count,
 				Lod1Anchor = ToPerformanceVector( _lod1Clipbox.Anchor ),
+				Lod1OuterAnchor = ToPerformanceVector( _lod1Clipbox.OuterAnchor ),
 				Lod1OuterMinimum = ToPerformanceVector( _lod1Clipbox.OuterMinimum ),
 				Lod1OuterMaximum = ToPerformanceVector( _lod1Clipbox.OuterMaximum ),
 				Lod1HoleMinimum = ToPerformanceVector( _lod1Clipbox.HoleMinimum ),
@@ -953,8 +957,8 @@ public sealed class VoxelManager : Component
 				Lod2Anchor = ToPerformanceVector( _lod2Clipbox.Anchor ),
 				Lod2OuterMinimum = ToPerformanceVector( _lod2Clipbox.OuterMinimum ),
 				Lod2OuterMaximum = ToPerformanceVector( _lod2Clipbox.OuterMaximum ),
-				Lod2NearCoverageMinimum = ToPerformanceVector( _lod2Clipbox.NearCoverageMinimum ),
-				Lod2NearCoverageMaximum = ToPerformanceVector( _lod2Clipbox.NearCoverageMaximum ),
+				Lod2HoleMinimum = ToPerformanceVector( _lod2Clipbox.HoleMinimum ),
+				Lod2HoleMaximum = ToPerformanceVector( _lod2Clipbox.HoleMaximum ),
 				Lod2NominalHoleHalfExtent = PlacementInputs.Lod2NominalHoleHalfExtent,
 				Lod2CachedCoordinates = _lod2Clipbox.DesiredCache.Count,
 				Lod2ActiveCoordinates = _lod2Clipbox.Active.Count,
@@ -1749,7 +1753,8 @@ public sealed class VoxelManager : Component
 
 		Log.Info(
 			$"[VoxelWorld] lod.inspect.level level=Lod1 cellSize={Lod1CellSize:0.###} " +
-			$"regionSize={CellsPerAxis * Lod1CellSize:0.###} anchor={FormatRegionCoordinate( _lod1Clipbox.Anchor )} " +
+			$"regionSize={CellsPerAxis * Lod1CellSize:0.###} innerAnchor={FormatRegionCoordinate( _lod1Clipbox.Anchor )} " +
+			$"outerAnchor={FormatRegionCoordinate( _lod1Clipbox.OuterAnchor )} " +
 			$"outerRegions={FormatRegionBox( _lod1Clipbox.OuterMinimum, _lod1Clipbox.OuterMaximum )} " +
 			$"outerWorld={FormatWorldBox( _lod1Clipbox.OuterMinimum, _lod1Clipbox.OuterMaximum, Lod1CellSize )} " +
 			$"holeRegions={FormatRegionBox( _lod1Clipbox.HoleMinimum, _lod1Clipbox.HoleMaximum )} " +
@@ -1759,7 +1764,7 @@ public sealed class VoxelManager : Component
 			$"lastEnter={_lod1Clipbox.LastEnteredRegions} lastLeave={_lod1Clipbox.LastLeftRegions}" );
 
 		Log.Info(
-			$"[VoxelWorld] lod.inspect.transition levels=Lod0-Lod1 desired={_transitionDesired.Count} " +
+			$"[VoxelWorld] lod.inspect.transition levels=Lod0-Lod1,Lod1-Lod2 desired={_transitionDesired.Count} " +
 			$"ready={_gpuMesher?.TransitionReadyCount ?? 0} pending={_gpuMesher?.TransitionPendingCount ?? 0} " +
 			$"lastEnter={_lastTransitionEntered} lastLeave={_lastTransitionLeft}" );
 
@@ -1769,19 +1774,13 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
-		var lod2NominalHoleMinimum = _lod2Clipbox.Anchor -
-			new Vector3Int( PlacementInputs.Lod2NominalHoleHalfExtent );
-		var lod2NominalHoleMaximum = _lod2Clipbox.Anchor +
-			new Vector3Int( PlacementInputs.Lod2NominalHoleHalfExtent );
 		Log.Info(
 			$"[VoxelWorld] lod.inspect.level level=Lod2 cellSize={Lod2CellSize:0.###} " +
 			$"regionSize={CellsPerAxis * Lod2CellSize:0.###} anchor={FormatRegionCoordinate( _lod2Clipbox.Anchor )} " +
 			$"outerRegions={FormatRegionBox( _lod2Clipbox.OuterMinimum, _lod2Clipbox.OuterMaximum )} " +
 			$"outerWorld={FormatWorldBox( _lod2Clipbox.OuterMinimum, _lod2Clipbox.OuterMaximum, Lod2CellSize )} " +
-			$"nominalHoleRegions={FormatRegionBox( lod2NominalHoleMinimum, lod2NominalHoleMaximum )} " +
-			$"nominalHoleWorld={FormatWorldBox( lod2NominalHoleMinimum, lod2NominalHoleMaximum, Lod2CellSize )} " +
-			$"nearCoverageLod1Regions={FormatRegionBox( _lod2Clipbox.NearCoverageMinimum, _lod2Clipbox.NearCoverageMaximum )} " +
-			$"nearCoverageWorld={FormatWorldBox( _lod2Clipbox.NearCoverageMinimum, _lod2Clipbox.NearCoverageMaximum, Lod1CellSize )} " +
+			$"holeRegions={FormatRegionBox( _lod2Clipbox.HoleMinimum, _lod2Clipbox.HoleMaximum )} " +
+			$"holeWorld={FormatWorldBox( _lod2Clipbox.HoleMinimum, _lod2Clipbox.HoleMaximum, Lod2CellSize )} " +
 			$"cached={_lod2Clipbox.DesiredCache.Count} active={_lod2Clipbox.Active.Count} " +
 			$"excluded={_lod2Clipbox.DesiredCache.Count - _lod2Clipbox.Active.Count} " +
 			$"resident={_gpuMesher?.Lod2ResidentCount ?? 0} pending={_gpuMesher?.PendingLod2Count ?? 0} " +
@@ -1943,6 +1942,8 @@ public sealed class VoxelManager : Component
 		_nextLod2Active.Clear();
 		_transitionDesired.Clear();
 		_nextTransitionDesired.Clear();
+		_transitionMasks.Clear();
+		_nextTransitionMasks.Clear();
 		_pendingChunks.Clear();
 		_completedChunks.Clear();
 		_pendingWarmChunks.Clear();
@@ -2279,26 +2280,27 @@ public sealed class VoxelManager : Component
 
 	private void UpdateClipboxPlacement( Vector3 viewerPosition )
 	{
-		var anchor = WorldToLod1Anchor( viewerPosition );
-		var lod0Lod1Changed = !_lod1Clipbox.HasAnchor || anchor != _lod1Clipbox.Anchor;
-		if ( lod0Lod1Changed )
-		{
-			UpdateLod0Lod1Placement( anchor );
-		}
-		var lod2Changed = UpdateLod2Placement( viewerPosition );
-		if ( VerboseLogging && (lod0Lod1Changed || lod2Changed) )
+		var innerAnchor = WorldToLod1Anchor( viewerPosition );
+		var lod2Anchor = WorldToLod2Anchor( viewerPosition );
+		var outerAnchor = lod2Anchor * 2;
+		if ( _lod1Clipbox.HasAnchor && innerAnchor == _lod1Clipbox.Anchor &&
+			outerAnchor == _lod1Clipbox.OuterAnchor && _lod2Clipbox.HasAnchor &&
+			lod2Anchor == _lod2Clipbox.Anchor ) return;
+
+		UpdateLodPlacement( innerAnchor, outerAnchor, lod2Anchor );
+		if ( VerboseLogging )
 		{
 			LogLodPlacement( "placement.update" );
 		}
 	}
 
-	private void UpdateLod0Lod1Placement( Vector3Int anchor )
+	private void UpdateLodPlacement( Vector3Int innerAnchor, Vector3Int outerAnchor, Vector3Int lod2Anchor )
 	{
 
 		_nextLod0RenderActive.Clear();
 		AddHalfOpenBox( _nextLod0RenderActive,
-			anchor * 2 - new Vector3Int( PlacementInputs.Lod0VisualHalfExtent ),
-			anchor * 2 + new Vector3Int( PlacementInputs.Lod0VisualHalfExtent ) );
+			innerAnchor * 2 - new Vector3Int( PlacementInputs.Lod0VisualHalfExtent ),
+			innerAnchor * 2 + new Vector3Int( PlacementInputs.Lod0VisualHalfExtent ) );
 		foreach ( var coordinate in _lod0RenderActive )
 		{
 			if ( !_nextLod0RenderActive.Contains( coordinate ) )
@@ -2313,10 +2315,10 @@ public sealed class VoxelManager : Component
 
 		_nextLod1Cache.Clear();
 		_nextLod1Active.Clear();
-		var outerMinimum = anchor - new Vector3Int( PlacementInputs.Lod1CacheHalfExtent );
-		var outerMaximum = anchor + new Vector3Int( PlacementInputs.Lod1CacheHalfExtent );
-		var holeMinimum = anchor - new Vector3Int( PlacementInputs.Lod1HoleHalfExtent );
-		var holeMaximum = anchor + new Vector3Int( PlacementInputs.Lod1HoleHalfExtent );
+		var outerMinimum = outerAnchor - new Vector3Int( PlacementInputs.Lod1CacheHalfExtent );
+		var outerMaximum = outerAnchor + new Vector3Int( PlacementInputs.Lod1CacheHalfExtent );
+		var holeMinimum = innerAnchor - new Vector3Int( PlacementInputs.Lod1HoleHalfExtent );
+		var holeMaximum = innerAnchor + new Vector3Int( PlacementInputs.Lod1HoleHalfExtent );
 		AddHalfOpenBox( _nextLod1Cache, outerMinimum, outerMaximum );
 		foreach ( var coordinate in _nextLod1Cache )
 		{
@@ -2348,7 +2350,7 @@ public sealed class VoxelManager : Component
 		foreach ( var coordinate in _lod1LeavingBuffer )
 			_gpuMesher.Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod1, coordinate ) );
 
-		SortNearestFirst( _lod1EnteringBuffer, anchor );
+		SortNearestFirst( _lod1EnteringBuffer, innerAnchor );
 		foreach ( var coordinate in _lod1EnteringBuffer )
 		{
 			var descriptor = new GpuSdfDescriptor(
@@ -2361,8 +2363,80 @@ public sealed class VoxelManager : Component
 			_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, GpuMeshResidency.Lod1 );
 		}
 
+		var lod2OuterMinimum = lod2Anchor - new Vector3Int( PlacementInputs.Lod2CacheHalfExtent );
+		var lod2OuterMaximum = lod2Anchor + new Vector3Int( PlacementInputs.Lod2CacheHalfExtent );
+		var lod2HoleMinimum = outerMinimum / 2;
+		var lod2HoleMaximum = outerMaximum / 2;
+		_nextLod2Cache.Clear();
+		_nextLod2Active.Clear();
+		AddHalfOpenBox( _nextLod2Cache, lod2OuterMinimum, lod2OuterMaximum );
+		foreach ( var coordinate in _nextLod2Cache )
+		{
+			if ( !IsInsideHalfOpenBox( coordinate, lod2HoleMinimum, lod2HoleMaximum ) )
+				_nextLod2Active.Add( coordinate );
+		}
+
+		_lod2EnteringBuffer.Clear();
+		_lod2LeavingBuffer.Clear();
+		foreach ( var coordinate in _lod2Clipbox.DesiredCache )
+		{
+			if ( !_nextLod2Cache.Contains( coordinate ) ) _lod2LeavingBuffer.Add( coordinate );
+		}
+		foreach ( var coordinate in _nextLod2Cache )
+		{
+			if ( !_lod2Clipbox.DesiredCache.Contains( coordinate ) ) _lod2EnteringBuffer.Add( coordinate );
+		}
+		var lod2Activated = 0;
+		var lod2Deactivated = 0;
+		foreach ( var coordinate in _lod2Clipbox.Active )
+		{
+			if ( _nextLod2Active.Contains( coordinate ) ) continue;
+			_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ), false );
+			lod2Deactivated++;
+		}
+		foreach ( var coordinate in _nextLod2Active )
+		{
+			if ( _lod2Clipbox.Active.Contains( coordinate ) ) continue;
+			_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ), true );
+			lod2Activated++;
+		}
+		foreach ( var coordinate in _lod2LeavingBuffer )
+			_gpuMesher.Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ) );
+		SortNearestFirst( _lod2EnteringBuffer, lod2Anchor );
+		foreach ( var coordinate in _lod2EnteringBuffer )
+		{
+			_gpuMesher.Schedule(
+				new GpuSdfDescriptor(
+					new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ),
+					CellsPerAxis,
+					Lod2CellSize,
+					CurrentTerrainSettings,
+					ProceduralTerrainSdf.CurrentVersion,
+					_terrainContentRevision ),
+				_playerFigureEightRouteDistance,
+				GpuMeshResidency.Lod2 );
+		}
+
 		_nextTransitionDesired.Clear();
-		AddTransitionFaces( _nextTransitionDesired, holeMinimum, holeMaximum );
+		AddTransitionFaces( _nextTransitionDesired, GpuMeshLevel.Lod1, holeMinimum, holeMaximum );
+		AddTransitionFaces( _nextTransitionDesired, GpuMeshLevel.Lod2, lod2HoleMinimum, lod2HoleMaximum );
+		_nextTransitionMasks.Clear();
+		foreach ( var key in _nextTransitionDesired )
+		{
+			AddBoundaryMask( _nextTransitionMasks,
+				new GpuMeshRegionKey( key.CoarseLevel, key.CoarseCoordinate ), key.Face );
+		}
+		foreach ( var pair in _transitionMasks )
+		{
+			if ( !_nextTransitionMasks.ContainsKey( pair.Key ) ) _gpuMesher.SetTransitionMask( pair.Key, 0 );
+		}
+		foreach ( var pair in _nextTransitionMasks )
+		{
+			if ( !_transitionMasks.TryGetValue( pair.Key, out var previous ) || previous != pair.Value )
+				_gpuMesher.SetTransitionMask( pair.Key, pair.Value );
+		}
+		_transitionMasks.Clear();
+		foreach ( var pair in _nextTransitionMasks ) _transitionMasks.Add( pair.Key, pair.Value );
 		_transitionEnteringBuffer.Clear();
 		_transitionLeavingBuffer.Clear();
 		foreach ( var key in _transitionDesired )
@@ -2389,19 +2463,24 @@ public sealed class VoxelManager : Component
 		_transitionEntered += _lastTransitionEntered;
 		_transitionLeft += _lastTransitionLeft;
 		foreach ( var key in _transitionLeavingBuffer ) _gpuMesher.RemoveTransition( key );
-		SortTransitionsNearestFirst( _transitionEnteringBuffer, anchor );
+		_transitionEnteringBuffer.Clear();
+		_transitionEnteringBuffer.AddRange( _nextTransitionDesired );
+		SortTransitionsNearestFirst( _transitionEnteringBuffer, innerAnchor, lod2Anchor );
 		foreach ( var key in _transitionEnteringBuffer )
 		{
 			_gpuMesher.SetTransitionActive( key, true );
+			var coarseKey = new GpuMeshRegionKey( key.CoarseLevel, key.CoarseCoordinate );
+			_nextTransitionMasks.TryGetValue( coarseKey, out var coarseMask );
 			_gpuMesher.ScheduleTransition(
 				new GpuTransitionDescriptor(
 					key,
 					CellsPerAxis,
-					CellSize,
-					Lod1CellSize,
+					key.CoarseLevel == GpuMeshLevel.Lod1 ? CellSize : Lod1CellSize,
+					key.CoarseLevel == GpuMeshLevel.Lod1 ? Lod1CellSize : Lod2CellSize,
 					CurrentTerrainSettings,
 					ProceduralTerrainSdf.CurrentVersion,
-					_terrainContentRevision ),
+					_terrainContentRevision,
+					coarseMask ),
 				_playerFigureEightRouteDistance );
 		}
 		_transitionDesired.Clear();
@@ -2410,7 +2489,8 @@ public sealed class VoxelManager : Component
 		{
 			var retainedAfter = _gpuMesher.CaptureTransitionIdentity( _transitionRetainedBuffer );
 			Log.Info(
-				$"[VoxelWorld] transition.update anchor=[{anchor.x},{anchor.y},{anchor.z}] " +
+				$"[VoxelWorld] transition.update innerAnchor=[{innerAnchor.x},{innerAnchor.y},{innerAnchor.z}] " +
+				$"outerAnchor=[{outerAnchor.x},{outerAnchor.y},{outerAnchor.z}] " +
 				$"desired={_transitionDesired.Count} entered={_lastTransitionEntered} " +
 				$"left={_lastTransitionLeft} retained={_lastTransitionRetained} " +
 				$"residentRetained={retainedAfter.Count} " +
@@ -2422,167 +2502,93 @@ public sealed class VoxelManager : Component
 		}
 
 		_lod1Clipbox.RecordUpdate(
-			anchor, outerMinimum, outerMaximum, holeMinimum, holeMaximum,
+			innerAnchor, outerAnchor, outerMinimum, outerMaximum, holeMinimum, holeMaximum,
 			_lod1EnteringBuffer.Count, _lod1LeavingBuffer.Count,
-			_lod1Clipbox.HasAnchor && IsAdjacent( _lod1Clipbox.Anchor, anchor ) );
+			_lod1Clipbox.HasAnchor && IsAdjacent( _lod1Clipbox.Anchor, innerAnchor ) &&
+			IsAdjacentAtMost( _lod1Clipbox.OuterAnchor, outerAnchor, 2 ) );
 		_lod1Clipbox.DesiredCache.Clear();
 		_lod1Clipbox.DesiredCache.UnionWith( _nextLod1Cache );
 		_lod1Clipbox.Active.Clear();
 		_lod1Clipbox.Active.UnionWith( _nextLod1Active );
-	}
-
-	private bool UpdateLod2Placement( Vector3 viewerPosition )
-	{
-		if ( PlacementInputs.MaximumVisualLevel != GpuMeshLevel.Lod2 || !_lod1Clipbox.HasAnchor ) return false;
-		var anchor = WorldToLod2Anchor( viewerPosition );
-		var nearMinimum = _lod1Clipbox.OuterMinimum;
-		var nearMaximum = _lod1Clipbox.OuterMaximum;
-		if ( _lod2Clipbox.HasAnchor && anchor == _lod2Clipbox.Anchor &&
-			nearMinimum == _lod2Clipbox.NearCoverageMinimum &&
-			nearMaximum == _lod2Clipbox.NearCoverageMaximum ) return false;
-
-		var outerMinimum = anchor - new Vector3Int( PlacementInputs.Lod2CacheHalfExtent );
-		var outerMaximum = anchor + new Vector3Int( PlacementInputs.Lod2CacheHalfExtent );
-		_nextLod2Cache.Clear();
-		_nextLod2Active.Clear();
-		AddHalfOpenBox( _nextLod2Cache, outerMinimum, outerMaximum );
-		foreach ( var coordinate in _nextLod2Cache )
-		{
-			if ( !IsLod2RegionContainedByNearCoverage( coordinate, nearMinimum, nearMaximum ) )
-				_nextLod2Active.Add( coordinate );
-		}
-
-		_lod2EnteringBuffer.Clear();
-		_lod2LeavingBuffer.Clear();
-		foreach ( var coordinate in _lod2Clipbox.DesiredCache )
-		{
-			if ( !_nextLod2Cache.Contains( coordinate ) ) _lod2LeavingBuffer.Add( coordinate );
-		}
-		foreach ( var coordinate in _nextLod2Cache )
-		{
-			if ( !_lod2Clipbox.DesiredCache.Contains( coordinate ) ) _lod2EnteringBuffer.Add( coordinate );
-		}
-
-		var activated = 0;
-		var deactivated = 0;
-		foreach ( var coordinate in _lod2Clipbox.Active )
-		{
-			if ( _nextLod2Active.Contains( coordinate ) ) continue;
-			_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ), false );
-			deactivated++;
-		}
-		foreach ( var coordinate in _nextLod2Active )
-		{
-			if ( _lod2Clipbox.Active.Contains( coordinate ) ) continue;
-			_gpuMesher.SetRenderActive( new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ), true );
-			activated++;
-		}
-		foreach ( var coordinate in _lod2LeavingBuffer )
-			_gpuMesher.Remove( new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ) );
-
-		SortNearestFirst( _lod2EnteringBuffer, anchor );
-		foreach ( var coordinate in _lod2EnteringBuffer )
-		{
-			_gpuMesher.Schedule(
-				new GpuSdfDescriptor(
-					new GpuMeshRegionKey( GpuMeshLevel.Lod2, coordinate ),
-					CellsPerAxis,
-					Lod2CellSize,
-					CurrentTerrainSettings,
-					ProceduralTerrainSdf.CurrentVersion,
-					_terrainContentRevision ),
-				_playerFigureEightRouteDistance,
-				GpuMeshResidency.Lod2 );
-		}
 
 		_lod2Clipbox.RecordUpdate(
-			anchor,
-			outerMinimum,
-			outerMaximum,
-			nearMinimum,
-			nearMaximum,
+			lod2Anchor,
+			lod2OuterMinimum,
+			lod2OuterMaximum,
+			lod2HoleMinimum,
+			lod2HoleMaximum,
 			_lod2EnteringBuffer.Count,
 			_lod2LeavingBuffer.Count,
-			activated,
-			deactivated,
-			_lod2Clipbox.HasAnchor && IsAdjacent( _lod2Clipbox.Anchor, anchor ) );
+			lod2Activated,
+			lod2Deactivated,
+			_lod2Clipbox.HasAnchor && IsAdjacent( _lod2Clipbox.Anchor, lod2Anchor ) );
 		_lod2Clipbox.DesiredCache.Clear();
 		_lod2Clipbox.DesiredCache.UnionWith( _nextLod2Cache );
 		_lod2Clipbox.Active.Clear();
 		_lod2Clipbox.Active.UnionWith( _nextLod2Active );
-		return true;
 	}
 
-	private bool IsLod2RegionContainedByNearCoverage( Vector3Int coordinate,
-		Vector3Int nearMinimum, Vector3Int nearMaximum )
-	{
-		var lod2Size = CellsPerAxis * Lod2CellSize;
-		var lod1Size = CellsPerAxis * Lod1CellSize;
-		var minimum = new Vector3(
-			coordinate.x * lod2Size,
-			coordinate.y * lod2Size,
-			coordinate.z * lod2Size );
-		var maximum = minimum + new Vector3( lod2Size );
-		var coverageMinimum = new Vector3(
-			nearMinimum.x * lod1Size,
-			nearMinimum.y * lod1Size,
-			nearMinimum.z * lod1Size );
-		var coverageMaximum = new Vector3(
-			nearMaximum.x * lod1Size,
-			nearMaximum.y * lod1Size,
-			nearMaximum.z * lod1Size );
-		return minimum.x >= coverageMinimum.x && maximum.x <= coverageMaximum.x &&
-			minimum.y >= coverageMinimum.y && maximum.y <= coverageMaximum.y &&
-			minimum.z >= coverageMinimum.z && maximum.z <= coverageMaximum.z;
-	}
-
-	private static void AddTransitionFaces( HashSet<Lod0Lod1TransitionKey> keys,
-		Vector3Int minimum, Vector3Int maximum )
+	private static void AddTransitionFaces( HashSet<GpuTransitionKey> keys,
+		GpuMeshLevel coarseLevel, Vector3Int minimum, Vector3Int maximum )
 	{
 		for ( var z = minimum.z; z < maximum.z; z++ )
 		for ( var y = minimum.y; y < maximum.y; y++ )
 		{
-			keys.Add( new Lod0Lod1TransitionKey(
-				new Vector3Int( minimum.x - 1, y, z ), Lod0Lod1TransitionFace.PositiveX ) );
-			keys.Add( new Lod0Lod1TransitionKey(
-				new Vector3Int( maximum.x, y, z ), Lod0Lod1TransitionFace.NegativeX ) );
+			keys.Add( new GpuTransitionKey( coarseLevel,
+				new Vector3Int( minimum.x - 1, y, z ), GpuTransitionFace.PositiveX ) );
+			keys.Add( new GpuTransitionKey( coarseLevel,
+				new Vector3Int( maximum.x, y, z ), GpuTransitionFace.NegativeX ) );
 		}
 		for ( var z = minimum.z; z < maximum.z; z++ )
 		for ( var x = minimum.x; x < maximum.x; x++ )
 		{
-			keys.Add( new Lod0Lod1TransitionKey(
-				new Vector3Int( x, minimum.y - 1, z ), Lod0Lod1TransitionFace.PositiveY ) );
-			keys.Add( new Lod0Lod1TransitionKey(
-				new Vector3Int( x, maximum.y, z ), Lod0Lod1TransitionFace.NegativeY ) );
+			keys.Add( new GpuTransitionKey( coarseLevel,
+				new Vector3Int( x, minimum.y - 1, z ), GpuTransitionFace.PositiveY ) );
+			keys.Add( new GpuTransitionKey( coarseLevel,
+				new Vector3Int( x, maximum.y, z ), GpuTransitionFace.NegativeY ) );
 		}
 		for ( var y = minimum.y; y < maximum.y; y++ )
 		for ( var x = minimum.x; x < maximum.x; x++ )
 		{
-			keys.Add( new Lod0Lod1TransitionKey(
-				new Vector3Int( x, y, minimum.z - 1 ), Lod0Lod1TransitionFace.PositiveZ ) );
-			keys.Add( new Lod0Lod1TransitionKey(
-				new Vector3Int( x, y, maximum.z ), Lod0Lod1TransitionFace.NegativeZ ) );
+			keys.Add( new GpuTransitionKey( coarseLevel,
+				new Vector3Int( x, y, minimum.z - 1 ), GpuTransitionFace.PositiveZ ) );
+			keys.Add( new GpuTransitionKey( coarseLevel,
+				new Vector3Int( x, y, maximum.z ), GpuTransitionFace.NegativeZ ) );
 		}
 	}
 
-	private static bool IsAdjacent( Vector3Int first, Vector3Int second )
+	private static void AddBoundaryMask( Dictionary<GpuMeshRegionKey, uint> masks,
+		GpuMeshRegionKey key, GpuTransitionFace face )
+	{
+		masks.TryGetValue( key, out var mask );
+		masks[key] = mask | 1u << (int)face;
+	}
+
+	private static bool IsAdjacent( Vector3Int first, Vector3Int second ) =>
+		IsAdjacentAtMost( first, second, 1 );
+
+	private static bool IsAdjacentAtMost( Vector3Int first, Vector3Int second, int maximumDelta )
 	{
 		var delta = second - first;
-		return Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1;
+		return Math.Abs( delta.x ) <= maximumDelta && Math.Abs( delta.y ) <= maximumDelta &&
+			Math.Abs( delta.z ) <= maximumDelta;
 	}
 
-	private static void SortTransitionsNearestFirst( List<Lod0Lod1TransitionKey> keys,
-		Vector3Int center )
+	private static void SortTransitionsNearestFirst( List<GpuTransitionKey> keys,
+		Vector3Int innerCenter, Vector3Int outerCenter )
 	{
 		keys.Sort( ( left, right ) =>
 		{
-			var leftCoordinate = left.Lod1Coordinate;
-			var rightCoordinate = right.Lod1Coordinate;
+			var comparison = left.CoarseLevel.CompareTo( right.CoarseLevel );
+			if ( comparison != 0 ) return comparison;
+			var center = left.CoarseLevel == GpuMeshLevel.Lod1 ? innerCenter : outerCenter;
+			var leftCoordinate = left.CoarseCoordinate;
+			var rightCoordinate = right.CoarseCoordinate;
 			var leftDistance = Math.Abs( leftCoordinate.x - center.x ) +
 				Math.Abs( leftCoordinate.y - center.y ) + Math.Abs( leftCoordinate.z - center.z );
 			var rightDistance = Math.Abs( rightCoordinate.x - center.x ) +
 				Math.Abs( rightCoordinate.y - center.y ) + Math.Abs( rightCoordinate.z - center.z );
-			var comparison = leftDistance.CompareTo( rightDistance );
+			comparison = leftDistance.CompareTo( rightDistance );
 			if ( comparison != 0 ) return comparison;
 			comparison = leftCoordinate.z.CompareTo( rightCoordinate.z );
 			if ( comparison != 0 ) return comparison;
@@ -3282,8 +3288,8 @@ internal sealed class Lod2ClipboxState
 	public Vector3Int Anchor { get; private set; }
 	public Vector3Int OuterMinimum { get; private set; }
 	public Vector3Int OuterMaximum { get; private set; }
-	public Vector3Int NearCoverageMinimum { get; private set; }
-	public Vector3Int NearCoverageMaximum { get; private set; }
+	public Vector3Int HoleMinimum { get; private set; }
+	public Vector3Int HoleMaximum { get; private set; }
 	public HashSet<Vector3Int> DesiredCache { get; } = new();
 	public HashSet<Vector3Int> Active { get; } = new();
 	public int FullUpdates { get; private set; }
@@ -3301,8 +3307,8 @@ internal sealed class Lod2ClipboxState
 		Vector3Int anchor,
 		Vector3Int outerMinimum,
 		Vector3Int outerMaximum,
-		Vector3Int nearCoverageMinimum,
-		Vector3Int nearCoverageMaximum,
+		Vector3Int holeMinimum,
+		Vector3Int holeMaximum,
 		int entered,
 		int left,
 		int activated,
@@ -3313,8 +3319,8 @@ internal sealed class Lod2ClipboxState
 		Anchor = anchor;
 		OuterMinimum = outerMinimum;
 		OuterMaximum = outerMaximum;
-		NearCoverageMinimum = nearCoverageMinimum;
-		NearCoverageMaximum = nearCoverageMaximum;
+		HoleMinimum = holeMinimum;
+		HoleMaximum = holeMaximum;
 		LastEnteredRegions = entered;
 		LastLeftRegions = left;
 		LastActivatedRegions = activated;
@@ -3333,8 +3339,8 @@ internal sealed class Lod2ClipboxState
 		Anchor = default;
 		OuterMinimum = default;
 		OuterMaximum = default;
-		NearCoverageMinimum = default;
-		NearCoverageMaximum = default;
+		HoleMinimum = default;
+		HoleMaximum = default;
 		DesiredCache.Clear();
 		Active.Clear();
 		FullUpdates = 0;
@@ -3354,6 +3360,7 @@ internal sealed class Lod1ClipboxState
 {
 	public bool HasAnchor { get; private set; }
 	public Vector3Int Anchor { get; private set; }
+	public Vector3Int OuterAnchor { get; private set; }
 	public Vector3Int OuterMinimum { get; private set; }
 	public Vector3Int OuterMaximum { get; private set; }
 	public Vector3Int HoleMinimum { get; private set; }
@@ -3367,11 +3374,13 @@ internal sealed class Lod1ClipboxState
 	public int LastEnteredRegions { get; private set; }
 	public int LastLeftRegions { get; private set; }
 
-	public void RecordUpdate( Vector3Int anchor, Vector3Int outerMinimum, Vector3Int outerMaximum,
+	public void RecordUpdate( Vector3Int anchor, Vector3Int outerAnchor,
+		Vector3Int outerMinimum, Vector3Int outerMaximum,
 		Vector3Int holeMinimum, Vector3Int holeMaximum, int entered, int left, bool incremental )
 	{
 		HasAnchor = true;
 		Anchor = anchor;
+		OuterAnchor = outerAnchor;
 		OuterMinimum = outerMinimum;
 		OuterMaximum = outerMaximum;
 		HoleMinimum = holeMinimum;
@@ -3388,6 +3397,7 @@ internal sealed class Lod1ClipboxState
 	{
 		HasAnchor = false;
 		Anchor = default;
+		OuterAnchor = default;
 		OuterMinimum = default;
 		OuterMaximum = default;
 		HoleMinimum = default;

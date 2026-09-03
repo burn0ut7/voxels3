@@ -15,6 +15,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private const int VertexArenaCapacity = VertexArenaBytes / TerrainVertexBytes;
 	private const int IndexArenaCapacity = IndexArenaBytes / sizeof( uint );
 	private const int IndirectArgumentStride = sizeof( uint ) * 5;
+	private const uint TerrainRecordSlotMask = 0x001fffffu;
+	private const uint TerrainRecordGenerationTokenMask = 3u;
+	private const int TerrainRecordGenerationTokenShift = 21;
+	private const uint TerrainRecordIdentitySignatureMask = 0xff800000u;
+	private const uint TerrainRecordIdentitySignature = 0x3f800000u;
 	private const int MaximumScheduleLatencySamples = 524288;
 	private const int MaximumThroughputBatchSamples = 65536;
 	private const int DefaultMeshAuditRegionsPerLevel = 8;
@@ -34,17 +39,18 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private ScratchLane[] _scratchLanes;
 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
 	private readonly HashSet<GpuMeshRegionKey> _renderActive = new();
+	private readonly Dictionary<GpuMeshRegionKey, uint> _transitionMasks = new();
 	private readonly HashSet<CameraComponent> _currentRenderCameras = new();
 	private readonly HashSet<CameraComponent> _leavingRenderCameras = new();
 	private readonly Dictionary<CameraComponent, RenderCameraState> _renderCameraStates = new();
 	private readonly List<RenderCameraState> _retiredRenderCameraStates = new();
 	private readonly object _renderCameraLock = new();
-	private readonly Dictionary<Lod0Lod1TransitionKey, ResidentTransition> _transitionResident = new();
-	private readonly Dictionary<Lod0Lod1TransitionKey, GpuTransitionDescriptor> _transitionDesiredDescriptors = new();
-	private readonly Dictionary<Lod0Lod1TransitionKey, PendingTransition> _transitionPending = new();
+	private readonly Dictionary<GpuTransitionKey, ResidentTransition> _transitionResident = new();
+	private readonly Dictionary<GpuTransitionKey, GpuTransitionDescriptor> _transitionDesiredDescriptors = new();
+	private readonly Dictionary<GpuTransitionKey, PendingTransition> _transitionPending = new();
 	private readonly Queue<PendingTransition> _transitionDispatchQueue = new();
 	private readonly HashSet<uint> _transitionCancelledGenerations = new();
-	private readonly HashSet<Lod0Lod1TransitionKey> _transitionRenderActive = new();
+	private readonly HashSet<GpuTransitionKey> _transitionRenderActive = new();
 	private TransitionScratchLane[] _transitionScratchLanes;
 	private readonly object _visibilityLock = new();
 	private readonly object _visibilityDescriptorLock = new();
@@ -63,6 +69,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private int _lod2ResidentCount;
 	private uint _nextGeneration;
 	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
+	private Vector4[] _terrainRecordData = Array.Empty<Vector4>();
 	private GpuBuffer.IndirectDrawIndexedArguments[] _sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
 	private bool _visibilityMeasurementActive;
 	private bool _visibilitySettledCaptureActive;
@@ -247,7 +254,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public string Lod2PositionDigest => _lod2PositionDigest.ToString( "X16" );
 	public long RenderSequence => System.Threading.Interlocked.Read( ref _renderSequence );
 	public long LogicalVisibilityBytes => _visibilityCapacity == 0 ? 0 :
-		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) + sizeof( uint ) * 31;
+		(long)_visibilityCapacity * (sizeof( float ) * 16 + IndirectArgumentStride * 2) + sizeof( uint ) * 31;
 
 	public GpuVoxelMesher( Scene scene, int cellsPerAxis )
 	{
@@ -365,7 +372,18 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionScheduledCount++;
 	}
 
-	public void SetTransitionActive( Lod0Lod1TransitionKey key, bool active )
+	public void SetTransitionMask( GpuMeshRegionKey key, uint mask )
+	{
+		_transitionMasks.TryGetValue( key, out var previousMask );
+		if ( previousMask == mask ) return;
+		if ( mask == 0 ) _transitionMasks.Remove( key );
+		else _transitionMasks[key] = mask;
+		if ( !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
+		lock ( _visibilityDescriptorLock ) SetTerrainRecordDescriptorLocked( resident );
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	public void SetTransitionActive( GpuTransitionKey key, bool active )
 	{
 		var changed = active ? _transitionRenderActive.Add( key ) : _transitionRenderActive.Remove( key );
 		if ( !changed || !_transitionResident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
@@ -373,7 +391,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		MarkDrawCommandsDirty();
 	}
 
-	public void RemoveTransition( Lod0Lod1TransitionKey key )
+	public void RemoveTransition( GpuTransitionKey key )
 	{
 		_transitionRenderActive.Remove( key );
 		_transitionDesiredDescriptors.Remove( key );
@@ -395,14 +413,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 	}
 
 	public GpuTransitionIdentitySnapshot CaptureTransitionIdentity(
-		IEnumerable<Lod0Lod1TransitionKey> keys )
+		IEnumerable<GpuTransitionKey> keys )
 	{
 		var count = 0;
 		ulong digest = 0;
 		foreach ( var key in keys
-			.OrderBy( value => value.Lod1Coordinate.x )
-			.ThenBy( value => value.Lod1Coordinate.y )
-			.ThenBy( value => value.Lod1Coordinate.z )
+			.OrderBy( value => value.CoarseLevel )
+			.ThenBy( value => value.CoarseCoordinate.x )
+			.ThenBy( value => value.CoarseCoordinate.y )
+			.ThenBy( value => value.CoarseCoordinate.z )
 			.ThenBy( value => value.Face ) )
 		{
 			if ( !_transitionResident.TryGetValue( key, out var resident ) ) continue;
@@ -471,9 +490,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private GpuTransitionFaceMeasurement[] CreateTransitionFaceMeasurements() =>
 		_transitionResident
-			.OrderBy( pair => pair.Key.Lod1Coordinate.x )
-			.ThenBy( pair => pair.Key.Lod1Coordinate.y )
-			.ThenBy( pair => pair.Key.Lod1Coordinate.z )
+			.OrderBy( pair => pair.Key.CoarseLevel )
+			.ThenBy( pair => pair.Key.CoarseCoordinate.x )
+			.ThenBy( pair => pair.Key.CoarseCoordinate.y )
+			.ThenBy( pair => pair.Key.CoarseCoordinate.z )
 			.ThenBy( pair => pair.Key.Face )
 			.Select( pair =>
 			{
@@ -491,7 +511,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					resident.Counts.ActiveCells,
 					resident.ScheduleToPublicationMilliseconds,
 					resident.Counts.TopologyDigest,
-					resident.Counts.PositionDigest,
+					CombinedTransitionPositionDigest( resident.Descriptor, resident.Counts.PositionDigest ),
 					resident.Counts.FineFaceMismatchCount,
 					resident.Counts.CoarseFaceMismatchCount,
 					resident.Counts.MinimumUDigest,
@@ -675,10 +695,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 				.Select( resident => CreateRegularMeshAuditTarget( resident, target ) );
 			targets.AddRange( SelectMeshAuditTargets( candidates, regionsPerLevel, selection ) );
 		}
-		var transitionCandidates = _transitionResident.Values
-			.Where( resident => resident.Handle is not null && _transitionRenderActive.Contains( resident.Descriptor.Key ) )
-			.Select( resident => CreateTransitionMeshAuditTarget( resident, target ) );
-		targets.AddRange( SelectMeshAuditTargets( transitionCandidates, regionsPerLevel, selection ) );
+		foreach ( var coarseLevel in new[] { GpuMeshLevel.Lod1, GpuMeshLevel.Lod2 } )
+		{
+			var transitionCandidates = _transitionResident.Values
+				.Where( resident => resident.Descriptor.Key.CoarseLevel == coarseLevel &&
+					resident.Handle is not null && _transitionRenderActive.Contains( resident.Descriptor.Key ) )
+				.Select( resident => CreateTransitionMeshAuditTarget( resident, target ) );
+			targets.AddRange( SelectMeshAuditTargets( transitionCandidates, regionsPerLevel, selection ) );
+		}
 
 		if ( targets.Count == 0 )
 		{
@@ -769,8 +793,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 				if ( reportedMismatches++ >= 32 ) continue;
 				Log.Warning(
 					$"[VoxelWorld] mesh.audit.visibility_mismatch id={auditId} kind=transition " +
-					$"mesh=\"{pair.Key.Face}:C[{pair.Key.Lod1Coordinate.x}," +
-					$"{pair.Key.Lod1Coordinate.y},{pair.Key.Lod1Coordinate.z}]\" " +
+					$"mesh=\"{pair.Key.CoarseLevel}:{pair.Key.Face}:C[{pair.Key.CoarseCoordinate.x}," +
+					$"{pair.Key.CoarseCoordinate.y},{pair.Key.CoarseCoordinate.z}]\" " +
 					$"expectedActive={expected} drawable={drawable}" );
 			}
 		}
@@ -793,7 +817,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 			lock ( _visibilityDescriptorLock )
 			{
 				var expected = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
+				var expectedRecords = new Vector4[_visibilityCapacity * 2];
 				_sourceArgumentData.CopyTo( expected, 0 );
+				_terrainRecordData.CopyTo( expectedRecords, 0 );
 				foreach ( var state in _renderCameraStates.Values )
 				{
 					var cameraIndex = cameraCount++;
@@ -810,16 +836,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 					var source = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
 					var visible = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
+					var records = new Vector4[_visibilityCapacity * 2];
 					visibility.SourceArguments.GetData<GpuBuffer.IndirectDrawIndexedArguments>(
 						source.AsSpan(), 0, _visibilityCapacity );
 					visibility.VisibleArguments.GetData<GpuBuffer.IndirectDrawIndexedArguments>(
 						visible.AsSpan(), 0, _visibilityCapacity );
-					_geometryReadbackCount += 2;
-					readbacks += 2;
-					readbackBytes += (long)_visibilityCapacity * IndirectArgumentStride * 2;
+					visibility.Records.GetData<Vector4>( records.AsSpan(), 0, records.Length );
+					_geometryReadbackCount += 3;
+					readbacks += 3;
+					readbackBytes += (long)_visibilityCapacity *
+						(IndirectArgumentStride * 2 + sizeof( float ) * 8);
 
 					var sourceMismatches = 0;
 					var visibleMismatches = 0;
+					var recordMismatches = 0;
 					var sourceDraws = 0;
 					var visibleDraws = 0;
 					for ( var slot = 0; slot < _visibilityCapacity; slot++ )
@@ -827,6 +857,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 						var expectedArgument = expected[slot];
 						var sourceArgument = source[slot];
 						var visibleArgument = visible[slot];
+						var recordIndex = slot * 2;
 						if ( sourceArgument.IndexCount > 0 && sourceArgument.InstanceCount > 0 ) sourceDraws++;
 						if ( visibleArgument.IndexCount > 0 && visibleArgument.InstanceCount > 0 ) visibleDraws++;
 
@@ -839,6 +870,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 									$"[VoxelWorld] mesh.audit.draw_argument_mismatch id={auditId} camera={cameraIndex} " +
 									$"buffer=source slot={slot} expected=\"{FormatDrawArguments( expectedArgument )}\" " +
 									$"actual=\"{FormatDrawArguments( sourceArgument )}\"" );
+							}
+						}
+
+						if ( !TerrainRecordEqual( records[recordIndex], expectedRecords[recordIndex] ) ||
+							!TerrainRecordEqual( records[recordIndex + 1], expectedRecords[recordIndex + 1] ) )
+						{
+							recordMismatches++;
+							if ( reportedFailures++ < 32 )
+							{
+								Log.Warning(
+									$"[VoxelWorld] mesh.audit.record_descriptor_mismatch id={auditId} camera={cameraIndex} " +
+									$"slot={slot} expected=\"{FormatTerrainRecord( expectedRecords[recordIndex], expectedRecords[recordIndex + 1] )}\" " +
+									$"actual=\"{FormatTerrainRecord( records[recordIndex], records[recordIndex + 1] )}\"" );
 							}
 						}
 
@@ -860,14 +904,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 						}
 					}
 
-					var cameraFailures = sourceMismatches + visibleMismatches;
+					var cameraFailures = sourceMismatches + visibleMismatches + recordMismatches;
 					failures += cameraFailures;
 					Log.Info(
 						$"[VoxelWorld] mesh.audit.draw_state id={auditId} " +
 						$"status={(cameraFailures == 0 ? "pass" : "fail")} camera={cameraIndex} " +
 						$"main={state.Camera.IsMainCamera} capacity={_visibilityCapacity} " +
 						$"sourceDraws={sourceDraws} visibleDraws={visibleDraws} " +
-						$"sourceMismatches={sourceMismatches} visibleMismatches={visibleMismatches}" );
+						$"sourceMismatches={sourceMismatches} visibleMismatches={visibleMismatches} " +
+						$"recordMismatches={recordMismatches}" );
 				}
 			}
 		}
@@ -896,6 +941,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 			left.BaseVertex == right.BaseVertex &&
 			left.FirstInstance == right.FirstInstance;
 	}
+
+	private static bool TerrainRecordEqual( Vector4 left, Vector4 right ) =>
+		left.x == right.x && left.y == right.y && left.z == right.z && left.w == right.w;
+
+	private static string FormatTerrainRecord( Vector4 first, Vector4 second ) =>
+		$"first=[{first.x},{first.y},{first.z},{first.w}]," +
+		$"second=[{second.x},{second.y},{second.z},{second.w}]";
 
 	private static string FormatDrawArguments( GpuBuffer.IndirectDrawIndexedArguments arguments )
 	{
@@ -1143,6 +1195,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var failed = result.InvalidIndices > 0 || result.IndexRemainder > 0 ||
 				result.NonFinitePositions > 0 || result.OutOfBoundsPositions > 0 ||
 				result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 ||
+				result.RecordIdentityMismatches > 0 ||
 				result.OversizedTriangles > 0 || (result.IsTransition && result.DegenerateTriangles > 0);
 			Log.Info(
 				$"[VoxelWorld] mesh.audit.region id={request.Id} status={(failed ? "fail" : "pass")} " +
@@ -1150,7 +1203,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 				$"triangles={result.TriangleCount} invalidIndices={result.InvalidIndices} " +
 				$"indexRemainder={result.IndexRemainder} nonFinitePositions={result.NonFinitePositions} " +
 				$"outOfBoundsPositions={result.OutOfBoundsPositions} nonFiniteNormals={result.NonFiniteNormals} " +
-				$"abnormalNormals={result.AbnormalNormals} degenerateTriangles={result.DegenerateTriangles} " +
+				$"abnormalNormals={result.AbnormalNormals} " +
+				$"recordIdentityMismatches={result.RecordIdentityMismatches} " +
+				$"degenerateTriangles={result.DegenerateTriangles} " +
 				$"oversizedTriangles={result.OversizedTriangles} maxEdge={result.MaximumEdgeLength:0.###} " +
 				$"maxEdgeCells={result.MaximumEdgeCellRatio:0.###} observedMin={result.MinimumPosition} " +
 				$"observedMax={result.MaximumPosition} expectedMin={result.ExpectedMinimum} " +
@@ -1165,11 +1220,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 		var failures = completed.Count( result => result.InvalidIndices > 0 || result.IndexRemainder > 0 ||
 			result.NonFinitePositions > 0 || result.OutOfBoundsPositions > 0 ||
-			result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 || result.OversizedTriangles > 0 ||
+			result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 ||
+			result.RecordIdentityMismatches > 0 || result.OversizedTriangles > 0 ||
 			(result.IsTransition && result.DegenerateTriangles > 0) );
 		var mutationFailures = completed.Count( result => result.InvalidIndices > 0 || result.IndexRemainder > 0 ||
 			result.NonFinitePositions > 0 || result.OutOfBoundsPositions > 0 ||
-			result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 || result.OversizedTriangles > 0 ) +
+			result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 ||
+			result.RecordIdentityMismatches > 0 || result.OversizedTriangles > 0 ) +
 			drawAudit.Failures;
 		var elapsed = Stopwatch.GetElapsedTime( started ).TotalMilliseconds;
 		Log.Info(
@@ -1178,6 +1235,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			$"invalidIndices={completed.Sum( result => result.InvalidIndices )} " +
 			$"outOfBoundsPositions={completed.Sum( result => result.OutOfBoundsPositions )} " +
 			$"nonFinitePositions={completed.Sum( result => result.NonFinitePositions )} " +
+			$"recordIdentityMismatches={completed.Sum( result => result.RecordIdentityMismatches )} " +
 			$"oversizedTriangles={completed.Sum( result => result.OversizedTriangles )} " +
 			$"degenerateTriangles={completed.Sum( result => result.DegenerateTriangles )} " +
 			$"maximumEdgeCells={(completed.Count > 0 ? completed.Max( result => result.MaximumEdgeCellRatio ) : 0):0.###} " +
@@ -1228,25 +1286,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var descriptor = resident.Descriptor;
 		var size = descriptor.CellsPerAxis * descriptor.CoarseCellSize;
 		var minimum = new Vector3(
-			descriptor.Key.Lod1Coordinate.x * size,
-			descriptor.Key.Lod1Coordinate.y * size,
-			descriptor.Key.Lod1Coordinate.z * size );
+			descriptor.Key.CoarseCoordinate.x * size,
+			descriptor.Key.CoarseCoordinate.y * size,
+			descriptor.Key.CoarseCoordinate.z * size );
 		var maximum = minimum + new Vector3( size );
 		switch ( descriptor.Key.Face )
 		{
-			case Lod0Lod1TransitionFace.NegativeX: maximum.x = minimum.x; break;
-			case Lod0Lod1TransitionFace.PositiveX: minimum.x = maximum.x; break;
-			case Lod0Lod1TransitionFace.NegativeY: maximum.y = minimum.y; break;
-			case Lod0Lod1TransitionFace.PositiveY: minimum.y = maximum.y; break;
-			case Lod0Lod1TransitionFace.NegativeZ: maximum.z = minimum.z; break;
-			case Lod0Lod1TransitionFace.PositiveZ: minimum.z = maximum.z; break;
+			case GpuTransitionFace.NegativeX: maximum.x = minimum.x; break;
+			case GpuTransitionFace.PositiveX: minimum.x = maximum.x; break;
+			case GpuTransitionFace.NegativeY: maximum.y = minimum.y; break;
+			case GpuTransitionFace.PositiveY: minimum.y = maximum.y; break;
+			case GpuTransitionFace.NegativeZ: maximum.z = minimum.z; break;
+			case GpuTransitionFace.PositiveZ: minimum.z = maximum.z; break;
 		}
-		var secondaryEnvelope = new Vector3( descriptor.FineCellSize * 0.25f * MathF.Sqrt( 3f ) );
+		var secondaryEnvelope = new Vector3( descriptor.CoarseCellSize * 0.25f * MathF.Sqrt( 3f ) );
 		minimum -= secondaryEnvelope;
 		maximum += secondaryEnvelope;
 		return new MeshAuditTarget(
-			$"Transition:{descriptor.Key.Face}:C[{descriptor.Key.Lod1Coordinate.x}," +
-				$"{descriptor.Key.Lod1Coordinate.y},{descriptor.Key.Lod1Coordinate.z}]",
+			$"Transition:{descriptor.Key.CoarseLevel}:{descriptor.Key.Face}:C[{descriptor.Key.CoarseCoordinate.x}," +
+				$"{descriptor.Key.CoarseCoordinate.y},{descriptor.Key.CoarseCoordinate.z}]",
 			null,
 			descriptor.Key,
 			resident.Handle,
@@ -1276,6 +1334,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var outOfBoundsPositions = 0;
 		var nonFiniteNormals = 0;
 		var abnormalNormals = 0;
+		var recordIdentityMismatches = 0;
 		var tolerance = MathF.Max( target.CellSize * 0.01f, 0.001f );
 		foreach ( var vertex in vertices )
 		{
@@ -1298,13 +1357,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 				outOfBoundsPositions++;
 			}
 
-			var normal = vertex.Normal;
-			if ( !float.IsFinite( normal.x ) || !float.IsFinite( normal.y ) || !float.IsFinite( normal.z ) )
+			var packedNormal = vertex.Normal;
+			if ( !float.IsFinite( packedNormal.x ) || !float.IsFinite( packedNormal.y ) ||
+				!float.IsFinite( packedNormal.z ) )
 			{
 				nonFiniteNormals++;
 			}
 			else
 			{
+				var encodedRecordIdentity = BitConverter.SingleToUInt32Bits( packedNormal.x );
+				var recordId = (int)(encodedRecordIdentity & TerrainRecordSlotMask);
+				var generationToken =
+					(encodedRecordIdentity >> TerrainRecordGenerationTokenShift) &
+					TerrainRecordGenerationTokenMask;
+				if ( (encodedRecordIdentity & TerrainRecordIdentitySignatureMask) !=
+						TerrainRecordIdentitySignature ||
+					recordId != target.Handle.GlobalSlot ||
+					generationToken != (target.Generation & TerrainRecordGenerationTokenMask) )
+					recordIdentityMismatches++;
+				var normal = DecodeTerrainNormal( packedNormal.y, packedNormal.z );
 				var lengthSquared = normal.LengthSquared;
 				if ( lengthSquared < 0.8f * 0.8f || lengthSquared > 1.2f * 1.2f ) abnormalNormals++;
 			}
@@ -1378,6 +1449,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			outOfBoundsPositions,
 			nonFiniteNormals,
 			abnormalNormals,
+			recordIdentityMismatches,
 			degenerateTriangles,
 			oversizedTriangles,
 			maximumEdge,
@@ -1387,6 +1459,22 @@ internal sealed class GpuVoxelMesher : IDisposable
 			target.ExpectedMinimum,
 			target.ExpectedMaximum,
 			string.Join( " | ", degenerateExamples ) );
+	}
+
+	private static Vector3 DecodeTerrainNormal( float x, float y )
+	{
+		var normal = new Vector3( x, y, 1f - MathF.Abs( x ) - MathF.Abs( y ) );
+		if ( normal.z < 0f )
+		{
+			var signX = normal.x >= 0f ? 1f : -1f;
+			var signY = normal.y >= 0f ? 1f : -1f;
+			var decodedX = (1f - MathF.Abs( normal.y )) * signX;
+			var decodedY = (1f - MathF.Abs( normal.x )) * signY;
+			normal.x = decodedX;
+			normal.y = decodedY;
+		}
+		var lengthSquared = normal.LengthSquared;
+		return lengthSquared > 1e-12f ? normal / MathF.Sqrt( lengthSquared ) : Vector3.Up;
 	}
 
 	private void ProcessGpuRenderTick()
@@ -1597,40 +1685,40 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var descriptor = inFlight.Descriptor;
 		var size = descriptor.CellsPerAxis * descriptor.CoarseCellSize;
 		var regionOrigin = new Vector3(
-			descriptor.Key.Lod1Coordinate.x * size,
-			descriptor.Key.Lod1Coordinate.y * size,
-			descriptor.Key.Lod1Coordinate.z * size );
+			descriptor.Key.CoarseCoordinate.x * size,
+			descriptor.Key.CoarseCoordinate.y * size,
+			descriptor.Key.CoarseCoordinate.z * size );
 		Vector3 origin;
 		Vector3 basisU;
 		Vector3 basisV;
 		Vector3 normal;
 		switch ( descriptor.Key.Face )
 		{
-			case Lod0Lod1TransitionFace.NegativeX:
+			case GpuTransitionFace.NegativeX:
 				origin = regionOrigin + new Vector3( 0, 0, size );
 				basisU = new Vector3( 0, 1, 0 );
 				basisV = new Vector3( 0, 0, -1 );
 				normal = new Vector3( -1, 0, 0 );
 				break;
-			case Lod0Lod1TransitionFace.PositiveX:
+			case GpuTransitionFace.PositiveX:
 				origin = regionOrigin + new Vector3( size, 0, 0 );
 				basisU = new Vector3( 0, 1, 0 );
 				basisV = new Vector3( 0, 0, 1 );
 				normal = new Vector3( 1, 0, 0 );
 				break;
-			case Lod0Lod1TransitionFace.NegativeY:
+			case GpuTransitionFace.NegativeY:
 				origin = regionOrigin + new Vector3( size, 0, 0 );
 				basisU = new Vector3( 0, 0, 1 );
 				basisV = new Vector3( -1, 0, 0 );
 				normal = new Vector3( 0, -1, 0 );
 				break;
-			case Lod0Lod1TransitionFace.PositiveY:
+			case GpuTransitionFace.PositiveY:
 				origin = regionOrigin + new Vector3( 0, size, 0 );
 				basisU = new Vector3( 0, 0, 1 );
 				basisV = new Vector3( 1, 0, 0 );
 				normal = new Vector3( 0, 1, 0 );
 				break;
-			case Lod0Lod1TransitionFace.NegativeZ:
+			case GpuTransitionFace.NegativeZ:
 				origin = regionOrigin + new Vector3( 0, size, 0 );
 				basisU = new Vector3( 1, 0, 0 );
 				basisV = new Vector3( 0, -1, 0 );
@@ -1655,7 +1743,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 			BasisVAndCellsPerAxis = new Vector4( basisV, descriptor.CellsPerAxis ),
 			NormalAndFace = new Vector4( normal, (int)descriptor.Key.Face ),
 			Generation = inFlight.Generation,
-			RequestIndex = (uint)requestIndex
+			RequestIndex = (uint)requestIndex,
+			CoarseOriginAndMask = new Vector4( regionOrigin, descriptor.CoarseMask )
 		};
 	}
 
@@ -1716,7 +1805,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 					IndexCapacity = (uint)candidate.Handle.Indices.Count,
 					Generation = candidate.Generation,
 					RequestIndex = (uint)index,
-					Enabled = 1
+					Enabled = 1,
+					Reserved = PackTerrainRecordIdentity( candidate.Handle )
 				};
 			}
 			var arenaEmitMilliseconds = lane.Scratch.SubmitEmitPass( allocations, count, arena.Vertices, arena.Indices );
@@ -1873,7 +1963,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 					IndexCapacity = (uint)candidate.Handle.Indices.Count,
 					Generation = candidate.Generation,
 					RequestIndex = (uint)index,
-					Enabled = 1
+					Enabled = 1,
+					Reserved = PackTerrainRecordIdentity( candidate.Handle )
 				};
 			}
 			lane.Scratch.SubmitEmitPass( allocations, count, arena.Vertices, arena.Indices );
@@ -1935,7 +2026,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 					SetTransitionVisibilityActive( resident, true );
 				}
 				_transitionTopologyDigest ^= TransitionCoordinateDigest( key, completed.Counts.TopologyDigest );
-				_transitionPositionDigest ^= TransitionCoordinateDigest( key, completed.Counts.PositionDigest );
+				_transitionPositionDigest ^= TransitionCoordinateDigest( key,
+					CombinedTransitionPositionDigest( completed.Descriptor, completed.Counts.PositionDigest ) );
 				_transitionFineFaceMismatchCount += completed.Counts.FineFaceMismatchCount;
 				_transitionCoarseFaceMismatchCount += completed.Counts.CoarseFaceMismatchCount;
 				_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
@@ -1952,18 +2044,21 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 	}
 
-	private static ulong TransitionCoordinateDigest( Lod0Lod1TransitionKey key, uint digest )
+	private static ulong TransitionCoordinateDigest( GpuTransitionKey key, uint digest )
 	{
-		var coordinate = key.Lod1Coordinate;
+		var coordinate = key.CoarseCoordinate;
 		ulong value = digest ^ (uint)coordinate.x * 0x9E3779B1u ^
 			(uint)coordinate.y * 0x85EBCA77u ^ (uint)coordinate.z * 0xC2B2AE3Du ^
-			(uint)key.Face * 0x27D4EB2Du;
+			(uint)key.Face * 0x27D4EB2Du ^ (uint)key.CoarseLevel * 0x165667B1u;
 		value ^= value >> 30;
 		value *= 0xBF58476D1CE4E5B9ul;
 		value ^= value >> 27;
 		value *= 0x94D049BB133111EBul;
 		return value ^ (value >> 31);
 	}
+
+	private static uint CombinedTransitionPositionDigest( GpuTransitionDescriptor descriptor, uint primaryDigest ) =>
+		primaryDigest ^ descriptor.CoarseMask * 0x9E3779B1u;
 
 	private void RecordTransitionLatency( float milliseconds )
 	{
@@ -2030,6 +2125,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return allocation;
 	}
 
+	private static uint PackTerrainRecordIdentity( GeometryHandle handle )
+	{
+		var slot = (uint)handle.GlobalSlot;
+		if ( slot > TerrainRecordSlotMask )
+			throw new InvalidOperationException( "Terrain record slot exceeds the packed vertex identity." );
+		return slot | ((handle.Generation & TerrainRecordGenerationTokenMask) << 30);
+	}
+
 	private void ReleaseResident( ResidentMesh resident )
 	{
 		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
@@ -2063,7 +2166,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionTopologyDigest ^= TransitionCoordinateDigest(
 			resident.Descriptor.Key, resident.Counts.TopologyDigest );
 		_transitionPositionDigest ^= TransitionCoordinateDigest(
-			resident.Descriptor.Key, resident.Counts.PositionDigest );
+			resident.Descriptor.Key,
+			CombinedTransitionPositionDigest( resident.Descriptor, resident.Counts.PositionDigest ) );
 		_transitionFineFaceMismatchCount -= resident.Counts.FineFaceMismatchCount;
 		_transitionCoarseFaceMismatchCount -= resident.Counts.CoarseFaceMismatchCount;
 		_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( resident.Counts );
@@ -2080,13 +2184,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var pair in _transitionResident )
 		{
 			GetTransitionFaceAxes( pair.Key.Face, out var u, out var v );
-			var uNeighborKey = pair.Key with { Lod1Coordinate = pair.Key.Lod1Coordinate + u };
+			var uNeighborKey = pair.Key with { CoarseCoordinate = pair.Key.CoarseCoordinate + u };
 			if ( _transitionResident.TryGetValue( uNeighborKey, out var uNeighbor ) &&
 				pair.Value.Counts.MaximumUDigest != uNeighbor.Counts.MinimumUDigest )
 			{
 				mismatches++;
 			}
-			var vNeighborKey = pair.Key with { Lod1Coordinate = pair.Key.Lod1Coordinate + v };
+			var vNeighborKey = pair.Key with { CoarseCoordinate = pair.Key.CoarseCoordinate + v };
 			if ( _transitionResident.TryGetValue( vNeighborKey, out var vNeighbor ) &&
 				pair.Value.Counts.MaximumVDigest != vNeighbor.Counts.MinimumVDigest )
 			{
@@ -2099,20 +2203,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private static uint TransitionCombinedLateralDigest( GpuTransitionCountResult counts ) =>
 		counts.MinimumUDigest ^ counts.MaximumUDigest ^ counts.MinimumVDigest ^ counts.MaximumVDigest;
 
-	private static void GetTransitionFaceAxes( Lod0Lod1TransitionFace face,
+	private static void GetTransitionFaceAxes( GpuTransitionFace face,
 		out Vector3Int u, out Vector3Int v )
 	{
 		switch ( face )
 		{
-			case Lod0Lod1TransitionFace.NegativeX:
+			case GpuTransitionFace.NegativeX:
 				u = new Vector3Int( 0, 1, 0 ); v = new Vector3Int( 0, 0, -1 ); return;
-			case Lod0Lod1TransitionFace.PositiveX:
+			case GpuTransitionFace.PositiveX:
 				u = new Vector3Int( 0, 1, 0 ); v = new Vector3Int( 0, 0, 1 ); return;
-			case Lod0Lod1TransitionFace.NegativeY:
+			case GpuTransitionFace.NegativeY:
 				u = new Vector3Int( 0, 0, 1 ); v = new Vector3Int( -1, 0, 0 ); return;
-			case Lod0Lod1TransitionFace.PositiveY:
+			case GpuTransitionFace.PositiveY:
 				u = new Vector3Int( 0, 0, 1 ); v = new Vector3Int( 1, 0, 0 ); return;
-			case Lod0Lod1TransitionFace.NegativeZ:
+			case GpuTransitionFace.NegativeZ:
 				u = new Vector3Int( 1, 0, 0 ); v = new Vector3Int( 0, -1, 0 ); return;
 			default:
 				u = new Vector3Int( 1, 0, 0 ); v = new Vector3Int( 0, 1, 0 ); return;
@@ -2234,7 +2338,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		return false;
 	}
 
-	private void RemovePendingTransition( Lod0Lod1TransitionKey key ) => _transitionPending.Remove( key );
+	private void RemovePendingTransition( GpuTransitionKey key ) => _transitionPending.Remove( key );
 
 	private int CountInFlight( GpuMeshResidency residency )
 	{
@@ -2278,6 +2382,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( state.Visibility is not null ) state.RetiredVisibility.Add( state.Visibility );
 		var bounds = new GpuBuffer<Vector4>( _visibilityCapacity * 2,
 			GpuBuffer.UsageFlags.Structured, "Voxel View Visibility Bounds" );
+		var records = new GpuBuffer<Vector4>( _visibilityCapacity * 2,
+			GpuBuffer.UsageFlags.Structured, "Voxel Terrain Record Descriptors" );
 		var source = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
 			"Voxel View Source Indexed Arguments" );
@@ -2286,7 +2392,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			"Voxel View Visible Indexed Arguments" );
 		var frame = new GpuBuffer<uint>( 11, GpuBuffer.UsageFlags.Structured,
 			"Voxel View Visibility Frame Counters" );
-		state.Visibility = new VisibilityBuffers( bounds, source, visible, frame );
+		state.Visibility = new VisibilityBuffers( bounds, records, source, visible, frame );
 		state.VisibilityCapacity = _visibilityCapacity;
 		state.DescriptorsDirty = true;
 		state.CommandsDirty = true;
@@ -2323,6 +2429,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		}
 		if ( _visibilityCapacity > 0 )
 		{
+			commands.Attributes.Set( "TerrainRecordDescriptors", visibility.Records );
 			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
 			commands.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
 			commands.Attributes.Set( "VisibleIndirectArguments", visibility.VisibleArguments );
@@ -2332,6 +2439,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			commands.Attributes.Set( "VisibilityPass", 0 );
 			commands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
 			commands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
+			commands.ResourceBarrierTransition( visibility.Records, ResourceState.GenericRead );
 			commands.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
 			commands.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
 			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.UnorderedAccess );
@@ -2494,11 +2602,14 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var newCapacity = Math.Max( RegionsPerSlab, _visibilityCapacity );
 		while ( newCapacity < requiredCapacity ) newCapacity = checked( newCapacity * 2 );
 		var oldBounds = _visibilityBoundsData;
+		var oldRecords = _terrainRecordData;
 		var oldArguments = _sourceArgumentData;
 		_visibilityCapacity = newCapacity;
 		_visibilityBoundsData = new Vector4[newCapacity * 2];
+		_terrainRecordData = new Vector4[newCapacity * 2];
 		_sourceArgumentData = new GpuBuffer.IndirectDrawIndexedArguments[newCapacity];
 		oldBounds.CopyTo( _visibilityBoundsData, 0 );
+		oldRecords.CopyTo( _terrainRecordData, 0 );
 		oldArguments.CopyTo( _sourceArgumentData, 0 );
 	}
 
@@ -2521,6 +2632,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var padding = new Vector3( descriptor.CellSize );
 		var slot = resident.Handle.GlobalSlot;
 		var index = slot * 2;
+		SetTerrainRecordDescriptorLocked( resident );
 		var activeResidency = resident.Residency switch
 		{
 			GpuMeshResidency.Warm => 2f,
@@ -2538,10 +2650,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 				IndexCount = (uint)resident.Handle.Indices.Count,
 				InstanceCount = 1,
 				FirstIndex = (uint)resident.Handle.Indices.Offset,
-				BaseVertex = resident.Handle.Vertices.Offset,
-				FirstInstance = 0
+				BaseVertex = resident.Handle.Vertices.Offset
 			}
 			: default;
+	}
+
+	private void SetTerrainRecordDescriptorLocked( ResidentMesh resident )
+	{
+		var descriptor = resident.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CellSize;
+		var origin = new Vector3(
+			descriptor.ChunkCoordinate.x * size,
+			descriptor.ChunkCoordinate.y * size,
+			descriptor.ChunkCoordinate.z * size );
+		_transitionMasks.TryGetValue( descriptor.Key, out var mask );
+		var index = resident.Handle.GlobalSlot * 2;
+		_terrainRecordData[index] = new Vector4( origin, descriptor.CellSize );
+		var state = (mask & 63u) |
+			((resident.Handle.Generation & TerrainRecordGenerationTokenMask) << 6);
+		_terrainRecordData[index + 1] = new Vector4( size, size, size, state );
 	}
 
 	private void SetTransitionVisibilityActive( ResidentTransition resident, bool active )
@@ -2557,34 +2684,37 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var descriptor = resident.Descriptor;
 		var size = descriptor.CellsPerAxis * descriptor.CoarseCellSize;
 		var minimum = new Vector3(
-			descriptor.Key.Lod1Coordinate.x * size,
-			descriptor.Key.Lod1Coordinate.y * size,
-			descriptor.Key.Lod1Coordinate.z * size );
+			descriptor.Key.CoarseCoordinate.x * size,
+			descriptor.Key.CoarseCoordinate.y * size,
+			descriptor.Key.CoarseCoordinate.z * size );
 		var maximum = minimum + new Vector3( size );
 		var padding = descriptor.FineCellSize;
 		switch ( descriptor.Key.Face )
 		{
-			case Lod0Lod1TransitionFace.NegativeX:
+			case GpuTransitionFace.NegativeX:
 				maximum.x = minimum.x;
 				break;
-			case Lod0Lod1TransitionFace.PositiveX:
+			case GpuTransitionFace.PositiveX:
 				minimum.x = maximum.x;
 				break;
-			case Lod0Lod1TransitionFace.NegativeY:
+			case GpuTransitionFace.NegativeY:
 				maximum.y = minimum.y;
 				break;
-			case Lod0Lod1TransitionFace.PositiveY:
+			case GpuTransitionFace.PositiveY:
 				minimum.y = maximum.y;
 				break;
-			case Lod0Lod1TransitionFace.NegativeZ:
+			case GpuTransitionFace.NegativeZ:
 				maximum.z = minimum.z;
 				break;
-			case Lod0Lod1TransitionFace.PositiveZ:
+			case GpuTransitionFace.PositiveZ:
 				minimum.z = maximum.z;
 				break;
 		}
 		var slot = resident.Handle.GlobalSlot;
 		var index = slot * 2;
+		_terrainRecordData[index] = new Vector4( minimum, descriptor.FineCellSize );
+		var state = (resident.Handle.Generation & TerrainRecordGenerationTokenMask) << 6;
+		_terrainRecordData[index + 1] = new Vector4( size, size, size, state );
 		_visibilityBoundsData[index] = new Vector4( minimum - new Vector3( padding ), active ? 4f : 0f );
 		_visibilityBoundsData[index + 1] = new Vector4(
 			maximum + new Vector3( padding ), active ? resident.Counts.ActiveCells : 0 );
@@ -2594,8 +2724,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				IndexCount = (uint)resident.Handle.Indices.Count,
 				InstanceCount = 1,
 				FirstIndex = (uint)resident.Handle.Indices.Offset,
-				BaseVertex = resident.Handle.Vertices.Offset,
-				FirstInstance = 0
+				BaseVertex = resident.Handle.Vertices.Offset
 			}
 			: default;
 	}
@@ -2606,6 +2735,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			if ( !state.DescriptorsDirty || state.Visibility is null ) return;
 			state.Visibility.Bounds.SetData( _visibilityBoundsData );
+			state.Visibility.Records.SetData( _terrainRecordData );
 			state.Visibility.SourceArguments.SetData( _sourceArgumentData );
 			// The visibility compute pass exclusively owns VisibleArguments once the camera list is attached.
 			_visibilityDescriptorUploadCount++;
@@ -2637,6 +2767,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		foreach ( var resident in _resident.Values ) ReleaseResident( resident );
 		_resident.Clear();
 		_renderActive.Clear();
+		_transitionMasks.Clear();
 		_transitionPending.Clear();
 		_transitionDispatchQueue.Clear();
 		_transitionDesiredDescriptors.Clear();
@@ -2979,7 +3110,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	{
 		public string Label { get; }
 		public GpuMeshRegionKey? RegularKey { get; }
-		public Lod0Lod1TransitionKey? TransitionKey { get; }
+		public GpuTransitionKey? TransitionKey { get; }
 		public GeometryHandle Handle { get; }
 		public uint Generation { get; }
 		public float CellSize { get; }
@@ -2990,7 +3121,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public MeshAuditTarget(
 			string label,
 			GpuMeshRegionKey? regularKey,
-			Lod0Lod1TransitionKey? transitionKey,
+			GpuTransitionKey? transitionKey,
 			GeometryHandle handle,
 			uint generation,
 			float cellSize,
@@ -3022,6 +3153,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		int OutOfBoundsPositions,
 		int NonFiniteNormals,
 		int AbnormalNormals,
+		int RecordIdentityMismatches,
 		int DegenerateTriangles,
 		int OversizedTriangles,
 		float MaximumEdgeLength,
@@ -3222,15 +3354,20 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private sealed class VisibilityBuffers : IDisposable
 	{
 		public GpuBuffer<Vector4> Bounds { get; }
+		public GpuBuffer<Vector4> Records { get; }
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> SourceArguments { get; }
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> VisibleArguments { get; }
 		public GpuBuffer<uint> FrameCounters { get; }
-		public VisibilityBuffers( GpuBuffer<Vector4> bounds, GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source,
+		public VisibilityBuffers( GpuBuffer<Vector4> bounds, GpuBuffer<Vector4> records,
+			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source,
 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> visible, GpuBuffer<uint> frame )
 		{
-			Bounds = bounds; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
+			Bounds = bounds; Records = records; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
 		}
-		public void Dispose() { Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose(); }
+		public void Dispose()
+		{
+			Bounds.Dispose(); Records.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
+		}
 	}
 
 	private sealed class ReadbackSceneObject : SceneCustomObject
@@ -3301,7 +3438,7 @@ internal readonly record struct GpuTransitionMeasurement(
 	GpuMetricDistribution ScheduleToPublication );
 internal readonly record struct GpuTransitionIdentitySnapshot( int Count, ulong Digest );
 internal readonly record struct GpuTransitionFaceMeasurement(
-	Lod0Lod1TransitionKey Key,
+	GpuTransitionKey Key,
 	uint Generation,
 	int Arena,
 	int Slot,

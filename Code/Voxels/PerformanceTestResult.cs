@@ -71,7 +71,8 @@ internal sealed class PerformanceTransitionMetrics
 
 internal sealed class PerformanceTransitionFaceMetrics
 {
-	public PerformanceVector3Int Lod1Coordinate { get; init; }
+	public string CoarseLevel { get; init; }
+	public PerformanceVector3Int CoarseCoordinate { get; init; }
 	public string Face { get; init; }
 	public uint Generation { get; init; }
 	public int Arena { get; init; }
@@ -99,6 +100,7 @@ internal sealed class PerformanceClipboxMetrics
 	public int Lod0GameplayCoordinates { get; init; }
 	public int Lod0ActiveCoordinates { get; init; }
 	public PerformanceVector3Int Lod1Anchor { get; init; }
+	public PerformanceVector3Int Lod1OuterAnchor { get; init; }
 	public PerformanceVector3Int Lod1OuterMinimum { get; init; }
 	public PerformanceVector3Int Lod1OuterMaximum { get; init; }
 	public PerformanceVector3Int Lod1HoleMinimum { get; init; }
@@ -116,8 +118,8 @@ internal sealed class PerformanceClipboxMetrics
 	public PerformanceVector3Int Lod2Anchor { get; init; }
 	public PerformanceVector3Int Lod2OuterMinimum { get; init; }
 	public PerformanceVector3Int Lod2OuterMaximum { get; init; }
-	public PerformanceVector3Int Lod2NearCoverageMinimum { get; init; }
-	public PerformanceVector3Int Lod2NearCoverageMaximum { get; init; }
+	public PerformanceVector3Int Lod2HoleMinimum { get; init; }
+	public PerformanceVector3Int Lod2HoleMaximum { get; init; }
 	public int Lod2NominalHoleHalfExtent { get; init; }
 	public int Lod2CachedCoordinates { get; init; }
 	public int Lod2ActiveCoordinates { get; init; }
