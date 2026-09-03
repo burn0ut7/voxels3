@@ -88,6 +88,24 @@ and world bounds are half-open intervals. Enabling the existing `VerboseLogging`
 property emits the same snapshot only when a placement boundary changes; it does
 not add per-frame logging or a second placement model.
 
+### Streaming research direction (not implemented)
+
+The 2026-09-03 [GPU voxel terrain streaming research](../Research/GpuVoxelTerrainStreaming.md)
+records the intended replacement for whole-placement readiness. The desired
+clipbox and resident drawable placement should become distinct states inside the
+same manager and mesher. Coarse coverage remains drawable until a smaller
+dependency-complete refinement region, including its required transition, is
+resident and can be published atomically. Work remains coarse-to-fine and flows
+through one bounded deadline-aware scheduler.
+
+That direction adapts requested-versus-resident hierarchy and incremental
+viewer-centered updates from production heightfield and streaming systems while
+retaining the fixed three-level volumetric SDF, Transvoxel topology, and single
+GPU mesher. A second fallback terrain renderer, CPU mesher, generalized LOD
+hierarchy, or independently mutable placement model remains rejected. The
+direction is not production truth until it passes the unchanged figure-eight
+correctness and performance gates.
+
 ## Fixed 2:1 Transitions
 
 Clipbox placement owns where the boundary exists; Transvoxel owns its geometry.
