@@ -1,55 +1,26 @@
 # Voxels3 Agent Instructions
 
-## Purpose
+## Start Here
 
-This file is the entry point for work in this repository. Read this file first,
-then read every route that applies to the requested change. Route files contain
-domain-specific constraints; this file owns project-wide rules.
-
-If a change crosses domains, start with the architecture route and then read the
-other applicable routes. Do not infer an established implementation from a
-route: distinguish current repository facts from intended design constraints.
-
-## Mandatory Skill and Router Use
-
-- Use the Sandbox skill for all s&box-specific work. Load and follow its current
-  instructions before researching APIs, planning an implementation, reviewing
-  s&box code, or making changes. Do not rely on remembered engine behavior when
-  the skill can provide current, project-grounded guidance.
-- If the Sandbox skill is unavailable in the active environment, state that
-  limitation explicitly and continue only with verified repository evidence and
-  authoritative s&box documentation. Never invent an API or silently substitute
-  an unrelated skill.
-- Router documentation is mandatory, not optional background reading. Before
-  planning or modifying anything, read this file and every route selected by the
-  Route Map. Follow their ownership, design-gate, validation, and performance
-  requirements throughout the task.
-- If the scope expands while working, stop and read the newly applicable route
-  before continuing. Re-check the routes before final validation.
-- The Sandbox skill supplies engine and tooling guidance; these router files
-  supply Voxels3-specific architecture and development rules. Follow both. If
-  they appear to conflict, surface the conflict and resolve it explicitly rather
-  than choosing a silent workaround.
+- Use the `sbox` skill for s&box work before API research, planning, review, or
+  implementation. If unavailable, say so and use verified repository evidence
+  and authoritative s&box documentation; never invent APIs.
+- Read the applicable routes below before planning or editing. Start with
+  architecture for cross-domain work; read additional routes if scope expands
+  and re-check them before final validation.
+- The skill owns engine/tooling guidance; routes own project-specific rules.
+  Surface conflicts explicitly. Distinguish implemented behavior from intended
+  design, and verify current source before relying on documentation.
 
 ## Project Overview
 
-Voxels3 is an s&box multiplayer game project for a 3D voxel world with smooth
-signed-distance-field (SDF) terrain, procedural generation, and live terrain
-edits. Performance is a primary product requirement: world generation,
-meshing, rendering, collision, streaming, editing, and replication must remain
-responsive under real multiplayer load.
+Voxels3 is an s&box multiplayer voxel game with smooth signed-distance-field
+(SDF) terrain, procedural generation, and planned live edits. Performance under
+multiplayer load is a primary requirement.
 
-The project is currently at an early foundation stage. The s&box project is
-configured as a multiplayer game for 1-64 players at a 50 Hz tick rate. The
-canonical world path now provides deterministic implicit volumetric SDF
-evaluation with Grass/Air material IDs and no sample arrays, bounded
-single-origin chunk streaming, persistent GPU Transvoxel terrain for LOD0,
-LOD1, and LOD2, one level-aware transition pipeline for both fixed 2:1
-boundaries, indirect visibility/drawing, inspector status, structured logs, and
-measurable runtime diagnostics. Collision, live terrain edits, persistence,
-multi-origin interest management, and project-specific network replication are
-not implemented yet. See
-`Docs/Architecture/VoxelChunkFoundation.md` for the exact current design.
+Use `Docs/Architecture/VoxelChunkFoundation.md` and
+`Docs/Architecture/GpuVoxelMeshing.md` for current implementation, ownership,
+and remaining work; keep detailed subsystem status there.
 
 ## Repository Facts
 
@@ -83,95 +54,48 @@ of `Code/`.
 
 ## Research Reference Library
 
-[`Docs/smooth_procedural_voxel_terrain_resources.md`](Docs/smooth_procedural_voxel_terrain_resources.md)
-is the curated routing index for external smooth-terrain, voxel, SDF, meshing,
-LOD, streaming, and large-world research.
+Use `Docs/smooth_procedural_voxel_terrain_resources.md` to find external research.
+Read each source's transfer limits; research is evidence, not an adopted design.
+Repository contracts, measured results, and verified engine behavior take
+precedence.
 
-- Treat every catalog entry as research evidence, not as an adopted design,
-  requirement, recommendation, or source of repository truth. An entry can be
-  useful even when its architecture is incompatible with Voxels3.
-- Route by the problem being investigated and read the entry's transfer limits
-  before applying an idea. In particular, CPU-first systems such as Godot Voxel
-  can inform algorithms, ownership, streaming, or failure modes without being a
-  template for Voxels3's GPU-first production path.
-- When a durable external source materially helps Voxels3 research, add it to
-  the reference library in the same change. Catalog it under the narrowest
-  applicable topic and state what it is, when it is useful, and which assumptions
-  or design constraints do not transfer.
-- Do not add raw links, generic inspiration, duplicate sources, or sources with
-  no clear research question. The library is a routing table, not a bookmark
-  dump, bibliography, implementation backlog, or substitute for a design note.
-- When a source affects an implementation decision, cite it in the relevant
-  design note and separately record what Voxels3 adopts, rejects, or changes and
-  why. Current repository evidence, route constraints, measured results, and
-  verified s&box behavior take precedence over external examples.
+Add durable sources that materially help the task under the narrowest relevant
+entry, explaining their use and limits. Avoid duplicates and generic bookmarks.
+When a source informs a design decision, record what the project adopts or
+rejects and why in the relevant design note.
 
 ## Development Rules
 
-- Do not add speculative abstractions, general-purpose helpers, or extra
-  features unless the current slice requires them.
-- Carefully and comprehensively plan features before implementation. Avoid
-  over-engineering, premature abstraction, and scope creep.
-- Follow YAGNI. Never speculate about future features. Prefer a small,
-  well-bounded change over re-architecting unless there is an articulable reason
-  the larger change is necessary. Extraordinary changes require extensive
-  justification.
-- If an existing system is low quality or conflicts with these principles,
-  remove it and redesign the feature properly from first principles. Do not
-  preserve a bad design through compatibility layers.
-- Choose the best long-term design, not merely the easiest short-term solution.
-  When unsure, research and compare the strongest paths before choosing.
-- Each feature must have one canonical system, with all related behavior flowing
-  through it. Do not add fallbacks, secondary implementations, duplicate logic,
-  compatibility layers, workarounds, or parallel paths.
-- Move duplicated behavior into a shared package only when it is genuinely the
-  same responsibility and must evolve together.
-- Do not refactor for style alone. Do not create one-line functions for trivial
-  operations used once; keep those operations in the main function.
-- Validation must execute the actual production code through its real in-world
-  entry point and exercise the complete behavior being claimed. Loading a world,
-  starting without an exception, or confirming that an object exists is not a
-  test of the feature.
-- Do not create separate test projects, test systems, test scenes, test-only
-  components, test files, mocks, synthetic implementations, or alternate code
-  paths. Do not add test-only hooks to production code. Validate the production
-  function itself in the actual playable world with a realistic example.
-- Every validation run must produce measurable output and append its exact
-  parameters, measurements, pass criteria, and result to the canonical
-  [`Docs/ValidationResults.md`](Docs/ValidationResults.md) ledger. A subjective
-  statement such as "it works" is not evidence.
-- Each scenario has one canonical parameter set. Use exactly the same world,
-  seed, coordinates, inputs, operation count, timing window, player count, and
-  other relevant values on every comparable run. Do not tune, shift, randomize,
-  reduce, or otherwise change parameters to obtain a passing result.
-- A parameter may change only when an extraordinary, substantive issue makes the
-  existing scenario invalid or impossible to execute. Document the issue and
-  justification before the change, create a new scenario version, preserve the
-  old definition and results, and establish a new baseline. Never rewrite prior
-  measurements or compare incompatible scenario versions as if they were the
-  same test.
-- Test meaningful behavior, contracts, regressions, edge cases, and non-trivial
-  transformations through that in-world production path. Do not test that a
-  generated file changed; test the source behavior that produces the result.
+- Plan the smallest complete slice. Add only what it requires; avoid speculative
+  features, abstractions, helpers, and style-only refactors.
+- Inspect ownership and data flow before editing. For a new subsystem, document
+  inputs, outputs, state ownership, downstream effects, budgets, and serious
+  design alternatives in the relevant design note.
+- Keep one canonical implementation per responsibility. Remove superseded paths
+  in the same change; do not retain duplicate implementations or compatibility
+  layers. Share behavior only when it has the same responsibility and must
+  evolve together.
+- Redesign an existing system when a concrete defect or architectural conflict
+  requires it. Explain why the broader change is necessary; poor style alone
+  is not a reason to expand scope.
+- Keep trivial, single-use operations inline rather than adding one-line helpers.
 
-## Required Working Method
+## Validation
 
-1. Load the Sandbox skill, then identify the smallest complete feature slice and
-   every router document it touches.
-2. Read the selected routes completely before planning or editing.
-3. Inspect the current source and write down the relevant ownership and data
-   flow before changing code.
-4. For a new subsystem, compare viable designs and record the chosen canonical
-   path plus the rejected alternatives that were serious contenders.
-5. Define correctness and performance acceptance criteria plus the exact fixed
-   in-world scenario parameters before implementation. Record a new scenario in
-   `Docs/ValidationResults.md` before its first run; reuse the existing scenario
-   unchanged for regression work.
-6. Implement only the selected slice. Remove superseded paths in the same
-   change; do not leave dormant alternatives behind.
-7. Re-check the selected routes, run the unchanged canonical scenario through
-   the production code in the actual world, and append its measurable output to
-   `Docs/ValidationResults.md`. Report what was and was not verified.
+- Validate shipping behavior through its real entry point in the playable world.
+  Exercise and measure the claimed behavior, including relevant edge cases;
+  startup, object existence, or absence of exceptions alone is insufficient.
+- Do not add separate test projects, frameworks, files, scenes, components,
+  mocks, synthetic implementations, alternate paths, or test-only hooks.
+- Define measurable pass criteria and fixed scenario parameters in
+  `Docs/ValidationResults.md` before the first run. Reuse existing scenarios
+  unchanged for comparable runs; follow the performance route's versioning rules
+  when a scenario is invalid or impossible. Never tune inputs to obtain a pass.
+- Append each runtime validation run's scenario/version, exact parameters,
+  source/environment, measurements, criteria, and result to that ledger. Preserve
+  failures and history. Report what was verified and what remains unverified.
+- Check documentation-only changes for accuracy, links, and consistency; they
+  do not require an in-world run.
 
 ## Cross-Cutting Invariants
 
@@ -188,68 +112,19 @@ LOD, streaming, and large-world research.
 
 ## Figure-Eight Performance Acceptance
 
-- After completing any non-simple change, and after any change that could
-  plausibly affect runtime performance, run the canonical figure-eight scenario
-  through the real playable-world production path before accepting the change.
-  Performance-sensitive changes include world generation, chunk streaming,
-  meshing, rendering, collision, networking, memory ownership or allocation,
-  threading, jobs, frame scheduling, and changes to work performed per frame.
-- A change may skip the figure-eight scenario only when it is plainly unable to
-  affect runtime behavior or performance, such as a documentation-only change.
-  When uncertain, run the scenario.
-- Use the figure-eight scenario's exact recorded parameters without alteration.
-  Compare the candidate result with the most recent accepted, comparable
-  baseline from the same scenario version. If no valid comparable baseline
-  exists, capture and record one from the unchanged pre-change revision before
-  evaluating the candidate.
-- Figure-eight workload and measurement parameters are locked across every run.
-  This includes the scene, seed, player count, start position, route geometry,
-  world height, speed, distance, loop count, chunk configuration, warmup and
-  completion boundaries, sampling cadence, sample capacity, percentile method,
-  and metric definitions. Do not create a shorter, faster, reduced, temporary,
-  debug, smoke, or otherwise modified run and present it as figure-eight
-  acceptance evidence. Only run identity metadata such as run ID, timestamp,
-  task, and revision should change, and those values must identify the actual
-  candidate being measured.
-- Changing a locked parameter is forbidden unless extraordinary measured
-  evidence shows that the existing scenario is invalid, impossible to execute,
-  or itself causing a deeper test or system failure. Before running any changed
-  parameters, stop and document the evidence, proposed change, and consequences
-  in `Docs/ValidationResults.md`, then obtain explicit approval from the human
-  user. An agent, script, CI job, or inferred intent cannot grant this approval.
-  Convenience, run duration, resource cost, a failing result, or a desire for a
-  cleaner baseline is not extraordinary evidence.
-- After human approval, preserve the old scenario definition and all results,
-  create a new scenario version, record the approval and justification, and
-  establish a new baseline. Never rewrite historical parameters or compare the
-  new version with the old version as though they were the same workload. If
-  explicit human approval is absent, do not run the modified scenario and do not
-  accept, commit, or push the performance-sensitive change.
-- Evaluate the whole player journey and all recorded metrics. Frame pacing and
-  tail latency, average and median frame rate or frame time, completed and
-  resident chunk work, streaming responsiveness, peak and steady-state memory,
-  memory growth, allocations, and correctness are independent acceptance
-  dimensions. One improved or acceptable metric cannot hide a regression in
-  another.
-- Reject the change when the fixed figure-eight comparison shows any material
-  unexplained regression. Failure includes visible or measured stutters even
-  when average frame rate is unchanged, frame-rate or frame-time degradation
-  beyond the scenario's recorded tolerance, fewer required chunks loaded or
-  less streaming work completed along the same route, delayed or missing chunk
-  availability, excessive peak or steady-state memory, unbounded memory growth,
-  or materially higher allocation pressure.
-- A performance regression may be accepted only for an extraordinary,
-  substantive reason supported by measurements and an explicit product-level
-  tradeoff decision. Document the evidence, justification, affected metrics,
-  and approval in `Docs/ValidationResults.md`; convenience, schedule pressure,
-  implementation difficulty, or an unrelated metric improvement are not
-  sufficient reasons.
-- Append both the baseline and candidate measurements, exact parameters, pass
-  criteria, and pass/fail decision to `Docs/ValidationResults.md`. Do not commit,
-  push, or describe a performance-sensitive change as complete until the
-  figure-eight comparison passes or the extraordinary-regression exception is
-  fully documented.
+- The canonical figure-eight is our main performance test. Run it in the real
+  playable world for non-simple or potentially performance-affecting changes;
+  skip only changes that cannot affect runtime behavior, such as documentation.
+- Use the recorded scenario unchanged and compare with the latest accepted,
+  comparable baseline; capture a pre-change baseline if none exists.
+- Check frame rate, frame pacing/tail latency, chunk completion and streaming,
+  memory, allocations, and correctness against the recorded criteria. Resolve
+  material unexplained regressions before accepting, committing, or pushing.
+- Append measurements and the comparison decision to `Docs/ValidationResults.md`.
+  Changing the workload or accepting a regression requires documented evidence
+  and explicit user approval; preserve history and baseline any new version.
 
-## Git commit policy
+## Git Commit Policy
 
-After completing a task, commit and push the task's changes. The commit subject must contain no more than five words, and the commit description/body must be blank.
+After completing a task, commit and push only the task's changes. Use a commit
+subject of at most five words and leave the commit body blank.
