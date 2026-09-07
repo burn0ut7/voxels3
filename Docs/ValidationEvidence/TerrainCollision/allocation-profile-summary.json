@@ -1,0 +1,327 @@
+{
+  "ticks": 7815,
+  "bytes": 833699456,
+  "missingStacks": 0,
+  "types": [
+    {
+      "Key": "<>c__DisplayClass404_0",
+      "Value": 126744712
+    },
+    {
+      "Key": "System.Func`2[GpuVoxelMesher+InFlightMesh,System.Boolean]",
+      "Value": 48723584
+    },
+    {
+      "Key": "System.Func`2[GpuVoxelMesher+CandidateMesh,System.Boolean]",
+      "Value": 48607248
+    },
+    {
+      "Key": "System.Func`2[GpuVoxelMesher+ScratchLane,System.Boolean]",
+      "Value": 48077576
+    },
+    {
+      "Key": "<>c__DisplayClass59_0",
+      "Value": 28135088
+    },
+    {
+      "Key": "Sandbox.RenderAttributes",
+      "Value": 25793936
+    },
+    {
+      "Key": "System.Threading.TimerQueueTimer",
+      "Value": 25150704
+    },
+    {
+      "Key": "DelayPromiseWithCancellation",
+      "Value": 24828408
+    },
+    {
+      "Key": "Slot[System.Threading.Tasks.TaskReplicator+Replica][]",
+      "Value": 20891864
+    },
+    {
+      "Key": "<GetDescendants>d__22`1[Editor.EditorToolButton]",
+      "Value": 16945224
+    },
+    {
+      "Key": "System.Action",
+      "Value": 16416416
+    },
+    {
+      "Key": "System.String",
+      "Value": 15131784
+    },
+    {
+      "Key": "<EnumerateLocked>d__13[System.Object]",
+      "Value": 13004536
+    },
+    {
+      "Key": "System.Collections.Generic.List`1[Editor.Widget]",
+      "Value": 11726000
+    },
+    {
+      "Key": "Sandbox.ScenePushScope",
+      "Value": 11725744
+    },
+    {
+      "Key": "<TryGetAll>d__5",
+      "Value": 10979824
+    },
+    {
+      "Key": "System.Collections.Concurrent.ConcurrentQueueSegment`1[System.Threading.Tasks.TaskReplicator+Replica]",
+      "Value": 9702168
+    },
+    {
+      "Key": "ContingentProperties",
+      "Value": 7995000
+    },
+    {
+      "Key": "Native.QObject[]",
+      "Value": 7887688
+    },
+    {
+      "Key": "System.Threading.Tasks.Task",
+      "Value": 7781336
+    },
+    {
+      "Key": "System.Single",
+      "Value": 7354968
+    },
+    {
+      "Key": "System.Threading.ExecutionContext",
+      "Value": 7353472
+    },
+    {
+      "Key": "Editor.Widget[]",
+      "Value": 7033728
+    },
+    {
+      "Key": "ResidentMesh",
+      "Value": 6819432
+    },
+    {
+      "Key": "TwoElementAsyncLocalValueMap",
+      "Value": 6394704
+    },
+    {
+      "Key": "Vector3",
+      "Value": 6180688
+    },
+    {
+      "Key": "OnRenderCallback",
+      "Value": 5857192
+    },
+    {
+      "Key": "Sandbox.Connection[]",
+      "Value": 5756400
+    },
+    {
+      "Key": "InternalPartitionEnumerator[Sandbox.SkinnedModelRenderer]",
+      "Value": 5542736
+    },
+    {
+      "Key": "Replica`1[System.Collections.IEnumerator]",
+      "Value": 5223400
+    }
+  ],
+  "stacks": [
+    {
+      "Key": "GpuVoxelMesher.Contains(value class GpuSdfDescriptor) <- VoxelManager.CapturePendingClipboxReadiness() <- VoxelManager.TryCommitPendingClipboxPlacement() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 155110432
+    },
+    {
+      "Key": "GpuVoxelMesher+<>c__DisplayClass404_0.<Contains>b__0(class ScratchLane) <- System.Linq.Enumerable.Any(class System.Collections.Generic.IEnumerable`1<!!0>,class System.Func`2<!!0,bool>) <- GpuVoxelMesher.Contains(value class GpuSdfDescriptor) <- VoxelManager.CapturePendingClipboxReadiness() <- VoxelManager.TryCommitPendingClipboxPlacement() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 75470408
+    },
+    {
+      "Key": "System.Threading.Tasks.Parallel.PartitionerForEachWorker(class System.Collections.Concurrent.Partitioner`1<!!0>,class System.Threading.Tasks.ParallelOptions,class System.Action`1<!!0>,class System.Action`2<!!0,class System.Threading.Tasks.ParallelLoopState>,class System.Action`3<!!0,class System.Threading.Tasks.ParallelLoopState,int64>,class System.Func`4<!!0,class System.Threading.Tasks.ParallelLoopState,!!1,!!1>,class System.Func`5<!!0,class System.Threading.Tasks.ParallelLoopState,int64,!!1,!!1>,class System.Func`1<!!1>,class System.Action`1<!!1>) <- Sandbox.SceneAnimationSystem.UpdateAnimation() <- Sandbox.TimedCallbackList+CallbackEntry.Run() <- Sandbox.TimedCallbackList.Run() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 47646448
+    },
+    {
+      "Key": "Managed.SandboxEngine.Exports.SndbxRndrng_ShdwMpprCllbcks_SetShaderAttributes(int,int) <- Sandbox.Scene.Render(value class SwapChainHandle_t,value class System.Nullable`1<value class Vector2>) <- Editor.SceneRenderingWidget.RenderScene() <- Editor.SceneRenderingWidget.RenderAll() <- Sandbox.EngineLoop.OnClientOutput() <- Managed.SandboxEngine.Exports.Sandbox_EngineLoop_OnClientOutput() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 23555592
+    },
+    {
+      "Key": "System.Threading.Tasks.Task+DelayPromise..ctor(unsigned int32,class System.TimeProvider) <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueueTimer.System.Threading.IThreadPoolWorkItem.Execute() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 21419960
+    },
+    {
+      "Key": "Sandbox.PostProcessSystem.UpdateCamera(class Sandbox.CameraComponent) <- Sandbox.PostProcessSystem.Sandbox.Component.ISceneStage.End() <- Sandbox.Scene.RunEvent(class System.Action`1<!!0>,value class Sandbox.FindMode) <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 21312888
+    },
+    {
+      "Key": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueueTimer.System.Threading.IThreadPoolWorkItem.Execute() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 20772424
+    },
+    {
+      "Key": "Sandbox.Scene.PreCameraRender() <- Sandbox.Scene.Render(value class SwapChainHandle_t,value class System.Nullable`1<value class Vector2>) <- Editor.SceneRenderingWidget.RenderScene() <- Editor.SceneRenderingWidget.RenderAll() <- Sandbox.EngineLoop.OnClientOutput() <- Managed.SandboxEngine.Exports.Sandbox_EngineLoop_OnClientOutput() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 16202488
+    },
+    {
+      "Key": "Editor.Widget.get_Children() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.ViewportTools.UpdateChildren() <- Editor.ViewportTools.OnViewportToolsFrame() <- dynamicClass.InvokeStub_ViewportTools.OnViewportToolsFrame(class System.Object,class System.Object,int*) <- System.Reflection.RuntimeMethodInfo.Invoke(class System.Object,value class System.Reflection.BindingFlags,class System.Reflection.Binder,class System.Object[],class System.Globalization.CultureInfo) <- Sandbox.Internal.EventSystem+<>c__DisplayClass11_0.<BuildDelegate>b__0(class System.Object,class System.Object[]) <- Sandbox.Internal.EventSystem+EventAction.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem+EventList.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem.Run(class System.String) <- Editor.ManagedTools.RunFrame() <- Managed.SourceTools.Exports.Editor_ManagedTools_RunFrame() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 15991016
+    },
+    {
+      "Key": "Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.ViewportTools.UpdateChildren() <- Editor.ViewportTools.OnViewportToolsFrame() <- dynamicClass.InvokeStub_ViewportTools.OnViewportToolsFrame(class System.Object,class System.Object,int*) <- System.Reflection.RuntimeMethodInfo.Invoke(class System.Object,value class System.Reflection.BindingFlags,class System.Reflection.Binder,class System.Object[],class System.Globalization.CultureInfo) <- Sandbox.Internal.EventSystem+<>c__DisplayClass11_0.<BuildDelegate>b__0(class System.Object,class System.Object[]) <- Sandbox.Internal.EventSystem+EventAction.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem+EventList.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem.Run(class System.String) <- Editor.ManagedTools.RunFrame() <- Managed.SourceTools.Exports.Editor_ManagedTools_RunFrame() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 13109328
+    },
+    {
+      "Key": "GpuVoxelMesher.Contains(value class GpuSdfDescriptor) <- VoxelManager.PrepareLodPlacement() <- VoxelManager.PrepareNextClipboxPlacementStep() <- VoxelManager.CommitPendingClipboxPlacement(bool,value class PendingClipboxReadiness) <- VoxelManager.TryCommitPendingClipboxPlacement() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 12783912
+    },
+    {
+      "Key": "Sandbox.SceneAnimationSystem.UpdateAnimation() <- Sandbox.TimedCallbackList+CallbackEntry.Run() <- Sandbox.TimedCallbackList.Run() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 9485688
+    },
+    {
+      "Key": "GpuVoxelMesher+<>c__DisplayClass404_0.<Contains>b__0(class ScratchLane) <- System.Linq.Enumerable.Any(class System.Collections.Generic.IEnumerable`1<!!0>,class System.Func`2<!!0,bool>) <- GpuVoxelMesher.Contains(value class GpuSdfDescriptor) <- VoxelManager.PrepareLodPlacement() <- VoxelManager.PrepareNextClipboxPlacementStep() <- VoxelManager.CommitPendingClipboxPlacement(bool,value class PendingClipboxReadiness) <- VoxelManager.TryCommitPendingClipboxPlacement() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 8747440
+    },
+    {
+      "Key": "Sandbox.ITagSet.SetFrom(class Sandbox.ITagSet) <- Sandbox.CameraComponent.UpdateSceneCamera(class Sandbox.SceneCamera,bool) <- Sandbox.Scene.PreCameraRender() <- Sandbox.Scene.Render(value class SwapChainHandle_t,value class System.Nullable`1<value class Vector2>) <- Editor.SceneRenderingWidget.RenderScene() <- Editor.SceneRenderingWidget.RenderAll() <- Sandbox.EngineLoop.OnClientOutput() <- Managed.SandboxEngine.Exports.Sandbox_EngineLoop_OnClientOutput() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 8741200
+    },
+    {
+      "Key": "Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.ViewportTools.UpdateChildren() <- Editor.ViewportTools.OnViewportToolsFrame() <- dynamicClass.InvokeStub_ViewportTools.OnViewportToolsFrame(class System.Object,class System.Object,int*) <- System.Reflection.RuntimeMethodInfo.Invoke(class System.Object,value class System.Reflection.BindingFlags,class System.Reflection.Binder,class System.Object[],class System.Globalization.CultureInfo) <- Sandbox.Internal.EventSystem+<>c__DisplayClass11_0.<BuildDelegate>b__0(class System.Object,class System.Object[]) <- Sandbox.Internal.EventSystem+EventAction.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem+EventList.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem.Run(class System.String) <- Editor.ManagedTools.RunFrame() <- Managed.SourceTools.Exports.Editor_ManagedTools_RunFrame() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 7462000
+    },
+    {
+      "Key": "Sandbox.CameraComponent.CopyPostProcessing(class Sandbox.SceneCamera) <- Sandbox.CameraComponent.UpdateSceneCamera(class Sandbox.SceneCamera,bool) <- Sandbox.Scene.PreCameraRender() <- Sandbox.Scene.Render(value class SwapChainHandle_t,value class System.Nullable`1<value class Vector2>) <- Editor.SceneRenderingWidget.RenderScene() <- Editor.SceneRenderingWidget.RenderAll() <- Sandbox.EngineLoop.OnClientOutput() <- Managed.SandboxEngine.Exports.Sandbox_EngineLoop_OnClientOutput() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 7248800
+    },
+    {
+      "Key": "Sandbox.Scene.Render(value class SwapChainHandle_t,value class System.Nullable`1<value class Vector2>) <- Editor.SceneRenderingWidget.RenderScene() <- Editor.SceneRenderingWidget.RenderAll() <- Sandbox.EngineLoop.OnClientOutput() <- Managed.SandboxEngine.Exports.Sandbox_EngineLoop_OnClientOutput() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 7142200
+    },
+    {
+      "Key": "Sandbox.UISystem.LayoutAndBuild() <- Sandbox.MenuDll.SimulateUI() <- Sandbox.EngineLoop.SimulateUI() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 6608944
+    },
+    {
+      "Key": "GpuVoxelMesher.Remove(value class GpuMeshRegionKey) <- VoxelManager.CommitPendingClipboxPlacement(bool,value class PendingClipboxReadiness) <- VoxelManager.TryCommitPendingClipboxPlacement() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 6502600
+    },
+    {
+      "Key": "Sandbox.Connection.get_All() <- Sandbox.Connection.ClearUpdateContextInput() <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 6289400
+    },
+    {
+      "Key": "Sandbox.UISystem.LayoutAndBuild() <- Sandbox.UISystem.Simulate(bool) <- Sandbox.GameInstanceDll.SimulateUI() <- Sandbox.EngineLoop.SimulateUI() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 6177928
+    },
+    {
+      "Key": "GpuVoxelMesher+<>c__DisplayClass408_0.<Remove>b__0(class ScratchLane) <- System.Linq.Enumerable.Any(class System.Collections.Generic.IEnumerable`1<!!0>,class System.Func`2<!!0,bool>) <- GpuVoxelMesher.Remove(value class GpuMeshRegionKey) <- VoxelManager.CommitPendingClipboxPlacement(bool,value class PendingClipboxReadiness) <- VoxelManager.TryCommitPendingClipboxPlacement() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 6079480
+    },
+    {
+      "Key": "System.Threading.Tasks.TaskReplicator+Replica`1[System.__Canon].CreateNewReplica() <- System.Threading.Tasks.TaskReplicator+Replica.Execute() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.Task.ExecuteWithThreadLocal(class System.Threading.Tasks.Task&,class System.Threading.Thread) <- System.Threading.Tasks.Task.InternalRunSynchronously(class System.Threading.Tasks.TaskScheduler,bool) <- System.Threading.Tasks.Parallel.PartitionerForEachWorker(class System.Collections.Concurrent.Partitioner`1<!!0>,class System.Threading.Tasks.ParallelOptions,class System.Action`1<!!0>,class System.Action`2<!!0,class System.Threading.Tasks.ParallelLoopState>,class System.Action`3<!!0,class System.Threading.Tasks.ParallelLoopState,int64>,class System.Func`4<!!0,class System.Threading.Tasks.ParallelLoopState,!!1,!!1>,class System.Func`5<!!0,class System.Threading.Tasks.ParallelLoopState,int64,!!1,!!1>,class System.Func`1<!!1>,class System.Action`1<!!1>) <- Sandbox.SceneAnimationSystem.UpdateAnimation() <- Sandbox.TimedCallbackList+CallbackEntry.Run() <- Sandbox.TimedCallbackList.Run() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 6076200
+    },
+    {
+      "Key": "Sandbox.Rendering.RenderLayer.AddToView(value class NativeEngine.ISceneView,value class NativeEngine.RenderViewport) <- Sandbox.Rendering.RenderPipeline.AddLayersToView(value class NativeEngine.ISceneView,value class NativeEngine.RenderViewport,value class Sandbox.Rendering.SceneViewRenderTargetHandle,value class Sandbox.Rendering.SceneViewRenderTargetHandle,value class NativeEngine.RenderMultisampleType,value class NativeEngine.CRenderAttributes,value class NativeEngine.RenderViewport) <- Managed.SandboxEngine.Exports.SndbxRndrng_RenderPipeline_InternalAddLayersToView(int,value class NativeEngine.RenderViewport,int,int,int64,int,value class NativeEngine.RenderViewport) <- Sandbox.Scene.Render(value class SwapChainHandle_t,value class System.Nullable`1<value class Vector2>) <- Editor.SceneRenderingWidget.RenderScene() <- Editor.SceneRenderingWidget.RenderAll() <- Sandbox.EngineLoop.OnClientOutput() <- Managed.SandboxEngine.Exports.Sandbox_EngineLoop_OnClientOutput() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5857192
+    },
+    {
+      "Key": "Sandbox.MenuDll.SimulateUI() <- Sandbox.EngineLoop.SimulateUI() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5649800
+    },
+    {
+      "Key": "Sandbox.PlayerController.TryGetLookedAt() <- Sandbox.PlayerController.UpdateHovered() <- Sandbox.PlayerController.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5436600
+    },
+    {
+      "Key": "Editor.Widget.get_Children() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.ViewportTools.UpdateChildren() <- Editor.ViewportTools.OnViewportToolsFrame() <- dynamicClass.InvokeStub_ViewportTools.OnViewportToolsFrame(class System.Object,class System.Object,int*) <- System.Reflection.RuntimeMethodInfo.Invoke(class System.Object,value class System.Reflection.BindingFlags,class System.Reflection.Binder,class System.Object[],class System.Globalization.CultureInfo) <- Sandbox.Internal.EventSystem+<>c__DisplayClass11_0.<BuildDelegate>b__0(class System.Object,class System.Object[]) <- Sandbox.Internal.EventSystem+EventAction.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem+EventList.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem.Run(class System.String) <- Editor.ManagedTools.RunFrame() <- Managed.SourceTools.Exports.Editor_ManagedTools_RunFrame() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5436600
+    },
+    {
+      "Key": "VoxelCollisionWorld.SetInterest(value class Vector3Int,int32,int64,value class ProceduralTerrainSettings) <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5434168
+    },
+    {
+      "Key": "Editor.Widget.get_Children() <- Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext() <- Editor.ViewportTools.UpdateChildren() <- Editor.ViewportTools.OnViewportToolsFrame() <- dynamicClass.InvokeStub_ViewportTools.OnViewportToolsFrame(class System.Object,class System.Object,int*) <- System.Reflection.RuntimeMethodInfo.Invoke(class System.Object,value class System.Reflection.BindingFlags,class System.Reflection.Binder,class System.Object[],class System.Globalization.CultureInfo) <- Sandbox.Internal.EventSystem+<>c__DisplayClass11_0.<BuildDelegate>b__0(class System.Object,class System.Object[]) <- Sandbox.Internal.EventSystem+EventAction.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem+EventList.Run(class System.String,class System.Object[]) <- Sandbox.Internal.EventSystem.Run(class System.String) <- Editor.ManagedTools.RunFrame() <- Managed.SourceTools.Exports.Editor_ManagedTools_RunFrame() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5219800
+    },
+    {
+      "Key": "Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5012784
+    }
+  ],
+  "collision": [
+    {
+      "Key": "VoxelCollisionWorld.SetInterest(value class Vector3Int,int32,int64,value class ProceduralTerrainSettings) <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 5434168
+    },
+    {
+      "Key": "VoxelCollisionWorld+Region..ctor() <- VoxelCollisionWorld.SetInterest(value class Vector3Int,int32,int64,value class ProceduralTerrainSettings) <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 2771600
+    },
+    {
+      "Key": "VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 533000
+    },
+    {
+      "Key": "VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 529440
+    },
+    {
+      "Key": "VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 319800
+    },
+    {
+      "Key": "System.Collections.Generic.List`1[System.Single].AddWithResize(!0) <- VoxelCollisionWorld+CollisionSamples.Add(float32) <- VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 245880
+    },
+    {
+      "Key": "VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 213200
+    },
+    {
+      "Key": "System.Threading.SemaphoreSlim.CreateAndAddAsyncWaiter() <- System.Threading.SemaphoreSlim.WaitAsync() <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 213200
+    },
+    {
+      "Key": "Sandbox.HandleIndex.New(int,class System.Func`2<value class Sandbox.HandleCreationData,!!0>) <- Sandbox.HandleIndex.RegisterHandle(int,unsigned int32) <- Managed.SandboxEngine.Exports.Sandbox_HandleIndex_RegisterHandle(int,unsigned int32) <- Sandbox.PhysicsBody.AddMeshShape(class System.Collections.Generic.List`1<value class Vector3>,class System.Collections.Generic.List`1<int32>) <- VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 213200
+    },
+    {
+      "Key": "VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 106600
+    },
+    {
+      "Key": "System.Threading.SemaphoreSlim.CreateAndAddAsyncWaiter() <- System.Threading.SemaphoreSlim.WaitAsync() <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 106600
+    },
+    {
+      "Key": "Sandbox.PhysicsBody..ctor(class Sandbox.PhysicsWorld) <- VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 106600
+    },
+    {
+      "Key": "VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 106600
+    },
+    {
+      "Key": "System.Collections.Generic.HashSet`1[System.__Canon].Initialize(int32) <- Sandbox.PhysicsShape+TagAccessor.Add(class System.String) <- VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 106600
+    },
+    {
+      "Key": "System.Collections.Concurrent.ConcurrentDictionary`2[System.Int32,System.__Canon].TryAddInternal(class Tables<!0,!1>,!0,value class System.Nullable`1<int32>,!1,bool,bool,!1&) <- Sandbox.HandleIndex.New(int,class System.Func`2<value class Sandbox.HandleCreationData,!!0>) <- Sandbox.HandleIndex.RegisterHandle(int,unsigned int32) <- Managed.SandboxEngine.Exports.Sandbox_HandleIndex_RegisterHandle(int,unsigned int32) <- Sandbox.PhysicsBody.AddMeshShape(class System.Collections.Generic.List`1<value class Vector3>,class System.Collections.Generic.List`1<int32>) <- VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 106600
+    },
+    {
+      "Key": "System.Collections.Concurrent.ConcurrentDictionary`2[System.Int32,System.__Canon].TryAddInternal(class Tables<!0,!1>,!0,value class System.Nullable`1<int32>,!1,bool,bool,!1&) <- Sandbox.HandleIndex.New(int,class System.Func`2<value class Sandbox.HandleCreationData,!!0>) <- Sandbox.HandleIndex.RegisterHandle(int,unsigned int32) <- Managed.SandboxEngine.Exports.Sandbox_HandleIndex_RegisterHandle(int,unsigned int32) <- Sandbox.PhysicsBody..ctor(class Sandbox.PhysicsWorld) <- VoxelCollisionWorld.Integrate() <- VoxelManager.OnUpdate() <- Sandbox.Component.InternalUpdate() <- Sandbox.Scene.InternalUpdate() <- Sandbox.Scene.SharedTick() <- Sandbox.Scene.GameTick(float64) <- Sandbox.GameInstanceDll.Tick() <- Sandbox.EngineLoop.FrameStart() <- Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&) <- Sandbox.AppSystem.Run() <- Sandbox.Launcher.Main() <- Sandbox.Program.Launch() <- Sandbox.Program.Main()",
+      "Value": 106600
+    },
+    {
+      "Key": "VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueueTimer.System.Threading.IThreadPoolWorkItem.Execute() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 106600
+    },
+    {
+      "Key": "System.Threading.Tasks.Task.UnsafeSetContinuationForAwait(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 106600
+    },
+    {
+      "Key": "System.Threading.Tasks.Task.UnsafeSetContinuationForAwait(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- VoxelCollisionWorld+<Work>d__46.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext(class System.Threading.Thread) <- Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue() <- Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext() <- System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object) <- System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool) <- System.Threading.Tasks.Task.RunContinuations(class System.Object) <- System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut() <- System.Threading.TimerQueue.FireNextTimers() <- System.Threading.ThreadPoolWorkQueue.Dispatch() <- System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart() <- System.Threading.Thread.StartCallback()",
+      "Value": 106344
+    }
+  ]
+}

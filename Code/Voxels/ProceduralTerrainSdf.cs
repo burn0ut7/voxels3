@@ -66,25 +66,80 @@ internal static class ProceduralTerrainSdf
 
 	public static float SampleWorld( Vector3 worldPosition, ProceduralTerrainSettings settings )
 	{
-		var surfaceHeight = settings.SurfaceBaseHeight + SimplexNoise2D(
+		return SampleWorld( worldPosition, settings, SampleSurfaceHeight( worldPosition, settings ) );
+	}
+
+	private static float SampleSurfaceHeight( Vector3 worldPosition, ProceduralTerrainSettings settings )
+	{
+		return settings.SurfaceBaseHeight + SimplexNoise2D(
 			worldPosition.x * settings.SurfaceFrequency,
 			worldPosition.y * settings.SurfaceFrequency,
 			unchecked((uint)settings.WorldSeed) ) * settings.SurfaceAmplitude;
+	}
+
+	// Build-local derived workspace. The generator owns its XY-only dependency;
+	// consumers can only obtain full volumetric density values.
+	internal sealed class LatticeSampler
+	{
+		private readonly int _stride;
+		private readonly float[] _heights;
+		private readonly bool[] _sampled;
+		private Vector3Int _origin;
+		private float _cellSize;
+		private ProceduralTerrainSettings _settings;
+
+		public LatticeSampler( int samplesPerAxis )
+		{
+			_stride = samplesPerAxis;
+			_heights = new float[samplesPerAxis * samplesPerAxis];
+			_sampled = new bool[_heights.Length];
+		}
+
+		public void Begin( Vector3Int origin, float cellSize, ProceduralTerrainSettings settings )
+		{
+			_origin = origin; _cellSize = cellSize; _settings = settings;
+			Array.Clear( _sampled );
+		}
+
+		public float Sample( int x, int y, int z )
+		{
+			var coordinate = _origin + new Vector3Int( x, y, z );
+			var position = new Vector3( coordinate.x * _cellSize, coordinate.y * _cellSize, coordinate.z * _cellSize );
+			var column = x + _stride * y;
+			if ( !_sampled[column] )
+			{
+				_heights[column] = SampleSurfaceHeight( position, _settings );
+				_sampled[column] = true;
+			}
+			return SampleWorld( position, _settings, _heights[column] );
+		}
+	}
+
+	private static float SampleWorld( Vector3 worldPosition, ProceduralTerrainSettings settings, float surfaceHeight )
+	{
 		var surfaceDensity = worldPosition.z - surfaceHeight;
+		var depth = -surfaceDensity;
+		var envelope = MathF.Min( depth - CaveMinimumDepth, CaveMaximumDepth - depth );
+		// min(caves, envelope) cannot beat the surface in this range. Keep the
+		// canonical field value while avoiding four irrelevant 3D noise queries.
+		if ( envelope <= surfaceDensity ) return surfaceDensity;
 		var seed = unchecked((uint)settings.WorldSeed);
-		var noodleA = SimplexNoise3D( worldPosition / NoodleAWavelength, seed ^ NoodleASeedSalt );
-		var noodleB = SimplexNoise3D( worldPosition / NoodleBWavelength, seed ^ NoodleBSeedSalt );
 		var thickness = SimplexNoise3D(
 			worldPosition / ThicknessWavelength,
 			seed ^ ThicknessSeedSalt );
 		var threshold = NoodleBaseThreshold + NoodleThicknessVariation * thickness;
-		var tunnelDensity = CaveDensityScale *
-			(threshold - MathF.Max( MathF.Abs( noodleA ), MathF.Abs( noodleB ) ));
 		var cheese = SimplexNoise3D( worldPosition / CheeseWavelength, seed ^ CheeseSeedSalt );
 		var cheeseThreshold = CheeseBaseThreshold - CheeseThresholdVariation * thickness;
 		var cheeseDensity = CaveDensityScale * (cheese - cheeseThreshold);
-		var depth = -surfaceDensity;
-		var envelope = MathF.Min( depth - CaveMinimumDepth, CaveMaximumDepth - depth );
+		var resolvedDensity = MathF.Max( surfaceDensity, MathF.Min( cheeseDensity, envelope ) );
+		// A noodle can only reduce these upper bounds. Skip remaining noise only
+		// when it cannot change the canonical max/min result; keep ties on the full path.
+		if ( CaveDensityScale * threshold < resolvedDensity ) return resolvedDensity;
+		var noodleA = SimplexNoise3D( worldPosition / NoodleAWavelength, seed ^ NoodleASeedSalt );
+		if ( CaveDensityScale * (threshold - MathF.Abs( noodleA )) < resolvedDensity ) return resolvedDensity;
+		var noodleB = SimplexNoise3D( worldPosition / NoodleBWavelength, seed ^ NoodleBSeedSalt );
+		var tunnelDensity = CaveDensityScale *
+			(threshold - MathF.Max( MathF.Abs( noodleA ), MathF.Abs( noodleB ) ));
 		var caveDensity = MathF.Min( MathF.Max( tunnelDensity, cheeseDensity ), envelope );
 		return MathF.Max( surfaceDensity, caveDensity );
 	}
@@ -281,6 +336,25 @@ internal static class ProceduralTerrainSdf
 		DensityInterval surface,
 		uint seed )
 	{
+		var minimumDepth = -surface.Maximum;
+		var maximumDepth = -surface.Minimum;
+		var envelopeAtMinimum = MathF.Min(
+			minimumDepth - CaveMinimumDepth,
+			CaveMaximumDepth - minimumDepth );
+		var envelopeAtMaximum = MathF.Min(
+			maximumDepth - CaveMinimumDepth,
+			CaveMaximumDepth - maximumDepth );
+		var envelopeMidpoint = (CaveMinimumDepth + CaveMaximumDepth) * 0.5f;
+		var envelopeMaximum = minimumDepth <= envelopeMidpoint &&
+			maximumDepth >= envelopeMidpoint
+			? (CaveMaximumDepth - CaveMinimumDepth) * 0.5f
+			: MathF.Max( envelopeAtMinimum, envelopeAtMaximum );
+		var envelope = new DensityInterval(
+			MathF.Min( envelopeAtMinimum, envelopeAtMaximum ),
+			envelopeMaximum );
+		// The surface dominates the entire cave envelope; noise cannot affect
+		// the final density interval, so avoid all four volumetric bounds.
+		if ( envelope.Maximum < surface.Minimum ) return envelope;
 		var noodleA = BoundSimplex3D( worldAabb, 1f / NoodleAWavelength, seed ^ NoodleASeedSalt );
 		var noodleB = BoundSimplex3D( worldAabb, 1f / NoodleBWavelength, seed ^ NoodleBSeedSalt );
 		var thickness = BoundSimplex3D(
@@ -308,22 +382,7 @@ internal static class ProceduralTerrainSdf
 		var union = new DensityInterval(
 			MathF.Max( tunnel.Minimum, cavern.Minimum ),
 			MathF.Max( tunnel.Maximum, cavern.Maximum ) );
-		var minimumDepth = -surface.Maximum;
-		var maximumDepth = -surface.Minimum;
-		var envelopeAtMinimum = MathF.Min(
-			minimumDepth - CaveMinimumDepth,
-			CaveMaximumDepth - minimumDepth );
-		var envelopeAtMaximum = MathF.Min(
-			maximumDepth - CaveMinimumDepth,
-			CaveMaximumDepth - maximumDepth );
-		var envelopeMidpoint = (CaveMinimumDepth + CaveMaximumDepth) * 0.5f;
-		var envelopeMaximum = minimumDepth <= envelopeMidpoint &&
-			maximumDepth >= envelopeMidpoint
-			? (CaveMaximumDepth - CaveMinimumDepth) * 0.5f
-			: MathF.Max( envelopeAtMinimum, envelopeAtMaximum );
-		var envelope = new DensityInterval(
-			MathF.Min( envelopeAtMinimum, envelopeAtMaximum ),
-			envelopeMaximum );
+
 		return new DensityInterval(
 			MathF.Min( union.Minimum, envelope.Minimum ),
 			MathF.Min( union.Maximum, envelope.Maximum ) );

@@ -434,16 +434,17 @@ thresholds, baseline runs, and acceptance decisions belong to the
 - Changing cave complexity, movement speed, load radius, LOD, collision,
   networking, deformation, or authority would invalidate this throughput
   comparison.
-- CPU density arrays, CPU topology decoding, or geometry readback would create
-  a second terrain/geometry path.
+- Feeding CPU density arrays/topology or geometry readback into rendering would
+  create a second visual path. The independent [collision prototype](TerrainCollision.md)
+  consumes the canonical SDF solely for physics; it does not replace GPU visuals.
 - Rebuilding meshes every frame discards their persistent-cache value.
 - A dedicated fourth regular scratch instance was rejected after its outer-only
   emit path reproducibly crashed native Vulkan resource access during editor
   camera ejection. Mixing foreground and outer requests in one batch, or allowing
   outer work to participate in foreground settlement, would still let stale
   outer work block newer movement and remains rejected.
-- CPU density fields or coarse voxel buffers would violate the canonical GPU SDF
-  contract. Additional visual levels must continue through the generic records,
+- CPU density fields or coarse voxel buffers supplied to visual extraction would
+  violate the canonical GPU SDF rendering contract. Additional visual levels must continue through the generic records,
   queues, publication handoff, and telemetry arrays; they cannot introduce
   per-level scratch, shaders, or publication paths.
 
@@ -500,3 +501,14 @@ stage boundaries. Keep every intermediate variant syntactically valid; an
 invalid preprocessor guard can remove a function's closing brace, and cold
 construction of that invalid asset can crash the native error-recovery path
 before a useful diagnostic reaches the console.
+
+## Readiness lookup allocation constraint
+
+The current working-tree candidate uses direct array/List iteration in both
+GpuVoxelMesher.Contains overloads. Repeated readiness checks must not allocate
+captured predicates. Resident/pending precedence, descriptor equality, and the
+descriptor overload's cancelled-in-flight exclusion remain unchanged; the key
+lookup retains its existing semantics. This change addresses allocation stacks
+observed during CapturePendingClipboxReadiness, without changing GPU geometry
+or dispatch ownership. See candidate 8 in the [validation ledger](../ValidationResults.md)
+for sampled attribution, the standard benchmark, and unresolved acceptance.

@@ -18,7 +18,7 @@ Copy this section when a real feature is ready for validation. Replace every
 placeholder before running it.
 
 ```markdown
-### <SCENARIO-ID>/v1 — <behavior being validated>
+### <SCENARIO-ID>/v1 â€” <behavior being validated>
 
 - Production entry point:
 - Actual world/scene:
@@ -188,7 +188,7 @@ Record an approved extraordinary change here before adding the new version:
 
 ## Recorded Scenarios and Runs
 
-### VOXEL-STREAM-001/v1 — initial chunk population and one-chunk stream shift
+### VOXEL-STREAM-001/v1 â€” initial chunk population and one-chunk stream shift
 
 - Production entry point: `VoxelManager.OnStart` and `VoxelManager.OnUpdate`
 - Actual world/scene: `Assets/scenes/basic_example.scene`
@@ -279,7 +279,7 @@ Record an approved extraordinary change here before adding the new version:
   fixed v1 parameters; the user's original scene values were restored after play
   before the restored scene hash above was recorded.
 
-### VOXEL-CHUNK-PERF-001/v1 — final player-driven chunk throughput baseline
+### VOXEL-CHUNK-PERF-001/v1 â€” final player-driven chunk throughput baseline
 
 - Production entry point: `VoxelManager.OnStart`, `VoxelManager.OnUpdate`, the
   configured `Player Controller` streaming target, and the production
@@ -368,7 +368,7 @@ Record an approved extraordinary change here before adding the new version:
 - Notes: This valid run is retained because every run is append-only evidence.
   The following v2 definition replaces its vertical residency contract.
 
-### VOXEL-CHUNK-PERF-001/v2 — player-driven full terrain-column throughput
+### VOXEL-CHUNK-PERF-001/v2 â€” player-driven full terrain-column throughput
 
 - Production entry point: `VoxelManager.OnStart`, `VoxelManager.OnUpdate`, the
   assigned or uniquely resolved local `Player Controller`, and
@@ -463,7 +463,7 @@ Record an approved extraordinary change here before adding the new version:
   the production world's actual chunk creation and streaming path without a
   separate harness, test scene, test system, or altered runtime parameters.
 
-### VOXEL-DEBUG-001/v1 — player-centered chunk diagnostics
+### VOXEL-DEBUG-001/v1 â€” player-centered chunk diagnostics
 
 - Production entry point: `VoxelManager.OnStart`, `VoxelManager.OnUpdate`, the
   assigned `Player Controller`, `voxel_player_chunk`, and `voxel_chunk_info`
@@ -553,7 +553,7 @@ Record an approved extraordinary change here before adding the new version:
   test-only hook, alternate implementation, or changed query coordinate was
   used.
 
-### VOXEL-CHUNK-PERF-001/v3 — background full-column streaming
+### VOXEL-CHUNK-PERF-001/v3 â€” background full-column streaming
 
 - Production entry point: `VoxelManager.OnStart`, `VoxelManager.OnUpdate`, the
   assigned `Player Controller`, the component-scoped worker pipeline, and
@@ -647,12 +647,12 @@ Record an approved extraordinary change here before adding the new version:
   that startup frame to chunk work; stale cancellation under rapid movement,
   procedural terrain, meshing, collision, and multi-client contention remain
   unmeasured
-- Notes: The failure is retained. The runtime streaming shift—the playable case
-  after scene startup—stayed within `2.629 ms`, while measured manager
+- Notes: The failure is retained. The runtime streaming shiftâ€”the playable case
+  after scene startupâ€”stayed within `2.629 ms`, while measured manager
   integration itself stayed within `0.198 ms` initially and `0.015 ms` during
   the shift.
 
-### VOXEL-CHUNK-PERF-001/v4 — loading-phase population and live background shift
+### VOXEL-CHUNK-PERF-001/v4 â€” loading-phase population and live background shift
 
 - Production entry point: async `VoxelManager.OnLoad`, `VoxelManager.OnStart`,
   `VoxelManager.OnUpdate`, the assigned `Player Controller`, the one serialized
@@ -753,7 +753,7 @@ Record an approved extraordinary change here before adding the new version:
   integration queues. No test file, test scene, test component, test-only hook,
   fallback implementation, or altered scenario input was used.
 
-### VOXEL-CHUNK-PERF-001/v5 — viewer-centered 3D load radius
+### VOXEL-CHUNK-PERF-001/v5 â€” viewer-centered 3D load radius
 
 - Production entry point: async `VoxelManager.OnLoad`, `VoxelManager.OnStart`,
   `VoxelManager.OnUpdate`, the assigned `Player Controller`, the serialized
@@ -876,7 +876,7 @@ Record an approved extraordinary change here before adding the new version:
   world and loaded chunk dictionary. No test project, test file, test scene,
   test-only component, hook, mock, fallback, or altered parameter was used.
 
-### VOXEL-CHUNK-PERF-001/v6 — implicit flat-SDF storage
+### VOXEL-CHUNK-PERF-001/v6 â€” implicit flat-SDF storage
 
 - Production entry point: async `VoxelManager.OnLoad`, `VoxelManager.OnStart`,
   `VoxelManager.OnUpdate`, the assigned Player Controller, the serialized worker
@@ -1039,7 +1039,7 @@ Record an approved extraordinary change here before adding the new version:
   Those measurements do not justify a simultaneous scheduler rewrite. No test
   project, file, scene, component, hook, mock, or alternate path was added.
 
-### VOXEL-GENERATION-001/v1 — flat grass and air material IDs
+### VOXEL-GENERATION-001/v1 â€” flat grass and air material IDs
 
 - Production entry point: async `VoxelManager.OnLoad`, the canonical
   `VoxelChunk` sample query, and `voxel_chunk_info`
@@ -1129,7 +1129,7 @@ Record an approved extraordinary change here before adding the new version:
   command is an existing production diagnostic, not a test-only path; no test
   file, scene, component, hook, mock, or alternate generator was added.
 
-### VOXEL-MEMORY-001/v1 — loaded voxel memory report
+### VOXEL-MEMORY-001/v1 â€” loaded voxel memory report
 
 - Production entry point: async `VoxelManager.OnLoad`, production chunk
   integration, player-boundary streaming, inspector status, and stream summary
@@ -1214,7 +1214,7 @@ Record an approved extraordinary change here before adding the new version:
 - Notes: No GC API, profiler harness, test file, test scene, test component,
   compatibility property, fallback metric, or alternate memory path was added.
 
-### VOXEL-DIAGNOSTICS-001/v1 — memory reporting removal
+### VOXEL-DIAGNOSTICS-001/v1 â€” memory reporting removal
 
 - Production entry point: async `VoxelManager.OnLoad`, production chunk
   integration, player-boundary streaming, inspector status, chunk inspection,
@@ -1281,7 +1281,7 @@ Record an approved extraordinary change here before adding the new version:
   +X streaming behavior, production logs, settle time, and density/material
   probes require a controllable s&box production session
 
-### VOXEL-STATUS-001/v1 — concise inspector dashboard
+### VOXEL-STATUS-001/v1 â€” concise inspector dashboard
 
 - Production entry point: async `VoxelManager.OnLoad`, production chunk
   integration, player-boundary streaming, inspector status, and stream-completion
@@ -1320,7 +1320,7 @@ Record an approved extraordinary change here before adding the new version:
   chunks; effective chunks/second; settle milliseconds; process working-set MiB;
   required structured-log field count
 
-### VOXEL-STATUS-001/v2 — concise inspector dashboard
+### VOXEL-STATUS-001/v2 â€” concise inspector dashboard
 
 - Production entry point: async `VoxelManager.OnLoad`, production chunk
   integration, player-boundary streaming, inspector status, and stream-completion
@@ -1377,7 +1377,7 @@ Record an approved extraordinary change here before adding the new version:
   `OnLoad` to settle; issue `voxel_stream_origin 512 0 0`; read the live
   component schema and structured completion logs; stop play
 - Raw measurements:
-  - Inspector schema: exactly `3` `World Status` properties — `Chunk Status`,
+  - Inspector schema: exactly `3` `World Status` properties â€” `Chunk Status`,
     `Streaming Performance`, and `Process Memory Usage`
   - Initial: loaded `35,937`, pending `0`, generated `35,937`, stale `0`, settle
     `24.164 ms`, worker `2.202 ms`, generation `1.059 ms`, integration `3.054
@@ -1403,7 +1403,7 @@ Record an approved extraordinary change here before adding the new version:
 - Notes: no guessed chunk-object size, GC API, compatibility property, test
   scene, test component, mock, or alternate streaming path was added.
 
-### PLAYER-FIGURE-EIGHT-001/v1 — MCP movement smoke
+### PLAYER-FIGURE-EIGHT-001/v1 â€” MCP movement smoke
 
 - Production entry point: editor MCP tool `player_figure_eight`, the active
   `VoxelManager`, its assigned local `Player Controller`, and
@@ -1524,7 +1524,7 @@ Record an approved extraordinary change here before adding the new version:
 - Remaining limitation: this slice intentionally fixes Z at `0` and provides no
   terrain following, multiplayer automation protocol, or movement report
 
-### PLAYER-FIGURE-EIGHT-001/v2 — shared MCP and inspector control
+### PLAYER-FIGURE-EIGHT-001/v2 â€” shared MCP and inspector control
 
 - Production entry point: `VoxelManager` figure-eight configuration and update
   path, editor MCP tool `player_figure_eight`, and the manager inspector's
@@ -1621,7 +1621,7 @@ Record an approved extraordinary change here before adding the new version:
   following, multiplayer automation protocol, and movement reporting remain out
   of scope
 
-### PERFORMANCE-OVERVIEW-001/v1 — three-pillar runtime baseline
+### PERFORMANCE-OVERVIEW-001/v1 â€” three-pillar runtime baseline
 
 - Production entry point: `VoxelManager` production update, memory, and chunk
   integration paths; editor MCP tool `performance_overview`; manager inspector
@@ -1738,7 +1738,7 @@ Record an approved extraordinary change here before adding the new version:
   GPU-pass, allocator, or per-chunk profiler. Product pass/fail budgets remain to
   be set from representative hardware and workload evidence.
 
-### PERFORMANCE-OVERVIEW-001/v2 — automated loop-boundary baseline
+### PERFORMANCE-OVERVIEW-001/v2 â€” automated loop-boundary baseline
 
 - Version justification recorded before execution: v1 depended on separately
   timed start, wait, report, and stop calls. That execution procedure is not a
@@ -1785,7 +1785,7 @@ Record an approved extraordinary change here before adding the new version:
 - Baseline policy: v2 replaces v1 as the canonical comparable execution method.
   V1 remains historical evidence and is not compared as an automated run.
 
-#### Run 2026-08-28 — pass
+#### Run 2026-08-28 â€” pass
 
 - Entry: live `player_figure_eight` MCP adapter, which invokes the same
   `ConfigurePlayerFigureEightTest` method as the inspector button
@@ -1819,7 +1819,7 @@ Record an approved extraordinary change here before adding the new version:
   verified from source; live execution used its exact shared MCP method rather
   than a physical inspector click.
 
-### DEBUG-SURFACE-REMOVAL-001/v1 — bounded diagnostics
+### DEBUG-SURFACE-REMOVAL-001/v1 â€” bounded diagnostics
 
 - Definition recorded before execution: remove the manual world-summary,
   player-chunk, and performance-overview actions plus the per-loaded-chunk
@@ -1849,7 +1849,7 @@ Record an approved extraordinary change here before adding the new version:
   - The live run produces zero `chunk.load` and zero `chunk.unload` records
   - Runtime/editor compilation, both .NET builds, and `git diff --check` succeed
 
-#### Run 2026-08-28 — pass
+#### Run 2026-08-28 â€” pass
 
 - Revision: `f2089ab+working-tree`; engine build `26.08.19`
 - Static surface: live `VoxelManager` metadata exposed none of the three removed
@@ -1873,11 +1873,11 @@ Record an approved extraordinary change here before adding the new version:
   warnings; `git diff --check` passed
 - Hotload note: removing serialized members produced expected unresolved-member
   migration messages at `13:53:56`; a fresh play session then started and the
-  measured run at `13:55:00–13:55:01` produced no runtime error
+  measured run at `13:55:00â€“13:55:01` produced no runtime error
 - Outcome: pass. The unbounded debug surfaces are absent and the automated suite
   retains its single bounded structured result.
 
-### PERFORMANCE-OVERVIEW-001/v3 — durable structured baseline
+### PERFORMANCE-OVERVIEW-001/v3 â€” durable structured baseline
 
 - Version justification recorded before execution: v2 established an automatic
   loop boundary but retained results only as general engine log text. V3 keeps
@@ -1915,7 +1915,7 @@ Record an approved extraordinary change here before adding the new version:
   - Runtime/editor compilation, both .NET builds, live production execution,
     durable-file readback, and `git diff --check` succeed
 
-#### Run 2026-08-28 — pass
+#### Run 2026-08-28 â€” pass
 
 - Engine build `26.08.19`; revision `70d878f+working-tree`
 - Rejection evidence: task `unassigned` was rejected by
@@ -1942,7 +1942,7 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: pass. The unchanged baseline completed and the runtime created a
   durable structured record after measurement.
 
-### PERFORMANCE-STORAGE-APPEND-001/v1 — append integrity
+### PERFORMANCE-STORAGE-APPEND-001/v1 â€” append integrity
 
 - Definition recorded before execution: prove a second completed production
   test appends one independently parseable record without changing the existing
@@ -1962,7 +1962,7 @@ Record an approved extraordinary change here before adding the new version:
   - The second record has schema version `1`, outcome `completed`, zero truncated
     samples, and positive finite frame measurements
 
-#### Run 2026-08-28 — invalid validation
+#### Run 2026-08-28 â€” invalid validation
 
 - The production run completed and appended run
   `99e0f14f3c0a49bb85400cb2d293c934`; the dataset increased to two independently
@@ -1973,7 +1973,7 @@ Record an approved extraordinary change here before adding the new version:
 - Outcome: invalid validation, not a product failure. The records are retained;
   the result is not used as append-integrity evidence.
 
-### PERFORMANCE-STORAGE-APPEND-001/v2 — corrected append integrity
+### PERFORMANCE-STORAGE-APPEND-001/v2 â€” corrected append integrity
 
 - Version justification recorded before execution: v1's workload and product
   behavior were valid, but its verification command hashed one character. V2
@@ -1992,7 +1992,7 @@ Record an approved extraordinary change here before adding the new version:
   - The third record has schema version `1`, outcome `completed`, zero truncated
     samples, and positive finite frame measurements
 
-#### Run 2026-08-28 — pass
+#### Run 2026-08-28 â€” pass
 
 - Saved run ID `7298bfe501f14a748a99511a5644b7bf`; task
   `PERFORMANCE-STORAGE-APPEND-001/v2`; revision `70d878f+working-tree`
@@ -3016,7 +3016,7 @@ Record an approved extraordinary change here before adding the new version:
 - Historical results and scenario definitions were not rewritten. References to
   removed paths describe immutable past runs and are not current instructions.
 
-#### PERFORMANCE-OVERVIEW-001/v3 cleanup run 2026-08-29 01:44 EDT — pass
+#### PERFORMANCE-OVERVIEW-001/v3 cleanup run 2026-08-29 01:44 EDT â€” pass
 
 - Executor: Codex through the unchanged `run_performance_test` figure-eight.
 - Project/source state: cleanup candidate based on `22bced7`, revision label
@@ -9406,3 +9406,1404 @@ Started the authored playable world, observed settled queues, stopped play, then
 requested normal engine quit. No scene edits, timing claim, synthetic mesher or
 new project test trigger. Record the dialog/log/marker outcome next and restart
 the original runtime for the user.
+
+
+### TERRAIN-COLLISION-PROTOTYPE-001/v1 - CPU collision path
+
+Definition recorded 2026-09-07 before baseline or collision implementation runs.
+Canonical comparison uses GPU-MESHING-512-001/v1 unchanged: authored basic_example
+scene, original spawn (0,0,0), one local player, generator v5/seed1337/base0/
+frequency0.0005/amplitude128, cells32/cell16, gameplay radius8, visual radius512,
+levels0..6/extents4/8, attached game camera, unchanged viewport, fps_max1000;
+normal stop/play and all queues settled before each run. Figure Eight speed2500,
+distance50000/Y25000, one loop at Z0; normal drain and ten stationary seconds.
+Ryzen7 9800X3D / RTX5090, engine26.09.01c. No deformation or networking load.
+Baseline source1c8e0d8 (no terrain collision). No source edits during timed runs.
+Record actual process, begin center and source identity with every attempt.
+
+This new collision feature adds physics work but does not change the journey or
+weaken GPU-MESHING-512-001/v1 regression gates: CPU/GPU moving/stationary p95/p99
+within max(5%,0.25ms); every publication p95/p99 and drain within max(5%,10ms);
+placement lag at most +1; foreground drain<=500ms, foreground/transition
+p95<409.6ms, outer p95<4096ms/service gap<300ms; allocation/frame<=baseline*1.05.
+Identical visual settled counts/digests, zero geometry readbacks, unsafe commits,
+invalid tables, mismatches, truncation or unexpected exceptions. Memory reports
+separate collision-owned buffers/native counts from whole-process variation.
+A failed prototype is evidence, not permission to accept a regression.
+
+First prototype bounds: gameplay radii0..8 (authored radius8 must not silently
+become4), one collision worker, at most two completed results, at most one native
+mesh construction/update per frame, initial0.5ms admission budget. Coverage is
+full-resolution32^3 cells/chunk. Radius8 extends the research's initial4 target
+because the current authored workload is8; this is not a modification of an old
+scenario. No unbounded collider residency is authorized by the analytic radius128
+configuration limit. Measure creation, retirement, extraction, sampling,
+request-to-ready tails, stale/failure counts, bytes, and readiness stalls.
+Initial path proof gates: settle all desired collision records within60s at
+spawn; no native creation call>10ms; no failure/stale publication; completed
+queue<=2; desired records<=4913; full settled coverage; after movement, collision
+queues drain within60s; no owned shapes after teardown. These do not replace
+stricter figure-eight frame-tail acceptance or promise near-instant edits.
+
+Contact observation outside timing: real player at authored spawn, normal
+controller/gravity, no input for10s after collision readiness; read-only downward
+terrain trace from (0,0,256) to (0,0,-256), and seam traces at X=-512,0,512 with
+Y=-16,0,16 over the same Z interval. Require terrain mesh hits, finite normals,
+and player support at the extracted surface (within2 world units at spawn);
+exclude the authored Plane from terrain-trace evidence. Observe a production
+physics body settling on the surface if an existing gameplay body is available;
+do not create test-only components/scenes. Cave traversal and fast-body cases
+must use actual playable entry points and separately predeclared coordinates;
+report unexercised cases rather than inventing a test hook. The fixed-height
+Figure Eight is explicitly not evidence of character contact or seam traversal.
+
+Preserve all attempts below. Documentation declaration alone is not a test run.
+
+
+#### Pre-change control - 2026-09-07 06:19 UTC
+
+Run4d2d24ffea4a4b5685e353d8de960c6a, source1c8e0d8/schema24, exact
+TERRAIN-COLLISION-PROTOTYPE-001/v1 baseline configuration and begin center(0,0,0).
+Raw result: [baseline](ValidationEvidence/TerrainCollision/baseline.json).
+Moving CPU p95/p99=1.4903/3.1604ms; GPU=1.2433529/1.6293526ms;921.95654FPS.
+Stationary CPU=1.0121/2.4114ms; GPU=0.70881844/0.93626976ms.
+Allocation/frame29047.496 moving,24733.83 stationary; measured exceptions0.
+No runtime source changes during measurement. Local read-only source/API
+inspection continued; one host-side JSON read also overlapped. This is a fresh
+control, not an assertion that collision passes any gate. Initial candidate
+compilation exposed inaccessible non-component Task access and whitelist
+rejection of Monitor.Wait/PulseAll and volatile fields. No candidate runtime
+run occurred on those sources. The scheduler uses one async worker chain,
+SemaphoreSlim wakeup, GameTask.WorkerThread and cancellation tokens instead.
+
+
+#### Prototype 1 startup - 2026-09-07 06:30 UTC
+
+Source manifest [prototype-1](ValidationEvidence/TerrainCollision/prototype-1-source.json),
+engine compile success (runtime/editor0 errors,0 warnings), normal authored play
+start06:30:18UTC. At06:30:43: desired4913, ready2385, bodies750, pending2526,
+building1, completed0, peak completed2/229376bytes. Native publish at coordinate
+(-4,4,0) failed; retained as failure, not empty. Sampling p95/p99=19.5679/21.279ms,
+creation p95/p99=1.492/2.0846ms,max3.3115ms. Origin terrain-only trace hit(0,0,0)
+normal(0,0.2695,0.963), componentVoxelManager. Player released after16 held
+physics steps; observed position(-0.00080655,0.1974015,2.1835408). Point-height
+support tolerance is not established by this observation (body footprint on a
+slope differs from an origin point trace). Startup prototype fails the zero
+native-failure gate. Do not start an acceptance Figure Eight on this source.
+
+
+Prototype1 settled observation06:31:33UTC:4911/4913 ready,1060 bodies, queues0,
+failures2 at(-4,4,0) and(-8,8,-1), max request-to-ready50399.805ms. Native creation
+max3.3115ms; sampling p50/p95/p99=15.9/19.7694/21.4569ms. Published geometry
+payload39584184bytes (excludes native acceleration structures). Fail zero-failure
+and complete-coverage gates despite meeting the60s throughput bound. Stop play
+and add bounded production failure diagnostics (shape kind and first12 vertices),
+then repeat the same startup as prototype1-diagnostics. No topology change yet.
+
+
+#### Prototype 1 diagnostic repeat - 2026-09-07 06:32 UTC
+
+Normal stop/play, same v1 parameters. Diagnostic reports prove both rejected
+regions are isolated three-vertex/one-triangle fragments: (-4,4,0) positions
+(0.0002,0,0),(0,0.0002,0),(0,0,0); (-8,8,-1) positions
+(0,0,511.9999),(0.0002,0,512),(0,0.0002,512). Native creation returns a valid
+sphere fallback, not a mesh or hull. It is never activated. Final4911/4913,
+1060 bodies,2 failures; payload39584184bytes; max ready50215.105ms;
+creation p95/p99/max1.4274/2.1041/3.3306ms. Reproduced failure, not accepted.
+Teardown reports bodies0. Asked user whether to omit only native-rejected
+fragments with total size<0.001world units; this is a pending fidelity decision.
+
+Prototype2 sampling work follows measured sampling dominance: use the existing
+canonical conservative AABB bound on fixed8-cell blocks (64 per chunk), sample
+only lattice points used by uncertain blocks, and reuse shared samples. No
+approximate densities or alternative SDF. In canonical SampleWorld, evaluate the
+existing depth envelope before 3D noise and return surfaceDensity only when
+min(caves,envelope)<=surfaceDensity is guaranteed by envelope<=surfaceDensity.
+No output/formula/seed/version change; GPU formula remains equivalent. Preserve
+the first native-failure gate pending the user's fragment decision. Repeat v1
+startup to measure sampling, coverage and the exact rejected fragments.
+
+
+#### Prototype 2 startup/contact - 2026-09-07 06:36 UTC
+
+Source [prototype-2](ValidationEvidence/TerrainCollision/prototype-2-source.json).
+Normal authored play start06:36:12UTC. Final4911/4913,1060 bodies, same two tiny
+fragment failures,39584184 payload bytes and427 discarded exact degenerates.
+Maximum ready36097.664ms versus prototype1's50399.805ms (28.4% lower); sampling
+average6.62648ms versus9.56759ms. Sample count65702614, rejected8-cell blocks48542.
+Creation p95/p99/max1.3983/2.0736/2.7126ms. Same native-failure rejection remains.
+Player after settlement: position(-0.00080655,0.1974015,2.1835408), grounded=true,
+GroundComponent=VoxelManager, velocity0, MotionEnabled=true, no held bodies.
+Screenshot inspected at1024x640 outside timing: player standing on the rendered
+terrain at the edge of the authored dev platform, no obvious visual offset.
+All nine predeclared terrain-only seam rays hit VoxelManager with finite normals:
+X=-512 gives heights[-1.3004,-4.1134,-6.9319] forY[-16,0,16]; X=0 gives
+[4.4777,0,-4.4777]; X=512 gives[-1.94,-4.1849,-6.4482]. This verifies static
+ray contact across those seams, not walking or high-speed rigidbody traversal.
+
+Point-height comparison at body origin is insufficient to interpret the existing
+2-unit support criterion on a slope. Read-only status now also sweeps the actual
+PlayerController.BodyBox16units down/up about the unchanged player position;
+report gap to trace.EndPosition (supported body origin), retaining the2-unit
+criterion and the same stationary spawn. No actor position or terrain changes.
+Typed schema25 collision metrics retain startup failures across measurement
+reset, so a performance window cannot hide failed startup regions.
+
+
+#### Prototype 2 support repeat - 2026-09-07 06:40 UTC
+
+Source [support manifest](ValidationEvidence/TerrainCollision/prototype-2-support-source.json),
+raw [support observation](ValidationEvidence/TerrainCollision/prototype-2-support.json).
+Same v1 authored startup and stationary player. Full build max36078.18ms;
+4911/4913 ready,1060 bodies, same2 tiny native failures, all queues0. Creation
+p95/p99/max1.3551/2.0913/2.9939ms; geometry payload39584184bytes unchanged.
+Actual-body-box terrain support hit=true, gap=-0.032527447world units, within
+predeclared2-unit support tolerance; grounded=true on VoxelManager, velocity0,
+MotionEnabled=true, heldBodies0. This resolves the slope/footprint measurement
+ambiguity without changing player, terrain, inputs or tolerance. Support passes;
+complete coverage/native-failure gates still fail. Stop play reports bodies0.
+
+Current checkpoint: runtime/editor compile0 errors0 warnings; canonical table
+regeneration byte-identical; whitespace/local-link checks pass. No shaders,
+scene, or generated engine assets were modified. No candidate Figure Eight has
+been started because full collision settlement is prevented by the two failed
+regions. Prototype is unaccepted, not committed or pushed. Await the user's
+pending0.001-unit native-rejected-fragment fidelity choice before changing that
+behavior and completing performance/movement validation. Goal remains active.
+
+
+#### Independent lifecycle review - 2026-09-07
+
+The previous goal turn made implementation and runtime-evidence progress. The
+fragment tolerance remains unanswered; no omission has been introduced.
+Review found that submitted geometry bytes were subtracted at interest removal
+while native bodies could still wait in the retirement queue. Accounting now
+retains those bytes until actual native removal. Teardown additionally reads
+back each released handle's validity rather than logging a constant zero count.
+The public readiness query rejects non-finite/inverted bounds instead of allowing
+an empty coordinate loop to report ready. These are correctness changes, not a
+new mesher or relaxation of the native-failure gate.
+
+Predeclared lifecycle observation: same authored scene/configuration as v1;
+start play normally, immediately request one collision status observation, then
+stop play normally while initial work remains pending. No frame timing claim,
+artificial delay, origin edit, test component, or performance acceptance claim.
+Require pending/building evidence before stop, native remainingBodies0 after
+stop, and no late publication or worker error after stop. Record actual times
+and compile identity. This supplements, not replaces, the fixed Figure Eight.
+
+
+Lifecycle observation06:45:42-43UTC: successful runtime/editor compile0/0;
+4913 desired,4911 pending,2 completed,0 ready/native bodies before immediate
+stop. Stop emitted bodies0 verified=True; this exercises queued-result cleanup,
+not removal of an already published body. Predeclare a complementary normal
+start/stop observation with a1second wait before the same status query, so
+native bodies can be published; require body count>0 before stop and verified
+zero after stop. Keep scene/configuration unchanged and make no timing claim.
+
+
+Complementary lifecycle observation06:46:27UTC: after the requested1second wait
+and tool/model turnaround (actual build age about15.7seconds), status showed658
+native bodies,1946 ready,2965 pending,one building. One known tiny-fragment
+failure occurred before stop; coverage remains failed. Normal stop immediately
+reported bodies0 verified=True after checking native handle validity. Thus
+published bodies and pending work were both present before teardown; all owned
+body handles were invalid afterward. Raw [pending observation](ValidationEvidence/TerrainCollision/lifecycle-pending.json).
+Do not treat the requested sleep as an exact1second runtime sample or compare
+its throughput against the startup runs. This is cleanup evidence only.
+The user fragment decision remains pending; no fidelity change, candidate
+Figure Eight, acceptance commit or push occurred in this continuation.
+
+
+#### Endpoint welding decision and validation plan - 2026-09-07
+
+User explicitly approves 0.001-unit collision approximation, with connected
+coverage required rather than simply dropping native-rejected fragments.
+The production extractor now snaps an edge intersection within 0.001 world
+units of its lattice endpoint to that endpoint. All incident cells and chunks
+apply the same rule using shared global densities; in-chunk indices weld at the
+corner. Adjacent surviving triangles connect at that corner. Only resulting
+zero-area/repeated-index triangles are removed. This is collision geometry
+approximation, not a field edit or a renderer change. It is not a guarantee of
+point-for-point coverage of the original microscopic triangle footprint.
+Native failures remain errors; no sphere or failed nonempty mesh is accepted.
+WeldedIntersections counts affected unique cell edges per chunk (including
+already exact endpoints); DegenerateTriangles counts removed collapsed output.
+
+Repeat TERRAIN-COLLISION-PROTOTYPE-001/v1 unchanged, then canonical
+GPU-MESHING-512-001/v1 against baseline 4d2d24ffea4a4b5685e353d8de960c6a.
+Additional bounded read-only coverage observations, outside timed performance:
+vertical rays at X=-4096,Y=4096 and X=-2048,Y=2048, top=16,bottom=-16,
+and each pair offset by (+0.001,0), (0,+0.001), (-0.001,0), (0,-0.001).
+These are the world corners of the two reproduced failed chunks. Require all
+10 rays to hit terrain with finite normals and height within 0.01 units of Z=0.
+Keep original nine seam rays and actual-body support tolerance unchanged.
+Coverage/full readiness, zero native errors, <=60s startup and prior native
+creation/performance criteria remain required. No runtime result recorded yet.
+
+
+#### Prototype 3 endpoint welding - startup and Figure Eight, 2026-09-07
+
+Source [manifest](ValidationEvidence/TerrainCollision/prototype-3-source.json),
+[contact observations](ValidationEvidence/TerrainCollision/prototype-3-contact.json),
+[Figure Eight result](ValidationEvidence/TerrainCollision/prototype-3-figure-eight.json),
+[post-run observation](ValidationEvidence/TerrainCollision/prototype-3-drain.json).
+Installed engine26.09.01c; runtime/editor compilation succeeds with zero errors
+and warnings. Same authored scene, seed1337, radius8,32cells,16unit cells,
+visual maximum6, unchanged shaders. Normal stop/play then full startup settlement.
+
+Startup ready4913/4913, bodies1060, failures0, all queues0, max ready38926.01ms.
+Native creation p95/p99/max1.5418/2.3669/3.1155ms. Submitted payload39555384bytes;
+welded edges2241, degenerate triangles1644. All10 additional repaired-corner
+probes hit VoxelManager, finite normals, Z=0 or approximately +/-0.0002 units.
+All original9 seam probes hit. Player grounded on VoxelManager, velocity0,
+heldBodies0, support gap-0.032527447units. These startup/contact gates pass.
+
+Canonical runner run3cb5094431774625a5b4c88e8faa30bc: speed2500,distance50000,
+1loop,Z0,duration121.93215s, fps_max1000. Actual start center
+(-0.0008065507,0.19740152), after normal physical settlement; retain this
+recorded displacement when judging exact baseline comparability. No workload
+or code changes during run. Bounded console reads and source investigation
+occurred during the run; do not claim an isolated benchmark environment.
+
+Streaming exposed6 rejected single-triangle meshes at coordinates (73,-51,0),
+(-76,48,0),(-81,43,-1),(-83,41,0),(-85,39,-1),(-87,37,0). Their reported axial
+spans range approximately0.0019..0.0039units, beyond the approved0.001weld.
+All fallback spheres removed; native-failure criterion fails. No larger
+weld tolerance applied. During final result capture collision ready1547/4913,
+pending3364,completed2; final10second stationary phase still included collision
+builds. This is real outstanding collision work, not a settled collision phase.
+Later read at04:36:17 engine-local time showed4274ready,638pending,1building;
+no claim of complete drain within60seconds is established by that observation.
+
+Moving CPU p95/p99=1.6813/3.7889ms (baseline1.4903/3.1604); GPU
+1.37496/1.9803047ms (baseline1.2433529/1.6293526). Moving p95 gates pass;
+both p99 gates exceed baseline+max(5%,0.25ms). Stationary CPU
+1.9056/3.2758ms and GPU1.4045238/1.9040108ms exceed all corresponding gates.
+Allocations/frame36376.29moving and30835.627stationary exceed baseline
+29047.496/24733.83 plus5%. Native creation maximum8.3222ms passes10ms;
+completed queue peak2 passes; sampled distributions untruncated. Overall failed,
+not accepted or committed. High average FPS871.998 does not establish pacing,
+allocation, complete streaming, or collision correctness acceptance.
+
+The public pinned PhysicsBody.AddMeshShape wrapper delegates cooking to native
+physics and exposes no numeric minimum edge/area tolerance. Its warning checks
+invalid results or sphere fallback. Repository tree/source inspection did not
+locate native cooking implementation. Rejected spans are observations, not a
+universal engine threshold. At world magnitude50000, float32 position spacing
+is0.00390625units; distinguish representable world position precision from
+chunk-local cooking geometry. Proposed0.01unit (0.254mm) endpoint weld is a
+candidate project error allowance, not a documented engine minimum. User was
+asked to approve this larger approximation; decision pending. Keep connected
+corner welding and native failure checks. Next acceptance work must also
+resolve streaming backlog, allocations and frame tails, not only tiny geometry.
+
+
+#### Prototype 4 troubleshooting plan - 2026-09-07
+
+User instructed continuation after the proposed0.01-unit weld: proceed with
+that candidate tolerance. This does not alter canonical field, sampling grid,
+route parameters or acceptance thresholds. Repeat unchanged v1 startup,
+original19 contact probes, and canonical Figure Eight. Before running, add
+mesh list reuse: exactly3 VoxelCollisionGeometry buffers (one worker plus2
+completed), returned only after native submission/stale discard. This addresses
+measured allocation pressure without new authoritative storage or concurrency.
+Retained capacity is bounded by the maximum regular chunk topology, not mesh
+residency; no per-resident CPU geometry cache. Native code owns submitted copy.
+Sampling remains the next measured bottleneck. No new sampling optimization in
+this candidate, so measurements can distinguish buffer reuse and fidelity fix.
+
+Review also identifies runner/physics interference: it forces Z=0 inside real
+terrain and preserves XY body velocity; after moving completion it drops the
+route target. Prototype3's post-run player reached(3361.88037,2048.47852,75.94761),
+so its supposed stationary world origin was displaced. Do not silently change
+the canonical runner or accept its final visual counts as comparable. Observe
+whether this recurs and report the benchmark validity limitation explicitly.
+
+
+#### Prototype 4 results and prototype 5 plan - 2026-09-07
+
+Source [p4 manifest](ValidationEvidence/TerrainCollision/prototype-4-source.json),
+[contact](ValidationEvidence/TerrainCollision/prototype-4-contact.json),
+[run](ValidationEvidence/TerrainCollision/prototype-4-figure-eight.json).
+Successful runtime/editor compile0errors0warnings; normal startup same v1.
+Startup4913ready,1060bodies,0failures,maxready41320.12ms, creationmax6.1942ms;
+all19 probes hit and body supportgap-0.032527447. Mesh payload39539076bytes,
+welded3627,degenerate2528. The editor was restarted between p3 and p4; one
+hotload substitution warning preceded play, not a candidate runtime mesh error.
+
+Run a3448fb854a5437fb5562901ea787781: unchanged canonical speed/distance/loop/Z,
+source p4. Zero collision failures; completed queuepeak2, no truncated samples.
+Moving CPU p95/p99=1.7324/3.7524ms, GPU1.3599396/2.0434856ms; p99 gates fail.
+Alloc/frame31887.996 moving (p3 36376.29:12.34% lower) and26372.309 stationary
+still exceed baseline+5%. Stationary CPU1.2429/2.1803 passes old numeric gates,
+GPU0.9906292/1.6624928 fails. Comparability caveats from p3 remain; no approval
+of a revised runner has arrived. Native creationmax4.3537ms passes10ms.
+Final result had1612ready,3299pending,2completed: collision still building in
+stationary window. At05:24:27local (about47seconds after moving completion)
+all4913ready,allqueues0,0failures,1060bodies,39539076payload bytes. Native
+creation/retirement counts both8797 after full drain. Player settled nearorigin
+(-0.882198453,0.0804844648,2.21620703),grounded,VoxelManager,velocity0,
+supportgap-0.0325799. Full-route geometry failure and <=60second drain gates
+pass in this observation. Overall performance acceptance still fails.
+
+Next candidate changes only conservative sampling block size8->4 cells.
+This targets measured samplingavg5.029361ms versus extractionavg0.2225408ms
+in p4, without changing lattice positions, density interpolation or workload.
+Use canonical closed-AABB bounds; uncertain blocks still sample every required
+full-resolution point. Require same startup1060bodies and39539076submitted
+payload bytes as p4, plus unchanged v1 readiness/contact criteria. Repeat normal
+startup before further changes; record any cost regression rather than choosing
+an unrecorded favorable result. Renderer and figure-eight remain unchanged.
+
+
+Prototype5 startup05:26:14local: [manifest](ValidationEvidence/TerrainCollision/prototype-5-source.json),
+[observation](ValidationEvidence/TerrainCollision/prototype-5-startup.json).
+Normal v1 startup, compilation successful. Ready4913/4913,1060bodies,0failures,
+allqueues0; maxready24101.172ms versusp4 41320.12ms (41.67% lower).
+Submitted geometry39539076bytes,degenerate2528,welded3627 exactly matchp4.
+Samples38435525 versus65702614 (41.50% fewer); samplingavg4.23336ms,
+extractionavg0.16714714ms; creationp95/p99/max1.4384/1.9952/3.1196ms.
+Player ground/support unchanged, gap-0.032527447. This supports the bounded
+sampling change; counts/payload alone do not prove identical topology.
+Now repeat original19 probes and unchanged Figure Eight; retain pending
+benchmark-version decision and exact-comparability caveats. No changed
+acceptance thresholds or scene/workload parameters.
+
+
+#### Prototype 5 streaming failure and prototype 6 local-origin plan
+
+Run03c91ba7d98843efb6d2f1ae08b73e0a ([result](ValidationEvidence/TerrainCollision/prototype-5-figure-eight.json))
+used unchanged v1 route. All19startup probes hit, but native failure at
+(-48,-47,-1), positions(512,0,512),(512,0.0195,512),(511.981,0,512),
+returned sphere and was removed. This approximately0.0195-unit fragment is
+larger than0.01. Faster extraction reached geometry p4 did not necessarily
+build: zero errors along a route is not proof every desired region was built.
+Ready2126/4913 at result, pending2785,completed2; published37898 versusp4 22797.
+Samplingavg2.781117ms, extractionavg0.13935587ms; creationmax4.2419ms.
+Moving CPU1.6695/3.6894ms and GPU1.3086796/1.9834042ms p95/p99; both p99 gates
+still fail. Alloc/frame31856.215moving,26477.53stationary fail5% gates.
+Stationary CPU1.4394/2.3403ms and GPU0.9701252/1.461029ms; CPU p95 and both
+GPU gates fail. At05:30:21local all4913ready after failed region left interest;
+Failures remains1. This later sample cannot prove <=60second drain.
+No acceptance or commit; original/native failures remain in history.
+
+Prototype6 keeps0.01 weld and4-cell sampling. Recenter each submitted mesh
+around its used-vertex AABB midpoint, rounded to an integral16unit grid offset;
+subtract from local vertices and add to static body position. This is a rigid
+translation of representation, not mesh scaling or extra collision coverage.
+Hypothesis: small triangles far from local origin suffer native arithmetic
+cancellation. Actual native rejection rule remains unknown; do not claim cause
+before evidence. Exactly the same v1 route and19startup/contact observations;
+require no creation failures and unchanged body/payload counts. Track the
+previously failing(-48,-47,-1) via route and native failure log. Preserve any
+new rejection rather than raising the weld silently. Staging PhysicsShape.Scale
+is obsolete/read-only1; pinned source confirms it cannot support a cook-large,
+scale-down workaround. No such workaround was implemented.
+
+
+#### Prototype 6 rejection and prototype 7 connected patch plan
+
+P6 [startup](ValidationEvidence/TerrainCollision/prototype-6-startup.json) and
+[contact](ValidationEvidence/TerrainCollision/prototype-6-contact.json) pass:
+4913ready,1060bodies,39539076bytes,zeroerrors, all19probes hit, bodygap
+-0.032507896; maxready23881.852ms,creationmax2.5772ms.
+Run211c33d995eb4f35ad458d789558f30e
+([result](ValidationEvidence/TerrainCollision/prototype-6-figure-eight.json))
+rejects the same(-48,-47,-1) triangle at local positions(0,0,0),
+(0,0.0195,0),(-0.019,0,0). Thus recentering alone does not resolve rejection;
+remove that unsuccessful representation change. Moving CPU1.7577/3.791ms,
+GPU1.3222694/1.9798279ms,allocation/frame32025.41 still fail acceptance.
+Do not infer a native threshold from this failed attempt.
+
+P7 keeps0.01weld,4cellbounds,3reusedgeometry buffers. If a complete nonempty
+chunk output fits strictly within one cell along each axis, re-extract its
+used-vertex bounds expanded by one lattice cell, using the SAME extractor,
+field and16unitgrid. Integer floor/ceil bounds yield at most4^3cells; support
+can extend one cell beyond the owning chunk. Submit this connected terrain
+neighborhood as that region's shape instead of the isolated clipped fragment.
+There is no arbitrary larger vertex weld, fabricated triangle, hull or sphere.
+Existing overlapping neighbor triangles remain; measure the resulting contact,
+not just cooking. An empty support result is an error, never silent deletion.
+Whole isolated microscopic features may still fail; native validation remains.
+
+The region retains ownership of its support patch and retires it normally.
+This does not make neighboring logical regions ready. Current immutable field
+revision invalidates everything; future edits must invalidate owners whose
+one-cell support dependency intersects the edit. No edit API added.
+SupportPatchRebuilds counts integrated neighborhood rebuilds; sampling/extraction
+costs include original plus replacement extraction. Original discarded output
+is not retained. Buffer/scratch bound remains one32cellmaximum extractor.
+
+Repeat unchanged v1 startup/contact and figure-eight; native error criterion
+unchanged. P7 may have more submitted geometry because overlap is intentional;
+record it explicitly, not as bit-identical output. Require original19trace hits,
+body supportwithin2units,4913ready,zeroerrors,creationmax<=10ms and unchanged
+performance gates. Do not change the runner while its version decision is pending.
+
+
+#### Prototype 7 connected-patch results - 2026-09-07
+
+Source [manifest](ValidationEvidence/TerrainCollision/prototype-7-source.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-7-startup.json),
+[contact](ValidationEvidence/TerrainCollision/prototype-7-contact.json),
+[route result](ValidationEvidence/TerrainCollision/prototype-7-figure-eight.json),
+[post-run drain](ValidationEvidence/TerrainCollision/prototype-7-drain.json).
+Successful runtime/editor compilation. Normal authored v1 startup4913ready,
+1060bodies,0failures, allqueues0;12support patches; submitted39546000bytes,
+6924more thanp5 (intentional shared terrain overlap). Sampling38436325points,
+maxready24467.605ms; creationp95/p99/max1.4975/2.0033/2.486ms. All19rays hit
+VoxelManager with finite normals. Playergrounded,velocity0,held0,supportgap
+-0.032527447. These startup and static-contact gates pass.
+
+Canonical run aac89b0bdeec46509639b4c57829b8a5, unchanged v1 inputs,
+engine26.09.01c, compiled p7, no source changes during timed route. Zero native
+failures;37333published,72support patches at result; all distributions untruncated,
+completedpeak2. This is evidence for the connected-patch path, not proof that
+every desired region along the moving cube was built (pending work can retire).
+All40,051integrated publications through later drain had zero failures and
+75support patches. Known p5/p6 rejection did not recur on this route. No larger
+vertex weld or mesh-recentering path retained.
+
+Moving CPU p95/p99=1.752/3.797ms (limits1.7403/3.4104), GPU
+1.2934208/1.9655228ms (limits1.4933529/1.8793526): CPUboth/GPU p99 fail.
+Moving allocation/frame31990.035 exceeds30599.871 (baseline+5%). Stationary CPU
+1.2372/2.1782ms passes old numeric limits; GPU0.9448528/1.3077259ms passesp95,
+fails p99 limit1.18626976. Stationary allocation/frame26468.887 exceeds25970.522.
+Native creationp95/p99/max0.9703/1.7017/11.81ms; maximum fails10ms gate.
+GC maximum pause13.52ms is recorded, but no causal overlap with native11.81ms
+has been established. Do not explain away the maximum as proven GC interference.
+
+Final result collision2195ready,2716pending,2completed,0failures. At05:43:03local
+all4913ready,0queues,1060bodies,0failures,creation/retirement counts11519each.
+Readout was about65seconds after moving completion, so it establishes eventual
+drain, not an observed <=60second drain deadline; max request-to-ready25928.793ms
+is a different metric. Playergrounded at(-0.00169685658,0.336718708,2.14456749),
+velocity0,supportgap-0.032505035. Stationary workload still included collision
+builds and physical displacement; pending explicit approval is required to
+version the canonical benchmark before correcting that interference and
+establishing a matching baseline. Old runs and failures are preserved.
+
+Overall not accepted: frame tails, allocations, native-publication maximum,
+benchmark comparability, and dynamic contact across overlapping support patches
+remain unresolved. No runtime acceptance commit/push. Current origin contact,
+seam traces, startup coverage, zero-error route publications and eventual drain
+are verified to the scope above. Cave walking, high-speed objects, multiplayer,
+future edit invalidation and universal native tolerance remain unverified.
+
+
+P7 teardown05:44:05local verifies remaining owned bodies0. Source-manifest
+hashes still match after deterministic table regeneration; whitespace and local
+link-target checks pass. Editor left stopped. Benchmark-version approval remains
+pending; no acceptance commit or push. Goal is incomplete.
+
+
+#### Acceptance comparability audit - continuation, 2026-09-07
+
+Previous goal turn made concrete implementation and runtime-evidence progress.
+Current p7 source hashes still match the saved manifest; no runtime change or
+new runtime run in this audit. Benchmark-version approval remains unanswered.
+Direct inspection of baseline and p7 result world metadata establishes an
+additional concrete mismatch: baseline streamingCenter=(0,0,0),targetPosition
+=(0,0,0); p7 streamingCenter=(-1,0,0),targetPosition approximately
+(-0.0016968566,0.3367187,2.1445675). Floor division makes even tiny negative X
+select another gameplay chunk. Thus final residency/count comparisons cannot
+be treated as identical-workload acceptance, independently of the already
+recorded collision backlog during the stationary phase. Do not use this fact
+to excuse moving-frame/native publication failures or accept the prototype.
+
+Moving total managed allocations: baseline3265781032bytes versusp7 3354059352
+(+2.70%); frame samples112429 versus104847. The previously recorded +10.13%
+per-frame allocation increase is correct, but reflects both total allocation
+and a smaller rendered-frame denominator. Neither ratio identifies allocation
+call sites. Existing profiler snapshots cover only200frames, not the whole
+route; they cannot establish whether native maximum11.81ms overlaps GC pause.
+No speculative optimization or benchmark rewrite is justified as a proven fix
+by these aggregates alone.
+
+Next accepted measurement requires the pending explicit scenario decision:
+keep route/speed/distance/Z0, give the existing automated driver exclusive
+motion ownership during measurement, hold its fixed final coordinate through
+stationary capture, and include collision settlement before that phase. A new
+scenario version and matching baseline are required under repository policy.
+Keep separate ordinary gameplay contact checks, especially support-patch overlap;
+a kinematic benchmark is not evidence for dynamic contact. Do not modify the
+runner, baseline the altered workload, accept regression, commit or push before
+the user decides. The goal remains incomplete and active.
+
+
+#### User-requested standard benchmark repeat - 2026-09-07
+
+User explicitly selects the regular standard benchmark. Run unchanged
+GPU-MESHING-512-001/v1 and collision v1 on current p7 source: normal stop/play,
+authored basic_example,seed1337,radius8,32cells,16units,maxvisualLOD6,
+2500speed,50000distance,1loop,Z0,fps_max1000,existing stationary10seconds.
+No runner modification or scenario version change; retain original numerical
+acceptance gates and recorded comparability limitations. This is a requested
+repeat, not a replacement for previous failures. Capture source and result.
+
+
+Standard repeat result4c92ac4a31d24053b3c17b39d22e41fd:
+[raw result](ValidationEvidence/TerrainCollision/standard-repeat.json),
+[startup](ValidationEvidence/TerrainCollision/standard-repeat-startup.json).
+Engine26.09.01c, source p7 hashes verified unchanged, successful compiler state.
+First start attempt rejected by collision settlement guard at1321/4913ready;
+no measurement started. Waited for4913ready,allqueues0,0failures then invoked
+standard runner. Startupmaxready27279.473ms,creationmax4.0441ms. No runner,
+source,scene,route,or gate changes. Existing source/comparability limits remain.
+
+Completed1loop,2500speed,50000distance,Z0,121.94233seconds; starting center
+(-0.0008065507,0.19740152). Moving552.4104FPS, CPU p95/p99 3.719/5.7496ms,
+GPU3.585577/4.389763ms; stationary10second635.3441FPS, CPU3.43/5.1468ms,
+GPU3.0624866/4.025936ms. All CPU/GPU p95/p99 baseline gates fail.
+Moving allocations/frame52794.008,stationary27767.762 both exceed5% gates.
+Managed exceptions0 and collision failures0. Native creationp95/p99/max
+1.0508/1.8579/3.7828ms passes10ms maximum; completedpeak2, untruncatedsamples.
+Collision at result2114ready,2797pending,1building,1completed;70supportpatches,
+33837published. No claim of full collision settlement at result. Maximum visual
+level lag16 versuspreviousp7 2 is a material regression. No environmental cause
+has been established; preserve this slower run, do not silently replace it.
+
+The user requested the standard benchmark and it completed unchanged. It does
+not meet prototype acceptance. No commit/push and no benchmark correction is
+made by this repeat. Runtime changes remain p7. Overall goal incomplete.
+
+
+#### Fresh standard baseline diagnostic plan - 2026-09-07
+
+User selected the standard unchanged benchmark; do not continue treating a
+runner rewrite as the selected next step. Prior version-proposal discussions
+remain history, not permission. Current p7 and slower standard-repeat use the
+same runtime hashes but differ materially in Render profiler snapshots and
+submission cadence. Those200frame snapshots do not prove a cause.
+
+Capture a fresh diagnostic baseline using the exact pre-collision runtime files
+from1c8e0d8 in the same editor, normal authored stop/play and unchanged standard
+GPU-MESHING-512-001/v1 (seed1337,radius8,32cells,16units,maxLOD6,2500speed,
+50000distance,1loop,Z0,fps_max1000,normal settled visual queues,10second
+stationary). This adds no alternate implementation, runtime switch or test
+component. All current prototype sources are byte-backed-up outside the project
+and guarded by hashes for exact restoration. Only the three originally modified
+runtime files are temporarily replaced, and three new collision sources removed
+from compilation. Documentation and other working-tree changes remain intact.
+After baseline, restore exact prototype bytes before any new implementation.
+Keep the original baseline and all failures. This diagnostic does not authorize
+changing thresholds or accepting regressions; recorded start/final coordinate
+comparability limitations remain. No source research or edits during timed run.
+
+
+Fresh baseline fab9c862f12546ec877b0b703ed07ff3 completed unchanged on1c8e0d8:
+[raw result](ValidationEvidence/TerrainCollision/fresh-standard-baseline.json).
+Normal origin(0,0,0),standard workload,successful compilation,zero exceptions.
+Moving570.0915FPS,CPU3.807/5.8524ms p95/p99,GPU3.8836002/4.6243668ms;
+stationary644.95FPS,CPU3.3661/4.8813ms,GPU3.0510426/3.9861202ms.
+Moving allocations/frame49239.035,total3423048432bytes. Max visual level lag14.
+Thus the contemporaneous pre-collision build also shows the major slowdown
+relative to the earlier921.95654FPS baseline. Adjacent current runs552.4104FPS
+with collision versus570.0915without differ3.10%, not30%; this is a single-pair
+observation with previously recorded coordinate/comparability caveats, not proof
+of an isolated collision cost or acceptance. The larger shared slowdown remains
+unexplained. Current pre-collision baseline itself fails the earlier frame-tail
+limits. Native collision is not the sole cause of that change.
+
+All six backed-up prototype runtime source files were restored byte-exact after
+normal stop; replacement and original hashes checked before restoration. No
+other working-tree changes overwritten. No baseline branch, runtime toggle,
+benchmark modification, acceptance commit or push introduced.
+
+
+Post-run environment observation (not historical benchmark attribution):
+RTX5090 reports56C,P0,2955MHz graphics,14001MHz memory,179.68W of600W limit,
+45%device utilization while play is stopped. Windows GPU engine snapshot
+attributes34%3D to sbox-dev,6%toDiscord on anotheradapter LUID,4%todwm.
+These snapshots do not establish a thermal, background-app or editor cause;
+no process stopped or graphics setting changed. Existing profiler evidence
+shows broader rendering slowdown in both builds; investigation remains open.
+
+
+#### Allocation attribution diagnostic plan - 2026-09-07
+
+Attempted production per-stage GC.GetAllocatedBytesForCurrentThread counters
+were rejected by installed whitelist SB1000 (5runtime compiler errors); no
+runtime run used that code. Restored exact p7 CollisionWorld/PerformanceTestResult
+bytes. Do not bypass whitelist or interpret frame-global BytesAllocated as a
+per-stage allocation counter.
+
+External Microsoft dotnet-trace10.0.731102 installed in a temporary tooling
+directory, gc-verbose profile (CLR keywords0x8003,level5), attaches to verified
+sbox-dev pid68192. A1second stopped-editor attach check produced allocation
+samples with call stacks, no gameplay correctness claim. TraceEvent3.1.23
+reader outside repository decodes AllocationTick weights and managed stacks;
+these are sampled estimates, not exact type byte counts.
+
+Run unchanged GPU-MESHING-512-001/v1 on restored p7, normal authored startup
+and settlement. Immediately after runner acknowledgement attach gc-verbose for
+30seconds (tool turnaround affects exact start; retain trace timestamps).
+The complete standard route still runs, but mark this result DIAGNOSTIC,
+not performance acceptance because tracing adds overhead. No geometry, queue,
+concurrency, route or engine setting changes. Collect top allocation stack/type
+estimates and collision-attributed stacks; require usable allocation events and
+resolved call stacks before drawing conclusions. Retain failures and original
+unprofiled results. Stop play after saved benchmark and restore no source (p7
+remains current throughout). Primary methodology: Microsoft dotnet-trace docs
+https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-trace and
+TraceEvent programmers guide https://github.com/microsoft/perfview/blob/main/documentation/TraceEvent/TraceEventProgrammersGuide.md .
+
+
+#### Allocation trace finding and candidate 8 plan
+
+Diagnostic runf51501faba38409eaed146d8c290308a completed,0collision failures;
+not a performance acceptance run. [Allocation summary](ValidationEvidence/TerrainCollision/allocation-profile-summary.json)
+contains7815 AllocationTick samples,833699456weighted bytes,0missing stacks
+from the30second trace. Two largest stacks, GpuVoxelMesher.Contains(descriptor)
+and its nested predicate, weigh155110432+75470408bytes (27.66% of sampled weight).
+The trace attributes nested descriptor/ScratchLane/CandidateMesh/InFlightMesh
+predicate allocations to repeated CapturePendingClipboxReadiness calls. These
+are samples, not exact per-method byte counters. Top20 collision-attributed
+stacks total11539232weightedbytes; largest SetInterest5434168,Region constructor
+2771600. That subset is not all allocations including asynchronous engine work.
+
+Candidate8 removes captured LINQ predicates in both Contains overloads using
+allocation-free array/List iteration, retaining dictionary precedence, null
+behavior, descriptor equality and descriptor cancellation rejection. Key overload
+keeps its existing separate semantics. Collision SetInterest's sort captures
+this instead of the local center, using _center already assigned under _gate;
+this avoids a per-call display-class allocation even on unchanged-interest
+returns. No field, geometry, priority ordering, workload or concurrency changes.
+This GPU-side scope expansion addresses a measured shared readiness hotspot;
+it is not a general style refactor. Preserve one lookup per overload.
+
+Run standard GPU-MESHING-512-001/v1 unprofiled with candidate8 after normal
+startup/full settlement. Same authored inputs, fixed route and gates, compare
+both original baseline and fresh-standard-baseline; do not claim original
+baseline comparability has been resolved. Require zero collision errors,
+unchanged startup geometry39546000bytes/1060bodies,4913ready, original19contact
+probes, completedqueue<=2, maxpublication<=10ms. Capture allocations/frame,
+frame tails, visual geometry/digests and streaming to check the lookup rewrite.
+
+#### Candidate 8 standard result - 2026-09-07
+
+GPU-MESHING-512-001/v1, unchanged authored parameters and acceptance gates,
+engine 26.09.01c, unprofiled run 0cc1c38abda0436f91793c05fc335abd.
+[Source hashes](ValidationEvidence/TerrainCollision/prototype-8-source.json),
+[raw benchmark](ValidationEvidence/TerrainCollision/prototype-8-figure-eight.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-8-startup.json),
+[19 contact probes](ValidationEvidence/TerrainCollision/prototype-8-contact.json),
+[post-run drain](ValidationEvidence/TerrainCollision/prototype-8-drain.json).
+
+Startup: 4913/4913 ready, 1060 bodies, 39546000 geometry payload bytes,
+zero failures; maximum request-to-ready 24145.484 ms. All 19 contact probes
+pass. Player grounded on VoxelManager, support gap -0.032527685 units.
+
+Moving: 799.5616 FPS, CPU p95/p99 2.2107/4.5665 ms, GPU p95/p99
+1.2655258/1.8899441 ms, maximum GPU 28.811693 ms. Managed allocations
+32991.797 bytes/frame, total 3216700072 bytes across 97500 frames;
+maximum GC 12.998 ms, zero exceptions. Stationary: 960.3353 FPS,
+CPU p95/p99 1.3325/2.2697 ms, GPU 0.9727478/1.2638569 ms,
+29123.125 allocated bytes/frame. Maximum visual level lag 14.
+
+At benchmark result collision had 2128 ready, 2783 pending and two completed;
+36320 published, 71 support patches, zero failures. Shape creation p95/p99/max
+0.9913/1.7282/3.236 ms. Later observation at 06:22:32 engine-local had all
+4913 ready, empty queues, 1060 bodies, 39546000 bytes, 39105 publications,
+74 patches, zero failures, and maximum shape creation 8.6662 ms. This later
+observation does not prove the fixed 60-second drain deadline. Ground support
+gap was -0.032510757 units, no held bodies. Normal stop verified zero owned
+bodies; final runtime/editor compilation succeeded with zero warnings/errors.
+
+Compared with the preceding unprofiled candidate-7 standard repeat,
+552.4104 to 799.5616 FPS and 52794.008 to 32991.797 bytes/frame are useful
+observations after removing measured closure allocations. A single pair does
+not isolate causality or explain all environment variation. Original baseline
+frame-tail and allocation gates still fail. Final visual geometry is 25287
+regions, 8816673 vertices, 15264728 triangles, topology 15B4D9622B88FD38,
+position CA8A8E8478AC8A73, differing from both pre-collision baselines.
+Physical origin drift remains a comparability concern; it does not waive the
+geometry criterion or establish the mismatch's cause. Memory acceptance and
+full streaming acceptance remain unresolved. Result: NOT ACCEPTED. No change
+to standard workload, no regression waiver, no acceptance commit or push.
+
+#### Candidate 8 geometry comparison audit - 2026-09-07
+
+Read-only analysis of retained results; no additional gameplay run. See
+[comparison artifact](ValidationEvidence/TerrainCollision/prototype-8-geometry-comparison.json).
+Candidate 7 standard-repeat and candidate 8 have identical resident counts,
+gameplay resident counts, vertices, triangles, topology/position digests, and
+all captured per-level placement/residency/digest fields. The Contains rewrite
+therefore has no observed final aggregate geometry regression against its
+immediate collision predecessor.
+
+Relative to the original pre-collision baseline, captured fields for levels
+1 through 6 match exactly. Only level 0 residency/digests differ: gameplay
+resident count 710 versus 711. Both collision runs finish with gameplay center
+(-1,0,0); both pre-collision baselines finish at (0,0,0). The standard-repeat
+player finishes at (-0.2848121,0.025178423,2.2317333), candidate 8 at
+(-0.0017500137,0.33699492,2.1444845). VoxelManager.WorldToChunkCoordinate
+floors world position divided by 512, so both negative X values select chunk -1.
+OnUpdate derives gameplay residency from that actual target. The unchanged
+SetFigureEightPosition forces Z=0 and retains horizontal velocity; completion
+releases the route target before the stationary sample. GpuVoxelMesher's
+aggregate digest includes resident coordinates at publication and retirement.
+
+This narrows the mismatch to changed final level-0 residency and provides a
+concrete mechanism for physics to affect the comparison. It is not a
+per-region geometry proof and does not waive the canonical baseline gate.
+No rounding workaround, route change, physics exemption or threshold change
+was introduced. Future comparisons must retain the recorded final coordinates
+alongside geometry; do not attribute this existing mismatch to candidate 8's
+lookup optimization.
+
+The candidate-8 saved moving profiler covers only 200 frames, not the complete
+route. In that window the Physics category averages 0.004647 ms/frame with
+p99 0.0866 ms; VoxelManager.OnUpdate averages 0.117345 ms with p99 1.7008 ms.
+This does not measure total asynchronous collision cost, native shape cooking
+outside the physics step, or identify the full-route tail cause. It supports
+investigating manager integration/CPU contention before changing native contact
+geometry for performance. Full-route allocation maximum is 45902720 bytes in
+one frame; its source is not established by the aggregate result.
+
+#### Collision timing attribution plan - 2026-09-07
+
+Candidate 9 adds three production Performance.Scope names using the existing
+VoxelPerformanceProfiler mechanism: collision interest changes, engine-thread
+integration, and pre-physics readiness checks. Include them in the existing
+200-frame snapshots. No new test trigger, workload, queue policy, geometry,
+concurrency, tolerance or acceptance threshold. Scopes measure inclusive wall
+time on their calling thread; do not add nested timings or interpret these
+snapshots as full-route percentiles or worker CPU time.
+
+Run unchanged GPU-MESHING-512-001/v1, same candidate-8 scene/settings and normal
+startup settlement, speed 2500, distance 50000, one loop, fps_max 1000, attached
+game camera, original drain and stationary windows. Compare original and fresh
+baselines plus candidate 8; retain existing coordinate caveats. Require valid
+compilation, named scope samples for invoked paths, zero collision failures,
+full eventual collision settlement, verified teardown, and report all original
+performance/geometry gate failures. Additional profiler overhead is not a
+waiver. Keep the original runtime metrics definitions and bounded history.
+
+Candidate-9 run 655a4ab26e254be18aa2907c642e2740 completed the unchanged
+standard workload: 743.6538 FPS, CPU p95/p99 2.6754/5.3214 ms, GPU
+2.1574497/3.971815 ms, 30977.945 allocated bytes/frame, maximum GC 20.187 ms,
+zero exceptions or collision failures. Original frame gates still fail.
+[Raw result](ValidationEvidence/TerrainCollision/prototype-9-figure-eight.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-9-startup.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-9-drain.json).
+At 06:32:52 engine-local all 4913 ready, empty queues, 1060 bodies,
+39546000 payload bytes; maximum shape creation 3.8822 ms. Stop verified zero
+owned bodies. Compilation succeeded before and after the run.
+
+Attribution criterion FAILED: neither moving nor stationary saved script list
+contains the three added names, while current source includes them. A static
+readonly name array can retain its existing contents during editor hotload;
+compilation success did not establish refreshed registry contents. Do not claim
+scope timings from this result. Move the small name array into Capture so the
+current method constructs it on each infrequent snapshot, eliminating persistent
+registry state. Repeat the unchanged standard scenario as candidate 9b and
+require the added entries in the actual saved result before interpreting them.
+This adds one small array per snapshot, not a per-frame allocation. Preserve
+this failed attempt and all original gates.
+
+Candidate 9b run f8abbf4af5084b5aa67786ba2b6bd55a completed unchanged on
+engine 26.09.01c. [Raw result](ValidationEvidence/TerrainCollision/prototype-9b-figure-eight.json),
+[source hashes](ValidationEvidence/TerrainCollision/prototype-9b-source.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-9b-startup.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-9b-drain.json),
+[teardown](ValidationEvidence/TerrainCollision/prototype-9b-teardown.json).
+All eight source hashes still match after execution. Startup 4913 ready,
+1060 bodies, 39546000 payload bytes, maximum request-to-ready 24008.418 ms,
+zero failures, grounded player support gap -0.032527685 units.
+
+Moving 790.8306 FPS, CPU p95/p99 2.217/4.0462 ms, GPU 2.1018982/2.5908947 ms,
+maximum GPU 12.915373 ms; 30641.729 allocated bytes/frame, maximum GC
+15.267 ms, zero exceptions. Stationary 897.4026 FPS, CPU 1.955/2.6288 ms,
+GPU 1.8355846/2.2673607 ms. Final aggregate geometry matches candidate 8,
+so the original pre-collision geometry mismatch persists. These results still
+fail the original performance gates; no regression acceptance.
+
+Added scope entries now exist in both snapshots. Moving final 200 frames:
+CollisionIntegration 200 calls, average 0.0477565 ms/frame, p99 1.0353 ms,
+maximum 1.5801 ms. CollisionReadiness 12 calls, average 0.00032 ms/frame,
+p99 0.0069 ms, maximum 0.0077 ms. CollisionInterest has zero calls in this
+window; its cost remains unmeasured here, not zero throughout the route.
+Manager update average 0.128693 ms/frame, p99 2.5341 ms, maximum 10.131 ms.
+Stationary final 200 frames: integration average 0.0266135 ms/frame,
+p99 0.5294 ms, maximum 1.9127 ms; readiness average 0.0003505 ms/frame,
+maximum 0.0094 ms. Do not subtract percentiles or sum nested scopes.
+
+Full-run shape creation maximum 9.2868 ms. At 06:37:27 engine-local all
+4913 ready, queues empty, 1060 bodies, 39546000 payload bytes, 39350
+publications, 74 support patches, zero failures. Player grounded, no held
+bodies, support gap -0.032509804 units. Normal stop verifies zero owned bodies.
+Attribution is now usable for invoked paths, but is limited to the recorded
+200-frame windows and excludes asynchronous sampling CPU. The full-route
+sampling workload remains 219877018 samples through final drain, substantially
+more cumulative work than extraction or publication. Next investigation should
+attribute that worker cost and publication tails; readiness checks are not a
+supported optimization target from this evidence. Overall NOT ACCEPTED;
+no commit or push, and no benchmark or collision geometry change.
+
+#### Collision worker CPU attribution plan - 2026-09-07
+
+Use current candidate 9b, unchanged GPU-MESHING-512-001/v1, normal startup
+and full settlement, fps_max 1000, speed 2500, distance 50000, one loop.
+Attach external dotnet-trace 10.0.731102 cpu-sampling profile for 30 seconds
+immediately after runner acknowledgement, retaining exact timestamps in trace.
+Run the entire standard route, mark it DIAGNOSTIC because tracing perturbs timing.
+No source edits or unrelated analysis during timing. Decode CPU sample stacks
+with TraceEvent 3.1.23 outside the repository. Require resolved collision-worker
+stacks and separate bounds versus point-sampling attribution before selecting
+an optimization. Statistical stack counts are not elapsed critical-path time;
+retain unknown/native stacks and report missing symbols. Preserve benchmark,
+raw compressed trace, summary, tool/source identity and reader provenance.
+No geometry, concurrency, coverage, scenario or acceptance gate changes.
+
+Thread attribution diagnostic 019812244c2640bbaa9ba7b60715f025 completed the
+unchanged route on candidate 9b. Initial cpu-sampling profile request failed
+before attachment: dotnet-trace 10.0.731102 exposes that profile only through
+collect-linux. The live benchmark was not restarted. Tool-listed Windows
+profile dotnet-sampled-thread-time then captured 30 seconds later in the same
+moving window. This is sampled thread-time, including waiting threads, not
+kernel CPU utilization. The failed tool attempt and delayed attachment are
+retained here; scope is narrower than the initial CPU attribution plan.
+
+[Benchmark](ValidationEvidence/TerrainCollision/collision-thread-benchmark.json),
+[summary](ValidationEvidence/TerrainCollision/collision-thread-summary.json),
+[compressed trace](ValidationEvidence/TerrainCollision/collision-thread-profile.nettrace.gz),
+[provenance](ValidationEvidence/TerrainCollision/collision-thread-provenance.json),
+[external reader source](ValidationEvidence/TerrainCollision/collision-thread-reader.txt),
+[drain](ValidationEvidence/TerrainCollision/collision-thread-drain.json),
+[teardown](ValidationEvidence/TerrainCollision/collision-thread-teardown.json).
+Reader executed externally with TraceEvent 3.1.23; no project test path added.
+The first reader invocation used ambiguous dotnet run syntax and failed; the
+explicit --file invocation from the temporary tooling directory succeeded.
+
+449883 Thread/Sample events, zero absent stacks; waiting worker/file-watcher
+stacks dominate global counts. Collision-containing stacks account for 13224
+samples; 12370 include VoxelCollisionMesher.Build, 9879 SampleGlobal, 1063
+GetConservativeDensityRange, 7228 SimplexNoise3D, 1688 SimplexNoise2D, and 668
+CollisionWorld.Integrate. Categories overlap and must not be added. These are
+sample-stack counts, not exact CPU milliseconds or independent time shares;
+inlining and unresolved native work limit attribution. Resolved point-sampling
+stacks strongly outweigh conservative-bound stacks in this capture, directing
+the next optimization toward canonical cave evaluation rather than bounds or
+actor readiness. No optimization is justified merely by the count of waiting
+threads. Avoid changing the concurrency limit on that basis.
+
+Diagnostic averaged 791.72595 FPS, CPU p95/p99 2.143/4.1744 ms, GPU
+2.0177364/2.5043488 ms. Not an acceptance comparison because tracing perturbs
+execution. Zero collision failures; eventual 4913 ready, queues empty. Final
+player (0.085332118,-0.0163278952,2.2433722) selects a different gameplay cube:
+1031 bodies and 37691868 payload bytes are not the prior (-1,0,0) residency.
+Support gap -0.03250575 units, grounded, no held bodies; stop verified zero
+owned bodies. No runtime source change during this diagnostic and no acceptance
+commit or push.
+
+Next candidate should preserve exact canonical values by exploiting monotonic
+min/max composition: after thickness and cheese are known, the noodle term is
+bounded above by CaveDensityScale * threshold; after noodle A it is bounded by
+CaveDensityScale * (threshold - abs(noodleA)). A term whose upper bound cannot
+exceed the already-composed surface/cheese result can be skipped. Review finite
+arithmetic ordering and sign handling before implementing; do not change the
+field version, tolerance, sampling grid, or add an approximate field path.
+
+#### Candidate 10 cave short-circuit plan - 2026-09-07
+
+Trace-backed change limited to canonical ProceduralTerrainSdf.SampleWorld:
+evaluate thickness and cheese before noodle A/B. Let B=max(surface,min(cheese,
+envelope)). Since abs(noodle)>=0, tunnel<=512*threshold; after A,
+tunnel<=512*(threshold-abs(A)). If either upper bound is strictly below B,
+return B without evaluating remaining noodles. Monotone finite subtraction and
+positive multiplication preserve the bound with the same float operation order;
+strict comparison avoids introducing a signed-zero/tie selection difference.
+NaN comparisons do not short-circuit. Retain the original full composition for
+all unresolved cases, exact seed/coordinate arithmetic, and generator version 5.
+No new sampler, approximation, grid, cache, tolerance, or GPU shader change.
+
+Validate candidate 10 through unchanged GPU-MESHING-512-001/v1 on 26.09.01c:
+normal authored startup and all queues settled, fps_max 1000, speed 2500,
+distance 50000, one loop, existing drain/stationary windows. Compare candidate
+9b and both retained pre-collision baselines with unchanged gates. Require
+startup sample/geometry totals identical to 9b (38436325 samples, 1060 bodies,
+39546000 payload bytes, 12 support patches), all 19 recorded contact rays,
+zero build/native failures, bounded queues, full eventual readiness, normal
+teardown. Report sampling timing and full-route frame/memory/allocation tails;
+changed final residency is a comparability limit, not a waived geometry gate.
+No offline or parallel reference field implementation. Source review proves
+the short-circuit bound; real-world outputs provide limited runtime evidence,
+not exhaustive bitwise proof for arbitrary float coordinates/settings.
+
+Candidate 10 run e81d34b6c5054d379c5b66f6301bf971 completed unchanged.
+[Source hashes](ValidationEvidence/TerrainCollision/prototype-10-source.json),
+[benchmark](ValidationEvidence/TerrainCollision/prototype-10-figure-eight.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-10-startup.json),
+[contact](ValidationEvidence/TerrainCollision/prototype-10-contact.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-10-drain.json),
+[teardown](ValidationEvidence/TerrainCollision/prototype-10-teardown.json).
+All eight runtime source hashes match after execution; compilation succeeded.
+Startup required 22910.605 ms maximum request-to-ready versus 24008.418 ms in
+9b. Sample total 38436325, 1060 bodies, 39546000 bytes, 12 support patches,
+2528 degenerate triangles and 3627 welded intersections match 9b exactly.
+All 19 prescribed rays hit finite terrain; repaired-corner heights lie within
+0.0002 units of zero. Player grounded on terrain, support gap -0.032527447.
+
+Moving 790.7755 FPS versus 790.8306 in 9b: no observed aggregate FPS benefit.
+CPU p95/p99 2.1913/4.1584 ms, GPU 2.056837/2.5408268 ms, maximum GPU
+11.933327 ms. Allocations 30652.402 bytes/frame, maximum GC 20.899 ms,
+zero exceptions. Stationary 843.44824 FPS, CPU 2.0446/2.9552 ms, GPU
+1.8489361/2.2842884 ms. Stationary tails worsen relative to 9b; cause is
+not isolated by this single pair. Do not accept a performance regression.
+
+At saved result sampling average 2.692157 ms/chunk versus 2.8219798 in 9b
+(4.60% lower), p95 17.4247 versus 18.7995 ms, with different completed build
+populations (37819 versus 36558). Startup sampling average 3.9528341 versus
+4.1980157 ms (5.84% lower) uses identical sample/geometry totals and is the
+better matched construction comparison. These measurements support only a
+modest sampling improvement, not a general FPS or deformation guarantee.
+Final visual resident/vertex/triangle counts and both digests match 9b; the
+original pre-collision baseline mismatch remains. Maximum visual level lag 2.
+
+At 06:49:32 engine-local all 4913 ready, queues empty, 1060 bodies,
+39546000 payload bytes, 40390 publications, 74 support patches, zero failures.
+Maximum native creation 3.5759 ms, peak completed queue 2. Final player
+(-0.0017050741,0.336841613,2.14454484), grounded, no holds, support gap
+-0.032493353 units. Normal stop verified zero owned bodies. This observation
+is not a precise 60-second drain deadline measurement. Full original gates
+remain unsatisfied; candidate remains experimental, no commit or push.
+
+#### Candidate 11 block granularity plan - 2026-09-07
+
+Change only VoxelCollisionMesher.BlockCells from 4 to 2. Collision remains the
+same 32-cell full-resolution grid; blocks control conservative rejection, not
+output resolution. Existing closed-AABB strict-sign rejection and shared sample
+workspace remain canonical. The earlier 8-to-4 change reduced sampling work;
+the thread trace attributes more build stacks to point samples than bounds,
+justifying a measured 2-cell candidate. This increases block-range queries up
+to eightfold while potentially shrinking the sampled volume. Revert this
+candidate if construction cost does not improve; do not assume smaller wins.
+
+Run unchanged GPU-MESHING-512-001/v1 on engine 26.09.01c, normal authored
+startup/full settlement, fps_max 1000, speed 2500, distance 50000, one loop,
+original drain/stationary windows. Compare candidate 10, 9b and original/fresh
+baselines with unchanged acceptance gates. Require identical startup geometry
+1060 bodies/39546000 bytes/12 support patches and all 19 contact rays; sample
+and rejected-block counts are expected to change. Record total sampling plus
+extraction timing, startup readiness, memory and full-route tails. Require zero
+collision failures, bounded queues, eventual full settlement and clean teardown.
+Preserve final coordinate caveats; do not waive geometry/performance gates.
+
+Candidate 11 run 1a67c18b08d44ceaa0d5b877cee8c0d0 completed unchanged.
+[Source](ValidationEvidence/TerrainCollision/prototype-11-source.json),
+[benchmark](ValidationEvidence/TerrainCollision/prototype-11-figure-eight.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-11-startup.json),
+[contact](ValidationEvidence/TerrainCollision/prototype-11-contact.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-11-drain.json),
+[teardown](ValidationEvidence/TerrainCollision/prototype-11-teardown.json).
+Compilation succeeded. Startup geometry equals candidate 10: 1060 bodies,
+39546000 bytes, 12 patches, same weld/degenerate totals. All 19 prescribed
+contact rays pass. Samples drop from 38436325 to 20514554; rejected blocks
+rise to 8279932. Startup request-to-ready maximum 22036.422 ms versus
+22910.605 ms; sampling average 3.9104037 and extraction 0.15142483 ms.
+
+Moving 807.37866 FPS, CPU p95/p99 2.1225/4.0579 ms, GPU
+2.0151138/2.5134087 ms; allocated bytes/frame 30469.672, maximum GC
+14.514 ms, zero exceptions. Stationary 900.5624 FPS, CPU 1.9204/2.6401 ms,
+GPU 1.4419556/2.2284985 ms. Final visual counts and digests match candidate 10;
+original pre-collision mismatch and performance gate failures persist.
+
+Collision build population at saved result 34555 versus 37819 in candidate 10.
+Average sampling+extraction 3.31833682 ms versus 2.87532565 ms (15.4% higher);
+median sampling 2.2353 versus 0.462 ms. Different completed populations limit
+strict per-chunk comparison, but fewer publications and far more bounds work
+oppose adopting this layout on FPS alone. Maximum creation 3.5149 ms, zero
+failures, peak completed queue 2. Final observed 4913 ready, empty queues,
+1060 bodies, 39546000 bytes, 37056 publications, 72 patches; grounded player,
+support gap -0.032592773 units. Stop verified zero owned bodies.
+
+Decision: REJECT uniform two-cell blocks as a construction optimization.
+Restored BlockCells=4 after stop; all eight runtime source hashes again match
+candidate 10 exactly. No new benchmark is needed solely to verify byte-exact
+restoration; its previous failed acceptance remains applicable. No commit/push.
+A future candidate can apply the known four-cell rejection before descending
+to two-cell blocks only in unresolved regions, preserving the same strict
+closed-AABB classification and canonical sampling rather than adding a second
+field or caching authoritative data. Predeclare and measure that tradeoff.
+
+#### Candidate 12 hierarchical rejection plan - 2026-09-07
+
+Replace uniform four-cell sampling blocks with two-cell blocks preceded by
+cached four-cell parent classification within the same build workspace. A
+512-byte parent-state array records unknown, uncertain or strictly rejected
+parents; reset each Build, including support-patch recursion. Parent bounds
+use closed AABBs clipped to local support extents. Only strictly positive or
+negative intervals reject; all surviving children use the existing two-cell
+classifier and canonical samples. No duplicate field implementation, persistent
+sample cache, output grid change, tolerance, queue or concurrency change.
+Fine-grid rejection counter counts rejected two-cell blocks whether the parent
+or child proves absence. Additional workspace is 4096 fine flags plus 512
+parent bytes versus 512 fine flags before; no per-job array allocation.
+
+Run unchanged GPU-MESHING-512-001/v1, engine 26.09.01c, normal startup/full
+settlement, fps_max 1000, speed 2500, distance 50000, one loop, original drain
+and stationary windows. Compare candidate 10 and rejected candidate 11 plus
+original/fresh baselines with unchanged gates. Require matching startup geometry
+1060 bodies/39546000 bytes/12 patches, all 19 prescribed contact rays, zero
+collision failures, bounded queues, eventual readiness and clean teardown.
+Measure combined sampling/extraction, sample counts, startup latency, frame tails,
+allocations and memory. Keep final coordinate caveats and preserve all failures.
+
+Candidate 12 run 06f4a5d7cfd94c25a77619f3ce59887d completed unchanged.
+[Source](ValidationEvidence/TerrainCollision/prototype-12-source.json),
+[benchmark](ValidationEvidence/TerrainCollision/prototype-12-figure-eight.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-12-startup.json),
+[contact](ValidationEvidence/TerrainCollision/prototype-12-contact.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-12-drain.json),
+[teardown](ValidationEvidence/TerrainCollision/prototype-12-teardown.json).
+Compilation succeeds; all eight source hashes match after execution.
+Startup 4913 ready, 1060 bodies, 39546000 bytes, 12 patches, matching
+candidate 10 geometry/weld/degenerate totals. Samples 20514554 exactly match
+candidate 11. All 19 prescribed rays pass; player grounded, support gap
+-0.032527685. Startup request-to-ready maximum 18645.674 ms versus
+22910.605 ms in candidate 10 (18.6% lower); sampling+extraction average
+3.2756338 ms versus 4.16078833 ms (21.3% lower), with identical geometry.
+
+Moving 818.8816 FPS, CPU p95/p99 2.0936/4.0172 ms, GPU
+2.011776/2.4912357 ms, maximum GPU 12.172699 ms. Allocations
+30443.756 bytes/frame, maximum GC 16.112 ms, zero exceptions. Stationary
+920.05194 FPS, CPU 1.8878/2.5661 ms, GPU 1.8196106/2.1295547 ms.
+Original frame-time/allocation gates remain unmet. No general FPS guarantee
+from this single comparison; memory acceptance remains open.
+
+At result 46899 collision publications versus 37819 in candidate 10 (24.0%
+more); sampling+extraction average 2.22136586 versus 2.87532565 ms (22.7%
+lower). Populations differ, so startup is the cleaner matched comparison.
+3064 ready, 1847 pending, two completed at capture. Zero failures, one stale
+result discarded, completed queue peak 2. Maximum creation 3.7743 ms. Later
+all 4913 ready, queues empty, 48748 publications, 84 support patches,
+1039 bodies and 38582460 bytes. Final center (-1,-1,0), player
+(-0.40077275,-0.207536414,2.29682469), differs from candidate 10's (-1,0,0).
+Final visual 25287 regions, 8800993 vertices, 15235172 triangles, topology
+6C9B850CBA1361E4, position CBB8D13437CF86A5. Do not compare these aggregate
+values as identical-region geometry or waive the canonical baseline criterion.
+Ground support gap -0.032568693, no held bodies. Normal stop verifies zero
+owned bodies. The late readiness observation does not prove the drain deadline.
+
+Decision: retain hierarchical rejection as a measured experimental construction
+improvement; overall prototype NOT ACCEPTED. No commit/push. It preserves
+full-resolution sampling and has no GPU dependency. Remaining work includes
+frame-tail/allocations acceptance, comparable final geometry evidence, precise
+drain timing and broader dynamic contact validation; this run does not close
+those requirements.
+
+#### Candidate 13 replacement ownership plan - 2026-09-07
+
+Source audit identified a contract violation: SetInterest cancelled and retired
+all shapes on content revision, creating a support gap before valid replacement.
+The current candidate transfers an existing body's ownership/payload accounting
+to a new immutable request for each coordinate still inside interest. Old jobs
+remain cancelled and cannot publish into that request. Departure coordinates
+still retire normally. Candidate creation keeps old support intact until the
+new mesh has validated and enabled on the engine-thread update boundary; only
+then remove old support. Empty success explicitly removes it; build/native
+failure keeps it and requested readiness stays false. No edit storage or API.
+
+Validate unchanged canonical figure-eight first, same candidate-12 parameters
+and gates, to check ordinary streaming/lifetime regression. Separately validate
+configuration replacement through the existing public manager property route,
+using a predeclared same-scene configuration round trip outside the timed run.
+Do not claim failure-retention runtime proof without a naturally failing build;
+no injected test failure or alternate shape path. Requires engine compilation,
+source ownership review, body accounting and observed gameplay revision change.
+
+Replacement scenario TERRAIN-COLLISION-REPLACEMENT-001/v1: after the unchanged
+candidate-13 figure-eight and full settlement, change the running manager's
+existing SurfaceBaseHeight property from authored 0 to 16, wait for all 4913
+regions ready, then restore 0 and wait again. Same seed, radii, resolution,
+player, scene; do not save the running scene. Observe collision_info immediately
+after each property change and at settlement, plus terrain-only origin ray
+(0,0,top=256,bottom=-256) requiring height 16 then 0 within 0.01 units once
+ready. Require zero failures, old native bodies retained during unready rebuild,
+no double-accounted permanent bodies, player supported/released after readiness,
+normal teardown to zero, original property restored. The old support need not
+match new terrain while the actor is held. Immediate MCP timing cannot prove
+absence of a sub-frame simulation gap; source ordering and engine update boundary
+are separate evidence. This exercise is outside performance acceptance timing.
+
+Candidate 13 standard run 3420f5c63277456587706ef185f7ca5f completed unchanged.
+[Source](ValidationEvidence/TerrainCollision/prototype-13-source.json),
+[benchmark](ValidationEvidence/TerrainCollision/prototype-13-figure-eight.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-13-startup.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-13-drain.json).
+All eight source hashes match after execution. Compilation succeeded; startup
+4913 ready, 1060 bodies, 39546000 bytes and 12 patches match candidate 12;
+maximum initial readiness 18425.19 ms. Moving 650.29236 FPS, CPU p95/p99
+3.087/4.6624 ms, GPU 3.1673908/3.5629272 ms, max GPU 6.6177845 ms.
+Maximum shape creation 14.6522 ms exceeds the 10 ms gate. Maximum visual lag14.
+Zero collision failures. Later all 4913 ready, empty queues, 46223 publications,
+1060 bodies/39546000 bytes, grounded player, support gap -0.0325768 units.
+Performance regression is unresolved; do not accept, commit or push.
+
+Replacement scenario TERRAIN-COLLISION-REPLACEMENT-001/v1 NOT RUN. Native
+find/get component returned authored World GUID d3b30a99-ed5a-42e2-9229-3888b6c1f191
+and component 018e6829-f01c-4152-88c1-ee2438b997fb with stale editor-state
+properties (LastPerformanceRunId="No saved run") after the benchmark completed.
+Installed Scene.cs FindByGuid/ResolveComponent searches scene sessions; duplicate
+source/game GUIDs make mutation targeting ambiguous. No property mutation was
+issued. Closing the saved editor tab by exact resource path with discardChanges
+false also stopped its game; subsequent lookup failed because no scene was open.
+Editor_status confirmed stopped, console at 07:09:10 verified zero owned bodies.
+Reopened scenes/basic_example.scene; no scene save or terrain setting change.
+This tool limitation is not evidence of replacement correctness or failure.
+Source review establishes new ownership transfer and successful/empty/failure
+branches, but does not replace an in-world revision test. A reliable running-world
+property entry point is needed to finish that scenario without adding test-only
+hooks or silently changing the authored scene. Existing set_terrain_configuration
+only exposes spatial settings and cannot trigger the content revision needed here.
+
+Replacement validation continuation: extend existing editor-only
+set_terrain_configuration with optional surfaceBaseHeight, omitted preserving
+current value, using its existing Game.ActiveScene manager lookup and the normal
+SurfaceBaseHeight property. This is the existing production configuration control,
+not an injected failure, test-only component, density oracle or direct streaming
+origin mutation. All original spatial arguments are supplied unchanged during
+replacement checks. Native component GUID targeting is not used. Discover the
+hotloaded schema and verify returned property value. Runtime code remains exact
+candidate 13; editor-only configuration exposure cannot change the uninvoked
+standard route, whose failed result remains valid. Run the previously declared
+0->16->0 replacement scenario after an unchanged standard route and full
+settlement, preserving the original scenario precondition and all gates.
+
+#### Candidate 14 supplied-profile bounds plan - 2026-09-07
+
+User supplied 07_22_47 capture resolves to profiler_captures/sbox_2026-09-07_07_22_47.json/sbox_2026-09-07_07_22_47.json;
+the supplied escaped-underscore directory spelling does not exist. New capture
+process main TID4472 differs from earlier live session. Duration21.957415s,
+threadCPUDelta ns, reconstructed prefix stacks yield collision Build16133.151ms,
+SampleGlobal8222.575ms, conservative bounds6093.194ms, cave bounds4261.549ms.
+These are overlapping sampled CPU estimates, not elapsed frame latency.
+Capture begins11:22:47.237UTC; latest custom result saved11:17:21.537UTC,
+so it is not proven to overlap that benchmark or share its exact workload.
+
+Candidate14 moves existing depth-envelope interval calculation ahead of cave
+noise bounds. If envelope.Maximum < surface.Minimum, return envelope: subsequent
+max(surface,cave) selects surface at both endpoints regardless of noise, so the
+final density interval/classification is unchanged. Strict finite comparison;
+otherwise preserve existing operations. No point sampler, grid, topology,
+collision radius, concurrency, tolerance or GPU code changes. This optimizes a
+measured bounds cost rather than assuming all noise time is point sampling.
+
+Run unchanged GPU-MESHING-512-001/v1, normal startup/full settlement,
+engine26.09.01c, fps_max1000, speed2500,distance50000,one loop, original
+stationary/drain windows. Compare candidate13 and12 plus original/fresh gates.
+Require matching startup geometry1060bodies/39546000bytes/12patches and
+20514554samples/8279932rejected fine blocks, all19contact rays, zero failures,
+bounded queues, eventual readiness and clean teardown. Report construction,
+allocations, frame tails and source/environment differences. No acceptance waiver.
+
+Candidate14 ab09f87558574dc2b99a362e5d734f5d completed unchanged, engine26.09.01c.
+[Review and analysis](Research/CollisionProfile20260907.md),
+[raw result](ValidationEvidence/TerrainCollision/prototype-14-figure-eight.json),
+[source](ValidationEvidence/TerrainCollision/prototype-14-source.json),
+[startup](ValidationEvidence/TerrainCollision/prototype-14-startup.json),
+[19 contact rays](ValidationEvidence/TerrainCollision/prototype-14-contact.json),
+[drain](ValidationEvidence/TerrainCollision/prototype-14-drain.json),
+[teardown](ValidationEvidence/TerrainCollision/prototype-14-teardown.json).
+All nine source hashes match after execution. Compilation passed. Startup exact
+geometry/sample/rejection totals match candidate13; all rays pass. Standard
+813.733FPS, CPU2.1459/3.8133 ms p95/p99,GPU2.7487278/3.2243729 ms,
+allocated28887.357bytes/frame,GCmax17.256ms,zeroexceptions. Stationary912.040FPS,
+CPU1.8924/2.6515ms. Collision0failures,peakcompleted2,47907published at result,
+creationp99/max1.7725/13.6169ms. Creation maximum FAILS10ms gate. Later4913ready,
+queuesempty,49897published,87patches,1049bodies/38571264bytes,player
+(0.702829063,1.14584994,1.91813052),grounded,supportgap-0.032505393.
+Finalcenter(0,0,0) differs from recent(-1,0,0)/(-1,-1,0) runs; retain raw
+geometry for comparison rather than waive the residency issue. Teardown0bodies.
+Overall NOT ACCEPTED: frame tails, native call maximum and broader validation
+remain unresolved. No commit/push. Runtime replacement round trip remains
+pending; the interrupted previous session had not changed base height.
+
+#### Candidate15 gradient lookup plan - 2026-09-07
+
+User requested implementation/prototyping of supplied-profile findings. Replace
+12-way Gradient3D switch with a private static readonly12-vector table and index
+Hash%12 directly in the canonical contribution method. All12 signed component
+constants, modulus, hash, multiplication/addition order and generator version
+are unchanged. Remove superseded helper; no dual implementation, shader change,
+mutable field cache or per-sample allocation. Constant payload144bytes plus
+array header, process lifetime. Source review compares all12 cases explicitly.
+Measured motivation:1205.387ms sampled inclusive Gradient3D in supplied capture.
+
+Run unchanged GPU-MESHING-512-001/v1,26.09.01c,normal authored startup/full
+settlement,fps_max1000,speed2500,distance50000,one loop,original drain/stationary
+windows. Compare candidate14 and original/fresh baseline gates. Require startup
+20514554samples,8279932rejectedblocks,1060bodies,39546000payloadbytes,12patches,
+all19prescribed contact rays,zero collision failures,bounded queues,eventual
+readiness,clean teardown. Measure construction and full frame tails/allocations.
+Revert if this simplification does not improve measured construction; FPS alone
+cannot attribute the change. No acceptance waiver or benchmark input change.
+
+Candidate15 fe6c5b9788aa446d8a32bd0fe4da8aa3: standard807.358FPS,
+CPU p95/p99 2.1937/3.7815ms,GPU2.8202534/3.294468ms,allocated28944.957bytes/frame.
+Stationary899.505FPS,CPU1.9662/2.7368ms. Collision sampling+extraction2.17920559ms
+versus2.15784218 in candidate14; published47467vs47907. Startup sampling
+2.9998472vs3.0391207ms is small and not sustained in moving workload. All19
+rays passed, matching startup counts; zero failures, eventual4913ready,
+1060bodies/39546000bytes,creationmax2.8291ms,teardownverifiedzero. Raw files
+prototype-15-{source,startup,contact,figure-eight,drain}.json preserve evidence.
+REJECT lookup optimization for no demonstrated moving construction improvement.
+Restored ProceduralTerrainSdf byte-exact to candidate14. User clarified collision
+focus; no rendering or animation change. Original acceptance still fails.
+
+#### Candidate16 collision workspace initialization plan
+
+Change only VoxelCollisionMesher: initialize the corner-cache entry and three
+edge-cache entries when an exact lattice sample is first visited. Remove the two
+full Array.Fill calls before extraction. Every emitted cell corner and every
+edge's minimum-coordinate endpoint belongs to the sampled uncertain child;
+therefore its cache entries are initialized before extraction. Shared samples
+initialize once, before any extraction starts. Build resets the sampled mask,
+including support-patch recursion; no prior-build cache value is read. No extra
+state, lookup, field change, geometry ordering or resolution change. Existing
+sample traversal now owns initialization, avoiding full-grid write passes for
+sparse occupied chunks. Sampling timing includes this work, so compare sampling
+PLUS extraction rather than claiming shifted work is a saving.
+
+Same unchanged standard scenario and19contact checks as candidate14; require
+identical startup sample/rejection/geometry/weld/patch counts, no stale cache
+geometry failures, bounded queues and clean teardown. Compare total construction,
+frame tails, allocations and final residency. No threshold change or acceptance
+waiver; revert if combined construction does not improve.
+
+Candidate16 dec52ba98eab490d8e531d1788ede45b completed unchanged. Raw evidence
+prototype-16-{source,startup,contact,figure-eight,drain,teardown}.json retained.
+All19contact rays passed; startup counts exactly matched candidate14. Moving
+808.957FPS,CPU p95/p99 2.1458/3.7958ms,GPU2.7592182/3.259182ms,
+allocated28925.697bytes/frame. Stationary927.764FPS,CPU1.8431/2.5191ms.
+Combined sampling/extraction2.18828008ms versus2.15784218 in candidate14,
+47289publications versus47907. No demonstrated construction improvement;
+startup combined3.21421724ms versus3.18944871ms also did not improve.
+Zero collision failures,peakcompleted2,eventual4913ready,1060bodies/39546000bytes,
+creationmax14.3414ms FAILS10ms gate. Grounded supportgap-0.03250408,
+normal teardown verifieszero. REJECT sparse initialization change. Restored
+all nine source hashes byte-exact to candidate14, including reverted candidate15
+shared-gradient experiment. No acceptance commit or push. User explicitly
+reinforced collision-only focus; future work targets collision build volume and
+native publication rather than unrelated renderer/animation optimization.
+
+
+#### Candidate17 collision creation attribution plan
+
+Keep candidate14 geometry and scheduling unchanged. Schema26 adds a bounded
+MeshCreation distribution around completed AddMeshShape calls and setup, mesh,
+publication elapsed times plus coordinate/vertex/index counts for the worst
+whole creation call. Existing Creation semantics remain unchanged; failures
+remain failures and calls that throw do not enter MeshCreation. Setup includes
+body creation and configuration; publication includes validation, tags, enabling
+and accounting. These are elapsed times and include any scheduling/GC pause;
+they do not independently prove native CPU cooking time. No per-call logging,
+geometry copy or extra authoritative storage. One extra bounded sample list
+uses the existing 65536 cap and truncation reporting.
+
+Run unchanged GPU-MESHING-512-001/v1 and
+TERRAIN-COLLISION-PROTOTYPE-001/v1 with the same startup,19contact rays,
+normal teardown and original acceptance thresholds. Require zero errors,
+matching startup geometry/sample/rejection counts, and MeshCreation samples
+matching Creation when no calls fail. Worst-call phase sum must match Creation
+maximum within0.001ms on successful calls. Compare frame tails, allocations,
+construction and queue limits with candidate14; this is diagnostic attribution,
+not a claimed optimization. Preserve any failed gate. No external profiler in
+this run. Archive exact source hashes and raw result before interpretation.
+
+
+Candidate17 completed as6020a3e443524b4a9e551b90429e41bf on installed26.09.01c,
+source1c8e0d8+prototype17. Raw prototype-17-{source,startup,contact,figure-eight,
+drain,teardown}.json records source hashes and observations. Initial compile
+caught an incorrect existing DTO name; corrected to PerformanceVector3Int before
+play. Final engine compile succeeded with zero errors. Source hashes matched
+again after testing. No external profiler or code changes during the run.
+
+Unchanged scenario: seed1337,v5,32cells,16units,radius8,visualLOD0..6,
+halfextents4/8,baseheight0,frequency0.0005,amplitude128,fps_max1000,
+speed2500,distance50000,one loop,121.93901s; normal10.000673s stationary window.
+Startup4913ready in18.292416s,1060bodies,39546000payload bytes,
+20514554samples,8279932rejected blocks,2528degenerates,3627welds,12patches.
+All19 prescribed contact rays passed; grounded supportgap-0.032527685units.
+
+Moving752.962FPS,CPU p95/p99 2.3937/4.2222ms,GPU2.9296875/3.5629272ms,
+29402.18allocatedbytes/frame,maximumGC14.88ms. Stationary908.1693FPS,
+CPU1.9223/2.6381ms,GPU2.0997524/2.9804707ms,25091.41allocatedbytes/frame.
+Process peak2519117824bytes; GPU peak2168221260bytes. Moving construction
+2.20504852ms/chunk versus2.15784218ms in candidate14,46504publications versus
+47907. This run is slower overall than candidate14 and fails original frame-time
+acceptance; do not attribute that difference entirely to a few timing reads
+without isolation. No optimization or acceptance claim. The extra bounded
+sample list remains experimental diagnostic instrumentation.
+
+12978Creation and12978MeshCreation samples,zero truncation/failures/exceptions.
+Creation average0.43389347,p991.7939ms,max3.4396ms;
+MeshCreation average0.42571035,p991.7837,max3.4258ms. About98.1% of aggregate
+creation elapsed time lies inside completed AddMeshShape calls. Worst whole
+call coordinate(2,-5,-2),4179vertices,24150indices: setup0.0081ms,
+mesh3.4258ms,publication0.0057ms. Sum matches maximum within0.001ms.
+The previously observed13–14ms creation tail did not recur, so its cause remains
+unresolved; GC overlap or worker contention is not proven by these timings.
+
+At result capture2980/4913collision regions were ready,1931pending,2completed;
+peakcompleted2. At07:54:01,39seconds after the07:53:22 movement-end trim marker,
+all4913were ready,1060bodies/39546000bytes,48437publications,84patches,
+zero failures/stale discards,grounded gap-0.03250146units. This observation is
+within60seconds of movement end; no claim of an exact drain duration.
+Final streaming center(-1,0,0) differs from original baseline, retaining the
+known post-route physics comparability limitation. Normal07:54:14 teardown
+verifiedzero owned bodies. Original acceptance remains failed; no commit/push.
+
+
+#### Candidate18 collision column reuse plan
+
+The supplied profile attributes2118ms inclusive CPU to2Dsimplex noise. Collision
+repeats its exact XY surface term for each sampled Z. Introduce one reusable
+generator-owned LatticeSampler (33x33 floats plus33x33 flags) per collision
+worker. Reset flags and immutable build inputs on every Build, including
+support patches. Lazy XY sampling only computes visited columns. Both ordinary
+point queries and lattice sampling call one surface formula and one volumetric
+composition; caves remain fully3D, arithmetic ordering and global lattice
+multiplication remain unchanged. No inter-chunk cache, edit store, geometry
+simplification or render change. Additional persistent array payload5445bytes
+plus object headers. Consumers receive full density, never authoritative height.
+
+Retain candidate17 instrumentation and compare against candidate17 and14 using
+unchanged GPU-MESHING-512-001/v1 and TERRAIN-COLLISION-PROTOTYPE-001/v1,
+including19contact rays and normal teardown. Require exact startup sample,
+rejection,weld,degenerate,support-patch and geometry-byte counts; zero failures,
+no stale column data, bounded queues, and improved combined construction time.
+Keep all original acceptance thresholds. No external profiling or code edits
+during measurement. Revert if construction does not demonstrate improvement;
+passing contact samples does not prove all possible field coordinates.
+
+
+Candidate18 run7d29e03a133c4f9583862a96c27f287d completed on26.09.01c,
+source1c8e0d8+prototype18, unchanged standard scenario. Engine compile succeeded;
+source hashes verified after testing. Raw prototype-18-{source,startup,contact,
+figure-eight,drain,teardown}.json retained. Startup18.060055s,4913ready,
+1060bodies,39546000bytes,20514554samples,8279932rejected,2528degenerates,
+3627welds,12patches match count gates exactly. Startup construction3.10630665ms
+versus3.21336899ms in candidate17. All19contact positions pass. Two exact-edge
+ray normals differed; do not claim byte-identical records or exhaustive mesh
+identity. Grounded gap-0.032527447units.
+
+Moving787.6221FPS,CPU p95/p99 2.2205/3.9831ms,GPU2.828598/3.3400059ms,
+29159.623allocatedbytes/frame,maxGC18.604ms,zeroexceptions. Stationary869.1297FPS,
+CPU2.04/2.8191ms,GPU2.53582/3.0648708ms,25230.71allocatedbytes/frame.
+Process peak2527723520bytes,GPU2168221260bytes. Moving construction2.0353183ms
+versus2.20504852ms in candidate17 (7.7% lower),2.15784218ms in candidate14
+(5.7% lower). Published49917versus46504 in candidate17. Populations differ;
+aggregate FPS is not an isolated causal measurement. Retain column reuse as an
+experimental candidate; construction improves in startup and movement.
+
+Creation13587samples,max3.0009ms;mesh13587samples,max2.9891ms;zero truncation,
+failures and stale discards. Worst phases0.0055/2.9891/0.0063ms at(-16,-16,-2),
+4261vertices/24390indices. Result3305ready,1606pending,2completed. At08:00:36,
+25seconds after08:00:11 movement-end marker,4913ready,1039bodies,38582460bytes,
+51525publications,87patches,grounded gap-0.033070326. Finalcenter(-1,-1,0)
+differs from candidate17 and baseline, retaining post-route comparability limits.
+Original frame-time acceptance remains failed. Normal08:01:23teardown verified
+zeroownedbodies. No commit/push. Broader contact/replacement coverage pending.

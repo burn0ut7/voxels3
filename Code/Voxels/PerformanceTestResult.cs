@@ -1,6 +1,8 @@
 internal sealed class PerformanceTestResult
 {
 	public int SchemaVersion { get; init; }
+	public PerformanceCollisionMetrics Collision { get; init; }
+	public long CollisionHoldSteps { get; init; }
 	public string RunId { get; init; }
 	public string CapturedAtUtc { get; init; }
 	public string Outcome { get; init; }
@@ -520,4 +522,39 @@ internal sealed class PerformanceVector3Int
 	public int X { get; init; }
 	public int Y { get; init; }
 	public int Z { get; init; }
+}
+
+internal sealed class PerformanceCollisionMetrics
+{
+	public int Desired { get; init; }
+	public int Ready { get; init; }
+	public int Bodies { get; init; }
+	public int Pending { get; init; }
+	public bool Building { get; init; }
+	public int Completed { get; init; }
+	public int Retiring { get; init; }
+	public int Failures { get; init; }
+	public int StaleDiscarded { get; init; }
+	public int Published { get; init; }
+	public int PeakCompleted { get; init; }
+	public long PeakCompletedBytes { get; init; }
+	public long ResidentGeometryBytes { get; init; }
+	public long PeakResidentGeometryBytes { get; init; }
+	public long DegenerateTriangles { get; init; }
+	public long WeldedIntersections { get; init; }
+	public long SupportPatchRebuilds { get; init; }
+	public long SampleCount { get; init; }
+	public long RejectedBlocks { get; init; }
+	public PerformanceDistributionMetrics Sampling { get; init; }
+	public PerformanceDistributionMetrics Extraction { get; init; }
+	public PerformanceDistributionMetrics Creation { get; init; }
+	public PerformanceDistributionMetrics MeshCreation { get; init; }
+	public float WorstCreationSetupMilliseconds { get; init; }
+	public float WorstCreationMeshMilliseconds { get; init; }
+	public float WorstCreationPublicationMilliseconds { get; init; }
+	public PerformanceVector3Int WorstCreationCoordinate { get; init; }
+	public int WorstCreationVertices { get; init; }
+	public int WorstCreationIndices { get; init; }
+	public PerformanceDistributionMetrics Retirement { get; init; }
+	public PerformanceDistributionMetrics RequestToReady { get; init; }
 }

@@ -1189,9 +1189,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( _pending.TryGetValue( descriptor.Key, out var pending ) &&
 			pending.Descriptor == descriptor ) return true;
 		if ( _cancelledInFlight.Contains( descriptor.Key ) ) return false;
-		return _scratchLanes?.Any( lane =>
-			lane.CountInFlight.Any( value => value.Descriptor == descriptor ) ||
-			lane.EmitInFlight.Any( value => value.Descriptor == descriptor ) ) ?? false;
+		if ( _scratchLanes is null ) return false;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var value in lane.CountInFlight )
+			{
+				if ( value.Descriptor == descriptor ) return true;
+			}
+			foreach ( var value in lane.EmitInFlight )
+			{
+				if ( value.Descriptor == descriptor ) return true;
+			}
+		}
+		return false;
 	}
 
 	public bool IsResident( GpuSdfDescriptor descriptor ) =>
@@ -1201,9 +1211,23 @@ internal sealed class GpuVoxelMesher : IDisposable
 		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
 		resident.Descriptor == descriptor;
 
-	public bool Contains( GpuMeshRegionKey key ) => _resident.ContainsKey( key ) || _pending.ContainsKey( key ) ||
-		(_scratchLanes?.Any( lane => lane.CountInFlight.Any( value => value.Descriptor.Key == key ) ||
-			lane.EmitInFlight.Any( value => value.Descriptor.Key == key ) ) ?? false);
+	public bool Contains( GpuMeshRegionKey key )
+	{
+		if ( _resident.ContainsKey( key ) || _pending.ContainsKey( key ) ) return true;
+		if ( _scratchLanes is null ) return false;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var value in lane.CountInFlight )
+			{
+				if ( value.Descriptor.Key == key ) return true;
+			}
+			foreach ( var value in lane.EmitInFlight )
+			{
+				if ( value.Descriptor.Key == key ) return true;
+			}
+		}
+		return false;
+	}
 
 	public void Remove( GpuMeshRegionKey key )
 	{

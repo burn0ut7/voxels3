@@ -42,11 +42,12 @@ the appropriate architecture or research owner from the [documentation map](READ
 | --- | --- | --- |
 | [GC performance and retained objects](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/performance), [dotnet-gcdump](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-gcdump) | Support the terrain-owned heap census proposed in [enhancement directions](Research/PerformanceEnhancementDirections.md#e0-terrain-owned-memory-census). | Heap collection can induce a full Gen2 pause; run outside timing. Engine attachment is unverified, and a snapshot is not a long-session leak proof. |
 | [Microsoft GC ETW events](https://learn.microsoft.com/en-us/dotnet/framework/performance/garbage-collection-etw-events) | Interpret allocation thresholds, collection generations and heap-stat fields in the September 7 trace. | Allocation threshold bytes can cover multiple types; the named type is the threshold-crossing object. This is event-schema evidence, not an s&box allocation stack or terrain ownership census. |
+| [Microsoft dotnet-trace](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-trace), [TraceEvent programmer guide](https://github.com/microsoft/perfview/blob/main/documentation/TraceEvent/TraceEventProgrammersGuide.md) | Collect EventPipe allocation stacks externally and decode the candidate-7 collision diagnostic with dotnet-trace 10.0.731102 and TraceEvent 3.1.23. Raw trace, parser provenance and summary are retained in the validation evidence. | AllocationTick weights are statistical estimates; stack/type weights are not exact byte ownership. Tracing perturbs execution, so the traced route is diagnostic only. Successful attachment to this installed editor does not guarantee another engine build permits it. |
 | [Firefox profile schema](https://github.com/firefox-devtools/profiler/blob/main/src/types/profile.ts), [data-source guide](https://github.com/firefox-devtools/profiler/blob/main/docs-developer/data-sources.md) | Decode prefix stacks, sample units and statistical attribution in imported profiles. | The s&box exporter supplies ETW data. Firefox's native sampling implementation does not establish exporter accuracy, complete symbols or frame-critical-path timing. |
 
 The [CPU review](Research/CpuPerformanceReview20260907.md) adopts these
 interpretation limits and keeps raw marker weights separate from exact ownership
-claims. Neither reference selects an optimization or changes runtime contracts.
+claims. These references do not by themselves select an optimization or change runtime contracts.
 
 ## Open-Source Terrain Systems
 
@@ -70,7 +71,8 @@ claims. Neither reference selects an optimization or changes runtime contracts.
 
 The [terrain collision research](Research/TerrainCollisionFirstSlice.md) records
 installed evidence, the CPU extraction recommendation, alternatives, and
-validation gates. Collision remains unimplemented. Reuse the existing Transvoxel
+validation gates. The [collision prototype](Architecture/TerrainCollision.md)
+is implemented but unaccepted. Reuse the existing Transvoxel
 entries below for topology theory and lookup data.
 
 ## Primary Algorithms and Papers

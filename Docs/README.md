@@ -17,7 +17,8 @@ link to it elsewhere instead of copying its state, settings, or results.
 | Which larger CPU/memory capabilities are worth investigating? | [Performance enhancement directions](Research/PerformanceEnhancementDirections.md): bounded metadata, planning, admission and revisit reuse; separate from local optimizations. |
 | What should change in GPU extraction, allocation, or rendering? | [GPU meshing study](Research/GpuMeshingOptimizationStudy.md): source audit, external comparisons, deletion candidates, and measurement gates. |
 | What did the scan and GPU arena prototypes establish? | [Scan and arena investigation](Research/GpuReductionsAndArenaEfficiency.md): hypotheses, isolated experiments, capacity accounting and acceptance outcomes. |
-| What is the proposed first terrain collision slice? | [Terrain collision research](Research/TerrainCollisionFirstSlice.md): full-resolution gameplay collision, CPU/GPU separation, engine evidence, and implementation measurement gates; not implemented. |
+| What currently owns terrain collision? | [Collision prototype](Architecture/TerrainCollision.md): CPU extraction, physics readiness, lifecycle and unresolved acceptance gates. |
+| What is the proposed first terrain collision slice? | [Terrain collision research](Research/TerrainCollisionFirstSlice.md): full-resolution gameplay collision, CPU/GPU separation, engine evidence, and implementation measurement gates; proposal history. |
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
 
 Source code and authored configuration establish actual behavior. Architecture
@@ -50,3 +51,5 @@ the relevant scenario family and follow its later runs and decisions:
   documentation when historical investigation needs it.
 - Add a document only for a distinct responsibility that cannot fit an existing
   owner. Update incoming links when moving or removing one.
+
+- [Collision profile review: September 7, 07:22:47](Research/CollisionProfile20260907.md) — supplied capture, measured opportunities, and candidate14 results.

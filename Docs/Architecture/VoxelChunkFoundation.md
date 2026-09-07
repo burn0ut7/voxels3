@@ -8,7 +8,8 @@ CPU render preparation, and manager diagnostics. The
 GPU scheduling, allocation, publication, and drawing. Exact validation workloads
 and acceptance decisions belong to the [ledger](../ValidationResults.md).
 
-Collision, live edits, persistence, project-specific voxel replication, and
+A [terrain collision prototype](TerrainCollision.md) is implemented but not yet
+accepted. Live edits, persistence, project-specific voxel replication, and
 multi-origin interest management are not implemented. Requirements for those
 features in the agent routes describe future work, not existing systems.
 
@@ -88,7 +89,8 @@ formulae and constants live in the source owner and its
 [GPU field mirror](../../Assets/shaders/voxels/voxel_sdf_v5.hlsl).
 
 CPU and GPU use the same integer hashes, gradient tables, seed salts, and
-operation order. Negative coordinates use floor operations. Simplex outputs
+field recipe. The CPU skips cave noise where the existing depth envelope proves
+it cannot affect the final density; evaluated field operations remain equivalent. Negative coordinates use floor operations. Simplex outputs
 are clamped, and conservative classification accounts for floating-point
 uncertainty; determinism does not imply unmeasured bitwise CPU/GPU equivalence.
 

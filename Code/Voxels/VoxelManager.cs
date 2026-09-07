@@ -9,7 +9,7 @@ using System.Threading;
 /// Owns the canonical loaded voxel chunks and streams them around one world-space
 /// target. Chunks are deterministic managed data rather than networked objects.
 /// </summary>
-public sealed class VoxelManager : Component
+public sealed class VoxelManager : Component, IScenePhysicsEvents
 {
 	private enum PerformanceCompletionPhase
 	{
@@ -29,7 +29,7 @@ public sealed class VoxelManager : Component
 	private const int DefaultGameplayRadius = 4;
 	private const int MaximumSupportedVisualLod = TerrainClipboxLimits.MaximumSupportedVisualLod;
 	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
-	private const int PerformanceResultSchemaVersion = 24;
+	private const int PerformanceResultSchemaVersion = 26;
 	private const int RenderWarmShellChunks = 1;
 	private const int RequiredCellsPerAxis = 32;
 	private const float RequiredBaseCellSize = 16f;
@@ -109,6 +109,11 @@ public sealed class VoxelManager : Component
 	private readonly float[] _performanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private readonly float[] _sortedPerformanceGpuMilliseconds = new float[MaximumPerformanceFrameSamples];
 	private GpuVoxelMesher _gpuMesher;
+	private VoxelCollisionWorld _collision;
+	private readonly Dictionary<Rigidbody, HeldTerrainBody> _heldTerrainBodies = new();
+	private readonly List<Rigidbody> _releasedTerrainBodies = new();
+	private long _collisionHoldSteps;
+	private sealed record HeldTerrainBody( Vector3 Velocity, Vector3 AngularVelocity, PlayerController Player, bool PlayerEnabled );
 	private long _gpuRenderUpdateEpoch;
 
 	private bool _hasStreamingCenter;
@@ -367,6 +372,7 @@ public sealed class VoxelManager : Component
 	{
 		ResolveStreamingTarget();
 		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis );
+		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
 		ApplyConfigurationAndRebuild();
 		if ( VerboseLogging )
 		{
@@ -404,7 +410,7 @@ public sealed class VoxelManager : Component
 					$"appliedVisualRevision={_appliedVisualConfigurationRevision}" );
 			}
 
-			var gameplayChanged = GameplayRadius >= 0 && GameplayRadius <= 128 &&
+			var gameplayChanged = GameplayRadius >= 0 && GameplayRadius <= VoxelCollisionWorld.MaximumRadius &&
 				GameplayRadius != _appliedGameplayRadius;
 			if ( gameplayChanged ) _appliedGameplayRadius = GameplayRadius;
 			var targetPosition = ActiveStreamingTarget.WorldPosition;
@@ -455,6 +461,9 @@ public sealed class VoxelManager : Component
 			}
 		}
 
+		_collision?.SetInterest( _streamingCenterCoordinate, _appliedGameplayRadius, _terrainContentRevision, CurrentTerrainSettings );
+		_collision?.Integrate();
+
 		if ( IntegrateCompletedWarmChunks() )
 		{
 			RefreshReadableStatus();
@@ -490,6 +499,10 @@ public sealed class VoxelManager : Component
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTestCompletionReady = false;
 		_warmGenerationCancellation?.Cancel();
+		foreach ( var pair in _heldTerrainBodies ) ReleaseTerrainBody( pair.Key, pair.Value );
+		_heldTerrainBodies.Clear();
+		_collision?.Dispose();
+		_collision = null;
 		_gpuMesher?.Dispose();
 		_gpuMesher = null;
 	}
@@ -609,6 +622,12 @@ public sealed class VoxelManager : Component
 		{
 			throw new InvalidOperationException( "All enabled visual LOD levels must be settled before the test starts." );
 		}
+		if ( _collision is not null && !_collision.Settled )
+		{
+			throw new InvalidOperationException( "Terrain collision must be settled before the test starts." );
+		}
+		_collision?.BeginMeasurement();
+		_collisionHoldSteps = 0;
 		StartPlayerFigureEight( speed, distance );
 		FigureEightLoopCount = loopCount;
 		PerformanceTask = normalizedTask;
@@ -701,6 +720,8 @@ public sealed class VoxelManager : Component
 		var result = new PerformanceTestResult
 		{
 			SchemaVersion = PerformanceResultSchemaVersion,
+			Collision = _collision?.Capture(),
+			CollisionHoldSteps = _collisionHoldSteps,
 			RunId = runId,
 			CapturedAtUtc = DateTimeOffset.UtcNow.ToString( "O" ),
 			Outcome = "completed",
@@ -964,6 +985,94 @@ public sealed class VoxelManager : Component
 			$"transitionDeferredTicks={result.Meshing.TransitionDeferredRenderTicks}" );
 		LastPerformanceRunId = runId;
 		return runId;
+	}
+
+	/// <summary>True only when every intersecting terrain region has current collision data.</summary>
+	public bool IsTerrainCollisionReady( BBox bounds )
+	{
+		if ( !float.IsFinite( bounds.Mins.x ) || !float.IsFinite( bounds.Mins.y ) || !float.IsFinite( bounds.Mins.z ) ||
+			!float.IsFinite( bounds.Maxs.x ) || !float.IsFinite( bounds.Maxs.y ) || !float.IsFinite( bounds.Maxs.z ) ||
+			bounds.Mins.x > bounds.Maxs.x || bounds.Mins.y > bounds.Maxs.y || bounds.Mins.z > bounds.Maxs.z ) return false;
+		return _collision is not null && _collision.IsReady(
+			WorldToChunkCoordinate( bounds.Mins ), WorldToChunkCoordinate( bounds.Maxs ) );
+	}
+
+	void IScenePhysicsEvents.PrePhysicsStep()
+	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.CollisionReadiness );
+		if ( _collision is null ) return;
+		foreach ( var body in Scene.GetAllComponents<Rigidbody>() )
+		{
+			if ( body.IsProxy || !body.PhysicsBody.IsValid() ) continue;
+			var held = _heldTerrainBodies.TryGetValue( body, out var previous );
+			if ( !body.MotionEnabled && !held ) continue;
+			var bounds = body.PhysicsBody.GetBounds();
+			var displacement = (held ? previous.Velocity : body.Velocity) * Time.Delta;
+			var swept = bounds.AddPoint( bounds.Mins + displacement ).AddPoint( bounds.Maxs + displacement ).Grow( 16f );
+			if ( IsTerrainCollisionReady( swept ) )
+			{
+				if ( held )
+				{
+					ReleaseTerrainBody( body, previous );
+					_heldTerrainBodies.Remove( body );
+				}
+				continue;
+			}
+			_collisionHoldSteps++;
+			if ( held ) continue;
+			var player = body.GameObject.Components.Get<PlayerController>();
+			_heldTerrainBodies.Add( body, new HeldTerrainBody( body.Velocity, body.AngularVelocity, player, player.IsValid() && player.Enabled ) );
+			if ( player.IsValid() ) player.Enabled = false;
+			body.MotionEnabled = false;
+		}
+		_releasedTerrainBodies.Clear();
+		foreach ( var pair in _heldTerrainBodies )
+		{
+			if ( !pair.Key.IsValid() ) _releasedTerrainBodies.Add( pair.Key );
+		}
+		foreach ( var body in _releasedTerrainBodies ) _heldTerrainBodies.Remove( body );
+	}
+
+	private static void ReleaseTerrainBody( Rigidbody body, HeldTerrainBody held )
+	{
+		if ( !body.IsValid() ) return;
+		body.MotionEnabled = true;
+		body.Velocity = held.Velocity;
+		body.AngularVelocity = held.AngularVelocity;
+		if ( held.Player.IsValid() && held.PlayerEnabled ) held.Player.Enabled = true;
+	}
+
+	[ConCmd( "voxel_collision_info" )]
+	public static void LogCollisionInfoCommand()
+	{
+		if ( TryGetActiveManager( "collision.inspect", out var manager ) )
+		{
+			var player = manager.Scene.GetAllComponents<PlayerController>().FirstOrDefault( x => !x.IsProxy );
+			SceneTraceResult support = default;
+			if ( player.IsValid() )
+			{
+				support = manager.Scene.Trace.Box( player.BodyBox(), player.WorldPosition + Vector3.Up * 16f,
+					player.WorldPosition - Vector3.Up * 16f ).WithTag( "voxel_terrain" ).Run();
+			}
+			Log.Info( "[VoxelCollision] inspect " + JsonSerializer.Serialize( new
+			{
+				Collision = manager._collision?.Capture(), HoldSteps = manager._collisionHoldSteps,
+				HeldBodies = manager._heldTerrainBodies.Count, PlayerPosition = manager.ActiveStreamingTarget.WorldPosition,
+				PlayerGrounded = player?.IsOnGround, GroundComponent = player?.GroundComponent?.GetType().Name,
+				PlayerVelocity = player?.Body?.Velocity, PlayerMotionEnabled = player?.Body?.MotionEnabled,
+				SupportHit = support.Hit, SupportGap = player.IsValid() && support.Hit ? player.WorldPosition.z - support.EndPosition.z : (float?)null
+			}, PerformanceJsonOptions ) );
+		}
+	}
+
+	[ConCmd( "voxel_collision_trace" )]
+	public static void LogCollisionTraceCommand( float x, float y, float top = 256f, float bottom = -256f )
+	{
+		if ( TryGetActiveManager( "collision.trace", out var manager ) )
+		{
+			var hit = manager.Scene.Trace.Ray( new Vector3( x, y, top ), new Vector3( x, y, bottom ) ).WithTag( "voxel_terrain" ).Run();
+			Log.Info( $"[VoxelCollision] trace x={x} y={y} hit={hit.Hit} position={hit.HitPosition} normal={hit.Normal} component={hit.Component}" );
+		}
 	}
 
 	[ConCmd( "voxel_chunk_info" )]
@@ -2077,9 +2186,9 @@ public sealed class VoxelManager : Component
 			return false;
 		}
 
-		if ( GameplayRadius < 0 || GameplayRadius > 128 )
+		if ( GameplayRadius < 0 || GameplayRadius > VoxelCollisionWorld.MaximumRadius )
 		{
-			error = "Gameplay Radius must be between 0 and 128.";
+			error = "Gameplay Radius must be between 0 and 8 for terrain collision.";
 			return false;
 		}
 

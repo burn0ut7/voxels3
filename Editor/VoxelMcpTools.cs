@@ -72,6 +72,7 @@ public static class VoxelMcpTools
 	/// <param name="lodCacheHalfExtent">Shared coarse cache half extent in regions.</param>
 	/// <param name="cellsPerAxis">Regular region cell count; only 32 is supported.</param>
 	/// <param name="baseCellSize">LOD0 cell size; only 16 is supported.</param>
+	/// <param name="surfaceBaseHeight">Optional procedural base height; omitted keeps the current value.</param>
 	[McpTool( "set_terrain_configuration" )]
 	public static object SetTerrainConfiguration(
 		int gameplayRadius = 4,
@@ -80,7 +81,8 @@ public static class VoxelMcpTools
 		int lod0VisualHalfExtent = 4,
 		int lodCacheHalfExtent = 8,
 		int cellsPerAxis = 32,
-		float baseCellSize = 16f )
+		float baseCellSize = 16f,
+		float? surfaceBaseHeight = null )
 	{
 		if ( !Game.IsPlaying )
 		{
@@ -95,6 +97,7 @@ public static class VoxelMcpTools
 		manager.LodCacheHalfExtent = lodCacheHalfExtent;
 		manager.CellsPerAxis = cellsPerAxis;
 		manager.CellSize = baseCellSize;
+		if ( surfaceBaseHeight.HasValue ) manager.SurfaceBaseHeight = surfaceBaseHeight.Value;
 		return new
 		{
 			manager.GameplayRadius,
@@ -103,7 +106,8 @@ public static class VoxelMcpTools
 			manager.Lod0VisualHalfExtent,
 			manager.LodCacheHalfExtent,
 			manager.CellsPerAxis,
-			manager.CellSize
+			manager.CellSize,
+			manager.SurfaceBaseHeight
 		};
 	}
 

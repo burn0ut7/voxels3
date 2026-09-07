@@ -1,0 +1,24 @@
+#:property PublishAot=false
+#:property JsonSerializerIsReflectionEnabledByDefault=true
+#:package Microsoft.Diagnostics.Tracing.TraceEvent@3.1.23
+using Microsoft.Diagnostics.Tracing;
+using Microsoft.Diagnostics.Tracing.Etlx;
+using System.Text.Json;
+var stacks=new Dictionary<string,int>();
+var events=new Dictionary<string,int>();
+int samples=0,missing=0;
+var etlx=TraceLog.CreateFromEventPipeDataFile(args[0]);
+using var log=new TraceLog(etlx);
+foreach(var e in log.Events) {
+ if(!e.ProviderName.Contains("SampleProfiler"))continue;
+ var key=e.ProviderName+"/"+e.EventName;
+ events[key]=events.GetValueOrDefault(key)+1;
+ samples++;
+ var names=new List<string>();
+ for(var stack=e.CallStack();stack!=null && names.Count<64;stack=stack.Caller)
+  names.Add(stack.CodeAddress.FullMethodName??"unknown");
+ if(names.Count==0)missing++;
+ var path=string.Join(" <- ",names);
+ stacks[path]=stacks.GetValueOrDefault(path)+1;
+}
+Console.WriteLine(JsonSerializer.Serialize(new {samples,missing,events,stacks=stacks.OrderByDescending(x=>x.Value).Take(40),collision=stacks.Where(x=>x.Key.Contains("VoxelCollision")).OrderByDescending(x=>x.Value).ToArray()},new JsonSerializerOptions{WriteIndented=true}));

@@ -1,6 +1,7 @@
 # Terrain Collision: First-Slice Research
 
-Date: 2026-09-07. Status: research and proposed design; collision is not implemented.
+Date: 2026-09-07. Status: original research and proposed design. A subsequent
+[prototype](../Architecture/TerrainCollision.md) exists but has not passed acceptance.
 No collision performance or runtime correctness result is claimed by this document.
 
 ## Recommendation and scope

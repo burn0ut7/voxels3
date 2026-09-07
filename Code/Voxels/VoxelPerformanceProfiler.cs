@@ -8,6 +8,9 @@ using System.Collections.Generic;
 internal static class VoxelPerformanceProfiler
 {
 	public const int WindowFrames = 200;
+	public const string CollisionInterest = "Voxels3/CollisionInterest";
+	public const string CollisionIntegration = "Voxels3/CollisionIntegration";
+	public const string CollisionReadiness = "Voxels3/CollisionReadiness";
 	public const string ManagerUpdate = "Voxels3/VoxelManager.OnUpdate";
 	public const string FigureEightMovement = "Voxels3/FigureEightMovement";
 	public const string PerformanceSampling = "Voxels3/PerformanceSampling";
@@ -18,29 +21,33 @@ internal static class VoxelPerformanceProfiler
 	public const string RefreshRenderCameras = "Voxels3/RefreshRenderCameras";
 	public const string CommitDrawCommands = "Voxels3/CommitDrawCommands";
 
-	private static readonly string[] ScriptTimingNames =
-	{
-		ManagerUpdate,
-		FigureEightMovement,
-		PerformanceSampling,
-		RebuildDesiredChunks,
-		PreparePlacement,
-		IntegrateWarmChunks,
-		ProcessPendingMeshes,
-		RefreshRenderCameras,
-		CommitDrawCommands
-	};
-
 	public static PerformanceProfilerMetrics Capture()
 	{
+		// Construct on capture so editor hotload cannot retain an obsolete name list.
+		string[] scriptTimingNames =
+		{
+			ManagerUpdate,
+			CollisionInterest,
+			CollisionIntegration,
+			CollisionReadiness,
+			FigureEightMovement,
+			PerformanceSampling,
+			RebuildDesiredChunks,
+			PreparePlacement,
+			IntegrateWarmChunks,
+			ProcessPendingMeshes,
+			RefreshRenderCameras,
+			CommitDrawCommands
+		};
+
 		var engine = new List<PerformanceProfilerTiming>();
 		foreach ( var timing in global::Sandbox.Diagnostics.PerformanceStats.Timings.GetMain() )
 		{
 			engine.Add( CaptureTiming( timing ) );
 		}
 
-		var scripts = new List<PerformanceProfilerTiming>( ScriptTimingNames.Length );
-		foreach ( var name in ScriptTimingNames )
+		var scripts = new List<PerformanceProfilerTiming>( scriptTimingNames.Length );
+		foreach ( var name in scriptTimingNames )
 		{
 			scripts.Add( CaptureTiming(
 				global::Sandbox.Diagnostics.PerformanceStats.Timings.Get( name ) ) );
