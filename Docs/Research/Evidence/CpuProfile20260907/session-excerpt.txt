@@ -1,0 +1,19 @@
+Source: sbox/logs/sbox-dev.log; selected session lines, trailing whitespace trimmed.
+2026/09/07 00:57:50.2450	[Generic] Starting Profiler call `profiler` again to stop.
+2026/09/07 00:57:52.1985	[Generic] [ETW Profiler] Target PID: 41496
+2026/09/07 00:57:52.4445	[Generic] [ETW Profiler] Kernel ETW session started. Outputting to ../../profiler_captures/sbox_2026-09-07_00_57_52.kernel.etl.
+2026/09/07 00:57:52.8896	[Generic] [ETW Profiler] User ETW session started. Outputting to ../../profiler_captures/sbox_2026-09-07_00_57_52.etl.
+2026/09/07 00:57:52.8896	[Generic] ETW profiling session started
+2026/09/07 00:57:56.0284	[Generic] [VoxelWorld] performance.test.begin task="manual-figure-eight" revision="manual-inspector" loops=1 speed=2500 distance=50000 center=[0,0,0]
+2026/09/07 00:58:17.3474	[Generic] Sent command: SHUTDOWN
+2026/09/07 00:58:17.3474	[Generic] ETW profiling session stopping...
+2026/09/07 00:58:17.7850	[Generic] [ETW Profiler] Sessions stopped.
+2026/09/07 00:58:17.7850	[Generic] [ETW Profiler] Triggering coreclr rundown...
+2026/09/07 00:58:19.8328	[Generic] [ETW Profiler] coreclr rundown complete.
+2026/09/07 00:58:19.8328	[Generic] [ETW Profiler] Merging etl files, this may take a while...
+2026/09/07 00:58:37.5247	[Generic] [ETW Profiler] Merge complete.
+2026/09/07 00:58:37.5247	[Generic] [ETW Profiler] Processing to Firefox Profiler format...
+2026/09/07 00:58:45.7498	[Generic] [ETW Profiler] Loading Modules for process sbox-dev (41496)
+2026/09/07 01:00:08.1450	[Generic] [VoxelWorld] performance.work runId=aa45c1cda4e847aba3284cac926960e7 prepared=93390 retained=1430 dropped=143 cacheScans=4456448 skippedLevels=3154 placementMs=1995.046 maxLevelLag=4 skippedGeometry=15/0 emptyBatchesAvoided=149585
+2026/09/07 01:00:08.1450	[Generic] [VoxelWorld] performance.gpu_work runId=aa45c1cda4e847aba3284cac926960e7 regularBatches=17077 regions=133775 emitArenaPasses=19276 emitBatchSlots=153186 enabledEmitRegions=78530 multiArenaBatches=2896 transitionDeferredTicks=17798
+2026/09/07 01:00:08.1450	[Generic] [VoxelWorld] performance.result.saved runId="aa45c1cda4e847aba3284cac926960e7" task="manual-figure-eight" revision="manual-inspector" path="C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\data\\local\\voxels3#local\\performance\\results-v1.jsonl"

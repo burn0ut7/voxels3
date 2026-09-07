@@ -23,6 +23,7 @@ the appropriate architecture or research owner from the [documentation map](READ
 
 | Research question | Start with | Why route here |
 | --- | --- | --- |
+| Interpreting CPU samples and managed allocation/GC markers | [CPU capture review](Research/CpuPerformanceReview20260907.md), [GC ETW events](https://learn.microsoft.com/en-us/dotnet/framework/performance/garbage-collection-etw-events), [Firefox profile schema](https://github.com/firefox-devtools/profiler/blob/main/src/types/profile.ts) | Threshold type labels are not exact byte ownership; sampled CPU weights are not frame latency. See the transfer limits below. |
 | Regular-cell isosurface topology and interpolation | [Marching Cubes paper](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf) | Primary description of the baseline surface-extraction algorithm. |
 | Crack-free 2:1 voxel LOD transitions | [Transvoxel site](https://transvoxel.org/), [official tables](https://github.com/EricLengyel/Transvoxel), [dissertation](https://transvoxel.org/) | Authoritative theory, diagrams, and lookup data for regular and transition cells. |
 | Practical chunk LOD, transitions, streaming, and editing | [Godot Voxel](https://github.com/Zylann/godot_voxel), [UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain), [Voxel Plugin Legacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy) | Mature or production-oriented systems expose ownership, paging, invalidation, and integration concerns. Their architectures are not Voxels3 templates. |
@@ -34,6 +35,17 @@ the appropriate architecture or research owner from the [documentation map](READ
 | Sparse large-world volume representation | [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb), [Efficient Sparse Voxel Octrees](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees), [HashDAG](https://github.com/Phyronnaz/HashDAG) | Contrasting hierarchical and compressed representations for storage and traversal research. |
 | Compact implementations for algorithm inspection | [stoyannk/voxels](https://github.com/stoyannk/voxels), [Marching-Cubes-Terrain](https://github.com/Eldemarkki/Marching-Cubes-Terrain), [Fast Unity Marching Cubes](https://github.com/Fobri/Fast-Unity-Marching-Cubes), [Scrawk/Marching-Cubes](https://github.com/Scrawk/Marching-Cubes) | Smaller codebases make topology, chunking, threading, and hot-path details easier to isolate. |
 | Shipped-game behavior and production failure modes | [Planet Nomads](https://planet-nomads.com/), [No Man's Sky community analysis](https://github.com/gistya/nomansterrain) | Useful for forming questions about scale and player experience; closed or inferred implementations are not architectural evidence. |
+
+## CPU and Managed-Memory Measurement
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Microsoft GC ETW events](https://learn.microsoft.com/en-us/dotnet/framework/performance/garbage-collection-etw-events) | Interpret allocation thresholds, collection generations and heap-stat fields in the September 7 trace. | Allocation threshold bytes can cover multiple types; the named type is the threshold-crossing object. This is event-schema evidence, not an s&box allocation stack or terrain ownership census. |
+| [Firefox profile schema](https://github.com/firefox-devtools/profiler/blob/main/src/types/profile.ts), [data-source guide](https://github.com/firefox-devtools/profiler/blob/main/docs-developer/data-sources.md) | Decode prefix stacks, sample units and statistical attribution in imported profiles. | The s&box exporter supplies ETW data. Firefox's native sampling implementation does not establish exporter accuracy, complete symbols or frame-critical-path timing. |
+
+The [CPU review](Research/CpuPerformanceReview20260907.md) adopts these
+interpretation limits and keeps raw marker weights separate from exact ownership
+claims. Neither reference selects an optimization or changes runtime contracts.
 
 ## Open-Source Terrain Systems
 

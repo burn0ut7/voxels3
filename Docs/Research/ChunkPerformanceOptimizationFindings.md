@@ -1,5 +1,11 @@
 # Terrain Performance Research
 
+The [2026-09-07 CPU capture review](CpuPerformanceReview20260907.md) follows up
+the implemented CPU work using the user's stationary/figure-eight trace and
+matching radius-512 result. It owns that capture's attribution and remaining
+CPU/memory hypotheses; the historical source-only priorities below are not all
+still pending.
+
 The [GPU meshing study](GpuMeshingOptimizationStudy.md) owns the 2026-09-07
 GPU source audit and extraction/renderer comparisons. Its proposed changes are
 not implemented; the accepted chunk-preparation outcome below remains distinct.
