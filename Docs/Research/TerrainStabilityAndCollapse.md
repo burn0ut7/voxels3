@@ -5,28 +5,24 @@ Status: research and proposed design only. No runtime implementation, benchmark,
 
 ## Recommendation
 
-Use **edit-triggered terrain stability with delayed, budgeted collapse**. Keep the terrain static until a stability decision removes material. Tiny detached scraps disappear with dust; larger failures disappear in visible stages, optionally accompanied by a small, capped number of falling debris objects.
+Use **one material-driven, rooted support graph**, updated after terrain edits and processed within a shared work budget. This is the selected research direction, subject to the correctness and performance gates below. Each analyzed terrain cell participates in the same support calculation. A floating scrap has no support path; an excessive pillar or overhang exhausts the support transmitted along that path. All failures enter the same existing terrain mutation boundary.
 
-There are three separate responsibilities:
+Keep terrain static until that solver confirms failure. The initial response is bounded removal with dust or non-colliding falling flecks. Fragment size changes the amount of presentation, not the failure algorithm. Physical debris is an optional later presentation capability and must not become another terrain-stability solver.
 
-1. **Connectivity:** has a piece actually become disconnected?
-2. **Stability:** can connected material support its height, overhang, and cave span?
-3. **Presentation:** should failed material vanish, crumble, fall briefly, or become persistent rubble?
-
-Implement them as stages of one authoritative edit pipeline, with derived analysis data. Do not turn every terrain voxel into a physics body. Start with predictable gameplay rules rather than engineering-grade stress simulation.
+The user's clarification on 2026-09-07 requires one solver, one derived graph/state owner, one dirty-work queue and budget, one failure criterion, and one collapse commit path. Connectivity traversal, material lookup, and removal preparation are operations inside that system, not independently scheduled systems with their own competing decisions. Do not first ship a separate island-cleanup implementation and then layer dirt, cave-in, and stress solvers over it.
 
 Material strength and stability parameters belong in shared **material definitions**, looked up by the voxel's material ID. Do not store copies of those numbers in each voxel. The user's clarification on 2026-09-07 establishes this as the preferred ownership model; per-voxel overrides would require a concrete gameplay need and supporting evidence.
 
-The best fit is a combination of Godot Voxel's bounded island detection, Vintage Story/TerraFirmaCraft's local mining-collapse rules, and explicitly budgeted support propagation. NVIDIA Blast is the useful comparison if genuine load-bearing structures later justify a more expensive solver. These are recommendations from the evidence below, not a measured ranking of those engines.
+The examples below supply evidence about boundary handling, material rules, scheduling, and alternatives. They are not a list of subsystems to combine. Select the rooted support model because it gives the requested behaviors one decision path; do not describe it as a proven best-performing implementation before measuring it. If it cannot meet the required gameplay, replace the selected solver at the design gate rather than accumulating corrective solvers.
 
-**A nearby-neighbor count alone cannot meet the request.** A floating cluster can give every member plenty of neighbors. A dirt pillar can remain vertically connected forever. A vast roof can still touch rock around its perimeter. Each requires a different check.
+**A nearby-neighbor count alone cannot meet the request.** A floating cluster can give every member plenty of neighbors. A dirt pillar can remain vertically connected forever. A vast roof can still touch rock around its perimeter. The same rooted support calculation must distinguish these cases through path availability, material properties, and contact geometry.
 
 ## 1. What the player should experience
 
 | Situation | Proposed behavior | Required analysis |
 | --- | --- | --- |
 | Mining leaves a tiny floating scrap | Remove it after a short delay; dust, optional aggregated resource drop | Prove the entire fragment is disconnected |
-| A one-cell-wide dirt pole grows upward | Upper dirt slumps or crumbles; height and lateral confinement matter | Granular rules plus finite vertical support |
+| A one-cell-wide dirt pole grows upward | Upper dirt crumbles; height and lateral confinement matter | Finite support with material/contact-dependent transmission |
 | Dirt extends sideways from a cliff | Short reach only; unsupported growth collapses | Material-specific lateral support |
 | A broad dirt hill is built | Supported slopes remain possible | Wider bases and lateral confinement must improve stability |
 | Mining widens a stone chamber | Small spans survive; excessive spans shed roof material in stages | Rock support distance and roof geometry |
@@ -47,7 +43,7 @@ Source audit: clean working tree at `c72444d0bba187c5af8d9ff96282b9762c8ddf77` o
 - Regional terrain replication and persistence code already exist. [Deformation status](../Architecture/TerrainDeformation.md) still records incomplete acceptance gates. Do not describe networking as absent, or assume existing multiplayer acceptance covers collapse.
 - Gameplay interest has no fixed world-Z foundation plane. A protected bedrock horizon would be a new world-design decision, not an existing anchor.
 
-This supports a first fragment-cleanup slice using density alone. Completing dirt and stone stability also needs shared material physics definitions, placement semantics, and a support policy. Reuse existing material queries and persistence wherever available; only newly introduced material identity changes need additional saved/networked representation.
+The existing density/material query supplies inputs to the single solver. Completing dirt and stone stability also needs shared material physics definitions, placement semantics, and a support policy. Reuse existing material queries and persistence wherever available; only newly introduced material identity changes need additional saved/networked representation.
 
 ## 3. Games and projects worth learning from
 
@@ -73,7 +69,7 @@ In the pinned 1.21.x `CollapseRecipe`, mining-trigger checks require server exec
 
 The versioned 1.20.x support documentation likewise distinguishes preventing a collapse from starting from stopping a collapse arriving from elsewhere. It exposes configurable vertical and horizontal support distances. [TFC support definitions](https://terrafirmacraft.github.io/Documentation/1.20.x/custom/#supports)
 
-**Transfer:** model trigger, propagation, warnings, and material conversion separately. **Recommended departure:** intact support should continue to matter during Voxels3 propagation. Recompute after each batch and stop at supported material; otherwise beams appear unreliable. The 1.20 documentation and 1.21 source are separate version evidence, not one frozen build.
+**Transfer:** distinguish the cause of work from its resulting presentation. **Recommended departure:** use the same support solve before and during collapse. Each committed removal dirties that same graph; subsequent batches require fresh failure results rather than an independent propagation rule that ignores support. The 1.20 documentation and 1.21 source are separate version evidence, not one frozen build.
 
 ### Luanti: simple falling material, useful lower-complexity comparison
 
@@ -112,14 +108,14 @@ The following assessment is engineering inference for Voxels3, not external benc
 | Approach | Handles well | Does not solve | Decision |
 | --- | --- | --- | --- |
 | Count nearby occupied cells | Local crumbling hints | Floating clusters, support to ground, load | Never the only test |
-| Downward falling / slope rules | Loose dirt, gravel, sand | Stone roofs, global detachment | Use for granular materials |
-| Connected components / flood fill | Floating fragments | Attached but weak terrain | First required stage |
-| Rooted support score with directional loss | Limited height, overhang, material span | Accumulated load, realistic arches or bending | Preferred simple stability stage |
-| Shared load/capacity graph | Overloaded narrow necks and foundations | Cheap implementation and easy parallel updates | Later only if gameplay demands it |
+| Downward falling / slope rules | Loose dirt, gravel, sand | Stone roofs, global detachment | Reject as an additional material-specific solver |
+| Connected components / flood fill | Floating fragments | Attached but weak terrain | Traversal operation within the selected graph, not a standalone cleanup system |
+| Rooted support score with directional loss | Limited height, overhang, material span | Accumulated load, realistic arches or bending | Selected single solver; geometry/material transfer must pass the scenario gates |
+| Shared load/capacity graph | Overloaded narrow necks and foundations | Cheap implementation and easy parallel updates | Replacement candidate if required; never an additional failure solver |
 | Per-voxel rigid bodies / bonded bodies | Rich motion after failure | Predictable worst-case work at terrain scale | Reject for initial terrain |
 | Finite-element / continuum stress | More physical deformation and failure | Small implementation scope | Outside this request's first design |
 
-A support-score solver can look convincing without being a weight solver. In particular, a wide platform may pass distance rules even though its total weight should overload one pillar. If that specific behavior becomes required, choose a capacity/load model rather than pretending another score threshold fixes it.
+A support-score solver can look convincing without being a weight solver. In particular, a wide platform may pass distance rules even though its total weight should overload one pillar. If that specific behavior becomes required, reconsider and replace the support model before acceptance. Do not add a separate load checker to compensate. Robustness here means consistent decisions, explicit limits, bounded work, and correct invalidation; it does not establish engineering realism.
 
 ## 5. Proposed analysis representation and support rules
 
@@ -145,39 +141,43 @@ Smooth terrain makes connectivity approximate. Negative sample adjacency is an i
 
 Use conservative classification: unresolved thin connections become **unknown**, not automatically severed. A gameplay minimum support thickness may deliberately reject thin visible necks, but should be documented as a rule and communicated through preview.
 
-### Fragment detection
+### One graph traversal and failure result
 
-After a committed removal, queue surviving solid candidates around changed samples and their interpolation dependencies. Search one component at a time with a persistent frontier and visited state.
+After a committed removal or addition, merge the changed samples and their interpolation dependencies into the solver's dirty queue. Traverse the affected support graph with a resumable frontier, tracking the dependencies needed to resolve root reachability and support. A single result contract reports supported, failed, or unresolved for the analyzed region and source revision.
 
-- Entire component enclosed, no supporting root: eligible detached fragment.
-- Search reaches known current support: connected, but not necessarily strong.
+- Complete affected solve finds no supporting root: support is zero and the ordinary failure criterion applies, including to tiny scraps.
+- Search reaches a valid root or current boundary support: continue the same material-weighted support calculation; connectivity alone is not a pass.
 - Search reaches unloaded state, region boundary without a valid summary, node quota, or label limit: unknown; preserve it and schedule continuation.
 
 Never delete every component except the largest. A legitimate detached boulder can be larger than a nearby anchored column.
 
-A small local box is an excellent first slice for mining scraps. It cannot complete the large floating-island requirement. The full feature needs resumable cross-region traversal, or per-region component labels connected through face portals. A portal graph must represent multiple components within one chunk; one occupied/not-occupied flag per chunk invents connections.
+A small local box can bound one work batch, not define a second cleanup policy or the limit of structural influence. Use resumable cross-region traversal in the same graph. Consider region summaries only if measured traversal cost requires them; they must preserve the same decisions and multiple connections within a chunk. Do not maintain an independent coarse stability simulation. One occupied/not-occupied flag per chunk invents connections.
 
 Deletion can split a component. An insertion-oriented union-find cache alone cannot repair that. Rebuild affected local labels and invalidate downstream reachability. Search can remain linear in the affected component in the worst case; spreading work over frames changes latency, not total complexity.
 
-### Rooted support and dirt confinement
+### One material and geometry transfer rule
 
-For simple attached-terrain stability, use a finite support reserve propagated from explicit roots. One candidate rule is:
+Use a finite support reserve propagated from explicit roots for all analyzed terrain. One candidate rule is:
 
 ```text
 support(root) = configured root reserve
 support(cell) = max over valid neighbors:
-    max(0, min(support(neighbor), material transfer cap) - directional loss)
+    max(0, min(support(neighbor), transfer cap(materials, contact geometry))
+        - loss(materials, direction, contact geometry))
+failed(cell) = completed solve and support(cell) <= shared failure threshold
 ```
 
 This is proposed gameplay mathematics. Upward loss must be positive for dirt, or a vertical dirt pole has no height limit. Horizontal loss should be substantially larger for dirt than stone. No non-root cell replenishes support simply because it touches other cells.
 
 Use deterministic ordering/ties and positive loss along every possible cycle. After support removal, invalidate affected dependency chains and recompute from verified roots; do not keep circulating old cached values. Defer failure until the affected solve is complete for its source revisions.
 
-For dirt, add a local confinement/slope condition: narrow exposed stacks lose stability sooner; broad connected bases and surrounding material allow supported slopes. Define confinement using actual supported neighbors, not mutually floating neighbors. This gives dirt a different behavior from cohesive stone and prevents the vertical-pole exploit without forbidding all hills.
+Material definitions parameterize this same transfer rule. Contact geometry may account for contact width and local terrain thickness, so thin exposed dirt and broad bases transmit support differently. These are inputs to the same calculation, not a separate slope or dirt-collapse pass. Geometry alone must never seed support; even a thick disconnected cluster has no root. Keep transfer inputs fixed for the versioned solve, avoiding a second iterative confinement simulation.
+
+The exact geometry-to-transfer function remains an implementation design gate. The simple maximum-path formula does not automatically produce convincing slopes or weight distribution. It must demonstrate both a failing narrow dirt pole and a surviving broad mound under one rule before acceptance. If it cannot, revise the one transfer model or select the load/capacity alternative; do not add exceptions that independently trigger collapse.
 
 **Foundation policy is an implementation gate.** Preferred direction: geological roots with revisioned connectivity certificates, backed by a documented world-generation foundation rule. Player-added dirt and stone cannot create roots. A root certificate must name the terrain dependencies that justify it and be invalidated when mining cuts them. Unloaded chunk edges and all unedited rock are not automatically roots.
 
-A protected bedrock horizon is simpler but changes the present unrestricted-Z gameplay contract. Treat it as a product alternative, not a silently adopted shortcut. If geological certificates cannot be made both correct and affordable, ship the deliberately local cave-in behavior with its limits, rather than claiming global support guarantees.
+A protected bedrock horizon is simpler but changes the present unrestricted-Z gameplay contract. Treat it as a product alternative, not a silently adopted shortcut. Root verification belongs to the same graph and invalidation owner. If the foundation policy cannot be made correct and affordable, the unified design remains unaccepted; do not introduce a separate local cave-in fallback to hide the gap.
 
 ### Stone roofs and natural caves
 
@@ -204,13 +204,15 @@ Recommended default lifecycle:
 
 A delay budget does not replace step 6. Otherwise a newly falling piece intersects the collider that still represents its old position.
 
-Use three presentation tiers:
+All sizes use the same bounded removal operation. These are presentation options for its confirmed output, not three collapse implementations:
 
 | Tier | Suggested role | Lifetime and authority |
 | --- | --- | --- |
 | Dust / non-colliding flecks | Tiny scraps and overload fallback | Client presentation; no gameplay collision |
 | A few simplified physical pieces | Nearby medium collapses | Host authority if damaging or interactable; capped lifetime/count |
 | Progressive terrain removal | Large cave-ins and islands | Bounded canonical edits; optional pooled presentation |
+
+The initial selection is removal plus cosmetic dust/flecks for all sizes. Cosmetic pieces do not support terrain, deposit material, or cause further terrain damage. Each removal can expose new structural failure, but it does so only by queuing another update in the same solver. This permits a physical chain reaction without introducing a chain of different systems. Physical debris and persistent rubble are outside initial acceptance.
 
 A large collapse should not require a giant movable concave terrain mesh or immediate convex decomposition. A simple hull may bridge empty concavities; choose small bounded shapes or cosmetic pieces where accuracy is unnecessary.
 
@@ -240,6 +242,8 @@ When demand exceeds capacity: reduce cosmetic debris first, then increase analys
 
 Measure sampling, classification, graph rebuild, queue wait, snapshot memory, mutation preparation, GPU publication, collider publication/retirement, physics contacts, and network transfer separately. Faster connectivity is irrelevant if native collider creation dominates frame tails.
 
+Keep one diagnostic record per solver job: initiating edit ID, affected bounds, source/rules versions, visited nodes/edges, queue wait, compute time, retained bytes, result/reason, and commit/publication times. A failure explanation reports the material parameters and support path used by that same solve. There are no separate dirt, island, cave-in, and structural queues to reconcile. Existing rendering, collision, and replication remain downstream consumers with their existing owners.
+
 Memory arithmetic illustrates why allocation layout matters. At 32 cubed cells, one bit per cell is 4 KiB; one byte is 32 KiB; one 32-bit label is 128 KiB. Across 1,000 dense regions, labels alone are 125 MiB. These are derived sizes excluding halos, containers, support values, and snapshots—not measured project memory.
 
 ## 8. Multiplayer, saving, and fairness
@@ -264,13 +268,13 @@ No engine changes or live tests were made for this research.
 
 ## 10. Implementation sequence and acceptance gates
 
-**Slice 1: tiny fragment cleanup.** Density-only, bounded enclosed-component detection, conservative unknown handling, exact removal through the existing field pipeline, dust only. This solves mining scraps but explicitly leaves large boundary-crossing fragments unresolved.
+**Design gate:** settle root policy, topology classification, the single material/contact transfer function, failure threshold, and invalidation/convergence rules. Keep genuine accumulated-load behavior explicitly outside the selected approximation unless a requirement changes. This research selects a direction, not a proven finished solver.
 
-**Slice 2: material stability.** Associate shared physics definitions with the canonical material IDs; add rooted support and dirt confinement, delayed failure, stale-result rejection, and staged cave-ins. Do not add per-voxel strength fields. Finish the foundation and natural-cave policy first.
+**One complete production slice:** implement the same support graph for scraps, material height/overhang limits, cave spans, and cross-region support. Include one bounded queue, conservative unresolved state, stale-result rejection, one canonical removal path, and cosmetic presentation. Do not add per-voxel strength fields or temporary standalone cleanup code. Develop incrementally within this implementation; use the scenarios below to expose missing behavior rather than implementing another solver for each scenario.
 
-**Slice 3: complete spatial behavior.** Cross-region component summaries/traversal, dependency invalidation through unloaded areas, overload recovery, save/rejoin correctness, and large-island completion. Required before claiming the user's entire floating-terrain request is implemented.
+**Acceptance:** verify material cases, region boundaries, unloaded dependencies, overload recovery, save/rejoin, and large-island completion through that same production path, then meet figure-eight and collapse performance gates. None of these becomes a separate simulation just because it has its own scenario.
 
-**Slice 4: optional physical debris.** Add only after the first three slices preserve frame pacing. Persistent rubble and genuine load/bending remain separate scope decisions.
+**Optional later presentation:** physical debris only if it justifies its cost after the unified system passes. Persistent rubble, impact-driven terrain destruction, and additional dynamic material state require separate scope decisions; they are not promised extensions of the initial system. Any necessary future solver replacement removes the superseded implementation in the same change.
 
 Before any runtime implementation run, define exact scenarios and immutable parameter sets in [ValidationResults](../ValidationResults.md), using the existing real-world entry points. This document does not invent passed runs or change the accepted figure-eight workload.
 
@@ -298,7 +302,7 @@ The algorithm recommendation is supported by source-visible examples, but **no i
 
 | Evidence family | Confidence and gap | Decision consequence |
 | --- | --- | --- |
-| Local detached-piece extraction | High for inspected Godot implementation; SDF topology transfer remains unresolved | Best first slice; conservative boundary policy |
+| Local detached-piece extraction | High for inspected Godot implementation; SDF topology transfer remains unresolved | Boundary-handling evidence for the single graph; no standalone cleanup slice |
 | Local mining collapse | High for pinned Vintage Story/TFC source; different block geometry and versions | Adopt bounded triggers/staging, not constants |
 | Genuine load support | High that Blast exposes graph stress controls; no integration measurement | Alternative, not first dependency |
 | Closed-source game mechanics | Developer confirms 7 Days feature; exact solver unverified | Gameplay reference only |
