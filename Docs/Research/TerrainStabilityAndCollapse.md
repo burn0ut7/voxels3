@@ -15,6 +15,8 @@ There are three separate responsibilities:
 
 Implement them as stages of one authoritative edit pipeline, with derived analysis data. Do not turn every terrain voxel into a physics body. Start with predictable gameplay rules rather than engineering-grade stress simulation.
 
+Material strength and stability parameters belong in shared **material definitions**, looked up by the voxel's material ID. Do not store copies of those numbers in each voxel. The user's clarification on 2026-09-07 establishes this as the preferred ownership model; per-voxel overrides would require a concrete gameplay need and supporting evidence.
+
 The best fit is a combination of Godot Voxel's bounded island detection, Vintage Story/TerraFirmaCraft's local mining-collapse rules, and explicitly budgeted support propagation. NVIDIA Blast is the useful comparison if genuine load-bearing structures later justify a more expensive solver. These are recommendations from the evidence below, not a measured ranking of those engines.
 
 **A nearby-neighbor count alone cannot meet the request.** A floating cluster can give every member plenty of neighbors. A dirt pillar can remain vertically connected forever. A vast roof can still touch rock around its perimeter. Each requires a different check.
@@ -41,11 +43,11 @@ Source audit: clean working tree at `c72444d0bba187c5af8d9ff96282b9762c8ddf77` o
 - [Foundation](../Architecture/VoxelChunkFoundation.md#spatial-contract) records 32 cells per chunk, 512-unit chunk width, 33 logical samples per axis, negative-solid/positive-air density, and zero at the surface. Use project units; do not silently equate a cell or world unit with a meter.
 - [Deformation entry point](../../Code/Voxels/VoxelManager.Deformation.cs) exposes host-only `TryQueueTerrainEdit`. Its result means queued, not committed. A successful commit invalidates GPU and collision derivatives. The existing brush is radial density modification, not an arbitrary detached-component removal operation.
 - [Collision source](../../Code/Voxels/VoxelCollisionWorld.cs) creates static mesh bodies and retains old collision until replacement succeeds. This makes collision publication part of collapse correctness, not merely a rendering concern.
-- Material currently means derived Air/Grass, not independently authored dirt, stone, cohesion, weight, or structural strength. A material-aware collapse system requires new canonical material semantics; assigning strength from the displayed grass color would be incorrect.
+- The inspected [VoxelChunk material query](../../Code/Voxels/VoxelChunk.cs) already exposes a material ID, currently derived as Air/Grass from density. Reuse that material identity for physics lookup. The missing part in this source snapshot is distinct dirt/stone/wood definitions and their selection, not per-voxel strength storage. If another material system has since been added, use its canonical IDs and definitions rather than introducing a competing registry.
 - Regional terrain replication and persistence code already exist. [Deformation status](../Architecture/TerrainDeformation.md) still records incomplete acceptance gates. Do not describe networking as absent, or assume existing multiplayer acceptance covers collapse.
 - Gameplay interest has no fixed world-Z foundation plane. A protected bedrock horizon would be a new world-design decision, not an existing anchor.
 
-This supports a first fragment-cleanup slice using density alone. Completing dirt and stone stability also needs a material query, placement semantics, support policy, and saved/networked material changes.
+This supports a first fragment-cleanup slice using density alone. Completing dirt and stone stability also needs shared material physics definitions, placement semantics, and a support policy. Reuse existing material queries and persistence wherever available; only newly introduced material identity changes need additional saved/networked representation.
 
 ## 3. Games and projects worth learning from
 
@@ -120,6 +122,18 @@ The following assessment is engineering inference for Voxels3, not external benc
 A support-score solver can look convincing without being a weight solver. In particular, a wide platform may pass distance rules even though its total weight should overload one pillar. If that specific behavior becomes required, choose a capacity/load model rather than pretending another score threshold fixes it.
 
 ## 5. Proposed analysis representation and support rules
+
+### Material properties versus calculated support
+
+| Information | Owner | Storage policy |
+| --- | --- | --- |
+| Which material occupies a location | Existing canonical material identity | Reuse the material ID; do not duplicate it for physics |
+| Strength, cohesion, mass density, directional support loss, and collapse behavior | Shared definition for stone, grass/soil, wood, etc. | Store once per material type; all matching voxels use the same definition |
+| Whether this particular location is connected and sufficiently supported | Analysis of material definitions plus current surrounding terrain | Compute when affected; retain temporary job state or bounded derived caches only where useful |
+
+Two stone locations have the same material strength but can have different calculated support: one rests on a broad foundation, while the other hangs over a mined chamber. In the formula below, material transfer cap and directional loss come from the shared definition; the support value is a calculated result, not a saved voxel attribute.
+
+No evidence gathered here establishes a benefit from duplicating fixed material properties in every voxel. Cached support may avoid repeating expensive traversal, but its value must be measured against memory and invalidation costs. Independent persistent damage, compaction, moisture, or reinforcement could justify location-specific state in a later feature; none is required for this proposal. Shared definition changes must invalidate affected analysis and use a consistent rules version across host, clients, and saved worlds.
 
 ### Derived grid, independent of visual LOD
 
@@ -252,7 +266,7 @@ No engine changes or live tests were made for this research.
 
 **Slice 1: tiny fragment cleanup.** Density-only, bounded enclosed-component detection, conservative unknown handling, exact removal through the existing field pipeline, dust only. This solves mining scraps but explicitly leaves large boundary-crossing fragments unresolved.
 
-**Slice 2: material stability.** Add canonical dirt/stone semantics, rooted support and dirt confinement, delayed failure, stale-result rejection, and staged cave-ins. Finish the foundation and natural-cave policy first.
+**Slice 2: material stability.** Associate shared physics definitions with the canonical material IDs; add rooted support and dirt confinement, delayed failure, stale-result rejection, and staged cave-ins. Do not add per-voxel strength fields. Finish the foundation and natural-cave policy first.
 
 **Slice 3: complete spatial behavior.** Cross-region component summaries/traversal, dependency invalidation through unloaded areas, overload recovery, save/rejoin correctness, and large-island completion. Required before claiming the user's entire floating-terrain request is implemented.
 
