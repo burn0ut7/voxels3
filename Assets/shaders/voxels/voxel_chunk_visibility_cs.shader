@@ -93,7 +93,7 @@ CS
 					VisibilityAggregateCounters[4] = max( VisibilityAggregateCounters[4], visible );
 					VisibilityAggregateCounters[5] += VisibilityFrameCounters[2];
 					[unroll]
-					for ( uint level = 0; level < 3; level++ )
+					for ( uint level = 0; level < 7; level++ )
 					{
 						uint frameIndex = 5 + level * 2;
 						uint aggregateIndex = 10 + level * 3;
@@ -109,7 +109,7 @@ CS
 					VisibilityAggregateCounters[8] = VisibilityFrameCounters[3];
 					VisibilityAggregateCounters[9] = VisibilityFrameCounters[4];
 					[unroll]
-					for ( uint level = 0; level < 3; level++ )
+					for ( uint level = 0; level < 7; level++ )
 					{
 						uint frameIndex = 5 + level * 2;
 						uint aggregateIndex = 10 + level * 3;
@@ -151,14 +151,14 @@ CS
 			{
 				InterlockedAdd( VisibilityFrameCounters[2], 1 );
 			}
-			if ( !transition && level < 3 )
+			if ( !transition && level < 7 )
 			{
 				InterlockedAdd( VisibilityFrameCounters[5 + level * 2], 1 );
 			}
 			if ( visible )
 			{
 				InterlockedAdd( VisibilityFrameCounters[1], 1 );
-				if ( !transition && level < 3 )
+				if ( !transition && level < 7 )
 				{
 					InterlockedAdd( VisibilityFrameCounters[6 + level * 2], 1 );
 				}

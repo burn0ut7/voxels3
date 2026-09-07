@@ -3,13 +3,13 @@
 ## Production Slice
 
 One integer-indexed clipbox hierarchy owns the enabled terrain render levels.
-The shipping configuration enables levels 0 through 2; level 3 is rejected by
-the validated configuration and creates no identity or work in this slice. The
+The shipping default enables levels 0 through 2. Optional visual-distance tiers
+enable ordinary levels 3 through 6 through the same records and queues. The
 authoritative world remains the implicit SDF represented by `VoxelChunk`;
 indexed meshes are derived, GPU-resident, revisioned, disposable caches.
 Generator version 5 owns the exterior surface, noodle tunnels, and cheese
 caverns. One adjacent-pair-aware transition cache closes every enabled 2:1
-interface. This slice excludes enabling LOD3, morphing, collision, edits,
+interface. This slice excludes morphing, collision, edits,
 networking, generator changes, and allocator redesign.
 
 Logical chunks are streaming, SDF-input, and revision units, not GPU allocation
@@ -61,6 +61,25 @@ LOD0 coordinates; a 4096-coordinate level-1 cache with a 64-coordinate hole and
 512-coordinate hole and 3584 active coordinates. Its adjacent transition pairs
 contain 96 and 384 face identities. `GameplayRadius=4` independently owns 729
 authoritative gameplay coordinates.
+
+`VisualChunkRadius` is the terrain quality policy surface, expressed as nominal
+reach in LOD0-sized chunks. It selects, rather than duplicates, the canonical
+`MaximumVisualLod` state. At the default `4/8` half extents, tiers
+`4/16/32/64/128/256/512` select maximum levels `0..6`; unsupported intermediate
+values reject without changing the applied visual revision. Every tier above
+LOD0 adds one ordinary 4096-coordinate cache, one 512-coordinate hole, 3584
+active coordinates, and one normal 384-face adjacent transition pair. Cell and
+region sizes double per level. Gameplay residency is still owned only by
+`GameplayRadius`, and entity draw distance is not part of this terrain policy.
+
+The current gameplay payload is only immutable implicit-SDF identity and
+settings. `GameplayRadius` is therefore stored as an analytic inclusive 3D cube,
+not as millions of identical wrapper objects or GPU mesh requests. A
+`VoxelChunk` view is synthesized on demand for a coordinate inside that cube.
+LOD0 classification and meshing are bounded to the union of its visual warm
+shell and committed/staged LOD0 placement, independently of gameplay radius.
+This representation must be replaced by real per-coordinate residency only when
+a future gameplay feature actually owns mutable chunk state.
 
 `VoxelManager` computes the changed regular boxes and adjacent transition
 boundaries in one placement update. Each transition identity contains its fine
@@ -276,7 +295,12 @@ publication is finalized. The single list is attached to the selected main
 camera; s&box propagates it to dependent editor views, so transient editor-camera
 components do not acquire duplicate terrain state. This boundary is required by
 the command-list lifecycle and prevents camera switching from replacing an
-executing list or its indirect buffers.
+executing list or its indirect buffers. Main-camera membership is revalidated at
+4 Hz, or immediately when the current camera becomes invalid, instead of
+enumerating and diffing every camera component every frame. A newly selected
+valid camera can therefore take at most 250 ms to acquire the existing command
+list; no render resource, queue, or publication state is duplicated during that
+handoff.
 
 The scheduler rendezvous retains `SceneCustomObject`'s native infinite bounds.
 Giving the scheduler a merely large finite box makes it eligible for per-view
@@ -407,6 +431,6 @@ geometry are stored separately in the same result.
   outer work to participate in foreground settlement, would still let stale
   outer work block newer movement and remains rejected.
 - CPU density fields or coarse voxel buffers would violate the canonical GPU SDF
-  contract. Enabling another visual level is deliberately deferred until the
-  accepted three-level implementation proves identical through the generic
-  records, queues, publication handoff, and telemetry arrays.
+  contract. Additional visual levels must continue through the generic records,
+  queues, publication handoff, and telemetry arrays; they cannot introduce
+  per-level scratch, shaders, or publication paths.

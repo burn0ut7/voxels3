@@ -108,6 +108,31 @@ public static class VoxelMcpTools
 	}
 
 	/// <summary>
+	/// Select the terrain clipbox's nominal visual reach in LOD0-sized chunks.
+	/// </summary>
+	/// <param name="visualChunkRadius">Supported visual radius tier in LOD0-sized chunks.</param>
+	[McpTool( "set_terrain_visual_radius" )]
+	public static object SetTerrainVisualRadius( int visualChunkRadius = 32 )
+	{
+		if ( !Game.IsPlaying )
+		{
+			throw new InvalidOperationException( "Start play mode before changing terrain view distance." );
+		}
+
+		var manager = FindManager();
+		var previousMaximumVisualLod = manager.MaximumVisualLod;
+		manager.VisualChunkRadius = visualChunkRadius;
+		return new
+		{
+			RequestedVisualChunkRadius = visualChunkRadius,
+			AppliedToRequest = manager.MaximumVisualLod != previousMaximumVisualLod ||
+				manager.VisualChunkRadius == visualChunkRadius,
+			manager.VisualChunkRadius,
+			manager.MaximumVisualLod
+		};
+	}
+
+	/// <summary>
 	/// Set whether the running game is viewed through the detached editor camera.
 	/// </summary>
 	/// <param name="ejected">True to detach into the editor camera; false to return to the game camera.</param>
@@ -235,8 +260,15 @@ public static class VoxelMcpTools
 
 	private static VoxelManager FindManager()
 	{
+		var activeScene = Game.ActiveScene;
+		if ( !activeScene.IsValid() )
+		{
+			throw new InvalidOperationException(
+				"The playable scene is not ready; wait for play startup to complete." );
+		}
+
 		VoxelManager manager = null;
-		foreach ( var candidate in Game.ActiveScene.GetAllComponents<VoxelManager>() )
+		foreach ( var candidate in activeScene.GetAllComponents<VoxelManager>() )
 		{
 			if ( manager is not null )
 			{

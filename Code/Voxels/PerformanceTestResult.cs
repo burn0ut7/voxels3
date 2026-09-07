@@ -8,6 +8,7 @@ internal sealed class PerformanceTestResult
 	public PerformanceTestDefinition Test { get; init; }
 	public PerformanceWorldContext World { get; init; }
 	public PerformanceFrameMetrics Frame { get; init; }
+	public PerformanceRuntimeMetrics Runtime { get; init; }
 	public PerformanceStationaryMetrics Stationary { get; init; }
 	public PerformanceMemoryMetrics Memory { get; init; }
 	public PerformanceChunkMetrics Chunks { get; init; }
@@ -217,6 +218,8 @@ internal sealed class PerformanceProfilerTiming
 	public int Calls { get; init; }
 	public float MinimumMillisecondsPerFrame { get; init; }
 	public float AverageMillisecondsPerFrame { get; init; }
+	public float P95MillisecondsPerFrame { get; init; }
+	public float P99MillisecondsPerFrame { get; init; }
 	public float MaximumMillisecondsPerFrame { get; init; }
 }
 
@@ -267,6 +270,7 @@ internal sealed class PerformanceWorldContext
 	public int CellsPerAxis { get; init; }
 	public float BaseCellSize { get; init; }
 	public int GameplayRadius { get; init; }
+	public int VisualChunkRadius { get; init; }
 	public int MinimumVisualLod { get; init; }
 	public int MaximumVisualLod { get; init; }
 	public int Lod0VisualHalfExtent { get; init; }
@@ -299,8 +303,26 @@ internal sealed class PerformanceStationaryMetrics
 {
 	public float DurationSeconds { get; init; }
 	public PerformanceFrameMetrics Frame { get; init; }
+	public PerformanceRuntimeMetrics Runtime { get; init; }
 	public PerformanceMemoryMetrics Memory { get; init; }
+	public PerformanceProfilerMetrics Profiler { get; init; }
 	public PerformanceVisibilityMetrics Visibility { get; init; }
+}
+
+internal sealed class PerformanceRuntimeMetrics
+{
+	public int Samples { get; init; }
+	public long ManagedBytesAllocated { get; init; }
+	public float AverageManagedBytesAllocatedPerFrame { get; init; }
+	public long MaximumManagedBytesAllocatedPerFrame { get; init; }
+	public int Gen0Collections { get; init; }
+	public int Gen1Collections { get; init; }
+	public int Gen2Collections { get; init; }
+	public int FramesWithCollections { get; init; }
+	public float GcPauseMilliseconds { get; init; }
+	public float MaximumGcPauseMilliseconds { get; init; }
+	public int Exceptions { get; init; }
+	public int FramesWithExceptions { get; init; }
 }
 
 internal sealed class PerformanceMemoryMetrics

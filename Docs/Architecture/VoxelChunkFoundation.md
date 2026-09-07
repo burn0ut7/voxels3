@@ -5,7 +5,8 @@
 This decision covers the first production chunk slice: integer chunk identity,
 implicit SDF data, deterministic volumetric terrain, bounded streaming,
 and runtime/editor diagnostics. The default level-indexed LOD0-through-LOD2
-clipbox and both adjacent 2:1 transition boundaries are implemented by the sole GPU path documented in
+clipbox, optional LOD3-through-LOD6 visual-distance tiers, and every adjacent 2:1 transition
+boundary are implemented by the sole GPU path documented in
 `GpuVoxelMeshing.md`. Collision, live edits,
 persistence, and network replication remain later slices.
 
@@ -163,30 +164,55 @@ parallel generation path.
 - Cell size: `16` s&box units (s&box uses Source-style inches)
 - Chunk world extent: `512` units per axis
 - Density samples per chunk: `35,937`
-- Production load radius: `16` chunks in X/Y/Z around the player's current chunk
-  (`33x33x33 = 35,937` chunks)
-- Supported load-radius range: `0..128` chunks. The default and authored
-  production scene remain `16`; the upper bound exists for intentionally
-  expensive single-resolution baselines and is not a recommended production
-  configuration. Radius `128` requests an inclusive `257^3 = 16,974,593`
-  gameplay-chunk cube and a `259^3 = 17,373,979` render-warm cube.
+- Default gameplay radius: `4` chunks in X/Y/Z around the player's current
+  chunk (`9x9x9 = 729` authoritative gameplay chunks)
+- Supported gameplay-radius range: `0..128` chunks. This is simulation and
+  gameplay residency, not terrain view distance. A gameplay radius of `64`
+  describes an inclusive `129^3 = 2,146,689` authoritative-chunk cube. Because
+  the current chunk payload is only deterministic implicit-SDF identity and
+  settings, that cube is represented analytically instead of allocating one
+  object, queue entry, or GPU mesh request per coordinate.
+- Default visual chunk radius: `32` LOD0-sized chunks. With the fixed LOD0/cache
+  half extents `4/8`, supported visual tiers are `4`, `16`, `32`, `64`, `128`,
+  `256`, and `512`, selecting maximum visual levels `0` through `6`. This is the
+  terrain-meshing view-distance control; character and entity rendering
+  distances remain outside this slice.
 - Background generation concurrency: one serialized worker pipeline
 - Main-thread integration budget: `0.500 ms` per update, independent of chunk
   count
 
-At the production radius the settled world contains `1,291,467,969` logical density
-samples. The procedural field evaluates them directly and has no density arrays.
+At the default gameplay radius the gameplay range contains `26,198,073` logical
+density samples. The procedural field evaluates requested samples directly and
+has no density arrays. `VoxelChunk` is an immutable coordinate/settings view and
+is constructed on demand for diagnostics or a future consumer. Until a feature
+owns mutable per-chunk state, materializing every coordinate would add no world
+truth and is forbidden.
 Runtime diagnostics do not estimate or report chunk-attributed memory; allocator
 and managed-runtime layout are outside the chunk data contract. The concise
 inspector reports s&box's approximate working-set measurement for the whole
 process and labels it accordingly.
 
-There is no authored minimum or maximum chunk Z. The one load radius defines a
-viewer-centered cubic interest volume equally in all three axes. At radius `4`,
-a player in `C[0,0,0]` loads coordinates `-4` through `4` in X, Y, and Z. Moving
-to `C[0,0,1]` shifts the loaded Z range to `-3` through `5`. “Everything” means
-every chunk inside this explicit 3D view extent; chunks beyond it are outside the
-configured view distance rather than silently clipped by fixed world bounds.
+There is no authored minimum or maximum chunk Z. `GameplayRadius` defines a
+viewer-centered cubic authoritative interest volume equally in all three axes.
+At radius `4`, a player in `C[0,0,0]` loads coordinates `-4` through `4` in X,
+Y, and Z. Moving to `C[0,0,1]` shifts the loaded Z range to `-3` through `5`.
+This volume does not determine how far terrain is visible.
+
+`VisualChunkRadius` is nominal reach expressed in LOD0 chunk extents, not a
+cube of LOD0 gameplay chunks. It selects the matching maximum level on the one
+fixed-cache clipbox. Tier `64`, for example, uses LOD3 with `128`-unit cells and
+`4096`-unit regions and reaches `32768` world units. Tiers `128`, `256`, and
+`512` add ordinary LOD4, LOD5, and LOD6 records and reach `65536`, `131072`, and
+`262144` world units. Unsupported intermediate radii reject without changing
+the applied visual revision. The default remains tier `32` and maximum level
+`2`.
+
+LOD0 render preparation is independently bounded to the union of the one-chunk
+warm shell around requested LOD0 visual coverage and committed/staged LOD0
+placement. Raising `GameplayRadius` cannot enlarge this render set. Coarse
+visual levels continue to use the fixed 16-cubed cache and conservative
+known-empty broadphase. This slice retains full 3D caches and does not introduce
+underground occlusion or gameplay-dependent visibility.
 
 The dimensions remain inspector-configurable because scale is a product setting,
 but the validation scenario fixes them exactly. Runtime configuration changes
@@ -302,7 +328,10 @@ before that policy changes.
   status combines loaded and queued counts with the last window's integration
   rate. Streaming performance retains effective chunks per second and the last
   settle time. Process memory reports windowed process RAM and engine-tracked GPU
-  memory; neither is memory attributed to chunks or one manager.
+  memory; neither is memory attributed to chunks or one manager. These readable
+  inspector strings refresh at 4 Hz rather than every render frame; their source
+  counters and terrain behavior remain current independently of that presentation
+  cadence.
 - Logs use the stable machine-searchable field `chunk=C[x,y,z]` plus the
   readable chunk name.
 - Per-chunk load/unload logging is intentionally absent. Routine startup,
@@ -420,6 +449,14 @@ and pending-state counters plus coarse broad-phase classification counts and
 timing. Schema version 18 replaces fixed-level result fields with ordered
 `levels[]` and adjacent `transitionPairs[]` records while keeping hierarchy-wide
 placement, queue, arena, memory, scratch, drain, and combined metrics singular.
+Schema version 19 adds the effective `VisualChunkRadius` once at world scope;
+per-level and per-pair records remain the canonical detailed hierarchy report.
+Schema version 20 adds moving and stationary managed-allocation, collection,
+GC-pause, and exception counters from `PerformanceStats`, plus separate bounded
+moving and stationary engine/script profiler snapshots. Profiler records retain
+the 200-frame min/average/maximum values and add nearest-rank p95/p99 values from
+the same public timing history. Sampling remains scalar-only in the per-frame
+path; history copying and sorting occur only when a window completes.
 The manager exposes the resolved results path as inspector status.
 Task and revision are passive caller-supplied strings: the runtime never queries
 Git, invokes another process, or performs a network lookup. Blank or `unassigned`

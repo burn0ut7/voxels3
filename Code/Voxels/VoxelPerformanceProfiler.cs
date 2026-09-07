@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -14,6 +15,7 @@ internal static class VoxelPerformanceProfiler
 	public const string IntegrateGameplayChunks = "Voxels3/IntegrateGameplayChunks";
 	public const string IntegrateWarmChunks = "Voxels3/IntegrateWarmChunks";
 	public const string ProcessPendingMeshes = "Voxels3/ProcessPendingMeshes";
+	public const string RefreshRenderCameras = "Voxels3/RefreshRenderCameras";
 	public const string CommitDrawCommands = "Voxels3/CommitDrawCommands";
 
 	private static readonly string[] ScriptTimingNames =
@@ -25,6 +27,7 @@ internal static class VoxelPerformanceProfiler
 		IntegrateGameplayChunks,
 		IntegrateWarmChunks,
 		ProcessPendingMeshes,
+		RefreshRenderCameras,
 		CommitDrawCommands
 	};
 
@@ -55,12 +58,31 @@ internal static class VoxelPerformanceProfiler
 		global::Sandbox.Diagnostics.PerformanceStats.Timings timing )
 	{
 		var metric = timing.GetMetric( WindowFrames );
+		var history = timing.History;
+		var sampleCount = Math.Min( WindowFrames, history.Size );
+		var samples = new float[sampleCount];
+		var firstSample = history.Size - sampleCount;
+		for ( var index = 0; index < sampleCount; index++ )
+		{
+			samples[index] = history[firstSample + index].TotalMs;
+		}
+		Array.Sort( samples );
+		var p95Index = Math.Clamp(
+			(int)Math.Ceiling( sampleCount * 0.95d ) - 1,
+			0,
+			Math.Max( 0, sampleCount - 1 ) );
+		var p99Index = Math.Clamp(
+			(int)Math.Ceiling( sampleCount * 0.99d ) - 1,
+			0,
+			Math.Max( 0, sampleCount - 1 ) );
 		return new PerformanceProfilerTiming
 		{
 			Name = timing.Name,
 			Calls = metric.Calls,
 			MinimumMillisecondsPerFrame = metric.Min,
 			AverageMillisecondsPerFrame = metric.Avg,
+			P95MillisecondsPerFrame = sampleCount > 0 ? samples[p95Index] : 0f,
+			P99MillisecondsPerFrame = sampleCount > 0 ? samples[p99Index] : 0f,
 			MaximumMillisecondsPerFrame = metric.Max
 		};
 	}

@@ -7614,3 +7614,690 @@ Record an approved extraordinary change here before adding the new version:
   level-indexed implementation with no correctness, memory-shape, scheduling,
   or performance regression. Level `3` remains rejected and disabled. The next
   slice may enable `MaximumVisualLod=3`; it is not part of this result.
+
+### CLIPBOX-VIEW-DISTANCE-001/v1 - Visual chunk radius and LOD3
+
+- Definition recorded on 2026-09-03 at source commit
+  `d4c038431db19c719ea6ca3402537df0f43abd10`, before implementation and before
+  its baseline. The production scene is the current read-only
+  `Assets/scenes/basic_example.scene`, SHA-256
+  `D25E5984D71343382CB1CFC15A34DA80CC26A9C20002E78DD119477FAAF21CA3`, with
+  pre-existing binary diff hash
+  `97aba8b896a666b1d5c72cc6a87a7c61c40fa6d6`. Its authored
+  `GameplayRadius=64` is user state and is never saved, normalized, or committed
+  by this slice. Each validation run applies an undoable in-editor
+  `GameplayRadius=4` before play, verifies the effective runtime value, stops
+  play, and undoes the edit so the file and authored value remain exact.
+- The canonical baseline is schema `18` at the source commit above with visual
+  radius `32`, minimum/maximum visual levels `0/2`, LOD0/cache half extents
+  `4/8`, `32` cells per region, base cell size `16`, generator v5/seed `1337`,
+  and one local player. The candidate is schema `19`; it records the effective
+  visual radius at hierarchy/world scope and otherwise retains the ordered
+  `levels[]` and `transitionPairs[]` contract.
+- The fixed performance journey is the existing one-loop production
+  figure-eight: start and final center `(0,0,0)`, speed `2500`, X reach `50000`,
+  Y reach `25000`, one loop, unchanged drain boundary and two render-sequence
+  advances, then the exact ten-second stationary window. Camera is the Game
+  camera at `1280x720`, `fps_max=1000`; sampling limits and nearest-rank
+  percentiles are unchanged. Run the schema-18 radius-32 baseline before source
+  edits, a schema-19 radius-32 regression after edits, and a schema-19 radius-64
+  LOD3 capture without altering any other workload parameter.
+- `VisualChunkRadius` is policy over the one generic clipbox, expressed in
+  LOD0-sized chunks. With the fixed `4/8` half extents, accepted tiers are
+  `4`, `16`, `32`, and `64`, mapping to maximum visual levels `0`, `1`, `2`,
+  and `3`. Default remains `32`/level `2`. A radius change uses the existing
+  requested-to-staged-to-committed visual revision and must never change
+  gameplay residency. Unsupported radii are rejected without an applied
+  revision or active-set change.
+- At radius `64`, LOD3 has cell size `128`, region size `4096`, fixed cache
+  bounds `16^3 = 4096`, an `8^3 = 512` hole, and `3584` active regions. The
+  nominal outer reach is `64` LOD0 chunks or `32768` world units from the
+  clipbox center. Existing level cache/active counts remain
+  `512/512`, `4096/4032`, and `4096/3584`; gameplay remains exactly `729`.
+- Enabled adjacent pairs are `0->1`, `1->2`, and `2->3`, with desired counts
+  `96`, `384`, and `384`, total `864`. Every pair must settle ready with zero
+  pending work, stale publication, seam/lateral mismatch, or invalid table use.
+  LOD0-through-LOD2 and their pair digests must remain exact. LOD3 and pair
+  `2->3` digests must be deterministic across the functional capture and saved
+  performance result.
+- The implementation retains exactly three shared regular scratch lanes, three
+  transition lanes, one mesher, one allocator/arena pool, one visibility path,
+  one outer FIFO for every level `>=2`, and the existing `250 ms`
+  anti-starvation service policy. Enabling LOD3 may add ordinary resident
+  geometry and arena capacity, but adds no LOD3-specific state type, queue,
+  shader, scratch allocation, draw submission, hierarchy rebuild, or publication
+  model.
+- Functional configuration sequence is visual radius
+  `32 -> 16 -> 4 -> 32 -> 64 -> 32 -> 64`, waiting for each atomic commit and
+  queue settlement. Reject radii `0`, `8`, `48`, and `65`; reject maximum level
+  `4` through the advanced configuration surface. Observe positive/negative
+  boundaries and backtracking with the prior hierarchy continuously visible.
+- Radius-32 candidate frame p95/p99, queue tails, drain, arena shape, used
+  geometry, and moving/stationary visibility must remain within the existing
+  greater-of-`5%`-or-`0.25 ms` regression tolerance from this scenario's
+  radius-32 baseline. Radius-64 must keep foreground and each transition-pair
+  p95 below `409.6 ms`, outer p95 below `4096 ms`, maximum outer service gap
+  below `300 ms`, drain at most `1000 ms`, and CPU/GPU p95/p99 within the same
+  regression tolerance from radius `32`. Ordinary geometry readback and
+  render-time SDF evaluation remain zero.
+- Build runtime and editor with `--no-restore`, compile the visibility shader
+  live, run `voxel_mesh_audit 32 coverage`, and perform the final clean editor
+  restart. The Sentry marker must not advance and fresh logs must contain no
+  shader, compute, device-loss, draw, readback, or managed error. The production
+  scene hash and pre-existing diff must remain byte-identical before and after
+  every run.
+
+#### Baseline, functional traversal, and audit - 2026-09-03
+
+- Pre-change schema-18 run `7e3eaf913c2e4b3bb24329259bdb9536`, revision
+  `d4c0384-schema18-visual-radius32-baseline`, completed the locked journey in
+  `121.907135 s`. Moving CPU/GPU p95/p99 was
+  `1.0759/2.0591` and `0.9441/1.2746 ms`; stationary was
+  `1.0027/1.7620` and `0.7930/0.8159 ms`. Its outer p95/p99 was
+  `204.5982/350.4921 ms`, maximum service gap `258.7933 ms`, queue p95/max
+  `65/126`, and drain `26.9647 ms`.
+- The baseline ended with gameplay `729`; regular cache/active/resident
+  `512/512/710`, `4096/4032/4096`, and `4096/3584/4096`; and transition
+  desired/ready/drawable/pending `480/480/187/0`. Regular digests were
+  `60C89421FF1B19BD/7E9C783F3C60468C`,
+  `97D4F8ABEC98BA72/A580C20007E621C3`, and
+  `081C4C044EB32D11/60AD76F21522FDB4`; combined transitions were
+  `CE624B2A1C469A41/5A444911199CC773`. It used eight arenas,
+  `268435456/134217728` committed and `78517560/73028568` used vertex/index
+  bytes, exactly three regular lanes, and
+  `34310016/0/3884628` regular/dedicated-outer/transition scratch bytes.
+- The live candidate exercised visual tiers
+  `32 -> 16 -> 4 -> 32 -> 64 -> 32 -> 64`. Gameplay stayed `729` throughout.
+  The 16 tier retained only LOD0 and LOD1; the 4 tier retained only LOD0; the
+  restored 32 tier reproduced the accepted three-level counts; and tier 64
+  produced LOD3 cache/active/resident `4096/3584/4096`, 128-unit cells,
+  half-open world bounds `[-32768,32768)`, and pair `2->3`
+  desired/ready/drawable/pending `384/384/102/0`.
+- Invalid visual radii `0`, `8`, `48`, and `65` each reported the supported
+  set `4,16,32,64`, retained effective radius `64`, and did not advance the
+  applied revision. Advanced maximum level `4` likewise rejected with applied
+  revision `6` and no active-set change.
+- A rate-limited expansion captured the atomic handoff in flight. Applied
+  revision `9` remained the complete radius-32 hierarchy while requested/staged
+  revision `10` reported missing regular dependencies `[0,0,0,768]` and `376`
+  transition dependencies. No committed LOD3 level or `2->3` pair was exposed.
+  After resume, revision `10` committed the complete four-level hierarchy in
+  one update; unsafe commits remained zero.
+- `voxel_mesh_audit 32 coverage` selected and completed `224` live regular and
+  transition records. It reported zero stale selections, invalid indices,
+  out-of-bounds or non-finite positions, identity mismatches, oversized
+  triangles, mutation failures, and draw-argument failures. The separately
+  tracked known Transvoxel repeated-position limitation affected `82` sampled
+  transition records and `2419` zero-area triangles; maximum edge remained
+  `1.73` cells. The explicit audit used `450` readbacks and `7949876` bytes;
+  clean production performance sessions below returned to zero geometry
+  readbacks.
+
+#### Schema-19 performance results and decision - 2026-09-03
+
+- Runs `34f9038ed6084c3090837470e6db0a47` and
+  `bf832627552a473c94e0cbcacdba6088` completed radius-32 and radius-64
+  captures, but inherited the preceding audit's `450` geometry readbacks. They
+  are retained as functional records and excluded from acceptance comparison.
+- Clean radius-32 run `ba04e69da2844b9dad9a091016d1ef03`, revision
+  `working-tree-schema19-visual-radius32-clean`, completed in `121.90744 s`.
+  Moving CPU/GPU p95/p99 was `1.1473/2.0693` and
+  `0.9737/1.3604 ms`; stationary was `1.0194/1.7752` and
+  `0.7877/0.8225 ms`. These pass the locked baseline limits
+  `1.3259/2.3091`, `1.1941/1.5246`, `1.2527/2.0120`, and
+  `1.0430/1.0659 ms`. Counts, visibility workload, every regular and pair
+  digest, used geometry bytes, scratch shape, and gameplay residency were
+  exact; all queues settled; ordinary geometry readbacks and render-time SDF
+  evaluations were zero.
+- Clean radius-64 run `aca64f3a658b4d48b33c1be5b73de597`, revision
+  `working-tree-schema19-visual-radius64-clean`, completed in `121.9137 s`.
+  It retained the exact accepted LOD0-through-LOD2 counts and digests and added
+  deterministic LOD3 digest `22F4DC4576C0885F/820BA8949792C1B7`.
+  Pair `2->3` settled at `384/384/102/0`; total transitions were
+  `864/864/289/0` with digest
+  `A62C1D3F9DDB67B0/3F6302D163708473`. Unsafe, stale, cancelled, seam,
+  lateral, and invalid-table counts were zero.
+- Radius 64 used the same three regular lanes and unchanged
+  `34310016/0/3884628` scratch bytes. It settled at `12998` residents and ten
+  shared arenas with `335544320/167772160` committed and
+  `110724456/102228504` used vertex/index bytes. Queue p95/max was `65/126`,
+  drain `26.9944 ms`, outer p95/p99 `235.6983/250.8076 ms`, service gap
+  `120.1932 ms`, and pair p95 values `48.4439/159.2459/102.8486 ms`; every
+  responsiveness gate passes.
+- Radius-64 moving CPU/GPU p95/p99 was `1.2768/2.2737` and
+  `1.1687/1.6048 ms`; stationary was `1.0052/1.8048` and
+  `0.8659/1.1179 ms`. CPU and GPU p95 pass, but moving GPU p99 exceeds its
+  `1.5246 ms` limit by `0.0802 ms` and stationary GPU p99 exceeds its
+  `1.0659 ms` limit by `0.0520 ms`. The fixed high-tier frame gate therefore
+  fails despite the intended additional visible terrain workload.
+- A narrow experiment bounded visibility dispatch to the last arena slot and
+  changed the shader diagnostic loop to a runtime level count. The runtime-bound
+  unrolled shader caused an NVIDIA DMA page fault before measurement. The
+  Aftermath record `core_25.nv-gpudmp.json` identifies
+  `voxel_chunk_visibility_cs.shader_cs`, Vulkan reported
+  `VK_ERROR_DEVICE_LOST`, and the Sentry marker advanced to
+  `2026-09-03T18:27:47.086068Z`. The runtime loop was immediately removed.
+  A clean restart with the compile-time four-level loop settled the complete
+  radius-64 hierarchy without a shader or device error.
+- Post-isolation run `223b54e9bc5842c98bddf9ed5776a089` and default check
+  `fee20d6f8ced465e9bb5e2b11d3129fb` showed no correctness failure but did not
+  establish a performance improvement; their frame tails were materially
+  noisier than both clean pre-experiment captures. The slot-bound optimization
+  was therefore removed as unproven. The final source retains the established
+  full-capacity visibility dispatch and only fixes aggregate-counter reset size
+  from the old fixed `20` entries to the derived four-level count.
+- Final editor process PID `44432` started at `14:46:45` after the final source
+  and compile-time four-level shader loop were restored. Through the production
+  player path it settled radius `64` at `14:47:36` with gameplay radius `4`,
+  residents `710/4096/4096/4096`, transition ready/drawable
+  `96/51`, `384/136`, and `384/102`, no missing level or transition dependency,
+  and no shader, compute, device-loss, draw, readback, managed, stream, or GPU
+  scheduler error in the fresh log. An ejected Game camera at
+  `(0,0,10000)` visibly showed continuous terrain. Play stopped cleanly, the
+  temporary gameplay-radius edit was discarded, the read-only scene reopened
+  without unsaved changes, and its SHA-256 and Git diff-object identity remained
+  exactly `D25E5984D71343382CB1CFC15A34DA80CC26A9C20002E78DD119477FAAF21CA3`
+  and `97aba8b896a666b1d5c72cc6a87a7c61c40fa6d6`.
+- A preceding candidate editor process ended with a normal
+  `Source2Shutdown` log but nevertheless advanced the engine Sentry marker to
+  `2026-09-03T18:46:36.786182Z` during shutdown, consistent with the separately
+  observed existing shutdown-crash behavior. The final PID `44432` runtime and
+  stop did not advance that marker. This distinction preserves the failed
+  experimental GPU crash record above and does not misreport the overall
+  multi-process crash-marker gate as clean.
+- Attempted final repeat `9a2f5cfadd4b412bbec99b5651006f2c`, labelled
+  `working-tree-schema19-visual-radius64-final-repeat`, is diagnostic-only and
+  excluded from clipbox acceptance because the editor did not apply the
+  temporary pre-play override: schema `19` correctly recorded
+  `GameplayRadius=64` rather than the locked `4`. It recreated the user's
+  reported failure mode: moving CPU p95/p99 was
+  `1587.3975/1740.73 ms`, schedule-to-renderable p95/p99 was
+  `92540.68/94552.4 ms`, queue p95/max was `23073/25280`, drain was
+  `110989.4 ms`, residents reached `318837`, and the shared arena pool grew to
+  `178` arenas with `5972688896/2986344448` committed vertex/index bytes.
+  Fresh scheduler-stall diagnostics reported regular pending work of `302120`
+  and later `24440`. In contrast, the visual clipbox remained bounded at four
+  ordinary levels and `864` transitions, proving that this pathological work
+  comes from the independent gameplay cube. The session was stopped, no file
+  was saved, the scene identities remained exact, and the Sentry marker did not
+  advance.
+- A corrected retry first proved a stopped-scene `GameplayRadius=4` readback,
+  then refused to start measurement when the new play instance still exposed
+  the preceding radius-64 session's `2146689` loaded coordinates and `297256`
+  queued gameplay meshes. Its requested visual radius had consequently not yet
+  committed either. No performance command or result was produced. This is
+  retained as live-editor carry-over evidence and not treated as a clipbox
+  result. The editor scene was subsequently closed with changes discarded and
+  reopened from disk. Final status was stopped, compilation settled with zero
+  errors, and no unsaved changes; disk readback restored the authored
+  `GameplayRadius=64` and `MaximumVisualLod=2`. Both scene identities and the
+  `2026-09-03T18:46:36.786182Z` Sentry marker remained unchanged.
+- Current decision: **not yet accepted**. Default radius 32 has a clean passing
+  schema-19 comparison, and radius 64 proves the requested bounded hierarchy,
+  deterministic geometry, queue convergence, memory scaling, and gameplay
+  independence. The optional high tier nevertheless exceeds the locked GPU
+  p99 tolerance. It requires either a measured optimization or explicit human
+  approval of this graphics-quality tradeoff before commit and push. All runs
+  preserved scene SHA-256
+  `D25E5984D71343382CB1CFC15A34DA80CC26A9C20002E78DD119477FAAF21CA3`
+  and binary diff hash `97aba8b896a666b1d5c72cc6a87a7c61c40fa6d6`.
+
+### TERRAIN-OVERHEAD-LOAD-001/v1 - Gameplay-independent visual bootstrap
+
+- Definition recorded on 2026-09-03 before the loading-performance fix. Source
+  state is the working tree based on `d4c038431db19c719ea6ca3402537df0f43abd10`
+  with the schema-19 generic visual-radius implementation documented above.
+  Hardware is the NVIDIA GeForce RTX 5090 and the installed s&box build is
+  `26.08.19`. The production scene remains the read-only
+  `Assets/scenes/basic_example.scene`, SHA-256
+  `D25E5984D71343382CB1CFC15A34DA80CC26A9C20002E78DD119477FAAF21CA3`
+  and Git diff-object identity
+  `97aba8b896a666b1d5c72cc6a87a7c61c40fa6d6`.
+- This scenario intentionally preserves the scene's authored
+  `GameplayRadius=64`, `MinimumVisualLod=0`, `MaximumVisualLod=2`, LOD0/cache
+  half extents `4/8`, 32 cells per axis, base cell size `16`, generator v5,
+  seed `1337`, and target at `(0,0,0)`. The candidate may not lower gameplay or
+  visual coverage to pass. A clean stopped editor closes the scene with changes
+  discarded and reopens it from disk before each run.
+- Start play through the normal editor control and measure wall time until the
+  production game becomes interactive. Immediately enter Game-Ejected view and
+  position the actual detached viewport camera at `(0,0,10000)`, angles
+  `(80,0,0)`, FOV `60`, resolution `1280x720`. Capture hierarchy state, queue
+  state, frame/GPU/memory state, fresh errors, and a screenshot immediately and
+  at elapsed `2`, `5`, `10`, `20`, `30`, and `60` seconds, stopping earlier
+  only after the hierarchy is completely settled. The player remains stationary;
+  the detached camera does not become the streaming origin.
+- At visual radius `32`, require interactive play admission within `3 s`, first
+  continuous center terrain within `2 s` after admission, and complete
+  LOD0-through-LOD2 plus both transition pairs within `10 s`. While visual work
+  is pending, CPU frame p95/p99 must remain below `16.67/33.33 ms` and GPU p95/p99
+  below `4/8 ms`; no single manager update or draw commit may reach `100 ms`.
+  Gameplay generation may continue independently, but it may not delay visual
+  scheduling, create visual geometry outside the LOD0 clipbox/warm shell, or
+  block the editor camera.
+- After the radius-32 capture settles, use the normal validated runtime property
+  to expand to visual radius `64` and then `128`, without changing any other
+  setting. Radius `64` must settle the ordinary LOD3 level and `2->3` transition
+  pair within `15 s`; radius `128` must settle ordinary LOD4 and pair `3->4`
+  within `20 s`. The previous hierarchy remains continuously visible until each
+  atomic commit. Both expansions use the same frame/GPU/update limits above.
+- Radius `128` means maximum visual level `4`, 256-unit cells, 8192-unit
+  regions, the unchanged `16^3` cache and `8^3` hole, `3584` active LOD4
+  regions, nominal reach `128` LOD0 chunks or `65536` world units, and one
+  additional 384-face transition pair. It adds no per-level queue, scratch lane,
+  shader, allocator, visibility path, draw path, or publication model.
+- Validate visual reach after settlement with the same overhead camera at X
+  positions `0`, `30000`, and `60000`, always Z `10000` with the same angles,
+  FOV, and resolution. Radius `64` must cover the first two positions and radius
+  `128` all three. State readback must show exact half-open world bounds and all
+  enabled levels/pairs resident; screenshots must show coherent terrain rather
+  than blank space, partial rings, cracks, or stale coverage.
+- At radius `32`, GPU residency and draw shape must return to the accepted bounded
+  hierarchy rather than scale with the gameplay cube: LOD0 regular residency is
+  limited to its visual cache/warm preparation, LOD1/L2 remain `4096` residents
+  each, transitions remain `480`, and shared arena/indirect counts remain within
+  the accepted shape. Radius `64` and `128` may add roughly one ordinary level's
+  geometry each. All runs require zero unsafe commits, stale publications, seam
+  mismatches, invalid tables, ordinary geometry readbacks, render-time SDF
+  evaluations, scheduler stalls, shader/compute errors, Vulkan timeout/device
+  loss, draw errors, or managed exceptions.
+- Record the pre-change reproduction and every candidate, including failures,
+  below. Also rerun the unchanged canonical figure-eight scenario at visual
+  radius `64` or greater after the overhead journey passes. Completion requires
+  both measured responsiveness and direct screenshot confirmation; queue
+  convergence alone is insufficient.
+
+#### Pre-change diagnosis - 2026-09-03
+
+- Existing schema-19 run `9a2f5cfadd4b412bbec99b5651006f2c` is not a
+  canonical execution of this newly defined scenario, but it is retained as
+  supporting evidence from the same production scene and authored gameplay
+  radius. It materialized `2146689` gameplay coordinates, generated at
+  `985770.94` chunks/s, and integrated the initial stream in `15201.243 ms`.
+  Rendering incorrectly followed that gameplay volume: `297256` gameplay
+  residents, `318837` total residents, `178` arenas, and `91136` indirect
+  records per frame.
+- During its moving journey, 76 full and 31 incremental streaming updates touched
+  `164609418` gameplay and `172361678` render coordinates. Synchronous manager
+  work totaled `122403.88 ms`, including `88354.49 ms` of prioritization;
+  one update reached `1936.2041 ms`. Moving CPU p95/p99 was
+  `1587.3975/1740.73 ms`, queue p95/max `23073/25280`, and visual publication
+  p95/p99 `92540.68/94552.4 ms`.
+- Fresh logs recorded terrain scheduler stalls with `302120` and `24440` regular
+  requests pending. A subsequent play attempt inherited the oversized live
+  residency, and the engine reported a 21-iteration swapchain present wait plus
+  a `0.250114 s` `vkWaitForFences` timeout. No current-source shader compilation
+  failure, compute-dispatch exception, or device-loss report accompanied those
+  events. The evidence indicates GPU starvation and submission overload from
+  the unbounded LOD0 work, while the earlier experimental visibility-shader
+  device loss remains a separate reverted failure.
+
+#### Timed pre-change overhead attempt - 2026-09-03
+
+- A clean stop/start attempt entered Game-Ejected view with the locked camera at
+  `(0,0,10000)`, angles `(80,0,0)`, FOV `60`, and `1280x720`, then sampled at
+  elapsed `0`, `5`, `10`, `20`, `30`, and `60` seconds. Every sample remained
+  at `2146689` gameplay coordinates loaded, `4352` GPU meshes resident, and
+  `297256` gameplay meshes pending. Scheduler-stall diagnostics reported
+  `301096` regular plus `480` transition requests pending, followed later by
+  `2328/0` with `6194` residents. The hierarchy did not settle within 60 s.
+- This attempt is diagnostic-only because the new play instance read
+  `GameplayRadius=8` even though the scene had been verified immediately before
+  the run with the authored value `64`. On stop, the editor unexpectedly wrote
+  live component status and configuration fields into the read-only scene at
+  `2026-09-03T19:44:32Z`, without an issued save command. Its SHA-256 changed
+  from `D25E5984D71343382CB1CFC15A34DA80CC26A9C20002E78DD119477FAAF21CA3`
+  to `18807845D2C00A96F4A46C8B5B10E61AADC6214B6AD365E13D247225ACA1BB08`.
+  The exact diff is confined to the `VoxelManager` inspector block: dynamic
+  chunk/streaming status, `GameplayRadius=8`, the four LOD configuration fields,
+  and `VisualChunkRadius=32`. No source, shader, or document was written by the
+  run. The Sentry marker remained
+  `2026-09-03T18:46:36.786182Z`. Further validation must treat this scene
+  mutation as unresolved user-state corruption and must not describe the run as
+  a clean execution of the locked scenario.
+
+### TERRAIN-VISUAL-STRESS-001/v1 - 256 goal and 512 stretch
+
+- Definition recorded on 2026-09-03 before support for these tiers or the
+  loading-performance fix. This extends, but does not rewrite,
+  `TERRAIN-OVERHEAD-LOAD-001/v1`. Use the same production scene, generator,
+  player origin, detached-camera procedure, sampling cadence, frame/GPU/update
+  limits, atomic-handoff requirements, error gates, and read-only scene policy.
+  Preserve `GameplayRadius=64`, 32 cells per axis, base cell size `16`, and
+  LOD0/cache half extents `4/8`; no lower workload or quality setting is a
+  comparable result.
+- After radius `128` has settled, request visual radius `256` through the normal
+  validated runtime property. This enables one ordinary LOD5 record with
+  512-unit cells, 16384-unit regions, the same `16^3` cache and `8^3` hole,
+  `3584` active regions, and one ordinary `4->5` 384-face transition pair.
+  Nominal reach is 256 LOD0 chunks or 131072 world units. Radius `256` is a
+  product goal: it must settle within `25 s`, remain interactive under the
+  overhead loading gates, preserve all nearer levels and seams, and add roughly
+  one level of memory/work rather than expanding any fine-level cube.
+- After radius `256` has settled and its evidence is captured, request visual
+  radius `512`. This enables one ordinary LOD6 record with 1024-unit cells,
+  32768-unit regions, the same cache/hole/active counts, and pair `5->6`.
+  Nominal reach is 512 LOD0 chunks or 262144 world units. Radius `512` is an
+  explicit stretch test, not permission to relax the user-visible workload. It
+  has a `30 s` settlement target and the same correctness, frame, GPU, update,
+  queue, and error gates; any limit found must be reported with measurements.
+- At both tiers, retain exactly three regular scratch lanes, three transition
+  lanes, one mesher, one shared arena pool, one outer FIFO/service policy, one
+  visibility path, and one publication model. No per-tier queue, shader,
+  allocator, scratch resource, recursive hierarchy, octree, SDF simplification,
+  material change, seam change, or underground-culling feature may be added.
+- Validate reach after settlement with the locked overhead camera additionally
+  positioned at `(120000,0,10000)` for radius `256` and
+  `(250000,0,10000)` for radius `512`. State readback must prove the exact
+  half-open bounds and every level/pair resident, while screenshots must show
+  coherent terrain at each point. Then contract `512->256->128->64->32` through
+  the same runtime property and require atomic commits, released leaving
+  geometry, bounded arenas, and complete queue convergence at every step.
+
+#### Root cause and implementation - 2026-09-03
+
+- `VoxelChunk` was verified to contain only immutable coordinate, scale, and
+  deterministic implicit-SDF settings; it owns no density array, edits,
+  collision, persistence, or other mutable gameplay payload. Nevertheless, the
+  old radius-64 path allocated and sorted a `2,146,689`-entry gameplay set,
+  constructed one wrapper per coordinate, and submitted every potential surface
+  result as LOD0 gameplay geometry. `OnLoad` also waited for that entire stream,
+  preventing the normal GPU update path from draining it. This explains the
+  measured multi-minute backlog and GPU starvation without implicating the
+  fixed visual clipbox.
+- The candidate represents gameplay coverage as an analytic inclusive 3D cube
+  and constructs a `VoxelChunk` view on demand. Gameplay-radius changes now
+  compute old/new overlap in constant space and immediately publish the logical
+  range. LOD0 classification/meshing is bounded to the union of its visual warm
+  shell and committed/staged LOD0 coverage. `GameplayRadius` still governs the
+  same full-3D authoritative coordinates but no longer changes terrain view
+  distance or creates visual work.
+- Supported visual tiers are now `4/16/32/64/128/256/512`, mapping to maximum
+  levels `0..6`. Levels 3 through 6 are ordinary records with 128/256/512/1024
+  unit cells and the same fixed cache, scheduler, allocator, visibility,
+  publication, and transition paths. The compile-time visibility diagnostic
+  layout was extended to seven levels; no shader, queue, lane, arena pool, or
+  draw submission was added per level. The default remains exactly radius 32
+  and levels `0..2`.
+- The architecture choice and rejected alternatives are recorded with primary
+  sources in `Docs/Research/VisualClipboxScaling.md`. Full-3D caches, caves,
+  SDF, materials, and Transvoxel topology are retained. Underground occlusion
+  remains a future isolated slice; current conservative range analysis already
+  avoids geometry for provably all-air or all-solid regions.
+
+#### Overhead loading and visual reach - 2026-09-03
+
+- After a clean editor restart, `play_start` returned an interactive production
+  world in `72 ms`. The normal runtime configuration property then applied
+  `GameplayRadius=64` as exactly `2,146,689` logical implicit-SDF coordinates
+  with zero gameplay queue. The settled default visual state remained LOD0
+  cache/active/resident `512/512/710`, LOD1 `4096/4032/4096`, LOD2
+  `4096/3584/4096`, and transitions `96/96/51/0` plus
+  `384/384/136/0`. The overhead Game-Ejected camera at `(0,0,10000)`, angles
+  `(80,0,0)`, FOV 60, and `1280x720` showed continuous terrain across the
+  viewport. Fresh error-level output was empty.
+- Sequential expansion through the normal `VisualChunkRadius` property settled
+  radius 64 within the `1.2 s` observation interval, radius 128 within `1.5 s`,
+  radius 256 within `1.8 s`, and radius 512 within `2.2 s`. Every observation
+  had `pending=False`, no missing level or transition dependency, and zero
+  unsafe commits. Each tier added exactly one 4096-cache/3584-active level and
+  one ready 384-face transition pair. At radius 512, LOD6 bounds were
+  `[-262144,262144)` on every axis.
+- The locked far-reach screenshots showed coherent terrain at
+  `(120000,0,10000)` for radius 256 and `(250000,0,10000)` for radius 512.
+  Contracting `512->256->128->64->32` converged within each `0.7 s` observation
+  interval, released all leaving level/pair geometry, and retained no pending
+  work. Shared arenas intentionally retained reusable high-water capacity; a
+  clean replay restored the accepted default arena shape.
+- Runtime configuration exercised maximum levels `2->1->0->2`, minimum levels
+  `0->1->2->0`, extents `4/8->2/6->4/8`, and gameplay radius `4->3->4`.
+  Radius 3 reported exactly 343 logical coordinates, radius 4 reported 729,
+  and gameplay-only changes did not advance visual revision. A deliberately
+  rapid restore sequence coalesced outstanding visual work and finished at the
+  complete default revision with zero unsafe commit. Maximum level 7, minimum
+  above maximum, odd extents, the containment-invalid `16/8` extents, 31 cells,
+  and base cell size 15 each rejected at applied revision 13. Visual radius 48
+  rejected with the supported set `4,16,32,64,128,256,512` and retained radius
+  32.
+
+#### Production performance and stress results - 2026-09-03
+
+- Default run `3da709713e4f42189023f80e6fa63279`, revision
+  `working-tree-schema19-implicit-gameplay-range`, completed the unchanged
+  one-loop figure-eight in `121.90829 s` at gameplay radius 4 and visual radius
+  32. The last logical gameplay-range application took `1.4175 ms`; gameplay
+  pending and peak gameplay mesh backlog were both zero. All accepted counts,
+  LOD0/1/2 digests, transition digests, eight-arena used/committed shape, three
+  scratch lanes, `34,310,016/3,884,628` regular/transition scratch bytes, and
+  zero ordinary readback/render-SDF/correctness counters were exact.
+- That default run's moving CPU/GPU p95/p99 were
+  `1.2548/2.7183` and `0.9272/1.1940 ms`; stationary values were
+  `1.0473/2.4035` and `0.6218/0.8380 ms`. GPU tails improved and CPU p95 passed,
+  but moving and stationary CPU p99 exceeded the strict clean radius-32
+  baseline tolerance. The run is retained as a functional pass, not the final
+  regression decision; a clean repeat is required below. Maximum manager
+  synchronous work was `11.9208 ms`, foreground/outer p95 was
+  `58.5509/210.9111 ms`, outer service gap `250.4691 ms`, and drain
+  `25.2698 ms`.
+- Radius-256 run `6aa1186bba7f4dcd94b8085697146b3f` used the same journey
+  with gameplay radius 64 and completed in `121.91073 s`. Moving CPU/GPU
+  p95/p99 was `1.3961/3.0200` and `1.1504/1.5116 ms`; stationary was
+  `1.0679/2.4489` and `0.7222/0.9410 ms`. It settled all six levels at
+  residents `710/4096/4096/4096/4096/4096`, all five pairs at
+  desired/ready/pending `1632/1632/0`, and zero final queues. Foreground/outer
+  p95 was `67.5952/201.7730 ms`, service gap `120.0909 ms`, drain
+  `26.3632 ms`, and maximum manager work stayed below the 16.67 ms frame gate.
+  It used 13 arenas, `436,207,616/218,103,808` committed and
+  `176,218,248/157,049,904` used vertex/index bytes, with unchanged scratch.
+- Radius-512 stretch run `1fda52a0ba2548da9cfd003c40f16477` completed in
+  `121.91219 s` at gameplay radius 64. Moving CPU/GPU p95/p99 was
+  `1.4518/3.1785` and `1.1892/1.5588 ms`; stationary was
+  `1.0979/2.5168` and `0.7143/0.9332 ms`. All seven levels settled at
+  `710` then six times `4096` residents, with level-6 deterministic digest
+  `7E093B0F197A938C/BD1B176BD0EEF4C5`. All six pairs settled at
+  `2016/2016/499/0` desired/ready/drawable/pending; combined transition digest
+  was `5EFB46241C8E7838/2F3EFAB8A4CB38F8`. Foreground/outer p95 was
+  `68.0693/202.7279 ms`, service gap `118.5191 ms`, drain `26.8736 ms`,
+  and maximum manager work `14.1631 ms`. It used 14 arenas,
+  `469,762,048/234,881,024` committed and
+  `211,235,640/182,837,520` used vertex/index bytes, again with exactly three
+  lanes and unchanged scratch.
+- Both stress tiers remained well inside the overhead frame limits, kept every
+  queue at zero, and reported no unsafe commit, seam/lateral mismatch,
+  invalid-table use, ordinary geometry readback, or render-time SDF evaluation.
+  Radius 512 added only one arena and about 50 MB GPU process allocation over
+  radius 256. Average visible mesh count was effectively unchanged
+  (`936.66` versus `936.79`), while the extra outer level preserved reachable
+  terrain for distant cameras.
+
+#### Maximum-hierarchy geometry audit - 2026-09-03
+
+- `voxel_mesh_audit 32 coverage` at radius 512 selected and completed 416 live
+  regular and transition records in `808.582 ms`. It reported zero stale
+  selections, invalid indices, out-of-bounds or non-finite positions, identity
+  mismatches, oversized triangles, mutation failures, and draw-argument
+  failures. Maximum edge was `1.731` cells. The audit observed 5,099 zero-area
+  triangles across 178 transition samples, the same already accepted
+  repeated-position Transvoxel table limitation; it did not introduce a new
+  seam, bounds, or draw failure. Explicit audit readback was 834 operations and
+  `16,415,816` bytes; ordinary performance runs above remained at zero geometry
+  readback.
+- The scene corruption recorded by the pre-change attempt did not advance during
+  any candidate run: SHA-256 remained
+  `18807845D2C00A96F4A46C8B5B10E61AADC6214B6AD365E13D247225ACA1BB08`,
+  last write remained `2026-09-03T19:44:32.5546007Z`, and diff identity remained
+  `0c07d8bb3bc89088b48d37374e1b97a260e8e9c8`. The candidate does not claim the
+  original read-only-scene gate passed and will not include the scene in the
+  source commit. The Sentry marker remained
+  `2026-09-03T18:46:36.786182Z` through the implementation and stress runs.
+
+#### Default repeats, hot-reload diagnosis, and allocation isolation - 2026-09-03
+
+- Default-radius repeats `d227a35f5bfa4872a2abd11d7a851526`,
+  `5eda349c9e594785a81e13b6f1c0662d`, and
+  `97c54b148b4641f88d078e813e60bd3a` reproduced the exact accepted level,
+  transition, digest, queue, arena, scratch, and correctness state. Moving CPU
+  p95/p99 was respectively `1.2518/2.7514`, `1.2552/2.7414`, and
+  `1.2531/2.7011 ms`; stationary CPU p95/p99 was `1.0273/2.4313`,
+  `1.0168/2.4362`, and `1.0443/2.4308 ms`. All GPU p95/p99 gates passed, but
+  both CPU p99 gates remained above the clean `ba04e69...` limits.
+- Run `97c54b...` is excluded from clean error-gate evidence. From
+  `16:47:50.7070` through `16:48:18.8670`, the preceding hot-reload session
+  emitted 3,644 command-list warnings. Every warning was an
+  `InvalidCastException` attempting to cast
+  `Sandbox.GpuBuffer<TerrainVertex>` from the old loaded assembly identity to
+  the same named generic type from the replacement assembly inside
+  `DrawIndexedInstancedIndirect`. No shader compilation, compute, Vulkan device
+  loss, scheduler stall, or crash accompanied it. The warnings ended before a
+  new camera binding and command-list initialization. This is direct evidence
+  of stale editor hot-reload command state, not a steady-state shader or GPU
+  workload failure; subsequent clean processes emitted none of these warnings.
+- Clean-process run `066b497b6848414ab08cd7957cdca92a` completed in
+  `121.90918 s` with no project warning or error. Moving CPU/GPU p95/p99 was
+  `1.2606/2.8482` and `0.9251/1.1876 ms`; stationary was
+  `1.0516/2.4973` and `0.6189/0.8378 ms`. Against `ba04e69...`, six of eight
+  frame gates passed; only moving and stationary CPU p99 failed. Scoped terrain
+  cost improved: render average/max changed from `0.4959/0.8218` to
+  `0.4803/0.7893 ms`, and `VoxelManager.OnUpdate` from `0.1133/15.8483` to
+  `0.1041/14.0932 ms`. Draw-commit total fell from `609.8872` to
+  `557.4663 ms`, drain from `28.3974` to `26.3226 ms`, process peak from
+  `4,540,366,848` to `3,678,666,752` bytes, and GPU tails improved. The result
+  therefore does not identify terrain manager, rendering, geometry, queueing,
+  or memory growth as the CPU-tail source.
+- The clean process did capture one `7.896 ms` engine GC pause. Inspector-only
+  streaming status had been formatting three strings on every frame, which is
+  roughly 3,000 short-lived allocations per second at this scenario's frame
+  rate. The candidate now updates those diagnostics at 4 Hz; gameplay and
+  visual placement, scheduling, meshing, drawing, and test sampling are
+  unchanged. Post-change run `b19e641d3341497c940da937ed535c84` completed in
+  `121.91 s` with zero GC pause in the final profiler window. Manager average
+  fell again to `0.1023 ms`, while moving CPU/GPU p95/p99 was
+  `1.2532/2.8222` and `0.9325/1.1959 ms`; stationary was
+  `1.0307/2.4614` and `0.6185/0.8297 ms`. The strict CPU p99 misses persisted,
+  so GC allocation was real avoidable work but not their complete cause.
+- The CPU-tail shift predates the gameplay-range optimization. The earlier
+  post-device-loss control `fee20d6f8ced465e9bb5e2b11d3129fb`, still on the
+  eager gameplay implementation, had already moved to `2.4949/1.9991 ms`
+  moving/stationary CPU p99 from the pre-experiment
+  `2.0693/1.7752 ms`. Across the new implementation, moving CPU p95 remains
+  tightly grouped at `1.2518..1.2606 ms`, GPU tails are better than the clean
+  baseline, and scoped terrain work is lower, while whole-editor CPU p99 remains
+  `2.7011..2.8482 ms`. This is evidence of a persistent host/editor tail-state
+  change after the earlier engine fault, but it does not waive the locked p99
+  gate. A focused clean-process repeat remains required before final acceptance.
+- Focused clean-process run `e03faa35ca534046a9b43c76d1d1ebd4` matched the
+  locked Game-camera path with the editor window explicitly foregrounded. It
+  remained warning-free and again reproduced the exact accepted default
+  hierarchy. Moving CPU/GPU p95/p99 was `1.2535/2.8248` and
+  `0.9274/1.1902 ms`; stationary was `1.0351/2.5020` and
+  `0.6220/0.8330 ms`. `VoxelManager.OnUpdate` improved further to
+  `0.1003/13.8371 ms` average/max and the final profiler window recorded no GC
+  pause. Foreground scheduling did not move the whole-editor CPU tail. The
+  implementation, high-radius stress, visual reach, GPU, queue, memory,
+  correctness, and terrain-scoped performance gates pass, but the historical
+  moving/stationary CPU p99 comparison remains failed. It is not waived, so the
+  source is not yet eligible for the required acceptance commit or push.
+- Final cold editor PID `48012` started on engine `26.09.01a` after the last
+  source, shader, documentation, CRLF, and build pass. The production scene
+  admitted play and settled default radius 32 with exact level
+  cache/active/resident `512/512/710`, `4096/4032/4096`, and
+  `4096/3584/4096`; pair desired/ready/drawable/pending was `96/96/51/0` and
+  `384/384/136/0`. Radius 512 then settled all seven levels and six pairs in the
+  next four-second observation, including level-6 half-open bounds
+  `[-262144,262144)`, with zero pending dependency or unsafe commit. The locked
+  detached camera at `(250000,0,10000)` showed coherent continuous terrain.
+  Contracting to radius 32 restored the exact default counts, and the overhead
+  camera at `(0,0,10000)` again showed continuous terrain. Fresh play, expansion,
+  contraction, screenshot, and terminal stop logs contained no shader, compute,
+  device-loss, command-list, draw, readback, scheduler, or managed warning/error.
+- Final runtime/editor `--no-restore` builds completed with zero warning or
+  error; `git diff --check` passed; the live shader binary timestamp followed
+  the final source timestamp by less than one second. The Sentry marker at
+  `C:\Program Files (x86)\Steam\steamapps\common\sbox\.source2\sentry\last_crash`
+  remained exactly `2026-09-03T18:46:36.786182Z`. The unresolved pre-change
+  editor serialization incident also remained byte-stable: scene SHA-256
+  `18807845D2C00A96F4A46C8B5B10E61AADC6214B6AD365E13D247225ACA1BB08`
+  and last write `2026-09-03T19:44:32.5546007Z`. The scene and generated shader
+  remain excluded from any future source commit.
+
+#### Settled-frame attribution and camera-binding cadence - 2026-09-03
+
+- A further bounded optimization removed two remaining pieces of unnecessary
+  settled-frame work without changing placement, geometry, view distance, or
+  rendering decisions. Main-camera component enumeration and set-diff work now
+  runs at 4 Hz, or immediately when the selected camera becomes invalid, instead
+  of every manager update. Terrain indirect-submission counting now uses a
+  direct arena loop and the performance sampler derives argument-record count
+  from that single result rather than enumerating the arena list twice.
+- Performance result schema 20 adds moving and stationary scalar runtime
+  counters for managed bytes allocated, Gen0/1/2 collections, collection-frame
+  count, GC pause total/maximum, exceptions, and exception-frame count. It also
+  records separate 200-frame moving and stationary profiler snapshots with
+  nearest-rank p95/p99 timing values. These diagnostics use installed public
+  `Sandbox.Diagnostics.PerformanceStats` counters and timing histories; they do
+  not add a terrain code path, geometry readback, or per-frame collection.
+- Cold schema-20 run `214cab71101443ed85dbe14e7f5dd38f`, revision
+  `working-tree-schema20-camera-cadence`, completed the unchanged one-loop
+  scenario in `121.919846 s`. Moving CPU/GPU p95/p99 was
+  `1.7179/3.3096` and `1.2603/1.7502 ms`; stationary was
+  `1.2566/2.8106` and `0.8745/1.1413 ms`. Exact gameplay, level, transition,
+  scratch, digest, queue, and unsafe-commit gates passed. The moving window
+  observed `3,223,446,496` managed bytes over `109,782` samples
+  (`29,362.25` bytes/frame), 63 Gen0 plus 63 Gen1 collections, 63 collection
+  frames, `549.729 ms` total GC pause, `11.653 ms` maximum GC pause, and zero
+  exceptions. Stationary observed `245,058,392` bytes over `9,438` samples
+  (`25,965.078` bytes/frame), 6/5/1 Gen0/1/2 collections, five collection
+  frames, `43.193 ms` total GC pause, `9.29 ms` maximum, and zero exceptions.
+  Collection frames are only `0.057%` of moving samples, so GC explains rare
+  maxima but cannot by itself explain the repeated one-percentile tail.
+- Cold percentile run `ae21ff2c12c14c5d8a76d1abfdf5147f`, revision
+  `working-tree-schema20-profiler-percentiles`, completed the same unchanged
+  scenario in `121.92294 s`. Moving CPU/GPU p95/p99 was
+  `1.7364/3.3391` and `1.2372/1.7097 ms`; stationary was
+  `1.3174/2.8608` and `0.8678/1.1339 ms`. Runtime allocation repeated at
+  `3,219,076,400` bytes over `109,455` moving samples (`29,410.043`
+  bytes/frame), 63 Gen0 plus 63 Gen1 collections, `530.553 ms` total pause,
+  and zero exceptions. Stationary repeated at `245,365,584` bytes over
+  `9,419` samples (`26,050.066` bytes/frame), five Gen0 plus five Gen1
+  collections, `41.934 ms` pause, and zero exceptions.
+- The last-200-frame moving profiler in that run measured terrain manager
+  p95/p99 `0.1482/1.0802 ms`, complete mesher processing
+  `0.0436/0.0631 ms`, and the actual camera refresh `0/0 ms` with one
+  `0.0065 ms` call. Engine/editor timing in the same frames was render
+  `0.8886/0.9659 ms` and editor `0.2254/2.1192 ms`. In the fully settled
+  stationary profiler, the complete manager measured `0.0089/0.0145 ms`,
+  mesher processing `0.0037/0.0044 ms`, and camera refresh again `0/0 ms`
+  with one `0.0064 ms` call, while render measured `0.7730/0.9809 ms` and
+  editor `0.2295/1.6859 ms`. This directly rules out settled chunk generation,
+  queue draining, camera discovery, or terrain manager work as the owner of the
+  current whole-editor stationary p99 regression.
+- A separate diagnostic outside the canonical measurement attached official
+  `dotnet-trace 10.0.731102` to the settled production editor PID `40784`.
+  The 20-second `dotnet-sampled-thread-time` trace was `66,967,738` bytes and
+  the sequential 20-second `gc-verbose` trace was `84,053,282` bytes, both under
+  `C:\Users\Gray\AppData\Local\Temp`. Managed stack sampling attributed only
+  `0.02%` inclusive sampled time to `VoxelManager.OnUpdate`; the render callback
+  object was `0.81%`. Across the complete process, generic indirect-draw and
+  compute-dispatch calls were `4.08%` and `2.48%` exclusive respectively,
+  while worker synchronization/waits dominated the trace. The built-in trace
+  converter exposed sampled stacks but not allocation-event type payloads, so
+  it cannot identify the approximately 26-29 KB/frame allocation owner without
+  a richer EventPipe analyzer.
+- The final live detached-camera check switched to `GameEjected`, confirmed the
+  viewport and camera still belonged to the production game scene, positioned
+  the camera at `(0,0,10000)` with angles `(80,0,0)`, FOV 60, and rendered a
+  continuous `1280x720` terrain image. Fresh project logs contained no shader,
+  compute, device-loss, draw, readback, scheduler, managed, or camera-binding
+  warning/error. The production scene remained byte-stable at SHA-256
+  `18807845D2C00A96F4A46C8B5B10E61AADC6214B6AD365E13D247225ACA1BB08`,
+  last write `2026-09-03T19:44:32.5546007Z`, and the Sentry marker content
+  remained `2026-09-03T18:46:36.786182Z`.
+- Decision: the camera scan and status-allocation cleanups are valid small
+  optimizations, but neither is the locked CPU-tail cause. Both new runs remain
+  functional/correctness passes and strict performance failures. Further
+  in-scope terrain scheduling or generation micro-optimization is not supported
+  by the measurements. Reducing the remaining managed render submission cost
+  would require a separately approved allocator/draw-batching or visibility
+  publication slice, which this scenario explicitly forbids. The historical
+  CPU p99 and original scene-integrity gates remain failed; no commit or push is
+  authorized.

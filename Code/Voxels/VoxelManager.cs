@@ -23,12 +23,13 @@ public sealed class VoxelManager : Component
 	private const float MainThreadIntegrationBudgetMilliseconds = 0.5f;
 	private const float PerformanceWindowSeconds = 10f;
 	private const float MemorySampleIntervalSeconds = 1f;
+	private const float ReadableStatusRefreshIntervalSeconds = 0.25f;
 	private const int MaximumPerformanceFrameSamples = 524288;
 	private const int MaximumFigureEightLoopCount = 8;
 	private const int DefaultGameplayRadius = 4;
 	private const int MaximumSupportedVisualLod = TerrainClipboxLimits.MaximumSupportedVisualLod;
 	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
-	private const int PerformanceResultSchemaVersion = 18;
+	private const int PerformanceResultSchemaVersion = 20;
 	private const int RenderWarmShellChunks = 1;
 	private const int RequiredCellsPerAxis = 32;
 	private const float RequiredBaseCellSize = 16f;
@@ -51,19 +52,12 @@ public sealed class VoxelManager : Component
 		DefaultLod0VisualHalfExtent,
 		DefaultLodCacheHalfExtent );
 
-	private readonly Dictionary<Vector3Int, VoxelChunk> _loadedChunks = new();
-	private readonly HashSet<Vector3Int> _desiredChunks = new();
 	private HashSet<Vector3Int> _renderDesiredChunks = new();
 	private HashSet<Vector3Int> _nextRenderDesiredChunks = new();
 	private readonly HashSet<Vector3Int> _renderPreparedChunks = new();
-	private readonly Queue<Vector3Int> _pendingChunks = new();
-	private readonly Queue<VoxelChunk> _completedChunks = new();
 	private readonly Queue<Vector3Int> _pendingWarmChunks = new();
 	private readonly Queue<WarmChunkResult> _completedWarmChunks = new();
-	private readonly List<Vector3Int> _coordinateBuffer = new();
 	private readonly List<Vector3Int> _warmCoordinateBuffer = new();
-	private readonly List<Vector3Int> _gameplayEnteringBuffer = new();
-	private readonly List<Vector3Int> _gameplayLeavingBuffer = new();
 	private readonly List<Vector3Int> _renderEnteringBuffer = new();
 	private readonly List<Vector3Int> _renderLeavingBuffer = new();
 	private readonly HashSet<Vector3Int> _coordinateSetBuffer = new();
@@ -116,11 +110,11 @@ public sealed class VoxelManager : Component
 	private long _gpuRenderUpdateEpoch;
 
 	private bool _hasStreamingCenter;
-	private bool _streamInProgress;
-	private bool _hasObservedStreamingFrame;
-	private bool _completionReady;
-	private bool _initialLoadCompleted;
 	private Vector3Int _streamingCenterCoordinate;
+	private int _streamingGameplayRadius;
+	private int _streamingRenderRadius = -1;
+	private Vector3Int _playerStatusCoordinate;
+	private VoxelChunk _playerStatusChunk;
 	private long _streamStartedTimestamp;
 	private int _generatedThisStream;
 	private int _retainedThisStream;
@@ -141,16 +135,13 @@ public sealed class VoxelManager : Component
 	private float _appliedSurfaceBaseHeight = ProceduralTerrainSdf.DefaultSurfaceBaseHeight;
 	private float _appliedSurfaceFrequency = ProceduralTerrainSdf.DefaultSurfaceFrequency;
 	private float _appliedSurfaceAmplitude = ProceduralTerrainSdf.DefaultSurfaceAmplitude;
-	private int _streamRevision;
 	private int _terrainContentRevision;
-	private bool _workerCompleted;
-	private CancellationTokenSource _generationCancellation;
-	private System.Threading.Tasks.Task _generationTask = System.Threading.Tasks.Task.CompletedTask;
 	private int _warmGenerationRevision;
 	private bool _warmWorkerCompleted;
 	private CancellationTokenSource _warmGenerationCancellation;
 	private System.Threading.Tasks.Task _warmGenerationTask = System.Threading.Tasks.Task.CompletedTask;
 	private string _lastConfigurationError = string.Empty;
+	private float _readableStatusRefreshElapsedSeconds;
 	private GameObject _resolvedStreamingTarget;
 	private bool _playerFigureEightEnabled;
 	private GameObject _playerFigureEightTarget;
@@ -175,6 +166,17 @@ public sealed class VoxelManager : Component
 	private double _performanceFrameMillisecondsTotal;
 	private double _performanceGpuFrameMillisecondsTotal;
 	private int _performanceGpuFrameSampleCount;
+	private int _performanceRuntimeSampleCount;
+	private long _performanceManagedBytesAllocated;
+	private long _performanceMaximumManagedBytesAllocated;
+	private int _performanceGen0Collections;
+	private int _performanceGen1Collections;
+	private int _performanceGen2Collections;
+	private int _performanceFramesWithCollections;
+	private long _performanceGcPauseTicks;
+	private long _performanceMaximumGcPauseTicks;
+	private int _performanceExceptions;
+	private int _performanceFramesWithExceptions;
 	private double _performanceProcessMemoryBytesTotal;
 	private ulong _performancePeakProcessMemoryBytes;
 	private double _performanceGpuMemoryBytesTotal;
@@ -244,6 +246,7 @@ public sealed class VoxelManager : Component
 	private GpuTransitionMeasurement _lastPerformanceTransitions;
 	private GpuOuterLevelMeasurement _lastPerformanceOuter;
 	private PerformanceProfilerMetrics _lastPerformanceProfiler = new();
+	private PerformanceRuntimeMetrics _lastPerformanceRuntime = new();
 	private GameObject ActiveStreamingTarget => StreamingTarget ?? _resolvedStreamingTarget ?? GameObject;
 	private ProceduralTerrainSettings CurrentTerrainSettings => new(
 		_appliedWorldSeed,
@@ -262,6 +265,36 @@ public sealed class VoxelManager : Component
 
 	[Property, Category( "Terrain Visuals" )]
 	public int MaximumVisualLod { get; set; } = DefaultMaximumVisualLod;
+
+	/// <summary>
+	/// Nominal visual reach in LOD0-sized chunks. Supported values are derived from the
+	/// fixed LOD0 and coarse-cache extents; changing this selects the matching maximum LOD.
+	/// </summary>
+	[Property, Category( "Terrain Visuals" )]
+	public int VisualChunkRadius
+	{
+		get => VisualChunkRadiusForLevel(
+			MaximumVisualLod,
+			Lod0VisualHalfExtent,
+			LodCacheHalfExtent );
+		set
+		{
+			for ( var level = 0; level <= MaximumSupportedVisualLod; level++ )
+			{
+				if ( value != VisualChunkRadiusForLevel(
+					level,
+					Lod0VisualHalfExtent,
+					LodCacheHalfExtent ) ) continue;
+
+				MaximumVisualLod = level;
+				return;
+			}
+
+			Log.Warning(
+				$"[VoxelWorld] visual.radius.rejected requested={value} " +
+				$"supported=\"{FormatSupportedVisualChunkRadii( Lod0VisualHalfExtent, LodCacheHalfExtent )}\"" );
+		}
+	}
 
 	[Property, Category( "Diagnostics" )]
 	public int MinimumVisualLod { get; set; } = DefaultMinimumVisualLod;
@@ -371,46 +404,22 @@ public sealed class VoxelManager : Component
 
 	public int LastStaleDiscardedChunkCount { get; private set; }
 
-	protected override async System.Threading.Tasks.Task OnLoad()
+	protected override System.Threading.Tasks.Task OnLoad()
 	{
 		ResolveStreamingTarget();
 		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis );
 		ApplyConfigurationAndRebuild();
-
-		while ( _streamInProgress )
-		{
-			if ( IntegrateCompletedChunks() )
-			{
-				RefreshReadableStatus();
-			}
-
-			if ( _completionReady )
-			{
-				CompleteStream();
-				RefreshReadableStatus();
-			}
-
-			await Task.Yield();
-		}
-
-		_initialLoadCompleted = _loadedChunks.Count == _desiredChunks.Count &&
-			_pendingChunks.Count == 0;
 		if ( VerboseLogging )
 		{
 			Log.Info(
-				$"[VoxelWorld] load.complete ready={_initialLoadCompleted} loaded={_loadedChunks.Count} " +
-				$"pending={_pendingChunks.Count}" );
+				$"[VoxelWorld] load.complete ready=True loaded={GetCubeCoordinateCount( AuthoritativeGameplayRadius )} " +
+				"pending=0 storage=implicit-sdf" );
 		}
+		return System.Threading.Tasks.Task.CompletedTask;
 	}
 
 	protected override void OnStart()
 	{
-		if ( !_initialLoadCompleted )
-		{
-			Log.Error( "[VoxelWorld] start.rejected reason=\"initial chunk load did not complete\"" );
-			return;
-		}
-
 		_performanceSnapshotReady = false;
 		FramePerformance = "Collecting first 10-second window";
 		ProcessMemoryUsage = "Collecting first 10-second window";
@@ -425,23 +434,6 @@ public sealed class VoxelManager : Component
 		TrySaveCompletedPerformanceTest();
 		UpdatePlayerFigureEight();
 		UpdatePerformanceOverview();
-
-		if ( _streamInProgress )
-		{
-			if ( _hasObservedStreamingFrame )
-			{
-				_maximumObservedFrameMilliseconds = Math.Max(
-					_maximumObservedFrameMilliseconds,
-					RealTime.Delta * 1000f );
-			}
-
-			_hasObservedStreamingFrame = true;
-			if ( _completionReady )
-			{
-				CompleteStream();
-				RefreshReadableStatus();
-			}
-		}
 
 		if ( !TryValidateConfiguration( out var visualConfiguration, out var configurationError ) )
 		{
@@ -504,17 +496,18 @@ public sealed class VoxelManager : Component
 			}
 		}
 
-		if ( IntegrateCompletedChunks() )
-		{
-			RefreshReadableStatus();
-		}
-		else if ( IntegrateCompletedWarmChunks() )
+		if ( IntegrateCompletedWarmChunks() )
 		{
 			RefreshReadableStatus();
 		}
 		else
 		{
-			RefreshPlayerChunkStatus();
+			_readableStatusRefreshElapsedSeconds += RealTime.Delta;
+			if ( _readableStatusRefreshElapsedSeconds >= ReadableStatusRefreshIntervalSeconds )
+			{
+				_readableStatusRefreshElapsedSeconds = 0f;
+				RefreshPlayerChunkStatus();
+			}
 		}
 		if ( _clipboxPlacementPending ) TryCommitPendingClipboxPlacement();
 		var meshDispatches = _gpuMesher.ProcessPending(
@@ -537,7 +530,6 @@ public sealed class VoxelManager : Component
 		_playerFigureEightBody = null;
 		_playerFigureEightTestRunning = false;
 		_playerFigureEightTestCompletionReady = false;
-		_generationCancellation?.Cancel();
 		_warmGenerationCancellation?.Cancel();
 		_gpuMesher?.Dispose();
 		_gpuMesher = null;
@@ -777,6 +769,7 @@ public sealed class VoxelManager : Component
 				CellsPerAxis = _appliedCellsPerAxis,
 				BaseCellSize = _appliedCellSize,
 				GameplayRadius = AuthoritativeGameplayRadius,
+				VisualChunkRadius = VisualChunkRadiusForConfiguration( _appliedVisualConfiguration ),
 				MinimumVisualLod = _appliedVisualConfiguration.MinimumVisualLod,
 				MaximumVisualLod = _appliedVisualConfiguration.MaximumVisualLod,
 				Lod0VisualHalfExtent = _appliedVisualConfiguration.Lod0VisualHalfExtent,
@@ -813,6 +806,7 @@ public sealed class VoxelManager : Component
 				P99GpuMilliseconds = _lastP99GpuFrameMilliseconds,
 				MaximumGpuMilliseconds = _lastMaximumGpuFrameMilliseconds
 			},
+			Runtime = _lastPerformanceRuntime,
 			Stationary = _lastStationaryMetrics,
 			Memory = new PerformanceMemoryMetrics
 			{
@@ -828,8 +822,8 @@ public sealed class VoxelManager : Component
 			},
 			Chunks = new PerformanceChunkMetrics
 			{
-				Loaded = _loadedChunks.Count,
-				Pending = _pendingChunks.Count,
+				Loaded = GetCubeCoordinateCount( AuthoritativeGameplayRadius ),
+				Pending = 0,
 				Integrated = _lastPerformanceChunksIntegrated,
 				IntegratedPerSecond = _lastPerformanceChunksPerSecond,
 				LastStreamGenerated = LastGeneratedChunkCount,
@@ -935,8 +929,8 @@ public sealed class VoxelManager : Component
 				ClassificationMilliseconds = (float)(_clipboxClassificationMilliseconds -
 					_performanceClipboxClassificationMillisecondsStart),
 				MaximumClassificationMilliseconds = _performanceClipboxMaximumClassificationMilliseconds,
-				GameplayCoordinates = _desiredChunks.Count,
-				GameplayPending = _pendingChunks.Count,
+				GameplayCoordinates = GetCubeCoordinateCount( AuthoritativeGameplayRadius ),
+				GameplayPending = 0,
 				TransitionDesired = _lastPerformanceTransitions.Desired,
 				TransitionReady = _lastPerformanceTransitions.Ready,
 				TransitionDrawable = _lastPerformanceTransitions.Drawable,
@@ -1213,7 +1207,9 @@ public sealed class VoxelManager : Component
 		{
 			DurationSeconds = _lastStationaryMetrics.DurationSeconds,
 			Frame = _lastStationaryMetrics.Frame,
+			Runtime = _lastStationaryMetrics.Runtime,
 			Memory = _lastStationaryMetrics.Memory,
+			Profiler = _lastStationaryMetrics.Profiler,
 			Visibility = CreateVisibilityMetrics( _lastStationaryVisibility )
 		};
 		_performanceVisibilityPending = false;
@@ -1269,6 +1265,8 @@ public sealed class VoxelManager : Component
 				_performanceGpuMilliseconds[_performanceGpuFrameSampleCount - 1] = gpuFrameMilliseconds;
 			}
 		}
+
+		SamplePerformanceRuntime();
 		if ( _playerFigureEightTestRunning )
 		{
 			_gpuMesher?.SampleThroughputQueueDepth();
@@ -1279,7 +1277,7 @@ public sealed class VoxelManager : Component
 				_performanceStreaming.PeakWarmMeshBacklog,
 				_gpuMesher?.PendingWarmCount ?? 0 );
 			var terrainSubmissions = _gpuMesher?.TerrainIndirectApiSubmissionCount ?? 0;
-			var indirectRecords = _gpuMesher?.IndirectArgumentRecordCount ?? 0;
+			var indirectRecords = terrainSubmissions * GpuVoxelMesher.RegionsPerSlab;
 			var terrainBufferGroups = _gpuMesher?.TerrainBufferGroupCount ?? 0;
 			_performanceTerrainSubmissionTotal += terrainSubmissions;
 			_performanceTerrainSubmissionMaximum = Math.Max(
@@ -1399,6 +1397,7 @@ public sealed class VoxelManager : Component
 		_lastPerformanceTestDistance = _playerFigureEightTestRunning ? _playerFigureEightTestDistance : 0f;
 		_lastPerformanceStreaming = _performanceStreaming;
 		_lastPerformanceBounds = _performanceBounds;
+		_lastPerformanceRuntime = CapturePerformanceRuntime();
 		_lastPerformanceProfiler = _playerFigureEightTestRunning
 			? VoxelPerformanceProfiler.Capture()
 			: new PerformanceProfilerMetrics();
@@ -1452,6 +1451,7 @@ public sealed class VoxelManager : Component
 				P99GpuMilliseconds = gpuP99,
 				MaximumGpuMilliseconds = gpuMaximum
 			},
+			Runtime = CapturePerformanceRuntime(),
 			Memory = new PerformanceMemoryMetrics
 			{
 				StartProcessBytes = _performanceStartProcessMemoryBytes,
@@ -1463,7 +1463,8 @@ public sealed class VoxelManager : Component
 				AverageGpuBytes = (ulong)(_performanceGpuMemoryBytesTotal / _performanceMemorySampleCount),
 				PeakGpuBytes = _performancePeakGpuMemoryBytes,
 				GpuBudgetBytes = _performanceGpuMemoryBudgetBytes
-			}
+			},
+			Profiler = VoxelPerformanceProfiler.Capture()
 		};
 	}
 
@@ -1733,6 +1734,52 @@ public sealed class VoxelManager : Component
 		_performanceMemorySampleCount++;
 	}
 
+	private void SamplePerformanceRuntime()
+	{
+		var allocatedBytes = Math.Max( 0, global::Sandbox.Diagnostics.PerformanceStats.BytesAllocated );
+		var gen0Collections = Math.Max( 0, global::Sandbox.Diagnostics.PerformanceStats.Gen0Collections );
+		var gen1Collections = Math.Max( 0, global::Sandbox.Diagnostics.PerformanceStats.Gen1Collections );
+		var gen2Collections = Math.Max( 0, global::Sandbox.Diagnostics.PerformanceStats.Gen2Collections );
+		var gcPauseTicks = Math.Max( 0, global::Sandbox.Diagnostics.PerformanceStats.GcPause );
+		var exceptions = Math.Max( 0, global::Sandbox.Diagnostics.PerformanceStats.Exceptions );
+
+		_performanceRuntimeSampleCount++;
+		_performanceManagedBytesAllocated += allocatedBytes;
+		_performanceMaximumManagedBytesAllocated = Math.Max(
+			_performanceMaximumManagedBytesAllocated,
+			allocatedBytes );
+		_performanceGen0Collections += gen0Collections;
+		_performanceGen1Collections += gen1Collections;
+		_performanceGen2Collections += gen2Collections;
+		if ( gen0Collections > 0 || gen1Collections > 0 || gen2Collections > 0 )
+		{
+			_performanceFramesWithCollections++;
+		}
+		_performanceGcPauseTicks += gcPauseTicks;
+		_performanceMaximumGcPauseTicks = Math.Max( _performanceMaximumGcPauseTicks, gcPauseTicks );
+		_performanceExceptions += exceptions;
+		if ( exceptions > 0 ) _performanceFramesWithExceptions++;
+	}
+
+	private PerformanceRuntimeMetrics CapturePerformanceRuntime() => new()
+	{
+		Samples = _performanceRuntimeSampleCount,
+		ManagedBytesAllocated = _performanceManagedBytesAllocated,
+		AverageManagedBytesAllocatedPerFrame = _performanceRuntimeSampleCount > 0
+			? (float)_performanceManagedBytesAllocated / _performanceRuntimeSampleCount
+			: 0f,
+		MaximumManagedBytesAllocatedPerFrame = _performanceMaximumManagedBytesAllocated,
+		Gen0Collections = _performanceGen0Collections,
+		Gen1Collections = _performanceGen1Collections,
+		Gen2Collections = _performanceGen2Collections,
+		FramesWithCollections = _performanceFramesWithCollections,
+		GcPauseMilliseconds = (float)(_performanceGcPauseTicks * 1000d / TimeSpan.TicksPerSecond),
+		MaximumGcPauseMilliseconds = (float)(
+			_performanceMaximumGcPauseTicks * 1000d / TimeSpan.TicksPerSecond ),
+		Exceptions = _performanceExceptions,
+		FramesWithExceptions = _performanceFramesWithExceptions
+	};
+
 	private void ResetPerformanceWindow()
 	{
 		_performanceWindowElapsedSeconds = 0f;
@@ -1743,6 +1790,17 @@ public sealed class VoxelManager : Component
 		_performanceFrameMillisecondsTotal = 0d;
 		_performanceGpuFrameMillisecondsTotal = 0d;
 		_performanceGpuFrameSampleCount = 0;
+		_performanceRuntimeSampleCount = 0;
+		_performanceManagedBytesAllocated = 0;
+		_performanceMaximumManagedBytesAllocated = 0;
+		_performanceGen0Collections = 0;
+		_performanceGen1Collections = 0;
+		_performanceGen2Collections = 0;
+		_performanceFramesWithCollections = 0;
+		_performanceGcPauseTicks = 0;
+		_performanceMaximumGcPauseTicks = 0;
+		_performanceExceptions = 0;
+		_performanceFramesWithExceptions = 0;
 		_performanceProcessMemoryBytesTotal = 0d;
 		_performancePeakProcessMemoryBytes = 0;
 		_performanceGpuMemoryBytesTotal = 0d;
@@ -1843,13 +1901,18 @@ public sealed class VoxelManager : Component
 
 	private void LogChunkData( Vector3Int coordinate )
 	{
-		if ( !_loadedChunks.TryGetValue( coordinate, out var chunk ) )
+		if ( !IsGameplayCoordinate( coordinate ) )
 		{
 			Log.Warning(
 				$"[VoxelWorld] chunk.missing chunk=C[{coordinate.x},{coordinate.y},{coordinate.z}] " +
-				$"loaded={_loadedChunks.Count}" );
+				$"loaded={GetCubeCoordinateCount( AuthoritativeGameplayRadius )}" );
 			return;
 		}
+		var chunk = new VoxelChunk(
+			coordinate,
+			_appliedCellsPerAxis,
+			_appliedCellSize,
+			CurrentTerrainSettings );
 
 		chunk.TryGetSample( Vector3Int.Zero, out var originDensity, out var originMaterialId );
 		chunk.TryGetSample(
@@ -1883,6 +1946,7 @@ public sealed class VoxelManager : Component
 			$"[VoxelWorld] lod.inspect reason=\"{reason}\" target={FormatWorldPosition( targetPosition )} " +
 			$"cellsPerAxis={_appliedCellsPerAxis} baseCellSize={_appliedCellSize:0.###} " +
 			$"gameplayRadius={AuthoritativeGameplayRadius} " +
+			$"visualChunkRadius={VisualChunkRadiusForConfiguration( _appliedVisualConfiguration )} " +
 			$"minimumVisualLevel={_appliedVisualConfiguration.MinimumVisualLod} " +
 			$"maximumVisualLevel={_appliedVisualConfiguration.MaximumVisualLod} " +
 			$"visualRevision={_appliedVisualConfigurationRevision}" );
@@ -1935,7 +1999,8 @@ public sealed class VoxelManager : Component
 			$"anchor={FormatRegionCoordinate( _streamingCenterCoordinate )} " +
 			$"gameplayRegions={FormatRegionBox( gameplayMinimum, gameplayMaximum )} " +
 			$"gameplayWorld={FormatWorldBox( gameplayMinimum, gameplayMaximum, _appliedCellSize )} " +
-			$"gameplayDesired={_desiredChunks.Count} loaded={_loadedChunks.Count} " +
+			$"gameplayDesired={GetCubeCoordinateCount( AuthoritativeGameplayRadius )} " +
+			$"loaded={GetCubeCoordinateCount( AuthoritativeGameplayRadius )} storage=implicit-sdf " +
 			$"pendingGameplay={_gpuMesher?.PendingGameplayCount ?? 0} pendingWarm={_gpuMesher?.PendingWarmCount ?? 0}" );
 
 		for ( var level = 0; level <= _appliedVisualConfiguration.MaximumVisualLod; level++ )
@@ -2060,7 +2125,7 @@ public sealed class VoxelManager : Component
 
 		if ( MaximumVisualLod < 0 || MaximumVisualLod > MaximumSupportedVisualLod )
 		{
-			error = $"Maximum Visual LOD must be between 0 and {MaximumSupportedVisualLod}; level 3 is not enabled.";
+			error = $"Maximum Visual LOD must be between 0 and {MaximumSupportedVisualLod}.";
 			return false;
 		}
 
@@ -2155,14 +2220,10 @@ public sealed class VoxelManager : Component
 		_appliedSurfaceFrequency = SurfaceFrequency;
 		_appliedSurfaceAmplitude = SurfaceAmplitude;
 
-		_generationCancellation?.Cancel();
 		_warmGenerationCancellation?.Cancel();
-		_streamRevision++;
 		_warmGenerationRevision++;
 		_terrainContentRevision++;
 		_gpuMesher.Reset( _appliedCellsPerAxis );
-		_loadedChunks.Clear();
-		_desiredChunks.Clear();
 		_renderDesiredChunks.Clear();
 		_nextRenderDesiredChunks.Clear();
 		_renderPreparedChunks.Clear();
@@ -2183,12 +2244,12 @@ public sealed class VoxelManager : Component
 		Array.Clear( _clipboxRejectedAir );
 		_clipboxClassificationMilliseconds = 0;
 		_performanceClipboxMaximumClassificationMilliseconds = 0f;
-		_pendingChunks.Clear();
-		_completedChunks.Clear();
 		_pendingWarmChunks.Clear();
 		_completedWarmChunks.Clear();
 		_hasStreamingCenter = false;
-		_streamInProgress = false;
+		_streamingGameplayRadius = 0;
+		_streamingRenderRadius = -1;
+		_playerStatusChunk = null;
 
 		var targetPosition = ActiveStreamingTarget.WorldPosition;
 		RebuildDesiredChunks( WorldToChunkCoordinate( targetPosition ), "configuration applied" );
@@ -2214,6 +2275,34 @@ public sealed class VoxelManager : Component
 	}
 
 	private float CellSizeForLevel( int level ) => _appliedCellSize * (1 << level);
+
+	private static int VisualChunkRadiusForConfiguration( VoxelVisualConfiguration configuration ) =>
+		VisualChunkRadiusForLevel(
+			configuration.MaximumVisualLod,
+			configuration.Lod0VisualHalfExtent,
+			configuration.LodCacheHalfExtent );
+
+	private static int VisualChunkRadiusForLevel(
+		int level,
+		int lod0VisualHalfExtent,
+		int lodCacheHalfExtent )
+	{
+		if ( level <= 0 ) return lod0VisualHalfExtent;
+		return checked( lodCacheHalfExtent * (1 << level) );
+	}
+
+	private static string FormatSupportedVisualChunkRadii(
+		int lod0VisualHalfExtent,
+		int lodCacheHalfExtent )
+	{
+		return string.Join(
+			",",
+			Enumerable.Range( 0, SupportedVisualLevelCount )
+				.Select( level => VisualChunkRadiusForLevel(
+					level,
+					lod0VisualHalfExtent,
+					lodCacheHalfExtent ) ) );
+	}
 
 	private static TerrainClipboxLevelState[] CreateClipboxLevels()
 	{
@@ -2243,217 +2332,118 @@ public sealed class VoxelManager : Component
 		VoxelVisualConfiguration? visualConfiguration = null )
 	{
 		var synchronousStart = Stopwatch.GetTimestamp();
+		_streamStartedTimestamp = synchronousStart;
 		var previousCenter = _streamingCenterCoordinate;
 		var hadPreviousCenter = _hasStreamingCenter;
+		var previousGameplayRadius = _streamingGameplayRadius;
+		var previousGameplayCount = hadPreviousCenter
+			? GetCubeCoordinateCount( previousGameplayRadius )
+			: 0;
+		var nextVisualConfiguration = visualConfiguration ?? _targetVisualConfiguration;
+		var renderRadius = nextVisualConfiguration.MinimumVisualLod == 0
+			? nextVisualConfiguration.Lod0VisualHalfExtent + RenderWarmShellChunks
+			: -1;
 		var desiredUpdateStart = Stopwatch.GetTimestamp();
 		var delta = hadPreviousCenter ? center - previousCenter : Vector3Int.Zero;
-		var renderRadius = AuthoritativeGameplayRadius + RenderWarmShellChunks;
 		var incremental = hadPreviousCenter && center != previousCenter &&
 			Math.Abs( delta.x ) <= 1 && Math.Abs( delta.y ) <= 1 && Math.Abs( delta.z ) <= 1 &&
-			_desiredChunks.Count == GetCubeCoordinateCount( AuthoritativeGameplayRadius ) &&
-			_renderDesiredChunks.Count == GetCubeCoordinateCount( renderRadius );
+			previousGameplayRadius == AuthoritativeGameplayRadius &&
+			_streamingRenderRadius == renderRadius &&
+			_renderDesiredChunks.Count == GetRenderCoordinateCount( renderRadius );
 
-		_gameplayEnteringBuffer.Clear();
-		_gameplayLeavingBuffer.Clear();
 		_renderEnteringBuffer.Clear();
 		_renderLeavingBuffer.Clear();
 		if ( incremental )
 		{
-			SlideDesiredWindow( _desiredChunks, previousCenter, center, AuthoritativeGameplayRadius,
-				_gameplayEnteringBuffer, _gameplayLeavingBuffer );
-			SlideDesiredWindow( _renderDesiredChunks, previousCenter, center, renderRadius,
-				_renderEnteringBuffer, _renderLeavingBuffer );
+			if ( renderRadius >= 0 )
+			{
+				SlideDesiredWindow( _renderDesiredChunks, previousCenter, center, renderRadius,
+					_renderEnteringBuffer, _renderLeavingBuffer );
+			}
 		}
 		else
 		{
-			_desiredChunks.Clear();
-			for ( var z = -AuthoritativeGameplayRadius; z <= AuthoritativeGameplayRadius; z++ )
-			{
-				for ( var y = -AuthoritativeGameplayRadius; y <= AuthoritativeGameplayRadius; y++ )
-				{
-					for ( var x = -AuthoritativeGameplayRadius; x <= AuthoritativeGameplayRadius; x++ )
-					{
-						_desiredChunks.Add( new Vector3Int( center.x + x, center.y + y, center.z + z ) );
-					}
-				}
-			}
-
 			_nextRenderDesiredChunks.Clear();
-			for ( var z = -renderRadius; z <= renderRadius; z++ )
+			if ( renderRadius >= 0 )
 			{
-				for ( var y = -renderRadius; y <= renderRadius; y++ )
+				for ( var z = -renderRadius; z <= renderRadius; z++ )
 				{
-					for ( var x = -renderRadius; x <= renderRadius; x++ )
+					for ( var y = -renderRadius; y <= renderRadius; y++ )
 					{
-						_nextRenderDesiredChunks.Add(
-							new Vector3Int( center.x + x, center.y + y, center.z + z ) );
+						for ( var x = -renderRadius; x <= renderRadius; x++ )
+						{
+							_nextRenderDesiredChunks.Add(
+								new Vector3Int( center.x + x, center.y + y, center.z + z ) );
+						}
 					}
 				}
 			}
+			CaptureSetDelta(
+				_renderDesiredChunks,
+				_nextRenderDesiredChunks,
+				_renderEnteringBuffer,
+				_renderLeavingBuffer );
+			var previousRenderDesired = _renderDesiredChunks;
+			_renderDesiredChunks = _nextRenderDesiredChunks;
+			_nextRenderDesiredChunks = previousRenderDesired;
 		}
 
 		_streamingCenterCoordinate = center;
+		_streamingGameplayRadius = AuthoritativeGameplayRadius;
+		_streamingRenderRadius = renderRadius;
 		_hasStreamingCenter = true;
+		_playerStatusChunk = null;
 		var desiredUpdateMilliseconds = (float)Stopwatch.GetElapsedTime( desiredUpdateStart ).TotalMilliseconds;
-
-		_coordinateBuffer.Clear();
-		if ( incremental )
-		{
-			_coordinateBuffer.AddRange( _gameplayLeavingBuffer );
-		}
-		else
-		{
-			foreach ( var coordinate in _loadedChunks.Keys )
-			{
-				if ( !_desiredChunks.Contains( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-
-		var unloadedCount = 0;
-		foreach ( var coordinate in _coordinateBuffer )
-		{
-			if ( (incremental ? _renderDesiredChunks : _nextRenderDesiredChunks).Contains( coordinate ) ||
-				RetainsLod0PlacementCoordinate( coordinate ) )
-			{
-				_gpuMesher.SetResidency( new GpuMeshRegionKey( 0, coordinate ), GpuMeshResidency.Warm );
-			}
-			else
-			{
-				_gpuMesher.Remove( new GpuMeshRegionKey( 0, coordinate ) );
-				if ( _renderPreparedChunks.Remove( coordinate ) ) _renderPreparedRevision++;
-			}
-			if ( _loadedChunks.Remove( coordinate ) )
-			{
-				unloadedCount++;
-			}
-		}
-
-		_coordinateBuffer.Clear();
-		if ( incremental )
-		{
-			_coordinateBuffer.AddRange( _renderLeavingBuffer );
-		}
-		else
-		{
-			foreach ( var coordinate in _renderDesiredChunks )
-			{
-				if ( !_nextRenderDesiredChunks.Contains( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-
-		foreach ( var coordinate in _coordinateBuffer )
+		foreach ( var coordinate in _renderLeavingBuffer )
 		{
 			if ( RetainsLod0PlacementCoordinate( coordinate ) ) continue;
 			_gpuMesher.Remove( new GpuMeshRegionKey( 0, coordinate ) );
 			if ( _renderPreparedChunks.Remove( coordinate ) ) _renderPreparedRevision++;
 		}
-
-		if ( !incremental )
+		foreach ( var coordinate in _renderPreparedChunks )
 		{
-			var previousRenderDesired = _renderDesiredChunks;
-			_renderDesiredChunks = _nextRenderDesiredChunks;
-			_nextRenderDesiredChunks = previousRenderDesired;
+			var wasGameplay = hadPreviousCenter && IsInsideCube(
+				coordinate,
+				previousCenter,
+				previousGameplayRadius );
+			var isGameplay = IsGameplayCoordinate( coordinate );
+			if ( hadPreviousCenter && wasGameplay == isGameplay ) continue;
+
+			_gpuMesher.SetResidency(
+				new GpuMeshRegionKey( 0, coordinate ),
+				isGameplay
+					? GpuMeshResidency.Gameplay
+					: GpuMeshResidency.Warm );
 		}
 		UpdateClipboxPlacement(
 			ActiveStreamingTarget.WorldPosition,
-			visualConfiguration ?? _targetVisualConfiguration );
+			nextVisualConfiguration );
 		var drawCommit = _gpuMesher.DrainDrawCommandCommitResult();
 
 		var prioritizationStart = Stopwatch.GetTimestamp();
-		_coordinateBuffer.Clear();
 		_coordinateSetBuffer.Clear();
-		if ( incremental )
-		{
-			foreach ( var coordinate in _pendingChunks )
-			{
-				if ( _desiredChunks.Contains( coordinate ) && !_loadedChunks.ContainsKey( coordinate ) &&
-					_coordinateSetBuffer.Add( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-			foreach ( var coordinate in _gameplayEnteringBuffer )
-			{
-				if ( !_loadedChunks.ContainsKey( coordinate ) && _coordinateSetBuffer.Add( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-		else
-		{
-			foreach ( var coordinate in _desiredChunks )
-			{
-				if ( !_loadedChunks.ContainsKey( coordinate ) )
-				{
-					_coordinateBuffer.Add( coordinate );
-				}
-			}
-		}
-		SortNearestFirst( _coordinateBuffer, center );
-
-		_pendingChunks.Clear();
-		foreach ( var coordinate in _coordinateBuffer )
-		{
-			_pendingChunks.Enqueue( coordinate );
-		}
-
 		_warmCoordinateBuffer.Clear();
-		_coordinateSetBuffer.Clear();
-		if ( incremental )
+		foreach ( var coordinate in _pendingWarmChunks )
 		{
-			foreach ( var coordinate in _pendingWarmChunks )
+			if ( (_renderDesiredChunks.Contains( coordinate ) ||
+				RetainsLod0PlacementCoordinate( coordinate )) &&
+				!_renderPreparedChunks.Contains( coordinate ) &&
+				_coordinateSetBuffer.Add( coordinate ) )
 			{
-				if ( (_renderDesiredChunks.Contains( coordinate ) ||
-					RetainsLod0PlacementCoordinate( coordinate )) &&
-					!_desiredChunks.Contains( coordinate ) &&
-					!_renderPreparedChunks.Contains( coordinate ) && _coordinateSetBuffer.Add( coordinate ) )
-				{
-					_warmCoordinateBuffer.Add( coordinate );
-				}
-			}
-			if ( _clipboxPlacementPending && _levels[0].PlacementChanged )
-			{
-				foreach ( var coordinate in _levels[0].NextActive )
-				{
-					if ( !_desiredChunks.Contains( coordinate ) &&
-						!_renderPreparedChunks.Contains( coordinate ) &&
-						_coordinateSetBuffer.Add( coordinate ) )
-					{
-						_warmCoordinateBuffer.Add( coordinate );
-					}
-				}
-			}
-			foreach ( var coordinate in _renderEnteringBuffer )
-			{
-				if ( !_desiredChunks.Contains( coordinate ) && !_renderPreparedChunks.Contains( coordinate ) &&
-					_coordinateSetBuffer.Add( coordinate ) )
-				{
-					_warmCoordinateBuffer.Add( coordinate );
-				}
+				_warmCoordinateBuffer.Add( coordinate );
 			}
 		}
-		else
+		foreach ( var coordinate in _renderDesiredChunks )
 		{
-			foreach ( var coordinate in _renderDesiredChunks )
+			if ( !_renderPreparedChunks.Contains( coordinate ) &&
+				_coordinateSetBuffer.Add( coordinate ) )
 			{
-				if ( !_desiredChunks.Contains( coordinate ) && !_renderPreparedChunks.Contains( coordinate ) &&
-					_coordinateSetBuffer.Add( coordinate ) )
-				{
-					_warmCoordinateBuffer.Add( coordinate );
-				}
+				_warmCoordinateBuffer.Add( coordinate );
 			}
 		}
 		foreach ( var coordinate in _levels[0].Active )
 		{
-			if ( !_desiredChunks.Contains( coordinate ) &&
-				!_renderPreparedChunks.Contains( coordinate ) &&
+			if ( !_renderPreparedChunks.Contains( coordinate ) &&
 				_coordinateSetBuffer.Add( coordinate ) )
 			{
 				_warmCoordinateBuffer.Add( coordinate );
@@ -2463,8 +2453,7 @@ public sealed class VoxelManager : Component
 		{
 			foreach ( var coordinate in _levels[0].NextActive )
 			{
-				if ( !_desiredChunks.Contains( coordinate ) &&
-					!_renderPreparedChunks.Contains( coordinate ) &&
+				if ( !_renderPreparedChunks.Contains( coordinate ) &&
 					_coordinateSetBuffer.Add( coordinate ) )
 				{
 					_warmCoordinateBuffer.Add( coordinate );
@@ -2483,9 +2472,19 @@ public sealed class VoxelManager : Component
 		}
 		var prioritizationMilliseconds = (float)Stopwatch.GetElapsedTime( prioritizationStart ).TotalMilliseconds;
 
+		var gameplayCount = GetCubeCoordinateCount( AuthoritativeGameplayRadius );
+		var retainedGameplayCount = hadPreviousCenter
+			? GetCubeOverlapCoordinateCount(
+				previousCenter,
+				previousGameplayRadius,
+				center,
+				AuthoritativeGameplayRadius )
+			: 0;
+		var gameplayEnteringCount = gameplayCount - retainedGameplayCount;
+		var gameplayLeavingCount = previousGameplayCount - retainedGameplayCount;
 		_generatedThisStream = 0;
-		_retainedThisStream = _loadedChunks.Count;
-		_unloadedThisStream = unloadedCount;
+		_retainedThisStream = retainedGameplayCount;
+		_unloadedThisStream = gameplayLeavingCount;
 		_staleDiscardedThisStream = 0;
 		_generationMillisecondsThisStream = 0f;
 		_integrationMillisecondsThisStream = 0f;
@@ -2496,44 +2495,22 @@ public sealed class VoxelManager : Component
 		_firstGenerationBatchMilliseconds = 0f;
 		_firstGameplayIntegrationMilliseconds = 0f;
 		_integratedBeforeWorkerCompleted = false;
-		_hasObservedStreamingFrame = false;
-		_completionReady = false;
 		SlowestChunkGenerationMilliseconds = 0f;
 		LastBackgroundWorkerMilliseconds = 0f;
-		_streamStartedTimestamp = Stopwatch.GetTimestamp();
-		_streamInProgress = true;
-
 		if ( VerboseLogging )
 		{
 			Log.Info(
 				$"[VoxelWorld] stream.begin center=C[{center.x},{center.y},{center.z}] reason=\"{reason}\" " +
-				$"loadRadius={AuthoritativeGameplayRadius} retained={_loadedChunks.Count} " +
-				$"unloaded={unloadedCount} queued={_pendingChunks.Count} desired={_desiredChunks.Count}" );
+				$"loadRadius={AuthoritativeGameplayRadius} retained={retainedGameplayCount} " +
+				$"unloaded={gameplayLeavingCount} queued=0 desired={gameplayCount} storage=implicit-sdf" );
 		}
+		StartWarmGeneration( _warmCoordinateBuffer.ToArray() );
+		CompleteStream();
 		RefreshReadableStatus();
 
-		if ( _pendingChunks.Count == 0 )
-		{
-			_generationCancellation?.Cancel();
-			_streamRevision++;
-			_completedChunks.Clear();
-			_workerCompleted = true;
-			CompleteStream();
-		}
-		else
-		{
-			StartBackgroundGeneration( _coordinateBuffer.ToArray() );
-		}
-
-		StartWarmGeneration( _warmCoordinateBuffer.ToArray() );
-
 		var totalMilliseconds = (float)Stopwatch.GetElapsedTime( synchronousStart ).TotalMilliseconds;
-		var gameplayTouched = incremental
-			? _gameplayEnteringBuffer.Count + _gameplayLeavingBuffer.Count
-			: _desiredChunks.Count;
-		var renderTouched = incremental
-			? _renderEnteringBuffer.Count + _renderLeavingBuffer.Count
-			: _renderDesiredChunks.Count;
+		var gameplayTouched = gameplayEnteringCount + gameplayLeavingCount;
+		var renderTouched = _renderEnteringBuffer.Count + _renderLeavingBuffer.Count;
 		if ( _playerFigureEightTestRunning )
 		{
 			if ( incremental )
@@ -2565,11 +2542,11 @@ public sealed class VoxelManager : Component
 				$"delta=C[{delta.x},{delta.y},{delta.z}] reason=\"{reason}\" " +
 				$"totalMs={totalMilliseconds:0.0000} desiredMs={desiredUpdateMilliseconds:0.0000} " +
 				$"prioritizeMs={prioritizationMilliseconds:0.0000} drawCommitMs={drawCommit.Milliseconds:0.0000} " +
-				$"drawRebuilt={drawCommit.Rebuilt} gameplayEntering={_gameplayEnteringBuffer.Count} " +
-				$"gameplayLeaving={_gameplayLeavingBuffer.Count} renderEntering={_renderEnteringBuffer.Count} " +
+				$"drawRebuilt={drawCommit.Rebuilt} gameplayEntering={gameplayEnteringCount} " +
+				$"gameplayLeaving={gameplayLeavingCount} renderEntering={_renderEnteringBuffer.Count} " +
 				$"renderLeaving={_renderLeavingBuffer.Count} " +
 				$"gameplayTouched={gameplayTouched} renderTouched={renderTouched} " +
-				$"gameplayQueued={_pendingChunks.Count} warmQueued={_pendingWarmChunks.Count} " +
+				$"gameplayQueued=0 warmQueued={_pendingWarmChunks.Count} " +
 				$"generationBatchSize={GenerationBatchSize}" );
 		}
 	}
@@ -2578,7 +2555,8 @@ public sealed class VoxelManager : Component
 		Vector3 viewerPosition,
 		VoxelVisualConfiguration visualConfiguration )
 	{
-		for ( var level = 1; level < SupportedVisualLevelCount; level++ )
+		var maximumAnchorLevel = Math.Max( 1, visualConfiguration.MaximumVisualLod );
+		for ( var level = 1; level <= maximumAnchorLevel; level++ )
 		{
 			_candidateLevelAnchors[level] = WorldToLevelAnchor( viewerPosition, level );
 		}
@@ -3155,6 +3133,36 @@ public sealed class VoxelManager : Component
 		return checked( side * side * side );
 	}
 
+	private static int GetRenderCoordinateCount( int radius ) =>
+		radius < 0 ? 0 : GetCubeCoordinateCount( radius );
+
+	private static int GetCubeOverlapCoordinateCount(
+		Vector3Int firstCenter,
+		int firstRadius,
+		Vector3Int secondCenter,
+		int secondRadius )
+	{
+		var overlapX = Math.Max(
+			0,
+			Math.Min( firstCenter.x + firstRadius, secondCenter.x + secondRadius ) -
+			Math.Max( firstCenter.x - firstRadius, secondCenter.x - secondRadius ) + 1 );
+		var overlapY = Math.Max(
+			0,
+			Math.Min( firstCenter.y + firstRadius, secondCenter.y + secondRadius ) -
+			Math.Max( firstCenter.y - firstRadius, secondCenter.y - secondRadius ) + 1 );
+		var overlapZ = Math.Max(
+			0,
+			Math.Min( firstCenter.z + firstRadius, secondCenter.z + secondRadius ) -
+			Math.Max( firstCenter.z - firstRadius, secondCenter.z - secondRadius ) + 1 );
+		return checked( overlapX * overlapY * overlapZ );
+	}
+
+	private bool IsGameplayCoordinate( Vector3Int coordinate ) =>
+		_hasStreamingCenter && IsInsideCube(
+			coordinate,
+			_streamingCenterCoordinate,
+			AuthoritativeGameplayRadius );
+
 	private static void SlideDesiredWindow(
 		HashSet<Vector3Int> coordinates,
 		Vector3Int previousCenter,
@@ -3248,173 +3256,6 @@ public sealed class VoxelManager : Component
 		} );
 	}
 
-	private void StartBackgroundGeneration( Vector3Int[] coordinates )
-	{
-		_generationCancellation?.Cancel();
-		var previousTask = _generationTask ?? System.Threading.Tasks.Task.CompletedTask;
-		var cancellation = new CancellationTokenSource();
-		_generationCancellation = cancellation;
-		var revision = ++_streamRevision;
-		_workerCompleted = false;
-		_completedChunks.Clear();
-		_generationTask = GenerateChunksInBackground(
-			previousTask,
-			coordinates,
-			_appliedCellsPerAxis,
-			_appliedCellSize,
-			CurrentTerrainSettings,
-			revision,
-			cancellation.Token );
-	}
-
-	private async System.Threading.Tasks.Task GenerateChunksInBackground(
-		System.Threading.Tasks.Task previousTask,
-		Vector3Int[] coordinates,
-		int cellsPerAxis,
-		float cellSize,
-		ProceduralTerrainSettings terrainSettings,
-		int revision,
-		CancellationToken cancellationToken )
-	{
-		try
-		{
-			await previousTask;
-			if ( cancellationToken.IsCancellationRequested )
-			{
-				return;
-			}
-
-			var totalWorkerMilliseconds = 0f;
-			var batchIndex = 0;
-			for ( var offset = 0; offset < coordinates.Length; offset += GenerationBatchSize )
-			{
-				var batchOffset = offset;
-				var batchCount = Math.Min( GenerationBatchSize, coordinates.Length - batchOffset );
-				var batch = await Task.RunInThreadAsync( () =>
-				{
-					var workerStart = Stopwatch.GetTimestamp();
-					var chunks = new List<VoxelChunk>( batchCount );
-					var generationMilliseconds = 0f;
-					var lastChunkMilliseconds = 0f;
-					var slowestChunkMilliseconds = 0f;
-					for ( var index = 0; index < batchCount; index++ )
-					{
-						if ( cancellationToken.IsCancellationRequested )
-						{
-							break;
-						}
-
-						var generationStart = Stopwatch.GetTimestamp();
-						var chunk = new VoxelChunk(
-							coordinates[batchOffset + index],
-							cellsPerAxis,
-							cellSize,
-							terrainSettings );
-						chunks.Add( chunk );
-						lastChunkMilliseconds = (float)Stopwatch.GetElapsedTime( generationStart ).TotalMilliseconds;
-						generationMilliseconds += lastChunkMilliseconds;
-						slowestChunkMilliseconds = Math.Max( slowestChunkMilliseconds, lastChunkMilliseconds );
-					}
-
-					return (
-						Chunks: chunks,
-						GenerationMilliseconds: generationMilliseconds,
-						LastChunkMilliseconds: lastChunkMilliseconds,
-						SlowestChunkMilliseconds: slowestChunkMilliseconds,
-						WorkerMilliseconds: (float)Stopwatch.GetElapsedTime( workerStart ).TotalMilliseconds );
-				} );
-
-				await Task.MainThread();
-				if ( cancellationToken.IsCancellationRequested || revision != _streamRevision )
-				{
-					_staleDiscardedThisStream += batch.Chunks.Count;
-					if ( _playerFigureEightTestRunning )
-					{
-						_performanceBounds.StaleOrCancelledQueries += batch.Chunks.Count;
-					}
-					if ( VerboseLogging && batch.Chunks.Count > 0 )
-					{
-						Log.Info(
-							$"[VoxelWorld] stream.stale revision={revision} currentRevision={_streamRevision} " +
-							$"discarded={batch.Chunks.Count}" );
-					}
-					return;
-				}
-
-				totalWorkerMilliseconds += batch.WorkerMilliseconds;
-				_generationMillisecondsThisStream += batch.GenerationMilliseconds;
-				LastChunkGenerationMilliseconds = batch.LastChunkMilliseconds;
-				SlowestChunkGenerationMilliseconds = Math.Max(
-					SlowestChunkGenerationMilliseconds,
-					batch.SlowestChunkMilliseconds );
-				foreach ( var chunk in batch.Chunks )
-				{
-					if ( _playerFigureEightTestRunning )
-					{
-						RecordBoundsQuery(
-							chunk.DensityClassification,
-							chunk.DensityRangeEvaluationMilliseconds,
-							false );
-					}
-					_completedChunks.Enqueue( chunk );
-				}
-				batchIndex++;
-				_generationBatchesThisStream = batchIndex;
-				_maximumGenerationBatchSizeThisStream = Math.Max(
-					_maximumGenerationBatchSizeThisStream,
-					batch.Chunks.Count );
-				if ( batchIndex == 1 )
-				{
-					_firstGenerationBatchMilliseconds =
-						(float)Stopwatch.GetElapsedTime( _streamStartedTimestamp ).TotalMilliseconds;
-				}
-				if ( _playerFigureEightTestRunning )
-				{
-					_performanceStreaming.GenerationBatches++;
-					_performanceStreaming.MaximumGenerationBatchSize = Math.Max(
-						_performanceStreaming.MaximumGenerationBatchSize,
-						batch.Chunks.Count );
-					if ( batchIndex == 1 )
-					{
-						_performanceStreaming.MaximumFirstGameplayBatchMilliseconds = Math.Max(
-							_performanceStreaming.MaximumFirstGameplayBatchMilliseconds,
-							(float)Stopwatch.GetElapsedTime( _streamStartedTimestamp ).TotalMilliseconds );
-					}
-				}
-				if ( VerboseLogging )
-				{
-					Log.Info(
-						$"[VoxelWorld] stream.batch revision={revision} index={batchIndex} " +
-						$"count={batch.Chunks.Count} published={Math.Min( coordinates.Length, batchOffset + batch.Chunks.Count )} " +
-						$"total={coordinates.Length}" );
-				}
-			}
-
-			LastBackgroundWorkerMilliseconds = totalWorkerMilliseconds;
-			_workerCompleted = true;
-		}
-		catch ( System.Threading.Tasks.TaskCanceledException )
-		{
-		}
-		catch ( Exception exception )
-		{
-			await Task.MainThread();
-			if ( revision != _streamRevision )
-			{
-				return;
-			}
-
-			_completedChunks.Clear();
-			_pendingChunks.Clear();
-			_streamInProgress = false;
-			LastStreamSummary = $"Background generation failed: {exception.Message}";
-			Log.Error(
-				exception,
-				$"[VoxelWorld] stream.failed revision={revision} error=\"{exception.Message}\"" );
-			RefreshReadableStatus();
-		}
-	}
-
 	private void StartWarmGeneration( Vector3Int[] coordinates )
 	{
 		_warmGenerationCancellation?.Cancel();
@@ -3429,10 +3270,8 @@ public sealed class VoxelManager : Component
 			return;
 		}
 
-		var previousTerrainTask = _generationTask ?? System.Threading.Tasks.Task.CompletedTask;
 		var previousWarmTask = _warmGenerationTask ?? System.Threading.Tasks.Task.CompletedTask;
 		_warmGenerationTask = GenerateWarmChunksInBackground(
-			previousTerrainTask,
 			previousWarmTask,
 			coordinates,
 			_appliedCellsPerAxis,
@@ -3443,7 +3282,6 @@ public sealed class VoxelManager : Component
 	}
 
 	private async System.Threading.Tasks.Task GenerateWarmChunksInBackground(
-		System.Threading.Tasks.Task previousTerrainTask,
 		System.Threading.Tasks.Task previousWarmTask,
 		Vector3Int[] coordinates,
 		int cellsPerAxis,
@@ -3454,7 +3292,6 @@ public sealed class VoxelManager : Component
 	{
 		try
 		{
-			await previousTerrainTask;
 			await previousWarmTask;
 			if ( cancellationToken.IsCancellationRequested )
 			{
@@ -3575,66 +3412,6 @@ public sealed class VoxelManager : Component
 		}
 	}
 
-	private bool IntegrateCompletedChunks()
-	{
-		var integrationStart = Stopwatch.GetTimestamp();
-		var integratedCount = 0;
-		while ( _completedChunks.TryDequeue( out var chunk ) )
-		{
-			if ( !_pendingChunks.TryDequeue( out var pendingCoordinate ) || pendingCoordinate != chunk.Coordinate )
-			{
-				Log.Error(
-					$"[VoxelWorld] stream.integration.invalid chunk={chunk.LogId} reason=\"pending order mismatch\"" );
-				continue;
-			}
-
-			if ( _desiredChunks.Contains( chunk.Coordinate ) && !_loadedChunks.ContainsKey( chunk.Coordinate ) )
-			{
-				if ( _generatedThisStream == 0 )
-				{
-					_firstGameplayIntegrationMilliseconds =
-						(float)Stopwatch.GetElapsedTime( _streamStartedTimestamp ).TotalMilliseconds;
-					_integratedBeforeWorkerCompleted = !_workerCompleted;
-				}
-				_loadedChunks.Add( chunk.Coordinate, chunk );
-				if ( _renderPreparedChunks.Add( chunk.Coordinate ) ) _renderPreparedRevision++;
-				_gpuMesher.Schedule(
-					chunk,
-					_terrainContentRevision,
-					_playerFigureEightRouteDistance,
-					GpuMeshResidency.Gameplay );
-				_gpuMesher.SetRenderActive(
-					new GpuMeshRegionKey( 0, chunk.Coordinate ),
-					_levels[0].Active.Contains( chunk.Coordinate ) );
-				integratedCount++;
-				_generatedThisStream++;
-
-			}
-
-			if ( Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds >= MainThreadIntegrationBudgetMilliseconds )
-			{
-				break;
-			}
-		}
-
-		if ( integratedCount > 0 )
-		{
-			_performanceChunksIntegrated += integratedCount;
-			var integrationMilliseconds = (float)Stopwatch.GetElapsedTime( integrationStart ).TotalMilliseconds;
-			_integrationMillisecondsThisStream += integrationMilliseconds;
-			_slowestIntegrationFrameMilliseconds = Math.Max(
-				_slowestIntegrationFrameMilliseconds,
-				integrationMilliseconds );
-		}
-
-		if ( _streamInProgress && _workerCompleted && _completedChunks.Count == 0 && _pendingChunks.Count == 0 )
-		{
-			_completionReady = true;
-		}
-
-		return integratedCount > 0;
-	}
-
 	private bool IntegrateCompletedWarmChunks()
 	{
 		var integrationStart = Stopwatch.GetTimestamp();
@@ -3657,7 +3434,7 @@ public sealed class VoxelManager : Component
 				if ( _renderPreparedChunks.Add( result.Coordinate ) ) _renderPreparedRevision++;
 				if ( result.Chunk is not null )
 				{
-					var residency = _loadedChunks.ContainsKey( result.Coordinate )
+					var residency = IsGameplayCoordinate( result.Coordinate )
 						? GpuMeshResidency.Gameplay
 						: GpuMeshResidency.Warm;
 					_gpuMesher.Schedule(
@@ -3684,8 +3461,6 @@ public sealed class VoxelManager : Component
 
 	private void CompleteStream()
 	{
-		_streamInProgress = false;
-		_completionReady = false;
 		LastStreamSettleMilliseconds = (float)Stopwatch.GetElapsedTime( _streamStartedTimestamp ).TotalMilliseconds;
 		LastRetainedChunkCount = _retainedThisStream;
 		LastUnloadedChunkCount = _unloadedThisStream;
@@ -3702,10 +3477,9 @@ public sealed class VoxelManager : Component
 			? _generatedThisStream * 1000f / LastStreamGenerationMilliseconds
 			: 0f;
 		LastStreamSummary =
-			$"Loaded {_loadedChunks.Count}; retained {_retainedThisStream}; unloaded {_unloadedThisStream}; " +
-			$"generated {_generatedThisStream}; stale {_staleDiscardedThisStream}; " +
-			$"{LastEffectiveChunksPerSecond:0.0} chunks/sec effective; " +
-			$"{LastGenerationChunksPerSecond:0.0} chunks/sec generation";
+			$"Loaded {GetCubeCoordinateCount( AuthoritativeGameplayRadius )} logical implicit-SDF chunks; " +
+			$"retained {_retainedThisStream}; unloaded {_unloadedThisStream}; " +
+			$"materialized {_generatedThisStream}; stale {_staleDiscardedThisStream}";
 		if ( VerboseLogging )
 		{
 			var processMemoryBytes = global::Sandbox.Diagnostics.PerformanceStats.ApproximateProcessMemoryUsage;
@@ -3714,18 +3488,21 @@ public sealed class VoxelManager : Component
 			var oneCellUpProbeDensity = float.NaN;
 			var surfaceProbeMaterialId = byte.MaxValue;
 			var oneCellUpProbeMaterialId = byte.MaxValue;
-			if ( _loadedChunks.TryGetValue( _streamingCenterCoordinate, out var probeChunk ) )
-			{
-				probeChunkId = probeChunk.LogId;
-				probeChunk.TryGetSample( Vector3Int.Zero, out surfaceProbeDensity, out surfaceProbeMaterialId );
-				probeChunk.TryGetSample( Vector3Int.OneZ, out oneCellUpProbeDensity, out oneCellUpProbeMaterialId );
-			}
+			var probeChunk = new VoxelChunk(
+				_streamingCenterCoordinate,
+				_appliedCellsPerAxis,
+				_appliedCellSize,
+				CurrentTerrainSettings );
+			probeChunkId = probeChunk.LogId;
+			probeChunk.TryGetSample( Vector3Int.Zero, out surfaceProbeDensity, out surfaceProbeMaterialId );
+			probeChunk.TryGetSample( Vector3Int.OneZ, out oneCellUpProbeDensity, out oneCellUpProbeMaterialId );
 
 			Log.Info(
 				$"[VoxelWorld] stream.complete center=C[{_streamingCenterCoordinate.x},{_streamingCenterCoordinate.y},{_streamingCenterCoordinate.z}] " +
 				$"rangeMin=C[{_streamingCenterCoordinate.x - AuthoritativeGameplayRadius},{_streamingCenterCoordinate.y - AuthoritativeGameplayRadius},{_streamingCenterCoordinate.z - AuthoritativeGameplayRadius}] " +
 				$"rangeMax=C[{_streamingCenterCoordinate.x + AuthoritativeGameplayRadius},{_streamingCenterCoordinate.y + AuthoritativeGameplayRadius},{_streamingCenterCoordinate.z + AuthoritativeGameplayRadius}] " +
-				$"loaded={_loadedChunks.Count} pending={_pendingChunks.Count} retained={_retainedThisStream} " +
+				$"loaded={GetCubeCoordinateCount( AuthoritativeGameplayRadius )} pending=0 " +
+				$"storage=implicit-sdf retained={_retainedThisStream} " +
 				$"unloaded={_unloadedThisStream} generated={_generatedThisStream} staleDiscarded={_staleDiscardedThisStream} " +
 				$"settleMs={LastStreamSettleMilliseconds:0.###} workerMs={LastBackgroundWorkerMilliseconds:0.###} " +
 				$"generationMs={LastStreamGenerationMilliseconds:0.###} integrationMs={LastStreamIntegrationMilliseconds:0.###} " +
@@ -3748,8 +3525,11 @@ public sealed class VoxelManager : Component
 
 	private void RefreshReadableStatus()
 	{
-		LoadedChunkCount = _loadedChunks.Count;
-		PendingChunkCount = _pendingChunks.Count;
+		_readableStatusRefreshElapsedSeconds = 0f;
+		LoadedChunkCount = _hasStreamingCenter
+			? GetCubeCoordinateCount( AuthoritativeGameplayRadius )
+			: 0;
+		PendingChunkCount = 0;
 		GeneratorStatus =
 			$"Simplex noodle-and-cheese caves v{ProceduralTerrainSdf.CurrentVersion}; seed {_appliedWorldSeed}; " +
 			$"base {_appliedSurfaceBaseHeight:0.##}, f {_appliedSurfaceFrequency:0.######}, " +
@@ -3765,7 +3545,7 @@ public sealed class VoxelManager : Component
 				$"{_gpuMesher?.PendingGameplayCount ?? 0:N0} gameplay and " +
 				$"{_gpuMesher?.PendingWarmCount ?? 0:N0} warm meshes queued";
 		StreamingPerformance = LastStreamSettleMilliseconds > 0f
-			? $"{LastEffectiveChunksPerSecond:N1} chunks/sec; {LastStreamSettleMilliseconds:N3} ms last stream"
+			? $"Implicit SDF range applied in {LastStreamSettleMilliseconds:N3} ms"
 			: "No stream completed";
 		LoadedChunkRange = _hasStreamingCenter
 			? $"X {_streamingCenterCoordinate.x - AuthoritativeGameplayRadius} through {_streamingCenterCoordinate.x + AuthoritativeGameplayRadius}; " +
@@ -3784,15 +3564,22 @@ public sealed class VoxelManager : Component
 			$"Y {targetObject.WorldPosition.y:0.##}, Z {targetObject.WorldPosition.z:0.##}";
 		PlayerChunk = $"Chunk X {targetCoordinate.x}, Y {targetCoordinate.y}, Z {targetCoordinate.z}";
 
-		if ( _loadedChunks.TryGetValue( targetCoordinate, out var playerChunk ) )
+		if ( IsGameplayCoordinate( targetCoordinate ) )
 		{
+			if ( _playerStatusChunk is null || _playerStatusCoordinate != targetCoordinate )
+			{
+				_playerStatusCoordinate = targetCoordinate;
+				_playerStatusChunk = new VoxelChunk(
+					targetCoordinate,
+					_appliedCellsPerAxis,
+					_appliedCellSize,
+					CurrentTerrainSettings );
+			}
+			var playerChunk = _playerStatusChunk;
 			PlayerChunkData =
-				$"Loaded; {playerChunk.CellsPerAxis} cells per axis; {playerChunk.SampleCount:N0} logical samples; " +
+				$"Loaded implicit SDF; {playerChunk.CellsPerAxis} cells per axis; " +
+				$"{playerChunk.SampleCount:N0} logical samples; " +
 				$"density {playerChunk.MinimumDensity:0.###} to {playerChunk.MaximumDensity:0.###}";
-		}
-		else if ( _desiredChunks.Contains( targetCoordinate ) )
-		{
-			PlayerChunkData = "Queued for loading";
 		}
 		else
 		{

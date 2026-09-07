@@ -27,6 +27,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private const int VisibilityFrameCounterCount = 5 + SupportedVisualLevelCount * 2;
 	private const int VisibilityAggregateCounterCount = 11 + SupportedVisualLevelCount * 3;
 	private const double OuterMaximumServiceDelayMilliseconds = 250.0;
+	private const double RenderCameraRefreshIntervalMilliseconds = 250.0;
 	private const double GpuSchedulerStallThresholdMilliseconds = 500.0;
 	private const double SlowDrawCommandCommitThresholdMilliseconds = 500.0;
 
@@ -105,6 +106,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private int _drawCommandDiagnosticReportCount;
 	private int _slowDrawCommandCommitReportCount;
 	private int _cameraBindingDiagnosticCount;
+	private long _lastRenderCameraRefreshTimestamp;
 	private long _drawCommitStopwatchTicks;
 	private int _drawCommitRebuildCount;
 	private int _renderViewKind;
@@ -180,8 +182,18 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public int PendingGameplayCount => _pendingGameplayCount + CountInFlight( GpuMeshResidency.Gameplay );
 	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Warm );
 	public int PendingNearVisualCount => PendingLevelCount( 1 );
-	public int PendingOuterVisualCount => Enumerable.Range( 2, SupportedVisualLevelCount - 2 )
-		.Sum( PendingLevelCount );
+	public int PendingOuterVisualCount
+	{
+		get
+		{
+			var count = CountOuterInFlight();
+			for ( var level = 2; level < SupportedVisualLevelCount; level++ )
+			{
+				count += _pendingLevelCounts[level];
+			}
+			return count;
+		}
+	}
 	public int WarmResidentCount => _warmResidentCount;
 	public int GameplayResidentCount => _resident.Count( pair =>
 		pair.Value.Residency == GpuMeshResidency.Gameplay );
@@ -192,8 +204,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public int TransitionDesiredCount => _transitionRenderActive.Count;
 	public int TransitionReadyCount => _transitionResident.Count;
 	public int TransitionDrawableCount => _transitionResident.Count( value => value.Value.Handle is not null );
-	public int TransitionPendingCount => _transitionPending.Count + (_transitionScratchLanes?.Sum( lane =>
-		lane.CountInFlight.Count + lane.EmitInFlight.Count ) ?? 0);
+	public int TransitionPendingCount => _transitionPending.Count + CountTransitionInFlight();
 	public int TransitionDesiredCountForPair( int coarseLevel ) =>
 		_transitionRenderActive.Count( key => key.CoarseLevel == coarseLevel );
 	public int TransitionReadyCountForPair( int coarseLevel ) =>
@@ -231,7 +242,18 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public long GeometryReadbackCount => _geometryReadbackCount;
 	public long ResidentPublicationRevision => _residentPublicationRevision;
 	public const long OrdinaryRenderSdfEvaluationCount = 0;
-	public int TerrainIndirectApiSubmissionCount => _arenas.Count( arena => arena.ActiveResidentCount > 0 );
+	public int TerrainIndirectApiSubmissionCount
+	{
+		get
+		{
+			var count = 0;
+			foreach ( var arena in _arenas )
+			{
+				if ( arena.ActiveResidentCount > 0 ) count++;
+			}
+			return count;
+		}
+	}
 	public int IndirectArgumentRecordCount => TerrainIndirectApiSubmissionCount * RegionsPerSlab;
 	public int TerrainBufferGroupCount => _arenas.Count;
 	public long LogicalCapacityBytes => UsedVertexBytes + UsedIndexBytes;
@@ -1198,7 +1220,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public int ProcessPending( int maximumDispatches, long updateEpoch )
 	{
-		RefreshRenderCameras();
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.ProcessPendingMeshes );
+		RefreshRenderCamerasIfNeeded();
 		FinalizeEmits();
 		FinalizeTransitionEmits();
 		_maximumDispatchesRequested = Math.Clamp( maximumDispatches, 0, MaximumDispatchesPerUpdate );
@@ -2549,22 +2573,67 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private int CountInFlight( GpuMeshResidency residency )
 	{
-		return _scratchLanes?.Sum( lane => lane.CountInFlight.Count( value => value.Residency == residency ) +
-			lane.EmitInFlight.Count( value => value.Residency == residency ) ) ?? 0;
+		if ( _scratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var pending in lane.CountInFlight )
+			{
+				if ( pending.Residency == residency ) count++;
+			}
+			foreach ( var pending in lane.EmitInFlight )
+			{
+				if ( pending.Residency == residency ) count++;
+			}
+		}
+		return count;
 	}
 
 	private int CountInFlight( int level )
 	{
-		return _scratchLanes?.Sum( lane =>
-			lane.CountInFlight.Count( value => value.Descriptor.Key.Level == level ) +
-			lane.EmitInFlight.Count( value => value.Descriptor.Key.Level == level ) ) ?? 0;
+		if ( _scratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var pending in lane.CountInFlight )
+			{
+				if ( pending.Descriptor.Key.Level == level ) count++;
+			}
+			foreach ( var pending in lane.EmitInFlight )
+			{
+				if ( pending.Descriptor.Key.Level == level ) count++;
+			}
+		}
+		return count;
 	}
 
 	private int CountOuterInFlight()
 	{
-		return _scratchLanes?.Sum( lane =>
-			lane.CountInFlight.Count( value => value.Descriptor.Key.Level >= 2 ) +
-			lane.EmitInFlight.Count( value => value.Descriptor.Key.Level >= 2 ) ) ?? 0;
+		if ( _scratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var pending in lane.CountInFlight )
+			{
+				if ( pending.Descriptor.Key.Level >= 2 ) count++;
+			}
+			foreach ( var pending in lane.EmitInFlight )
+			{
+				if ( pending.Descriptor.Key.Level >= 2 ) count++;
+			}
+		}
+		return count;
+	}
+
+	private int CountTransitionInFlight()
+	{
+		if ( _transitionScratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _transitionScratchLanes )
+		{
+			count += lane.CountInFlight.Count + lane.EmitInFlight.Count;
+		}
+		return count;
 	}
 
 	private void SetResidency( ResidentMesh resident, GpuMeshResidency residency )
@@ -2619,7 +2688,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		EnsureVisibilityBuffers( state );
 		if ( state.AggregateResetPending )
 		{
-			Span<uint> counters = stackalloc uint[20];
+			Span<uint> counters = stackalloc uint[VisibilityAggregateCounterCount];
 			counters[3] = uint.MaxValue;
 			state.AggregateCounters.SetData( counters );
 			state.AggregateResetPending = false;
@@ -3030,6 +3099,9 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void RefreshRenderCameras()
 	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.RefreshRenderCameras );
+		_lastRenderCameraRefreshTimestamp = Stopwatch.GetTimestamp();
 		lock ( _renderCameraLock )
 		{
 			_currentRenderCameras.Clear();
@@ -3073,6 +3145,21 @@ internal sealed class GpuVoxelMesher : IDisposable
 					$"entered={enteringCount} left={leavingCount} mainCameraValid={_camera.IsValid()}" );
 			}
 		}
+	}
+
+	private void RefreshRenderCamerasIfNeeded()
+	{
+		if ( !_camera.IsValid() )
+		{
+			RefreshRenderCameras();
+			return;
+		}
+
+		var now = Stopwatch.GetTimestamp();
+		if ( _lastRenderCameraRefreshTimestamp != 0 &&
+			Stopwatch.GetElapsedTime( _lastRenderCameraRefreshTimestamp, now ).TotalMilliseconds <
+				RenderCameraRefreshIntervalMilliseconds ) return;
+		RefreshRenderCameras();
 	}
 
 	private void DisposeArenas()

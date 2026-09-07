@@ -1,6 +1,6 @@
 internal static class TerrainClipboxLimits
 {
-	public const int MaximumSupportedVisualLod = 2;
+	public const int MaximumSupportedVisualLod = 6;
 	public const int SupportedVisualLevelCount = MaximumSupportedVisualLod + 1;
 }
 
