@@ -1,0 +1,1224 @@
+{
+  "baseline": "19a2ebfe8de946cba93cfe40f74d0dba",
+  "candidate": "ad3738d8704a485e8a57b0bdcb54cad1",
+  "gates": [
+    {
+      "metric": "frame.p95Milliseconds",
+      "baseline": 1.4416,
+      "candidate": 1.1538,
+      "pass": true
+    },
+    {
+      "metric": "frame.p99Milliseconds",
+      "baseline": 2.839,
+      "candidate": 1.8836,
+      "pass": true
+    },
+    {
+      "metric": "frame.p95GpuMilliseconds",
+      "baseline": 1.2843609,
+      "candidate": 0.900507,
+      "pass": true
+    },
+    {
+      "metric": "frame.p99GpuMilliseconds",
+      "baseline": 1.7096996,
+      "candidate": 1.2557507,
+      "pass": true
+    },
+    {
+      "metric": "runtime.averageManagedBytesAllocatedPerFrame",
+      "baseline": 30775.312,
+      "candidate": 28816.855,
+      "pass": true
+    },
+    {
+      "metric": "stationary.frame.p95Milliseconds",
+      "baseline": 1.1835,
+      "candidate": 1.1107,
+      "pass": true
+    },
+    {
+      "metric": "stationary.frame.p99Milliseconds",
+      "baseline": 1.9655,
+      "candidate": 1.5421,
+      "pass": true
+    },
+    {
+      "metric": "stationary.frame.p95GpuMilliseconds",
+      "baseline": 0.9152889,
+      "candidate": 0.53858757,
+      "pass": true
+    },
+    {
+      "metric": "stationary.frame.p99GpuMilliseconds",
+      "baseline": 1.139164,
+      "candidate": 0.7634163,
+      "pass": true
+    },
+    {
+      "metric": "stationary.runtime.averageManagedBytesAllocatedPerFrame",
+      "baseline": 26415.145,
+      "candidate": 24757.332,
+      "pass": true
+    },
+    {
+      "metric": "frame.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "runtime.exceptions",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "stationary.frame.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "stationary.runtime.exceptions",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.allPending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.geometryReadbacks",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.ordinaryRenderSdfEvaluations",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.scheduleToRenderable.p95Milliseconds",
+      "baseline": 69.6519,
+      "candidate": 63.18,
+      "pass": true
+    },
+    {
+      "metric": "meshing.scheduleToRenderable.p99Milliseconds",
+      "baseline": 88.3243,
+      "candidate": 77.162,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.countSubmissionMilliseconds.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.countReadbackMilliseconds.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.countCallbackWaitMilliseconds.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.cpuAllocationMilliseconds.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.emitSubmissionMilliseconds.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.emitToPublicationMilliseconds.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.gameplayQueue.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.warmQueue.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.totalQueue.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.playerRouteLagWorldUnits.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.playerRouteLagChunks.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.postLoopDrainMilliseconds",
+      "baseline": 26.1155,
+      "candidate": 25.4373,
+      "pass": true
+    },
+    {
+      "metric": "hierarchy.placementUnsafeCommits",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "hierarchy.transitionPending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.0.resident",
+      "baseline": 710,
+      "candidate": 710,
+      "pass": true
+    },
+    {
+      "metric": "levels.0.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.0.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.0.scheduleToRenderable.p95Milliseconds",
+      "baseline": 17.9307,
+      "candidate": 16.148,
+      "pass": true
+    },
+    {
+      "metric": "levels.0.scheduleToRenderable.p99Milliseconds",
+      "baseline": 24.4187,
+      "candidate": 22.1407,
+      "pass": true
+    },
+    {
+      "metric": "levels.0.topologyDigest",
+      "baseline": "60C89421FF1B19BD",
+      "candidate": "60C89421FF1B19BD",
+      "pass": true
+    },
+    {
+      "metric": "levels.0.positionDigest",
+      "baseline": "7E9C783F3C60468C",
+      "candidate": "7E9C783F3C60468C",
+      "pass": true
+    },
+    {
+      "metric": "levels.1.resident",
+      "baseline": 4096,
+      "candidate": 4096,
+      "pass": true
+    },
+    {
+      "metric": "levels.1.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.1.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.1.scheduleToRenderable.p95Milliseconds",
+      "baseline": 76.3666,
+      "candidate": 69.5876,
+      "pass": true
+    },
+    {
+      "metric": "levels.1.scheduleToRenderable.p99Milliseconds",
+      "baseline": 104.1705,
+      "candidate": 93.7756,
+      "pass": true
+    },
+    {
+      "metric": "levels.1.topologyDigest",
+      "baseline": "97D4F8ABEC98BA72",
+      "candidate": "97D4F8ABEC98BA72",
+      "pass": true
+    },
+    {
+      "metric": "levels.1.positionDigest",
+      "baseline": "A580C20007E621C3",
+      "candidate": "A580C20007E621C3",
+      "pass": true
+    },
+    {
+      "metric": "levels.2.resident",
+      "baseline": 4096,
+      "candidate": 4096,
+      "pass": true
+    },
+    {
+      "metric": "levels.2.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.2.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.2.scheduleToRenderable.p95Milliseconds",
+      "baseline": 211.1016,
+      "candidate": 197.3659,
+      "pass": true
+    },
+    {
+      "metric": "levels.2.scheduleToRenderable.p99Milliseconds",
+      "baseline": 262.137,
+      "candidate": 204.6517,
+      "pass": true
+    },
+    {
+      "metric": "levels.2.topologyDigest",
+      "baseline": "081C4C044EB32D11",
+      "candidate": "081C4C044EB32D11",
+      "pass": true
+    },
+    {
+      "metric": "levels.2.positionDigest",
+      "baseline": "60AD76F21522FDB4",
+      "candidate": "60AD76F21522FDB4",
+      "pass": true
+    },
+    {
+      "metric": "levels.3.resident",
+      "baseline": 4096,
+      "candidate": 4096,
+      "pass": true
+    },
+    {
+      "metric": "levels.3.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.3.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.3.scheduleToRenderable.p95Milliseconds",
+      "baseline": 173.9404,
+      "candidate": 165.7299,
+      "pass": true
+    },
+    {
+      "metric": "levels.3.scheduleToRenderable.p99Milliseconds",
+      "baseline": 181.7299,
+      "candidate": 172.5067,
+      "pass": true
+    },
+    {
+      "metric": "levels.3.topologyDigest",
+      "baseline": "22F4DC4576C0885F",
+      "candidate": "22F4DC4576C0885F",
+      "pass": true
+    },
+    {
+      "metric": "levels.3.positionDigest",
+      "baseline": "820BA8949792C1B7",
+      "candidate": "820BA8949792C1B7",
+      "pass": true
+    },
+    {
+      "metric": "levels.4.resident",
+      "baseline": 4096,
+      "candidate": 4096,
+      "pass": true
+    },
+    {
+      "metric": "levels.4.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.4.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.4.scheduleToRenderable.p95Milliseconds",
+      "baseline": 159.7151,
+      "candidate": 152.0678,
+      "pass": true
+    },
+    {
+      "metric": "levels.4.scheduleToRenderable.p99Milliseconds",
+      "baseline": 169.0116,
+      "candidate": 157.071,
+      "pass": true
+    },
+    {
+      "metric": "levels.4.topologyDigest",
+      "baseline": "C09FC37491B5E980",
+      "candidate": "C09FC37491B5E980",
+      "pass": true
+    },
+    {
+      "metric": "levels.4.positionDigest",
+      "baseline": "773FDBB7C854D8C1",
+      "candidate": "773FDBB7C854D8C1",
+      "pass": true
+    },
+    {
+      "metric": "levels.5.resident",
+      "baseline": 4096,
+      "candidate": 4096,
+      "pass": true
+    },
+    {
+      "metric": "levels.5.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.5.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.5.scheduleToRenderable.p95Milliseconds",
+      "baseline": 154.9696,
+      "candidate": 138.6108,
+      "pass": true
+    },
+    {
+      "metric": "levels.5.scheduleToRenderable.p99Milliseconds",
+      "baseline": 164.4298,
+      "candidate": 148.3723,
+      "pass": true
+    },
+    {
+      "metric": "levels.5.topologyDigest",
+      "baseline": "58650D42B7D48A70",
+      "candidate": "58650D42B7D48A70",
+      "pass": true
+    },
+    {
+      "metric": "levels.5.positionDigest",
+      "baseline": "AE4A837F4AF98D1F",
+      "candidate": "AE4A837F4AF98D1F",
+      "pass": true
+    },
+    {
+      "metric": "levels.6.resident",
+      "baseline": 4096,
+      "candidate": 4096,
+      "pass": true
+    },
+    {
+      "metric": "levels.6.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.6.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "levels.6.scheduleToRenderable.p95Milliseconds",
+      "baseline": 178.8812,
+      "candidate": 157.1936,
+      "pass": true
+    },
+    {
+      "metric": "levels.6.scheduleToRenderable.p99Milliseconds",
+      "baseline": 191.7133,
+      "candidate": 167.4819,
+      "pass": true
+    },
+    {
+      "metric": "levels.6.topologyDigest",
+      "baseline": "7E093B0F197A938C",
+      "candidate": "7E093B0F197A938C",
+      "pass": true
+    },
+    {
+      "metric": "levels.6.positionDigest",
+      "baseline": "BD1B176BD0EEF4C5",
+      "candidate": "BD1B176BD0EEF4C5",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.ready",
+      "baseline": 96,
+      "candidate": 96,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.drawable",
+      "baseline": 51,
+      "candidate": 51,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.activeCells",
+      "baseline": 1582,
+      "candidate": 1582,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.vertices",
+      "baseline": 4880,
+      "candidate": 4880,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.indices",
+      "baseline": 14268,
+      "candidate": 14268,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.triangles",
+      "baseline": 4756,
+      "candidate": 4756,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.topologyDigest",
+      "baseline": "B8BA4BA990E3C641",
+      "candidate": "B8BA4BA990E3C641",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.positionDigest",
+      "baseline": "7FA542893EF9C929",
+      "candidate": "7FA542893EF9C929",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.fineFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.coarseFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.lateralEdgeDigest",
+      "baseline": 441854564,
+      "candidate": 441854564,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.lateralMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.invalidTableCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.scheduleToPublication.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.scheduleToPublication.p95",
+      "baseline": 46.7989,
+      "candidate": 44.2549,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.0.scheduleToPublication.p99",
+      "baseline": 59.5539,
+      "candidate": 53.2232,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.ready",
+      "baseline": 384,
+      "candidate": 384,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.drawable",
+      "baseline": 136,
+      "candidate": 136,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.activeCells",
+      "baseline": 4040,
+      "candidate": 4040,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.vertices",
+      "baseline": 12508,
+      "candidate": 12508,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.indices",
+      "baseline": 36444,
+      "candidate": 36444,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.triangles",
+      "baseline": 12148,
+      "candidate": 12148,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.topologyDigest",
+      "baseline": "76D800838CA55C00",
+      "candidate": "76D800838CA55C00",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.positionDigest",
+      "baseline": "25E10B9827650E5A",
+      "candidate": "25E10B9827650E5A",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.fineFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.coarseFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.lateralEdgeDigest",
+      "baseline": 3033720405,
+      "candidate": 3033720405,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.lateralMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.invalidTableCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.scheduleToPublication.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.scheduleToPublication.p95",
+      "baseline": 166.3259,
+      "candidate": 153.5344,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.1.scheduleToPublication.p99",
+      "baseline": 239.5231,
+      "candidate": 223.4091,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.ready",
+      "baseline": 384,
+      "candidate": 384,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.drawable",
+      "baseline": 102,
+      "candidate": 102,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.activeCells",
+      "baseline": 2922,
+      "candidate": 2922,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.vertices",
+      "baseline": 9292,
+      "candidate": 9292,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.indices",
+      "baseline": 26592,
+      "candidate": 26592,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.triangles",
+      "baseline": 8864,
+      "candidate": 8864,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.topologyDigest",
+      "baseline": "684E5615819DFDF1",
+      "candidate": "684E5615819DFDF1",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.positionDigest",
+      "baseline": "65274BC07AEC4300",
+      "candidate": "65274BC07AEC4300",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.fineFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.coarseFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.lateralEdgeDigest",
+      "baseline": 1250643877,
+      "candidate": 1250643877,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.lateralMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.invalidTableCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.scheduleToPublication.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.scheduleToPublication.p95",
+      "baseline": 107.5407,
+      "candidate": 96.6741,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.2.scheduleToPublication.p99",
+      "baseline": 125.2471,
+      "candidate": 107.0376,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.ready",
+      "baseline": 384,
+      "candidate": 384,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.drawable",
+      "baseline": 82,
+      "candidate": 82,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.activeCells",
+      "baseline": 3497,
+      "candidate": 3497,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.vertices",
+      "baseline": 11030,
+      "candidate": 11030,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.indices",
+      "baseline": 31254,
+      "candidate": 31254,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.triangles",
+      "baseline": 10418,
+      "candidate": 10418,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.topologyDigest",
+      "baseline": "81A9142DF8022C59",
+      "candidate": "81A9142DF8022C59",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.positionDigest",
+      "baseline": "EAB92FE84E9D833C",
+      "candidate": "EAB92FE84E9D833C",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.fineFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.coarseFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.lateralEdgeDigest",
+      "baseline": 1143837903,
+      "candidate": 1143837903,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.lateralMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.invalidTableCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.scheduleToPublication.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.scheduleToPublication.p95",
+      "baseline": 104.6668,
+      "candidate": 97.2457,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.3.scheduleToPublication.p99",
+      "baseline": 114.3958,
+      "candidate": 106.9355,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.ready",
+      "baseline": 384,
+      "candidate": 384,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.drawable",
+      "baseline": 64,
+      "candidate": 64,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.activeCells",
+      "baseline": 3401,
+      "candidate": 3401,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.vertices",
+      "baseline": 10712,
+      "candidate": 10712,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.indices",
+      "baseline": 29352,
+      "candidate": 29352,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.triangles",
+      "baseline": 9784,
+      "candidate": 9784,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.topologyDigest",
+      "baseline": "C18F0534535B188F",
+      "candidate": "C18F0534535B188F",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.positionDigest",
+      "baseline": "C2095840A621FED2",
+      "candidate": "C2095840A621FED2",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.fineFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.coarseFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.lateralEdgeDigest",
+      "baseline": 620896048,
+      "candidate": 620896048,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.lateralMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.invalidTableCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.scheduleToPublication.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.scheduleToPublication.p95",
+      "baseline": 105.6681,
+      "candidate": 100.3786,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.4.scheduleToPublication.p99",
+      "baseline": 116.7322,
+      "candidate": 109.2168,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.ready",
+      "baseline": 384,
+      "candidate": 384,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.drawable",
+      "baseline": 64,
+      "candidate": 64,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.pending",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.activeCells",
+      "baseline": 3371,
+      "candidate": 3371,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.vertices",
+      "baseline": 10848,
+      "candidate": 10848,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.indices",
+      "baseline": 27504,
+      "candidate": 27504,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.triangles",
+      "baseline": 9168,
+      "candidate": 9168,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.topologyDigest",
+      "baseline": "B8F14A022A0C2B5E",
+      "candidate": "B8F14A022A0C2B5E",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.positionDigest",
+      "baseline": "38ED8FC12F07C165",
+      "candidate": "38ED8FC12F07C165",
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.fineFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.coarseFaceMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.lateralEdgeDigest",
+      "baseline": 1631791839,
+      "candidate": 1631791839,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.lateralMismatchCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.invalidTableCount",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.scheduleToPublication.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.scheduleToPublication.p95",
+      "baseline": 110.9662,
+      "candidate": 102.1831,
+      "pass": true
+    },
+    {
+      "metric": "transitionPairs.5.scheduleToPublication.p99",
+      "baseline": 123.9797,
+      "candidate": 111.7124,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.queueDepth.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.queueDepth.p95",
+      "baseline": 192,
+      "candidate": 192,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.queueDepth.p99",
+      "baseline": 192,
+      "candidate": 192,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.scheduleToRenderable.truncatedSamples",
+      "baseline": 0,
+      "candidate": 0,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.scheduleToRenderable.p95Milliseconds",
+      "baseline": 205.3195,
+      "candidate": 193.3676,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.scheduleToRenderable.p99Milliseconds",
+      "baseline": 242.1118,
+      "candidate": 203.1787,
+      "pass": true
+    },
+    {
+      "metric": "meshing.topologyDigest",
+      "baseline": "3B0709F214EBF6FD",
+      "candidate": "3B0709F214EBF6FD",
+      "pass": true
+    },
+    {
+      "metric": "meshing.positionDigest",
+      "baseline": "5DD42BFAEB75FA57",
+      "candidate": "5DD42BFAEB75FA57",
+      "pass": true
+    },
+    {
+      "metric": "meshing.uniqueVertices",
+      "baseline": 8801485,
+      "candidate": 8801485,
+      "pass": true
+    },
+    {
+      "metric": "meshing.indices",
+      "baseline": 45709380,
+      "candidate": 45709380,
+      "pass": true
+    },
+    {
+      "metric": "meshing.arenaCount",
+      "baseline": 14,
+      "candidate": 14,
+      "pass": true
+    },
+    {
+      "metric": "meshing.transientScratchBytes",
+      "baseline": 34310016,
+      "candidate": 34310016,
+      "pass": true
+    },
+    {
+      "metric": "meshing.transitionTransientScratchBytes",
+      "baseline": 3884628,
+      "candidate": 3884628,
+      "pass": true
+    },
+    {
+      "metric": "meshing.committedVertexBytes",
+      "baseline": 469762048,
+      "candidate": 469762048,
+      "pass": true
+    },
+    {
+      "metric": "meshing.committedIndexBytes",
+      "baseline": 234881024,
+      "candidate": 234881024,
+      "pass": true
+    },
+    {
+      "metric": "meshing.throughput.postLoopDrainMilliseconds",
+      "baseline": 26.1155,
+      "candidate": 25.4373,
+      "pass": true
+    },
+    {
+      "metric": "outerWork.maximumEligibleServiceGapMilliseconds",
+      "baseline": 170.2727,
+      "candidate": 117.3445,
+      "pass": true
+    },
+    {
+      "metric": "hierarchy.maximumPlacementLevelLag",
+      "baseline": 2,
+      "candidate": 2,
+      "pass": true
+    }
+  ]
+}

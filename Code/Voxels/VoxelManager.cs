@@ -29,7 +29,7 @@ public sealed class VoxelManager : Component
 	private const int DefaultGameplayRadius = 4;
 	private const int MaximumSupportedVisualLod = TerrainClipboxLimits.MaximumSupportedVisualLod;
 	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
-	private const int PerformanceResultSchemaVersion = 23;
+	private const int PerformanceResultSchemaVersion = 24;
 	private const int RenderWarmShellChunks = 1;
 	private const int RequiredCellsPerAxis = 32;
 	private const float RequiredBaseCellSize = 16f;
@@ -870,7 +870,14 @@ public sealed class VoxelManager : Component
 					Cancelled = _lastPerformanceScheduleLatency.Cancelled,
 					Superseded = _lastPerformanceScheduleLatency.Superseded
 				},
-				Throughput = CreateThroughputMetrics( _lastPerformanceThroughput )
+				Throughput = CreateThroughputMetrics( _lastPerformanceThroughput ),
+				RegularCountBatches = _gpuMesher?.RegularCountBatches ?? 0,
+				RegularCountRegions = _gpuMesher?.RegularCountRegions ?? 0,
+				RegularEmitArenaPasses = _gpuMesher?.RegularEmitArenaPasses ?? 0,
+				RegularEmitBatchSlots = _gpuMesher?.RegularEmitBatchSlots ?? 0,
+				RegularEnabledEmitRegions = _gpuMesher?.RegularEnabledEmitRegions ?? 0,
+				RegularMultiArenaBatches = _gpuMesher?.RegularMultiArenaBatches ?? 0,
+				TransitionDeferredRenderTicks = _gpuMesher?.TransitionDeferredRenderTicks ?? 0
 			},
 			Visibility = CreateVisibilityMetrics( _lastPerformanceVisibility ),
 			Submission = _lastPerformanceSubmission,
@@ -949,6 +956,12 @@ public sealed class VoxelManager : Component
 			$"placementMs={result.Streaming.PlacementPreparationMilliseconds:0.###} maxLevelLag={result.Hierarchy.MaximumPlacementLevelLag} " +
 			$"skippedGeometry={result.Meshing.SkippedRegularGeometryRegions}/{result.Meshing.SkippedTransitionGeometryRegions} " +
 			$"emptyBatchesAvoided={result.Meshing.EmptyBatchSubmissionsAvoided}" );
+		Log.Info(
+			$"[VoxelWorld] performance.gpu_work runId={runId} " +
+			$"regularBatches={result.Meshing.RegularCountBatches} regions={result.Meshing.RegularCountRegions} " +
+			$"emitArenaPasses={result.Meshing.RegularEmitArenaPasses} emitBatchSlots={result.Meshing.RegularEmitBatchSlots} " +
+			$"enabledEmitRegions={result.Meshing.RegularEnabledEmitRegions} multiArenaBatches={result.Meshing.RegularMultiArenaBatches} " +
+			$"transitionDeferredTicks={result.Meshing.TransitionDeferredRenderTicks}" );
 		LastPerformanceRunId = runId;
 		return runId;
 	}

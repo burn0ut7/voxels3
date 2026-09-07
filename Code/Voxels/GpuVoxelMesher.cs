@@ -10,6 +10,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public long SkippedRegularGeometryRegions { get; private set; }
 	public long SkippedTransitionGeometryRegions { get; private set; }
 	public long EmptyBatchSubmissionsAvoided { get; private set; }
+	public long RegularCountBatches { get; private set; }
+	public long RegularCountRegions { get; private set; }
+	public long RegularEmitArenaPasses { get; private set; }
+	public long RegularEmitBatchSlots { get; private set; }
+	public long RegularEnabledEmitRegions { get; private set; }
+	public long RegularMultiArenaBatches { get; private set; }
+	public long TransitionDeferredRenderTicks { get; private set; }
 	public const int MaximumRegionsPerBatch = 8;
 	public const int MaximumDispatchesPerUpdate = MaximumRegionsPerBatch;
 	public const int ScratchLaneCount = 3;
@@ -340,6 +347,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 		SkippedRegularGeometryRegions = 0;
 		SkippedTransitionGeometryRegions = 0;
 		EmptyBatchSubmissionsAvoided = 0;
+		RegularCountBatches = 0;
+		RegularCountRegions = 0;
+		RegularEmitArenaPasses = 0;
+		RegularEmitBatchSlots = 0;
+		RegularEnabledEmitRegions = 0;
+		RegularMultiArenaBatches = 0;
+		TransitionDeferredRenderTicks = 0;
 		_throughput = new ThroughputRecorder( chunkWorldSize );
 		_currentPlayerRouteDistance = 0f;
 	}
@@ -1782,6 +1796,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 			{
 				if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out var submissionMilliseconds ) )
 					throw new InvalidOperationException( "Voxel terrain scratch rejected an idle count batch." );
+				if ( _scheduleLatencyMeasurementActive )
+				{
+					RegularCountBatches++;
+					RegularCountRegions += processed;
+				}
 				_countSubmissionMilliseconds += submissionMilliseconds;
 				_throughput?.RecordBatchSubmitted( processed, (float)submissionMilliseconds );
 				System.Threading.Interlocked.Add( ref _processedRenderDispatches, processed );
@@ -1789,6 +1808,10 @@ internal sealed class GpuVoxelMesher : IDisposable
 			}
 		}
 
+		if ( _scheduleLatencyMeasurementActive && regularGpuWorkSubmitted && _transitionPending.Count > 0 )
+		{
+			TransitionDeferredRenderTicks++;
+		}
 		var transitionGpuWorkSubmitted = !regularGpuWorkSubmitted && ProcessTransitionGpuRenderTick();
 		if ( !regularGpuWorkSubmitted && !transitionGpuWorkSubmitted && TrySubmitOuterCount() )
 		{
@@ -1912,6 +1935,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( processed == 0 ) return false;
 		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _ ) )
 			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle outer count batch." );
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			RegularCountBatches++;
+			RegularCountRegions += processed;
+		}
 		return true;
 	}
 
@@ -2036,6 +2064,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 					source.Generation,
 					!outer );
 				arenas.Add( handle.Arena );
+				if ( _scheduleLatencyMeasurementActive ) RegularEnabledEmitRegions++;
 			}
 			lane.EmitInFlight.Add( new CandidateMesh(
 				source.Descriptor,
@@ -2049,6 +2078,12 @@ internal sealed class GpuVoxelMesher : IDisposable
 		lane.CountInFlight.Clear();
 		var allocationMilliseconds = (float)Stopwatch.GetElapsedTime( allocationStart ).TotalMilliseconds;
 		var emitMilliseconds = 0f;
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			RegularEmitArenaPasses += arenas.Count;
+			RegularEmitBatchSlots += (long)arenas.Count * count;
+			if ( arenas.Count > 1 ) RegularMultiArenaBatches++;
+		}
 		foreach ( var arena in arenas )
 		{
 			var allocations = new GpuTerrainAllocationDescriptor[count];

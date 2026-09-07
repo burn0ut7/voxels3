@@ -341,7 +341,21 @@ future decision.
 
 Count batches contain at most eight regions. A render tick admits at most one
 new count batch and consumes at most one count-ready batch for allocation and
-emit. The batch size and dispatch shape are unchanged.
+emit. The batch size and dispatch shape are unchanged. Regular emission retains
+the full count-batch domain for each destination arena, with disabled descriptors
+for regions without output in that arena. The compact-request prototype was
+removed after its fresh-control comparison missed a publication-tail gate; see
+the [investigation](../Research/GpuMeshingOptimizationStudy.md#9-prototype-investigation-outcome).
+
+Performance schema 24 records regular count batches/regions, emission arena
+passes, actual emission region slots, enabled output regions and multi-arena
+batches. The existing measurement lifecycle resets and gates these counters;
+one `performance.gpu_work` record accompanies the saved result. Region slots
+include disabled requests repeated across destination arenas. This measures
+dispatch-domain work, not kernel duration or GPU bandwidth. The limited
+`TransitionDeferredRenderTicks` counter observes normal foreground ticks with
+queued transitions; it excludes early outer-service returns and transition-only
+in-flight work, so it is not a starvation measurement.
 
 Three independent lanes overlap unrelated batch chains. Each lane owns its
 requests, count results, candidate allocations, timestamps, and lifecycle. A

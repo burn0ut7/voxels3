@@ -6,7 +6,7 @@ Research for Voxels3 | 7 September 2026 | Decision report
 
 **Keep the indexed, persistent GPU mesher and clipbox ownership for the next optimization slice. Remove verified dead shader source and unnecessary visibility diagnostics, then measure cooperative reductions and scheduling delays. Treat dual marching cubes as the leading algorithm-replacement investigation; persistent meshlets are the leading renderer-replacement research direction. Neither replacement is justified as an implementation decision yet.**
 
-This is an audit and comparative research session, not an implemented optimization or a fresh performance test. The goal is smooth, volumetric terrain with caves, predictable streaming, modest retained memory, and a system that can later support authoritative edits. No universal best-in-class implementation exists across those constraints. Strong references solve different portions of the problem.
+Sections 1–8 record the original audit and proposals. The subsequent [prototype investigation](#9-prototype-investigation-outcome) reports eight fresh Figure Eight runs: both performance candidates were removed, while production reporting and verified dead-source cleanup were retained. The goal is smooth, volumetric terrain with caves, predictable streaming, modest retained memory, and a system that can later support authoritative edits. No universal best-in-class implementation exists across those constraints. Strong references solve different portions of the problem.
 
 The audited runtime is commit `ab9a6e8e64fa29f979e84da3b9ce3cafe7cf57c6`. The installed engine reports `26.09.01c`; its raw build fields include `33901499107` and `build-pr`. The existing uncommitted scene requests levels 0..6 / visual radius 512. Its SHA-256 is `2B9C3E74156C3057E296A1AADE93F719F8CAD274BE07FCC9D163F755A4D206FD`. That scene change was preserved.
 
@@ -135,3 +135,142 @@ Accept only an attributable benefit with all locked gates satisfied. Remove a lo
 Research confidence is high for source-identified work and the current ownership graph, medium for the candidate ranking, and deliberately unset for speedup. Remaining gaps are kernel timings, current 512 baseline, lower-tier GPU behavior, callable advanced shader support and edited/multiplayer workloads that do not yet exist. Further broad searching is unlikely to change the immediate shortlist; those gaps require targeted engine evidence and production measurements.
 
 Discovery covered GPU indexed extraction, block cooperation, scans, allocation, clipboxes/Transvoxel, DMC/DC, meshlets, work graphs, Nanite and ray rendering. Follow-up checked the highest-impact claims against primary papers, maintainer documentation, installed XML and shipping source. No runtime performance claim is added by this document.
+
+## 9. Prototype investigation outcome
+
+**Retain the measurement improvements and remove the two unused shader sources.
+Reject both performance prototypes for now.** Eight production Figure Eight runs
+established a radius-512 baseline, checked instrumentation, investigated two
+candidates, and separated a large editor-restart effect from actual optimization.
+No alternate mesher, runtime switch, allocator, test scene or CPU oracle remains.
+The current rendering algorithm, scratch initialization, emission domain and
+transition scheduling are unchanged.
+
+The durable [evidence index](../ValidationEvidence/GpuMeshing512/README.md) links
+all raw production results and comparisons. The [validation ledger](../ValidationResults.md#gpu-meshing-512-001v1---gpu-simplification-investigation)
+owns the immutable scenario, thresholds, individual failures and acceptance.
+Tests used the authored radius-512 scene unchanged: seed 1337/generator 5, gameplay
+radius 8, levels 0–6, 32 cells per region, 16-unit base cells, half extents 4/8,
+one local player, speed 2500, distance 50000 and one Figure Eight loop. Each run
+started at the authored origin after stop/play and settlement, then included normal
+queue drain and ten stationary seconds. Hardware was Ryzen 7 9800X3D / RTX 5090,
+s&box 26.09.01c. This is not lower-tier GPU or multiplayer-load evidence.
+
+### What stays
+
+Schema 24 adds bounded production counters for regular count batches/regions,
+emission arena passes, actual dispatched region slots, enabled output regions,
+multi-arena batches and limited foreground transition deferrals. The existing
+measurement lifecycle owns reset and collection. One `performance.gpu_work` log
+accompanies each persisted result; there is no per-frame log spam. Existing
+publication tails, readback/submission timings, memory observations, exact geometry
+fingerprints and `voxel_mesh_audit` remain the debugging/reporting paths.
+
+The retained state matches the successful restored-control run
+`b80cd7b7de3947c79c45d436b45b996d`. It passes all 203 original-baseline summary
+comparisons and 6203 additional recorded correctness/absolute-budget checks.
+The reporting-only control also passed before the restart. These observations
+support retaining the counters, not claiming that logging speeds up the GPU.
+
+Deleted `voxel_regular_cell.hlsl` and `transvoxel_regular_metadata.hlsl` had no
+authored consumer in Code, Editor, Assets or ProjectSettings. This removes the
+obsolete alternate density-zero classifier and unused metadata declaration. The
+live regular lookup tables and their license remain. Generated shader binaries
+were not hand-edited or treated as source cleanup.
+
+### Candidate A: remove overwritten scratch clears — rejected
+
+This candidate removed cell/edge-ID clears and their corresponding post-clear
+barriers, initialized empty-cell metadata in classification, and removed unused
+count-shader helpers and allocation declarations/binding. Scan and classification
+stages already overwrite the affected entries before their intended consumers.
+At 32 cells per axis, the source-level saving was 693388 logical store bytes per
+regular count region; this is not a measured DRAM-bandwidth reduction.
+
+Both runs preserved recorded geometry but failed performance gates. The first
+missed moving CPU p99 and several regular/transition publication tails. The
+unchanged repeat again missed CPU/streaming tails and reached placement-level lag
+4 against a permitted 3. All runtime/shader changes from this candidate were
+removed. Without kernel attribution, the reason that this apparently redundant
+work removal did not pass is unresolved. Correct geometry alone was insufficient.
+
+### Candidate B: compact emission by destination arena — rejected
+
+The control dispatched 152211 regular region slots for 78543 enabled output
+regions. Each destination arena received the full original count-batch domain,
+including disabled descriptors. The prototype packed enabled descriptors into the
+existing buffer and used each descriptor's `RequestIndex` to address its original
+density, cell, edge and prefix-sum data. It added no GPU buffer, topology path or
+allocation policy. Per-arena vertex/index dispatch counts stayed the same; their
+thread domains shrank. The final variant also removed redundant emitter batch-size
+assignments from count setup.
+
+The reduction was real: the final candidate dispatched 78545 slots for 78545
+regions, versus the nearby restored control's 152267 slots for 78556 regions,
+about 48.4% fewer slots with near-identical workload completion. This is a reduction
+in dispatched region slots, not 48.4% less GPU time. Threads within enabled regions
+still scan complete cell/edge domains.
+
+| Measurement | Fresh restored control | Final compact candidate |
+| --- | ---: | ---: |
+| Moving CPU p95 / p99, ms | 1.1610 / 1.9171 | 1.1538 / 1.8836 |
+| Moving GPU p95 / p99, ms | 0.9096 / 1.2650 | 0.9005 / 1.2558 |
+| Stationary GPU p95 / p99, ms | 0.5388 / 0.7503 | 0.5386 / 0.7634 |
+| Moving allocations/frame, bytes | 28852.453 | 28816.855 |
+| Post-loop drain, ms | 25.9653 | 25.4373 |
+| Fine1/coarse2 publication p99, ms | 211.6967 | 223.4091 |
+
+The first candidate missed original-baseline outer p99. Its unchanged cold run
+passed. However, the restored unoptimized control reproduced almost all of the
+broad post-restart frame improvement. A meaningful frame-time gain from compaction
+was therefore not established. The final candidate passed original-baseline gates
+but missed the additionally predeclared nearby-control transition p99 limit:
+222.281535 ms. The failure was small, but it was preserved rather than weakening
+the criterion or repeating until a favorable run appeared. All compact-emission
+code, including its wrapper comments and batch-size cleanup, was removed.
+This is a conservative rejection with unresolved timing attribution, not proof
+that compaction intrinsically harms transitions.
+
+### Correctness, engine behavior and limits
+
+All eight runs retained identical recorded regular/transition geometry, including
+per-level/pair fingerprints and every recorded transition face matched by spatial
+identity. All pending/error/truncation and absolute-budget checks passed; the
+separate relative performance comparisons identify the rejected runs. Persistent
+terrain capacity stayed at 14 arenas with the same 34310016 regular-scratch and
+3884628 transition-scratch bytes. Whole-editor memory varied with process/hotload
+history, without a terrain-owned capacity increase from these candidates.
+
+The explicit emitted-buffer audit sampled 104 regions after candidate B's timed
+run. It found no invalid indices, nonfinite/out-of-bounds positions, abnormal
+normals, allocation-identity mismatch, oversized triangles or draw-argument defect.
+Its 47 flagged regions were transitions with existing degenerates. The total was
+1838 versus the baseline sample's 1666; equal-distance selection can choose different
+region identities, so these totals are not a fixed-subset comparison. The full
+[audit](../ValidationEvidence/GpuMeshing512/332a05fcc39e41a7ac23e5e05a2009b1-audit.md)
+and known limitation remain visible. Main-camera inspection supported continuity
+in that view; exhaustive seams and edited terrain were not verified.
+
+HLSL include edits did not trigger the installed editor's shader recompiler.
+Re-saving the owning `.shader` wrapper did, and generated output was verified
+before timing. Native `asset_compile` rejected these resources as compiled-only.
+The candidate survived a clean editor restart and actual Figure Eight execution,
+with the crash marker unchanged. These findings reinforce the existing dedicated
+regular-emitter resource boundary; they do not establish that merging shaders is
+safe on this engine.
+
+### Next investigation
+
+The next useful step is reliable GPU stage attribution and stronger publication
+wait attribution in the same production workload. Current CPU allocation p95 is
+roughly 0.01 ms in the measured foreground batches; count readback includes queue,
+execution, transfer and callback delay. Those observations do not justify replacing
+the allocator. The deferral counter establishes opportunities to observe waiting,
+but does not measure starvation or identify the dependency blocking publication.
+
+Compact emission remains a small, understood future experiment if workload or
+hardware evidence justifies revisiting it. Cooperative scans/atomics and visibility
+diagnostic gating remain unimplemented proposals. Do not stack them onto an
+unaccepted candidate. Dual marching cubes, GPU-owned allocation and meshlets still
+require their own measured bottleneck and engine-integration evidence before a
+replacement is warranted.

@@ -413,6 +413,13 @@ internal sealed class PerformanceMeshingMetrics
 	public float MaximumGpuMilliseconds { get; init; }
 	public PerformanceLatencyMetrics ScheduleToRenderable { get; init; }
 	public PerformanceMeshingThroughputMetrics Throughput { get; init; }
+	public long RegularCountBatches { get; init; }
+	public long RegularCountRegions { get; init; }
+	public long RegularEmitArenaPasses { get; init; }
+	public long RegularEmitBatchSlots { get; init; }
+	public long RegularEnabledEmitRegions { get; init; }
+	public long RegularMultiArenaBatches { get; init; }
+	public long TransitionDeferredRenderTicks { get; init; }
 }
 
 internal sealed class PerformanceMeshingThroughputMetrics
