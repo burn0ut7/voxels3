@@ -75,6 +75,22 @@ validation gates. The [collision prototype](Architecture/TerrainCollision.md)
 is implemented but unaccepted. Reuse the existing Transvoxel
 entries below for topology theory and lookup data.
 
+## Terrain Stability and Collapse
+
+The [stability research](Research/TerrainStabilityAndCollapse.md) compares these
+sources and proposes edit-triggered, bounded analysis. It introduces no runtime
+physics or material contract. Reuse the Godot terrain and physics-performance
+entries above for general field and collision integration.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Godot floating chunks](https://github.com/Zylann/godot_voxel/blob/2a276e180f2d59650566c52a68d2f2e364ff2329/edition/floating_chunks.cpp) | Smooth SDF fragment extraction, boundary uncertainty, delayed dynamic activation. | Connectivity is not structural strength; fixed collider delay is not readiness proof. |
+| [Vintage Story unstable rock](https://github.com/anegostudios/vssurvivalmod/blob/8eb9552972540749393fa7fa8206d28f582e8dca/BlockBehavior/BlockBehaviorUnstableRock.cs) | Local support checks, server decisions, staged cave-in layers. | Block geometry and material radii differ; source has proprietary terms and provides no Voxels3 performance result. |
+| [TerraFirmaCraft collapse](https://github.com/TerraFirmaCraft/TerraFirmaCraft/blob/a45b81f9f22e2d9af79f5050bf0025697ea5b990/src/main/java/net/dries007/tfc/common/recipes/CollapseRecipe.java) | Separate mining triggers, propagation, warnings, and falling entities. | Version-specific; propagation can ignore supports. Do not inherit that gameplay policy or assume the initial search bounds the whole event. |
+| [Blast stress solver](https://github.com/NVIDIAGameWorks/Blast/blob/9f4fc41dc5d857e3c7c3500fc71953e54d780a39/sdk/extensions/stress/include/NvBlastExtStressSolver.h) | Compare graph-based load/stress and bounded iteration controls. | Historical native chunk/bond solver, not a mutable SDF or verified s&box integration; inspect revision-specific terms before code reuse. |
+| [Teardown multiplayer account](https://blog.voxagon.se/2026/03/13/teardown-multiplayer.html) | Separate ordered permanent destruction from dynamic-object synchronization. | Teardown command determinism does not establish SDF determinism or justify replacing existing terrain replication. |
+| [Voxel Plugin migration](https://docs.voxelplugin.com/getting-started/migrating-from-legacy) | Verify legacy versus current terrain-physics availability. | Current VP2 documentation excludes legacy voxel physics; legacy feature lists are not current capability evidence. |
+
 ## Runtime Deformation and Replication
 
 The [second-slice deformation research](Research/TerrainDeformationSecondSlice.md)

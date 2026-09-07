@@ -23,6 +23,7 @@ link to it elsewhere instead of copying its state, settings, or results.
 | What is the proposed first terrain collision slice? | [Terrain collision research](Research/TerrainCollisionFirstSlice.md): full-resolution gameplay collision, CPU/GPU separation, engine evidence, and implementation measurement gates; proposal history. |
 | How should the second slice add responsive terrain deformation? | [Terrain deformation research](Research/TerrainDeformationSecondSlice.md): current-source audit, regional edited state, brush behavior, local rebuilds, multiplayer/distant edits and a dedicated benchmark proposal. |
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
+| How should mining scraps, dirt stability, and cave-ins behave? | [Terrain stability research](Research/TerrainStabilityAndCollapse.md): source-backed game comparisons, bounded connectivity and support rules, debris policy, and performance gates; proposal only. |
 | How should expensive generated terrain be saved and streamed in multiplayer? | [Chunk streaming and storage research](Research/ChunkStreamingStorage.md): server authority, regional persistence, loading/unloading, coherent joins, LOD data and implementation gates. |
 | What is the first authoritative chunk storage prototype? | [Storage prototype plan](Architecture/ChunkAuthoritativeStorage.md): existing live deformation, persisted regional history, real eviction/reload and staged acceptance. |
 
