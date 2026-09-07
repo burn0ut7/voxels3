@@ -6,19 +6,19 @@ Status: research and recommended direction, **not an implemented contract or per
 
 ## 1. Recommended direction
 
-Use a **server-owned, spatially indexed terrain store**. The server loads an existing region before generating it, materializes expensive generation results, commits edits through one mutation boundary, and sends versioned terrain state to interested clients. Keep resident memory, generation, disk work, network traffic and derived geometry separately bounded.
+Use a **server-owned, spatially indexed terrain store with a deterministic client-generation option**. The server owns the procedural recipe, saved changes and gameplay decisions; clients may reconstruct the baseline without supplying authoritative terrain. The server loads existing state before generating required gameplay regions and reuses expensive results. Keep resident memory, generation, disk work, network traffic and derived geometry separately bounded.
 
 The recommended end state is:
 
-1. **Generate on the server; reuse saved results.** Seed and a pinned generator recipe describe unexplored terrain. Once materialized, saved terrain is the source for that region. Do not rerun every biome/noise operation on every visit, collision query and client.
+1. **Keep generation authority on the server; share deterministic reconstruction.** Evaluate client generation, especially for distant visuals, while the server independently generates/loads terrain needed for gameplay. Cache expensive results. A server-defined recipe can establish terrain before every sample has been materialized; no client result establishes server state.
 2. **Store current regional state plus transactional recovery information.** Use compressed page checkpoints and a bounded recovery journal or database transactions. Do not require replaying the world's entire brush history to join or reopen it.
-3. **Stream nearby gameplay samples and coarse distant samples.** Replicate authoritative state, then let clients build disposable meshes. A far horizon must not trigger transmission or materialization of its entire full-resolution volume.
+3. **Replicate changes to a known baseline; send state when needed.** Compatible clients may generate the baseline and apply server-owned regional changes. Use authoritative page snapshots for incompatible or divergent reconstruction. For distant terrain, compare client generation with server-derived coarse data; neither route should expand the entire fine-resolution volume.
 4. **Use one revisioned synchronization protocol.** Initial join, movement, reconnect, cache validation and repair use snapshots and absolute state updates with explicit base/target versions. Client-generated terrain never repairs or establishes server state.
 5. **Treat storage capability as an implementation gate.** SQLite is the leading embedded backend candidate, conditional on a supported s&box binding and filesystem contract. If those are unavailable, a supported external persistence service is preferable for strong durability to casually implementing a database in game code.
 
 These are project recommendations drawn from the evidence below, not a claim that one game already implements this exact architecture. Luanti provides the clearest inspectable server lifecycle; Godot Voxel directly documents saving expensive generated blocks. Both are better starting references here than an uncited claim about a closed-source game's internals. See [Luanti's emergence path](https://github.com/luanti-org/luanti/blob/b81bb3c68ac633f1df8dd8ed758644cabf4c1efd/src/emerge.cpp#L545-L585) and [Voxel Tools streams](https://voxel-tools.readthedocs.io/en/latest/streams/).
 
-**Immediate next slice:** establish durable paging of the existing correction field, with real eviction/reload and late-join verification. **Subsequent expensive-generation slice:** introduce an explicitly versioned baked-field representation, prove its sampling and LOD semantics, and integrate it into that same store and protocol. Do not silently change today's field while calling the change only a save optimization.
+**Immediate next slice:** establish durable paging of the existing correction field, with real eviction/reload and late-join verification. **Subsequent generation decision:** measure deterministic client reconstruction plus authoritative regional updates against server-supplied samples. Materializing a new baked-field representation remains an option when its measured benefit justifies migration; it is not a prerequisite for server authority. Do not silently change today's field while calling the change only a save optimization.
 
 ## 2. What Voxels3 currently implements
 
@@ -58,11 +58,17 @@ At commit `b81bb3c68ac633f1df8dd8ed758644cabf4c1efd` (committer date 2026-09-04)
 
 Voxel Tools' stream documentation explicitly permits saving every generated block when the generator is too expensive to rerun; its default otherwise saves modified blocks. Terrain performs asynchronous loading/saving. It warns that pending tasks outlive scene destruction and that changing a live stream's path can send old-world saves into a new world. [Streams and asynchronous save lifecycle](https://voxel-tools.readthedocs.io/en/latest/streams/).
 
-The multiplayer documentation describes server-owned viewers and server-supplied block data. Remote players need server interests; a client's terrain interest generally belongs to its own viewer. Crucially, that page labels multiplayer experimental and says its documented approach does not support `VoxelLodTerrain`. It is evidence for responsibility separation, not proof of solved smooth-terrain multiplayer LOD. [Multiplayer documentation](https://voxel-tools.readthedocs.io/en/latest/multiplayer/).
+The multiplayer documentation describes server-owned viewers. Its dated 2022 approach explicitly allows clients to generate unedited blocks locally and install server-supplied edited data; installing a replacement cancels pending local generation so it cannot overwrite the replacement. The page labels multiplayer experimental and says the documented approach does not support `VoxelLodTerrain`. It establishes a hybrid technique, not solved smooth multiplayer LOD or arbitrary generator-mismatch deltas. [Multiplayer documentation](https://voxel-tools.readthedocs.io/en/latest/multiplayer/).
 
 The SQLite stream supports LOD-bearing coordinate keys and documents a key cache useful for sparse edited saves, not saves containing all generated blocks. The pinned implementation uses a write cache and explicit transaction failure recovery; a requested save and completed durable write remain different events. [SQLite stream API](https://voxel-tools.readthedocs.io/en/latest/api/VoxelStreamSQLite/), [source at `2ac9f5f8a8219bf499314cc0fad54ffc47df908f`](https://github.com/Zylann/godot_voxel/blob/2ac9f5f8a8219bf499314cc0fad54ffc47df908f/streams/sqlite/voxel_stream_sqlite.cpp).
 
 **Adopt:** a block-addressable store, immutable world identity for asynchronous work, and saving expensive generated results. **Limit:** its Godot/C++ integration and LOD/network support cannot be transplanted as an s&box subsystem.
+
+### Space Engineers: historical procedural baseline and synchronized changes
+
+Keen's archived source at `54f2f0f3169cda687a25a438097902a43bdfa603` contains seeded asteroid generation whose inspected initialization/generation path is not restricted to the server. Generated asteroid storage is marked `Save = false`; its first range change switches saving on. Separate voxel operations use replicated events. This is historical game-source evidence for procedural reconstruction alongside persistent/networked changes. [Generator initialization](https://github.com/KeenSoftwareHouse/SpaceEngineers/blob/54f2f0f3169cda687a25a438097902a43bdfa603/Sources/Sandbox.Game/Game/World/Generator/MyProceduralWorldGenerator.cs#L261-L290), [asteroid creation and persistence](https://github.com/KeenSoftwareHouse/SpaceEngineers/blob/54f2f0f3169cda687a25a438097902a43bdfa603/Sources/Sandbox.Game/Game/World/Generator/MyProceduralAsteroidCellGenerator.cs#L147-L195), [voxel edit events](https://github.com/KeenSoftwareHouse/SpaceEngineers/blob/54f2f0f3169cda687a25a438097902a43bdfa603/Sources/Sandbox.Game/Game/MyVoxelBase.cs#L780-L806).
+
+**Transfer limit:** these files do not establish a protocol that compares arbitrary client/server generated chunks and sends mismatch deltas, nor the current shipped game's behavior or security guarantees. Use this precedent to investigate reconstruction plus changes, not to claim deferred client verification eliminates authoritative server work.
 
 ### Minecraft-compatible region storage: study the format, not folklore
 
@@ -82,6 +88,8 @@ Voxel Plugin 1.2 distinguishes replaying edit actions from transmitting voxel st
 
 Epic's World Partition describes multiple streaming sources, priorities, loaded versus activated states, and preloading a teleport destination before moving the player. These ideas transfer to readiness; actor streaming does not solve SDF persistence. [Epic World Partition documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine).
 
+Voxel Plugin's 2.0p8 page also describes deterministic generation across server and clients from identical inputs. This supports evaluating shared reconstruction while retaining the page's explicit limitation that runtime edits require manual synchronization. [2.0p8 generation and multiplayer](https://docs.voxelplugin.com/knowledgebase/blueprints/multiplayer-support).
+
 **Synthesis:** separate world state, data residency, simulation readiness, visual readiness, persistence and delivery. The references agree on these responsibilities more strongly than on a particular database, chunk size or transport.
 
 ## 4. Authority and security contract
@@ -92,7 +100,28 @@ The server owns generation inputs, generated output, edit ordering, page version
 
 A client must never send an authoritative chunk, density result, generator completion, hit result or inventory reward. Cache hashes and acknowledgements help decide what to send; they cannot prove that a modified client rendered or simulated terrain honestly. A lying client must only damage its own presentation, not change the shared world.
 
-Client generation is not inherently an authority violation if the server independently owns all gameplay. It is nevertheless the wrong primary dependency for this request: it duplicates expensive generation, requires client compatibility and reveals the recipe/seed. Prefer server-supplied state. Keep the expensive recipe and seed server-side unless a specific product need warrants exposing them.
+Client generation is compatible with server authority when gameplay is independently evaluated by the server. Recommend evaluating a shared deterministic baseline plus server-owned edits, particularly for distant visuals. Reconstruction requires compatible inputs/evaluation and exposes whatever recipe/seed is supplied. Keep hidden gameplay information in separately controlled server data if necessary; do not assume shared generation can conceal that same information.
+
+### What client generation actually relieves
+
+| Approach | Potential benefit | Remaining server cost |
+| --- | --- | --- |
+| Client generates, then server generates the same chunk and compares | Earlier provisional visuals and possibly smaller downloads | Essentially the same generation work, plus comparison/repair overhead |
+| Compatible baseline generated locally; server sends committed changes | Less baseline bandwidth and network waiting | Independent generation/loading wherever server gameplay requires terrain |
+| Client generates distant visual terrain; server materializes only gameplay dependencies | Can reduce server generation as well as bandwidth | Union of nearby player/actor/edit dependencies; still grows with disjoint exploration |
+| Trusted generation workers or pre-generation | Moves or smooths expensive work outside the active simulation workload | Compute/storage still exist; trusted outputs, ordering and deployment must be qualified |
+
+Latency hiding is not increased server throughput. If requests arrive faster than the server can prepare authoritative gameplay terrain, a growing queue eventually exhausts the client's prediction lead. Keep generation bounded, reuse cached results, deduplicate overlapping interests, prefetch and reserve service for gameplay. Many clients seeing the same region should share one server generation result; many exploring different regions are the difficult case.
+
+A promising further split is server-owned macro generation data with deterministic client evaluation of visual detail. This helps only if macro data is reusable and fine evaluation is bounded; it does not permit gameplay-relevant details to exist solely in an untrusted client's result. These are proposed alternatives to measure, not implemented worker services or performance claims.
+
+### Baseline updates versus generation disagreement
+
+Prefer **changes relative to a known baseline** as the normal protocol: pin the generator/version/settings, generate locally, then apply the server's committed regional state. The server need not accept client samples or continuously compare the entire world to remain authoritative. It evaluates its own state for gameplay and controls all mutations.
+
+Treat **arbitrary generation disagreement** as recovery. A different recipe or CPU/GPU floating-point behavior can produce widespread differences, so a tiny delta is not guaranteed. A hash detects disagreement but does not identify changed samples. A delta requires an identified compatible baseline; otherwise send bounded absolute pages, invalidate dependent meshes/collision, and disable incompatible local reconstruction for that session. Hashes and sampled checks are not a cheap proof that client-generated gameplay terrain is correct.
+
+Locally generated distant terrain may be provisional presentation. Nearby traversal, digging and building still require server gameplay readiness and a coherent received edit revision. Guessing that an edited region is untouched can display solid ground over a saved tunnel. If server support is missing, hold progression or use explicitly reconciled prediction; do not grant persistent rewards or accept actions on unchecked client collision. Predicting farther ahead can hide bounded delays, but cannot guarantee safe play through sustained server overload.
 
 This does not eliminate all cheating. A client can inspect anything it receives. Sending deep ore, caves or hidden structures permits information extraction even if editing is secure. Use separate server-only semantic records and restricted interest if hidden information matters; coarse visual terrain should omit unnecessary gameplay metadata. Perfect concealment of already-transmitted geometry is not promised.
 
@@ -105,17 +134,17 @@ The host process is the trust boundary for listen servers. Preventing the person
 | Representation | Benefit | Main cost or failure mode | Decision |
 | --- | --- | --- | --- |
 | Seed/recipe plus entire edit history | Small early saves | Regeneration and replay grow; historical tool semantics must remain executable | Reject as the sole long-lived state and join format |
-| Pinned procedural base plus materialized correction pages | Fits today's field; economical when edits are sparse | Expensive base still runs unless separately cached; old generator remains necessary | Use for the first persistence slice |
-| Materialized final density/material pages | Reads and joins avoid base generation; edits become ordinary page updates | Disk growth and a deliberate sampled-field contract | Recommended expensive-generation end state |
+| Pinned procedural base plus materialized correction pages | Fits today's field; supports shared reconstruction and sparse edit transfer | Expensive base still runs unless cached; compatible generator remains necessary | First persistence slice and leading hybrid candidate to measure |
+| Materialized final density/material pages | Reads and joins avoid base generation; edits become ordinary page updates | Disk growth and a deliberate sampled-field contract | Conditional alternative when measurements justify baking/migration |
 | Meshes as saved authoritative terrain | Fast display of exactly that mesh version | Poor editing/query representation; renderer-dependent; collision can diverge | Reject as canonical state; optional derived cache only after profiling |
 
-A generator recipe remains the authoritative rule for **unmaterialized** coordinates. For a materialized coordinate, the store's final page is authoritative. This is one terrain model with explicit storage state, not two competing mutable bases. An immutable generation cache may be retained only as a reconstructible optimization or migration aid; do not indefinitely keep a mutable final field and an independently mutable correction field for the same format.
+A generator recipe remains the authoritative rule for **unmaterialized** coordinates. In the baseline-plus-corrections design, materialized base samples are caches; recipe plus committed corrections remain canonical. If the baked format is adopted, its saved final page becomes authoritative for that coordinate. Choose one field interpretation per world format. Do not keep an independently mutable final field and correction field as competing truths. A reconstructed client replica is never an authority source in either design.
 
 ### Baking is a semantic change, not just serialization
 
 Today `SampleWorld(p)` evaluates the continuous procedural formula at `p` and adds interpolated corrections. Storing only values on the 16-unit lattice and then interpolating them generally does **not** reproduce that formula between lattice points. Normals, ray hits, classification and collision queries can change even when lattice values match. [Current sampling source](../../Code/Voxels/TerrainField.cs).
 
-For the expensive-generation format, recommend an explicitly defined canonical lattice: server-generated finite float density samples, fixed coordinates and interpolation rules, with all fine gameplay consumers using the same contract. Initial precision stays float32. Before adoption, compare actual collision/contact, brush behavior, normals, thin features and LOD seams through the production world. If preserving the continuous field is required, cache immutable regional generation intermediates while retaining its evaluator; acknowledge that clients then still need a verified evaluator or more server-provided query data.
+If the baked format is chosen, define a canonical lattice: server-generated finite float density samples, fixed coordinates and interpolation rules, with all fine gameplay consumers using the same contract. Initial precision stays float32. Before adoption, compare actual collision/contact, brush behavior, normals, thin features and LOD seams through the production world. The shared-baseline candidate can instead preserve the continuous field and cache immutable regional generation intermediates; compatible clients use its verified evaluator and receive authoritative changes.
 
 Migration must read the old pinned recipe and correction pages, bake into a **new world-format version**, validate and retain the original backup. Do not run both field interpretations as selectable runtime fallbacks. No representation change is authorized or implemented by this report.
 
@@ -254,13 +283,15 @@ Use application fragments inside the supported transport. A 16 KiB application f
 ### Join or new spatial interest
 
 1. Authenticate the connection and choose the interest from server-approved player/actor state. A client may request a quality preference within server limits; it cannot force arbitrary world generation.
-2. Freeze a coherent region manifest at a committed revision. Enumerate the required pages or explicit known-empty records from that snapshot, including halos and transition dependencies.
-3. Send a small gameplay safety region first. Follow with required coarse visual coverage and refinement according to bounded priorities. Do not wait for the entire distant horizon before allowing all nearby interaction, unless the existing publication dependencies actually require it.
+2. Freeze a coherent region manifest at a committed revision. Identify the compatible procedural baseline and complete edit coverage, or enumerate authoritative replacement pages and explicit known-empty records. Include halos and transition dependencies. An absence of listed edits establishes unedited terrain only within explicitly complete coverage.
+3. Prepare a small gameplay safety region first. Compatible clients reconstruct the baseline and apply its committed changes; other cases receive sample pages. Follow with required coarse visual coverage and refinement according to bounded priorities. Do not wait for the entire distant horizon before allowing all nearby interaction, unless the existing publication dependencies actually require it.
 4. Client stages and validates records off-thread, then installs a complete dependency group through its canonical field boundary. Missing data remains unknown; absence from an incomplete transfer never means air or unedited terrain.
 5. Acknowledge installed data revisions. Report collision/visual readiness separately. Existing Voxels3 currently delays final acknowledgement for readiness; any split must preserve its safety gates while allowing obsolete network buffers to be released.
 6. Coalesce changes that occurred during transfer into the next absolute update. If a retained baseline is unavailable, send a new snapshot through the same protocol. Never retain an unlimited edit backlog for one slow client.
 
 A regional manifest can contain different page revision numbers and still be coherent if all are taken from one committed world cut. A transaction touching pages on both sides of an interest boundary sends the relevant state and required dependencies; the client need not receive the entire world transaction's unrelated spatial data.
+
+Treat baseline reconstruction and page replacement as encodings within this one synchronization protocol. Both install through the same field boundary and revision checks. A local generation job captures its baseline identity and target revision; an authoritative replacement or newer edit invalidates the job before publication. Never let a late baseline completion erase an already installed edit. Reconstruction compatibility includes generator inputs, evaluation rules and field format, not just the world seed.
 
 ### Editing during transfer: concrete example
 
@@ -280,14 +311,14 @@ Keep client cache quotas, expiry and eviction local and bounded. A server restar
 
 The current visual system reaches far using coarse evaluation, not by allocating every fine voxel in that volume. Keep that property when generation becomes stored data.
 
-**Proposed policy:** fine pages for gameplay and nearby visuals; bounded, server-derived coarse sample bricks for the existing distant clipbox; explicit support samples for transition geometry and normals. Render and collision meshes remain local derivatives. The server may share encoded immutable coarse bricks across interested peers.
+**Revised candidate policy:** clients generate compatible distant baseline samples and apply server-owned changes; the server focuses materialization on actual gameplay dependencies. Compare this against bounded server-derived coarse bricks when generation is too expensive for clients, incompatible or cannot be reconstructed from shared inputs. Supply explicit support samples/rules for transitions and normals. Render/collision meshes remain derived data. The server can share immutable encoded bricks where it supplies them, but need not reproduce every visual-only sample merely to compare it with a client.
 
 At shared lattice positions, fine/coarse samples must agree under the chosen field contract. Start from nested sampling rather than independently generated “similar-looking” coarse terrain. Filtering or averaging changes the represented surface and may lose caves; adopt it only with a defined restriction rule and measured seam/feature behavior. A sign summary may skip proven non-surface geometry, but cannot replace the density magnitude needed for interpolation near a surface.
 
 There are two distinct coarse construction cases:
 
-- **Already materialized or edited terrain:** derive coarse values from canonical fine state with a spatial index over relevant persisted edits. Dirty the exact dependent coarse/transition regions on commit, including when those regions are not resident; stale disk caches must also fail dependency checks later.
-- **Unexplored procedural terrain:** the pinned generator may evaluate only the nested sample positions required by a coarse brick, sharing immutable macro generation data. Later fine generation must produce identical values at those positions. This is a generator contract, not permission to generate a different coarse world.
+- **Already materialized or edited terrain:** derive coarse values from the selected canonical field with a spatial index over relevant persisted edits. A generating client needs complete authoritative edit coverage or a server-provided coarse replacement. Dirty exact dependent coarse/transition regions on commit, including nonresident ones; stale disk caches must fail dependency checks later.
+- **Unexplored procedural terrain:** a compatible client or the server may evaluate only the nested positions required by a coarse brick, sharing immutable macro generation data. Later authoritative fine generation must produce the same values at shared positions under the chosen contract. This does not require immediate server evaluation of all distant samples and is not permission to generate a different coarse world.
 
 If a future generator cannot evaluate coarse samples without first generating all fine children, do not recursively expand an enormous fine volume on demand. Precompute an authoritative multiresolution dataset, constrain first-visit visual distance, or redesign the generator's bounded evaluation. For some generators this is the decisive feasibility limit; compression cannot solve generation that was never bounded.
 
@@ -338,8 +369,8 @@ Use real host/client sessions to establish payload envelopes, supported array se
 
 1. **Durable correction paging.** Preserve today's field semantics. Index persisted correction pages, load before mutation, save revisions transactionally, evict safely, and make rejoin/movement read from that store. Replace whole-world memory assumptions within the existing owner; retain export snapshots only if they have a separate documented backup responsibility.
 2. **Qualify the storage backend and recovery.** This belongs in the first slice, not after calling it durable. Prove interrupted writes, disk full, restart, cross-page edits, idempotency and backup restore using the production path.
-3. **Baked-generation format.** Specify interpolation, materials, generator versioning and migration. Add materialized generated state through the same terrain boundary; replace the old runtime interpretation for that format. Validate before performance comparisons.
-4. **Hierarchical network terrain.** Extend the existing manifest/page transfer to generated state and server-derived LOD data; partition bounded install groups around actual mesh/collision dependencies. Preserve coherent snapshots and invalidation of persisted coarse caches.
+3. **Generation strategy qualification.** Compare shared deterministic baseline plus authoritative changes against supplied samples using fixed cold/warm and disjoint-player workloads. Measure server CPU, network traffic, client generation/frame cost, time to visuals, time to safe gameplay and mismatch frequency separately. If baking wins, specify its field semantics and migration before changing representation.
+4. **Hierarchical network terrain.** Extend the existing manifest/page transfer to identify reconstructible baselines, complete edit coverage and authoritative replacement/LOD data within one protocol. Partition bounded install groups around actual mesh/collision dependencies; preserve stale-job rejection and invalidation of persisted coarse caches.
 5. **Scale with evidence.** Add measured prefetch, warm caches, compression and peer fairness as required. Do not begin with distributed world sharding, a custom transport, or a speculative storage framework.
 
 These are sequencing recommendations, not permission to leave an advertised persistence feature without failure recovery. Each accepted shipping slice must have its own complete contract and measurable result.
@@ -358,6 +389,8 @@ The following are scenario requirements, **not pre-approved executable scenarios
 | Concurrent overlap/disjoint players | Separate fixed 1/8/32/64-player cases, routes and interest settings | Shared-job reuse versus worst-case disjoint memory; per-peer service and starvation; aggregate bandwidth |
 | Save/load failures | Committed edits, interruption phase, process-stop or storage-failure method, recovery expectations | Exactly the promised committed state; no half cross-page transaction, regeneration over corruption or duplicate reward |
 | Cache/reconnect | Exact world/epoch/version changes, eviction and stale content | Reuse only after server validation; bounded repair; no trust escalation |
+| Client baseline generation | Exact recipe, field format, hardware/backend, regions, server queue conditions and concurrent edits | Matching shared samples; no stale generation erases edits; bounded mismatch repair; separate visual latency and authoritative readiness |
+| Sustained generation overload | Fixed disjoint exploration rate, generation concurrency, cache state and prediction lead | Bounded queue/memory; explicit progression limits; no false claim that provisional visuals increase server throughput |
 | Boundary/LOD edits | Face/edge/corner cases, negative origin, exact tool sizes and enabled levels | Fine/coarse consistency; normals and transition seams; stale disk LOD rejected |
 | Teleport and fast travel | Fixed source/destination, maximum speed and network conditions | No fall-through or unknown-terrain gameplay; bounded failure and useful loading status |
 | Invalid input and stalled peer | Fixed oversized/truncated payloads, duplicate IDs, illegal edits, stalled ACK behavior | Rejection before unbounded allocation; server state unchanged; other peers still progress |
@@ -373,6 +406,9 @@ Freeze performance thresholds against actual hardware and comparable baselines b
 | --- | --- | --- |
 | Server load-before-generate and bounded per-client transfer | Strong primary implementation evidence | Voxels3 scheduling and runtime capacity |
 | Saving expensive generated blocks is a practical design | Explicit first-party Voxel Tools documentation | Actual generation/load break-even |
+| Shared baseline plus authoritative changes is a practical hybrid | Explicit dated Godot Voxel guidance, Voxel Plugin documentation and historical Space Engineers source | Voxels3 determinism, edit coverage, LOD and reconciliation |
+| Client generation reduces server generation cost | Conditional architectural inference | Only when it removes server work, such as visual-only evaluation; independently checking the same full chunk does not remove that cost |
+| Games routinely repair arbitrary generation mismatches using small deltas | **Not established** | Inspected examples establish related reconstruction/change techniques, not this exact protocol |
 | Current Voxels3 corrections and snapshots need real paging | Current source evidence; no runtime capacity claim | Re-audit changing working tree and implement complete lifecycle |
 | Materialized sampled terrain can avoid repeated base generation | Architectural inference | Explicit field-format migration and geometric acceptance |
 | Fine-volume streaming is infeasible at far visual radii | Exact payload arithmetic | Measured sparse/coarse coverage and compression |
@@ -380,7 +416,7 @@ Freeze performance thresholds against actual hardware and comparable baselines b
 | Transport will support desired player count | **Not established** | Real relay/dedicated sessions, bandwidth and fairness tests |
 | A named engine is “fastest” or solves all smooth multiplayer needs | **Not established** | No comparable benchmark; not needed to select responsibilities |
 
-Research used bounded searches for Luanti map storage/emergence, Voxel Tools streams/multiplayer/SQLite, Minecraft/Anvil primary implementation evidence, Factorio map transfer, Voxel Plugin replication limitations, SQLite WAL/durability/backups, s&box filesystem/RPCs and lossless compression candidates. Follow-up read pinned source paths and checked the highest-impact lifecycle claims against original code. A Microsoft Learn actor-storage page was inaccessible through the web tool; no consequential claim depends on it.
+Research used bounded searches for Luanti map storage/emergence, Voxel Tools streams/multiplayer/SQLite, Minecraft/Anvil primary implementation evidence, Factorio map transfer, Voxel Plugin replication limitations, SQLite WAL/durability/backups, s&box filesystem/RPCs and lossless compression candidates. The client-generation follow-up on 2026-09-07 re-read the explicit Godot hybrid and Voxel Plugin generation guidance and inspected Keen's archived source at the pinned revision above. These findings revise the earlier preference for universally server-supplied samples; no runtime behavior or acceptance changes. Follow-up checked consequential source claims against original code. A Microsoft Learn actor-storage page was inaccessible through the web tool; no consequential claim depends on it.
 
 Sources are living documents unless a version/date/commit is specified. All were accessed 2026-09-07. Relevant dates include Factorio's 2016 post, the 2023 iteration on Voxel Tools' multiplayer page, Voxel Plugin's explicitly separate 1.2/2.0p7/2.0p8 pages, and the pinned GitHub revisions above. Local engine evidence is an installed XML snapshot, while the helper's online API snapshot was dated 2026-09-06; neither substitutes for packaged game validation.
 
