@@ -297,6 +297,7 @@ internal sealed class PerformanceFrameMetrics
 	public float AverageFps { get; init; }
 	public float P95Milliseconds { get; init; }
 	public float P99Milliseconds { get; init; }
+	public float? MaximumMilliseconds { get; init; }
 	public float AverageGpuMilliseconds { get; init; }
 	public float P95GpuMilliseconds { get; init; }
 	public float P99GpuMilliseconds { get; init; }
@@ -531,6 +532,8 @@ internal sealed class PerformanceCollisionMetrics
 	public int Bodies { get; init; }
 	public int Pending { get; init; }
 	public bool Building { get; init; }
+	public int ActiveWorkers { get; init; }
+	public int WorkerLimit { get; init; }
 	public int Completed { get; init; }
 	public int Retiring { get; init; }
 	public int Failures { get; init; }

@@ -1,0 +1,41 @@
+{
+  "runId": "6cc2485f6d484e8a9ded872369ac4946",
+  "checks": {
+    "12Nonnoop": true,
+    "allDrained": true,
+    "noHolds": true,
+    "noErrors": true,
+    "field": true,
+    "cpu": true,
+    "gpu": true,
+    "p95MillisecondsDelta": true,
+    "p99MillisecondsDelta": true,
+    "p95GpuMillisecondsDelta": true,
+    "p99GpuMillisecondsDelta": true,
+    "peakProcessBytes": true,
+    "peakGpuBytes": true,
+    "allocation": true,
+    "pageBytes": true,
+    "queue": true,
+    "noCollisionPublications": true
+  },
+  "latencies": {
+    "fieldCommitMilliseconds": {
+      "samples": 12,
+      "p95": 18.4717,
+      "max": 18.4717
+    },
+    "visualPublicationMilliseconds": {
+      "samples": 12,
+      "p95": 22.6727,
+      "max": 22.6727
+    },
+    "editedCollisionDrainMilliseconds": {
+      "samples": 12,
+      "p95": 22.685,
+      "max": 22.685
+    }
+  },
+  "allocationMiBPerSecond": 24.99186619974182,
+  "decision": "Recorded numeric gates pass; full feature correctness remains incomplete"
+}

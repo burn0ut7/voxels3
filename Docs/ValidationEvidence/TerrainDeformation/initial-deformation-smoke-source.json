@@ -1,0 +1,42 @@
+{
+  "utc": "2026-09-07T12:52:39.208229+00:00",
+  "branch": "codex/terrain-deformation",
+  "base": "f1319ed",
+  "purpose": "initial field and local publication cold-start smoke; incomplete feature, no performance acceptance",
+  "files": {
+    "Code/Voxels/GpuSdfDescriptor.cs": "914f086c47dbc9bb3e424a571ccdbc0640ed90cdc9f32425d177e0e3db87471a",
+    "Code/Voxels/GpuTerrainContracts.cs": "8d6d6fc1b81b4561b98aa66f7e4f4d52c08f4dca161fc6eb86b19937bb12f5d2",
+    "Code/Voxels/GpuTerrainRangeAllocator.cs": "e1c86994476d897084b28df0cc5c6b7c579e46a908ec5ed4ac260d93999f8784",
+    "Code/Voxels/GpuTerrainScratch.cs": "8ca13f8e72f3982f95dece505399a3a0b30ff9b45dbffd309b9fe908db337e25",
+    "Code/Voxels/GpuTransitionScratch.cs": "24057220322be4973e2b6af5450a5545027c767ccdad4dab0deb54d779d4fc8f",
+    "Code/Voxels/GpuVoxelMesher.cs": "43621aa1c17c764fa4cf3930820c4c5fc2e5715b3f46262c1c100123262c31c2",
+    "Code/Voxels/GpuVoxelMesher.Deformation.cs": "6c7bad5e4cb7fe677a2a434356ec7c9cfdb2596f7ac1aeb2ef5855fbff7b1885",
+    "Code/Voxels/PerformanceTestResult.cs": "4d836ff5ae5ca0afbdfdfe606d4f38bf3ef5944e964a692b00194da690022e3f",
+    "Code/Voxels/ProceduralTerrainSdf.cs": "37b57ba9b66e0ea32573156215447c201ddb9b344aeeaf4c6c2724253d684ae1",
+    "Code/Voxels/TerrainField.cs": "e69f4f8f72496d130aa4ff1e4a43546c2969f12b18d31037a424448e7c86fd75",
+    "Code/Voxels/VoxelChunk.cs": "fc65e47f611f70d146578ead22354aca310e4a6c2d6c535b232c8843048ba367",
+    "Code/Voxels/VoxelCollisionMesher.cs": "f4048f1b36d6326a04e59b20e85caae36a69601435ff97c1a6c4028f735ea5e8",
+    "Code/Voxels/VoxelCollisionTables.cs": "b443245fa26b09a3454701ad0ded019b28886ab3596a5d1f3e9f66a770dac9ff",
+    "Code/Voxels/VoxelCollisionWorld.cs": "c68203ab8797b43368a895425f2d1a1d92cfe5c6c8f5038065bd938701cd929b",
+    "Code/Voxels/VoxelManager.cs": "e7b1087e400a6fe039da536c99ed4f83252955e12669be124d6a3ef199c264d4",
+    "Code/Voxels/VoxelManager.Deformation.cs": "494717be265797d680b61f1944f6291999c8a774e4b0f044560d42b435651c11",
+    "Code/Voxels/VoxelPerformanceProfiler.cs": "44c2137605db6779c4aa193d7acce9442067da0a8001db97539419d3a9aea53b",
+    "Assets/shaders/voxels/transvoxel_regular_tables.hlsl": "62cf0506b9bb0fc424664a889c50562925075dd5ad6b5deea03ee24294fb887d",
+    "Assets/shaders/voxels/transvoxel_transition_tables.hlsl": "c8049968f51e7dbdc3c3f373b16af5e5e3bd700d404289025bdc3c0ea6e7162a",
+    "Assets/shaders/voxels/voxel_chunk_visibility_cs.shader": "b59d7559642fabd2f0fe85e08125929dbd7229088a3e2e717f1bb7bab1cb60a7",
+    "Assets/shaders/voxels/voxel_emit_indices.hlsl": "6f4ef63d0f2b7a47b6a07a87774b116c096590249989209584f1779d4df33ae6",
+    "Assets/shaders/voxels/voxel_emit_indices_cs.shader": "638dbf3919a77cc1b8d238ba7ff77de7ec76d93d8910a53035e7ab45b21a1430",
+    "Assets/shaders/voxels/voxel_emit_vertices.hlsl": "93458645c839ab81fae1011a226310272b6305d1ff994d2da5f2a92ffade3d96",
+    "Assets/shaders/voxels/voxel_emit_vertices_cs.shader": "1423006bfb2bba5f7a908972890e6bdea6035623c69f4a937a4cda4ed453017c",
+    "Assets/shaders/voxels/voxel_persistent_geometry.hlsl": "23b2c6ed5cd250e4632d6295b5d7e3f98af7089911593ae1b96c433ac29eb652",
+    "Assets/shaders/voxels/voxel_persistent_geometry_cs.shader": "dffc200e191c6d957b2310c76377b4a0b6d01831d27498c6302f9f5a533d380e",
+    "Assets/shaders/voxels/voxel_sdf_v5.hlsl": "736eadfcb808d5e7e1915d38403fe15e08c578f74aea4f177d6008930462eae0",
+    "Assets/shaders/voxels/voxel_terrain.shader": "50d1c4465b8d5613359edba8b4ff6a27fc780a64100f23bca76e93d4bc48837b",
+    "Assets/shaders/voxels/voxel_transition_geometry.hlsl": "347bf5f36d61ba783dddd7efe56c21081850300135d84d40bee57baa64c30bb3",
+    "Assets/shaders/voxels/voxel_transition_geometry_cs.shader": "cab7804729d4d213200eacb1c945fbfde235b53efa238f024fbfa0b4e13cd269"
+  },
+  "lastCrashBefore": {
+    "mtimeNs": 1788772397503738000,
+    "content": "2026-09-07T09:13:17.503862Z"
+  }
+}

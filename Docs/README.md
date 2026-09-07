@@ -8,10 +8,12 @@ link to it elsewhere instead of copying its state, settings, or results.
 | How should an agent work in this repository? | [AGENTS.md](../AGENTS.md): project rules and route selection. |
 | What constraints apply to a domain? | [Agent routes](../AGENTS.md#route-map): domain-specific design and validation requirements, not implementation snapshots. |
 | What owns terrain state, coordinates, generation, and CPU preparation? | [Voxel foundation](Architecture/VoxelChunkFoundation.md). |
+| What owns live terrain edits and their implementation gates? | [Terrain deformation](Architecture/TerrainDeformation.md): in-progress implementation, validation status and remaining scope. |
 | How do visual LOD, GPU extraction, allocation, publication, and drawing work? | [GPU meshing](Architecture/GpuVoxelMeshing.md). |
 | How is the performance test implemented and invoked? | [Performance overview](Architecture/VoxelChunkFoundation.md#performance-overview). |
 | What workload should run, and what actually passed? | [Validation ledger](ValidationResults.md): exact versioned scenarios, measurements, and acceptance decisions. |
 | Why was visual scaling designed this way? | [Visual scaling decision](Research/VisualClipboxScaling.md): rationale and alternatives. |
+| What did the first terrain-edit profile reveal? | [Deformation profile](Research/TerrainDeformationProfile20260907.md): correction preparation, collision work and candidate optimizations. |
 | What performance questions remain worth investigating? | [Performance research](Research/ChunkPerformanceOptimizationFindings.md): evidence-backed questions, not an implementation backlog. |
 | What does the September 7 CPU capture show? | [CPU performance review](Research/CpuPerformanceReview20260907.md): sampled attribution, allocation/memory findings, source-backed hypotheses and measurement limits. |
 | Which larger CPU/memory capabilities are worth investigating? | [Performance enhancement directions](Research/PerformanceEnhancementDirections.md): bounded metadata, planning, admission and revisit reuse; separate from local optimizations. |

@@ -1,0 +1,1187 @@
+{
+  "capture": "C:\\Program Files (x86)\\Steam\\steamapps\\profiler_captures\\sbox_2026-09-07_17_09_18.json\\sbox_2026-09-07_17_09_18.json",
+  "sha256": "8266160f794db20d25145e3c6efc13246f2e85673beb3eccdbacebc3a0e97066",
+  "meta": {
+    "startTime": 1788815358112,
+    "profilingEndTime": 13033.6053,
+    "interval": 0.2,
+    "product": "sbox-dev"
+  },
+  "threads": [
+    {
+      "name": "0 - MainThrd (44684)",
+      "sampleCount": 32099,
+      "firstSampleMs": 8.903,
+      "lastSampleMs": 12001.2642,
+      "sampleCpuMs": 5409.770941,
+      "groups": [
+        {
+          "name": "Animation",
+          "samples": 5606,
+          "samplePercent": 17.464718527056917,
+          "cpuMs": 1091.684903
+        },
+        {
+          "name": "Terrain manager",
+          "samples": 3591,
+          "samplePercent": 11.187264400760148,
+          "cpuMs": 699.170278
+        },
+        {
+          "name": "Network tick",
+          "samples": 426,
+          "samplePercent": 1.3271441477927661,
+          "cpuMs": 72.370814
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 685,
+          "samplePercent": 2.1340228667559735,
+          "cpuMs": 134.335554
+        },
+        {
+          "name": "Collision mesh integration",
+          "samples": 1367,
+          "samplePercent": 4.258699647964111,
+          "cpuMs": 270.077464
+        },
+        {
+          "name": "Terrain replication",
+          "samples": 151,
+          "samplePercent": 0.47041963924109786,
+          "cpuMs": 28.374624
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 2,
+          "samplePercent": 0.006230723698557587,
+          "cpuMs": 0.410898
+        }
+      ],
+      "terrainMethods": [
+        {
+          "method": "VoxelManager.OnUpdate()",
+          "samples": 3591,
+          "percent": 11.187264400760148
+        },
+        {
+          "method": "VoxelCollisionWorld.Integrate()",
+          "samples": 1367,
+          "percent": 4.258699647964111
+        },
+        {
+          "method": "VoxelManager.UpdateTerrainEdits()",
+          "samples": 689,
+          "percent": 2.146484314153089
+        },
+        {
+          "method": "TerrainFieldSnapshot.GetCorrectionRange(value class SdfWorldAabb,float32&,float32&,bool)",
+          "samples": 685,
+          "percent": 2.1340228667559735
+        },
+        {
+          "method": "GpuSdfDescriptor.WithField(class TerrainFieldSnapshot)",
+          "samples": 547,
+          "percent": 1.7041029315555
+        },
+        {
+          "method": "VoxelManager.RebuildDesiredChunks(value class Vector3Int,class System.String,value class System.Nullable`1<value class VoxelVisualConfiguration>)",
+          "samples": 535,
+          "percent": 1.6667185893641547
+        },
+        {
+          "method": "GpuVoxelMesher.InvalidateField(class TerrainFieldChange,float32)",
+          "samples": 519,
+          "percent": 1.616872799775694
+        },
+        {
+          "method": "VoxelManager.UpdateClipboxPlacement(value class Vector3,value class VoxelVisualConfiguration)",
+          "samples": 513,
+          "percent": 1.598180628680021
+        },
+        {
+          "method": "VoxelManager.PrepareLodPlacement()",
+          "samples": 480,
+          "percent": 1.495373687653821
+        },
+        {
+          "method": "VoxelManager.PrepareNextClipboxPlacementStep()",
+          "samples": 480,
+          "percent": 1.495373687653821
+        },
+        {
+          "method": "VoxelManager.CreateRegularDescriptor(int32,value class Vector3Int)",
+          "samples": 433,
+          "percent": 1.3489516807377178
+        },
+        {
+          "method": "GpuVoxelMesher.ProcessPending(int32,int64)",
+          "samples": 291,
+          "percent": 0.906570298140129
+        },
+        {
+          "method": "VoxelManager.TryCommitPendingClipboxPlacement()",
+          "samples": 268,
+          "percent": 0.8349169756067167
+        },
+        {
+          "method": "VoxelManager.CapturePendingClipboxReadiness()",
+          "samples": 236,
+          "percent": 0.7352253964297953
+        },
+        {
+          "method": "dynamicClass.InvokeStub_VoxelManager.AcknowledgeTerrainTransfer(class System.Object,pMT: 00007FFEB681EA40<class System.Object>)",
+          "samples": 202,
+          "percent": 0.6293030935543164
+        },
+        {
+          "method": "VoxelManager.AcknowledgeTerrainTransfer(value class System.Guid,int64,int32,bool,bool)",
+          "samples": 200,
+          "percent": 0.6230723698557588
+        },
+        {
+          "method": "VoxelManager+<>c__DisplayClass119_0.<AcknowledgeTerrainTransfer>b__0()",
+          "samples": 196,
+          "percent": 0.6106109224586436
+        },
+        {
+          "method": "VoxelManager.UpdateTerrainReplication()",
+          "samples": 151,
+          "percent": 0.47041963924109786
+        },
+        {
+          "method": "VoxelManager.CreateTransitionDescriptor(value class GpuTransitionKey)",
+          "samples": 143,
+          "percent": 0.4454967444468675
+        },
+        {
+          "method": "GpuTransitionDescriptor.WithField(class TerrainFieldSnapshot)",
+          "samples": 134,
+          "percent": 0.41745848780335837
+        },
+        {
+          "method": "GpuVoxelMesher+GeometryArena.Release(class GeometryHandle)",
+          "samples": 123,
+          "percent": 0.38318950746129166
+        },
+        {
+          "method": "GpuVoxelMesher.Release(class GeometryHandle)",
+          "samples": 123,
+          "percent": 0.38318950746129166
+        },
+        {
+          "method": "GpuTerrainRangeAllocator.Release(value class GpuTerrainRange)",
+          "samples": 122,
+          "percent": 0.38007414561201286
+        },
+        {
+          "method": "GpuVoxelMesher.ReleaseResident(class ResidentMesh)",
+          "samples": 122,
+          "percent": 0.38007414561201286
+        },
+        {
+          "method": "TerrainFieldPage.GetRange(value class Vector3Int,value class SdfWorldAabb,float32&,float32&,bool)",
+          "samples": 121,
+          "percent": 0.37695878376273406
+        },
+        {
+          "method": "VoxelCollisionWorld.InvalidateField(class TerrainFieldChange)",
+          "samples": 118,
+          "percent": 0.36761269821489767
+        },
+        {
+          "method": "VoxelManager.UpdatePlayerCollisionInterests()",
+          "samples": 100,
+          "percent": 0.3115361849278794
+        },
+        {
+          "method": "System.Collections.Generic.ArraySortHelper`1[GpuTerrainRange].IntroSort(value class System.Span`1<!0>,int32,class System.Comparison`1<!0>)",
+          "samples": 94,
+          "percent": 0.2928440138322066
+        },
+        {
+          "method": "System.Collections.Generic.ArraySortHelper`1[GpuTerrainRange].Sort(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "samples": 94,
+          "percent": 0.2928440138322066
+        },
+        {
+          "method": "System.Collections.Generic.List`1[GpuTerrainRange].Sort(class System.Comparison`1<!0>)",
+          "samples": 94,
+          "percent": 0.2928440138322066
+        },
+        {
+          "method": "GpuVoxelMesher.PublishCompletedRegular(value class CandidateMesh,value class GpuMeshResidency)",
+          "samples": 84,
+          "percent": 0.2616903953394187
+        },
+        {
+          "method": "GpuVoxelMesher.TryPublishEditedField()",
+          "samples": 81,
+          "percent": 0.2523443097915823
+        },
+        {
+          "method": "GpuVoxelMesher.PublishResident(value class GpuSdfDescriptor,value class GpuMeshResidency,class GeometryHandle,value class GpuTerrainCountResult)",
+          "samples": 80,
+          "percent": 0.2492289479423035
+        },
+        {
+          "method": "GpuTerrainRangeAllocator+<>c.<Release>b__14_0(value class GpuTerrainRange,value class GpuTerrainRange)",
+          "samples": 70,
+          "percent": 0.21807532944951555
+        },
+        {
+          "method": "System.Collections.Generic.ArraySortHelper`1[GpuTerrainRange].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "samples": 63,
+          "percent": 0.196267796504564
+        }
+      ]
+    },
+    {
+      "name": "1 - VKRenderThread (39288)",
+      "sampleCount": 6477,
+      "firstSampleMs": 12.0909,
+      "lastSampleMs": 12002.0561,
+      "sampleCpuMs": 490.645832,
+      "groups": []
+    },
+    {
+      "name": "2 - Thread (70232)",
+      "sampleCount": 6180,
+      "firstSampleMs": 13.3426,
+      "lastSampleMs": 11992.5717,
+      "sampleCpuMs": 770.765253,
+      "groups": []
+    },
+    {
+      "name": "3 - .NET TP Worker (24384)",
+      "sampleCount": 4626,
+      "firstSampleMs": 34.1573,
+      "lastSampleMs": 10342.4729,
+      "sampleCpuMs": 694.681351,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 3096,
+          "samplePercent": 66.92607003891051,
+          "cpuMs": 590.934023
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 103,
+          "samplePercent": 2.2265456117596196,
+          "cpuMs": 19.466245
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 28,
+          "samplePercent": 0.6052745352356247,
+          "cpuMs": 3.971088
+        },
+        {
+          "name": "Terrain transfer preparation",
+          "samples": 3,
+          "samplePercent": 0.0648508430609598,
+          "cpuMs": 0.503299
+        }
+      ]
+    },
+    {
+      "name": "4 - GlobPool/6 (59464)",
+      "sampleCount": 3712,
+      "firstSampleMs": 12.179,
+      "lastSampleMs": 11995.5734,
+      "sampleCpuMs": 304.483125,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 4,
+          "samplePercent": 0.10775862068965517,
+          "cpuMs": 0.433797
+        }
+      ]
+    },
+    {
+      "name": "5 - GlobPool/3 (13516)",
+      "sampleCount": 3700,
+      "firstSampleMs": 12.1398,
+      "lastSampleMs": 12002.0509,
+      "sampleCpuMs": 285.727458,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 5,
+          "samplePercent": 0.13513513513513514,
+          "cpuMs": 0.442997
+        }
+      ]
+    },
+    {
+      "name": "6 - GlobPool/2 (72616)",
+      "sampleCount": 3666,
+      "firstSampleMs": 12.3038,
+      "lastSampleMs": 11994.1474,
+      "sampleCpuMs": 295.692199,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 12,
+          "samplePercent": 0.32733224222585927,
+          "cpuMs": 1.226396
+        }
+      ]
+    },
+    {
+      "name": "7 - GlobPool/4 (8736)",
+      "sampleCount": 3649,
+      "firstSampleMs": 12.377,
+      "lastSampleMs": 11993.1748,
+      "sampleCpuMs": 292.466769,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 19,
+          "samplePercent": 0.5206906001644286,
+          "cpuMs": 2.70319
+        }
+      ]
+    },
+    {
+      "name": "8 - .NET TP Worker (20820)",
+      "sampleCount": 3622,
+      "firstSampleMs": 3167.9317,
+      "lastSampleMs": 11278.1886,
+      "sampleCpuMs": 612.781689,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 2693,
+          "samplePercent": 74.35118718939812,
+          "cpuMs": 522.442647
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 127,
+          "samplePercent": 3.506350082827167,
+          "cpuMs": 24.382347
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 16,
+          "samplePercent": 0.4417448923246825,
+          "cpuMs": 1.880594
+        }
+      ]
+    },
+    {
+      "name": "9 - GlobPool/1 (13972)",
+      "sampleCount": 3639,
+      "firstSampleMs": 12.1419,
+      "lastSampleMs": 11978.8587,
+      "sampleCpuMs": 291.255906,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 4,
+          "samplePercent": 0.10992030777686178,
+          "cpuMs": 0.373597
+        }
+      ]
+    },
+    {
+      "name": "10 - .NET TP Worker (80732)",
+      "sampleCount": 3577,
+      "firstSampleMs": 1120.6071,
+      "lastSampleMs": 11985.8314,
+      "sampleCpuMs": 536.986895,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 2351,
+          "samplePercent": 65.72546826949959,
+          "cpuMs": 452.791285
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 115,
+          "samplePercent": 3.214984623986581,
+          "cpuMs": 21.471658
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 19,
+          "samplePercent": 0.5311713726586526,
+          "cpuMs": 2.542992
+        },
+        {
+          "name": "Terrain manager",
+          "samples": 1,
+          "samplePercent": 0.02795638803466592,
+          "cpuMs": 0.023499
+        },
+        {
+          "name": "Terrain replication",
+          "samples": 1,
+          "samplePercent": 0.02795638803466592,
+          "cpuMs": 0.023499
+        },
+        {
+          "name": "Terrain transfer preparation",
+          "samples": 2,
+          "samplePercent": 0.05591277606933184,
+          "cpuMs": 0.078098
+        },
+        {
+          "name": "Animation",
+          "samples": 1,
+          "samplePercent": 0.02795638803466592,
+          "cpuMs": 0.0546
+        }
+      ]
+    },
+    {
+      "name": "11 - GlobPool/0 (24784)",
+      "sampleCount": 3600,
+      "firstSampleMs": 12.2198,
+      "lastSampleMs": 11995.5575,
+      "sampleCpuMs": 274.775824,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 4,
+          "samplePercent": 0.1111111111111111,
+          "cpuMs": 0.386798
+        }
+      ]
+    },
+    {
+      "name": "12 - GlobPool/5 (41516)",
+      "sampleCount": 3596,
+      "firstSampleMs": 12.0339,
+      "lastSampleMs": 12002.108,
+      "sampleCpuMs": 281.020656,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 6,
+          "samplePercent": 0.1668520578420467,
+          "cpuMs": 0.512398
+        }
+      ]
+    },
+    {
+      "name": "13 - .NET TP Worker (77832)",
+      "sampleCount": 3381,
+      "firstSampleMs": 107.2682,
+      "lastSampleMs": 11997.5576,
+      "sampleCpuMs": 498.447502,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 2181,
+          "samplePercent": 64.5075421472937,
+          "cpuMs": 421.594076
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 88,
+          "samplePercent": 2.602780242531795,
+          "cpuMs": 16.305666
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 10,
+          "samplePercent": 0.29577048210588586,
+          "cpuMs": 0.862098
+        },
+        {
+          "name": "Terrain transfer preparation",
+          "samples": 1,
+          "samplePercent": 0.029577048210588583,
+          "cpuMs": 0.019699
+        }
+      ]
+    },
+    {
+      "name": "14 - .NET TP Worker (9884)",
+      "sampleCount": 3326,
+      "firstSampleMs": 10.8244,
+      "lastSampleMs": 11892.2527,
+      "sampleCpuMs": 462.656218,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 1964,
+          "samplePercent": 59.04990980156344,
+          "cpuMs": 377.521181
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 110,
+          "samplePercent": 3.307276007215875,
+          "cpuMs": 20.293353
+        },
+        {
+          "name": "Terrain transfer preparation",
+          "samples": 3,
+          "samplePercent": 0.09019843656043296,
+          "cpuMs": 0.281199
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 16,
+          "samplePercent": 0.4810583283223091,
+          "cpuMs": 2.37709
+        }
+      ]
+    },
+    {
+      "name": "15 - .NET TP Worker (14748)",
+      "sampleCount": 3070,
+      "firstSampleMs": 205.7182,
+      "lastSampleMs": 11989.7005,
+      "sampleCpuMs": 473.261634,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 2114,
+          "samplePercent": 68.8599348534202,
+          "cpuMs": 407.915194
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 100,
+          "samplePercent": 3.257328990228013,
+          "cpuMs": 19.09965
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 12,
+          "samplePercent": 0.39087947882736157,
+          "cpuMs": 1.529595
+        }
+      ]
+    },
+    {
+      "name": "16 - .NET TP Worker (25464)",
+      "sampleCount": 2954,
+      "firstSampleMs": 19.2999,
+      "lastSampleMs": 8955.0153,
+      "sampleCpuMs": 480.609597,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 2210,
+          "samplePercent": 74.81381178063643,
+          "cpuMs": 427.896473
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 75,
+          "samplePercent": 2.5389302640487474,
+          "cpuMs": 14.268367
+        },
+        {
+          "name": "Terrain transfer preparation",
+          "samples": 1,
+          "samplePercent": 0.033852403520649964,
+          "cpuMs": 0.0211
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 9,
+          "samplePercent": 0.3046716316858497,
+          "cpuMs": 1.251696
+        }
+      ]
+    },
+    {
+      "name": "17 - .NET TP Worker (82772)",
+      "sampleCount": 2344,
+      "firstSampleMs": 6078.7594,
+      "lastSampleMs": 8953.0296,
+      "sampleCpuMs": 395.993283,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 1877,
+          "samplePercent": 80.07679180887372,
+          "cpuMs": 363.774505
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 63,
+          "samplePercent": 2.6877133105802047,
+          "cpuMs": 12.069664
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 1,
+          "samplePercent": 0.042662116040955635,
+          "cpuMs": 0.132399
+        },
+        {
+          "name": "Animation",
+          "samples": 1,
+          "samplePercent": 0.042662116040955635,
+          "cpuMs": 0.2008
+        }
+      ]
+    },
+    {
+      "name": "18 - .NET Finalizer Thread (26144)",
+      "sampleCount": 2139,
+      "firstSampleMs": 1579.3557,
+      "lastSampleMs": 10045.5502,
+      "sampleCpuMs": 425.512672,
+      "groups": []
+    },
+    {
+      "name": "19 - .NET TP Worker (34624)",
+      "sampleCount": 2137,
+      "firstSampleMs": 88.8731,
+      "lastSampleMs": 8953.9409,
+      "sampleCpuMs": 313.59997,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 59,
+          "samplePercent": 2.7608797379503978,
+          "cpuMs": 10.748877
+        },
+        {
+          "name": "Collision worker",
+          "samples": 1436,
+          "samplePercent": 67.1970051474029,
+          "cpuMs": 274.904118
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 16,
+          "samplePercent": 0.7487131492746841,
+          "cpuMs": 2.162994
+        },
+        {
+          "name": "Terrain transfer preparation",
+          "samples": 1,
+          "samplePercent": 0.04679457182966776,
+          "cpuMs": 0.0262
+        },
+        {
+          "name": "Network tick",
+          "samples": 1,
+          "samplePercent": 0.04679457182966776,
+          "cpuMs": 0.1999
+        }
+      ]
+    },
+    {
+      "name": "20 - .NET TP Worker (21468)",
+      "sampleCount": 1085,
+      "firstSampleMs": 5152.255,
+      "lastSampleMs": 7257.2172,
+      "sampleCpuMs": 190.740382,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 935,
+          "samplePercent": 86.17511520737327,
+          "cpuMs": 180.185352
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 45,
+          "samplePercent": 4.147465437788019,
+          "cpuMs": 8.310979
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 7,
+          "samplePercent": 0.6451612903225806,
+          "cpuMs": 0.986098
+        }
+      ]
+    },
+    {
+      "name": "21 - .NET TP Worker (14988)",
+      "sampleCount": 832,
+      "firstSampleMs": 6757.2444,
+      "lastSampleMs": 10692.2131,
+      "sampleCpuMs": 116.213914,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 497,
+          "samplePercent": 59.73557692307692,
+          "cpuMs": 96.953863
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 9,
+          "samplePercent": 1.0817307692307692,
+          "cpuMs": 1.796395
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 2,
+          "samplePercent": 0.2403846153846154,
+          "cpuMs": 0.301798
+        }
+      ]
+    },
+    {
+      "name": "22 - .NET TP Worker (22520)",
+      "sampleCount": 776,
+      "firstSampleMs": 25.3255,
+      "lastSampleMs": 6756.8847,
+      "sampleCpuMs": 102.700842,
+      "groups": [
+        {
+          "name": "Terrain page encoding",
+          "samples": 9,
+          "samplePercent": 1.1597938144329898,
+          "cpuMs": 1.109497
+        },
+        {
+          "name": "Collision worker",
+          "samples": 335,
+          "samplePercent": 43.170103092783506,
+          "cpuMs": 64.154346
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 13,
+          "samplePercent": 1.675257731958763,
+          "cpuMs": 2.602394
+        }
+      ]
+    },
+    {
+      "name": "23 - .NET Timer (57572)",
+      "sampleCount": 712,
+      "firstSampleMs": 27.8111,
+      "lastSampleMs": 11972.1204,
+      "sampleCpuMs": 44.539558,
+      "groups": []
+    },
+    {
+      "name": "24 - .NET TP Worker (36800)",
+      "sampleCount": 716,
+      "firstSampleMs": 6080.258,
+      "lastSampleMs": 6756.8559,
+      "sampleCpuMs": 125.385046,
+      "groups": [
+        {
+          "name": "Terrain page encoding",
+          "samples": 7,
+          "samplePercent": 0.9776536312849162,
+          "cpuMs": 0.765996
+        },
+        {
+          "name": "Collision worker",
+          "samples": 606,
+          "samplePercent": 84.63687150837988,
+          "cpuMs": 118.340807
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 21,
+          "samplePercent": 2.9329608938547485,
+          "cpuMs": 3.895088
+        }
+      ]
+    },
+    {
+      "name": "25 - .NET TP Worker (1916)",
+      "sampleCount": 710,
+      "firstSampleMs": 6076.0935,
+      "lastSampleMs": 11952.5999,
+      "sampleCpuMs": 80.439959,
+      "groups": [
+        {
+          "name": "Terrain page encoding",
+          "samples": 5,
+          "samplePercent": 0.704225352112676,
+          "cpuMs": 0.549599
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 16,
+          "samplePercent": 2.2535211267605635,
+          "cpuMs": 2.812191
+        },
+        {
+          "name": "Collision worker",
+          "samples": 297,
+          "samplePercent": 41.83098591549296,
+          "cpuMs": 56.067959
+        }
+      ]
+    },
+    {
+      "name": "26 - .NET TP Worker (18844)",
+      "sampleCount": 688,
+      "firstSampleMs": 6095.8215,
+      "lastSampleMs": 10693.1003,
+      "sampleCpuMs": 110.018576,
+      "groups": [
+        {
+          "name": "Correction bounds",
+          "samples": 16,
+          "samplePercent": 2.3255813953488373,
+          "cpuMs": 3.059694
+        },
+        {
+          "name": "Collision worker",
+          "samples": 501,
+          "samplePercent": 72.81976744186046,
+          "cpuMs": 97.310666
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 4,
+          "samplePercent": 0.5813953488372093,
+          "cpuMs": 0.419297
+        }
+      ]
+    },
+    {
+      "name": "27 - SDLRawInput (30368)",
+      "sampleCount": 504,
+      "firstSampleMs": 200.5635,
+      "lastSampleMs": 8638.475,
+      "sampleCpuMs": 50.153364,
+      "groups": []
+    },
+    {
+      "name": "28 - SDLAudioP15 (31732)",
+      "sampleCount": 289,
+      "firstSampleMs": 21.3612,
+      "lastSampleMs": 11841.5733,
+      "sampleCpuMs": 21.393459,
+      "groups": []
+    },
+    {
+      "name": "29 - Networking (managed) (30320)",
+      "sampleCount": 282,
+      "firstSampleMs": 55.8176,
+      "lastSampleMs": 11901.7307,
+      "sampleCpuMs": 37.757269,
+      "groups": []
+    },
+    {
+      "name": "30 - Thread (82192)",
+      "sampleCount": 274,
+      "firstSampleMs": 13.403,
+      "lastSampleMs": 11980.6673,
+      "sampleCpuMs": 57.813163,
+      "groups": []
+    },
+    {
+      "name": "31 - .NET TP Worker (24532)",
+      "sampleCount": 263,
+      "firstSampleMs": 6757.008,
+      "lastSampleMs": 7249.7397,
+      "sampleCpuMs": 32.166064,
+      "groups": [
+        {
+          "name": "Collision worker",
+          "samples": 136,
+          "samplePercent": 51.71102661596958,
+          "cpuMs": 25.467734
+        },
+        {
+          "name": "Correction bounds",
+          "samples": 10,
+          "samplePercent": 3.802281368821293,
+          "cpuMs": 1.989697
+        },
+        {
+          "name": "Terrain page encoding",
+          "samples": 4,
+          "samplePercent": 1.520912547528517,
+          "cpuMs": 0.426897
+        }
+      ]
+    },
+    {
+      "name": "32 - .NET Tiered Compilation Worker (24348)",
+      "sampleCount": 164,
+      "firstSampleMs": 222.8403,
+      "lastSampleMs": 11817.7673,
+      "sampleCpuMs": 29.770919,
+      "groups": []
+    },
+    {
+      "name": "33 - Thread (80776)",
+      "sampleCount": 119,
+      "firstSampleMs": 44.3003,
+      "lastSampleMs": 11780.1782,
+      "sampleCpuMs": 16.457136,
+      "groups": []
+    },
+    {
+      "name": "34 - Thread (2184)",
+      "sampleCount": 109,
+      "firstSampleMs": 173.6517,
+      "lastSampleMs": 11797.8911,
+      "sampleCpuMs": 32.010844,
+      "groups": []
+    },
+    {
+      "name": "35 - Thread (74132)",
+      "sampleCount": 57,
+      "firstSampleMs": 16.2589,
+      "lastSampleMs": 11780.2337,
+      "sampleCpuMs": 2.454772,
+      "groups": []
+    },
+    {
+      "name": "36 - Thread (24028)",
+      "sampleCount": 42,
+      "firstSampleMs": 245.2886,
+      "lastSampleMs": 11667.536,
+      "sampleCpuMs": 15.353776,
+      "groups": []
+    },
+    {
+      "name": "37 - .NET ThreadPool IO (85600)",
+      "sampleCount": 41,
+      "firstSampleMs": 839.598,
+      "lastSampleMs": 11741.8324,
+      "sampleCpuMs": 24.090483,
+      "groups": []
+    },
+    {
+      "name": "38 - Thread (30744)",
+      "sampleCount": 30,
+      "firstSampleMs": 440.1536,
+      "lastSampleMs": 11637.5591,
+      "sampleCpuMs": 41.862985,
+      "groups": []
+    },
+    {
+      "name": "39 - Thread (75284)",
+      "sampleCount": 27,
+      "firstSampleMs": 13.2387,
+      "lastSampleMs": 11339.1136,
+      "sampleCpuMs": 30.683686,
+      "groups": []
+    },
+    {
+      "name": "40 - Thread (30400)",
+      "sampleCount": 22,
+      "firstSampleMs": 1333.943,
+      "lastSampleMs": 11613.2532,
+      "sampleCpuMs": 0.23459,
+      "groups": []
+    },
+    {
+      "name": "41 - Thread (25964)",
+      "sampleCount": 12,
+      "firstSampleMs": 940.1413,
+      "lastSampleMs": 11595.4828,
+      "sampleCpuMs": 81.00439,
+      "groups": []
+    },
+    {
+      "name": "42 - Thread (84552)",
+      "sampleCount": 8,
+      "firstSampleMs": 13.1888,
+      "lastSampleMs": 3004.7317,
+      "sampleCpuMs": 0.134699,
+      "groups": []
+    },
+    {
+      "name": "43 - Thread (4516)",
+      "sampleCount": 7,
+      "firstSampleMs": 1733.0747,
+      "lastSampleMs": 9371.237,
+      "sampleCpuMs": 0.046695,
+      "groups": []
+    },
+    {
+      "name": "44 - .NET TP Worker (35168)",
+      "sampleCount": 2,
+      "firstSampleMs": 122.6678,
+      "lastSampleMs": 250.6783,
+      "sampleCpuMs": 0.140198,
+      "groups": []
+    },
+    {
+      "name": "45 - .NET TP Gate (26020)",
+      "sampleCount": 2,
+      "firstSampleMs": 10295.7771,
+      "lastSampleMs": 11296.9293,
+      "sampleCpuMs": 0.014499,
+      "groups": []
+    },
+    {
+      "name": "46 - Thread (43428)",
+      "sampleCount": 1,
+      "firstSampleMs": 1917.7895,
+      "lastSampleMs": 1917.7895,
+      "sampleCpuMs": 0.0108,
+      "groups": []
+    },
+    {
+      "name": "47 - Thread (34316)",
+      "sampleCount": 1,
+      "firstSampleMs": 250.4975,
+      "lastSampleMs": 250.4975,
+      "sampleCpuMs": 0.0167,
+      "groups": []
+    },
+    {
+      "name": "48 - Thread (39404)",
+      "sampleCount": 1,
+      "firstSampleMs": 1075.9625,
+      "lastSampleMs": 1075.9625,
+      "sampleCpuMs": 0.1512,
+      "groups": []
+    }
+  ],
+  "allocationTicks": {
+    "totalBytes": 207344088,
+    "topTypes": [
+      [
+        "System.Single[]",
+        18511936
+      ],
+      [
+        "System.Byte[]",
+        12859488
+      ],
+      [
+        "System.Threading.TimerQueueTimer",
+        12574608
+      ],
+      [
+        "DelayPromiseWithCancellation",
+        11071248
+      ],
+      [
+        "Sandbox.RenderAttributes",
+        8846096
+      ],
+      [
+        "Enumerator[Vector3Int,TerrainFieldPage]",
+        7471992
+      ],
+      [
+        "<>c__DisplayClass59_0",
+        7457696
+      ],
+      [
+        "System.String",
+        7117176
+      ],
+      [
+        "Slot[System.Threading.Tasks.TaskReplicator+Replica][]",
+        6820256
+      ],
+      [
+        "<GetDescendants>d__22`1[Editor.EditorToolButton]",
+        5223400
+      ],
+      [
+        "System.Action",
+        4374344
+      ],
+      [
+        "<EnumerateLocked>d__13[System.Object]",
+        3513992
+      ],
+      [
+        "Sandbox.Connection[]",
+        3412528
+      ],
+      [
+        "System.Collections.Generic.List`1[Editor.Widget]",
+        3204352
+      ],
+      [
+        "Sandbox.ScenePushScope",
+        3200680
+      ],
+      [
+        "ContingentProperties",
+        2879992
+      ],
+      [
+        "System.Threading.Tasks.Task",
+        2560376
+      ],
+      [
+        "TwoElementAsyncLocalValueMap",
+        2451800
+      ],
+      [
+        "<TryGetAll>d__5",
+        2345200
+      ],
+      [
+        "InternalPartitionEnumerator[Sandbox.SkinnedModelRenderer]",
+        2239248
+      ]
+    ],
+    "caveat": "Sampled allocation ticks: type attribution is approximate, not exact per-type allocated bytes."
+  },
+  "gc": [
+    {
+      "thread": "0 - MainThrd (44684)",
+      "startMs": 2867.027,
+      "endMs": 2875.4894,
+      "durationMs": 8.462399999999889,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 167,
+      "depth": 0,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    },
+    {
+      "thread": "0 - MainThrd (44684)",
+      "startMs": 5545.3352,
+      "endMs": 5554.3281,
+      "durationMs": 8.992899999999281,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 168,
+      "depth": 0,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    },
+    {
+      "thread": "0 - MainThrd (44684)",
+      "startMs": 8189.1911,
+      "endMs": 8207.8154,
+      "durationMs": 18.624299999999494,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 169,
+      "depth": 1,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    },
+    {
+      "thread": "13 - .NET TP Worker (77832)",
+      "startMs": 9996.4981,
+      "endMs": 9999.307,
+      "durationMs": 2.808899999999994,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 170,
+      "depth": 0,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    }
+  ]
+}

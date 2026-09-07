@@ -1,0 +1,49 @@
+{
+  "runId": "ccd27ee359e54f5ea7a2a7f9bfb7f8da",
+  "failure": null,
+  "committed": 463,
+  "rejected": 0,
+  "peakQueue": 0,
+  "controllerStateChanges": 0,
+  "collisionHoldSteps": 0,
+  "pending": 0,
+  "reasons": {
+    "Accepted": 463,
+    "Previous edit publication pending": 136,
+    "Hit collision revision pending": 1
+  },
+  "frame": {
+    "samples": 23273,
+    "truncatedSamples": 0,
+    "averageFps": 930.8052,
+    "p95Milliseconds": 1.5329,
+    "p99Milliseconds": 3.6894,
+    "maximumMilliseconds": 12.4535,
+    "averageGpuMilliseconds": 0.65907323,
+    "p95GpuMilliseconds": 0.87094307,
+    "p99GpuMilliseconds": 0.9098053,
+    "maximumGpuMilliseconds": 9.046793
+  },
+  "exceptions": 0,
+  "latency": {
+    "fieldCommitMilliseconds": {
+      "count": 463,
+      "p95": 6.3116,
+      "p99": 7.1103,
+      "max": 15.0056
+    },
+    "visualPublicationMilliseconds": {
+      "count": 463,
+      "p95": 27.043,
+      "p99": 33.7526,
+      "max": 39.7287
+    },
+    "editedCollisionDrainMilliseconds": {
+      "count": 463,
+      "p95": 27.3023,
+      "p99": 31.4972,
+      "max": 33.7443
+    }
+  },
+  "finalDrainAfterLastScheduleSeconds": 0.025592899999999474
+}

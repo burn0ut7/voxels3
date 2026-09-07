@@ -154,7 +154,13 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		uint block=index/(uint)HaloSampleCount,local=index-block*(uint)HaloSampleCount;
 		uint3 halo=PersistentDecode3D(local,HaloSize);TerrainRequest request=Requests[block];
 		int3 origin=(int3)round(request.OriginAndCellSize.xyz/request.OriginAndCellSize.w);
-		DensitySamples[index]=SampleVoxelSdf(origin+int3(halo)-1,request.OriginAndCellSize.w,(int)request.Terrain.x,request.Terrain.y,request.Terrain.z,request.Terrain.w);
+		float correction = 0.0;
+		if ( request.Reserved0 != 0 )
+		{
+			correction = DensitySamples[index];
+		}
+		DensitySamples[index] = SampleVoxelSdf( origin + int3(halo) - 1, request.OriginAndCellSize.w,
+			(int)request.Terrain.x, request.Terrain.y, request.Terrain.z, request.Terrain.w ) + correction;
 		return;
 	}
 	if(PersistentStage==2)

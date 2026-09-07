@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using Sandbox.Rendering;
 
-internal sealed class GpuVoxelMesher : IDisposable
+internal sealed partial class GpuVoxelMesher : IDisposable
 {
 	// Persistent geometry is disposable revisioned cache state; the SDF remains canonical.
 	public long CancelledRegularCountResults { get; private set; }
@@ -168,6 +168,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 	private readonly int[] _transitionLatencyTruncatedByCoarseLevel = new int[SupportedVisualLevelCount];
 	private bool _transitionMeasurementActive;
 	private long _outerLastServiceTimestamp;
+	private long _transitionLastServiceTimestamp;
 	private long _outerEligibleSinceTimestamp;
 	private long _outerScheduledCount;
 	private long _outerPublishedCount;
@@ -409,17 +410,25 @@ internal sealed class GpuVoxelMesher : IDisposable
 	public void Schedule( VoxelChunk chunk, int sourceRevision, float playerRouteDistance,
 		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
-		if ( chunk.DensityClassification != ChunkDensityClassification.PotentiallySurfaceContaining )
+		var descriptor = GpuSdfDescriptor.FromChunk( chunk, sourceRevision );
+		if ( _editedField is not null && descriptor != descriptor.WithField( _editedField ) )
 		{
-			Remove( new GpuMeshRegionKey( 0, chunk.Coordinate ) );
+			Schedule( descriptor.WithField( _editedField ), playerRouteDistance, residency );
 			return;
 		}
-		var descriptor = GpuSdfDescriptor.FromChunk( chunk, sourceRevision );
+		if ( chunk.DensityClassification != ChunkDensityClassification.PotentiallySurfaceContaining )
+		{
+			PublishKnownEmpty( descriptor, residency );
+			return;
+		}
 		Schedule( descriptor, playerRouteDistance, residency );
 	}
 
 	public void Schedule( GpuSdfDescriptor descriptor, float playerRouteDistance, GpuMeshResidency residency )
 	{
+		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
+		if ( _editPublicationOpen && descriptor.EditRevision == _editedField.Revision ) _editRegularDependencies.Add( descriptor.Key );
+		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var staged ) && staged.Descriptor == descriptor ) return;
 		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
 		{
 			SetResidency( resident, residency );
@@ -446,6 +455,17 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void PublishKnownEmpty( GpuSdfDescriptor descriptor, GpuMeshResidency residency )
 	{
+		if ( _editRegularDependencies.Contains( descriptor.Key ) )
+		{
+			Schedule( descriptor, _currentPlayerRouteDistance, residency );
+			return;
+		}
+		// A stale empty classification may have become surface-containing after an edit.
+		if ( _editedField is not null && descriptor != descriptor.WithField( _editedField ) )
+		{
+			Schedule( descriptor.WithField( _editedField ), _currentPlayerRouteDistance, residency );
+			return;
+		}
 		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
 		{
 			SetResidency( resident, residency );
@@ -470,16 +490,19 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void ScheduleTransition( GpuTransitionDescriptor descriptor, float playerRouteDistance )
 	{
+		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
+		if ( _editPublicationOpen && descriptor.EditRevision == _editedField.Revision ) _editTransitionDependencies.Add( descriptor.Key );
 		if ( _transitionDesiredDescriptors.TryGetValue( descriptor.Key, out var desired ) &&
 			desired == descriptor ) return;
-		_transitionDesiredDescriptors[descriptor.Key] = descriptor;
+		_transitionDesiredDescriptors[descriptor.Key] = descriptor with { Field = null };
 		RemovePendingTransition( descriptor.Key );
 		var pending = new PendingTransition(
 			descriptor,
 			Stopwatch.GetTimestamp(),
 			playerRouteDistance );
 		_transitionPending[descriptor.Key] = pending;
-		_transitionDispatchQueue.Enqueue( pending );
+		if ( _editTransitionDependencies.Contains( descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
+		else _transitionDispatchQueue.Enqueue( pending );
 		_transitionScheduledCount++;
 		_transitionScheduledByCoarseLevel[descriptor.Key.CoarseLevel]++;
 	}
@@ -494,6 +517,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void RemoveTransition( GpuTransitionKey key )
 	{
+		_editTransitionDependencies.Remove( key );
+		if ( _editTransitionCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
 		_transitionRenderActive.Remove( key );
 		_transitionDesiredDescriptors.Remove( key );
 		RemovePendingTransition( key );
@@ -1184,6 +1209,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public bool Contains( GpuSdfDescriptor descriptor )
 	{
+		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var candidate ) && candidate.Descriptor == descriptor ) return true;
 		if ( _resident.TryGetValue( descriptor.Key, out var resident ) &&
 			resident.Descriptor == descriptor ) return true;
 		if ( _pending.TryGetValue( descriptor.Key, out var pending ) &&
@@ -1231,6 +1257,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void Remove( GpuMeshRegionKey key )
 	{
+		_editRegularDependencies.Remove( key );
+		if ( _editRegularCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
 		_renderActive.Remove( key );
 		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( key ) )
 		{
@@ -1273,6 +1301,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		RefreshRenderCamerasIfNeeded();
 		FinalizeEmits();
 		FinalizeTransitionEmits();
+		TryPublishEditedField();
 		_maximumDispatchesRequested = Math.Clamp( maximumDispatches, 0, MaximumDispatchesPerUpdate );
 		System.Threading.Interlocked.Exchange( ref _updateEpoch, updateEpoch );
 		var processed = System.Threading.Interlocked.Exchange( ref _processedRenderDispatches, 0 );
@@ -1779,6 +1808,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 			return;
 		}
 
+		// During edits, transition seams must progress even under continuous regular work.
+		if ( _editPublicationPending && Stopwatch.GetElapsedTime( _transitionLastServiceTimestamp ).TotalMilliseconds >= 16 &&
+			ProcessTransitionGpuRenderTick() )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+			return;
+		}
 		var regularGpuWorkSubmitted = false;
 		foreach ( var lane in _scratchLanes )
 		{
@@ -1800,6 +1836,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( targetLane is not null )
 		{
 			GpuTerrainRequest[] requests = null;
+			TerrainFieldSnapshot[] fields = null;
 			var processed = 0;
 			while ( processed < _maximumDispatchesRequested && TryDequeuePending( out var pending ) )
 			{
@@ -1813,12 +1850,17 @@ internal sealed class GpuVoxelMesher : IDisposable
 				targetLane.CountInFlight.Add( inFlight );
 				requests ??= new GpuTerrainRequest[MaximumDispatchesPerUpdate];
 				requests[processed] = CreateRequest( inFlight, processed );
+				if ( inFlight.Descriptor.EditRevision != 0 )
+				{
+					fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
+					fields[processed] = inFlight.Descriptor.Field;
+				}
 				processed++;
 			}
 			if ( processed == 0 && _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
 			if ( processed > 0 )
 			{
-				if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out var submissionMilliseconds ) )
+				if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out var submissionMilliseconds, fields ) )
 					throw new InvalidOperationException( "Voxel terrain scratch rejected an idle count batch." );
 				if ( _scheduleLatencyMeasurementActive )
 				{
@@ -1837,6 +1879,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			TransitionDeferredRenderTicks++;
 		}
 		var transitionGpuWorkSubmitted = !regularGpuWorkSubmitted && ProcessTransitionGpuRenderTick();
+		if ( transitionGpuWorkSubmitted ) _transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
 		if ( !regularGpuWorkSubmitted && !transitionGpuWorkSubmitted && TrySubmitOuterCount() )
 		{
 			RecordOuterService( outerServiceGap, false );
@@ -1866,6 +1909,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var targetLane = _transitionScratchLanes.FirstOrDefault( lane => lane.IsIdle );
 		if ( targetLane is null ) return false;
 		GpuTransitionRequest[] requests = null;
+		TerrainFieldSnapshot[] fields = null;
 		var processed = 0;
 		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingTransition( out var pending ) )
 		{
@@ -1878,6 +1922,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 			targetLane.CountInFlight.Add( inFlight );
 			requests ??= new GpuTransitionRequest[MaximumDispatchesPerUpdate];
 			requests[processed] = CreateTransitionRequest( inFlight, processed );
+			if ( inFlight.Descriptor.EditRevision != 0 )
+			{
+				fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
+				fields[processed] = inFlight.Descriptor.Field;
+			}
 			processed++;
 		}
 		if ( processed == 0 )
@@ -1885,7 +1934,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 			if ( _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
 			return false;
 		}
-		if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out _ ) )
+		if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out _, fields ) )
 			throw new InvalidOperationException( "Voxel transition scratch rejected an idle count batch." );
 		return true;
 	}
@@ -1941,6 +1990,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var lane = _scratchLanes.FirstOrDefault( value => value.IsIdle );
 		if ( lane is null ) return false;
 		GpuTerrainRequest[] requests = null;
+			TerrainFieldSnapshot[] fields = null;
 		var processed = 0;
 		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( out var pending ) )
 		{
@@ -1954,10 +2004,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 			lane.CountInFlight.Add( inFlight );
 			requests ??= new GpuTerrainRequest[MaximumDispatchesPerUpdate];
 			requests[processed] = CreateRequest( inFlight, processed );
+			if ( inFlight.Descriptor.EditRevision != 0 )
+			{
+				fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
+				fields[processed] = inFlight.Descriptor.Field;
+			}
 			processed++;
 		}
 		if ( processed == 0 ) return false;
-		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _ ) )
+		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _, fields ) )
 			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle outer count batch." );
 		if ( _scheduleLatencyMeasurementActive )
 		{
@@ -1985,7 +2040,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 				descriptor.TerrainSettings.SurfaceAmplitude ),
 			CellsPerAxis = descriptor.CellsPerAxis,
 			Generation = inFlight.Generation,
-			RequestIndex = (uint)requestIndex
+			RequestIndex = (uint)requestIndex,
+			Reserved0 = descriptor.EditRevision != 0 ? 1u : 0u
 		};
 	}
 
@@ -2052,7 +2108,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 			BasisVAndCellsPerAxis = new Vector4( basisV, descriptor.CellsPerAxis ),
 			NormalAndFace = new Vector4( normal, (int)descriptor.Key.Face ),
 			Generation = inFlight.Generation,
-			RequestIndex = (uint)requestIndex
+			RequestIndex = (uint)requestIndex,
+			Reserved0 = descriptor.EditRevision != 0 ? 1u : 0u
 		};
 	}
 
@@ -2076,7 +2133,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var result = counts[index];
 			if ( result.Generation != source.Generation || result.RequestIndex != (uint)index )
 				throw new InvalidOperationException( "Stale voxel terrain count metadata." );
-			var cancelled = _cancelledInFlight.Contains( source.Descriptor.Key );
+			var cancelled = _cancelledInFlight.Contains( source.Descriptor.Key ) ||
+				(_editedField is not null && source.Descriptor != source.Descriptor.WithField( _editedField ));
 			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledRegularCountResults++;
 			GeometryHandle handle = null;
 			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedRegularGeometryRegions++;
@@ -2162,7 +2220,8 @@ internal sealed class GpuVoxelMesher : IDisposable
 			{
 				var key = completed.Descriptor.Key;
 				var outer = key.Level >= 2;
-				if ( _cancelledInFlight.Remove( key ) )
+				if ( _cancelledInFlight.Remove( key ) ||
+					(_editedField is not null && completed.Descriptor != completed.Descriptor.WithField( _editedField )) )
 				{
 					if ( _scheduleLatencyMeasurementActive ) _levelCancelledCounts[key.Level]++;
 					if ( outer )
@@ -2190,24 +2249,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 					residency = replacement.Residency;
 					RemovePending( key );
 				}
-				PublishResident( completed.Descriptor, residency, completed.Handle, completed.Counts );
-				if ( _scheduleLatencyMeasurementActive )
+				if ( _editRegularDependencies.Contains( key ) )
 				{
-					_levelPublishedCounts[key.Level]++;
-					RecordLevelScheduleLatency( key.Level, completed.ScheduledTimestamp );
+					if ( _editRegularCandidates.Remove( key, out var previousCandidate ) ) Release( previousCandidate.Handle );
+					_editRegularCandidates[key] = completed with { Residency = residency };
+					continue;
 				}
-				if ( outer )
-				{
-					RecordOuterLatency( completed.ScheduledTimestamp );
-					if ( _outerMeasurementActive ) _outerPublishedCount++;
-				}
-				else
-				{
-					RecordScheduleLatency( completed.ScheduledTimestamp );
-					_throughput?.RecordPublished(
-						MathF.Max( 0f, _currentPlayerRouteDistance - completed.ScheduledRouteDistance ) );
-				}
-				_dispatchCount++;
+				PublishCompletedRegular( completed, residency );
 				changed = true;
 			}
 			lane.EmitInFlight.Clear();
@@ -2216,6 +2264,30 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			MarkDrawCommandsDirty();
 		}
+	}
+
+	private void PublishCompletedRegular( CandidateMesh completed, GpuMeshResidency residency )
+	{
+		var key = completed.Descriptor.Key;
+		var outer = key.Level >= 2;
+		PublishResident( completed.Descriptor, residency, completed.Handle, completed.Counts );
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			_levelPublishedCounts[key.Level]++;
+			RecordLevelScheduleLatency( key.Level, completed.ScheduledTimestamp );
+		}
+		if ( outer )
+		{
+			RecordOuterLatency( completed.ScheduledTimestamp );
+			if ( _outerMeasurementActive ) _outerPublishedCount++;
+		}
+		else
+		{
+			RecordScheduleLatency( completed.ScheduledTimestamp );
+			_throughput?.RecordPublished(
+				MathF.Max( 0f, _currentPlayerRouteDistance - completed.ScheduledRouteDistance ) );
+		}
+		_dispatchCount++;
 	}
 
 	private void PublishResident(
@@ -2338,27 +2410,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 					}
 					RemovePendingTransition( key );
 				}
-				if ( _transitionResident.Remove( key, out var previous ) ) ReleaseTransitionResident( previous );
-				var latencyMilliseconds = (float)Stopwatch.GetElapsedTime(
-					completed.ScheduledTimestamp ).TotalMilliseconds;
-				var resident = new ResidentTransition(
-					completed.Descriptor, completed.Handle, completed.Counts, latencyMilliseconds );
-				_transitionResident.Add( key, resident );
-				if ( completed.Handle is not null )
+				if ( _editTransitionDependencies.Contains( key ) )
 				{
-					completed.Handle.Arena.ActiveResidentCount++;
-					SetTransitionVisibilityActive( resident, _transitionRenderActive.Contains( key ) );
+					if ( _editTransitionCandidates.Remove( key, out var previousCandidate ) ) Release( previousCandidate.Handle );
+					_editTransitionCandidates[key] = completed;
+					continue;
 				}
-				_transitionTopologyDigest ^= TransitionCoordinateDigest( key, completed.Counts.TopologyDigest );
-				_transitionPositionDigest ^= TransitionCoordinateDigest( key, completed.Counts.PositionDigest );
-				_transitionFineFaceMismatchCount += completed.Counts.FineFaceMismatchCount;
-				_transitionCoarseFaceMismatchCount += completed.Counts.CoarseFaceMismatchCount;
-				_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
-				_transitionInvalidTableCount += completed.Counts.InvalidTableCount;
-				_transitionPublishedCount++;
-				_transitionPublishedByCoarseLevel[key.CoarseLevel]++;
-				_residentPublicationRevision++;
-				RecordTransitionLatency( key.CoarseLevel, latencyMilliseconds );
+				PublishCompletedTransition( completed );
 				changed = true;
 			}
 			lane.EmitInFlight.Clear();
@@ -2367,6 +2425,32 @@ internal sealed class GpuVoxelMesher : IDisposable
 		{
 			MarkDrawCommandsDirty();
 		}
+	}
+
+	private void PublishCompletedTransition( CandidateTransition completed )
+	{
+		var key = completed.Descriptor.Key;
+		if ( _transitionResident.Remove( key, out var previous ) ) ReleaseTransitionResident( previous );
+		var latencyMilliseconds = (float)Stopwatch.GetElapsedTime(
+			completed.ScheduledTimestamp ).TotalMilliseconds;
+		var resident = new ResidentTransition(
+			completed.Descriptor, completed.Handle, completed.Counts, latencyMilliseconds );
+		_transitionResident.Add( key, resident );
+		if ( completed.Handle is not null )
+		{
+			completed.Handle.Arena.ActiveResidentCount++;
+			SetTransitionVisibilityActive( resident, _transitionRenderActive.Contains( key ) );
+		}
+		_transitionTopologyDigest ^= TransitionCoordinateDigest( key, completed.Counts.TopologyDigest );
+		_transitionPositionDigest ^= TransitionCoordinateDigest( key, completed.Counts.PositionDigest );
+		_transitionFineFaceMismatchCount += completed.Counts.FineFaceMismatchCount;
+		_transitionCoarseFaceMismatchCount += completed.Counts.CoarseFaceMismatchCount;
+		_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
+		_transitionInvalidTableCount += completed.Counts.InvalidTableCount;
+		_transitionPublishedCount++;
+		_transitionPublishedByCoarseLevel[key.CoarseLevel]++;
+		_residentPublicationRevision++;
+		RecordTransitionLatency( key.CoarseLevel, latencyMilliseconds );
 	}
 
 	private static ulong TransitionCoordinateDigest( GpuTransitionKey key, uint digest )
@@ -2578,6 +2662,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 		RemovePending( pending.Descriptor.Key );
 		_pending[pending.Descriptor.Key] = pending;
 		_pendingLevelCounts[pending.Descriptor.Key.Level]++;
+		if ( _editRegularDependencies.Contains( pending.Descriptor.Key ) )
+		{
+			if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount++;
+			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
+			var queue = pending.Residency == GpuMeshResidency.Visual && pending.Descriptor.Key.Level >= 2
+				? _editOuterDispatchQueue : _editNearDispatchQueue;
+			queue.Enqueue( pending );
+			return;
+		}
 		if ( pending.Residency == GpuMeshResidency.Gameplay )
 		{
 			_pendingGameplayCount++;
@@ -2601,6 +2694,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private bool TryDequeuePending( out PendingMesh pending )
 	{
+		if ( TryDequeuePendingFrom( _editNearDispatchQueue, out pending ) ) return true;
 		if ( TryDequeuePendingFrom( _gameplayDispatchQueue, out pending ) ) return true;
 		if ( TryDequeuePendingFrom( _nearVisualDispatchQueue, out pending ) ) return true;
 		if ( TryDequeuePendingFrom( _warmDispatchQueue, out pending ) ) return true;
@@ -2637,12 +2731,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private bool TryDequeuePendingOuter( out PendingMesh pending )
 	{
-		return TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
+		return TryDequeuePendingFrom( _editOuterDispatchQueue, out pending ) ||
+			TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
 	}
 
 	private bool TryDequeuePendingTransition( out PendingTransition pending )
 	{
-		while ( _transitionDispatchQueue.TryDequeue( out var queued ) )
+		while ( _editTransitionDispatchQueue.TryDequeue( out var queued ) || _transitionDispatchQueue.TryDequeue( out queued ) )
 		{
 			if ( _transitionPending.TryGetValue( queued.Descriptor.Key, out var current ) && current == queued )
 			{
@@ -2797,7 +2892,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
 				$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
 		}
-		if ( _visibilityCapacity > 0 )
+		if ( _visibilityCapacity > 0 && _fieldPresentationReady )
 		{
 			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
 			commands.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
@@ -3094,10 +3189,17 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void Clear()
 	{
+		ClearEditPublication();
+		_editedField = null;
+		_editRegularRefresh.Clear();
+		_editTransitionRefresh.Clear();
 		if ( _scheduleLatencyMeasurementActive )
 			_scheduleLatencyCancelledCount += PendingCount;
 		if ( _outerMeasurementActive ) _outerCancelledCount += PendingOuterVisualCount;
 		_pending.Clear();
+		_editNearDispatchQueue.Clear();
+		_editOuterDispatchQueue.Clear();
+		_editTransitionDispatchQueue.Clear();
 		_gameplayDispatchQueue.Clear();
 		_nearVisualDispatchQueue.Clear();
 		_warmDispatchQueue.Clear();
@@ -3538,7 +3640,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public GpuTerrainCountResult Counts { get; }
 		public ResidentMesh( GpuSdfDescriptor descriptor, GpuMeshResidency residency, GeometryHandle handle, GpuTerrainCountResult counts )
 		{
-			Descriptor = descriptor; Residency = residency; Handle = handle; Counts = counts;
+			Descriptor = descriptor with { Field = null }; Residency = residency; Handle = handle; Counts = counts;
 		}
 	}
 
@@ -3551,7 +3653,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public ResidentTransition( GpuTransitionDescriptor descriptor, GeometryHandle handle,
 			GpuTransitionCountResult counts, float scheduleToPublicationMilliseconds )
 		{
-			Descriptor = descriptor;
+			Descriptor = descriptor with { Field = null };
 			Handle = handle;
 			Counts = counts;
 			ScheduleToPublicationMilliseconds = scheduleToPublicationMilliseconds;
@@ -3677,7 +3779,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); }
 	}
 
-	private sealed class RenderCameraState : IDisposable
+	private sealed class RenderCameraState : IDisposable, IHotloadManaged
 	{
 		public CameraComponent Camera { get; }
 		public Sandbox.Rendering.CommandList Commands { get; } =
@@ -3698,8 +3800,23 @@ internal sealed class GpuVoxelMesher : IDisposable
 			Camera = camera;
 		}
 
+		void IHotloadManaged.Destroyed( Dictionary<string, object> state )
+		{
+			// Cached draw delegates close over the old TerrainVertex type across code reloads.
+			Commands.Reset();
+		}
+
+		void IHotloadManaged.Created( IReadOnlyDictionary<string, object> state )
+		{
+			Commands.Reset();
+			CommandsDirty = true;
+			DescriptorsDirty = true;
+		}
+
 		public void DisposeVisibility()
 		{
+			// Drop recorded draws before releasing buffers captured by those commands.
+			Commands.Reset();
 			Visibility?.Dispose();
 			Visibility = null;
 			foreach ( var retired in RetiredVisibility ) retired.Dispose();

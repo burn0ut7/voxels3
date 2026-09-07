@@ -1,0 +1,43 @@
+{
+  "runId": "6e20b5fd5d6d45098c89c4226a0e17de",
+  "checks": {
+    "12Nonnoop": true,
+    "allDrained": true,
+    "noHolds": true,
+    "noErrors": true,
+    "fieldCommitMilliseconds": true,
+    "visualPublicationMilliseconds": true,
+    "editedCollisionDrainMilliseconds": true,
+    "p95Milliseconds": true,
+    "p95MillisecondsDelta": true,
+    "p99Milliseconds": true,
+    "p99MillisecondsDelta": true,
+    "maximumMilliseconds": true,
+    "p95GpuMilliseconds": true,
+    "p95GpuMillisecondsDelta": true,
+    "p99GpuMilliseconds": true,
+    "p99GpuMillisecondsDelta": true,
+    "maximumGpuMilliseconds": true,
+    "peakProcessBytes": true,
+    "peakGpuBytes": true,
+    "allocation": true,
+    "pageBytes": true,
+    "queue": true
+  },
+  "latencies": {
+    "fieldCommitMilliseconds": {
+      "p95": 5.9968,
+      "max": 5.9968
+    },
+    "visualPublicationMilliseconds": {
+      "p95": 28.2853,
+      "max": 28.2853
+    },
+    "editedCollisionDrainMilliseconds": {
+      "p95": 25.8488,
+      "max": 25.8488
+    }
+  },
+  "allocationMiBPerSecond": 24.505037949232225,
+  "decision": "Recorded numeric gates pass; visual seam proof incomplete"
+}

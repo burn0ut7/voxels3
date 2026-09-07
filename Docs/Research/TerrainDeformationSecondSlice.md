@@ -1,7 +1,9 @@
 # Terrain deformation: second-slice research
 
 Date: 2026-09-07. Audience: Voxels3 gameplay and terrain implementers.
-Status: **research proposal; no deformation implementation or benchmark run**.
+Status at research time: **proposal; no deformation implementation or benchmark run**.
+For the current implementation and nine-section completion status, see
+[terrain deformation implementation](../Architecture/TerrainDeformation.md).
 Source reviewed: `0159e1d334cb992646a9d8020749a159fe36bf1b`, plus the working
 source inspected that day. Scene settings changed during research; the values
 below describe the inspected scene, not a newly established performance baseline.

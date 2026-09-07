@@ -5,12 +5,15 @@
 One integer-indexed clipbox hierarchy owns the enabled terrain render levels.
 The shipping default enables levels 0 through 2. Optional visual-distance tiers
 enable ordinary levels 3 through 6 through the same records and queues. The
-authoritative world remains the implicit SDF represented by `VoxelChunk`;
+authoritative world combines the procedural SDF with the shared correction field
+owned by [terrain deformation](TerrainDeformation.md);
 indexed meshes are derived, GPU-resident, revisioned, disposable caches.
 Generator version 5 owns the exterior surface, noodle tunnels, and cheese
 caverns. One adjacent-pair-aware transition cache closes every enabled 2:1
-interface. This slice excludes morphing, collision, edits,
-networking, generator changes, and allocator redesign.
+interface. The subsequent in-progress deformation slice composes the edited
+field in both extractors and adds coherent local publication; its separate
+contract and validation status are in the linked document. Morphing, generator
+changes and allocator redesign remain outside that slice.
 
 Logical chunks are streaming, SDF-input, and revision units, not GPU allocation
 or draw-call units. Persistent geometry lives in shared arenas. Each arena owns

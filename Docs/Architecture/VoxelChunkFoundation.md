@@ -9,12 +9,13 @@ GPU scheduling, allocation, publication, and drawing. Exact validation workloads
 and acceptance decisions belong to the [ledger](../ValidationResults.md).
 
 A [terrain collision prototype](TerrainCollision.md) is implemented but not yet
-accepted. Live edits, persistence, project-specific voxel replication, and
-multi-origin interest management are not implemented. Requirements for those
-features in the agent routes describe future work, not existing systems.
-The [second-slice deformation research](../Research/TerrainDeformationSecondSlice.md)
-proposes edited-field ownership and its downstream pipeline; it does not change
-the implementation status described here.
+fully accepted. [Terrain deformation](TerrainDeformation.md) now owns the
+in-progress live edit contract: one shared correction field, local tool and
+GPU/collision invalidation, multiple player collision interests, and versioned
+disk commands are implemented. Networking transport, persistence validation and
+full feature acceptance remain incomplete. The linked deformation document and
+validation ledger distinguish current measured behavior from remaining work;
+[research](../Research/TerrainDeformationSecondSlice.md) remains a proposal source.
 
 ## Canonical Ownership and Data Flow
 
@@ -29,6 +30,8 @@ the implementation status described here.
   unedited field and conservative bounds. GPU extraction evaluates the matching
   field from an immutable descriptor; geometry remains derived data.
 - `GameplayRadius` defines an inclusive, viewer-centered cube in all three axes.
+  Collision uses the union of independently centered player cubes as described
+  in the deformation contract; visual streaming still has one target.
   Its membership and overlap are computed analytically. A chunk view is created
   on demand for a query or a render-preparation consumer. Mutable per-coordinate
   storage requires a feature that actually owns such state.

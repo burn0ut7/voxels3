@@ -59,6 +59,8 @@ internal sealed class GpuTransitionScratch : IDisposable
 	private ScratchState _state;
 	private bool _disposed;
 
+	private float[] _correctionUpload;
+	public long CorrectionUploadBytes => (_correctionUpload?.LongLength ?? 0) * sizeof( float );
 	public long CapacityBytes { get; }
 	public bool IsIdle { get { lock ( _stateLock ) return _state == ScratchState.Idle; } }
 
@@ -76,7 +78,7 @@ internal sealed class GpuTransitionScratch : IDisposable
 			GpuVoxelMesher.TerrainVertexBytes + sizeof( uint );
 	}
 
-	public bool TrySubmitCount( GpuTransitionRequest[] requests, int count, out double submissionMilliseconds )
+	public bool TrySubmitCount( GpuTransitionRequest[] requests, int count, out double submissionMilliseconds, TerrainFieldSnapshot[] fields = null )
 	{
 		lock ( _stateLock )
 		{
@@ -90,6 +92,55 @@ internal sealed class GpuTransitionScratch : IDisposable
 		}
 		var start = System.Diagnostics.Stopwatch.GetTimestamp();
 		_requests.SetData( new Span<GpuTransitionRequest>( requests, 0, count ) );
+		if ( fields is not null )
+		{
+			_correctionUpload ??= new float[DensityCount];
+			for ( var block = 0; block < count; block++ )
+			{
+				var field = fields[block];
+				if ( field is null ) continue;
+				var request = requests[block];
+				var origin = request.OriginAndFineCellSize;
+				var u = request.BasisUAndCoarseCellSize;
+				var v = request.BasisVAndCellsPerAxis;
+				var n = request.NormalAndFace;
+				for ( var index = 0; index < DensityCount; index++ )
+				{
+					int x, y, normal;
+					var local = index;
+					if ( local < DensitySize * DensitySize )
+					{
+						x = local % DensitySize - 2;
+						y = local / DensitySize - 2;
+						normal = 0;
+					}
+					else
+					{
+						local -= DensitySize * DensitySize;
+						if ( local < FineNormalDensitySize * FineNormalDensitySize * 2 )
+						{
+							normal = local < FineNormalDensitySize * FineNormalDensitySize ? -1 : 1;
+							local %= FineNormalDensitySize * FineNormalDensitySize;
+							x = local % FineNormalDensitySize;
+							y = local / FineNormalDensitySize;
+						}
+						else
+						{
+							local -= FineNormalDensitySize * FineNormalDensitySize * 2;
+							normal = local < CoarseNormalDensitySize * CoarseNormalDensitySize ? -2 : 2;
+							local %= CoarseNormalDensitySize * CoarseNormalDensitySize;
+							x = (local % CoarseNormalDensitySize) * 2;
+							y = (local / CoarseNormalDensitySize) * 2;
+						}
+					}
+					var position = new Vector3( origin.x + (u.x * x + v.x * y + n.x * normal) * origin.w,
+						origin.y + (u.y * x + v.y * y + n.y * normal) * origin.w,
+						origin.z + (u.z * x + v.z * y + n.z * normal) * origin.w );
+					_correctionUpload[index] = field.SampleCorrection( position );
+				}
+				_densitySamples.SetData<float>( _correctionUpload.AsSpan(), block * DensityCount );
+			}
+		}
 		SetBatchSize( count );
 		foreach ( var buffer in new GpuBuffer[] { _densitySamples, _cells, _edgeFlags, _edgeVertexIds,
 			_edgeGroupSums, _cellGroupSums, _blockCounts, _cellAuditCounts, _digests,

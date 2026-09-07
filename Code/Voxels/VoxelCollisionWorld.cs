@@ -6,13 +6,16 @@ using System.Threading;
 internal sealed class VoxelCollisionWorld : IDisposable
 {
 	public const int MaximumRadius = 8;
+	public const int MaximumPlayerInterests = 64;
+	public const int MaximumActorRegions = 4096;
 	private const int MaximumCompleted = 2;
+	private const int MaximumWorkers = 2;
 	private const double IntegrationBudgetMilliseconds = 0.5;
 	private readonly VoxelManager _owner;
 	private readonly int _cells;
 	private readonly float _cellSize;
 	private readonly object _gate = new();
-	private readonly SemaphoreSlim _wake = new( 0, 1 );
+	private readonly SemaphoreSlim _wake = new( 0, MaximumWorkers );
 	private readonly Dictionary<Vector3Int, Region> _regions = new();
 	private readonly Queue<Region> _pending = new();
 	private readonly Queue<Region> _completed = new();
@@ -20,8 +23,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 	private readonly Queue<Region> _retiring = new();
 	private readonly List<Vector3Int> _leaving = new();
 	private readonly List<Region> _ordered = new();
-	private readonly VoxelCollisionMesher _mesher;
-	private readonly System.Threading.Tasks.Task _worker;
+	private readonly System.Threading.Tasks.Task[] _workers;
 	private readonly CollisionSamples _sampling = new();
 	private readonly CollisionSamples _extraction = new();
 	private readonly CollisionSamples _creation = new();
@@ -36,8 +38,10 @@ internal sealed class VoxelCollisionWorld : IDisposable
 	private readonly CollisionSamples _retirement = new();
 	private readonly CollisionSamples _readyLatency = new();
 	private bool _stopping;
-	private Region _building;
-	private Vector3Int _center;
+	private readonly HashSet<Region> _building = new();
+	private readonly List<Vector3Int> _centers = new();
+	private readonly List<Vector3Int> _actorCoordinates = new();
+	private readonly HashSet<Vector3Int> _actorRegions = new();
 	private int _radius = -1;
 	private long _revision = -1;
 	private int _ready;
@@ -58,11 +62,14 @@ internal sealed class VoxelCollisionWorld : IDisposable
 	private sealed class Region
 	{
 		public Vector3Int Coordinate;
-		public ProceduralTerrainSettings Settings;
+		public long InterestDistanceSquared;
+		public TerrainFieldSnapshot Field;
+		public int EditRevision;
 		public long RequestedAt;
 		public readonly CancellationTokenSource Cancellation = new();
 		public bool Cancelled => Cancellation.IsCancellationRequested;
 		public bool Ready;
+		public bool HasPublishedCollision;
 		public bool QueuedResult;
 		public VoxelCollisionGeometry Geometry;
 		public PhysicsBody Body;
@@ -75,9 +82,17 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		_owner = owner;
 		_cells = cells;
 		_cellSize = cellSize;
-		_mesher = new VoxelCollisionMesher( cells );
-		for ( var i = 0; i <= MaximumCompleted; i++ ) _availableGeometry.Enqueue( new VoxelCollisionGeometry() );
-		_worker = Work();
+		for ( var i = 0; i < MaximumCompleted; i++ ) _availableGeometry.Enqueue( new VoxelCollisionGeometry() );
+		_workers = new System.Threading.Tasks.Task[MaximumWorkers];
+		for ( var i = 0; i < MaximumWorkers; i++ ) _workers[i] = Work( new VoxelCollisionMesher( cells ) );
+	}
+
+	public bool EditRebuildPending
+	{
+		get
+		{
+			lock ( _gate ) return _regions.Values.Any( region => region.EditRevision > 0 && !region.Ready );
+		}
 	}
 
 	public bool Settled
@@ -86,30 +101,37 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		{
 			lock ( _gate )
 			{
-				return _radius >= 0 && _ready == _regions.Count && _building is null &&
+				return _radius >= 0 && _ready == _regions.Count && _building.Count == 0 &&
 					_pending.Count == 0 && _completed.Count == 0 && _retiring.Count == 0;
 			}
 		}
 	}
 
-	public void SetInterest( Vector3Int center, int radius, long revision, ProceduralTerrainSettings settings )
+	public void SetInterest( IReadOnlyList<Vector3Int> centers, IReadOnlyList<Vector3Int> actorCoordinates, int radius, long revision, TerrainFieldSnapshot field )
 	{
-		if ( center == _center && radius == _radius && revision == _revision ) return;
+		if ( radius == _radius && revision == _revision && _centers.SequenceEqual( centers ) && _actorCoordinates.SequenceEqual( actorCoordinates ) ) return;
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.CollisionInterest );
 		if ( radius < 0 || radius > MaximumRadius ) throw new ArgumentOutOfRangeException( nameof( radius ) );
+		if ( centers.Count < 1 || centers.Count > MaximumPlayerInterests ) throw new ArgumentOutOfRangeException( nameof( centers ) );
+		if ( actorCoordinates.Count > MaximumActorRegions ) throw new ArgumentOutOfRangeException( nameof( actorCoordinates ) );
 		lock ( _gate )
 		{
-			_center = center;
+			_actorCoordinates.Clear();
+			_actorCoordinates.AddRange( actorCoordinates );
+			_actorRegions.Clear();
+			_actorRegions.UnionWith( actorCoordinates );
+			_centers.Clear();
+			_centers.AddRange( centers );
 			_radius = radius;
 			_leaving.Clear();
 			foreach ( var pair in _regions )
 			{
-				var delta = pair.Key - center;
-				if ( revision != _revision || Math.Abs( delta.x ) > radius || Math.Abs( delta.y ) > radius || Math.Abs( delta.z ) > radius )
+				var retained = IsInterested( pair.Key );
+				if ( revision != _revision || !retained )
 				{
 					pair.Value.Cancellation.Cancel();
 					if ( pair.Value.Ready ) _ready--;
-					if ( pair.Value.Body.IsValid() && (Math.Abs( delta.x ) > radius || Math.Abs( delta.y ) > radius || Math.Abs( delta.z ) > radius) )
+					if ( pair.Value.Body.IsValid() && !retained )
 						_retiring.Enqueue( pair.Value );
 					_leaving.Add( pair.Key );
 				}
@@ -118,53 +140,128 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			{
 				var previous = _regions[coordinate];
 				_regions.Remove( coordinate );
-				var delta = coordinate - center;
-				if ( Math.Abs( delta.x ) <= radius && Math.Abs( delta.y ) <= radius && Math.Abs( delta.z ) <= radius )
+				if ( IsInterested( coordinate ) )
 				{
 					// The new immutable request owns existing support until replacement succeeds.
-					_regions.Add( coordinate, new Region { Coordinate = coordinate, Settings = settings,
-						RequestedAt = Stopwatch.GetTimestamp(), Body = previous.Body, GeometryBytes = previous.GeometryBytes } );
+					_regions.Add( coordinate, CreateRegion( coordinate, field, previous.Body, previous.GeometryBytes ) );
 					previous.Body = null;
 					previous.GeometryBytes = 0;
 				}
 			}
 			_revision = revision;
-			for ( var z = center.z - radius; z <= center.z + radius; z++ )
+			foreach ( var center in _centers )
 			{
-				for ( var y = center.y - radius; y <= center.y + radius; y++ )
+				for ( var z = center.z - radius; z <= center.z + radius; z++ )
 				{
-					for ( var x = center.x - radius; x <= center.x + radius; x++ )
+					for ( var y = center.y - radius; y <= center.y + radius; y++ )
 					{
-						var coordinate = new Vector3Int( x, y, z );
-						if ( !_regions.ContainsKey( coordinate ) )
+						for ( var x = center.x - radius; x <= center.x + radius; x++ )
 						{
-							_regions.Add( coordinate, new Region { Coordinate = coordinate, Settings = settings, RequestedAt = Stopwatch.GetTimestamp() } );
+							var coordinate = new Vector3Int( x, y, z );
+							if ( !_regions.ContainsKey( coordinate ) )
+							{
+								_regions.Add( coordinate, CreateRegion( coordinate, field ) );
+							}
 						}
 					}
 				}
 			}
-			_ordered.Clear();
-			foreach ( var region in _regions.Values )
-			{
-				if ( !region.Ready && !region.QueuedResult && region != _building && region.Error is null ) _ordered.Add( region );
-			}
-			_ordered.Sort( ( a, b ) =>
-			{
-				var da = a.Coordinate - _center; var db = b.Coordinate - _center;
-				var order = (da.x * da.x + da.y * da.y + da.z * da.z).CompareTo( db.x * db.x + db.y * db.y + db.z * db.z );
-				if ( order != 0 ) return order;
-				order = a.Coordinate.z.CompareTo( b.Coordinate.z );
-				if ( order != 0 ) return order;
-				order = a.Coordinate.y.CompareTo( b.Coordinate.y );
-				return order != 0 ? order : a.Coordinate.x.CompareTo( b.Coordinate.x );
-			} );
-			_pending.Clear();
-			foreach ( var region in _ordered ) _pending.Enqueue( region );
-			if ( _wake.CurrentCount == 0 ) _wake.Release();
+			foreach ( var coordinate in _actorCoordinates )
+				if ( !_regions.ContainsKey( coordinate ) ) _regions.Add( coordinate, CreateRegion( coordinate, field ) );
+			RebuildPendingOrder();
 		}
 	}
 
-	private async System.Threading.Tasks.Task Work()
+	private bool IsInterested( Vector3Int coordinate )
+	{
+		if ( _actorRegions.Contains( coordinate ) ) return true;
+		foreach ( var center in _centers )
+		{
+			var delta = coordinate - center;
+			if ( Math.Abs( delta.x ) <= _radius && Math.Abs( delta.y ) <= _radius && Math.Abs( delta.z ) <= _radius ) return true;
+		}
+		return false;
+	}
+
+	/// <summary>Rebuild only resident dependencies; unloaded edits remain in the field.</summary>
+	public int InvalidateField( TerrainFieldChange change )
+	{
+		var field = change.Result;
+		var dirtyBounds = change.DependencyPageBounds;
+		lock ( _gate )
+		{
+			_leaving.Clear();
+			foreach ( var pair in _regions )
+			{
+				if ( !TerrainFieldChange.Intersects( SamplingBounds( pair.Key ), dirtyBounds ) ) continue;
+				var currentRevision = field.GetCorrectionRange( SamplingBounds( pair.Key ), out _, out _ );
+				if ( pair.Value.EditRevision != currentRevision ) _leaving.Add( pair.Key );
+				else if ( !_building.Contains( pair.Value ) && !pair.Value.Ready && !pair.Value.QueuedResult )
+					pair.Value.Field = field;
+			}
+			foreach ( var coordinate in _leaving )
+			{
+				var previous = _regions[coordinate];
+				previous.Cancellation.Cancel();
+				if ( previous.Ready ) _ready--;
+				_regions[coordinate] = CreateRegion( coordinate, field, previous.Body, previous.GeometryBytes, previous.Ready || previous.HasPublishedCollision );
+				previous.Body = null;
+				previous.GeometryBytes = 0;
+			}
+			if ( _leaving.Count > 0 ) RebuildPendingOrder();
+			return _leaving.Count;
+		}
+	}
+
+	private SdfWorldAabb SamplingBounds( Vector3Int coordinate )
+	{
+		var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * (_cells * _cellSize);
+		// Tiny native-collision support fragments sample one cell beyond the chunk.
+		return new SdfWorldAabb( origin - Vector3.One * _cellSize,
+			origin + Vector3.One * ((_cells + 1) * _cellSize) );
+	}
+
+	private Region CreateRegion( Vector3Int coordinate, TerrainFieldSnapshot field,
+		PhysicsBody body = null, long geometryBytes = 0, bool hasPublishedCollision = false ) => new()
+	{
+		Coordinate = coordinate, Field = field, RequestedAt = Stopwatch.GetTimestamp(),
+		EditRevision = field.GetCorrectionRange( SamplingBounds( coordinate ), out _, out _ ),
+		Body = body, GeometryBytes = geometryBytes, HasPublishedCollision = hasPublishedCollision
+	};
+
+	// Caller holds _gate. Cancelled requests cannot remain in the dispatch queue.
+	private void RebuildPendingOrder()
+	{
+		_ordered.Clear();
+		foreach ( var region in _regions.Values )
+		{
+			if ( !region.Ready && !region.QueuedResult && !_building.Contains( region ) && region.Error is null )
+			{
+				region.InterestDistanceSquared = _actorRegions.Contains( region.Coordinate ) ? 0 : long.MaxValue;
+				foreach ( var center in _centers )
+				{
+					var delta = region.Coordinate - center;
+					region.InterestDistanceSquared = Math.Min( region.InterestDistanceSquared,
+						(long)delta.x * delta.x + (long)delta.y * delta.y + (long)delta.z * delta.z );
+				}
+				_ordered.Add( region );
+			}
+		}
+		_ordered.Sort( ( a, b ) =>
+		{
+			var order = a.InterestDistanceSquared.CompareTo( b.InterestDistanceSquared );
+			if ( order != 0 ) return order;
+			order = a.Coordinate.z.CompareTo( b.Coordinate.z );
+			if ( order != 0 ) return order;
+			order = a.Coordinate.y.CompareTo( b.Coordinate.y );
+			return order != 0 ? order : a.Coordinate.x.CompareTo( b.Coordinate.x );
+		} );
+		_pending.Clear();
+		foreach ( var region in _ordered ) _pending.Enqueue( region );
+		if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
+	}
+
+	private async System.Threading.Tasks.Task Work( VoxelCollisionMesher mesher )
 	{
 		while ( true )
 		{
@@ -172,10 +269,10 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			lock ( _gate )
 			{
 				if ( _stopping ) return;
-				if ( _pending.Count > 0 && _completed.Count < MaximumCompleted && _availableGeometry.Count > 0 )
+				if ( _pending.Count > 0 && _completed.Count + _building.Count < MaximumCompleted && _availableGeometry.Count > 0 )
 				{
 					region = _pending.Dequeue();
-					_building = region;
+					_building.Add( region );
 					region.Geometry = _availableGeometry.Dequeue();
 				}
 			}
@@ -187,7 +284,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			await GameTask.WorkerThread();
 			try
 			{
-				region.Geometry = _mesher.Build( region.Coordinate, _cellSize, region.Settings, () => region.Cancelled, region.Geometry );
+				region.Geometry = mesher.Build( region.Coordinate, _cellSize, region.Field, () => region.Cancelled, region.Geometry );
 			}
 			catch ( OperationCanceledException ) { }
 			catch ( Exception exception )
@@ -196,7 +293,8 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			}
 			lock ( _gate )
 			{
-				_building = null;
+				_building.Remove( region );
+				region.Field = null;
 				if ( _stopping ) return;
 				region.QueuedResult = true;
 				_completed.Enqueue( region );
@@ -228,7 +326,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			lock ( _gate )
 			{
 				if ( !_completed.TryDequeue( out region ) ) return;
-				if ( _wake.CurrentCount == 0 ) _wake.Release();
+				if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
 			}
 			if ( region.Cancelled )
 			{
@@ -320,6 +418,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 					region.GeometryBytes = 0;
 				}
 				region.Ready = true;
+				region.HasPublishedCollision = true;
 				_ready++;
 				_published++;
 				_readyLatency.Add( (float)Stopwatch.GetElapsedTime( region.RequestedAt ).TotalMilliseconds );
@@ -334,22 +433,20 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		{
 			if ( region.Geometry is not null ) _availableGeometry.Enqueue( region.Geometry );
 			region.Geometry = null;
-			if ( _wake.CurrentCount == 0 ) _wake.Release();
+			if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
 		}
 	}
 
-	public bool IsReady( Vector3Int minimum, Vector3Int maximum )
+	public bool IsReady( Vector3Int minimum, Vector3Int maximum, bool allowRetained = false )
 	{
-		if ( minimum.x < _center.x - _radius || maximum.x > _center.x + _radius ||
-			minimum.y < _center.y - _radius || maximum.y > _center.y + _radius ||
-			minimum.z < _center.z - _radius || maximum.z > _center.z + _radius ) return false;
+
 		for ( var z = minimum.z; z <= maximum.z; z++ )
 		{
 			for ( var y = minimum.y; y <= maximum.y; y++ )
 			{
 				for ( var x = minimum.x; x <= maximum.x; x++ )
 				{
-					if ( !_regions.TryGetValue( new Vector3Int( x, y, z ), out var region ) || !region.Ready ) return false;
+					if ( !_regions.TryGetValue( new Vector3Int( x, y, z ), out var region ) || (!region.Ready && !(allowRetained && region.HasPublishedCollision)) ) return false;
 				}
 			}
 		}
@@ -373,7 +470,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			return new PerformanceCollisionMetrics
 			{
 				Desired = _regions.Count, Ready = _ready, Bodies = _bodies, Pending = _pending.Count,
-				Building = _building is not null, Completed = _completed.Count, Retiring = _retiring.Count,
+				Building = _building.Count > 0, ActiveWorkers = _building.Count, WorkerLimit = MaximumWorkers, Completed = _completed.Count, Retiring = _retiring.Count,
 				Failures = _failures, StaleDiscarded = _stale, Published = _published,
 				PeakCompleted = _peakCompleted, PeakCompletedBytes = _peakCompletedBytes,
 				ResidentGeometryBytes = _residentGeometryBytes, PeakResidentGeometryBytes = _peakResidentGeometryBytes,
@@ -407,10 +504,10 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			}
 			_regions.Clear(); _pending.Clear(); _completed.Clear();
 			_ready = 0; _bodies = remainingBodies; _residentGeometryBytes = 0;
-			if ( _wake.CurrentCount == 0 ) _wake.Release();
+			if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
 		}
-		if ( remainingBodies == 0 ) Log.Info( "[VoxelCollision] disposed bodies=0 verified=True" );
-		else Log.Error( $"[VoxelCollision] dispose.failed remainingBodies={remainingBodies}" );
+		if ( remainingBodies > 0 ) Log.Error( $"[VoxelCollision] dispose.failed remainingBodies={remainingBodies}" );
+		else if ( Game.IsPlaying ) Log.Info( "[VoxelCollision] disposed bodies=0 verified=True" );
 	}
 
 	private sealed class CollisionSamples
@@ -419,7 +516,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		private int _truncated;
 		public void Add( float value )
 		{
-			if ( _values.Count < 65536 ) _values.Add( value );
+			if ( _values.Count < 131072 ) _values.Add( value );
 			else _truncated++;
 		}
 		public void Clear() { _values.Clear(); _truncated = 0; }

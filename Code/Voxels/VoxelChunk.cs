@@ -12,11 +12,11 @@ public readonly record struct ChunkDensityRange(
 
 /// <summary>
 /// Authoritative logical SDF samples for one spatial chunk. The deterministic
-/// procedural field is evaluated directly without allocating a density array.
+/// base field and immutable correction snapshot are sampled without a chunk density array.
 /// Density below zero is solid, density above zero is air, and zero is the
 /// terrain surface.
 /// </summary>
-public sealed class VoxelChunk
+internal sealed class VoxelChunk
 {
 	public const byte AirMaterialId = 0;
 	public const byte GrassMaterialId = 1;
@@ -27,7 +27,8 @@ public sealed class VoxelChunk
 	public int CellsPerAxis { get; }
 	public int SamplesPerAxis { get; }
 	public float CellSize { get; }
-	public ProceduralTerrainSettings TerrainSettings { get; }
+	public ProceduralTerrainSettings TerrainSettings => Field.Settings;
+	public TerrainFieldSnapshot Field { get; }
 	public int SampleCount { get; }
 	public float MinimumDensity { get; }
 	public float MaximumDensity { get; }
@@ -40,8 +41,8 @@ public sealed class VoxelChunk
 		Vector3Int coordinate,
 		int cellsPerAxis,
 		float cellSize,
-		ProceduralTerrainSettings terrainSettings )
-		: this( coordinate, cellsPerAxis, cellSize, terrainSettings, null )
+		TerrainFieldSnapshot field )
+		: this( coordinate, cellsPerAxis, cellSize, field, null )
 	{
 	}
 
@@ -49,9 +50,9 @@ public sealed class VoxelChunk
 		Vector3Int coordinate,
 		int cellsPerAxis,
 		float cellSize,
-		ProceduralTerrainSettings terrainSettings,
+		TerrainFieldSnapshot field,
 		ChunkDensityRange densityRange )
-		: this( coordinate, cellsPerAxis, cellSize, terrainSettings, (ChunkDensityRange?)densityRange )
+		: this( coordinate, cellsPerAxis, cellSize, field, (ChunkDensityRange?)densityRange )
 	{
 	}
 
@@ -59,7 +60,7 @@ public sealed class VoxelChunk
 		Vector3Int coordinate,
 		int cellsPerAxis,
 		float cellSize,
-		ProceduralTerrainSettings terrainSettings,
+		TerrainFieldSnapshot field,
 		ChunkDensityRange? knownDensityRange )
 	{
 		Coordinate = coordinate;
@@ -72,12 +73,12 @@ public sealed class VoxelChunk
 			coordinate,
 			cellsPerAxis,
 			cellSize,
-			terrainSettings );
+			field );
 		DensityRangeEvaluationMilliseconds = knownDensityRange.HasValue
 			? 0f
 			: (float)System.Diagnostics.Stopwatch.GetElapsedTime( boundsStart ).TotalMilliseconds;
 		_globalSampleOrigin = coordinate * cellsPerAxis;
-		TerrainSettings = terrainSettings;
+		Field = field;
 		SampleCount = checked( SamplesPerAxis * SamplesPerAxis * SamplesPerAxis );
 		MinimumDensity = densityRange.MinimumDensity;
 		MaximumDensity = densityRange.MaximumDensity;
@@ -93,26 +94,28 @@ public sealed class VoxelChunk
 		Vector3Int coordinate,
 		int cellsPerAxis,
 		float cellSize,
-		ProceduralTerrainSettings terrainSettings )
+		TerrainFieldSnapshot field )
 	{
-		return ProceduralTerrainSdf.ClassifyDensityRange(
-			coordinate,
-			cellsPerAxis,
-			cellSize,
-			terrainSettings );
+		var size = cellsPerAxis * cellSize;
+		var minimum = new Vector3( coordinate.x * size, coordinate.y * size, coordinate.z * size );
+		return field.GetDensityRange( new SdfWorldAabb( minimum, minimum + new Vector3( size ) ), cellSize );
 	}
 
 	public static ChunkDensityClassification ClassifyDensityRangeBroadPhase(
 		Vector3Int coordinate,
 		int cellsPerAxis,
 		float cellSize,
-		ProceduralTerrainSettings terrainSettings )
+		TerrainFieldSnapshot field )
 	{
+		var size = cellsPerAxis * cellSize;
+		var minimum = new Vector3( coordinate.x * size, coordinate.y * size, coordinate.z * size );
+		field.GetCorrectionRange( new SdfWorldAabb( minimum, minimum + new Vector3( size ) ), out var low, out var high );
+		if ( low != 0f || high != 0f ) return ChunkDensityClassification.PotentiallySurfaceContaining;
 		return ProceduralTerrainSdf.ClassifyDensityRangeBroadPhase(
 			coordinate,
 			cellsPerAxis,
 			cellSize,
-			terrainSettings );
+			field.Settings );
 	}
 
 	public bool TryGetSample( Vector3Int localSample, out float density, out byte materialId )
@@ -126,10 +129,8 @@ public sealed class VoxelChunk
 			return false;
 		}
 
-		density = ProceduralTerrainSdf.SampleGlobal(
-			_globalSampleOrigin + localSample,
-			CellSize,
-			TerrainSettings );
+		var global = _globalSampleOrigin + localSample;
+		density = Field.SampleWorld( new Vector3( global.x * CellSize, global.y * CellSize, global.z * CellSize ) );
 		materialId = density <= 0f ? GrassMaterialId : AirMaterialId;
 		return true;
 	}

@@ -10807,3 +10807,1555 @@ failures and stale discards. Worst phases0.0055/2.9891/0.0063ms at(-16,-16,-2),
 differs from candidate17 and baseline, retaining post-route comparability limits.
 Original frame-time acceptance remains failed. Normal08:01:23teardown verified
 zeroownedbodies. No commit/push. Broader contact/replacement coverage pending.
+
+## Terrain deformation implementation kickoff - 2026-09-07
+
+Branch codex/terrain-deformation starts at f1319ed. No runtime source changes
+have been made. The saved scene has an unrelated user change from visual radius
+512/maxLOD6 to256/maxLOD5, plus diagnostic-string changes; preserve it.
+
+### Pre-change figure-eight control plan
+
+Repeat GPU-MESHING-512-001/v1 and TERRAIN-COLLISION-PROTOTYPE-001/v1 workload
+and all existing criteria without weakening them. Ryzen7 9800X3D/RTX5090,
+engine26.09.01c. Normal stop/play, attached game camera, fps_max1000, seed1337,
+base0/amplitude128/frequency0.0005, 32cells/16units, gameplay8, levels0..6,
+extents4/8, visual512, speed2500/distance50000/one loop, fixedZ0, complete
+normal drain plus10stationary seconds. No edits, profiling, viewport changes
+or runtime source edits during timing. Read-only inspection/documentation may
+continue. Wait for both collision and visuals to settle before timing.
+
+After stop/play, explicitly set runtime visual radius512 through the existing
+validated configuration tool because the user's saved scene now selects256.
+Do not save this change. Record effective settings, source manifest, process,
+starting center and the setup difference. This is a new pre-deformation control,
+not acceptance of the collision prototype and not a rewrite of older baseline
+history. Compare to candidate18 for incremental attribution and the original
+accepted/no-collision gates for ultimate acceptance; preserve discrepancies.
+
+#### Pre-change control attempt - 2026-09-07 08:23:52 local
+
+Outcome incomplete, not an accepted baseline. PID68192, source f1319ed;
+[manifest](ValidationEvidence/TerrainDeformation/prechange-source.json).
+The test started at (8.60010052,7.11773252,0) after collision settled at4913ready,
+1049bodies, zero failures. This differs from authored(0,0,0), so original
+coordinate-sensitive geometry comparisons were not available. No runtime code
+changed during the attempt. No saved result exists for the task label
+terrain-deformation-prechange/GPU-MESHING-512-001/v1 in results-v1.jsonl.
+At08:26:15 an inspector attempt was rejected for collision not settled; at
+08:26:19 a manual-inspector run began. Source StartPerformanceTest checks only
+moving state, while moving completion clears that state before final capture;
+a subsequent start resets pending capture state. This admits replacement during
+the finishing phase and is a concrete evidence-loss defect. Preserve this
+attempt as incomplete; do not infer performance from startup or elapsed time.
+The subsequent uncontrolled run was stopped for implementation work and is not
+a replacement baseline. Add a start guard covering final-capture state before
+retrying unchanged control parameters. This affects invocation admission only,
+not the recorded route or performance thresholds.
+
+
+#### TERRAIN-COLLISION-POST-ROUTE-001/v1 observation plan
+
+Investigate user-reported idle FPS loss after the standard route. Extend existing
+read-only collision_info with current rolling frame/memory text,200-frame
+profiler snapshot, visual queues/placement, arena usage/digests and exact center.
+No benchmark or runtime scheduling change. Fresh normal play, same standard
+seed1337/v5/32cells/16units/radius8/visual0..6/half4,8/fps_max1000. After full
+initial collision/visual settlement, collect two idle snapshots10seconds apart.
+Run unchanged standard figure-eight2500/50000/1, record its existing result;
+collect immediate post-result state and then two fully settled snapshots10seconds
+apart. No camera/input changes, extra external profiler or code edits during run.
+Compare body/payload/queue counts, geometry identity, arenas, rolling FPS and
+script/engine timings. Require zero failures and bounded queues. A persistent
+idle regression requires both settled post samples slower than both settled
+pre samples with comparable position/view/geometry; different residency prevents
+an equal-workload claim.200-frame scope samples are short observations, not
+route-wide distributions or causal proof. Preserve original acceptance gates;
+this does not silently redefine the standard stationary window.
+
+#### Pre-deformation source control evidence - 2026-09-07
+
+The repeat begun08:29:23 did not produce a saved result: another task restarted
+play while adding read-only collision diagnostics. It is incomplete, not a
+baseline. No deformation code was loaded during either attempt.
+
+The concurrent collision task subsequently completed run65c0a8409d344ecca4a372af8c6e5eb8
+under TERRAIN-COLLISION-POST-ROUTE-001/v1 with the unchanged standard route.
+[Raw result](ValidationEvidence/TerrainCollision/post-route-figure-eight.json)
+and [source](ValidationEvidence/TerrainCollision/post-route-source.json) are
+available; all manifest hashes matched current source before deformation edits.
+Use this as the immediate pre-deformation source control, with original gates
+still binding and source label provenance clarified: actual source is f1319ed
+plus the completion-start guard and read-only collision diagnostics. Its recorded
+label names prototype18 ancestry, not an exact Git commit. Effective settings
+confirm visual512/levels0..6, gameplay8, seed1337/v5,32cells/16units, extents4/8.
+Startcenter(-0.00080670294,0.19740185) agrees with candidate18 to float rounding.
+
+Moving847.02234FPS,CPU p95/p99 1.8427/3.7222ms,GPU2.0086765/2.5737286ms.
+Stationary898.9863FPS,CPU1.6424/2.6547ms,GPU1.6841888/2.1505356ms.
+Collision3189ready/1722pending at saved result,zero failures; creation maximum
+11.8251ms. Thus not accepted against original performance gates and not fully
+settled collision timing. This control does not close the separate task's
+post-route FPS investigation. Deformation must report incremental comparison
+and original acceptance separately; no regression waiver is inferred.
+
+
+### TERRAIN-DEFORMATION-SMOKE-001/v1 — initial integration plan
+
+Frozen before first execution, 2026-09-07. This is an initial production-path
+correctness check, not the dedicated workload or feature acceptance. Cold editor
+restart on engine26.09.01c, Ryzen7 9800X3D / RTX5090. Preserve saved user scene
+settings; explicitly apply visual512/levels0..6 at runtime, gameplay8, seed1337,
+generator5,32cells/16units, base0/frequency0.0005/amplitude128, fps_max1000.
+Normal playable scene startup, attached game camera, no figure-eight. Wait for
+initial visual and collision settlement. Record initial edit/collision statistics
+and camera image. Issue exactly one host production command:
+`voxel_terrain_edit 512 0 0 256 1024`. Poll readiness at most every10seconds;
+allow60seconds for this initial correctness check, then record pass/failure.
+Record final edit statistics, collision failures, render geometry digest and camera
+image. Require exactly one committed request, positive changed sample count,
+nonzero field pages, zero rejected requests, completed visual and collision edit
+work, changed geometry digest, no new native/managed/shader errors. Check cold
+editor remains alive and Sentry last_crash unchanged. Visibility of the modified
+area must be inspected before any claim that the rendered edit is correct;
+metrics alone are insufficient. No latency or performance acceptance is implied
+by the60second correctness timeout. Source manifest:
+[initial-deformation-smoke-source.json](ValidationEvidence/TerrainDeformation/initial-deformation-smoke-source.json).
+
+Before restart, saved the existing dirty editor scene to preserve user work;
+the prior on-disk scene is backed up outside the repo at
+`%TEMP%/voxels3-deformation-scene-before-save.scene`. Scene changes remain
+outside this task's intended commit. No test runtime settings were saved.
+
+
+#### TERRAIN-DEFORMATION-SMOKE-001/v1 - first attempt
+
+2026-09-07 approximately08:52-08:56 EDT. Initial source manifest above. C#
+compiled with0errors (intermittent SB2000 generated Description warning on the
+partial manager). Saved dirty scene and requested normal editor window closure.
+The previous process68192 logged an exception from the editor ConsoleWidget
+QPushButton callback while VoxelCollisionWorld.Dispose logged successful body
+retirement; this interrupted VoxelManager.OnDestroy. The Sentry last_crash marker
+advanced from09:13:17.503862Z to12:52:48.871044Z. Reopened editor process66776
+loaded the project; this is not a passed unchanged-marker cold restart. No
+shader parser failure was found in the new runtime log, and that marker stayed
+unchanged during terrain startup and the edit.
+
+Startup reported one GPU scheduling stall at08:54:03, age2897.581ms, before
+settlement. All4913 collision regions and visual queues subsequently settled,
+with0collision failures. At08:55:19 the exact planned host command accepted
+request1. At the first status observation08:55:47, revision1 held8pages/1MiB,
+17071changed samples,1committed/0rejected requests,17.0291ms request-to-field
+commit,116visual dependencies and64collision dependencies. Both edit work queues
+were complete. This observation only bounds downstream completion to the polling
+interval; it is not a measured visual/collision latency. Collision published count
+rose4913 to4977, failures remained0. Visual topology changed
+15B4D9622B88FD38 to ED13458E1733F634, positions
+CA8A8E8478AC8A73 to7291C0DFD4453821. Before/after game-camera screenshots were
+inspected; the level third-person view is insufficient to verify the crater's
+whole surface. Targeted visual inspection remains required.
+
+Result: initial field/local rebuilding completed, but overall smoke acceptance
+fails the new-error/unchanged-crash-marker gates and visible-shape verification
+is incomplete. Do not treat the17ms field commit or rolling FPS as feature
+performance acceptance. Preserve and resolve the shutdown and startup failures.
+Evidence: [before](ValidationEvidence/TerrainDeformation/smoke-before-settled.json),
+[after](ValidationEvidence/TerrainDeformation/smoke-after.json),
+[runtime](ValidationEvidence/TerrainDeformation/smoke-runtime.log).
+
+
+Post-run visual observation: detached camera at(100,-550,650), angles(43,53,0),
+FOV60 showed the crater as a continuous concave surface crossing checker cells,
+with no visible crack in this view. This completes limited shape inspection for
+that one edit, not full boundary/LOD correctness. Restored attached camera and
+stopped play without saving runtime test settings. The Sentry event associated
+with the advanced marker contains `shutdown_crash=true` and process name
+`sbox-launcher`; do not call it a demonstrated shader-parser crash. The old
+editor log separately proves a ConsoleWidget exception from the successful
+collision disposal log interrupted manager teardown. Added GPU cleanup in a
+finally block and limited successful disposal logging to active gameplay;
+errors still report failures. Subsequent clean restart validation remains due.
+
+User-reported camera defect, 2026-09-07: left/right terrain edits caused strange
+camera movement. Source review found the existing collision readiness hold
+changed PlayerController.Enabled to false while replacement collision was
+pending, disabling the controller's camera modifier. Replaced that with saving
+and temporarily disabling UseInputControls, clearing WishVelocity and holding
+the rigidbody. UseLookControls, camera settings, eye angles and component Enabled
+remain untouched. Release restores the prior movement-input setting. Official
+PlayerController.DefaultControls source confirms look/camera updates are separate
+from the fixed-update UseInputControls gate; installed properties and runtime
+compilation also verify these APIs. The user restarted play manually after the
+smoke run; do not interrupt or reposition their camera for automated inspection.
+The separate deformation benchmark must be explicitly started and must never
+be invoked by Attack1/Attack2. Camera stability during collision holds and
+continued safe body holds require runtime verification; no performance pass is
+claimed for this fix.
+
+
+### Terrain deformation profile, 2026-09-07 09:02:46
+
+User supplied an interactive editing capture; exact edit count, inputs and timing
+were not frozen, so this is attribution only. See
+[profile analysis](Research/TerrainDeformationProfile20260907.md) and its retained
+derived summary. It identifies expensive regular correction preparation,
+collision extraction/native cooking and broad dependency scans. Implemented a
+candidate using page-intersection lattice copies and spatial rejection before
+revision scans. No shader changes or reduced precision. The candidate has no
+measured speedup or acceptance yet. The user remains in interactive play; do not
+interrupt their session or move their camera to test this candidate implicitly.
+
+
+### 2026-09-07 responsiveness defect investigation (not an acceptance run)
+
+User-driven sprint/look/edit workload had no frozen input trace, so it is not a
+comparable performance run. Read-only status09:28:58: world
+f1b282a1-d231-47c4-9fef-deabe8c1b7bf, revision1, pages4, bytes524288,
+committed1/rejected0, changedSamples2151, request-to-field6.9374ms,
+visualDependencies84, collisionDependencies48; both derivative queues drained.
+This does not measure first-visible latency or frame pacing.
+
+Disk-log review found357375 TerrainVertex GpuBuffer InvalidCastException entries
+from08:59:19.604 through09:31:04.336 at the time of inspection, four earlier
+compiler-broken-reference exceptions, one earlier empty-world-identity rejection,
+and three build-volume actor-entry rejections. Further errors can occur after
+that snapshot. At09:31:01 hotload also reported unresolved old method definitions
+for IsTerrainCollisionReady/CreateRegion while live jobs were being migrated.
+The initial empty buffered-console error query therefore did not establish an
+error-free session. Existing scene/player state was not reset for this review.
+
+Candidate correction: smaller derived dependency revisions; tool admission with
+fresh aim instead of a queued old target; removal of global collision drain from
+mutation admission; retained published support during edit replacement; dynamic
+body build exclusion; cached draw-command reset on hotload. Compilation and
+source checks are recorded separately from runtime acceptance. No new latency,
+frame pacing, camera stability, seam, collision correctness, or multiplayer pass
+is claimed. Required dedicated deformation scenarios and unchanged figure-eight
+must still run in a clean session before acceptance/commit/push.
+
+
+Follow-up read-only observation09:34:07 (different user-driven world, not a
+controlled before/after comparison): worldbad12d40-8cff-467c-a663-c1f6d78c10d3,
+revision56, pages15, committed56/rejected0, queue0, no field preparation,
+last request-to-field3.6495ms, visualDependencies30/collisionDependencies8;
+both derivative queues pending. Latest compiler inspection: runtime/editor
+success,0errors/0warnings; git diff --check clean. New scheduler stall09:34:08
+was639.3ms with347regular/160transition pending; prior09:32:37 stall728.538ms
+with0regular/104transition pending. Both remain failures requiring clean-session
+investigation; no first-visible improvement or frame-pacing pass inferred.
+No new cast exception appeared in the final buffered error interval, which is
+insufficient to establish permanent hotload recovery.
+
+
+### TERRAIN-DEFORMATION-HOLD-001/v1 — frozen first continuous workload
+
+Preflight: current fresh playable basic_example world
+7a6c73de-abce-493b-adf2-b415704b401b, revision0/pages0, no pending field work;
+4913/4913 collision regions ready, no visual/transition/placement pending,
+zero collision failures. Spawn settled at(-0.000959950441,0.142429888,2.19893622),
+grounded, velocity0, heldBodies0. The initial smoke had already exercised a
+surface at(512,0,0); this workload uses the normal tool ray toward that location,
+not direct density writes. Preflight is retained in
+[hold-v1-before.json](ValidationEvidence/TerrainDeformation/hold-v1-before.json).
+
+Fixed environment: basic_example.scene, attached authored third-person camera,
+authored90degree FOV with UseFovFromPreferences enabled (capture actual view as
+preflight evidence), player stays at settled spawn within2units for the run;
+no external player input, no camera/streaming manipulation. Local host, one
+player, no simulated network impairment. Seed1337, generator5, baseheight0,
+frequency0.0005, amplitude128,32cells/chunk,16units/cell; gameplay8, visual512,
+levels0..6 and existing clipbox defaults. fps_max1000; engine26.09.01c,
+Ryzen7 9800X3D/RTX5090. Each run uses a fresh revision0 world. Exact source and
+scene hashes are in
+[hold-v1-source.json](ValidationEvidence/TerrainDeformation/hold-v1-source.json).
+
+Command: voxel_deformation_benchmark tool-stationary terrain-deformation
+hold-001-v1. Ten seconds of idle baseline, then600attempts at10Hz (index0..599,
+scheduled time=index*0.1seconds). Normal tool aims from current player eye at
+(512,0,0); radius128,strength+64,reach2048. Each attempt samples current terrain
+through the production ray/admission path. At most one attempt/frame; retain
+scheduling lateness and rejection. Drain allowance60seconds after nominal60second
+work window, then10seconds stationary capture. No input retuning based on results.
+
+Predeclared gates (all must pass; unavailable evidence is incomplete): at least
+480accepted non-no-op commits (eight per second averaged over nominal workload),
+all600attempt records retained, no lost accepted edits, no unfinished commit or
+derivative timings at completion. Coherent visual-publication p95<=100ms,
+p99<=200ms; conservative edited-collision drain p95<=150ms,p99<=250ms.
+No-op/nonvisible events excluded from visible summaries and reported separately.
+Publication is an engine-thread proxy; visible progression/seams require actual
+rendered inspection. Queue age/request-to-field max250ms, peak tool queue<=1;
+no cancellation starvation. CPU and GPU frame p95<=4ms,p99<=8ms,max<=50ms;
+each p95 increase versus same-run no-edit control<=max(25%,1ms), each p99
+increase<=max(25%,2ms). Peak process and GPU memory each<=control peak+512MiB;
+managed allocated bytes/work-and-drain seconds<=64MiB/s, peak page payload<=16MiB.
+Zero collision/native failures, new runtime exceptions, stale publications or
+visible cracks. Zero workload collision hold steps and peak held bodies0; player
+displacement<=2units. Staging/upload resource accounting must remain bounded
+and be reported before final feature acceptance. These measurements cannot
+waive the independent unchanged figure-eight or multiplayer/large-event gates.
+
+The current runner labels its timing schema candidate-v2; the ledger scenario
+above is the fixed executable workload identity. This is the first run, with no
+accepted deformation baseline. Preserve any failure as the initial measurement.
+
+
+#### TERRAIN-DEFORMATION-HOLD-001/v1 — run ab8ab390f3454150bb0e5128acfa7fae
+
+Started09:44:38.5163, preserved complete output in
+[hold-v1-result.json](ValidationEvidence/TerrainDeformation/hold-v1-result.json)
+and [summary](ValidationEvidence/TerrainDeformation/hold-v1-summary.json).
+600attempts retained;44accepted/committed, all consecutive indices0..43, then556
+not admitted. No queued/preparing work remained. All44derivative records completed.
+Field commit p50/p95/p99/max3.2233/4.2828/4.8602/4.8602ms; coherent visual
+publication26.5736/33.3287/41.8011/41.8011ms; conservative collision drain
+56.4943/83.87/88.485/88.485ms. Actor release matched collision drain;
+peak held bodies0 and workload hold steps0. Collision346published,0failures.
+
+Baseline10.004145seconds,972.448FPS,CPU p95/p99 1.3453/2.0782ms,
+GPU0.8647442/1.0716915ms. Work+drain69.893394seconds,943.7684FPS,
+CPU1.477/2.3223ms,GPU0.88119507/1.9283295ms,GPUmax3.383875ms.
+Process peak4678451200->4705902592bytes; GPUpeak2013022036 unchanged.
+Managed allocations1786662728bytes overwork+drain; maxGCpause13.994ms;
+0runtime exceptions,0frames with exceptions,2MiBpeak page payload. CPU maximum
+is absent from current frame output, so that gate cannot be proven. Snapshot
+before/after inspection showed a dug corridor and unchanged player/camera view;
+this single view does not prove every seam or correlate first-visible timing.
+
+Decision: FAILED continuous-work requirement44<480, not accepted performance.
+The successful edit latency gates passed for44edits only. The long idle tail
+makes aggregate frame/memory numbers insufficient for a sustained600edit claim.
+All556rejections must remain visible. No runtime errors appeared in buffered
+console interval through357998 after run start. Determine the stopped-edit cause
+before changing any workload; preserve this failed initial measurement.
+
+
+### TERRAIN-DEFORMATION-HOLD-001/v2 — justified reachable dig/build cycle
+
+The v1 workload is physically incapable of sustaining600digs on its single ray:
+post-run runtime eye(-0.0001,0.0049,66.2374) aimed at(512,0,0). Native scene
+traces, starting100units down that ray to exclude the player's body, missed up
+to the2048unit tool endpoint; extending to4096 hit terrain at ray distance
+2049.8826from the eye. Hit(2032.94092,-0.0145558771,-196.763962). All44accepted
+v1 edits completed within the100ms input interval before the surface left reach.
+Thus changing this workload is justified by exhausted reachable terrain, not by
+slow performance. The v1 failure and raw measurements remain above, with no
+retrospective pass and no continuous comparison across versions.
+
+V2 uses command voxel_deformation_benchmark tool-cycle terrain-deformation
+hold-001-v2. All v1 environment, position tolerances, aim,600attempts,10Hz,
+brush/range, baseline/work/drain durations, and numeric correctness/performance
+criteria remain exactly unchanged. The sole workload change is alternating
+10dig attempts then10build attempts repeatedly: index%20<10 uses+64, otherwise
+-64. This exercises both normal tool modes on a repeatedly edited reachable
+area. It is a stationary dig/build cycle, not proof of an endless dig-only hold.
+Moving-aim/dig-only/overload tests remain independently required. Each run starts
+fresh and preserves all rejections; if this cycle loses its target or intersects
+the player it fails, rather than silently changing its aim.
+
+Timing schema adds the normal tool's rejection reason to each tool attempt and
+CPU maximum to existing frame metrics (null when truncated). These are direct
+production diagnostics and do not change mutation/meshing implementations or
+weaken gates. A new source manifest precedes the first v2run.
+
+
+#### TERRAIN-DEFORMATION-HOLD-001/v2 — run c143d8f9de7a4d1f80353ab45874c051
+
+Source/preflight: [manifest](ValidationEvidence/TerrainDeformation/hold-v2-source.json),
+[settled state](ValidationEvidence/TerrainDeformation/hold-v2-before.json).
+Fresh world1496f390-4cff-4a5e-a188-c2cc09481e79; all4913collision regions and
+visual/transition/placement work settled, heldBodies0. Started09:52:27.3023.
+[Raw result](ValidationEvidence/TerrainDeformation/hold-v2-result.json),
+[derived summary](ValidationEvidence/TerrainDeformation/hold-v2-summary.json).
+600/600accepted and committed, all non-no-op, no pending work or missing latency
+records; all tool statusesAccepted. Field p50/p95/p99/max
+3.2558/5.0431/6.4267/14.4494ms; visual publication
+25.8468/30.7121/34.9668/41.974ms; collision drain
+79.6032/91.6785/96.4085/100.5924ms. Zero workload hold steps, held bodies,
+runtime exceptions, and collision failures. Peak page payload1.5MiB.
+
+Baseline10.002282seconds:866.0245FPS, CPU p95/p99/max
+1.9477/2.9023/13.0792ms; GPU0.85401535/1.8088818/2.915144ms.
+Work+drain69.98393seconds:904.4609FPS, CPU1.6908/3.9239/13.8988ms,
+GPU0.88238716/2.0093918/3.6623478ms. No sample truncation.
+Process peak4532527104->4535930880bytes; GPU2013022036bytes unchanged.
+Managed allocated2060067152bytes/work window,29.44MB/s decimal (about28.1MiB/s).
+Maximum GCpause12.427ms. The CPU p99 increase1.0216ms is below the2ms
+allowed increase; all recorded numeric criteria pass. No external input or
+source edits occurred during baseline/work/drain. Rendered after-view inspected
+without moving the camera; full seam/first-visible correlation and GPU staging
+accounting remain open. Decision: numeric stationary-cycle gates passed,
+feature acceptance remains INCOMPLETE. This is the v2 baseline, not comparable
+to the failed44edit v1 workload.
+
+
+### TERRAIN-DEFORMATION-LARGE-001/v1 — frozen large-event workload
+
+Fresh basic_example with the same host/player/camera/spawn/settings/hardware,
+fps_max1000, and settled prerequisites as HOLD-001/v2. Command
+voxel_deformation_benchmark large terrain-deformation large-001-v1.
+Ten-second idle control,12world-impact mutation attempts at2Hz
+(index0..11,time=index*0.5seconds),center(2048,0,0),radius1024,
+strength+1024 on even indices and-1024 on odd indices. One attempt/frame,
+60second final drain allowance after nominal6second workload, then10seconds
+stationary capture. Source is the unchanged code/shader/scene manifest from
+HOLD-v2; record new world identity and settled preflight before invocation.
+This is the trusted gameplay mutation path; no explosion actor exists yet,
+so this run does not claim to test a projectile/explosion caller.
+
+Predeclared gates:12accepted non-no-op commits, all records complete, no lost
+mutations; request-to-field max1000ms. Whole-group visual publication p95<=1000ms,
+p99/max<=2000ms; conservative collision completion p95<=2500ms,p99<=4000ms,
+max<=6000ms. First-visible surface response still needs rendered correlation
+and cannot be inferred from a nonvisible or no-op result. CPU/GPU p95<=8ms,
+p99<=16ms,max<=50ms; p95 increase versus the fixed10second control<=max(50%,3ms),
+p99 increase<=max(50%,6ms). Peak process memory<=control+1GiB; GPU<=control+512MiB;
+managed allocation rate<=128MiB/s over work+drain; peak page payload<=32MiB;
+queue<=12 with no final backlog. Zero native/collision/runtime failures,
+zero workload player holds, displacement<=2units, no observed broken boundaries
+or stale publication. Missing visual/resource proof is incomplete, not a pass.
+The independent unchanged figure-eight gates remain mandatory. Preserve the
+first measurement even if it fails; do not change these parameters to pass.
+
+
+#### TERRAIN-DEFORMATION-LARGE-001/v1 — run b4e24ec22fa74fc081f5520c2c4074f0
+
+Fresh worlda35a84a7-35f2-479d-bd92-70a8397e8aa9; settled preflight in
+[large-v1-before.json](ValidationEvidence/TerrainDeformation/large-v1-before.json).
+Code/shader/scene unchanged from hold-v2-source.json. Native vertical preflight
+at(2048,0) hit terrain z71.215332; the radius1024 volume intersects the surface.
+Started09:56:52. All12attempts accepted/non-no-op/committed and all records
+completed. [Raw](ValidationEvidence/TerrainDeformation/large-v1-result.json),
+[summary](ValidationEvidence/TerrainDeformation/large-v1-summary.json).
+Field p50/p95/p99/max70.1785/80.4388/80.4388/80.4388ms;
+visual150.6254/157.4559/157.4559/157.4559ms;
+collision drain3124.4372/6124.8673/6124.8673/6124.8673ms.
+
+Baseline CPU p95/p99/max1.1896/2.2144/12.72ms, GPU
+0.84877014/1.0712147/3.1688213ms; work+drain16.126648seconds,
+CPU1.5106/2.3822/14.0663ms,GPU0.86426735/1.591444/9.6485615ms.
+Managed507733400bytes; process peak4382253056->4385763328bytes;
+GPU2013022036unchanged; peak page payload8MiB. Zero held bodies/hold steps,
+runtime exceptions, collision failures, or new buffered errors through358078.
+Collision1084published,16stale-discarded; region request-to-ready
+p95/p99/max482.8881/524.6194/540.0711ms. Whole edited queue remained active
+across overlapping requests, so its conservative completion timestamps cluster
+at final drain. This limitation does not authorize changing the gate after the
+run. Decision: FAILED collision latency gates; frame, memory, field and visual
+publication numeric gates passed, but overall large-event acceptance remains open.
+
+
+Next comparable LARGE-001/v1 run: classification-only density range queries
+no longer calculate unused block dependency revisions. Bounds and actual
+sampling are unchanged; meshing validity queries retain revision computation.
+Source: [large-v1-range-source.json](ValidationEvidence/TerrainDeformation/large-v1-range-source.json).
+Use exactly the same workload and gates, fresh settled world. This targets
+unnecessary CPU work observed in the collision path; improvement is unproven.
+
+
+#### LARGE-001/v1 range-query run543c681ba99b425490d9c0b67e871871
+
+Fresh world72881dac-cfcb-4688-ae47-fe1d0da4b435,4913/4913ready, no pending
+visual/transition/placement/field work or held bodies. Started10:00:14.
+[Preflight](ValidationEvidence/TerrainDeformation/large-v1-range-before.json),
+[result](ValidationEvidence/TerrainDeformation/large-v1-range-result.json).
+12accepted/non-no-op commits; field max73.69ms; visual p50/p95/max
+137.6887/155.4863/155.4863ms. Collision drain p50/p95/max
+3080.5748/6081.3082/6081.3082ms: FAILED unchanged collision gates.
+1108collision publications,17stale, region p95/p99/max
+477.2329/496.3705/507.0163ms; sampling average4.5392947ms.
+CPU work p95/p99/max1.0984/1.9866/16.2277ms; GPU
+0.6542206/0.8788109/1.4867783ms. Zero holds/runtime exceptions/collision failures.
+Skipping unused revision walks was insufficient. Next candidate tightens
+classification ranges to existing8sample dependency blocks while preserving
+conservative interpolation coverage; it does not change workload or gates.
+
+
+#### LARGE-001/v1 block-range rund0632a4b0613422c85e9ca792d7b0d7c
+
+Fresh world59a50799-ac16-4b6d-b413-607d4e414914, same settled prerequisites,
+started10:03:56. [Source](ValidationEvidence/TerrainDeformation/large-v1-block-source.json),
+[preflight](ValidationEvidence/TerrainDeformation/large-v1-block-before.json),
+[result](ValidationEvidence/TerrainDeformation/large-v1-block-result.json).
+12accepted/non-no-op commits; field max110.9525ms; visual p95/max176.8431ms;
+collision drain p50/p95/max3091.0144/6091.6498/6091.6498ms.
+FAILED unchanged collision-drain gates. Region request-to-ready p95/p99/max
+474.5374/503.0483/524.213ms,1139publications,14stale; samplingaverage4.4099636ms.
+Work CPU p95/p99/max1.1394/2.0045/15.9807ms; GPU
+0.65112114/0.8788109/1.4929771ms. Zero holds, runtime exceptions, collision failures.
+Tighter conservative intervals did not resolve serial-worker throughput.
+Next candidate: two workers sharing the existing queue, each with its own
+canonical mesher scratch, with completed+building<=2 and unchanged native
+integration limits. This is justified by the measured CPU sampling bottleneck
+and near500ms per-event region tails; unchanged workload/gates will measure it.
+
+
+#### LARGE-001/v1 two-worker run098448bc554943daa291305d198c3546
+
+Fresh worldbbd3df7e-5e26-4cbe-90a6-0f20e52520cb,4913/4913ready and all
+visual/transition/placement work settled. Started10:07:53. Source:
+[manifest](ValidationEvidence/TerrainDeformation/large-v1-workers-source.json),
+[preflight](ValidationEvidence/TerrainDeformation/large-v1-workers-before.json),
+[raw](ValidationEvidence/TerrainDeformation/large-v1-workers-result.json),
+[summary](ValidationEvidence/TerrainDeformation/large-v1-workers-summary.json).
+12accepted/non-no-op commits, all derivative observations complete. Field
+p50/p95/max75.6702/79.5672/79.5672ms; visual
+145.9172/163.3668/163.3668ms; collision drain
+476.0133/976.054/976.054ms. All recorded latency gates passed. Compared with
+single-worker block-range run, max collision drain6091.6498->976.054ms.
+
+Baseline CPU p95/p99/max1.0025/1.5786/10.9461ms,
+GPU0.61917305/0.62561035/0.8363724ms. Work+drain15.928844seconds:
+CPU1.1511/1.9775/17.1318ms,GPU0.6542206/0.88334084/1.4719963ms.
+No truncation, holds, runtime exceptions or collision failures. Allocated
+515690256bytes (about30.9MiB/s); process peak4334678016->4337025024bytes;
+GPU2013038220bytes unchanged.1551collision publications,12stale discarded,
+region max503.416ms. Stale work was discarded, not published. Queues drained.
+Decision: recorded numeric LARGE-001/v1 gates PASSED on this source. Full
+visual/seam/resource accounting and whole-feature acceptance remain incomplete.
+HOLD-001/v2 and figure-eight must be repeated on the two-worker source.
+
+
+#### HOLD-001/v2 two-worker run70aa83c8e486426ea829166e8c38a30c
+
+Fresh world0da21f39-b092-4d9a-bf5f-27fe54bdbc2d; unchanged two-worker source
+large-v1-workers-source.json. [Preflight](ValidationEvidence/TerrainDeformation/hold-v2-workers-before.json),
+[raw](ValidationEvidence/TerrainDeformation/hold-v2-workers-result.json),
+[summary](ValidationEvidence/TerrainDeformation/hold-v2-workers-summary.json).
+Started10:10:32.600/600accepted/non-no-op commits, all timings complete.
+Field p50/p95/p99/max3.9892/5.0007/5.9998/12.663ms;
+visual24.3516/26.3298/33.2827/37.1212ms;
+collision23.6244/26.2543/31.32/35.1688ms.
+Baseline CPU p95/p99/max1.0023/1.5466/11.3364ms,
+GPU0.6186962/0.62584877/0.8430481ms. Work+drain69.90473seconds,
+CPU1.3964/2.671/10.9249ms,GPU0.6990433/0.87714195/4.981041ms.
+2154532792allocated bytes,1.5MiBpeak page payload. GPU2013038220unchanged;
+process peak4297572352bytes. Zero holds, runtime exceptions and collision
+failures; no truncation. Recorded numeric HOLD-v2 gates PASSED. Versus the first
+v2run, visual p95 30.7121->26.3298ms and conservative collision p95
+91.6785->26.2543ms. Environment/control variation is preserved in raw records.
+No whole-feature/multiplayer/occupied-chunk or exhaustive visual claim follows.
+
+Next run: unchanged canonical GPU-MESHING-512-001/v1 figure-eight with the
+collision contract gates, on the two-worker manifest, fresh revision0 world,
+fully settled4913collision regions and all visuals before dispatch. Use exact
+speed2500,distance50000,one loop,Z0,attached authored camera,fps_max1000,
+seed1337/generator5/gameplay8/visual512/levels0..6. Compare with immediate
+pre-deformation control65c0a8409d344ecca4a372af8c6e5eb8 and retain existing
+accepted-baseline requirements; that control itself did not waive collision
+acceptance. No workload/gate changes are authorized by this run entry.
+
+
+#### Canonical figure-eight — run c0d776f365414143b6dbea539f0f6870
+
+Fresh world9bbc0024-9079-42c8-a310-aec025329d4c, two-worker source,
+[preflight](ValidationEvidence/TerrainDeformation/figure-eight-workers-before.json),
+[raw result](ValidationEvidence/TerrainDeformation/figure-eight-workers-result.json).
+Started10:14:30.2903, saved10:16:42.4109; speed2500,distance50000,one loop,
+center[-0.001,0.142,0], unchanged authored settings and full pre-settlement.
+Moving911.951FPS, CPU p95/p99/max1.537/3.1127/20.5218ms,
+GPU1.0764599/1.4023781/2.3612976ms. Stationary981.90234FPS,
+CPU1.214/1.8793/11.7867ms,GPU0.71692467/0.9486675/1.1689663ms.
+Compared with immediate control65c0a8409d344ecca4a372af8c6e5eb8,
+CPU/GPU frame tails improved; this is not proof all environmental conditions
+are identical. No runtime exceptions or new buffered errors through358279.
+
+Final collision4913/4913ready,pending0,completed0,activeWorkers0,failures0;
+69766published,2stale discarded. The control ended3189ready/1722pending.
+Native creation max2.3745ms versus control11.8251ms. Collision sampling,
+extraction and request-to-ready recorder cap65536 discarded4230samples each;
+their full-run tails cannot be accepted from truncated distributions.
+
+Process peak4200099840bytes versus immediate control2848591872 (+1351507968),
+GPU2063369868versus2168221260bytes. Moving allocations3364887920versus
+3140261776bytes; per-frame30257.877versus30402.676bytes. The current editor
+process has undergone many hotloads and play resets; do not attribute the
+process-memory difference to code or dismiss it as environment without a clean
+process comparison. Decision: full figure-eight acceptance INCOMPLETE owing to
+memory comparison and truncated collision evidence. No gate is waived. Need
+bounded recorder capacity adequate for the unchanged workload, clean editor
+restart and comparable evidence before accepting/committing/pushing.
+
+
+Before the clean-process repeat, the bounded collision timing recorder cap is
+raised65536->131072 because the unchanged figure-eight actually produced69766
+region publications. This repairs missing evidence without changing workload or
+criteria; old truncated runs remain incomplete. The cap is still explicit and
+future truncation still fails evidence completeness. No scene/shader changes.
+Clean-process repeat is needed to distinguish retained editor/hotload state from
+runtime memory regression; preserve Sentry marker12:52:48.871044Z before restart.
+
+
+Clean-process restart attempt: oldprocess66776 stopped play with no unsaved
+scene changes and successful compilation. CloseMainWindow reached Source2Shutdown
+at10:20:09, then displayed a native Error dialog: [mimalloc] error11:double free
+detected. Acknowledging the dialog exposed a second message naming
+anonymous-namespace::MimallocErrorCallback with the same double-free message.
+After acknowledging that dialog, process66776 exited; Sentry marker advanced
+12:52:48.871044Z->14:22:45.379172Z. Shutdown excerpt:
+[cold-restart-shutdown.log](ValidationEvidence/TerrainDeformation/cold-restart-shutdown.log).
+No force kill was used. This restart gate FAILED. The process had extensive
+prior hotloads; no stack evidence yet attributes the double free to a specific
+project allocation. New editor launched with current source and the same project.
+Need validate startup, canonical test, memory and teardown without any intervening
+hotload to distinguish current lifecycle behavior from old-process migration.
+
+
+#### Canonical clean-process runfa628af3ebc548f3b07e5992cec2125f
+
+PID15576, no code hotloads since launch. [Source](ValidationEvidence/TerrainDeformation/figure-eight-cold-source.json),
+[preflight](ValidationEvidence/TerrainDeformation/figure-eight-cold-before.json),
+[raw](ValidationEvidence/TerrainDeformation/figure-eight-cold-result.json).
+Fresh world229cc893-3260-4486-b7df-11127623a041,4913/4913ready and all visual
+work settled; began10:25:05.8330 with unchanged figure-eight parameters.
+Moving925.34546FPS, CPU p95/p99/max1.4659/2.9561/20.3055ms,
+GPU1.0848045/1.4033318/2.977848ms. Stationary982.471FPS,
+CPU1.2011/1.906/11.058ms,GPU0.7202625/0.95820427/0.99015236ms.
+Final collision4913/4913ready,0failures, no collision timing truncation;
+native creationmax2.9073ms. Zero runtime exceptions during the recorded workload.
+Process peak4055244800bytes still exceeds old control2848591872 by1206652928;
+GPUpeak2063504036bytes. The restart did not eliminate the memory difference.
+Acceptance remains INCOMPLETE pending matched source/environment memory control
+and the remaining original collision/visual contracts. Do not claim clean-process
+results alone resolve comparability: authored scene FOV is90 while gitbase is60,
+with runtime UseFovFromPreferences enabled and old actual viewport/FOV not captured.
+
+Before pre-settlement, fresh startup logged gpu.scheduler.stalled at10:24:31,
+age2703.027ms,updateEpoch510,claimedEpoch509,renderSequence509. No further
+buffered errors through cursor81. Source inspection shows the health check uses
+elapsed wall time since last render alone, so a long main frame can be labeled
+as a missing rendezvous even when the immediately preceding epoch rendered.
+This is not proof the long frame itself is harmless; retain the startup failure
+and diagnose classification before changing the check. No code change will be
+made until this no-hotload process completes its teardown check.
+
+
+Current-source no-hotload teardown PID15576 also displayed mimalloc double-free
+and MimallocErrorCallback dialogs. After acknowledgements it exited; Sentry
+advanced14:22:45.379172Z->14:32:02.816480Z. [Shutdown log](ValidationEvidence/TerrainDeformation/cold-source-shutdown.log).
+This contradicts the hypothesis that only accumulated hotloads cause teardown
+failure. Current lifecycle acceptance remains FAILED.
+
+Paired control plan: isolated detached worktree atf1319ed under the local temp
+folder, with the current authored basic_example.scene copied so scene inputs
+match (FOV90 and two saved diagnostic strings are its only changes versusgitbase).
+Original task checkout remains untouched. [Manifest](ValidationEvidence/TerrainDeformation/paired-baseline-source.json).
+Launch fresh editor process on this baseline project, same native viewport and
+runtime preferences, fps_max1000; fully settle before the unchanged canonical
+figure-eight speed2500,distance50000,one loop,Z0. Capture memory and teardown
+without code edits/hotloads. This establishes a present-environment source
+comparison; it does not rewrite historic baselines or waive original gates.
+
+
+#### Paired present-environment control 63ebf86a014846b9aeebff5dd22326a7
+
+Fresh PID11544 at f1319ed, current authored scene copied as declared above;
+no code hotloads. [Raw](ValidationEvidence/TerrainDeformation/paired-baseline-result.json).
+Moving938.28687FPS, CPU p95/p99 1.3903/3.0583ms, GPU1.0845661/1.3988018ms.
+Process peak3967840256bytes, GPU2063633920bytes. Current cold source uses
+87404544bytes more process memory (83.36MiB,2.20%) and129884bytes less GPU
+memory. The historic1.2GB apparent increase is not reproduced against this
+matched control. Current moving CPU p95 is5.44% higher, p99 is3.34% lower;
+GPU p95/p99 within0.4%. Current allocations/frame30257.877 versus27969.305
+in this control (8.18% increase; recorder capacity and additional diagnostics
+also differ). Baseline final collision3323ready/1588pending/2completed versus
+current4913ready/0pending/0completed; both zero holds and runtime exceptions.
+These measurements resolve the gross memory discrepancy, not all original
+visual/collision acceptance gates or a claim of zero overhead.
+
+Baseline teardown also displayed the identical mimalloc double-free and
+MimallocErrorCallback dialogs, then exited after acknowledgements. Sentry
+advanced14:32:02.816480Z->14:40:29.551292Z.
+[Log](ValidationEvidence/TerrainDeformation/paired-baseline-shutdown.log).
+This reproduces shutdown failure on pre-deformation code without hotloads;
+it is not unique to this feature. Exact allocation/engine responsibility is
+unproven. Lifecycle check remains failed, not silently waived. Original project
+relaunched after the control; the detached baseline remains isolated.
+
+
+### TERRAIN-DEFORMATION-SPATIAL-001/v1 — frozen spatial cases
+
+Three separate fresh worlds, same HOLD-001/v2 environment: engine26.09.01c,
+Ryzen7 9800X3D/RTX5090, seed1337/generator5, base0/frequency0.0005/amplitude128,
+32cells*16units, gameplay8, visual512 levels0..6, fps_max1000, authored attached
+player camera/preferences unchanged, settled spawn within2units and4913/4913
+collision plus no visual/placement pending before each run. No camera movement.
+Source manifest spatial-v1-source.json. Scenario subcases are fixed independently:
+
+- distant: center(400000,300000,0),radius512; outside local gameplay/render range.
+- underground: center(2048,0,-1536),radius512; local subsurface field/collision.
+- boundaries: center(-512,-512,0),radius128; negative page/chunk face intersection.
+
+Each uses the existing corresponding voxel_deformation_benchmark scenario,
+task terrain-deformation, revision spatial-v1-<subcase>;10seconds idle baseline,
+12 attempts at2Hz, alternating+1024dig/-1024build starting dig, one attempt/frame,
+60seconds final drain allowance,10seconds stationary after drain. No inputs vary
+between comparable repeats. All12 must be accepted/non-no-op, committed, drained,
+with no lost observations. Field max250ms, local visual publication p95<=250ms,
+p99/max<=500ms; edited collision drain p95<=1000ms,p99/max<=2000ms. For distant,
+visual/collision latency is explicitly not a visibility/collision claim because
+there are no interested consumers; instead no new local geometry publication
+or local held bodies may be caused by these edits. Revisit convergence is a
+separate required check, not covered by this stationary subcase.
+
+CPU/GPU work p95<=4ms,p99<=8ms,max<=50ms, versus10second control p95 increase
+<=max(25%,1ms),p99<=max(25%,2ms). Process/GPU peak<=controlpeak+512MiB,
+managed allocations<=64MiB/s, correction payload<=16MiB, queue<=12. Zero holds,
+runtime exceptions, collision failures, unfinished observations or player
+movement>2units. No source/hotload/screenshot during timed windows. Full visual
+seams, local actor contact and resource correctness still require direct proof;
+these numeric cases do not establish those properties.
+
+
+### TERRAIN-DEFORMATION-OCCUPIED-001/v1 — frozen occupied chunk workload
+
+Same fresh settled environment/scene/seed/settings/hardware as SPATIAL-001/v1.
+Command voxel_deformation_benchmark occupied terrain-deformation occupied-v1.
+600 world-space gameplay edits at10Hz through TryQueueTerrainEdit, fixed center
+(-256,256,0),radius128,strength+64 for10 attempts then-64 for10, repeated.
+This center lies in chunk(-1,0,0), the settled player's current chunk; its brush
+is clear of the player's body. This specifically tests replacement of an occupied
+logical chunk without deliberately removing physical support beneath the player.
+It does not replace the separate contact/removal-underfoot or moving-input tests.
+10second idle control,600attempts,60second drain allowance,10second settled tail.
+Player/camera never moved by the runner. At work start record active camera
+position/forward and controller Enabled/UseInputControls/UseLookControls; sample
+changes throughout work/drain. New diagnostic fields apply to every scenario
+without changing earlier inputs. Source manifest occupied-v1-source.json.
+
+All600 must commit non-no-op, none rejected/cancelled, all derivative observations
+complete, queue<=1, field max250ms, visual p95<=100ms,p99<=200ms,
+collision drain p95<=150ms,p99<=250ms. Same HOLD-001/v2 CPU/GPU budgets:
+p95<=4ms,p99<=8ms,max50ms, delta p95<=max(25%,1ms),p99<=max(25%,2ms).
+Process/GPU peak<=control+512MiB, allocated<=64MiB/s,page payload<=16MiB.
+Zero collision holds, controller setting changes, runtime exceptions or collision
+failures; player displacement<=2units, camera displacement<=0.1unit and angle
+<=0.1degree. No screenshot/hotload during measured windows. This is a new spatial
+reproduction, not a version change to or replacement of HOLD-001/v2.
+
+
+#### SPATIAL-001/v1 numeric results
+
+All three cases used the frozen source/environment and12/12 accepted non-no-op
+commits, zero unfinished observations, no holds, runtime exceptions, or collision
+failures. All declared numeric budgets pass; no full feature acceptance.
+
+| Case/run | Field max ms | Publication max ms | Collision drain max ms | CPU p95/p99/max ms | GPU p95/p99/max ms | Allocated MiB/s |
+| --- | ---: | ---: | ---: | --- | --- | ---: |
+| distant/6cc2485f6d484e8a9ded872369ac4946 |18.4717|N/A (no local consumer)|N/A (no local consumer)|1.0019/1.5324/9.8315|0.6185/0.6256/0.8566|24.99|
+| underground/a161aab1ff2240518e0ff70d7f8ccf5b |13.9947|50.8948|386.1908|1.0053/1.8631/10.2524|0.6204/0.8197/2.0351|24.26|
+| boundaries/6e20b5fd5d6d45098c89c4226a0e17de |5.9968|28.2853|25.8488|1.0023/1.5925/9.2115|0.6416/0.7279/7.4394|24.51|
+
+Evidence: [distant](ValidationEvidence/TerrainDeformation/spatial-v1-distant-result.json),
+[underground](ValidationEvidence/TerrainDeformation/spatial-v1-underground-result.json),
+[boundaries](ValidationEvidence/TerrainDeformation/spatial-v1-boundaries-result.json);
+each adjacent summary file contains threshold checks, allocation rate and timings;
+each before file captures settled collision/player state. Distant after evidence
+has identical local topology15B4D9622B88FD38 and positionsCA8A8E8478AC8A73,
+zero collision publications and unchanged player position. Distant transaction
+publication timestamps in raw output are empty-group completion, not distant
+visible results. Underground384collision publications; its internal edits are
+not visible from the above-ground camera. Boundary seam geometry and distant
+revisit convergence still require direct inspection. No screenshot was taken
+inside any timed window. Console error cursors73->76->114->152 were empty.
+
+
+### TERRAIN-DEFORMATION-PERSISTENCE-001/v1 — frozen disk round trip
+
+Same fresh settled one-player world/environment as SPATIAL-001/v1 and current
+occupied-v1 source manifest. Through normal host commands, one edit at
+(1024,0,0),radius128,strength+512. Wait for field/render/collision drain; record
+vertical physics trace from(1024,0,512) to(1024,0,-512) before/after and save to
+unique slot validation-persist-v1-a. Start a fresh play world with identical
+generator/settings, fully settle, load that slot, wait for all derived work,
+repeat trace, save to unique slot validation-persist-v1-b. Both worlds commit
+exactly one transaction from revision0, so persisted bytes including revision
+and adopted WorldId must match exactly. Files must be nonempty and each command
+must complete within10seconds; check completion/status at bounded intervals.
+No actor intersects edit volume. No unplanned exceptions or collision holds,
+original and restored edited trace hit position must match within0.01unit and
+must differ from unedited hit by at least1unit. No source/hotload during steps.
+Also exercise corruption rejection through normal load: create a new uniquely
+named truncated copy of save A (original retained), load it on the restored
+world, require explicit rejection, unchanged revision/geometry and no queued
+work. The expected rejection error is part of the scenario and recorded, not
+silenced. This checks disk restore/checksum boundaries; it does not establish
+network replication, concurrent save semantics, or all corruption categories.
+
+
+#### OCCUPIED-001/v1 run6886fbb060d740fc92ecba6e0bf6d919
+
+[Source](ValidationEvidence/TerrainDeformation/occupied-v1-source.json),
+[preflight](ValidationEvidence/TerrainDeformation/occupied-v1-before.json),
+[raw](ValidationEvidence/TerrainDeformation/occupied-v1-result.json),
+[threshold checks](ValidationEvidence/TerrainDeformation/occupied-v1-summary.json).
+600/600 accepted non-no-op commits, zero rejected, pending or missing derivative
+observations. Peak queue0, correction payload262144bytes. Field p50/p95/p99/max
+2.9984/4.0139/4.3871/5.4041ms; publication26.1374/27.766/28.5273/35.974ms;
+collision drain9.5371/11.1078/11.7239/14.5383ms. Zero holds, controller setting
+changes, runtime exceptions or collision failures. Player enabled/input/look
+all true at work start and unchanged throughout. Camera max displacement
+0.001222228unit, maxangle0degrees, below declared0.1 thresholds.
+CPU p95/p99/max1.0062/2.1119/11.0806ms,GPU0.7591/0.8769/1.2095ms,
+25.98MiB/s allocated. All recorded numeric/occupied-controller gates PASSED.
+No camera or player movement was injected by the test. This verifies replacement
+within the occupied logical chunk, not physical removal underfoot or simultaneous
+sprinting/aim/input behavior. Full feature and lifecycle acceptance remain open.
+
+
+#### PERSISTENCE-001/v1 round-trip and truncation result
+
+Source occupied-v1; normal edit at10:50:39 committed in14.8183ms, revision1,
+2103changed samples,8pages,40visual and8collision dependencies. Unedited physics
+hit(1024,0,-51.4440918); edited hit(1024,0,-105.957581), displacement54.5134892.
+Save A started/completed10:50:48. Fresh play settled, load started10:51:25 and
+committed in14.0105ms; restored hit and normal exactly match the edited hit.
+WorldId e40d781e-5b4f-4447-8966-c29477feea51 adopted; revision1/pages8 retained.
+Save B started/completed10:51:35. Both13170bytes and byte-for-byte identical,
+SHA256 4c898e3d64bfb79ecdc79cdff5a397c96feb04b0e942cab9a686ce4e56281d5d.
+[Byte evidence](ValidationEvidence/TerrainDeformation/persistence-v1-bytes.json),
+[runtime preflights/traces](ValidationEvidence/TerrainDeformation/persistence-v1-runtime.json).
+
+A new copy truncated by one byte was loaded at10:51:53; the normal load path
+explicitly rejected it in the same logged second: Terrain block is truncated or
+corrupt. Revision1, WorldId, pages8, geometry trace and committed count1 remained
+unchanged; rejectedcount1, no queued/preparing/derived work. This is the sole
+expected error in console190->274. Restore holdSteps8 before/after,heldBodies0,
+4913ready,0collision failures. Original saves retained. A post-test attached
+camera screenshot shows the player and terrain rendering normally but does not
+resolve the edited surface behind the foreground; it is not visual restore proof.
+
+Correctness checks PASSED for exact disk round trip, physics restore and
+truncated-file rejection. Save completion is within one logged second and field
+commit times are recorded. The exact full derivative-drain timestamp was not
+instrumented for this manual command sequence; one status observation was about
+10seconds after load. Therefore the strict10second end-to-end bound remains
+INCOMPLETE, not inferred from the14ms field commit. Full persistence timing,
+additional corruption classes and visual proof remain open.
+
+
+### TERRAIN-DEFORMATION-SESSION-001/v1 — hosted join lifecycle qualification
+
+Engine26.09.01c, same basic_example.scene seed1337/generator5 and terrain settings
+as SPATIAL-001/v1, fps_max1000, Ryzen7 9800X3D/RTX5090. Fresh host play settled,
+start editor hosting with Private privacy using its normal StartHosting control.
+Launch one normal sbox.exe client via installed editor's documented -joinlocal
++instanceid N -sw -720 route. No deformation benchmark or player input yet.
+Wait at most60seconds for connection/scene readiness, then observe10seconds.
+Require exactly one owned player per active connection, one terrain manager per
+scene, host player unchanged, remote player spawned/owned and collision-ready;
+no unplanned exceptions. Disconnect that exact client, require its player removed
+and host player retained. No public lobby, scene serialization or special mutation
+entry point. Source manifest session-v1-source.json. This qualifies the real
+multiplayer environment and lifecycle only; terrain convergence remains unproved
+until transfer is implemented and its separate scenarios run. FPS values in this
+concurrent-process qualification are not a comparable single-process benchmark.
+
+
+#### SESSION-001/v1 first real-client qualification
+
+Source session-v1-source.json plus read-only network inspection addition in
+session-v1-inspection-source.json before client launch. Engine compilation
+succeeded for runtime/editor, no errors. Host started Private networking via
+normal EditorUtility.Network.StartHosting, local connection
+2d62fb5a-5b86-4db9-a210-842275032fca, one owned host player, networked manager.
+Normal client PID16592 launched with -joinlocal +instanceid1 -sw -720 at11:01;
+active at11:01:29, remote connection cb8f2b4b-194f-4bbd-959f-e5d10a6b8594,
+slot1/player333947d8-4b98-44c4-8daa-ca8a284efa9c. At11:01:50 both players were
+enabled/grounded with distinct matching owners. Host position remained
+(-0.000959971512,0.142429605,2.19893622); remote settled at
+(0.00314269564,-128.128494,36.7085838). One host scene manager, collision union
+5474/5474ready,0failures/held bodies. [Runtime](ValidationEvidence/TerrainDeformation/session-v1-runtime.json).
+Closing that exact client removed its player; at11:02:40 only the original
+host player and host connection remained. Private hosting then stopped; play
+stopped. No authored scene was saved or public lobby created.
+
+[Client log](ValidationEvidence/TerrainDeformation/session-v1-client.log) retains
+startup resource errors including blue_noise_256.vtex invalid header8736vs12,
+several missing packaged resources and basic_example.scene_c lookup failure.
+The client did load the live scene and own/ground its player afterward. It also
+logged scheduler stalls571.778ms at epoch1/claimed0 and3042.022ms at42/41,
+recovering after a render callback. Host error cursor350->355 had no errors.
+Client teardown displayed the same mimalloc double-free then callback dialog,
+acknowledged without force kill. Overall qualification FAILED its no-unplanned-
+error gate; successful ownership/cleanup evidence does not waive those errors.
+Client-side complete field readiness, terrain transfer/convergence, reconnect,
+all ownership edge cases and multi-player performance remain unverified.
+
+
+### TERRAIN-DEFORMATION-TRANSFER-001/v1 — first regional replication qualification
+
+Same engine26.09.01c/hardware/host scene and terrain settings as SESSION-001/v1,
+Private editor host, one normal client at its slot1 spawn. Host fps_max1000;
+client launched -joinlocal +instanceid1 -sw -720 +fps_max1000 (1280x720 client
+window, host viewport unchanged). No player input or concurrent benchmark.
+Source transfer-v1-source.json, fresh revision0 host fully settled. Issue one
+normal host edit(1024,0,0),radius128,strength+512, wait for all derived drain,
+then join client. Require one owned player each and one manager; client must
+log applied hostRevision1/pages8 and host final acknowledgement within60seconds
+of connection. Unknown initial terrain must remain gated until installation.
+Then issue another identical host edit, require client hostRevision2 and final
+acknowledgement within500ms of host command's logged accepted time. Preserve
+client and host logs and byte counters. Finally edit distant(400000,300000,0),
+radius512,strength+1024; after two seconds of host settlement require no new
+client transfer/applied revision or terrain payload bytes, since x400000 lies
+outside this player's padded regional coverage. No source/hotload during steps.
+
+Require no transfer rejection/timeout/lost accepted edit, no unplanned runtime
+exception, all relevant collision/visual work drained. Existing startup resource
+errors/long frames remain separately reported failures, not waived. This first
+qualification proves protocol activity/ordering and regional filtering only;
+exact installed density/mesh convergence, rendered results, remote input,
+multiplayer performance and fault/reconnect tests remain independent gates.
+
+
+#### TRANSFER-001/v1 first live regional delivery
+
+Source transfer-v1-source.json, client PID38292. Host first edit committed
+12.544ms, revision1/pages8, no pending derivatives before join. Client connection
+ceea2bc8-9402-4c12-b581-a6cf29672de0 active11:22:38.8206; applied transfer1
+hostRevision1/localRevision1/pages8 at11:23:15.9017, host acknowledged15.9046.
+Initial delivery13342payload bytes, within60second initial gate. A coverage-only
+manifest after the player settled cost268bytes and acknowledged11:23:18.7395.
+Second host edit accepted11:24:33.5348, client applied revision2 at33.7831,
+host acknowledged33.7881:248.3ms to client commit/publication/local state log,
+253.3ms to acknowledgement, within500ms functional qualification gate. This
+version waited for the entire client collision queue before acknowledging; it
+is not a pure network transfer latency or display-scanout measurement.
+
+Distant host edit committed revision3/pages22,17.3616ms,0visual/0collision
+dependencies. At11:26:55 host terrain bytes remained26952, no active transfer,
+client last applied hostRevision2 remained unchanged. Distant filtering passed.
+Both owned players grounded, host unchanged. Host error cursor439->455 empty.
+[Host log](ValidationEvidence/TerrainDeformation/transfer-v1-host.log),
+[client log](ValidationEvidence/TerrainDeformation/transfer-v1-client.log).
+Client startup still logged packaged resource errors; teardown again produced
+two mimalloc double-free dialogs, acknowledged without force kill. Thus protocol
+activity/ordering/filtering checks pass, but overall no-unplanned-error gate is
+FAILED and exact density/mesh convergence remains unproved. No multiplayer
+performance acceptance is inferred from this one incremental event.
+
+Before subsequent runs: fix client visual target resolution. The authored
+StreamingTarget references the original host player; when that target is a
+PlayerController, clients must resolve their own locally owned player instead.
+Explicit non-player scene targets remain explicit. Also narrow final-ACK
+readiness from global collision Settled to the locally owned player's actual
+collision region plus coherent visual publication. A moving client can keep
+unrelated streaming perpetually pending; that must not stall state delivery.
+All collision remains independently versioned/readiness-gated. Consequently
+future ACK timing has a narrower meaning and must not be called a continuous
+latency comparison to this global-drain version. Full edited-collision latency
+still needs its separate metrics. This is a contract correction, not a waiver
+of collision correctness or previously declared numeric workload gates.
+
+### 2026-09-07 HOLD-001/v2 authored-prefab/protocol2 rerun preflight
+
+Reuse HOLD-001/v2 unchanged: fresh settled basic_example, 600 tool-cycle
+attempts at10Hz, radius128/strength64/reach2048, fixed aim(512,0,0), ten
+dig/ten build, ten-second control and tail. Same numerical and correctness
+gates as the recorded two-worker run. Source: hold-v2-prefab-source.json;
+engine26.09.01c, original root, no client, unchanged authored cameraFOV90,
+fps_max1000. This checks the combined current source locally; it does not
+qualify multiplayer delivery or early joining. Outcome pending.
+
+HOLD-001/v2 run4211294f89c04a02a1c50eefe31d57b6 completed:600/600
+committed,0 rejected/pending/holds/controller-state changes/exceptions;
+console509..511 has no errors. CPU p95/p99=1.3597/2.3075ms,
+GPU p95/p99=0.7004738/0.89001656ms; max CPU15.4023ms.
+Camera displacement0.15399776unit, angle0degrees. Latencies (milliseconds):
+
+```json
+{
+  "fieldCommitMilliseconds": {
+    "p95": 5.0001,
+    "p99": 5.0085,
+    "max": 7.9744
+  },
+  "visualPublicationMilliseconds": {
+    "p95": 25.2173,
+    "p99": 32.7024,
+    "max": 39.9873
+  },
+  "editedCollisionDrainMilliseconds": {
+    "p95": 25.6482,
+    "p99": 31.382,
+    "max": 33.3605
+  }
+}
+```
+
+Raw evidence: hold-v2-prefab-raw.json. Timing and completion gates pass;
+this stationary local scenario does not qualify sprinting/rapid aim, early
+remote joins, or the remaining feature acceptance requirements. The prefab
+conversion preserved the original player GUID and streaming reference; other
+scene objects were unchanged except editor-reserialized diagnostic text.
+
+### TERRAIN-DEFORMATION-ACTOR-001/v1 preflight
+
+Fresh basic_example, seed1337/gen5, gameplay8/visual512/LOD0..6,
+engine26.09.01c, original root, no clients, fps_max1000. After normal
+streaming settles, create a normal engine BoxCollider+Rigidbody at
+(400000,300000,512), default native component values recorded at creation.
+Observe at creation and after10seconds; require body motion enabled after
+initial missing-collision hold, downward movement, then terrain support rather
+than falling through the surface. Trace downward at that position through
+terrain, excluding the spawned actor if necessary. Require no errors, no player
+movement hold introduced, at most4096 additional desired chunks, no remaining
+actor hold after10seconds. This is a functional distant-body qualification;
+exact frame/latency gates and edited-body performance remain separate work.
+Source/environment and full runtime outputs recorded with this run. Remove the
+runtime object on stopping Play; no scene save or alternate collision path.
+
+ACTOR-001/v1 partial result: native BoxCollider defaults50x50x50, dynamic,
+Rigidbody gravity1, motion enabled, damping0. Actor a4593b0f-1057-400b-b96b-ffcbfefd6c29
+moved from(400000,300000,512) to(400149.938,299706.562,-45.3398361),
+then remained at that position across observations. MotionEnabled true,
+heldBodies0, desired/ready4915/4915 (two beyond player4913), pending0,
+failures0. Nearby terrain-only trace at(400210,299706.562) hit VoxelManager
+atZ-74.9292908. A first trace beginningZ-72 below the surface missed and is
+not support evidence. Runtime outputs: actor-v1-runtime.json; source hashes:
+actor-v1-source.json. Downward motion, eventual release and bounded interest
+are demonstrated. Exact ten-second deadline and per-player hold delta were
+not captured, so those gates are INCOMPLETE. Console511..553 includes an
+11:48:47 editor hotload error resolving the changed SetInterest signature in
+an old scene's worker references. No clean no-error acceptance is claimed;
+a fresh editor session is required for that qualification. Original runtime
+object will be discarded on stopping Play; authored scene was not saved.
+
+### TERRAIN-DEFORMATION-OVERLOAD-001/v1 frozen workload
+
+First overload qualification: fresh settled basic_example, seed1337/gen5,
+32cells/16units, gameplay8/visual512/LOD0..6, same HOLD-001/v2 authored
+spawn/camera/environment, fps_max1000. Explicit benchmark `overload` invokes
+the real tool admission600times at40Hz (15seconds), aiming at(512,0,0),
+radius128/strength64/reach2048, ten dig attempts then ten build attempts.
+This alternation is defined before the first overload run to sustain material
+within reach; it does not revise any earlier frozen overload workload.
+Ten-second control and ten-second final tail. Busy attempts may be rejected
+immediately, with no replay; require all600attempts recorded, at least100
+accepted commits (sustained work), zero accepted loss/unfinished requests,
+peak queue<=1, accepted visual publication p95<=100ms/p99<=150ms/max<=250ms,
+collision drain p95<=150ms/p99<=250ms, and final drain<=1second after the
+last scheduled attempt. CPU p95<=2.5ms/p99<=5ms; GPU p95<=2ms/p99<=4ms.
+No new runtime errors/exceptions or controller input/look/enable flag changes.
+Record no-target/other rejections; they do not become accepted work or latency
+samples. This stresses admission above the shipping10Hz mouse sampling rate;
+it does not claim keyboard/mouse sprint reproduction or network load.
+
+#### OVERLOAD-001/v1 runccd27ee359e54f5ea7a2a7f9bfb7f8da
+
+Original root, engine26.09.01c, source overload-v1-source.json. All600 attempts
+recorded;463 accepted and committed,136 publication-busy declines and1
+collision-revision-busy decline. Zero no-target declines, accepted losses,
+pending requests, queued backlog, controller flag changes, collision holds or
+measured exceptions. Note `rejected=0` in the mutation counter does not include
+137 tool admission declines; observation reasons contain those explicitly.
+Accepted visual p95/p99/max27.043/33.7526/39.7287ms; collision p95/p99/max
+27.3023/31.4972/33.7443ms. Final drain25.5929ms after the last scheduled
+attempt (maximum observation completion time minus its scheduled end).
+CPU p95/p99/max1.5329/3.6894/12.4535ms; GPU p95/p99
+0.87094307/0.9098053ms. No samples truncated. All frozen numeric and
+controller gates pass. Source, full observations and computed summary are
+in overload-v1-source.json, overload-v1-raw.json and overload-v1-summary.json.
+This is a stationary admission-overload result, not sprint/input/network
+acceptance; clean process lifecycle and unchanged figure-eight remain required.
+
+### TRANSFER-001/v1 protocol2 rerun preflight
+
+Reuse original fixed workload, two local processes and criteria unchanged.
+Source transfer-v1-protocol2-source.json includes player prefab, local-client
+streaming target, actor collision interest and protocol2 manifest checksum.
+Final ACK now waits local-player collision and coherent visuals, as documented
+after protocol1; full collision drain is separate, so ACK timings are not a
+continuous comparison to protocol1 global-drain timing. No hotloads during run.
+Private-host control started Play itself; redundant play_start was rejected
+without altering the running host.
+
+#### TRANSFER-001/v1 protocol2 live result
+
+ClientPID14704, connection2063c452-b204-4ac5-8614-ddd46e56c479;
+world71ac2b0c-e2fc-4179-bbd7-258528027316,
+epoch38572d2f-382f-400f-8a3b-aa42daa253f1. Host joined event11:57:27.3652;
+client applied initial hostRevision1/pages8 at11:57:34.7057,13374bytes.
+Incremental host edit accepted11:58:07.7835, client appliedhostRevision2
+at11:58:08.0021 (218.6ms), hostACK08.0048 (221.3ms),26748totalbytes.
+After distant edit and more than2seconds, host reports26748bytes, zero active
+transfers, client remains atrevision2. Both uniquely owned players are grounded,
+input/look/enabled true; host position unchanged. Host revision2 inspection
+shows no queued/preparing/visual/collision pending work. Numerical initial/
+incremental delivery and regional-filter checks pass.
+
+Overall ERROR GATE FAILED: host11:57:27 reports NullReferenceException from
+Sandbox.PlayerController.EnsureComponentsCreated -> OnValidate during the
+prefab-based join. Both players subsequently functioned, which does not excuse
+the exception. Client resource errors include missing terrain_player.prefab_c
+and basic_example.scene_c plus existing engine/menu dependencies and an invalid
+blue_noise_256.vtex header. No scheduler-stall log appeared in the captured
+client run. Logs preserved as transfer-v1-protocol2-host.log and
+transfer-v1-protocol2-client.log. Exact field/mesh convergence, remote input,
+early join, fault recovery and multiplayer performance remain unproved.
+Client and private host are still live for follow-up diagnosis; no teardown
+result is claimed in this entry. No source edits/hotloads occurred during run.
+
+### 2026-09-07 replication cancellation implementation check
+
+Added generation cancellation to outgoing manifest/page work and incoming page
+decoding, linked to manager teardown. Reset, peer disconnect/failure, incoming
+supersession and successful completion release their token registrations.
+Bounded page codec work checks cancellation before/after one page; manifest
+scanning checks each page. Engine26.09.01c compiler reports success/zero errors;
+git diff whitespace check passes. No runtime cancellation or figure-eight gate
+is inferred from compilation. Source and installed engine assembly hashes:
+replication-cancellation-source.json. Installed implementation inspection ruled
+out null BodyCollisionTags for the join exception because ITagSet.SetFrom is
+null-tolerant; exact failing player reference still needs runtime diagnosis.
+Private hosting and Play were stopped before editing. ClientPID14704 was
+still responsive after disconnect; a normal window-close request was issued,
+with terminal outcome recorded separately once observed.
+
+Client14704 normal shutdown reproduced two mimalloc error11 double-free
+dialogs (second via MimallocErrorCallback). Both exact error dialogs were
+acknowledged normally; no process kill was used. This remains a failed native
+resource-lifecycle gate and is not a cancellation-code runtime result.
+
+### Canonical figure-eight current-source rerun preflight
+
+Reuse canonical2500speed/50000distance/1loop, unchanged basic_example,
+seed1337/gen5,32cells/16units, gameplay8/visual512/LOD0..6, authored camera90,
+fps_max1000 and existing acceptance gates. Original root/editor26.09.01c,
+no client, fresh settled Play. Source figure-eight-current-source.json includes
+prefab, regional replication, actor interest and visibility-command retirement.
+Compare numerical metrics with paired f1319ed baseline63ebf86a and earlier
+candidatefa628af3. This editor has hotloaded code between prior stopped runs;
+therefore cold-process lifecycle comparability is not claimed. Preserve any
+failure; no source changes or hotloads during this run.
+
+#### Current figure-eight runb94bb84e65d34a72a21a8f67c78120c5
+
+Completed canonical121.91774second route. Source figure-eight-current-source.json;
+full result figure-eight-current-raw.json. Average921.36847FPS; CPU
+p95/p99/max1.4864/3.0523/18.2105ms; GPU p95/p99/max
+1.0855198/1.4121532/2.3994446ms.112356samples, no frame sample truncation.
+Collision desired/ready4913/4913, pending/completed/failures0. Process peak
+4757835776bytes, GPU peak2013048788bytes. Compared with earlier candidate
+fa628af3, FPS-0.43%, CPU p95+1.40%, p99+3.25%; process peak+702590976bytes.
+Compared with paired baseline63ebf86a, FPS-1.80%, CPU p95+6.91%, p99-0.20%.
+Timing evidence is broadly similar but does not qualify overall acceptance:
+process-memory comparison is confounded by the repeatedly hotloaded editor,
+and the material difference is unresolved until a comparable cold-session run.
+Do not silently accept it. Existing visual/correctness/lifecycle criteria remain
+required; no commit or push. Current visibility-command cleanup has executed
+in the playable world, but native shutdown repair is still unproven.
+
+### TERRAIN-DEFORMATION-SUPPORT-001/v1 frozen resting-body test
+
+Fresh settled basic_example, canonical seed1337/gen5,32cells/16units,
+gameplay8/visual512/LOD0..6, original root engine26.09.01c, fps_max1000,
+no clients. Create native BoxCollider50x50x50 plus default Rigidbody at
+(1024,0,512). After10seconds inspect position/motion/sleep. Require Sleeping
+true before the support-removal step; if not asleep after30seconds, report
+precondition failure, do not force sleep. Freeze its observed resting center,
+then apply one canonical host dig centered32units beneath it, radius256,
+strength+1024. After5seconds require downward displacement>=32units,
+MotionEnabled true, no terrain safety hold, no new player control-state change,
+no new errors, collision dependencies drained. Report final position and
+terrain-only support trace; no scripted body displacement or wake injection.
+This proves resting-body response through native collision replacement; it
+is not the separate player-underfoot/multiplayer/frame-performance gate.
+The existing read-only collision inspection now reports live body velocity,
+sleep and hold state for production diagnosis. No added test component/scene.
+
+#### SUPPORT-001/v1 result
+
+Source support-v1-source.json; body0a483d93-abce-497c-b5b3-b595adeecbe7.
+After the prescribed settling wait, the crate was Sleeping=true, velocity0,
+MotionEnabled=true at(1160.77148,-135.282852,-41.4341087). Dig center
+(1160.77148,-135.282852,-73.4341087), radius256,+1024. After the five-second
+wait and inspection, crate(1161.5542,-132.934128,-237.148178), sleeping again,
+velocity0, motion enabled, not held. Downward displacement195.7140693units.
+Player position unchanged; aggregate holdSteps10 before/after, no held bodies.
+Terrain-only trace at finalXY hits VoxelManager Z-264.9536, consistent with
+support beneath the rotated50unit box. Field revision1/pages8,17200samples,
+commit20.7722ms,44visual/12collision dependencies; all edit work drained.
+No errors in console682..722. Runtime body/field observations preserved in
+support-v1-runtime.json. The frozen resting-body functional gates pass; native
+collision replacement already wakes this resting actor, so no speculative
+wake implementation was added. Player-underfoot, fast projectiles and
+multiplayer contact response remain distinct unverified cases.
+
+### TERRAIN-DEFORMATION-UNDERFOOT-001/v1 frozen player-contact test
+
+Fresh settled basic_example, seed1337/gen5,32cells/16units, gameplay8,
+visual512/LOD0..6, original root engine26.09.01c, fps_max1000, no clients.
+Record player position, grounded/input/look/enabled/motion flags and hold count.
+First request a build at the player's recorded feet position, radius128,
+strength-512. Require rejection and unchanged field revision0. Then dig at
+that same recorded position minus64Z, radius128,strength+512. Observe after
+five seconds. Require field revision1, player downward displacement>=32units,
+input/look/enabled/motion true, no added collision hold, no new exceptions,
+and no pending edited visual/collision dependencies. Camera position may
+follow the physically falling player; this is not an immobility gate. Inspect
+terrain-only support trace and actual player grounding. No scripted movement,
+input disabling or player teleport. Record any failure without changing inputs.
+
+#### UNDERFOOT-001/v1 first run FAILED
+
+Source underfoot-v1-source.json, runtime underfoot-v1-runtime.json. Build at
+(0.00132829149,0.1411428,2.19920397) rejected, revision0 unchanged. Dig
+at(0.00132829149,0.1411428,-61.80079603), radius128,+512, committedrevision1,
+2136samples/8pages, all derivatives drained. Player stopped atZ0.0402505472,
+only2.1589534units lower: fails>=32unit fall criterion. GroundComponent is
+PlaneCollider, terrain support trace false. Holds7 before/after, all control/
+motion flags true. The original template Plane object contains a flat collider
+atZ-0.001; it becomes competing support when deformable terrain is removed.
+This is a shipping scene defect, not permission to weaken the fall criterion.
+Remove only that leftover template Plane; retain authored camera/player/world
+settings and repeat the same frozen inputs/criteria on corrected source. The
+scenario definition and threshold remain unchanged; source legitimately changes
+for this defect fix. Historical runs with the plane remain recorded.
+
+#### UNDERFOOT-001/v1 corrected-plane run
+
+Source underfoot-v1-plane-fix-source.json; runtime
+underfoot-v1-plane-fix-runtime.json. Same frozen algorithm/inputs: natural
+resting feet(0.00130466698,0.14575173,2.19791174), buildradius128/-512
+rejected atrevision0; digcenter64units below, radius128/+512 committedrevision1.
+Player after observation(-0.016712293,0.109995179,-147.271927), downward
+149.46983874units, grounded on VoxelManager with positive terrain support trace.
+Input/look/enabled/motion true, no held body, holdSteps6 unchanged, no errors
+console764..806. Field2136samples/8pages,56visual/8collision dependencies,
+all edit work drained. Frozen functional gates PASS. The source fix removed
+the template Plane, not a test-only obstacle bypass. Historical baseline scene
+contained this defect; future performance comparison must record that source
+change and rerun the canonical workload without changing its movement settings.
+
+### TERRAIN-DEFORMATION-SPRINT-001/v1 frozen moving workload
+
+Fresh settled basic_example after removal of template Plane, all canonical
+terrain settings, no clients, engine26.09.01c, fps_max1000. Explicit separate
+benchmark sprint-look:10second stationary control,60second moving/edit work,
+600attempts at10Hz then10second tail. Standard PlayerController.WishVelocity
+is320*(cos(t*0.5),sin(t*0.5),0), eye pitch30+25sin(2t)degrees/yaw180tdegrees.
+Ten dig attempts then ten build, standard radius128/strength64/reach2048.
+This uses physical controller locomotion, without writing player position or
+body velocity. It disables default input/look readers only inside this explicit
+scenario and restores prior flags/eye angles on every exit; normal edits never
+activate it. It is controlled movement/aim stress, not OS keyboard/mouse proof.
+Require travel>=2048units, actual speed reaches>=280units/sec, at least200
+accepted commits, all600attempts recorded, accepted visual p95<=100ms/p99<=150ms,
+collision p95<=150ms/p99<=250ms, no accepted loss/final pending, peakqueue<=1,
+final drain<=1second, CPU p95<=2.5ms/p99<=5ms,GPU p95<=2ms/p99<=4ms.
+Unexpected controller-flag changes0, no new errors, and flags restored on exit.
+Physical ground loss and subsequent fall are allowed; record any safety holds.
+Rejected rays or actor-overlap builds remain explicit observations. Preserve
+failures without altering this trajectory or acceptance gates.
+
+SPRINT-001/v1 first run1ac99f7e8dbe464dbaffd3fa3f8f369e FAILED immediately
+on movement: the inherited stationary-position guard still applied to the new
+moving scenario. Raw sprint-v1-guard-failure.json preserved. Normal control
+flags were restored on failure (network inspection12:22:09). Fix guard only
+when the explicit benchmark owns movement; warmup and stationary scenarios
+retain the original guard. This corrects the benchmark implementation to its
+already frozen trajectory, without changing scenario parameters or gates.
+
+#### SPRINT-001/v1 corrected-guard run844a20e556d04d3a95a783a6382544aa
+
+All600attempts recorded:335commits,258mutation-admission declines and7
+publication-busy declines. No pending/queued backlog, collision holds,
+unexpected controller-flag changes or measured exceptions. Travel12354.51067
+units; maximum3D speed589.29565 (includes falling, not a horizontal sprint-speed
+measurement). Visual p95/p99/max31.8478/134.038/341.8393ms; collision
+84.7343/95.5024/278.0026ms. Final observed drain0.4249ms after last scheduled
+attempt. CPU p95/p99/max1.261/2.6637/18.9054ms; GPU p95/p99
+0.8201599/1.0104179ms. All frozen numerical gates pass;335accepted observations
+have complete visual/collision times. The341.8ms worst visual event is retained
+for tail investigation and is not represented by the p99 value. Declined builds
+remain declines; do not report600successful edits or infer their precise reason
+beyond the recorded mutation-admission status. Source sprint-v1-guard-fixed-source.json,
+raw sprint-v1-raw.json, computed sprint-v1-summary.json. This measures standard
+controller locomotion with benchmark-supplied wish velocity and eye angles;
+real keyboard/mouse and multiplayer moving load remain separate evidence gaps.
+
+### SPRINT-001/v1 edit-priority rerun preflight
+
+Same frozen trajectory,600attempts10Hz, all settings and gates unchanged.
+Prior worst editindex363/revision205:field4.481ms,collision35.2975ms,
+visual341.8393ms. Other visual outliers213.8696/158.0527/134.038ms also
+had field<=4ms and collision<=36ms. FIFO dispatch can place edit dependencies
+behind streaming requests. Candidate prioritizes the active edit group's
+requests within existing lanes, budgets and stale-result checks. No extra
+workers or relaxed coherence. Preserve all prior results and compare this
+same scenario; canonical figure-eight must also be rerun before acceptance.
+
+#### SPRINT-001/v1 edit-priority run26358a2e23704dbdade358bb91ddffc1
+
+354/600 accepted commits;236mutation-admission declines,10publication-busy.
+Travel13424.30048units, maximum3D speed539.39874. No queued/final pending,
+accepted loss, holds, unexpected controller changes, exceptions or console
+errors918..919. Visual p95/p99/max38.565/146.8836/209.9864ms; collision
+40.8487/65.5973/72.5974ms. Final drain0.2392ms after last scheduled attempt.
+CPU p95/p99/max1.3882/2.1858/21.3531ms; GPU p95/p99
+0.8661747/1.0654926ms. Frozen numeric gates pass. Source, raw and summary:
+sprint-v1-priority-source.json, sprint-v1-priority-raw.json,
+sprint-v1-priority-summary.json.
+
+Comparison with844a20e: worst visual342->210ms, but p95/p99 worsened
+31.85/134.04->38.57/146.88ms. Physical travel and accepted counts also differ
+under the same prescribed inputs because changing terrain changes contact.
+Therefore this is not proof of a uniform or causal tail-latency improvement.
+Priority fixes a concrete FIFO scheduling conflict within existing budgets;
+repeatability and unchanged figure-eight regression remain acceptance work.
+Do not conceal the worse percentile values or claim near-instant all-edit
+latency from this pass. No commit/push/full feature acceptance.
+
+### TERRAIN-DEFORMATION-CONVERGENCE-001/v1 frozen density comparison
+
+Same private two-process environment/settings as TRANSFER-001/v1, current
+plane-free scene, source convergence-v1-source.json. Fresh settled host,
+edit(1024,0,0),r128,+512; settle, join one client normally. After acknowledged
+revision1, invoke fingerprint region(1024,0,0),radius512. Require exactly one
+host and one client reply within10seconds, same world and identical hashes.
+Apply second identical edit, wait forrevision2ACK and>=10seconds from prior
+fingerprint invocation, then repeat same fingerprint. Require peer agreement
+again and a changed hash fromrevision1. Do not treat absent/duplicate/partial
+responses as convergence. Preserve logs and all errors; this tests settled
+canonical regional density only, not rendered seam/contact/multi-peer load.
+
+#### CONVERGENCE-001/v1 live result
+
+ClientPID39204, connectionb3cf61d0-0f69-4794-ac3b-cc32a154884f;
+world1f0b47dc-1052-4505-9741-7197daa6dea9. Both host and client answered
+requestcb287714-35eb-4523-8b09-298430b2a8b5 at12:34:30, revision1,
+SHA256 6CD6799E6F39F6234876ADE03822CFC8DD363D3FD9F8C9D235650CFF81769494.
+After the identical second edit/revision2ACK, both answered
+request011b5bf8-45a5-43aa-9cf4-bd84d6e66bdd at12:35:07,
+SHA256 54D7C3D763498479E7FE0136BA94F7942637A04E2AE61431D6BE89BE7F5DB737.
+Two distinct peers, same world/region and matching content each time, changed
+content after the second mutation: frozen density-convergence checks PASS.
+Responses: convergence-v1-responses.json; logs convergence-v1-host.log and
+convergence-v1-client.log. Diagnostic ran through actual host-only broadcast,
+off-thread field snapshot hashing and bounded replies, without mutation.
+
+Overall error gate remains FAILED: host OnValidate/EnsureComponentsCreated
+null-reference at12:34:06; client existing resource errors, including missing
+scene/prefab compiled resources and invalid blue-noise header. No scheduler
+stall appears in captured client log. Density agreement does not prove GPU
+mesh equivalence, absence of seams, remote input correctness or clean lifecycle.
+Private host/client remain live for follow-up; no teardown result claimed.
+
+### JOIN-INITIALIZATION-001/v1 — lifecycle localization
+
+Fixed diagnostic scenario: current plane-free basic_example scene, seed1337,
+32 cells at16 units, gameplay8/visual512, installed26.09.01c, existing settled
+private editor host and one normal joinlocal client. One join, no terrain edits
+or movement. Capture the existing join exception relative to clone begin, clone
+complete, network-spawn complete and joined log events. Require a complete
+ordered event sequence and two owned players; error-free initialization is the
+correctness gate. This is lifecycle localization, not performance acceptance.
+No alternate spawn implementation or test component is introduced.
+
+Before this run, process inspection found prior clientPID39204 absent and only
+editorPID69588 live; editor reported Play active, correct project, compile
+success/zero errors. Another join exception was present at16:04:43. The prior
+live-client state is no longer current.
+
+#### JOIN-INITIALIZATION-001/v1 result — localized, correctness FAILED
+
+ClientPID41344 initially received connection refusals despite editor hosting
+controls reporting active; game networking diagnostics reported inactive and
+the editor had no listening TCP socket. Disconnecting hosting, stopping Play,
+then starting private hosting restored the listener. The same live client
+connected through its existing retries; no second process was launched.
+
+At16:50:27.0885, connectionba2fe7e8-a597-4845-a535-34a5517d47da logged
+clone.begin, the OnValidate/EnsureComponentsCreated null-reference,
+clone.complete, network_spawn.complete, then joined, in that order. Thus the
+exception is inside GameObject.Clone(path,...), before NetworkSpawn or enabling
+the instance. This rules out those later spawn operations as this exception's
+trigger; prefab cache loading versus actual instance cloning remains unresolved.
+
+Live terrain edits were occurring (first ACK revision25, then further revisions),
+so the prescribed stationary/no-edit scenario was not satisfied. Record this
+as diagnostic localization and FAILED error gate, not a clean benchmark or
+performance result. No camera or movement test was activated by this work.
+Evidence: join-initialization-v1-source.json, join-initialization-v1-host.log,
+join-initialization-v1-client.log in ValidationEvidence/TerrainDeformation.
+Host/client remain live. Compile success/zero errors and diff whitespace check
+passed; no fix or final acceptance is claimed.
+
+Additional installed-engine evidence: CallbackBatch sorts CommonCallback values;
+Deserialize precedes Validate. GameObject.Clone uses an isolated callback batch
+and calls PostClone (which checks required components) before returning. These
+facts do not support blindly adding an outer callback batch as a fix; that class
+is internal in this build. Full decompiled engine source remains outside the
+repository.
+
+#### JOIN-INITIALIZATION-001/v1 follow-up instrumentation
+
+Add a prefab.ready marker between the existing path-to-prefab resolution and
+the same native instance Clone operation, reporting cached PlayerController.Body
+validity. No alternative player or terrain implementation. Repeat the same
+scenario; record any active edits/connection setup deviations explicitly.
+
+Follow-up at16:53:03, clientPID9504, connection27f7c9c0-c82c-4d03-a963-
+b0491f7cb529: prefab.ready precedes the exception, which still precedes
+clone.complete. The cached Body diagnostic used enabled-only lookup and returned
+no component, so it provides no evidence of a missing cached Body. Correct the
+lookup to EverythingInSelf. Instance cloning is now localized as the failing
+stage. Runtime edits again prevent claiming the frozen no-edit scenario.
+
+Next candidate: use native Clone's enabled initialization (startEnabled:true),
+then immediately NetworkSpawn in the same call stack. Installed component
+initialization is gated on active GameObject; this candidate tests whether
+disabled cloning skips required initialization before validation. No exception
+suppression. Require the same join error gate and valid owned player; revert if
+the hypothesis fails. Performance acceptance remains separate and pending.
+
+Enabled-clone candidate FAILED at16:56:16, clientPID85456, connection
+06e65632-8769-464e-8fe9-9fa25e044787: same validation exception plus an
+OnAwake/EnsureComponentsCreated exception. Reverted startEnabled to false;
+the required-component hypothesis did not fix the defect. Preserve enabled
+candidate host/client logs. A root-only cached controller lookup still returned
+no controller; inspect all prefab descendants and body ownership next.
+
+Previous clientPID9504 closed through CloseMainWindow, showed native mimalloc
+error11/double-free dialogs, both acknowledged, then exited. Recorded crash
+timestamp2026-09-07T20:55:46.193336Z. This remains an independent lifecycle
+failure. User reports two successful ordinary multiplayer tests; preserve that
+qualitative feedback without treating it as edge-case or error-free proof.
+
+#### Cached prefab integrity observation
+
+At16:58:42 explicit network diagnostics inspected the native cached prefab.
+Raw root component enumeration and full disabled-inclusive descendant enumeration
+both returned only MoveModeWalk, MoveModeSwim, MoveModeLadder and Dresser;
+Children was empty. The authored prefab still contains Rigidbody,
+PlayerController, Body and Colliders. Evidence: join-initialization-cache-
+integrity.json and join-initialization-cache-integrity-host.log. This establishes
+a runtime cached/authored mismatch, not its cause or when it first occurred.
+
+Next action is a fresh editor-process reproduction before redesigning spawning;
+repeated hotloads are a confounder and a clean process is also required by the
+outstanding performance/memory comparison. Do not infer that cache corruption
+explains all prior joins without reproducing. Removed temporary phase/component
+diagnostics and restored the original native path-based disabled Clone call;
+the failed enabled-clone experiment is not retained. No terrain behavior change
+accepted from this investigation.
+
+### JOIN-INITIALIZATION-001/v1 cold-process comparison
+
+Repeat the same native join scenario in a new editor process with no source
+hotloads before the join. Authored basic_example, seed1337,32x16,gameplay8,
+visual512, private host, one joinlocal client, no movement or edits. Wait for
+terrain to settle before joining. Require two owned players with valid bodies,
+no initialization exceptions, and acknowledged initial terrain state. Capture
+all errors independently. This comparison distinguishes accumulated editor
+state from persistent initialization failure; it does not waive previous
+failures or substitute for the performance suite. Pre-restart editorPID69588
+and clientPID85456 were responsive, correct project, no unsaved scene changes,
+compile success/zero errors. Logs saved as pre-cold-join-host/client.log.
+
+#### Cold-process join observation — managed error absent
+
+EditorPID8444 launched with the same voxels3.sbproj after previous host/client
+processes exited. No source edits/hotloads between fresh editor launch and join.
+Pre-join terrain settled: collision4913/4913, pending0, visual/transition0,
+heldBodies0, host grounded. ClientPID20976 joined at17:02:40.9777 and player
+spawn completed17:02:41.0052, connection90745426-68cd-4881-bf4b-14c8f0704815.
+No OnValidate, OnAwake or other managed exception appeared in the fresh host
+join observation. At17:03:12 both distinct owned players were grounded, enabled,
+with input/look controls true; terrain transfers continued with no reported
+network failure. Evidence: join-initialization-cold-source.json and cold host/
+client logs.
+
+The prior managed join error is therefore not reproduced in this cold process.
+This supports an accumulated editor/cache-state factor; it does not prove which
+operation corrupted the previous cache or establish a source-level fix. The
+disabled native prefab Clone call remains unchanged. Do not retain the failed
+enabled-clone experiment or compensate with an alternative spawn implementation.
+
+Live edits occurred after join, so stationary/no-edit criteria are not fully
+satisfied. Engine logs still contain invalid blue-noise and missing stock/game
+compiled-resource errors. Overall clean-error acceptance remains incomplete.
+Before this launch the old editor/client exited, and last_crash advanced to
+2026-09-07T21:00:47.113200Z; the exit was not cleanly attributable to either
+process, so no successful shutdown claim is made. Host/client currently live.
+
+### RECONNECT-001/v1 — edited world retained across client reconnect
+
+Fixed scenario: fresh settled private host in authored basic_example, seed1337,
+32 cells at16 units, gameplay8/visual512, normal player spawn, engine26.09.01c,
+one joinlocal client. Apply one normal host world edit at(1024,0,0),radius128,
+strength+512, wait for completion. Join, await initial ACK, fingerprint region
+(1024,0,0),radius512: require host/client identical world/hash. Close only that
+client normally, retain host; require connection/player cleanup. Apply a second
+identical edit while the client is absent, settle, relaunch one joinlocal client.
+Within30seconds of player.joined require latest revision ACK, exactly two owned
+players, no pending failure, and matching host/client fingerprint changed from
+the first result. Do not hotload source, move players, or issue other edits.
+Record any scenario deviation and all lifecycle/resource errors independently;
+matching canonical density is not visual seam or frame-performance evidence.
+
+At setup, prior editor/client handles were absent; only fresh editorPID14584
+was live, Play stopped, correct project, compile success/zero errors.
+
+RECONNECT-001/v1 setup deferred: editor reported Play stopped, but the following
+open-scene operation rejected because Play had become active. No reconnect
+sequence or test edit was issued. Asked whether the user is still interacting
+before continuing dependent live test actions. Updated the implementation
+completion table to reflect existing SUPPORT/UNDERFOOT/SPATIAL/OVERLOAD/SPRINT
+and CONVERGENCE evidence, keeping incomplete gates explicit; marked the initial
+checkpoint and research status as historical. Documentation-only changes,
+validated against current benchmark source and corresponding ledger entries.
+
+### Transfer recovery source audit — not runtime acceptance
+
+Reviewed fragment and ACK ordering, receive windows, manifest validation,
+supersession cancellation, TryCommit's cancellation guard, disconnect cleanup
+and deadline handling against current source. Documented exact implemented
+responses and missing runtime qualification in Architecture/TerrainDeformation.md.
+No fault injection, reconnect or live mutation ran; the editor-use clarification
+remains pending. No source fix was justified by this bounded review. Existing
+compile evidence is unchanged; documentation diff/whitespace validation passed.
+
+### User multiplayer profile — 2026-09-07 17:09:18
+
+Read-only analysis of user-requested editorPID14584 ETW JSON. Full findings in
+Research/TerrainDeformationMultiplayerProfile170918.md; derived counts/hash and
+join/transfer log excerpt under ValidationEvidence/TerrainDeformation/profile-
+multiplayer-170918-*. Main-thread inclusive samples: animation17.46%, terrain
+manager11.19%, collision integration4.26%, correction range2.13%, network
+pre-frame1.33%, terrain replication dispatch0.47% (overlapping rows). Three GC
+intervals8.4624/8.9929/18.6243ms. Allocation tick total207,344,088bytes across
+threads, with sampled type attribution.
+
+Join occurred about51seconds before capture start; active edits continue during
+recording. This is not a before/after join comparison, exact FPS/GPU measurement
+or acceptance run. No source changes or live tests performed. The evidence
+prioritizes animation, allocation pressure and collision installation for the
+reported multiplayer FPS loss. Do not claim terrain networking alone caused it.
+
+### IDLE-OBSERVATION-001/v1 — read-only current-session windows
+
+User prioritizes approximately900+ FPS while stationary, no editing/generation.
+Observe three consecutive normal10second performance windows without changing
+scene, camera, controls or runtime source. Record current position, queues,
+field revision and reported FPS/GPU times. Require unchanged position/revision,
+no visual/transition/collision backlog and all three averages>=900 to qualify
+only these observations. This is not the canonical baseline comparison or final
+feature acceptance; source/camera/process conditions must accompany results.
+Initial opportunistic read:909.7FPS,p95 1.50ms,p99 2.57ms,GPU0.98ms;
+streaming center(0,-1,0),4913collision ready,zero pending visual/transition/
+collision. Treat this as setup evidence, not one of the three frozen windows.
+
+IDLE-OBSERVATION-001/v1 did not qualify: first window910.9FPS (p95 1.52,
+p99 2.53,GPU0.99ms), second909.5FPS (p95 1.61,p99 2.73,GPU0.84ms).
+Position changed substantially between them; third window not collected.
+No source, camera or control changes made. Preserve idle-observation-v1.json.
+
+User17:15:51 profile quiet segment1000–6000ms: scene rendering33.93%,
+animation24.78%, terrain manager2.10%, networking0.18%, replication0.08%
+of13,815main-thread samples. Later8–13seconds contain brush/invalidation work.
+Descriptive segment selection is not frozen idle acceptance. Full findings
+in Research/TerrainDeformationIdleProfile171551.md and derived per-second
+evidence profile-idle-171551-summary.json.900+FPS target remains unaccepted.

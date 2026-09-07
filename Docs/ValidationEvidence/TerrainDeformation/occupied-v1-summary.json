@@ -1,0 +1,53 @@
+{
+  "runId": "6886fbb060d740fc92ecba6e0bf6d919",
+  "checks": {
+    "600Nonnoop": true,
+    "allDrained": true,
+    "noHolds": true,
+    "noErrors": true,
+    "cameraPosition": true,
+    "cameraAngle": true,
+    "controller": true,
+    "fieldCommitMilliseconds": true,
+    "visualPublicationMilliseconds": true,
+    "editedCollisionDrainMilliseconds": true,
+    "fieldMax": true,
+    "p95Milliseconds": true,
+    "p95MillisecondsDelta": true,
+    "p99Milliseconds": true,
+    "p99MillisecondsDelta": true,
+    "maximumMilliseconds": true,
+    "p95GpuMilliseconds": true,
+    "p95GpuMillisecondsDelta": true,
+    "p99GpuMilliseconds": true,
+    "p99GpuMillisecondsDelta": true,
+    "maximumGpuMilliseconds": true,
+    "peakProcessBytes": true,
+    "peakGpuBytes": true,
+    "allocation": true,
+    "pageBytes": true,
+    "queue": true
+  },
+  "latencies": {
+    "fieldCommitMilliseconds": {
+      "p50": 2.9984,
+      "p95": 4.0139,
+      "p99": 4.3871,
+      "max": 5.4041
+    },
+    "visualPublicationMilliseconds": {
+      "p50": 26.1374,
+      "p95": 27.766,
+      "p99": 28.5273,
+      "max": 35.974
+    },
+    "editedCollisionDrainMilliseconds": {
+      "p50": 9.5371,
+      "p95": 11.1078,
+      "p99": 11.7239,
+      "max": 14.5383
+    }
+  },
+  "allocationMiBPerSecond": 25.976914954162666,
+  "decision": "Recorded occupied-chunk gates pass; moving player/contact cases remain incomplete"
+}

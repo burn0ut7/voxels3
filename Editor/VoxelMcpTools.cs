@@ -4,6 +4,39 @@ using System;
 [McpToolset( "voxels3", "Voxels3 production smoke controls" )]
 public static class VoxelMcpTools
 {
+	/// <summary>Start or stop the editor's private network host using its normal network controls.</summary>
+	[McpTool( "set_private_network_hosting" )]
+	public static object SetPrivateNetworkHosting( bool enabled )
+	{
+		if ( enabled )
+		{
+			Editor.EditorUtility.Network.HostPrivacy = Sandbox.Network.LobbyPrivacy.Private;
+			if ( !Editor.EditorUtility.Network.Active ) Editor.EditorUtility.Network.StartHosting();
+		}
+		else if ( Editor.EditorUtility.Network.Active ) Editor.EditorUtility.Network.Disconnect();
+		return new { Editor.EditorUtility.Network.Active, Editor.EditorUtility.Network.Hosting };
+	}
+
+	/// <summary>Convert an authored scene object into a reusable prefab with the editor's normal undoable operation.</summary>
+	[McpTool( "convert_scene_object_to_prefab" )]
+	public static object ConvertSceneObjectToPrefab( string id, string resourcePath )
+	{
+		if ( Game.IsPlaying ) throw new InvalidOperationException( "Stop play before converting an authored object." );
+		if ( !resourcePath.StartsWith( "prefabs/", StringComparison.Ordinal ) ||
+			!resourcePath.EndsWith( ".prefab", StringComparison.Ordinal ) || resourcePath.Contains( ".." ) )
+			throw new ArgumentException( "Use a project-relative prefabs/*.prefab path." );
+		var path = System.IO.Path.Combine( Project.Current.GetAssetsPath(), resourcePath );
+		if ( System.IO.File.Exists( path ) ) throw new InvalidOperationException( "The prefab already exists." );
+		using var scope = Editor.SceneEditorSession.Scope();
+		var source = Game.ActiveScene.Directory.FindByGuid( Guid.Parse( id ) ) as GameObject
+			?? throw new InvalidOperationException( "The authored object was not found." );
+		using var undo = Editor.SceneEditorSession.Active.UndoScope( "Convert to Prefab" )
+			.WithGameObjectChanges( new[] { source }, GameObjectUndoFlags.All ).WithGameObjectCreations().Push();
+		System.IO.Directory.CreateDirectory( System.IO.Path.GetDirectoryName( path ) );
+		var converted = Editor.EditorUtility.Prefabs.ConvertGameObjectToPrefab( source, path );
+		return new { converted.Id, converted.Name, ResourcePath = resourcePath };
+	}
+
 	[EditorEvent.Frame]
 	public static void RepairEjectedRenderCamera()
 	{

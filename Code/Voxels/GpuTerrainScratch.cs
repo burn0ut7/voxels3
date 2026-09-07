@@ -39,6 +39,8 @@ internal sealed class GpuTerrainScratch : IDisposable
 	private ScratchState _state;
 	private bool _disposed;
 
+	private float[] _correctionUpload;
+	public long CorrectionUploadBytes => (_correctionUpload?.LongLength ?? 0) * sizeof( float );
 	public long CapacityBytes { get; }
 	public bool IsIdle { get { lock ( _stateLock ) return _state == ScratchState.Idle; } }
 
@@ -96,7 +98,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 			(long)MaximumBatchSize * (sizeof( uint ) * 8 + 64 + sizeof( uint ) * 5);
 	}
 
-	public bool TrySubmitCount( GpuTerrainRequest[] requests, int count, out double submissionMilliseconds )
+	public bool TrySubmitCount( GpuTerrainRequest[] requests, int count, out double submissionMilliseconds, TerrainFieldSnapshot[] fields = null )
 	{
 		lock ( _stateLock )
 		{
@@ -110,6 +112,21 @@ internal sealed class GpuTerrainScratch : IDisposable
 		}
 		var start = System.Diagnostics.Stopwatch.GetTimestamp();
 		_requests.SetData( new Span<GpuTerrainRequest>( requests, 0, count ) );
+		if ( fields is not null )
+		{
+			_correctionUpload ??= new float[_haloSampleCount];
+			for ( var block = 0; block < count; block++ )
+			{
+				var field = fields[block];
+				if ( field is null ) continue;
+				var origin = requests[block].OriginAndCellSize;
+				var step = (int)(origin.w / TerrainField.SampleSpacing);
+				var sampleOrigin = new Vector3Int( (int)(origin.x / TerrainField.SampleSpacing) - step,
+					(int)(origin.y / TerrainField.SampleSpacing) - step, (int)(origin.z / TerrainField.SampleSpacing) - step );
+				field.CopyLatticeCorrections( sampleOrigin, step, _haloSize, _correctionUpload );
+				_densitySamples.SetData<float>( _correctionUpload.AsSpan(), block * _haloSampleCount );
+			}
+		}
 		SetBatchSize( count );
 		foreach ( var buffer in new GpuBuffer[] { _densitySamples, _cells, _edgeFlags, _edgeVertexIds, _edgeGroupSums, _cellGroupSums, _blockCounts, _activeCellCounts, _digests, _countResults } )
 			Graphics.ResourceBarrierTransition( buffer, Sandbox.Rendering.ResourceState.UnorderedAccess );

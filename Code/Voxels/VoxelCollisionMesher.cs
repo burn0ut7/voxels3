@@ -32,7 +32,7 @@ internal sealed class VoxelCollisionMesher
 	}
 
 	public VoxelCollisionGeometry Build( Vector3Int coordinate, float cellSize,
-		ProceduralTerrainSettings settings, Func<bool> cancelled, VoxelCollisionGeometry result,
+		TerrainFieldSnapshot field, Func<bool> cancelled, VoxelCollisionGeometry result,
 		Vector3Int? supportMinimum = null, Vector3Int? supportMaximum = null )
 	{
 		var start = Stopwatch.GetTimestamp();
@@ -48,13 +48,13 @@ internal sealed class VoxelCollisionMesher
 		var origin = coordinate * _cells + localMinimum;
 		var worldMinimum = new Vector3( origin.x, origin.y, origin.z ) * cellSize;
 		var worldMaximum = worldMinimum + new Vector3( cells.x, cells.y, cells.z ) * cellSize;
-		var range = ProceduralTerrainSdf.GetConservativeDensityRange( new SdfWorldAabb( worldMinimum, worldMaximum ), cellSize, settings );
+		var range = field.GetDensityRange( new SdfWorldAabb( worldMinimum, worldMaximum ), cellSize );
 		if ( range.Classification != ChunkDensityClassification.PotentiallySurfaceContaining )
 		{
 			result.SamplingMilliseconds = (float)Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
 			return result;
 		}
-		_sampler.Begin( origin, cellSize, settings );
+		_sampler.Begin( origin, cellSize, field.Settings );
 		Array.Clear( _sampled );
 		Array.Clear( _activeBlocks );
 		Array.Clear( _parentBlocks );
@@ -76,7 +76,7 @@ internal sealed class VoxelCollisionMesher
 						var parentOrigin = origin + new Vector3Int( px, py, pz ) * ParentBlockCells;
 						var parentMinimum = new Vector3( parentOrigin.x, parentOrigin.y, parentOrigin.z ) * cellSize;
 						var parentMaximum = worldMinimum + new Vector3( Math.Min( (px + 1) * ParentBlockCells, cells.x ), Math.Min( (py + 1) * ParentBlockCells, cells.y ), Math.Min( (pz + 1) * ParentBlockCells, cells.z ) ) * cellSize;
-						var parentRange = ProceduralTerrainSdf.GetConservativeDensityRange( new SdfWorldAabb( parentMinimum, parentMaximum ), cellSize, settings );
+						var parentRange = field.GetDensityRange( new SdfWorldAabb( parentMinimum, parentMaximum ), cellSize );
 						_parentBlocks[parentIndex] = (byte)(parentRange.MaximumDensity < 0 || parentRange.MinimumDensity > 0 ? 2 : 1);
 					}
 					if ( _parentBlocks[parentIndex] == 2 )
@@ -86,8 +86,8 @@ internal sealed class VoxelCollisionMesher
 					}
 					var blockOrigin = origin + new Vector3Int( bx, by, bz ) * BlockCells;
 					var minimum = new Vector3( blockOrigin.x, blockOrigin.y, blockOrigin.z ) * cellSize;
-					var blockRange = ProceduralTerrainSdf.GetConservativeDensityRange(
-						new SdfWorldAabb( minimum, worldMinimum + new Vector3( Math.Min( (bx + 1) * BlockCells, cells.x ), Math.Min( (by + 1) * BlockCells, cells.y ), Math.Min( (bz + 1) * BlockCells, cells.z ) ) * cellSize ), cellSize, settings );
+					var blockRange = field.GetDensityRange(
+						new SdfWorldAabb( minimum, worldMinimum + new Vector3( Math.Min( (bx + 1) * BlockCells, cells.x ), Math.Min( (by + 1) * BlockCells, cells.y ), Math.Min( (bz + 1) * BlockCells, cells.z ) ) * cellSize ), cellSize );
 					if ( blockRange.MaximumDensity < 0 || blockRange.MinimumDensity > 0 )
 					{
 						result.RejectedBlocks++;
@@ -103,6 +103,11 @@ internal sealed class VoxelCollisionMesher
 								var index = x + _samples * (y + _samples * z);
 								if ( _sampled[index] ) continue;
 								var density = _sampler.Sample( x, y, z );
+								if ( field.PageCount > 0 )
+								{
+									var sample = origin + new Vector3Int( x, y, z );
+									density += field.SampleCorrection( new Vector3( sample.x * cellSize, sample.y * cellSize, sample.z * cellSize ) );
+								}
 								if ( !float.IsFinite( density ) ) throw new InvalidOperationException( "Non-finite collision density." );
 								_density[index] = MathF.Abs( density ) < 1e-6f ? (density < 0 ? -1e-6f : 1e-6f) : density;
 								_sampled[index] = true;
@@ -210,7 +215,7 @@ internal sealed class VoxelCollisionMesher
 				var sampling = result.SamplingMilliseconds;
 				var extraction = (float)Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
 				var samples = result.SampleCount; var rejected = result.RejectedBlocks;
-				Build( coordinate, cellSize, settings, cancelled, result, patchMinimum, patchMaximum );
+				Build( coordinate, cellSize, field, cancelled, result, patchMinimum, patchMaximum );
 				result.SamplingMilliseconds += sampling;
 				result.ExtractionMilliseconds += extraction;
 				result.SampleCount += samples; result.RejectedBlocks += rejected;

@@ -363,13 +363,18 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		float3 world = TransitionWorldPoint( request, facePoint ) +
 			request.NormalAndFace.xyz * normalOffset * request.OriginAndFineCellSize.w;
 		int3 sample = (int3)round( world / request.OriginAndFineCellSize.w );
+		float correction = 0.0;
+		if ( request.Reserved0 != 0 )
+		{
+			correction = TransitionDensitySamples[index];
+		}
 		TransitionDensitySamples[index] = SampleVoxelSdf(
 			sample,
 			request.OriginAndFineCellSize.w,
 			(int)request.Terrain.x,
 			request.Terrain.y,
 			request.Terrain.z,
-			request.Terrain.w );
+			request.Terrain.w ) + correction;
 		return;
 	}
 	if ( TransitionStage == 2 )
