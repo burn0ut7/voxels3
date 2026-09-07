@@ -40,6 +40,7 @@ the appropriate architecture or research owner from the [documentation map](READ
 
 | Reference | Use | Transfer limits |
 | --- | --- | --- |
+| [GC performance and retained objects](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/performance), [dotnet-gcdump](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-gcdump) | Support the terrain-owned heap census proposed in [enhancement directions](Research/PerformanceEnhancementDirections.md#e0-terrain-owned-memory-census). | Heap collection can induce a full Gen2 pause; run outside timing. Engine attachment is unverified, and a snapshot is not a long-session leak proof. |
 | [Microsoft GC ETW events](https://learn.microsoft.com/en-us/dotnet/framework/performance/garbage-collection-etw-events) | Interpret allocation thresholds, collection generations and heap-stat fields in the September 7 trace. | Allocation threshold bytes can cover multiple types; the named type is the threshold-crossing object. This is event-schema evidence, not an s&box allocation stack or terrain ownership census. |
 | [Firefox profile schema](https://github.com/firefox-devtools/profiler/blob/main/src/types/profile.ts), [data-source guide](https://github.com/firefox-devtools/profiler/blob/main/docs-developer/data-sources.md) | Decode prefix stacks, sample units and statistical attribution in imported profiles. | The s&box exporter supplies ETW data. Firefox's native sampling implementation does not establish exporter accuracy, complete symbols or frame-critical-path timing. |
 

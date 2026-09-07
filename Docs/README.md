@@ -14,6 +14,7 @@ link to it elsewhere instead of copying its state, settings, or results.
 | Why was visual scaling designed this way? | [Visual scaling decision](Research/VisualClipboxScaling.md): rationale and alternatives. |
 | What performance questions remain worth investigating? | [Performance research](Research/ChunkPerformanceOptimizationFindings.md): evidence-backed questions, not an implementation backlog. |
 | What does the September 7 CPU capture show? | [CPU performance review](Research/CpuPerformanceReview20260907.md): sampled attribution, allocation/memory findings, source-backed hypotheses and measurement limits. |
+| Which larger CPU/memory capabilities are worth investigating? | [Performance enhancement directions](Research/PerformanceEnhancementDirections.md): bounded metadata, planning, admission and revisit reuse; separate from local optimizations. |
 | What should change in GPU extraction, allocation, or rendering? | [GPU meshing study](Research/GpuMeshingOptimizationStudy.md): source audit, external comparisons, deletion candidates, and measurement gates. |
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
 
