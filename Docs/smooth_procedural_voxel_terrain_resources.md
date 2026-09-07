@@ -89,6 +89,21 @@ behavior is adopted by adding research references.
 | [Voxel Plugin 1.2 profiling](https://docs.voxelplugin.com/1.2/technical-notes/performance-and-profiling), [1.2 multiplayer](https://docs.voxelplugin.com/1.2/core-systems/voxelworld/multiplayer) | Spatial edit scheduling and action-versus-state replication tradeoffs. | Legacy Unreal architecture; do not merge these claims into current 2.0 behavior or import transport assumptions. |
 | [s&box RPC messages](https://sbox.game/dev/doc/networking/rpc-messages), [network visibility](https://sbox.game/dev/doc/networking/network-visibility) | Host routing, caller checks, recipient filtering and why object culling does not filter terrain RPC traffic. | Engine primitives do not implement terrain subscriptions, ordering, snapshots or payload-size budgets. Verify installed API and real clients. |
 
+## Chunk Streaming and Durable Storage
+
+The [chunk streaming and storage research](Research/ChunkStreamingStorage.md)
+compares these sources against the current field and replication owners. Its
+backend and baked-field recommendations remain proposals with engine and runtime
+validation gates; adding these references does not adopt a new world format.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Luanti emergence](https://github.com/luanti-org/luanti/blob/b81bb3c68ac633f1df8dd8ed758644cabf4c1efd/src/emerge.cpp), [per-client block delivery](https://github.com/luanti-org/luanti/blob/b81bb3c68ac633f1df8dd8ed758644cabf4c1efd/src/server/clientiface.cpp), [database backends](https://docs.luanti.org/for-server-hosts/database-backends/) | Load-before-generate, bounded outstanding sends, invalidation and regional database access. | Block terrain and native C++; no comparable Voxels3 throughput or s&box integration evidence. |
+| [Voxel Tools streams](https://voxel-tools.readthedocs.io/en/latest/streams/), [multiplayer](https://voxel-tools.readthedocs.io/en/latest/multiplayer/) | Saving expensive generated blocks, asynchronous world lifetime, server-owned viewers. | Multiplayer page is experimental and does not establish VoxelLodTerrain support. |
+| [Cuberite Anvil implementation](https://github.com/cuberite/cuberite/blob/7fd3fa5c9345a3f1b949c0988c4849db00a68486/src/WorldStorage/WSSAnvil.cpp) | Independently compressed spatial records grouped into region files; allocation tradeoffs. | Independent Minecraft-compatible implementation, not Mojang server internals; 2D column layout is not an SDF storage recommendation. |
+| [Factorio map transfers](https://www.factorio.com/blog/post/fff-136) | Bulk transfer flow control and recovery lessons from a developer postmortem. | Dated 2016 lockstep design; whole-map transfer and custom transport are not adopted. |
+| [SQLite WAL](https://www.sqlite.org/wal.html), [synchronous settings](https://sqlite.org/pragma.html#pragma_synchronous), [backup API](https://www.sqlite.org/backup.html) | Transaction durability, checkpoints, version qualification and coherent backups. | Database guarantees require a correct supported binding/VFS and real recovery tests; no s&box SQLite integration is established. |
+
 ## Primary Algorithms and Papers
 
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |

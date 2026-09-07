@@ -21,6 +21,7 @@ link to it elsewhere instead of copying its state, settings, or results.
 | What is the proposed first terrain collision slice? | [Terrain collision research](Research/TerrainCollisionFirstSlice.md): full-resolution gameplay collision, CPU/GPU separation, engine evidence, and implementation measurement gates; proposal history. |
 | How should the second slice add responsive terrain deformation? | [Terrain deformation research](Research/TerrainDeformationSecondSlice.md): current-source audit, regional edited state, brush behavior, local rebuilds, multiplayer/distant edits and a dedicated benchmark proposal. |
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
+| How should expensive generated terrain be saved and streamed in multiplayer? | [Chunk streaming and storage research](Research/ChunkStreamingStorage.md): server authority, regional persistence, loading/unloading, coherent joins, LOD data and implementation gates. |
 
 Source code and authored configuration establish actual behavior. Architecture
 documents explain its ownership and rationale; they do not prove runtime
