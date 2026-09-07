@@ -59,6 +59,20 @@ claims. Neither reference selects an optimization or changes runtime contracts.
 | [VoxelPlugin/VoxelPluginFreeLegacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy) | Legacy open-source Unreal Voxel Plugin for large volumetric, editable procedural worlds. | Researching broad production responsibilities across generation, streaming, editing, rendering, and engine integration. | Very large legacy codebase; current commercial versions have diverged, and Unreal ownership patterns are not s&box contracts. |
 | [stoyannk/voxels](https://github.com/stoyannk/voxels) | Compact terrain implementation containing Transvoxel-related code, compression, LOD, and dynamic editing. | Isolating algorithm details without navigating a full engine plugin. | Smaller and less production-proven; implementation choices are not evidence of scalability or compatibility. |
 
+## Terrain Collision and Physics Integration
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [s&box mesh creation](https://sbox.game/api/Sandbox.PhysicsBody/AddMeshShape), [mesh recreation](https://sbox.game/api/Sandbox.PhysicsShape/UpdateMesh) | Native triangle collision entry points; pair with installed XML and compiler verification. | Online documentation tracks staging; neither API promises cheap refitting, asynchronous cooking, or worker-thread safety. |
+| [Facepunch PhysicsBody](https://github.com/Facepunch/sbox-public/blob/9de061bb0fe2dc73ff29a134a0041928f2a47166/engine/Sandbox.Engine/Systems/Physics/PhysicsBody.cs), [PhysicsShape](https://github.com/Facepunch/sbox-public/blob/9de061bb0fe2dc73ff29a134a0041928f2a47166/engine/Sandbox.Engine/Systems/Physics/PhysicsShape.cs) | Pinned managed wrappers for creation failure, empty updates, and resource release. | Public source commit is not installed native-engine evidence; native cost and synchronization remain unverified. |
+| [Voxel Tools physics performance](https://voxel-tools.readthedocs.io/en/latest/performance/#physics) | Separate extraction from collision acceleration-structure creation; investigate thin-surface contacts and bounded integration. | Godot-specific costs and threading restrictions are not s&box measurements or API guarantees. Complements the existing Godot Voxel entry. |
+| [s&box navigation](https://sbox.game/dev/doc/gameplay/navigation/) | Establish navigation as a consumer of physics-world geometry. | Adding colliders does not implement navigation streaming or deformation updates. |
+
+The [terrain collision research](Research/TerrainCollisionFirstSlice.md) records
+installed evidence, the CPU extraction recommendation, alternatives, and
+validation gates. Collision remains unimplemented. Reuse the existing Transvoxel
+entries below for topology theory and lookup data.
+
 ## Primary Algorithms and Papers
 
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |
