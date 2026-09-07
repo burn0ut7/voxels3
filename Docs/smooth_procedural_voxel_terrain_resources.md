@@ -105,6 +105,19 @@ validation gates; adding these references does not adopt a new world format.
 | [Factorio map transfers](https://www.factorio.com/blog/post/fff-136) | Bulk transfer flow control and recovery lessons from a developer postmortem. | Dated 2016 lockstep design; whole-map transfer and custom transport are not adopted. |
 | [SQLite WAL](https://www.sqlite.org/wal.html), [synchronous settings](https://sqlite.org/pragma.html#pragma_synchronous), [backup API](https://www.sqlite.org/backup.html) | Transaction durability, checkpoints, version qualification and coherent backups. | Database guarantees require a correct supported binding/VFS and real recovery tests; no s&box SQLite integration is established. |
 
+## Water and Gas Simulation
+
+The [water and gas investigation](Research/WaterAndGasSimulation.md) records the
+September 7 proposal, current project evidence, alternatives and implementation
+gates. These sources do not establish implemented or measured Voxels3 behavior.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Simple Fluid Simulation With Cellular Automata](https://w-shadow.com/blog/2009/09/01/simple-fluid-simulation/) | Conserved local water amounts and artificial compression for upward redistribution. | Author's 2D example; slow settling and 3D boundaries, scheduling and performance require separate work. |
+| [Large Bodies of Water with Small Scale Details](https://matthias-research.github.io/pages/publications/hfFluid.pdf) | Shallow-water surface representation and detail treatment. | Height fields alone cannot represent stacked cave pools; no s&box integration evidence. |
+| [Effective Water Simulation from Physical Models](https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models) | Summed/Gerstner waves and normal detail for water presentation. | Surface animation is not conserved volume flow or wave-driven flooding. |
+| [Fast Fluid Dynamics Simulation on the GPU](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu) | Velocity, pressure, scalar smoke fields and buoyancy as a richer alternative. | Historical hardware results do not predict this project; simple gas drift is only an approximation. |
+
 ## Primary Algorithms and Papers
 
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |
