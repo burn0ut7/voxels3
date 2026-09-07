@@ -274,3 +274,11 @@ diagnostic gating remain unimplemented proposals. Do not stack them onto an
 unaccepted candidate. Dual marching cubes, GPU-owned allocation and meshlets still
 require their own measured bottleneck and engine-integration evidence before a
 replacement is warranted.
+
+## 10. Scan and arena follow-up
+
+The [GPU scan and arena investigation](GpuReductionsAndArenaEfficiency.md)
+continues the regular totals-scan and capacity-sizing questions with isolated
+prototypes and Figure Eight controls. Its dated results distinguish rejected
+experiments from retained implementation. The source audit above describes the
+original baseline; current contracts remain in the architecture document.

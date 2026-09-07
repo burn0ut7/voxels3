@@ -9137,3 +9137,272 @@ hardware, edits, multiplayer load or exhaustive seam validation. Existing transi
 degenerates remain. Both rejected experiments are research evidence, not retained
 fallback paths. Documentation-only final changes require link/source consistency
 checks rather than another runtime run.
+
+#### GPU reductions and arena research continuation - definition before runs
+
+2026-09-07, source aab4bc8. Reuse GPU-MESHING-512-001/v1 unchanged. Scope:
+regular cooperative reductions/totals scans and GPU arena capacity efficiency;
+no topology, field, workload, allocator ownership or render-lifetime changes.
+First run unchanged production code as a fresh environmental control. Retain
+comparisons to accepted reporting/cleanup control b80cd7b7de3947c79c45d436b45b996d,
+and compare candidates with their same-session instrumented control using the
+existing v1 tolerances. No failed result is discarded or threshold relaxed.
+Engine 26.09.01c, PID41496 (started 04:45:45 UTC), same hardware and authored
+scene hash. Scope excludes CPU allocation optimization and ordinary-play-only
+visibility changes. Hypotheses and benefit thresholds will be recorded before
+individual candidates. Research uses current source, installed API evidence and
+primary GPU synchronization/scan/suballocation sources; online APIs are not proof
+of installed support. update_plan is unavailable in this session's tool registry;
+the research plan is tracked internally with one active phase.
+
+Continuation baseline result: 50961ab6f6954b1a9154cb2129a5a31e, unchanged aab4bc8,
+PID41496. Moving CPU p95/p99 1.3764/2.7697 ms, GPU 1.229763/1.6403198 ms;
+stationary GPU 0.9188652/1.0390282 ms. Historical b80 control comparison has 18
+failures before any runtime change. Engine GPU peak is 2040064976 bytes versus
+1910083819 in that different editor process; both have identical terrain capacity,
+geometry and maximum 15 buffer groups. This is an environmental comparability gap,
+not evidence that the unchanged project regressed. Preserve the historical failure
+and do not claim its timings are restored. Candidate attribution uses this session's
+unchanged/instrumented control with the same v1 thresholds and inputs; no workload
+or tolerance is changed. Cross-process historical comparisons remain reported.
+
+Schema25 instrumentation definition, before control: record arena start/peak,
+pre-trim and final counts, trimmed count, capacity per buffer, and settled allocated
+bytes including transitions. Record existing per-arena usage at growth and pre/final
+trim only. At growth, independent rejection observations count slot exhaustion,
+vertex/index total-free shortage, or sufficient total-free but inadequate largest
+contiguous range. One arena may have multiple constraints; these are not first-fail
+reasons or a histogram of every allocation attempt. No free-list traversal per frame
+or successful allocation is added. The peak count updates only on arena creation.
+The existing measurement lifecycle owns counters; one growth event log plus a final
+summary, no alternate allocator or GPU work. Validate overhead with control first.
+
+Candidate hypotheses and benefit criteria - recorded before execution:
+
+S1 (regular stage5 only): scan 422 edge totals using two consecutive inputs per
+lane, then 128 cell totals padded to 256, reusing the existing exclusive scan and
+shared array. Every lane participates; add a group barrier before shared-array reuse.
+Same dispatch/buffers/field/topology/readback/arena sizes. Accept only if all v1
+same-session control gates and emitted-mesh checks pass, and moving GPU p95 AND
+p99 improve by at least 5 percent in the candidate and a confirming run. Count
+readback is secondary end-to-end evidence, never labeled kernel time. No stage2/6
+reduction, transition scan or wave-intrinsic change is bundled.
+
+M1 (arena proportions only): after event telemetry supports the hypothesis, reduce
+vertex arena bytes 32MiB ->24MiB; retain index16MiB and512 records, first-fit/coalescing,
+range lifetime, vertex layout and topology. Expected 14-arena final reservation
+672 ->560MiB. Require at least10 percent reduction in both peak and final terrain
+geometry arena capacity, no increase in peak/final arena counts or maximum indirect
+submissions, all v1 same-session control timing/allocation/correctness gates, and
+cold-start/main/editor-camera audit. Do not infer memory benefit from process-wide
+GPU figures. Reject if the extra vertex pressure requires more arenas or breaks
+latency/correctness. The comparisons permit reduced committed bytes, consistent
+with v1's prohibition on unexplained growth; equality remains required for geometry.
+
+Instrumentation control 613328854f374cc4960f31ce9be85850 (schema25, PID41496):
+202/203 comparisons pass the fresh unchanged control. LOD2 publication p99 fails
+at261.1392 ms versus221.5205 ms. All moving/stationary frame and allocation gates
+pass. Preserve this overhead-control failure; one unchanged repeat will check
+whether the tail change repeats before selecting a prototype.
+
+The growth event supports M1: one new arena, with9 existing arenas record-slot
+exhausted and5 index-capacity exhausted; no vertex-capacity or fragmentation
+rejections. Peak15 arenas, pre-trim15, final14. All allocated vertex/index bytes
+(including transitions) are212658120/183499176. Largest observed vertex use at
+this growth event is935614 vertices (22.44MB), below24MiB's1048576-vertex capacity.
+This is a point observation, not a per-arena lifetime peak. Candidate execution
+will establish whether24MiB actually preserves arena count throughout the route.
+
+Instrumentation repeat 0e70e19a68c0415e80a8099667a44e26: preserved failure against
+fresh unchanged 50961: LOD2 p99 282.6166 ms, transition pair2 p99 142.1455 ms,
+outer p99 257.752 ms and maximum placement lag4 versus2. Frame/allocation gates
+pass; final geometry and arena allocation match. This does not establish that
+reporting caused the tails, but the overhead control is not accepted.
+
+Before further prototypes, remove growth-time diagnostic free-list traversals and
+logging, plus their now-unused counters. Retain only O(1) peak-count updates at
+creation, initialization at test start, and final/pre-trim reporting outside the
+moving interval. The two failed controls preserve growth-reason evidence; no need
+to retain that cost in production. One revised instrumentation control will test
+this smaller reporting slice against unchanged 50961 using the same v1 gates.
+This is a changed implementation, not an unchanged rerun until a pass.
+
+Lean instrumentation control 08a4d0a8358548bdb61d1ad1bafcec2a: four failures
+against unchanged 50961 (stationary GPU p99 1.3608932 ms; LOD5 p99 226.0335 ms;
+LOD6 p95/p99 234.1149/250.7453 ms). Earlier LOD2/pair2/placement failures did not
+repeat. Geometry and arena capacity match. Source attribution remains unresolved;
+removing growth-time observations did not produce an accepted overhead control.
+Use this closest-source control to isolate S1/M1, while also retaining comparisons
+against the original unchanged control. Final retained behavior must pass the
+unchanged control's v1 gates; a favorable comparison to this slower control alone
+will not authorize retention. S1 now proceeds as an isolated investigation.
+
+S1 cooperative scan 194a4c1736eb403c92849f2d39f52529, PID41496: rejected.
+GPU p95/p99 1.3403893/1.8172264 ms versus lean control 1.3411045/1.7905235:
+0.05% lower p95 and 1.49% worse p99, failing both 5% benefit criteria. CPU p99,
+LOD2 p99, pair5 p99 and outer p99 also fail lean-control comparisons. The fresh
+unchanged comparison independently fails stationary GPU p99 and LOD2 p99.
+All 6203 metadata correctness checks pass. Live shader compilation succeeded;
+shader cold-start acceptance was not pursued for this rejected algorithm.
+Its source patch and hashes are preserved as evidence, not a production path.
+Restore both original shader files before M1; verify restored resources on the
+final clean restart. No scan feature flag or fallback remains.
+
+M1 begins with the lean schema25 reporting and original serial scan. Only the
+vertex capacity constant changes 32 ->24 MiB; both hypotheses remain isolated.
+The prior same-session controls remain comparison targets and every failed gate
+is retained. Confirming run and cold-start/emitted geometry checks are required
+before retention; no frame-time improvement is inferred from memory savings.
+
+M1 first run e2aba9806419460298d16b92ec59c264: 14 final /15 peak arenas,
+560/600 MiB final/peak capacity versus672/720 MiB, saving16.67% in both. Exact
+allocated geometry bytes and maximum15 indirect submissions match control.
+All210 closest-source gates pass, including memory benefit. The exporter initially
+used old committed-byte equality despite the predeclared no-growth criterion; that
+analysis bug is corrected to <= and the raw result is unchanged. Fresh-control
+stationary GPU p99 remains a failure (1.4705658 versus1.0390282 ms), but lean
+control was already1.3608932 ms before M1. This does not prove a size-change effect.
+
+Before accepting M1, perform a cold M1 confirming run, followed by a same-process
+32 MiB size-restored control using identical workload, lean reporting and gates.
+Compare cold M1 with that size-restored control as well as earlier controls; do not
+attribute an editor restart's timing change to the optimization. Reject if M1 fails
+the same-process size-restored comparison. This pair resolves environmental drift,
+not a relaxed threshold or a changed workload. Retain every earlier failure.
+
+Cold-start environment: agent stopped play and requested normal editor close;
+PID41496 exited without forced termination. Restarted the same project at
+05:29:05 UTC as PID19608. Native compile succeeded and the September3 Sentry
+last_crash timestamp did not advance. Original serial shader sources are restored;
+M1 remains24 MiB. The cold pair uses this process, fps_max1000 and attached camera,
+with unchanged authored scene and scenario parameters.
+
+M1 cold confirming run 72c9fd961b124d26a5449c6b61eef9d2, PID19608: all210
+lean-control gates and all206 original fresh/historical-control gates pass.
+CPU p95/p99 1.0662/1.7362 ms, GPU0.8676052/1.1403561 ms; drain25.0383 ms.
+Memory benefit repeats exactly: peak600 MiB/final560 MiB, 15/14 arenas, maximum
+15 submissions, identical geometry allocation and6,203 correctness checks pass.
+Do not claim the restart-associated timing improvement as M1's speedup.
+
+Post-timing main and ejected-editor observations audited104 emitted regions each
+and inspected both native screenshots. No invalid index/position/normal/identity,
+oversized-triangle, stale readback, visibility or draw-argument defects. Each audit
+flags47 transition regions with1794 degenerates, consistent with the known issue;
+nearest-distance ties prevent a fixed-subset comparison across runs. Main/ejected
+visible draws are932/2244, one active camera per observation, not simultaneous-camera
+proof. The authored scene remains untouched. The predeclared32 MiB size-restored
+control now runs in PID19608 with attached camera and identical parameters.
+
+Correction and interrupted control, 05:37 UTC: explicit Format-List/readback shows
+last_crash is2026-09-07T05:28:49.916354Z, advanced during the prior editor shutdown.
+The earlier statement that it remained September3 was incorrect: a mixed PowerShell
+formatted output hid this property. This timestamp precedes PID19608 startup and
+did not advance during M1 cold execution/audits. Shader cold loading and full M1
+runtime succeeded, but shutdown stability is not claimed.
+
+The size-restored32 MiB control began05:34:03 and logged drain/trim05:36:05 but
+never saved a result. A separate PID42868 started05:35:49, and the old editor's MCP
+endpoint became unavailable. No agent restart was requested during this control;
+its cause is not inferred. Record this as interrupted/incomplete, with no fabricated
+run ID or timing result. Camera movement in the new process suggests the editor may
+be in use; coordinate an uninterrupted final pair before further live mutation.
+No M1 acceptance is granted by the interrupted run.
+
+The current editor log identifies the MCP failure: at05:35:55 the server could not
+bind port7269 because of an existing registration. The overlap occurred while the
+previous control still ran. Restoring the endpoint and completing an uninterrupted
+paired comparison remain necessary; source changes are not committed as accepted.
+
+User clarified that the overlapping editor restart was manual. The incomplete
+32 MiB control is a user-interrupted run, not evidence of a crash or optimization
+regression. Resume by restoring the automation endpoint with one orderly editor
+restart, then run the32 MiB control and24 MiB candidate in that single process.
+Use fresh revision labels, preserve the interrupted attempt, and retain exactly
+the prior scenario and acceptance gates. Recheck shutdown marker separately.
+
+Endpoint-recovery shutdown of the user's PID42868 with the restored32 MiB size
+also advanced the crash marker, to2026-09-07T05:44:38.773970Z, after normal
+Source2Shutdown logging. An Error window was observed by process title, but it
+had disappeared by the native-window inventory; no UI dismissal was performed.
+Shutdown instability therefore occurs with32 MiB as well as the earlier24 MiB
+session. This does not isolate engine versus reporting or prior live-editor state,
+but it is not a demonstrated24 MiB-specific regression. Preserve separately from
+successful in-world cold shader loading, geometry, and performance acceptance.
+Restart once the old process has fully exited to avoid another port conflict.
+
+User clarified the manual restart was followed by a crash and requested crash
+logs and agent-owned recovery on every occurrence. Do not characterize the
+interrupted run as definitively crash-free. Local envelopes independently verify
+two identical native shutdown signatures at05:28:49 and05:44:38: access violation
+0xc0000005 in tier0.dll+0x5d7c4. The available dumps do not identify a third event
+at the interrupted-run time. Preserve user report and source uncertainty together.
+See ValidationEvidence/GpuReductionsArena512/crash-log.md for verified excerpts.
+Recovery restart restored MCP and successful native compilation. Resume the fixed
+32/24 pair; retain all failed and interrupted observations.
+
+Recovered pair environment: PID84748, started05:45:18.9074308 UTC; crash-marker
+baseline05:44:38.773970Z.32 MiB recovered control starts05:48:18, same workload,
+attached camera and fps_max1000. The24 MiB recovered candidate will follow in the
+same process. No editor close, camera operation or source edit during either run.
+
+Separately, before final retention isolate shutdown attribution with the original
+committed aab4bc8 runtime files: stop play, save candidate files outside the repo,
+restore the three changed C# files to HEAD (shader sources already match HEAD),
+start the real world to full settlement, stop play, and close the editor normally.
+Record log/dump/marker outcome and restore the selected final source before
+restarting. This is an observation of the real editor lifecycle, not a second
+project-owned automated test trigger or a substitute for Figure Eight timing.
+It makes no performance claim from startup or absence of exceptions alone.
+
+Recovered32 MiB control e428be4cd80d43efae2f8b0072cf335a completed in PID84748.
+All206 original fresh and historical accepted-control gates pass. CPU p95/p99
+1.1096/1.781 ms; GPU0.8945465/1.2614727 ms; drain26.691 ms. Capacity720/672 MiB
+peak/final with15/14 arenas. No errors or new crash marker during the run. This
+provides a successful independent control of the lean reporting after prior
+session's unresolved timing drift. The24 MiB source is restored byte-for-byte to
+M1-source.json before the recovered candidate; no additional optimization added.
+
+Shutdown attribution refinement before observation: reverting source within a
+process does not erase prior hotload history. A source-restored shutdown alone
+cannot prove a pre-existing baseline defect. If the shutdown failure repeats,
+restart with aab4bc8 files still restored, enter/settle/stop the real world and
+observe one clean-process baseline shutdown. Only that clean baseline separates
+candidate/hotload history from committed behavior. Capture any Error dialog and
+native report, then restore selected source and restart; do not dismiss an unseen
+window or treat a missing marker update as proof of a healthy shutdown.
+
+Recovered M1 696e8ee4c4864c8aa0cf5bc3dac3b1f2: all210 same-process recovered
+control gates pass. CPU p95/p99 1.1521/1.8826 ms versus1.1096/1.781; GPU
+0.9083748/1.2841225 versus0.8945465/1.2614727; stationary GPU p99 0.96440315
+versus0.73981285 (within0.25 ms absolute tolerance). Drain25.0881 ms. Peak/final
+600/560 MiB,15/14 arenas and max15 submissions; saving16.67% repeats. No FPS
+speedup is claimed. Performance/memory acceptance passes; finish original-code
+shutdown attribution and final source restoration before retaining/committing.
+
+At05:54 UTC stop play and restore the three changed runtime files to aab4bc8.
+No shader edits remain. This process still has candidate hotload history; close
+it only to start a fresh original-code process for the independent shutdown check.
+
+Mixed-history shutdown: actual Error dialog captured via Windows accessibility,
+"[mimalloc] error 11: double free detected". Log also records NullReferenceException
+in Sandbox.ResourceLibrary.GetAll<T> -> EditorMainWindow.GetUnsavedResources ->
+OnClose before Source2Shutdown. Agent acknowledged OK; process exited and crash
+marker advanced05:56:16.050663Z. These details are added to crash-log.md and shown
+to the user. All changed runtime/shader files now diff-identical to HEAD; launch a
+fresh original-code process next. Scene hash still preserved. Candidate source is
+saved outside the repo for exact restoration after this attribution check.
+
+Final disposition after user cost/benefit question: keep original aab4bc8 runtime,
+32 MiB vertices and schema24; do not retain either optimization or experimental
+reporting. The memory-only saving112 MiB settled/120 MiB peak has no demonstrated
+FPS benefit and does not justify continuing this optimization through unresolved
+shutdown instability. M1's successful performance evidence remains valid, but it
+is a researched option, not a shipped change. All nine completed Figure Eights
+and the interrupted control remain preserved. The final work is documentation.
+
+Clean baseline shutdown observation: fresh PID25812 started05:56:38.7813652 UTC
+with all Code/ and shader files diff-identical to aab4bc8, no candidate hotload.
+Started the authored playable world, observed settled queues, stopped play, then
+requested normal engine quit. No scene edits, timing claim, synthetic mesher or
+new project test trigger. Record the dialog/log/marker outcome next and restart
+the original runtime for the user.

@@ -77,6 +77,18 @@ claims. Neither reference selects an optimization or changes runtime contracts.
 | [Single-pass Parallel Prefix Scan with Decoupled Look-back](https://research.nvidia.com/sites/default/files/pubs/2016-03_Single-pass-Parallel-Prefix/nvr-2016-002.pdf) | Merrill and Garland, NVIDIA, March 2016: communication-avoiding GPU scan. | Comparing scan communication and allocation mechanisms. | CUDA progress/memory assumptions and large-array results do not establish a suitable s&box implementation for short per-region totals. |
 | [Real-Time Meshlet Extraction from Scalar Volumes](https://doi.org/10.2312/egpgv.20261001) | Kreskowski, Rendle and Froehlich, EGPGV 2026: persistent meshlets with adaptive occupied-block analysis. | Investigating a persistent meshlet renderer instead of assuming all mesh shaders regenerate terrain every frame. | Publisher abstract/metadata verified; full paper unavailable in the 2026-09-07 session. No quantitative result adopted and no callable s&box task/mesh-shader route established. |
 
+## GPU Scans and Arena Capacity
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [GPU Gems 3 chapter 39: Parallel Prefix Sum](https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda) | Work-efficient scans and consecutive inputs per thread. | Historical CUDA timings and bank-padding constants do not establish a win for short s&box region totals. |
+| [Microsoft group synchronization](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync), [WavePrefixSum](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/waveprefixsum) | Shared-array reuse, uniform participation and wave capability requirements. | HLSL semantics are authoritative; project VFX compiler support still requires verification. |
+| [NVIDIA parallel reductions](https://developer.nvidia.com/blog/faster-parallel-reductions-kepler/) | Compare group reduction and atomic contention costs. | Kepler/CUDA measurements are not current hardware results; region boundaries must remain correct. |
+| [VMA statistics](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/statistics.html), [custom pools](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html), [defragmentation](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/defragmentation.html) | Separate reservation, live allocation, free-range constraints and relocation costs. | Transfer accounting and lifetime principles only; this does not recommend importing Vulkan allocation APIs into s&box. |
+
+The [scan and arena investigation](Research/GpuReductionsAndArenaEfficiency.md)
+records the project hypotheses, transfer limits and measured acceptance decisions.
+
 ## Sparse Volume and Large-World Structures
 
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |

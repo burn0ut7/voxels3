@@ -1,0 +1,79 @@
+diff --git a/Assets/shaders/voxels/voxel_persistent_geometry.hlsl b/Assets/shaders/voxels/voxel_persistent_geometry.hlsl
+index bbb5719..a015ff1 100644
+--- a/Assets/shaders/voxels/voxel_persistent_geometry.hlsl
++++ b/Assets/shaders/voxels/voxel_persistent_geometry.hlsl
+@@ -172,9 +172,60 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
+ 	{
+ 		uint block=groupId.x/(uint)CellGroupCount,cellGroup=groupId.x-block*(uint)CellGroupCount;if(block>=(uint)BatchSize)return;uint local=cellGroup*256+lane,address=block*(uint)CellCount+local;uint value=local<(uint)CellCount?Cells[address].y:0;PersistentExclusiveScan(lane,value);uint total=value+PersistentScan[lane];if(local<(uint)CellCount)Cells[address].z=PersistentScan[lane];if(lane==255)CellGroupSums[block*(uint)CellGroupCount+cellGroup]=total;return;
+ 	}
+-	if(PersistentStage==5)
++	if ( PersistentStage == 5 )
+ 	{
+-		uint block=groupId.x;if(block>=(uint)BatchSize||lane!=0)return;uint vertices=0,indices=0;for(uint group=0;group<(uint)EdgeGroupCount;group++){uint address=block*(uint)EdgeGroupCount+group,count=EdgeGroupSums[address];EdgeGroupSums[address]=vertices;vertices+=count;}for(uint group=0;group<(uint)CellGroupCount;group++){uint address=block*(uint)CellGroupCount+group,count=CellGroupSums[address];CellGroupSums[address]=indices;indices+=count;}BlockCounts[block*2]=vertices;BlockCounts[block*2+1]=indices;return;
++		uint block = groupId.x;
++		if ( block >= (uint)BatchSize )
++		{
++			return;
++		}
++
++		// Two consecutive edge groups per lane cover the 422 regular totals.
++		uint edgeGroup = lane * 2;
++		uint edgeBase = block * (uint)EdgeGroupCount;
++		uint first = 0;
++		uint second = 0;
++		if ( edgeGroup < (uint)EdgeGroupCount )
++		{
++			first = EdgeGroupSums[edgeBase + edgeGroup];
++		}
++		if ( edgeGroup + 1 < (uint)EdgeGroupCount )
++		{
++			second = EdgeGroupSums[edgeBase + edgeGroup + 1];
++		}
++		PersistentExclusiveScan( lane, first + second );
++		uint prefix = PersistentScan[lane];
++		if ( edgeGroup < (uint)EdgeGroupCount )
++		{
++			EdgeGroupSums[edgeBase + edgeGroup] = prefix;
++		}
++		if ( edgeGroup + 1 < (uint)EdgeGroupCount )
++		{
++			EdgeGroupSums[edgeBase + edgeGroup + 1] = prefix + first;
++		}
++		if ( lane == 255 )
++		{
++			BlockCounts[block * 2] = prefix + first + second;
++		}
++
++		// Every lane must finish reading the first scan before shared-array reuse.
++		GroupMemoryBarrierWithGroupSync();
++		uint cellBase = block * (uint)CellGroupCount;
++		uint cells = 0;
++		if ( lane < (uint)CellGroupCount )
++		{
++			cells = CellGroupSums[cellBase + lane];
++		}
++		PersistentExclusiveScan( lane, cells );
++		if ( lane < (uint)CellGroupCount )
++		{
++			CellGroupSums[cellBase + lane] = PersistentScan[lane];
++		}
++		if ( lane == 255 )
++		{
++			BlockCounts[block * 2 + 1] = PersistentScan[lane] + cells;
++		}
++		return;
+ 	}
+ 	if(PersistentStage==6)
+ 	{
+diff --git a/Assets/shaders/voxels/voxel_persistent_geometry_cs.shader b/Assets/shaders/voxels/voxel_persistent_geometry_cs.shader
+index 9e91ad3..a008b34 100644
+--- a/Assets/shaders/voxels/voxel_persistent_geometry_cs.shader
++++ b/Assets/shaders/voxels/voxel_persistent_geometry_cs.shader
+@@ -5,6 +5,7 @@ MODES
+ 
+ FEATURES
+ {
++	// Cooperative regular group-total prefixes share the count-stage scratch.
+ 	// Persistent density, classification, scans, counts, and digest.
+ }
+ 
