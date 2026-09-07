@@ -8284,3 +8284,44 @@ Record an approved extraordinary change here before adding the new version:
   publication slice, which this scenario explicitly forbids. The historical
   CPU p99 and original scene-integrity gates remain failed; no commit or push is
   authorized.
+
+### SOURCE-REVIEW-2026-09-06 - Read-only source and compatibility review
+
+- Source: `ca8d5c3`; working tree clean before review. Scope: runtime and editor
+  C# ownership/data flow, chunk preparation and placement, GPU scheduling and
+  resource lifecycle, production shader entry points, and measurement contracts.
+  Findings are in `Research/ChunkPerformanceOptimizationFindings.md`, under
+  `Source Review - 2026-09-06`. Imported topology tables were not independently
+  re-derived, and this is not certification of all project behavior.
+- Installed/live engine: `26.09.01c`; native editor MCP confirmed project
+  `voxels3` at the workspace path, playing `basic_example`, no unsaved scene
+  changes, and successful current runtime/editor compilation. Both project
+  compiler entries reported zero errors and zero warnings.
+- Read-only `voxel_lod_info` observation at console time `22:50:08`: gameplay
+  radius 8, center chunk `(0,-1,0)`, logical membership 4913, gameplay/warm
+  pending 0/0. Enabled levels 0 through 4 had cache/active/resident counts
+  `512/512/710`, `4096/4032/4096`, and `4096/3584/4096` for each of levels 2-4.
+  Each reported level pending count was zero. Transition desired/ready/drawable/
+  pending was `96/96/51/0`, `384/384/136/0`, `384/384/102/0`, and
+  `384/384/82/0`. Placement pending was false, maximum level lag zero, missing
+  transition dependencies zero, and lifetime unsafe commits zero. Arena count
+  was 11. These are one settled observation, not throughput or correctness
+  acceptance measurements.
+- The authored scene also contains gameplay radius 8 and maximum visual LOD 4.
+  Its SHA-256 was `1ABC19F0912BCEDAC0F07EB1D749A834CB75D08F268FB5F46EF51F2EDD57A7ED`.
+  This differs from historical locked default-scene hashes. No scene settings,
+  player position, view distance, camera mode, or performance workload were
+  changed for the review. Existing failed historical gates remain failed.
+- `dotnet build Code/voxels3.csproj --no-restore --nologo -v:q` and the equivalent
+  editor project build both succeeded with zero warnings and zero errors.
+  Build compatibility does not establish runtime performance or prove the
+  installed engine is the latest available version.
+- Canonical figure-eight, before/after benchmark, mesh audit, cold shader restart,
+  and multiplayer tests: **not run**. No runtime or shader change was made;
+  review/documentation-only work does not require an in-world acceptance run.
+  No speedup, regression acceptance, visual correctness, or multiplayer scaling
+  claim is made. Proposed optimizations remain unimplemented and unmeasured.
+- Decision: retain the review as a documentation-only result. A subsequent
+  implementation must define its acceptance criteria before execution and use
+  a comparable unchanged-source baseline. This entry does not authorize a
+  workload change or waive previous acceptance failures.
