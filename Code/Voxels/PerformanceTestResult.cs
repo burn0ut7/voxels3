@@ -103,6 +103,7 @@ internal sealed class PerformanceTransitionFaceMetrics
 internal sealed class PerformanceHierarchyMetrics
 {
 	public bool PlacementPending { get; init; }
+	public int MaximumPlacementLevelLag { get; init; }
 	public long RequestedVisualConfigurationRevision { get; init; }
 	public long StagedVisualConfigurationRevision { get; init; }
 	public long AppliedVisualConfigurationRevision { get; init; }
@@ -180,10 +181,6 @@ internal sealed class PerformanceLevelMetrics
 
 internal sealed class PerformanceBoundsMetrics
 {
-	public int GameplayQueries { get; set; }
-	public int GameplayDefinitelySolid { get; set; }
-	public int GameplayDefinitelyAir { get; set; }
-	public int GameplayPotentiallySurfaceContaining { get; set; }
 	public int WarmQueries { get; set; }
 	public int WarmDefinitelySolid { get; set; }
 	public int WarmDefinitelyAir { get; set; }
@@ -225,6 +222,14 @@ internal sealed class PerformanceProfilerTiming
 
 internal sealed class PerformanceStreamingMetrics
 {
+	public long PreparationResultsDroppedOnMovement { get; set; }
+	public long PreparationResultsRetainedOnMovement { get; set; }
+	public long PreparationIntegrated { get; set; }
+	public double PreparationIntegrationMilliseconds { get; set; }
+	public long PlacementCacheCoordinatesScanned { get; set; }
+	public long PlacementLevelsSkipped { get; set; }
+	public double PlacementPreparationMilliseconds { get; set; }
+	public float MaximumPlacementPreparationMilliseconds { get; set; }
 	public int FullUpdates { get; set; }
 	public int IncrementalUpdates { get; set; }
 	public float TotalSynchronousMilliseconds { get; set; }
@@ -235,9 +240,6 @@ internal sealed class PerformanceStreamingMetrics
 	public int DrawRebuilds { get; set; }
 	public long GameplayCoordinatesTouched { get; set; }
 	public long RenderCoordinatesTouched { get; set; }
-	public int GenerationBatches { get; set; }
-	public int MaximumGenerationBatchSize { get; set; }
-	public float MaximumFirstGameplayBatchMilliseconds { get; set; }
 	public int WarmCoordinatesClassified { get; set; }
 	public int WarmRejectedSolid { get; set; }
 	public int WarmRejectedAir { get; set; }
@@ -340,18 +342,21 @@ internal sealed class PerformanceMemoryMetrics
 
 internal sealed class PerformanceChunkMetrics
 {
+	// Logical implicit-SDF membership is distinct from prepared or GPU-resident regions.
 	public int Loaded { get; init; }
 	public int Pending { get; init; }
-	public int Integrated { get; init; }
-	public float IntegratedPerSecond { get; init; }
-	public int LastStreamGenerated { get; init; }
-	public float LastStreamSettleMilliseconds { get; init; }
-	public float LastEffectivePerSecond { get; init; }
-	public float LastGenerationPerSecond { get; init; }
+	public long Prepared { get; init; }
+	public float PreparedPerSecond { get; init; }
+	public float LastRangeUpdateMilliseconds { get; init; }
 }
 
 internal sealed class PerformanceMeshingMetrics
 {
+	public long CancelledRegularCountResults { get; init; }
+	public long CancelledTransitionCountResults { get; init; }
+	public long SkippedRegularGeometryRegions { get; init; }
+	public long SkippedTransitionGeometryRegions { get; init; }
+	public long EmptyBatchSubmissionsAvoided { get; init; }
 	public int ConfiguredMaximumDispatchesPerUpdate { get; init; }
 	public int ObservedMaximumDispatchesPerUpdate { get; init; }
 	public long Dispatches { get; init; }

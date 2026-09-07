@@ -149,6 +149,19 @@ no prior coverage to retain
 and therefore activates its first placement immediately while that placement
 fills through the same production queues.
 
+An unchanged coarse cache skips preparation scanning only when the mesher reports
+zero pending/in-flight work at that level and its resident count matches the
+cache count. Changed, bootstrap, and incomplete caches retain the conservative
+scan. This avoids repeatedly inspecting complete levels without maintaining a
+second dependency index; it does not claim that changed boxes are built by slabs.
+
+Regular and transition request arrays are allocated only after a valid request
+has been dequeued. Canceled count results retain their batch identity and normal
+completion lifecycle but receive no geometry allocation or enabled emit entry.
+Finalization still rejects them; they never become known-empty residents.
+Reporting distinguishes avoided empty batches from canceled geometry regions;
+region counts are not counts of physical GPU dispatch calls.
+
 Every coarse-level preparation first applies a constant-time conservative vertical
 support bound owned by the canonical generator. Regions wholly above the maximum
 possible exterior surface are definitely air; regions wholly below both the

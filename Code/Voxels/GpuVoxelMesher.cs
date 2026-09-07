@@ -5,6 +5,11 @@ using Sandbox.Rendering;
 internal sealed class GpuVoxelMesher : IDisposable
 {
 	// Persistent geometry is disposable revisioned cache state; the SDF remains canonical.
+	public long CancelledRegularCountResults { get; private set; }
+	public long CancelledTransitionCountResults { get; private set; }
+	public long SkippedRegularGeometryRegions { get; private set; }
+	public long SkippedTransitionGeometryRegions { get; private set; }
+	public long EmptyBatchSubmissionsAvoided { get; private set; }
 	public const int MaximumRegionsPerBatch = 8;
 	public const int MaximumDispatchesPerUpdate = MaximumRegionsPerBatch;
 	public const int ScratchLaneCount = 3;
@@ -330,6 +335,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	public void BeginThroughputMeasurement( float chunkWorldSize )
 	{
+		CancelledRegularCountResults = 0;
+		CancelledTransitionCountResults = 0;
+		SkippedRegularGeometryRegions = 0;
+		SkippedTransitionGeometryRegions = 0;
+		EmptyBatchSubmissionsAvoided = 0;
 		_throughput = new ThroughputRecorder( chunkWorldSize );
 		_currentPlayerRouteDistance = 0f;
 	}
@@ -1304,6 +1314,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 	private void CommitDrawCommands()
 	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.CommitDrawCommands );
 		var rebuilds = 0;
 		var milliseconds = 0f;
 		lock ( _renderCameraLock )
@@ -1750,7 +1761,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		var targetLane = _scratchLanes.FirstOrDefault( lane => lane.IsIdle );
 		if ( targetLane is not null )
 		{
-			var requests = new GpuTerrainRequest[MaximumDispatchesPerUpdate];
+			GpuTerrainRequest[] requests = null;
 			var processed = 0;
 			while ( processed < _maximumDispatchesRequested && TryDequeuePending( out var pending ) )
 			{
@@ -1762,9 +1773,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 					pending.ScheduledTimestamp,
 					pending.ScheduledRouteDistance );
 				targetLane.CountInFlight.Add( inFlight );
+				requests ??= new GpuTerrainRequest[MaximumDispatchesPerUpdate];
 				requests[processed] = CreateRequest( inFlight, processed );
 				processed++;
 			}
+			if ( processed == 0 && _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
 			if ( processed > 0 )
 			{
 				if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out var submissionMilliseconds ) )
@@ -1805,7 +1818,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 
 		var targetLane = _transitionScratchLanes.FirstOrDefault( lane => lane.IsIdle );
 		if ( targetLane is null ) return false;
-		var requests = new GpuTransitionRequest[MaximumDispatchesPerUpdate];
+		GpuTransitionRequest[] requests = null;
 		var processed = 0;
 		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingTransition( out var pending ) )
 		{
@@ -1816,10 +1829,15 @@ internal sealed class GpuVoxelMesher : IDisposable
 				pending.ScheduledTimestamp,
 				pending.ScheduledRouteDistance );
 			targetLane.CountInFlight.Add( inFlight );
+			requests ??= new GpuTransitionRequest[MaximumDispatchesPerUpdate];
 			requests[processed] = CreateTransitionRequest( inFlight, processed );
 			processed++;
 		}
-		if ( processed == 0 ) return false;
+		if ( processed == 0 )
+		{
+			if ( _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
+			return false;
+		}
 		if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out _ ) )
 			throw new InvalidOperationException( "Voxel transition scratch rejected an idle count batch." );
 		return true;
@@ -1875,7 +1893,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 		if ( PendingOuterVisualCount == 0 || CountOuterInFlight() > 0 ) return false;
 		var lane = _scratchLanes.FirstOrDefault( value => value.IsIdle );
 		if ( lane is null ) return false;
-		var requests = new GpuTerrainRequest[MaximumDispatchesPerUpdate];
+		GpuTerrainRequest[] requests = null;
 		var processed = 0;
 		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( out var pending ) )
 		{
@@ -1887,6 +1905,7 @@ internal sealed class GpuVoxelMesher : IDisposable
 				pending.ScheduledTimestamp,
 				pending.ScheduledRouteDistance );
 			lane.CountInFlight.Add( inFlight );
+			requests ??= new GpuTerrainRequest[MaximumDispatchesPerUpdate];
 			requests[processed] = CreateRequest( inFlight, processed );
 			processed++;
 		}
@@ -2005,8 +2024,11 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var result = counts[index];
 			if ( result.Generation != source.Generation || result.RequestIndex != (uint)index )
 				throw new InvalidOperationException( "Stale voxel terrain count metadata." );
+			var cancelled = _cancelledInFlight.Contains( source.Descriptor.Key );
+			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledRegularCountResults++;
 			GeometryHandle handle = null;
-			if ( result.IndexCount > 0 )
+			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedRegularGeometryRegions++;
+			if ( !cancelled && result.IndexCount > 0 )
 			{
 				handle = Acquire(
 					checked( (int)result.VertexCount ),
@@ -2173,8 +2195,13 @@ internal sealed class GpuVoxelMesher : IDisposable
 			var result = counts[index];
 			if ( result.Generation != source.Generation || result.RequestIndex != (uint)index )
 				throw new InvalidOperationException( "Stale voxel transition count metadata." );
+			var cancelled = _transitionCancelledGenerations.Contains( source.Generation ) ||
+				!_transitionDesiredDescriptors.TryGetValue( source.Descriptor.Key, out var desired ) ||
+				desired != source.Descriptor;
+			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledTransitionCountResults++;
 			GeometryHandle handle = null;
-			if ( result.IndexCount > 0 && result.InvalidTableCount == 0 )
+			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedTransitionGeometryRegions++;
+			if ( !cancelled && result.IndexCount > 0 && result.InvalidTableCount == 0 )
 			{
 				handle = Acquire( checked( (int)result.VertexCount ), checked( (int)result.IndexCount ),
 					source.Generation, recordRegularTelemetry: false );

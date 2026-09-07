@@ -313,3 +313,95 @@ combination only when its measured behavior and correctness justify every
 retained part; remove a losing standalone implementation rather than parking it
 behind a toggle. Frame tails, publication/coverage latency, drain, allocations,
 memory, geometry, and feature preservation all remain acceptance requirements.
+
+#### Investigation design - before candidate implementation
+
+The existing ownership and pipeline remain canonical. No shader, meshing
+algorithm, terrain recipe, arena allocator, or publication unit is being replaced.
+Production measurements will live in the existing result schema and real method
+scopes; verbose logs remain opt-in, while run summaries/rejections remain sparse.
+
+- Measurement control: remove obsolete materialized-generation counters, retain
+  logical membership and user-readable status, and add real preparation,
+  integration, placement-scan, and canceled-count observations. Schema changes
+  must be explicit. Compare this control with the original before interpreting
+  optimization effects.
+- Preparation: prefer preserving completed compatible results first; retaining an
+  entire in-flight worker is warranted only if measured cancellations justify
+  its extra scheduling ownership. Content revision and current spatial interest
+  remain separate validity conditions. One serialized worker remains the limit.
+- Placement: first skip unchanged coarse levels only when the production mesher
+  reports no pending or in-flight work for that level. Preserve scans for
+  bootstrap/unsettled levels. This is smaller than adding a second dependency
+  index or rewriting all set operations; measure remaining scans before expanding.
+- Meshing: lazy request-array allocation needs no pool. Canceled count results
+  can retain their original batch slots with disabled allocations and normal
+  completion bookkeeping, avoiding both geometry and false empty publication.
+- Configuration: use a checked combined coordinate budget for the LOD0 warm cube
+  and enabled coarse caches. The recorded maximum supported seven-level layout
+  requires 1331 + 6*4096 = 25907 coordinates; the next power-of-two budget 32768
+  preserves every existing default 4/8 visual tier through radius 512 and reduced
+  2/6 settings. Reject extents exceeding the budget before cubic multiplication
+  or enumeration. Retained/staged sets remain bounded multiples of that budget.
+  This bounds CPU coordinate work; it does not claim a new worst-case GPU-memory
+  guarantee. No end-user distance tier is removed.
+
+#### Completed-result retention refinement
+
+The measured 1936 dropped completed results justify retaining already-computed
+work without replacing the worker. During reprioritization, reuse the existing
+missing-coordinate set to select compatible completed results, keep them and
+their pending entries in matching FIFO order, then append nearest-first missing
+coordinates for the next serialized worker. Compact the existing coordinate
+buffer to exclude retained results. No dictionary, second worker, cache service,
+or new authoritative state is needed. Content reset already clears both queues.
+`StartWarmGeneration` becomes the sole movement-cancellation/revision owner and
+must not clear retained completed/pending entries, including when no new work is
+needed. Existing integration budgeting and membership checks remain mandatory.
+
+For coarse-level scan skipping, additionally require resident count to equal
+current cache count as well as zero pending/in-flight work. A bootstrap or
+incomplete cache therefore retains the original conservative scan. Changed
+levels still use the existing set/diff implementation; its remaining cost will
+be measured before considering a slab rewrite.
+
+## Implemented investigation outcome - 2026-09-07
+
+The six selected opportunities are implemented in the chunk manager and existing
+GPU mesher. See [the validation ledger](../ValidationResults.md#chunk-optimization-128-001v1---authored-world-investigation)
+for fixed inputs, controls, individual/combined candidates, failed comparisons,
+and the final acceptance decision. Runtime source diff
+`2d510d558ec182906f7ca01573174e83fac6dc4e` identifies the accepted schema-23 code
+before its commit. No shader, terrain recipe, extraction algorithm, persistent
+arena allocator, or player feature was replaced.
+
+| Opportunity | Implemented change | Evidence and limit |
+| --- | --- | --- |
+| Preserve preparation | Reuse compatible completed FIFO results; one movement cancellation/revision owner. | Final run retained 1320 results and discarded 132 no-longer-needed results. Content reset still invalidates queued work. Unfinished workers still cancel and serialize. |
+| Reduce placement scans | Skip unchanged coarse caches only when complete/resident and free of pending work. | 62.72% fewer scanned coordinates and 36.42% lower placement phase time than measurement control. Changed/incomplete caches retain the canonical scan and set/diff path. |
+| Skip canceled meshing | Reject canceled count results before geometry allocation and emission; preserve batch bookkeeping. | Final run skipped geometry for 8 nonempty canceled regular regions. Transition cancellation did not occur, so its savings remain unmeasured. |
+| Remove idle allocations | Allocate request arrays after the first successful dequeue. | 169114 empty allocations avoided in the final moving window. Isolated candidate A reduced moving/stationary allocation by 884.888/1419.239 bytes/frame versus its instrumentation control. No pool or new container. |
+| Replace obsolete diagnostics | Delete dead generation fields/names, attach scopes to real work, report preparation/placement and cached geometry fingerprints. | Schema 23 adds peak anchor lag separately from publication route lag. Whole-editor memory is not attributed to terrain. Rolling engine profiler snapshots are not whole-route phase totals; use explicit streaming totals for that comparison. |
+| Bound oversized settings | Validate a checked combined preparation-coordinate budget before enumeration or applied-state changes. | Fixed invalid requests reject without changing geometry/revision; reduced settings and every default view-distance tier through 512 settle and restore correctly. This is a CPU-work budget, not a worst-case GPU-memory guarantee. |
+
+Final synchronous streaming work was 1781.836 ms over the fixed journey, 26.59%
+lower than exact original source in the same editor session. Maximum placement
+anchor lag stayed at 2 regions; settled counts and every level/pair geometry
+fingerprint match. Frame, publication, queue, allocation, and terrain-owned
+memory checks satisfy the recorded acceptance bounds. No publication-latency
+speedup is claimed: the ledger preserves two secondary tail-latency failures
+against the unusually low instrumentation-only control, along with the passing
+predeclared original and exact unchanged-source session comparisons.
+
+Editor working-set variation was reproduced with unchanged code. Per the user's
+explicit direction, acceptance looks for extreme, sustained, attributable growth
+rather than minor whole-editor fluctuations. Historical memory failures remain
+in the ledger. The work does not fix the separately documented transition-table
+degenerates or the engine's retained-task hotload diagnostics. Matching sampled
+regions in candidate/control audits have identical validity and geometry counts;
+all final world fingerprints match. Collision, networking, persistence, shader
+cleanup, and deeper allocator/transition-scheduler work are outside this slice.
+
+Do not retain old implementations behind flags. Larger scheduling, pooling, or
+coarse-slab rewrites were not justified by this evidence; the current bounded
+changes remove measured redundant work without adding competing state owners.

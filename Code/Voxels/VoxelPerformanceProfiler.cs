@@ -12,7 +12,7 @@ internal static class VoxelPerformanceProfiler
 	public const string FigureEightMovement = "Voxels3/FigureEightMovement";
 	public const string PerformanceSampling = "Voxels3/PerformanceSampling";
 	public const string RebuildDesiredChunks = "Voxels3/RebuildDesiredChunks";
-	public const string IntegrateGameplayChunks = "Voxels3/IntegrateGameplayChunks";
+	public const string PreparePlacement = "Voxels3/PreparePlacement";
 	public const string IntegrateWarmChunks = "Voxels3/IntegrateWarmChunks";
 	public const string ProcessPendingMeshes = "Voxels3/ProcessPendingMeshes";
 	public const string RefreshRenderCameras = "Voxels3/RefreshRenderCameras";
@@ -24,7 +24,7 @@ internal static class VoxelPerformanceProfiler
 		FigureEightMovement,
 		PerformanceSampling,
 		RebuildDesiredChunks,
-		IntegrateGameplayChunks,
+		PreparePlacement,
 		IntegrateWarmChunks,
 		ProcessPendingMeshes,
 		RefreshRenderCameras,

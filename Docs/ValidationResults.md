@@ -8325,3 +8325,537 @@ Record an approved extraordinary change here before adding the new version:
   implementation must define its acceptance criteria before execution and use
   a comparable unchanged-source baseline. This entry does not authorize a
   workload change or waive previous acceptance failures.
+
+### CHUNK-OPTIMIZATION-128-001/v1 - Authored-world investigation
+
+Definition recorded before the first run on 2026-09-07 (UTC). This is a distinct
+scenario for the current authored world, not a replacement or passing rerun of
+historical default-radius scenarios. The user requested investigation of the six
+opportunities in the 2026-09-06 source review. The old default workload cannot
+represent the current scene's gameplay radius 8 and visual radius 128; its prior
+failures and locked parameters remain unchanged.
+
+- Source baseline: `11152fe`, schema 20. Scene:
+  `Assets/scenes/basic_example.scene`, SHA-256
+  `1ABC19F0912BCEDAC0F07EB1D749A834CB75D08F268FB5F46EF51F2EDD57A7ED`.
+  Do not save the editor scene. Each run begins with stop/play through the normal
+  production scene lifecycle, original authored player spawn, and complete
+  settlement of all enabled levels. No direct origin/player mutation is used.
+- Hardware: AMD Ryzen 7 9800X3D, NVIDIA GeForce RTX 5090; engine 26.09.01c.
+  One local player; generator v5; seed 1337; surface base 0, frequency 0.0005,
+  amplitude 128; 32 cells/region; 16-unit base cells; gameplay radius 8;
+  enabled levels 0..4; LOD0/cache half extents 4/8; visual radius 128.
+- Game camera attached (not ejected), unchanged native editor game viewport and
+  host configuration across paired runs; fps_max=1000. No resizing or camera
+  controls during measurement. Camera screenshots at 1280x720 are outside the
+  timed journey and do not claim to set the editor viewport resolution.
+- Canonical production figure-eight: speed 2500, distance 50000 (Y reach 25000),
+  exactly one loop at world Z zero, centered on the authored spawn X/Y. Record
+  exact center from the begin record before interpreting a result. No external
+  duration cutoff; normal foreground drain, two render-sequence advances, and
+  ten-second stationary window. Maximum 524288 samples; memory cadence 1 second;
+  existing nearest-rank percentiles. No edits, collision changes, or networking
+  workload added. Warmup is complete queue/placement settlement plus the normal
+  production startup; use the same stop/play procedure for every candidate.
+- Acceptance: moving and stationary CPU/GPU p95/p99 no worse than baseline by
+  greater of 5% or 0.25 ms; regular/transition publication p95 and p99, maximum
+  placement lag, and post-loop drain no worse by greater of 5% or 10 ms (lag by
+  no more than one region). Foreground drain <=500 ms; regular foreground and
+  transition p95 <409.6 ms; outer p95 <4096 ms and eligible service gap <300 ms.
+  Track all enabled levels/pairs rather than only LOD0. No unexplained arena
+  growth, scratch growth, geometry changes, or >5% allocation/frame regression;
+  process/GPU memory peaks may vary by at most 5% or 64 MiB, whichever is greater.
+- Require identical final per-level/pair counts and geometry digests against the
+  baseline, queues/lanes and placement dependencies settled, zero unsafe commits,
+  invalid tables, face mismatches, unexpected exceptions, scheduler failures,
+  or ordinary geometry readback. Explicit mesh audits run outside measurement.
+  Preserve all visual-distance tiers, caves, normals, and atomic handoff.
+- Candidate benefit must be attributable: idle fix reduces allocation/frame;
+  canceled-work fix counts avoided allocation/emission; retained preparation
+  counts reused results; placement work counts scanned coordinates and measures
+  phase time. If a condition is not exercised, report it unverified and do not
+  claim a measured gain. Diagnostic changes must remove dead fields and attach
+  timings to real phases, with a new schema, not silently reinterpret old data.
+- Record all attempts, including failures and environmental interruptions.
+  Schema-instrumented control and individual/combined candidates use exactly
+  these parameters. Existing historical failures are not waived by a new pass.
+  Oversized configuration rejection and supported-tier checks will have fixed
+  edge-case definitions before execution; never attempt known billion-entry
+  allocations merely to demonstrate the existing defect.
+
+#### Baseline run - 2026-09-07 03:01:56 UTC
+
+- Run `11c92cd50fee48ad81da7d5264902d2f`, source `11152fe-baseline`, schema 20,
+  exact v1 parameters and center `(0,0,0)`. Moving duration 121.923035 s;
+  stationary 10.000098 s. Raw evidence: the matching run in
+  `C:/Program Files (x86)/Steam/steamapps/common/sbox/data/local/voxels3#local/performance/results-v1.jsonl`.
+- Moving CPU p95/p99 1.4461/3.1168 ms; GPU 1.2247562/1.6269684 ms; average
+  913.6683 FPS. Stationary CPU 1.0662/1.9605 ms; GPU 0.8575916/0.90408325 ms;
+  average 982.83514 FPS. Samples 111418/9828, no truncation or exceptions.
+- Managed allocation 32920.23 moving and 29167.805 stationary bytes/frame.
+  Moving process/GPU peak 1818828800/1889190032 bytes. Three regular lanes,
+  regular/transition scratch 34310016/3884628 bytes; settled arenas 11.
+- 766 incremental streaming updates; total/max synchronous work
+  2456.8047/15.5893 ms, prioritization 50.59311 ms, draw commits 957.2616 ms.
+  95326 warm queries, 608.7939 ms CPU bounds work, 1759 stale/canceled queries.
+  Legacy generation-batch and gameplay-query values are zero and are not used
+  as evidence of absent work.
+- Regular combined publication p95/p99 69.7617/87.622 ms; LOD0
+  18.9389/24.4977 ms. Per-pair transition p95/p99:
+  0->1 48.8115/64.8235; 1->2 165.3229/239.1965;
+  2->3 107.0663/128.3048; 3->4 104.6499/113.6063 ms.
+  Outer p95/p99 207.4331/249.3913 ms; maximum eligible service gap 166.1691 ms.
+  Foreground drain 26.3408 ms. All absolute latency gates pass.
+- Final LOD0 resident 710, LOD1..4 each 4096; every pending count zero.
+  Regular topology/position digests by level:
+  `60C89421FF1B19BD/7E9C783F3C60468C`,
+  `97D4F8ABEC98BA72/A580C20007E621C3`,
+  `081C4C044EB32D11/60AD76F21522FDB4`,
+  `22F4DC4576C0885F/820BA8949792C1B7`,
+  `C09FC37491B5E980/773FDBB7C854D8C1`.
+  Combined transitions desired/ready/drawable 1248/1248/371; topology/position
+  `2785091265D94BE9/D5DA2D392DED074F`. No pending placement, unsafe commits,
+  face/lateral mismatches, invalid tables, or geometry readbacks.
+- Decision: usable unchanged-source performance baseline for this v1 scenario.
+  This run does not independently establish visual/mesh-audit correctness or
+  resolve earlier scenarios. The measurement-control run adds real scopes and
+  counters before optimization; none of the six optimization candidates has
+  been applied in this baseline.
+
+### CHUNK-CONFIG-BUDGET-001/v1 - Bounded configuration rejection
+
+Recorded before execution. Same authored scene/engine/hardware as
+CHUNK-OPTIMIZATION-128-001/v1. One player stationary at authored spawn, no terrain
+edits. Use the existing production configuration properties through native MCP;
+never save the scene or run the known unsafe requests on the unbounded source.
+
+After installing the guard and full settlement at gameplay 8, levels 0..4,
+half extents 4/8, request extent pairs in exact order: 1024/1024, restore 4/8;
+2147483646/2147483646, restore 4/8; 16/16, restore 4/8. Each invalid request must
+produce one descriptive budget rejection, leave applied revision and all geometry
+counts/digests unchanged, and return without a crash, allocation explosion, or
+missing coverage. Check immediate state and again after one second. Then request
+2/6 and restore 4/8, waiting for complete settlement at each. Finally request
+maximum levels 0,1,2,3,4,5,6,4 in order with normal 4/8 extents and gameplay 8,
+waiting for all enabled work to settle at each. These preserve all default
+visual-radius tiers including 512. Require zero pending dependencies after each
+settlement, no unsafe commit/error, and final baseline counts/digests restored.
+Any requested inspector values are restored before resuming performance runs.
+
+#### Schema-21 measurement control - 2026-09-07 03:07:34 UTC
+
+- Run `66b926a8ff474af981917b7333f00c02`, revision
+  `11152fe-schema21-control`; runtime diff identity
+  `5745e4751f342e6d59cd790de0ef934dd11168e2` (git diff piped to hash-object).
+  Same v1 inputs; center `(0,0,0)`; moving duration 121.91457 s. The source
+  change adds real scopes/counters and replaces dead generation/UI reporting;
+  no scheduling, allocation, classification, or placement optimization yet.
+- Moving CPU p95/p99 1.3247/2.8274 ms; GPU 1.2059212/1.6162395 ms;
+  stationary CPU 1.049/1.9433 ms and GPU 0.8907318/1.0597706 ms.
+  Moving/stationary allocation 31352.277/27706.68 bytes/frame; no exceptions.
+  All eight frame-tail comparisons pass the original baseline bounds.
+- Measured 1936 completed results discarded on movement; 93357 integrated;
+  integration 57.994 ms total. Placement scanned 11239424 cache coordinates,
+  taking 2717.1693 ms total, maximum 13.2145 ms. These calls can occur both
+  inside streaming rebuilds and after a placement commit, so their total must
+  not be added to synchronous-streaming total as non-overlapping work.
+- Empty request arrays: 166191 during the moving window. Canceled regular count
+  results reaching allocation: 48; transitions: 0. No emits avoided yet.
+  1650 stale/canceled background queries; 95293 accepted warm queries.
+- LOD0 p95/p99 publication 18.1584/23.9727 ms; LOD1 74.0473/96.5734;
+  LOD2 204.5744/214.3054; LOD3 171.3697/179.1676; LOD4 200.6757/208.662.
+  Transition pair p95/p99: 46.6649/59.9056, 160.3999/225.4609,
+  103.4286/113.3024, 102.9582/113.1871 ms. These comparisons pass.
+- **Memory comparison failed:** process peak 2240733184 bytes versus baseline
+  1818828800 exceeds the locked tolerance. This run followed code hot reload
+  in the same editor process. Hot-reload assembly retention is a hypothesis,
+  not a waived gate. Final acceptance requires clean-process controls and
+  candidates with the same workload; this failed comparison remains recorded.
+- Decision: measurements support investigating completed-result retention,
+  coarse scan elimination, lazy request allocation, and early canceled-result
+  rejection. No optimized implementation is accepted by this control result.
+
+#### Candidate A - 2026-09-07 03:12:34 UTC
+
+- Run `b300022b2f5841baa20d81d7f8d0a33a`, source
+  `11152fe-candidate-a-lazy-cancel`, schema 21; runtime diff identity
+  `3b70b6291f4b7513f484e998721c78209b6b4b8d`. Exact v1 workload.
+  Changes beyond measurement control: lazy allocation of regular/transition
+  request arrays and cancellation checks before allocating geometry ranges.
+- Moving CPU p95/p99 1.3122/2.7496 ms, GPU 1.1603832/1.584053 ms;
+  stationary CPU 1.0064/1.7678 ms, GPU 0.8752346/1.11866 ms. All eight frame
+  comparisons pass against both initial baseline and measurement control.
+- Moving/stationary allocation 30467.389/26287.441 bytes/frame, down
+  884.888/1419.239 bytes/frame from the control. Empty-request arrays are zero
+  versus control 166191. Of 40 canceled regular count results, 17 contained
+  geometry and avoided allocation/emission; other canceled results were already
+  empty. No transition canceled result occurred, so transition savings remain
+  unexercised. Counters count regions, not physical batched dispatch calls.
+- Foreground drain 25.0368 ms; final regular and combined transition geometry
+  digests match baseline exactly. No unsafe commit or exception. Preparation
+  still discarded 1452 completed results and placement still scanned 11239424
+  cache coordinates. Those paths were deliberately unchanged for attribution.
+- Process/GPU peak 2084196352/1889290068 bytes. Process peak remains above the
+  original baseline tolerance: this is still the post-hot-reload process.
+  Decision: attributable allocation and canceled-geometry improvements, but
+  not final acceptance. Clean-process memory/performance comparisons remain
+  required. No runtime changes have been committed or pushed.
+
+#### Candidate B definition
+
+Schema 22 combines candidate A with compatible completed-result retention,
+unchanged/resident coarse-level scan skipping, and the 32768-coordinate guard.
+It also removes the never-used gameplay bounds branch and reports avoided empty
+batches and skipped geometry *regions* explicitly. The control's obsolete
+`idleRequestArrays` invariant is removed rather than retained as a dead zero
+counter. A sparse `performance.work` log summarizes each completed saved run.
+All v1 inputs and acceptance bounds are unchanged.
+
+#### Candidate B exploratory run - 2026-09-07 03:17:12 UTC
+
+- Run `ac8d85a1334f45429ec02f7ce9061353`, revision
+  `11152fe-candidate-b-combined`, schema 22, runtime diff identity
+  `a5e0b96ed1311328118dfd1da0ccc89401df0abf`; exact v1 parameters.
+- Moving CPU p95/p99 1.2997/2.6689 ms; GPU 1.1501312/1.573801 ms;
+  stationary CPU 1.0278/1.8474 ms, GPU 0.8573532/1.1043549 ms. Moving/stationary
+  allocation 30421.436/26270.316 bytes/frame. Final geometry digests match the
+  original baseline; no unsafe commit or measured exception. Drain 33.4729 ms.
+- Retained 1210 completed-result reuse events; discarded 121 no-longer-needed
+  completed results. Integrated 93456, newly classified 93577. Scanned 4182016
+  coarse coordinates and skipped 3113 complete-level scans. Placement preparation
+  total/max 1701.0384/14.2222 ms; synchronous streaming total 1789.3218 ms.
+  Against the measurement control, scans fell 62.8% and total placement
+  preparation time 37.4%. These are scoped exploratory measurements.
+- Avoided 169448 empty batch allocations and geometry for 13 canceled regular
+  regions. No transition canceled count result occurred. Process/GPU peak
+  2081001472/1889290068 bytes: process memory still fails the original baseline
+  comparison in the hot-reload process.
+- Before this run, at 23:14:04 local, editor hotload reported an unresolved
+  `VoxelManager.RecordBoundsQuery` method through a retained old
+  `_warmGenerationTask`. That method was intentionally replaced by the one
+  preparation-specific diagnostic method. The new source compiled and fresh
+  play ran, but this host is not clean error-gate evidence. No compatibility
+  method was restored solely to satisfy stale hotload state.
+- On closing PID 2872 after stopping play and verifying no unsaved scene changes,
+  the engine completed Source2 shutdown and displayed `[mimalloc] error 11:
+  double free detected`. The dialog did not support UI Automation Invoke.
+  The already-shutting-down process was terminated to finish the restart.
+  Scene SHA-256 remained unchanged; the Sentry marker remained
+  `2026-09-03T18:46:36.786182Z`. Cause is unresolved; cold control/candidate
+  lifecycle checks are required. Do not call this a clean shutdown pass.
+- Decision: retain all evidence; candidate remains unaccepted pending clean
+  process comparison and fixed configuration checks. The temporary source switch
+  for the next control restores only the four task-owned C# files from the exact
+  schema-21 snapshot; candidate B is preserved separately for restoration.
+
+#### Schema-21 fresh-process control - 2026-09-07 03:28:02 UTC
+
+- Run `9f10780e29434af394272665d54e4517`, revision
+  `11152fe-schema21-cold-control`, runtime diff
+  `5745e4751f342e6d59cd790de0ef934dd11168e2`. Exact
+  CHUNK-OPTIMIZATION-128-001/v1 parameters, center (0,0,0), engine 26.09.01c.
+  Observed editor PID 7608, created 03:23:41 UTC; scene opened and normal play
+  started before complete settlement. No source hot reload during this run.
+- Restart recovery included an aborted PID 78676 launch while the previous
+  editor still owned MCP port 7269. This was an environment startup failure,
+  not a measured journey. A subsequent observed PID 25904 was superseded by
+  PID 7608 before this run; the transition's cause was not established.
+- Moving CPU p95/p99 1.3697/2.6094 ms; GPU 1.1818409/1.6157627 ms.
+  Stationary CPU 1.0095/1.8561 ms; GPU 0.8816719/1.0499954 ms.
+  All frame, publication, geometry/count, scratch/arena, and error checks in
+  the 126-field raw-result comparison passed except the two process-memory
+  checks. This comparison includes every enabled level and transition pair.
+- Moving process peak 3748257792 bytes; stationary 3746299904 bytes.
+  Moving GPU peak 1889190032 bytes, identical to original baseline.
+  Process memory fails the original baseline tolerance again. Fresh-process
+  control therefore does not support attributing the increase to the candidate
+  or solely to hot-reload retention. The cause remains unresolved; no gate is
+  waived and this is not an accepted baseline replacement.
+- Dropped completed preparation 1331, retained 0, integrated 93368;
+  scanned 11173888 coarse coordinates, placement total/max
+  2746.9378/13.2611 ms. All measured exceptions and unsafe commits zero.
+- After the completed result was saved, play stopped. The user interrupted
+  Computer Use with Escape during the attempted editor close. No further
+  Computer Use occurred that turn. Source stayed at the measurement control;
+  the candidate snapshot remained preserved. Candidate acceptance and fixed
+  configuration checks were incomplete.
+
+#### Configuration guard run - 2026-09-07 03:30:38 to 03:31:56 UTC
+
+- CHUNK-CONFIG-BUDGET-001/v1, exact recorded operation order and inputs.
+  Candidate B plus production inspection fingerprints, runtime diff
+  `93a8fa70452ea9cb33a1c26ba046a3d7ceaad85d`, schema 22, engine 26.09.01c,
+  editor PID 7608. Native compiler and runtime build succeeded without errors.
+  Authored spawn target W[0,0,0.04], chunk anchor C[0,0,0]. No scene save.
+- Each of 1024/1024 and 2147483646/2147483646 returned one warning:
+  `Visual extents exceed the 32,768-coordinate preparation budget.`
+  The 16/16 request returned one warning reporting 173947 coordinates versus
+  budget 32768. Normal 4/8 requested settings were restored between requests.
+  Immediate and one-second reports for each rejection retained applied revision
+  2, the original five level counts/digests, all four transition counts, and
+  combined transition fingerprints. No placement was requested or committed;
+  all queues remained zero. No unbounded allocation, hang, or crash occurred.
+- Valid 2/6 settled at revision 3 with resident counts 185/1728/1728/1728/1728.
+  Restoring 4/8 settled at revision 4 with the original counts/fingerprints.
+- Maximum-LOD sequence 0,1,2,3,4,5,6,4 settled at revisions 5..12 respectively.
+  Reported visual radii were 4,16,32,64,128,256,512,128. Every observation had
+  pending/staging false, missing levels/transitions zero, zero level/pair pending
+  work, zero unsafe commits, and zero fine/coarse/lateral/table errors.
+- Final combined regular topology/position:
+  `1D6B3FBFBA45EF01/4E85BFEE7162838D`; transition:
+  `2785091265D94BE9/D5DA2D392DED074F`. All five per-level fingerprints match
+  the original baseline, as do resident counts 710/4096/4096/4096/4096 and
+  pair desired/ready/drawable 96/96/51,384/384/136,384/384/102,384/384/82.
+- Evidence: timestamped `configuration.rejected` and `lod.inspect` records in
+  the engine sbox-dev.log, plus native MCP readbacks. The existing inspection
+  command now includes cached regular/transition fingerprints and mismatch
+  counters without performing geometry readback. These are production
+  diagnostics, not a separate terrain implementation or test hook.
+- Result: PASS for this fixed configuration scenario. This is a stationary
+  configuration/correctness check; it makes no performance claim for radius
+  512 and does not waive the figure-eight process-memory comparison failure.
+
+#### Candidate inspection and geometry audit - 2026-09-07 03:32 UTC
+
+- Source `93a8fa70452ea9cb33a1c26ba046a3d7ceaad85d`, same stationary world after
+  CHUNK-CONFIG-BUDGET-001/v1 restored 4/8, maximum LOD 4. Explicit production
+  `voxel_mesh_audit 32 coverage`, target (0,0,0.0403), audit id 1.
+- Selected/completed 288/288, stale 0; 114 failed regions, all transitions,
+  containing 3503 reported degenerate triangles. Preserve the audit's FAIL
+  status. Repeated-position transition-table degenerates are documented in
+  earlier seam/audit scenarios, but this run alone does not prove attribution;
+  an unchanged-source audit at the same point is required for comparison.
+- Mutation failures, invalid indices, nonfinite/out-of-bounds positions,
+  record-identity errors, oversized triangles, and draw-argument failures all
+  zero; maximum edge 1.73 cells. Explicit diagnostic cost: 578 readbacks,
+  9625016 bytes, 617.288 ms. This audit ran outside timed performance capture.
+- Inspected two native 1280x720 images: the attached game camera at spawn, and
+  detached camera W[0,0,10000], angles [80,0,0], FOV 60. Terrain rendered with
+  continuous visible coverage and no obvious spikes or missing patches in
+  these views. This is bounded visual evidence, not proof of all seams/caves.
+  Returned to game camera and restarted normal play before the next journey.
+
+#### Candidate B with inspection - 2026-09-07 03:36:16 UTC
+
+- Run `b1c0abea4e8c451993e5d275720ae6f7`, revision
+  `11152fe-candidate-b-inspection`, schema 22, runtime diff
+  `93a8fa70452ea9cb33a1c26ba046a3d7ceaad85d`. Exact
+  CHUNK-OPTIMIZATION-128-001/v1 inputs, center (0,0,0), normal stop/open/play
+  and complete settlement. Same PID 7608 after configuration and audit checks.
+- Moving CPU p95/p99 1.3016/2.4512 ms, GPU 1.1560917/1.5771389 ms;
+  stationary CPU 1.0188/1.8502 ms, GPU 0.87046623/0.9150505 ms.
+  Allocation 30455.658 moving, 26340.027 stationary bytes/frame.
+- Retained 1430 completed reuse events, dropped 143, integrated 93423.
+  Scanned 4169728 coordinates; skipped 3098 complete-level scans.
+  Placement total/max 1759.4123/12.9025 ms, synchronous streaming 1848.3593 ms.
+  Avoided 169766 empty request-array allocations and geometry for 12 canceled
+  regular regions; transition cancellation still not exercised.
+- 129 raw-result comparisons (including per-level/pair publication, fingerprints,
+  counts, frame tails, allocations, arenas/scratch, error/mismatch counters,
+  drain and route-lag maximum) failed only moving/stationary process memory
+  against the initial baseline. Foreground drain 25.2883 ms; maximum recorded
+  publication route lag 0.6803894 LOD0 regions. This route-lag statistic is not
+  a per-frame maximum of the inspection command's anchor-lag calculation.
+- Process peak 4127182848 moving, 4102778880 stationary bytes; GPU peak
+  1889290068 bytes. Process memory also exceeds the fresh control. This editor
+  has since hotloaded source and visited larger valid configurations; no memory
+  regression is accepted or attributed without unchanged-source evidence.
+- At 03:29:17 UTC, restoration of the candidate produced the known hotload error
+  resolving removed RecordBoundsQuery through an old inspector-held task.
+  Fresh play compiled and the timed run recorded zero exceptions. Preserve the
+  host error; do not describe this as a clean-process candidate run.
+- Next attribution check restores the exact four original 11152fe files in this
+  same editor, runs the unchanged journey, and repeats the same coverage audit.
+  This tests source attribution of memory/geometry differences; it does not
+  alter scenario inputs, discard failures, or pre-authorize a replacement gate.
+
+#### Exact unchanged-source session control - 2026-09-07 03:39:28 UTC
+
+- Run `3e49b3865ae54a41a9bf864639cf1e55`, revision
+  `11152fe-original-session-control`, schema 20. All four task-owned runtime
+  files restored byte-for-byte from 11152fe; `git diff -- Code` empty after
+  newline normalization. Same editor PID 7608, engine and authored scene,
+  exact CHUNK-OPTIMIZATION-128-001/v1 parameters, center (0,0,0), normal
+  stop/open/play and complete settlement. Runtime/native compilation succeeded.
+- Moving CPU p95/p99 1.308/2.5435 ms; GPU 1.159668/1.6107559 ms.
+  Stationary CPU 1.0274/1.9202 ms; GPU 0.8699894/0.98872185 ms.
+  Allocation 29677.23 moving, 25992.79 stationary bytes/frame;
+  synchronous streaming total 2427.1443 ms; drain 27.4781 ms.
+- Unchanged code's process peak was 4399091712 moving and 4171497472 stationary
+  bytes; GPU peak 1889290068 bytes. It also FAILS the original process-memory
+  comparison. Thus the increase is demonstrably not specific to the candidate.
+  This identifies host/session dependence, not its precise allocation root.
+- Comparing candidate `b1c0abea4e8c451993e5d275720ae6f7` against this unchanged
+  same-session control passes all 129 numeric comparisons, including memory.
+  Candidate process peak is lower; GPU peak identical. Candidate moving and
+  stationary allocation are 2.62% and 1.34% higher than this original-source
+  control, within the fixed 5% limit; compare the isolated lazy-array candidate
+  to the schema-21 instrumentation control for attributable array savings.
+  Candidate synchronous streaming total is 23.85% lower than this control.
+- Original-baseline memory failures remain recorded. No process-memory saving
+  is claimed. The matching source/control experiment separates task effects
+  from the editor's changed memory context; initial absolute memory numbers
+  cannot describe the post-restart/hotload editor's working set.
+- Unchanged-source geometry audit follows at normal authored spawn outside
+  measurement, using the same 32-region coverage selection as the candidate.
+
+#### Acceptance clarification - user direction, 2026-09-07 03:42 UTC
+
+The user explicitly directed that editor memory fluctuates and acceptance should
+look for extreme rather than small/minor fluctuations. This supersedes the
+initial whole-process 5%/64-MiB rejection rule for this investigation. Preserve
+every recorded failure above. Future memory decisions use comparable source
+controls and terrain-owned arena/scratch/geometry metrics for attribution; flag
+a sustained increase of at least the greater of 25% or 512 MiB relative to the
+same-session control, or growing unreclaimed terrain resources, for investigation.
+A transient process peak alone is not an optimization rejection. This operational
+threshold is an investigation trigger, not permission to retain a demonstrated
+leak. No route, timing, seed, geometry, allocation, or frame/publication gate changes.
+
+The completion audit also found that publication route lag and the inspection
+command's placement anchor lag are distinct. The latter was only observed at
+settlement. Add the inspection's existing maximum axis-distance calculation to
+moving-window telemetry, shared by the inspection and recorder, as
+`hierarchy.maximumPlacementLevelLag` in schema 23. It is the maximum across
+all seven level anchors and moving-window updates, measured in each level's
+own regions. Reset at test start; preserve through drain and stationary capture.
+An original-code control with this additive measurement precedes the final
+candidate; compare maximum anchor lag with the already-recorded allowance of
+one region. Earlier runs do not prove that specific maximum-anchor-lag gate.
+
+#### Unchanged-source audit comparison - 2026-09-07 03:40:59 UTC
+
+- Original 11152fe, normal fresh play at exact audit target (0,0,0.0403),
+  `voxel_mesh_audit 32 coverage`. Selected/completed 288/288, stale 0;
+  106 failed transition regions, 3491 degenerates. Mutation, invalid-index,
+  nonfinite/out-of-bounds-position, identity, oversized-triangle, and draw-argument
+  failures zero; maximum edge 1.73 cells. 578 readbacks, 9633332 bytes, 573.084 ms.
+- The coverage selector chose 110 region keys shared with the candidate audit
+  and 178 different keys per run despite identical requested parameters. For
+  every shared key, vertex/index/triangle counts and all reported validity,
+  normal, identity, degeneracy, and edge counters match exactly. Exclusive
+  selections contain 2170 candidate versus 2158 control degenerates, explaining
+  the entire 12-triangle difference. Full-world regular/pair fingerprints also
+  match in both timed results. No new geometry defect is evidenced by this slice.
+- Both audit FAIL statuses remain intact. These are the documented transition
+  topology degenerates; the optimization does not repair or suppress them.
+  Audit sampling is not a deterministic exhaustive mesh comparison, so neither
+  the differing totals nor bounded images are claimed as such.
+
+
+#### Placement-lag control - 2026-09-07T03:46:04.7486247+00:00
+
+- Run `d7eee7bea49f41849e92118c8cacf184`, revision `11152fe-placement-lag-control`, schema 23,
+  runtime diff `6c571fa91c63a7afc7c8ca596d674b2c0f146712`. Original 11152fe
+  runtime plus the shared anchor-lag measurement only; no optimizations.
+  Exact CHUNK-OPTIMIZATION-128-001/v1 parameters, original center (0,0,0),
+  same PID 7608, normal scene restart and complete settlement.
+- Maximum moving-window placement anchor lag: 2 regions.
+  Moving CPU p95/p99 1.2774/2.476 ms;
+  GPU 1.1489391/1.5687943 ms.
+  Stationary CPU 1.2404/2.028 ms;
+  GPU 0.8506775/0.9191036 ms.
+- Moving/stationary allocation 29588.768/
+  26005.045 bytes/frame.
+  Moving process/GPU peak 4432060416/1838958420 bytes;
+  stationary process peak 4225470464 bytes.
+  Drain 26.9544 ms; maximum publication route lag
+  0.659729 LOD0 regions. No measured exceptions.
+- This source control supplies the missing anchor-lag reference for the final
+  schema-23 candidate. Historical schema-20/21/22 runs remain unchanged.
+
+#### Final-run launch and retained host diagnostics
+
+- At 03:47:18 UTC, the first final-run MCP invocation returned an invalid-active-
+  scene readiness error before starting a journey. Native status still reported
+  play active; inspection had just shown full settlement. Retrying the same
+  production trigger at 03:47:36 succeeded without restarting or changing inputs.
+  This is a pre-run tool readiness failure, not a discarded measured run.
+- Source-switch hotload at 03:36:59 had also logged unresolved references to
+  removed LastRangeUpdateMilliseconds and RecordPreparationBoundsQuery members
+  through inspector-held old tasks. At 03:41:11 the engine logged one present-
+  event/Vulkan fence timeout outside a timed journey. These historical host
+  diagnostics are retained; source compilation and each fresh playable instance
+  are checked separately. No legacy methods were restored to satisfy stale
+  hotload references.
+
+
+#### Final candidate - 2026-09-07T03:49:48.3630031+00:00
+
+- Run `f1bcf41aed124cc491b66262c1f30087`, revision `11152fe-final-chunk-optimization`, schema 23;
+  runtime diff `2d510d558ec182906f7ca01573174e83fac6dc4e`. Exact
+  CHUNK-OPTIMIZATION-128-001/v1 parameters, center (0,0,0), engine 26.09.01c,
+  editor PID 7608. Runtime/editor builds and native compile succeeded without
+  warnings/errors. No source edits during the journey.
+- Moving duration 121.914604 s; stationary
+  10.000275 s. Moving CPU p95/p99
+  1.2937/2.6133 ms; GPU
+  1.1634827/1.6121864 ms. Stationary CPU
+  1.0143/1.9793 ms; GPU
+  0.87952614/0.9365082 ms.
+- Moving/stationary allocation 28854.62/
+  24806.01 bytes/frame.
+  Process peak 4282470400 moving,
+  4260614144 stationary bytes; GPU peak
+  1889290068 bytes. No extreme candidate-specific process
+  increase versus exact original-source session control; settled arenas
+  11, lanes 3, scratch sizes unchanged.
+- Retained 1320 completed-result reuse events;
+  dropped 132 no-longer-needed results;
+  integrated 93412. Scanned 4190208
+  coordinates and skipped 3123 complete-level scans.
+  Placement total/max 1727.6037/
+  11.0553 ms; synchronous streaming total
+  1781.836 ms. Versus schema-21 measurement control:
+  scans -62.72%, placement phase time -36.42%. Versus exact original
+  same-session control: synchronous streaming time -26.59%.
+- Avoided 169114 empty request-array allocations;
+  33 canceled regular count results, with geometry
+  allocation/emission avoided for 8 nonempty regions.
+  Canceled transitions 0: the transition
+  cancellation branch has no measured savings in this workload. Source review
+  preserves disabled batch slots and existing rejection/finalization semantics.
+- Maximum moving placement anchor lag 2
+  regions, equal to additive-control reference 2. Maximum publication route lag
+  0.69314575 LOD0 regions. Foreground drain
+  27.7357 ms. All final pending counts zero; no placement
+  dependency, unsafe commit, invalid table, face/lateral mismatch, ordinary
+  geometry readback, sample truncation, or measured moving/stationary exception.
+- Every final level/pair count and topology/position fingerprint equals the
+  original baseline. 151 comparisons pass against the predeclared original
+  baseline, with same-session process attribution per the user's memory
+  instruction and additive control for the previously unrecorded anchor maximum.
+  The same 151 comparisons also pass against exact unchanged-source session
+  control `3e49b3865ae54a41a9bf864639cf1e55`, using that anchor reference.
+- Preserve a secondary comparison: applying every latency gate to the additive
+  lag-only control instead of its stated anchor-measurement role fails LOD1
+  p99 (83.191 -> 106.6465 ms) and pair 1->2 p99 (196.9258 -> 240.0337 ms).
+  Final values remain within original predeclared baseline bounds
+  (106.3907/239.1965 ms) and exact same-session original bounds
+  (100.6837/234.0639 ms). The added control is not promoted to a new accepted
+  publication baseline after its low readings. No publication-latency speedup
+  is claimed, and the secondary failed comparison is not erased.
+- Decision: ACCEPT the six-opportunity implementation under the predeclared
+  runtime gates and the user's updated editor-memory interpretation. Benefits
+  are reduced chunk preparation/scanning and avoidable allocations/emission,
+  with accurate production reporting and bounded configuration work. The fixed
+  configuration scenario passed and supported view-distance tiers were preserved.
+  Preexisting transition-table audit degenerates, hotload/source-switch host
+  diagnostics, and unexercised transition cancellation remain explicit limits.
+
+#### Final source verification - 2026-09-07
+
+- Accepted runtime diff still `2d510d558ec182906f7ca01573174e83fac6dc4e` after
+  documentation/line-ending cleanup; no executable change after the final run.
+  Runtime and editor builds: zero warnings/errors. Native compiler successful,
+  zero compile errors, active basic_example world. Latest host errors predate
+  the final journey; moving and stationary exception counters are zero.
+- Scene SHA-256 unchanged:
+  `1ABC19F0912BCEDAC0F07EB1D749A834CB75D08F268FB5F46EF51F2EDD57A7ED`.
+  Native scene unsaved flag false; crash marker unchanged at
+  `2026-09-03T18:46:36.786182Z`. No shader or generated asset was edited.
+- Reviewed architecture/terrain/meshing/performance routes, source ownership and
+  final diff; checked documentation links and whitespace. Removed legacy public
+  diagnostic members have no remaining runtime/editor/scene consumers. Task
+  changes are confined to four C# files and four documentation files. Temporary
+  measurement controls and analysis scripts are not shipping implementations.

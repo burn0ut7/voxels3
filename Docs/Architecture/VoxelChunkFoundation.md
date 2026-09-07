@@ -50,6 +50,15 @@ including shared boundary samples. These values are owned by the manager's
 configuration validation; changing inspector values does not establish a new
 supported layout.
 
+Visual configuration also has a 32,768-coordinate preparation budget, owned by
+the manager. It counts the LOD0 warm cube when enabled plus all enabled coarse
+cache cubes. The supported seven-level 4/8 layout needs 25,907 coordinates, so
+all default visual-radius tiers through 512 and the reduced 2/6 layout remain
+available. Oversized operands are rejected before checked volume calculation
+and enumeration; invalid requests retain the applied placement. This bounds CPU
+coordinate work, not worst-case GPU geometry memory. Committed/staged sets are
+bounded multiples of the same request budget.
+
 `WorldToChunkCoordinate` uses floor division, including for negative positions.
 A chunk's global sample origin is its integer coordinate multiplied by cells per
 axis. Every consumer must query shared positions identically.
@@ -108,6 +117,14 @@ incremental precondition rebuild that same set. The manager retains coordinates
 needed by committed/staged placement and sorts missing preparation nearest-first
 with explicit coordinate tie breaks.
 
+Movement retains completed, unintegrated preparation whose coordinate is still
+required. The existing missing-coordinate set selects those results; completed
+and pending queues retain matching FIFO order, followed by nearest-first missing
+coordinates for the new worker. No second preparation cache is introduced.
+Content reset clears both queues. `StartWarmGeneration` owns cancellation and
+revision advancement for movement and preserves retained results even when no
+new classification is required.
+
 One serialized background preparation chain receives immutable coordinates,
 dimensions, terrain settings, revision, and cancellation token. It classifies
 LOD0 regions and creates transient chunk views only for potential surfaces.
@@ -149,12 +166,23 @@ or creates a separate terrain implementation.
 `World Status` presents frame performance, chunk status, streaming performance,
 and process memory. Readable status refreshes at the source-owned cadence;
 logical chunk counts are not GPU-resident mesh counts. Legacy stream-generation
-counters do not establish mesh-availability throughput. Use the performance
-result's meshing, queue, and placement measurements for that question.
+bookkeeping is removed from schema 22. Status distinguishes logical membership,
+prepared regions, pending preparation, and GPU residents. Range-application time
+is explicitly named and is not a mesh-availability or streaming-settle metric.
+Use the performance result's meshing, queue, and placement measurements for that
+question.
+
+Schema 23 additionally records maximum moving-window placement anchor lag using
+the inspection command's shared calculation. This is a distance in each level's
+own regions, distinct from publication route lag in LOD0-sized chunks. It resets
+at test start and survives drain/stationary capture without per-frame logging.
 
 `voxel_chunk_info x y z` checks analytic gameplay membership and constructs a
 bounded query view to report generator identity, density bounds, sample/material,
 and boundary samples. `voxel_lod_info` observes manager-owned level/pair state.
+It includes cached per-level and combined geometry fingerprints and transition
+mismatch counters, so configuration rejection and restoration can be inspected
+without reading geometry back from the GPU.
 Neither creates independent world state or changes the streaming origin.
 
 Verbose logging is opt-in; per-chunk load/unload spam and runtime loaded-chunk
@@ -187,6 +215,14 @@ history occurs at completed windows. Capacity exhaustion is reported rather
 than silently allocating. Timing and capacity constants are owned by the manager;
 [PerformanceTestResult.cs](../../Code/Voxels/PerformanceTestResult.cs) owns the
 serialized field layout. Do not maintain a second schema changelog here.
+
+Real profiler scopes cover range rebuilding, placement preparation, result
+integration, mesher processing, and draw-command commits. Scalar work reporting
+counts integrated and retained preparation results, discarded completed results,
+coarse-cache coordinates scanned, skipped complete levels, and placement time.
+Retention counts are reuse events, not a second count of newly classified
+coordinates. Each saved run emits one sparse `performance.work` summary;
+per-coordinate diagnostic logging remains opt-in.
 
 One completed result appends to `performance/results-v1.jsonl` in
 `FileSystem.Data`. It includes a run ID, capture time, caller-supplied task and
