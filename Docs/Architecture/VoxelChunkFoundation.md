@@ -12,6 +12,9 @@ A [terrain collision prototype](TerrainCollision.md) is implemented but not yet
 accepted. Live edits, persistence, project-specific voxel replication, and
 multi-origin interest management are not implemented. Requirements for those
 features in the agent routes describe future work, not existing systems.
+The [second-slice deformation research](../Research/TerrainDeformationSecondSlice.md)
+proposes edited-field ownership and its downstream pipeline; it does not change
+the implementation status described here.
 
 ## Canonical Ownership and Data Flow
 

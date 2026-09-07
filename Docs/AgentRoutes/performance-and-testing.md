@@ -32,8 +32,12 @@ threading, allocations, and test strategy.
 ## Test Strategy
 
 Follow [project validation and figure-eight acceptance](../../AGENTS.md#validation).
-The figure-eight remains the sole project-owned automated test trigger; bounded
-read-only observations can support it. Do not use direct streaming-origin
+The figure-eight remains the primary project-owned automated test trigger;
+bounded read-only observations can support it. On 2026-09-07 the user explicitly
+authorized a separate deformation benchmark, run only when testing deformation.
+Its [research proposal](../Research/TerrainDeformationSecondSlice.md#7-dedicated-deformation-benchmark)
+does not implement a trigger or replace the figure-eight regression requirement.
+Both must exercise production behavior under fixed ledger scenarios. Do not use direct streaming-origin
 mutation or diagnostic-only terrain implementations as substitute test paths.
 
 Prioritize spatial boundaries, negative coordinates, deterministic seeds, stale

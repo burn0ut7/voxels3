@@ -19,6 +19,7 @@ link to it elsewhere instead of copying its state, settings, or results.
 | What did the scan and GPU arena prototypes establish? | [Scan and arena investigation](Research/GpuReductionsAndArenaEfficiency.md): hypotheses, isolated experiments, capacity accounting and acceptance outcomes. |
 | What currently owns terrain collision? | [Collision prototype](Architecture/TerrainCollision.md): CPU extraction, physics readiness, lifecycle and unresolved acceptance gates. |
 | What is the proposed first terrain collision slice? | [Terrain collision research](Research/TerrainCollisionFirstSlice.md): full-resolution gameplay collision, CPU/GPU separation, engine evidence, and implementation measurement gates; proposal history. |
+| How should the second slice add responsive terrain deformation? | [Terrain deformation research](Research/TerrainDeformationSecondSlice.md): current-source audit, regional edited state, brush behavior, local rebuilds, multiplayer/distant edits and a dedicated benchmark proposal. |
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
 
 Source code and authored configuration establish actual behavior. Architecture

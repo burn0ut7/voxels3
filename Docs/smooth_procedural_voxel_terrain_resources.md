@@ -75,6 +75,20 @@ validation gates. The [collision prototype](Architecture/TerrainCollision.md)
 is implemented but unaccepted. Reuse the existing Transvoxel
 entries below for topology theory and lookup data.
 
+## Runtime Deformation and Replication
+
+The [second-slice deformation research](Research/TerrainDeformationSecondSlice.md)
+uses the existing Godot, collision and Transvoxel entries alongside these focused
+sources. It proposes materialized regional correction state; no new runtime
+behavior is adopted by adding research references.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Voxel Tools smooth terrain](https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/), [VoxelLodTerrain](https://voxel-tools.readthedocs.io/en/latest/api/VoxelLodTerrain/) | Distance-field edit locality, precision/LOD concerns, editable residency and independent collision interest. | Living Godot documentation; encoding, storage sizes and full-load policy are not Voxels3 requirements. |
+| [Voxel Plugin runtime edits and sculpting](https://docs.voxelplugin.com/knowledgebase/blueprints/runtime-edits-and-sculpting) | Distinguishes repeated stamp evaluation from materialized sculpting; documents asynchronous completion and replication limitations. | 2.0p8 describes experimental functionality, not demonstrated s&box or production multiplayer performance. |
+| [Voxel Plugin 1.2 profiling](https://docs.voxelplugin.com/1.2/technical-notes/performance-and-profiling), [1.2 multiplayer](https://docs.voxelplugin.com/1.2/core-systems/voxelworld/multiplayer) | Spatial edit scheduling and action-versus-state replication tradeoffs. | Legacy Unreal architecture; do not merge these claims into current 2.0 behavior or import transport assumptions. |
+| [s&box RPC messages](https://sbox.game/dev/doc/networking/rpc-messages), [network visibility](https://sbox.game/dev/doc/networking/network-visibility) | Host routing, caller checks, recipient filtering and why object culling does not filter terrain RPC traffic. | Engine primitives do not implement terrain subscriptions, ordering, snapshots or payload-size budgets. Verify installed API and real clients. |
+
 ## Primary Algorithms and Papers
 
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |
