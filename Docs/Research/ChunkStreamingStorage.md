@@ -2,6 +2,8 @@
 
 Research date: 2026-09-07. Audience: Voxels3 implementation and architecture work.
 
+Execution plan: [authoritative storage prototype](../Architecture/ChunkAuthoritativeStorage.md) narrows the first implementation goal to integrated live deformation, persisted regional history and testable unload/reload, with acceptance before subsequent slices.
+
 Status: research and recommended direction, **not an implemented contract or performance acceptance**. Scope covers expensive procedural SDF generation, edited terrain, durable storage, multiplayer interest, joining, unloading, recovery and distant LOD. No runtime code was changed or benchmark run for this document.
 
 ## 1. Recommended direction

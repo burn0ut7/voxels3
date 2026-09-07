@@ -24,6 +24,7 @@ link to it elsewhere instead of copying its state, settings, or results.
 | How should the second slice add responsive terrain deformation? | [Terrain deformation research](Research/TerrainDeformationSecondSlice.md): current-source audit, regional edited state, brush behavior, local rebuilds, multiplayer/distant edits and a dedicated benchmark proposal. |
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
 | How should expensive generated terrain be saved and streamed in multiplayer? | [Chunk streaming and storage research](Research/ChunkStreamingStorage.md): server authority, regional persistence, loading/unloading, coherent joins, LOD data and implementation gates. |
+| What is the first authoritative chunk storage prototype? | [Storage prototype plan](Architecture/ChunkAuthoritativeStorage.md): existing live deformation, persisted regional history, real eviction/reload and staged acceptance. |
 
 Source code and authored configuration establish actual behavior. Architecture
 documents explain its ownership and rationale; they do not prove runtime
