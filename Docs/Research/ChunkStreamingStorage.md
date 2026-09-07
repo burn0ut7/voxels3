@@ -8,6 +8,8 @@ Status: research and recommended direction, **not an implemented contract or per
 
 Use a **server-owned, spatially indexed terrain store with a deterministic client-generation option**. The server owns the procedural recipe, saved changes and gameplay decisions; clients may reconstruct the baseline without supplying authoritative terrain. The server loads existing state before generating required gameplay regions and reuses expensive results. Keep resident memory, generation, disk work, network traffic and derived geometry separately bounded.
 
+**Required integration direction:** evolve the existing terrain field and multiplayer edit implementation into this single chunk lifecycle system. Chunk loading, unloading, persistence and delivery handle the existing edits as part of canonical regional state. Do not add a chunk streamer beside an independently maintained multiplayer deformation store or state publisher. The ownership contract below is prescribed for implementation; it does not claim that consolidation is already complete.
+
 The recommended end state is:
 
 1. **Keep generation authority on the server; share deterministic reconstruction.** Evaluate client generation, especially for distant visuals, while the server independently generates/loads terrain needed for gameplay. Cache expensive results. A server-defined recipe can establish terrain before every sample has been materialized; no client result establishes server state.
@@ -19,6 +21,35 @@ The recommended end state is:
 These are project recommendations drawn from the evidence below, not a claim that one game already implements this exact architecture. Luanti provides the clearest inspectable server lifecycle; Godot Voxel directly documents saving expensive generated blocks. Both are better starting references here than an uncited claim about a closed-source game's internals. See [Luanti's emergence path](https://github.com/luanti-org/luanti/blob/b81bb3c68ac633f1df8dd8ed758644cabf4c1efd/src/emerge.cpp#L545-L585) and [Voxel Tools streams](https://voxel-tools.readthedocs.io/en/latest/streams/).
 
 **Immediate next slice:** establish durable paging of the existing correction field, with real eviction/reload and late-join verification. **Subsequent generation decision:** measure deterministic client reconstruction plus authoritative regional updates against server-supplied samples. Materializing a new baked-field representation remains an option when its measured benefit justifies migration; it is not a prerequisite for server authority. Do not silently change today's field while calling the change only a save optimization.
+
+### One terrain system: ownership and replacement contract
+
+One logical terrain system owns the field, its regional residency and its committed revision history. Separate storage, generation, transport and meshing modules are appropriate implementation boundaries; they must consume the same state and cannot maintain independently writable versions of terrain.
+
+| Responsibility | Single owner/contract | Integration requirement |
+| --- | --- | --- |
+| World field and sample semantics | Existing `TerrainField` responsibility, evolved for paging | One canonical sampler and spatial/page identity; immutable recipe plus committed corrections define one composed field in the current format |
+| Gameplay edit admission and commit | Existing host validation and ordered mutation boundary | Dig/build tools, impacts and administrative edits enter this boundary; a client submits intent, never authoritative samples |
+| Load/unload and persistence | Regional lifecycle of that same field | Load saved changes before declaring a region ready; pin affected pages for edits; save committed revisions and evict safely |
+| Multiplayer terrain state | Existing manifest/page replication responsibility, integrated with regional interest | One publisher delivers joins, movement, edits, reconnects and repairs; no parallel edit-state broadcast or separate late-join save channel |
+| Rendering, LOD and collision | Existing derived consumers | One commit/invalidation flow supplies affected bounds and revisions; no separate editable mesh or collision terrain |
+| Client reconstruction | Replica population under the same field contract | Generated baselines and received pages install into one replica; prediction cannot become an independent saved or authoritative world |
+
+For the current representation, procedural base and corrections are complementary parts of **one field definition**, not competing truths. Likewise, RAM, a durable checkpoint and a client replica are versioned representations of that field. Only the server's ordered commit boundary creates authoritative gameplay changes. Current, durable, received and rendered revision markers describe progress through the pipeline, not different authorities.
+
+The complete edit lifecycle must be:
+
+1. A validated request identifies all affected pages, including sampling dependencies. The regional lifecycle loads/generates and pins their canonical state even if no player currently renders them.
+2. The existing mutation boundary prepares and commits one ordered transaction. Persistence and downstream delivery observe that transaction under the declared durability policy.
+3. Interested clients receive the resulting regional revisions through the same manifest/page protocol used for loading. Render/collision consumers receive one bounded invalidation for the committed change.
+4. A client outside interest receives no unnecessary terrain payload. When it enters later, its normal region load includes the latest committed changes; it does not replay a separate deformation history.
+5. When interest leaves, the lifecycle retires derived resources and evicts eligible field pages only after persistence and outstanding readers permit it. Re-entry uses the same region path and reconstructs the same committed state.
+
+Loading an already committed page changes residency, not terrain history: retain its authoritative revision and reject stale load results. A deliberate world restore is a separate epoch/restore operation through the same field boundary. Neither disk loading nor client receipt should manufacture a new gameplay edit and broadcast it back, causing duplicate mutation or replication loops.
+
+**Replacement rule:** extend or refactor `TerrainField`, `TerrainFieldCodec`, the manager's deformation orchestration, and its manifest/networking/replication responsibilities as needed. Preserve existing tool validation and real gameplay entry points. Remove superseded whole-world retention, save/load orchestration and duplicate terrain-state delivery paths in the same implementation change that replaces them. Do not keep a compatibility layer that runs an old edit system alongside a new chunk system. An export/backup command, if retained, reads the same committed store and codec; it is not a second persistence authority.
+
+Backend and generation alternatives in this research are decision candidates within that one system. Choose one backend and one canonical field interpretation for the implemented world format; do not ship all researched candidates as parallel terrain systems. Snapshot versus delta and generated baseline versus received payload are protocol encodings under one identity/revision model, not separate gameplay paths.
 
 ## 2. What Voxels3 currently implements
 
@@ -274,7 +305,7 @@ Every asynchronous operation captures a fixed world/store handle. Loading a diff
 
 ### One protocol, several bounded message types
 
-Use the existing terrain replication owner. Add typed records as needed within one protocol: session manifest, region manifest, page snapshot, absolute page update, coverage removal, acknowledgement and resynchronization request.
+Use the existing terrain replication owner as the single publisher for the chunk lifecycle. Multiplayer terrain edits become updates to those same subscribed regional revisions; chunk loading includes their committed state automatically. Client-to-host edit intent remains an input to the validated mutation boundary, not a second terrain-state synchronization protocol. Add typed records as needed within one protocol: session manifest, region manifest, page snapshot, absolute page update, coverage removal, acknowledgement and resynchronization request.
 
 Each transfer identifies persistent world ID, session epoch, protocol/field/material versions, interest generation, transfer ID, page coordinate, base/target revision and lengths/checksums. World ID survives restart; epoch changes on restart/load so old messages cannot be mistaken for current ones. Revisions must not ambiguously wrap or be reused after restoring a backup.
 
@@ -367,7 +398,7 @@ Use real host/client sessions to establish payload envelopes, supported array se
 
 ## 12. Smallest complete implementation sequence
 
-1. **Durable correction paging.** Preserve today's field semantics. Index persisted correction pages, load before mutation, save revisions transactionally, evict safely, and make rejoin/movement read from that store. Replace whole-world memory assumptions within the existing owner; retain export snapshots only if they have a separate documented backup responsibility.
+1. **Integrate existing edits into durable regional paging.** Preserve today's field semantics and validated tool entry points. Evolve their field/store and replication owners into the single chunk lifecycle: index persisted correction pages, load before mutation, save revisions transactionally, evict safely, and make edits/rejoin/movement use that same state and publisher. Remove the superseded retention, save/load and delivery paths as they are replaced; export snapshots may only read the same store for backup.
 2. **Qualify the storage backend and recovery.** This belongs in the first slice, not after calling it durable. Prove interrupted writes, disk full, restart, cross-page edits, idempotency and backup restore using the production path.
 3. **Generation strategy qualification.** Compare shared deterministic baseline plus authoritative changes against supplied samples using fixed cold/warm and disjoint-player workloads. Measure server CPU, network traffic, client generation/frame cost, time to visuals, time to safe gameplay and mismatch frequency separately. If baking wins, specify its field semantics and migration before changing representation.
 4. **Hierarchical network terrain.** Extend the existing manifest/page transfer to identify reconstructible baselines, complete edit coverage and authoritative replacement/LOD data within one protocol. Partition bounded install groups around actual mesh/collision dependencies; preserve stale-job rejection and invalidation of persisted coarse caches.
@@ -385,6 +416,7 @@ The following are scenario requirements, **not pre-approved executable scenarios
 | --- | --- | --- |
 | Cold discovery and warm revisit | World/recipe, route, seed, player speed, radii, cache state, duration and hardware | End-to-end readiness p50/p95/p99; disk hits; generation jobs; repeat expensive generation avoided where cached |
 | Eviction/reload | Exact edits, pages, travel path, memory limit and grace period | Values/revisions preserved; resident bytes plateau; no dirty data lost; same negative-coordinate boundaries |
+| Unified edit/chunk lifecycle | Existing dig/build entry points; a boundary-spanning edit; recipient inside/outside interest; unload/re-entry/restart sequence | One authoritative transaction, one state publication route, saved edits present through normal loading, no replay or double application, no second mutable field/store |
 | Join under editing | Edit sequence/timing, initial player positions, peer count and bandwidth/latency/loss | Coherent field hashes; transaction visibility; time to safe play; peak staging/host retention |
 | Concurrent overlap/disjoint players | Separate fixed 1/8/32/64-player cases, routes and interest settings | Shared-job reuse versus worst-case disjoint memory; per-peer service and starvation; aggregate bandwidth |
 | Save/load failures | Committed edits, interruption phase, process-stop or storage-failure method, recovery expectations | Exactly the promised committed state; no half cross-page transaction, regeneration over corruption or duplicate reward |
@@ -397,6 +429,8 @@ The following are scenario requirements, **not pre-approved executable scenarios
 | Long-lived storage | Fixed explored/edited dataset, checkpoint/compaction policy and restore point | Bounded startup/recovery, disk amplification, checkpoint tails and successful restored world |
 
 Universal correctness criteria can be fixed now: zero accepted half-transactions; zero client-authoritative terrain changes; zero lost edits that were reported durable; zero publication of stale versions; bounded declared memory/queues; exact canonical payload agreement at acknowledged revisions. Visual/collision equality must be evaluated under the selected field contract, not inferred from matching hashes alone.
+
+Acceptance also requires a source/data-flow inventory showing one owner for each responsibility above, deletion of superseded paths, and runtime evidence that the existing multiplayer editing tool reaches the same region store used by loading/unloading. A new streamer passing isolated load tests while the old deformation store still operates independently is not completion. The implementation architecture owner must document the resulting ownership; this research alone does not establish that it exists.
 
 Freeze performance thresholds against actual hardware and comparable baselines before running. Report frame pacing/tails, chunk readiness, allocations, CPU and GPU memory, process memory, network bytes, storage latency and failures separately. “No exceptions,” startup success, or a small successful save/load does not establish multiplayer scalability or crash durability.
 
