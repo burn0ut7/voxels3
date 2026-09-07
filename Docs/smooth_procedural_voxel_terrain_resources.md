@@ -12,25 +12,12 @@ data flow, scheduling problems, production failure modes, or alternative
 tradeoffs. Translate every finding through the current Voxels3 architecture,
 the applicable agent routes, verified s&box behavior, and measured project data.
 
-## How to Use and Maintain This Index
+## Using This Index
 
-1. Start with the research-question router below, then open only the catalog
-   entries relevant to the current decision.
-2. Read each entry's transfer limits before treating its implementation as
-   applicable to Voxels3.
-3. In the relevant design note, distinguish observed source facts from ideas
-   Voxels3 adopts, rejects, or adapts. A reference never silently becomes a
-   project requirement.
-4. Add a source only when it is durable, materially useful to a recurring
-   Voxels3 research question, and not already represented by a better source.
-5. Every new entry must identify what the source is, when to route to it, and
-   its important compatibility limits. Do not add unlabeled links, generic
-   inspiration, duplicates, or implementation tasks.
-
-Prefer primary papers, official algorithm material, maintained source code, and
-measured production writeups. Clearly label community analysis, demos, legacy
-code, and closed-source examples because they provide different kinds of
-evidence.
+Start with the question router, then read only relevant entries and their
+transfer limits. Source selection and maintenance follow
+[AGENTS.md](../AGENTS.md#research-reference-library). Keep project decisions in
+the appropriate architecture or research owner from the [documentation map](README.md).
 
 ## Research-Question Router
 
@@ -41,11 +28,11 @@ evidence.
 | Practical chunk LOD, transitions, streaming, and editing | [Godot Voxel](https://github.com/Zylann/godot_voxel), [UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain), [Voxel Plugin Legacy](https://github.com/VoxelPlugin/VoxelPluginFreeLegacy) | Mature or production-oriented systems expose ownership, paging, invalidation, and integration concerns. Their architectures are not Voxels3 templates. |
 | GPU-first generation or meshing work division | [UE4VoxelTerrain](https://github.com/bw2012/UE4VoxelTerrain), [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry) | Concrete GPU-oriented examples for minimizing CPU work and reusing persistent GPU data. |
 | Bounded viewer-centered LOD and incremental updates | [Voxels3 visual clipbox scaling research](Research/VisualClipboxScaling.md), [Geometry Clipmaps](https://hhoppe.com/geomclipmap.pdf), [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry) | Project decision and foundational cache, snapping, and exposed-region evidence; external geometry is heightfield-specific. |
-| Keeping streaming ahead of a fast player without holes | [Voxels3 GPU streaming research](Research/GpuVoxelTerrainStreaming.md), [Far Cry 5 terrain rendering](https://www.gdcvault.com/play/1025480/Terrain-Rendering-in-Far-Cry), [Sunset Overdrive streaming](https://www.gdcvault.com/play/1022268/Streaming-in-Sunset-Overdrive-s) | Connects requested-versus-resident LOD, coarse coverage, incremental refinement, movement budgets, and explicit teleport handling to current Voxels3 evidence. |
+| Keeping streaming ahead of a fast player without holes | [Voxels3 streaming questions](Research/ChunkPerformanceOptimizationFindings.md#publication-and-scheduling-alternatives), [Far Cry 5 terrain rendering](https://www.gdcvault.com/play/1025480/Terrain-Rendering-in-Far-Cry), [Sunset Overdrive streaming](https://www.gdcvault.com/play/1022268/Streaming-in-Sunset-Overdrive-s) | Connects requested-versus-resident LOD, coarse coverage, incremental refinement, movement budgets, and explicit teleport handling to dated Voxels3 evidence and unimplemented alternatives. |
 | Alternative sharp-feature surface extraction | [Dual Contouring paper](https://www.cs.rice.edu/~jwarren/papers/dualcontour.pdf) | Primary comparison point for Hermite data, QEFs, and feature preservation. |
 | Sparse large-world volume representation | [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb), [Efficient Sparse Voxel Octrees](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees), [HashDAG](https://github.com/Phyronnaz/HashDAG) | Contrasting hierarchical and compressed representations for storage and traversal research. |
 | Compact implementations for algorithm inspection | [stoyannk/voxels](https://github.com/stoyannk/voxels), [Marching-Cubes-Terrain](https://github.com/Eldemarkki/Marching-Cubes-Terrain), [Fast Unity Marching Cubes](https://github.com/Fobri/Fast-Unity-Marching-Cubes), [Scrawk/Marching-Cubes](https://github.com/Scrawk/Marching-Cubes) | Smaller codebases make topology, chunking, threading, and hot-path details easier to isolate. |
-| Shipped-game behavior and production failure modes | [Planet Nomads](https://planet-nomads.com/), [No Man's Sky community analysis](https://github.com/gistya/nomansterrain), Astroneer talks and postmortems | Useful for forming questions about scale and player experience; closed or inferred implementations are not architectural evidence. |
+| Shipped-game behavior and production failure modes | [Planet Nomads](https://planet-nomads.com/), [No Man's Sky community analysis](https://github.com/gistya/nomansterrain) | Useful for forming questions about scale and player experience; closed or inferred implementations are not architectural evidence. |
 
 ## Open-Source Terrain Systems
 
@@ -101,16 +88,3 @@ evidence.
 | [Nanite Virtualized Geometry](https://dev.epicgames.com/documentation/unreal-engine/nanite-virtualized-geometry-in-unreal-engine) | Epic documentation for GPU-driven hierarchical cluster selection, fine-grained streaming, and automatic LOD. | Comparing requested-versus-resident hierarchical detail, indirect rendering, and bounded GPU work in a production renderer. | Primarily imported/static clustered geometry with different deformation and topology constraints; not a live voxel-meshing solution. |
 | [World Partition](https://dev.epicgames.com/documentation/unreal-engine/world-partition-in-unreal-engine) | Epic documentation for source-driven spatial streaming, priorities, loaded versus activated states, and destination preloading. | Studying multiple streaming sources, directional importance, bounded concurrent loads, or explicit teleport preparation. | Actor/cell streaming semantics are not terrain-mesh ownership and must be adapted rather than copied. |
 | [Virtual Texture Memory Pools](https://dev.epicgames.com/documentation/unreal-engine/virtual-texture-memory-pools-in-unreal-engine) | Epic documentation for fixed GPU page pools, working-set fit, eviction, and residency diagnostics. | Researching bounded-cache behavior, thrash, utilization telemetry, and desired-versus-resident detail. | Texture pages are only an analogy for derived mesh residency; they do not define voxel publication or transition topology. |
-| Astroneer talks and postmortems | Public observations and developer material about a shipped smooth, editable, procedural planetary world. | Studying player-facing editing, traversal, visual behavior, and production constraints. | No canonical source is cataloged yet and implementation details are closed; add a specific durable link before relying on a claim. |
-
-## Recording a Research Outcome
-
-When a source materially affects a design decision, record the outcome in the
-smallest relevant Voxels3 design note:
-
-- the question being answered;
-- the fact or technique observed in the source;
-- the source's architecture and evidence type;
-- what Voxels3 adopts, rejects, or adapts;
-- why that choice fits the canonical Voxels3 path and verified s&box constraints;
-- measurements still required before making correctness or performance claims.

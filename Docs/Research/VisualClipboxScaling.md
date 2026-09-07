@@ -1,95 +1,59 @@
-# Visual Clipbox Scaling Research
+# Visual Clipbox Scaling Decision
 
-## Decision
+Decision context: 2026-09-03 gameplay-independent visual loading work. This
+record owns the rationale and serious alternatives. Current configuration and
+ownership belong to [voxel foundation](../Architecture/VoxelChunkFoundation.md)
+and [GPU meshing](../Architecture/GpuVoxelMeshing.md#canonical-level-indexed-placement).
+Test outcomes belong to [the ledger](../ValidationResults.md#terrain-visual-stress-001v1---256-goal-and-512-stretch).
 
-Terrain view distance should scale by enabling another ordinary fixed-cache
-clipbox level, never by expanding the LOD0 or gameplay cube. The default remains
-levels 0 through 2. `VisualChunkRadius` selects the supported maximum level at
-tiers `4/16/32/64/128/256/512`, while `GameplayRadius` remains an independent
-full-3D simulation-interest setting.
+## Problem and Chosen Direction
 
-The current gameplay chunk has no stored samples, edits, collision, persistence,
-or other mutable payload. Its authoritative content is the deterministic
-implicit SDF plus coordinate. The gameplay range is therefore an analytic cube,
-and a `VoxelChunk` view is created on demand. Materializing millions of identical
-wrappers or submitting them all to the visual mesher adds no world state and is
-not gameplay streaming.
+The failed implementation expanded gameplay interest into an eager coordinate
+set, constructed one immutable wrapper per coordinate, and sent potential
+surfaces into LOD0 meshing. Increasing gameplay radius therefore created cubic
+allocation and mesh work even though the visual clipbox had not expanded.
+The ledger's loading diagnosis records the exact session and measurements.
 
-## Primary evidence
+The implemented direction separates analytic gameplay membership from bounded
+visual preparation. Additional view distance enables another ordinary fixed-cache
+level and adjacent transition pair through the existing GPU pipeline. The
+implicit gameplay payload does not justify materializing every coordinate;
+future mutable gameplay state will need its own explicit residency decision.
 
-- Losasso and Hoppe's [Geometry Clipmaps paper](https://hhoppe.com/geomclipmap.pdf)
-  bounds terrain cost with nested power-of-two grids, snapped placement, and
-  updates only to exposed regions. Its heightfield topology does not represent
-  arbitrary caves, so Voxels3 retains volumetric extraction and Transvoxel.
-- NVIDIA's [GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry)
-  reinforces persistent reusable level storage and incremental coarse-to-fine
-  updates. Voxels3 adapts the cache discipline, not its 2D ring mesh.
-- NVIDIA's [GPU procedural terrain chapter](https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-1-generating-complex-procedural-terrains-using-gpu)
-  uses 32-cubed blocks, bounded reusable geometry buffers, nearest-first work,
-  farthest eviction, and cached empty results. Those ownership principles fit
-  the existing single mesher and known-empty broadphase.
-- Godot Voxel documents its [clipbox LOD model](https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/)
-  and [time-budgeted performance controls](https://voxel-tools.readthedocs.io/en/latest/performance/).
-  Its concentric-box differences and warnings about task backlog are relevant;
-  its CPU task graph is not an implementation template for this GPU-first path.
-- Voxel Plugin's official [world-size and LOD documentation](https://docs.voxelplugin.com/1.2/core-systems/voxelworld/world-size-and-level-of-details)
-  and [profiling guidance](https://docs.voxelplugin.com/1.2/technical-notes/performance-and-profiling)
-  support power-of-two LODs, transition geometry, explicit viewer/invoker policy,
-  and bounded priority work. Unreal-specific ownership does not transfer.
-- Ubisoft's [Far Cry 5 terrain rendering talk](https://www.gdcvault.com/play/1025480/Terrain-Rendering-in-Far-Cry)
-  is evidence for separating requested and resident terrain and retaining coarse
-  coverage while detail arrives. Its heightfield culling and stitching do not
-  replace the volumetric seam system.
-- The author-maintained [GigaVoxels publication page](https://www.icare3d.org/research-cat/publications/gigavoxels-ray-guided-streaming-for-efficient-and-detailed-voxel-rendering.html)
-  supports bounded, view-guided multiresolution residency. Its sparse-volume ray
-  caster is rejected as a renderer architecture for live polygonized SDF terrain.
+## Evidence and Transfer
 
-## Repository diagnosis
+The [research catalog](../smooth_procedural_voxel_terrain_resources.md) supplies
+source links and their compatibility limits:
 
-The failing radius-64 session created an inclusive `129^3 = 2,146,689`
-gameplay-coordinate set, one wrapper per coordinate, then scheduled every
-potential surface coordinate as LOD0 gameplay geometry. It reached about
-`297,256` gameplay mesh requests, `318,837` residents, `178` arenas, roughly
-`9 GB` of committed vertex/index capacity, CPU p95/p99 of
-`1587/1741 ms`, and schedule latency around `92.5 s`. Later Vulkan fence and
-present timeouts were a consequence of this unbounded work. The visual clipbox
-itself remained fixed and was not the source of the millions of requests.
+- Geometry Clipmaps and GPU-Based Geometry Clipmaps support nested reusable
+  caches and updates to exposed regions. Voxels3 adapts that cache discipline;
+  their heightfield rings and trims cannot represent caves.
+- GPU Gems 3 procedural terrain supports bounded geometry pools and remembered
+  empty blocks. Its hardware, extraction pipeline, and capacities are not targets.
+- Godot Voxel and Voxel Plugin provide LOD, backlog, and priority failure cases.
+  Their engine ownership and CPU scheduling are not templates for Voxels3.
+- Far Cry 5 and GigaVoxels inform requested/resident separation and bounded
+  detail. Neither supplies Voxels3's volumetric mesh publication implementation.
 
-The replacement keeps the exact simulation range but represents it in constant
-space. Only the bounded LOD0 visual warm shell and committed/staged LOD0
-coverage enter classification and meshing. Each outer tier adds one fixed
-`16^3` cache, one ordinary adjacent transition pair, and linear work through the
-existing scheduler, lanes, allocator, visibility, and atomic publication paths.
+## Alternatives and Disposition
 
-## Gap and disposition matrix
+| Alternative | Decision and reason |
+| --- | --- |
+| Expand the gameplay or LOD0 cube for view distance | Rejected: reproduces cubic work and confuses simulation interest with rendering quality. |
+| Separate distant heightfield renderer | Rejected: loses arbitrary volumetric surfaces and introduces another terrain representation. |
+| Replace the renderer with an octree or sparse ray caster | Rejected for this slice: changes ownership, topology, and publication beyond the scaling problem. |
+| Fixed-cache level-indexed clipbox | Implemented: extends reach using the same volumetric extraction, transition, allocator, and publication paths. |
+| Analytic implicit-SDF gameplay cube | Implemented for the current immutable payload; chunk views are created on demand. |
+| Underground occlusion hierarchy | Deferred: separate measured visibility problem, not a prerequisite for distance tiers. |
 
-| Candidate | User-visible reach | Work/memory bound | Full 3D SDF and caves | Disposition |
-| --- | --- | --- | --- | --- |
-| Expand gameplay or LOD0 cube | Yes | Cubic and unbounded | Yes | Reject; caused the measured failure. |
-| Separate heightfield distance renderer | Yes | Bounded | No | Reject; loses caves/material/topology parity and creates competing terrain truth. |
-| Recursive octree or new sparse renderer | Yes | Potentially bounded | Yes | Reject for this slice; replaces ownership, publication, and rendering architecture. |
-| Fixed-cache N-level clipbox | Yes | Roughly linear per tier | Yes | Adopt; reuses the proven volumetric and Transvoxel paths. |
-| Analytic implicit-SDF gameplay cube | No visual policy | Constant until real state exists | Yes | Adopt for the current payload; instantiate on demand. |
-| Underground occlusion hierarchy | Potentially | Unknown until measured | Must remain 3D | Defer to an isolated future slice. |
+## Limits
 
-## Measured scaling
+Outer caches remain full 3D. Conservative field bounds skip provably empty or
+solid extraction, but are not occlusion culling of hidden cave surfaces. A
+future visibility change must preserve volumetric geometry and transition
+coverage.
 
-Production figure-eight runs with `GameplayRadius=64` settled radius `256` at
-`21,190` total residents and `13` arenas, then radius `512` at `25,286`
-residents and `14` arenas. Both retained exactly three regular scratch lanes and
-`34,310,016/3,884,628` regular/transition scratch bytes. Radius 256 moving
-CPU/GPU p95/p99 was `1.396/3.020` and `1.150/1.512 ms`; radius 512 was
-`1.452/3.179` and `1.189/1.559 ms`. Every queue drained, all adjacent pairs were
-ready, and unsafe publication, seam mismatch, invalid-table use, ordinary
-geometry readback, and render-time SDF evaluation remained zero. Exact run IDs
-and complete metrics are in `Docs/ValidationResults.md`.
-
-## Full-3D boundary
-
-The outer levels remain 3D volumetric caches. Conservative SDF range analysis
-already avoids meshing regions proven entirely air or solid, including much of
-the underground volume, but the renderer does not yet perform occlusion-based
-rejection of hidden cave surfaces. A future underground-culling slice must
-measure visibility and preserve edits, caves, overhangs, and the same SDF and
-transition topology. It cannot assume a heightfield, flatten vertical interest,
-or become a prerequisite for the view-distance tiers accepted here.
+This design record does not grant performance acceptance. Expansion/contraction
+checks, default figure-eight comparisons, unresolved regressions, and exact
+run data are recorded only in the ledger. Do not infer a passing baseline from
+an implementation being present in the source.

@@ -3,10 +3,12 @@
 Use this route for authority, replication, RPCs, edit ordering, prediction,
 joining, interest management, and transfer of world state.
 
-## Project Constraints
+## Scope
 
-The s&box project is configured for multiplayer, 1-64 players, and a 50 Hz tick
-rate. There is no project-specific voxel networking implementation yet.
+Read the [foundation scope](../Architecture/VoxelChunkFoundation.md#scope) for
+implementation status and the authored project settings for player/tick limits.
+The rules below constrain multiplayer work; they do not describe an existing
+voxel replication protocol.
 
 ## Authority
 
@@ -35,10 +37,7 @@ rate. There is no project-specific voxel networking implementation yet.
 
 Validate late join, reconnect, duplicate delivery, reordered edits, invalid
 requests, boundary-spanning edits, concurrent edits, unloaded-region edits, and
-clients with mismatched generator/configuration versions by exercising the real
-production multiplayer flow in the actual playable world. Use fixed world seed,
-clients, positions, edit sequence, timing, latency conditions, and operation
-counts for each versioned scenario. Measure final authoritative/client state,
-convergence time, bandwidth, and processing work against criteria defined before
-execution, then append every result to `Docs/ValidationResults.md` under the
-policy in `Docs/AgentRoutes/performance-and-testing.md`.
+mismatched generator/configuration versions through the real multiplayer flow.
+Measure authoritative/client convergence, bandwidth, and processing work. Follow
+the [performance and testing route](performance-and-testing.md); record clients,
+positions, edit order, timing, and latency conditions in each fixed scenario.

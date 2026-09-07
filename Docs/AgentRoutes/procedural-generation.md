@@ -26,12 +26,8 @@ and initial world creation.
 ## Performance and Tests
 
 Generation must support bounded spatial evaluation without generating unrelated
-world areas. Measure sample throughput and region-generation latency by invoking
-the production generation path in the actual playable world with the fixed seed,
-coordinates, operation count, and other scenario parameters recorded in
-`Docs/ValidationResults.md`.
-
-Validate invariants—same seed, boundary continuity, coordinate stability,
-bounded values, and known feature samples—through that same in-world production
-path. Record the measurable values and pass criteria in the canonical ledger. Do
-not create golden files, snapshots, fixtures, or a separate generator harness.
+world areas. Measure sample throughput and region-generation latency. Validate
+same-seed reproducibility, boundary continuity, coordinate stability, bounds,
+and known feature samples through the production path. Follow the
+[performance and testing route](performance-and-testing.md) for execution,
+fixed scenarios, and reporting.

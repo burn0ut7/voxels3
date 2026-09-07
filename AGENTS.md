@@ -18,9 +18,9 @@ Voxels3 is an s&box multiplayer voxel game with smooth signed-distance-field
 (SDF) terrain, procedural generation, and planned live edits. Performance under
 multiplayer load is a primary requirement.
 
-Use `Docs/Architecture/VoxelChunkFoundation.md` and
-`Docs/Architecture/GpuVoxelMeshing.md` for current implementation, ownership,
-and remaining work; keep detailed subsystem status there.
+Use the [documentation map](Docs/README.md) to find the owner of each subject.
+Keep current contracts in architecture, test outcomes in the validation ledger,
+and research proposals separate from implemented behavior.
 
 ## Repository Facts
 

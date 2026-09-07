@@ -28,7 +28,7 @@ while reducing geometry arenas and draw submissions.
 
 ## Ownership and Data Flow
 
-`VoxelManager` owns authoritative loaded chunks and one `GpuVoxelMesher`.
+`VoxelManager` owns the analytic gameplay range and one `GpuVoxelMesher`.
 `VoxelChunk` owns no engine resource. The manager conservatively rejects chunks
 whose exact density range proves them entirely solid or air. Potential surface
 chunks enter the mesher as immutable coordinate, dimension, generator-setting,
@@ -72,14 +72,8 @@ active coordinates, and one normal 384-face adjacent transition pair. Cell and
 region sizes double per level. Gameplay residency is still owned only by
 `GameplayRadius`, and entity draw distance is not part of this terrain policy.
 
-The current gameplay payload is only immutable implicit-SDF identity and
-settings. `GameplayRadius` is therefore stored as an analytic inclusive 3D cube,
-not as millions of identical wrapper objects or GPU mesh requests. A
-`VoxelChunk` view is synthesized on demand for a coordinate inside that cube.
-LOD0 classification and meshing are bounded to the union of its visual warm
-shell and committed/staged LOD0 placement, independently of gameplay radius.
-This representation must be replaced by real per-coordinate residency only when
-a future gameplay feature actually owns mutable chunk state.
+Gameplay membership and bounded CPU preparation are defined in the
+[voxel foundation](VoxelChunkFoundation.md#canonical-ownership-and-data-flow).
 
 `VoxelManager` computes the changed regular boxes and adjacent transition
 boundaries in one placement update. Each transition identity contains its fine
@@ -126,8 +120,9 @@ placement model.
 
 ### Atomic Clipbox Handoff
 
-The 2026-09-03 [GPU voxel terrain streaming research](../Research/GpuVoxelTerrainStreaming.md)
-informed the implemented requested-versus-resident separation. `VoxelManager`
+The earlier streaming study considered regional refinement. It remains an
+[unimplemented alternative](../Research/ChunkPerformanceOptimizationFindings.md#publication-and-scheduling-alternatives),
+not the publication contract below. `VoxelManager`
 owns one committed drawable placement, the latest target anchors and validated
 configuration revision, and at most one staged replacement. While the
 replacement is incomplete, every committed level and pair active set remains
@@ -172,9 +167,9 @@ independently mutable publication model remains rejected.
 Clipbox placement owns where the boundary exists; Transvoxel owns its geometry.
 For each coarse region on a hole face, the manager derives a separate
 `(FineLevel, CoarseLevel, CoarseCoordinate, Face)` identity. The face direction points from
-the owning coarse region toward the hole. The inner boundary owns 96 identities;
-the outer boundary owns 384. The combined 480-key set is diffed by the one
-placement update. Retained faces keep their generation and allocation while
+the owning coarse region toward the hole. Face counts follow the configured
+hierarchy described above. The combined key set is diffed by the one placement
+update. Retained faces keep their generation and allocation while
 moving anchors replace only the identities that entered or left the boundary.
 
 A transition is a face-local Transvoxel volume-cell mesh, not a heightfield trim
@@ -255,6 +250,8 @@ reconstruct or compact transition triangles in an additional GPU phase caused
 reproducible Vulkan invalid-write device loss on s&box `26.08.19`, so those paths
 are rejected rather than retained as a fallback. Explicit `voxel_mesh_audit`
 geometry readback remains diagnostic-only and never participates in rendering.
+
+## Regular Extraction and Render Lifecycle
 
 A remesh evaluates the canonical `voxel_sdf_v5.hlsl` field once into a haloed
 `35^3` density lattice, classifies the `32^3` regular cells from cached corners,
@@ -393,25 +390,13 @@ descriptor plus every draw-enabled visible record against its source layout.
 
 ## Performance Contract
 
-Schema 10 measures the unchanged moving figure-eight separately from settled
-persistent rendering. The moving window records:
-
-- regions scheduled, count-submitted, and published per second;
-- batches submitted/completed per second and occupancy distribution;
-- count submission, submit-to-readback callback, callback-to-consumption, CPU
-  allocation, emit submission, and emit-to-publication distributions;
-- gameplay, warm, and total queue distributions and post-loop drain time;
-- schedule-to-renderable latency, cancellations, and supersessions;
-- direct player-route distance travelled between schedule and publication in
-  world units and 512-unit chunks;
-- frame, GPU, memory, arena, readback, visibility, and correctness metrics.
-
-After the moving loop, the player stops and the manager waits for warm generation,
-all regular and transition queues, and any pending whole-placement handoff to
-settle. After two further render-sequence advances it measures a fixed 10-second
-stationary window using the same production terrain.
-Stationary FPS, CPU tails, GPU distribution, memory, visibility, and settled
-geometry are stored separately in the same result.
+The [manager performance lifecycle](VoxelChunkFoundation.md#performance-overview)
+owns measurement and result capture. GPU results cover stage latency, queue and
+batch utilization, schedule-to-renderable lag, placement readiness, memory,
+visibility, and correctness, with moving and settled rendering measured separately.
+Exact fields are defined by the production result types; scenario parameters,
+thresholds, baseline runs, and acceptance decisions belong to the
+[validation ledger](../ValidationResults.md).
 
 ## Alternatives Outside This Slice
 
@@ -434,3 +419,57 @@ geometry are stored separately in the same result.
   contract. Additional visual levels must continue through the generic records,
   queues, publication handoff, and telemetry arrays; they cannot introduce
   per-level scratch, shaders, or publication paths.
+
+## s&box VFX Shader Parser Gotcha
+
+s&box 26.08.19 can terminate in native `vfx_vulkan` code while reflecting a
+compute shader instead of reporting an ordinary shader error. The observed
+signature was `EXCEPTION_ACCESS_VIOLATION_READ / 0xffffffffffffffff` through
+`HlslParserErrorCallback`, `recoverFromMismatchedToken`,
+`hlslvariablesParser`, and `CHlslParser::Parse`.
+
+Voxels3 reproduced this when persistent vertex and index output writes were
+embedded in the large multi-stage terrain compute shader. The density,
+classification, scan, digest, and count stages were cold-start safe. Adding
+either final geometry-buffer write stage to that monolithic program caused the
+native parser crash even when the shader compiled successfully during a live
+editor session. Moving the two writes into the small dedicated
+`voxel_emit_vertices_cs.shader` and `voxel_emit_indices_cs.shader` resources
+removed the crash without changing geometry bytes or topology.
+
+Treat the following as hard requirements for terrain compute shaders:
+
+- Keep persistent vertex and index writes in their dedicated shader resources.
+  Do not merge them into `voxel_persistent_geometry_cs.shader` merely to reduce
+  the shader count.
+- This rule remains absolute for the regular terrain pipeline. The level-aware
+  transition pipeline serving adjacent LOD boundaries is a measured engine-specific
+  exception: on
+  s&box 26.08.19, dispatching a second transition compute resource beside its
+  topology resource terminates the editor natively even when the second shader
+  is a freshly compiled zero-work kernel with no reflected resources. Its final
+  vertex and index stages therefore share one transition resource capped at the
+  engine's 16-storage-buffer limit. Do not apply this exception to regular
+  terrain or other shaders without reproducing the same native failure.
+- Give each dedicated output shader only the declarations, helpers, and tables
+  it actually consumes. Do not create several wrappers that all include the
+  complete multi-stage program.
+- Use conventional multiline VFX/HLSL grammar: multiline `HEADER`, `MODES`,
+  `FEATURES`, `COMMON`, `CS`, `VS`, and `PS` blocks; one structure member or
+  declaration per line; and explicit braces around control flow. The engine's
+  parser and error-recovery path are less tolerant than the live compiler.
+- Do not treat a successful hot compile as parser-crash validation. After a
+  shader resource or include change, require a clean editor restart, verify
+  the editor remains alive, verify the s&box Sentry `last_crash` marker did not
+  advance, and inspect the fresh log for HLSL/parser, failed shader load,
+  missing compute pipeline, dispatch, and managed exception errors.
+- A newly added shader may initially report a failed on-demand recompile and a
+  missing `.shader_c`. Compile it successfully in the live editor first, then
+  repeat the clean-start check. Never hide this failure by disabling scratch
+  construction or leaving an empty kernel in production.
+
+When diagnosing a similar crash, bisect valid shader programs by complete
+stage boundaries. Keep every intermediate variant syntactically valid; an
+invalid preprocessor guard can remove a function's closing brace, and cold
+construction of that invalid asset can crash the native error-recovery path
+before a useful diagnostic reaches the console.

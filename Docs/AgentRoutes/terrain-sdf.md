@@ -42,9 +42,7 @@ or LOD layout by intuition alone. Base them on representative measurements of:
 ## Validation
 
 Validate sign/iso conventions, coordinate conversion, region boundaries,
-negative coordinates, edit bounds, overlapping edits, and reproducibility.
-Include seam cases where one real operation touches multiple regions. Run every
-case through the production terrain path in the actual playable world, use its
-fixed scenario parameters unchanged, measure the resulting state and downstream
-effects, and append the run to `Docs/ValidationResults.md` under the policy in
-`Docs/AgentRoutes/performance-and-testing.md`.
+negative coordinates, edit bounds, overlapping edits, and reproducibility as
+relevant. Include seam cases where one real operation touches multiple regions.
+Follow the [performance and testing route](performance-and-testing.md) for
+execution, fixed scenarios, and reporting.

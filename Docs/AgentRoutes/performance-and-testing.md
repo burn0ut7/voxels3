@@ -31,28 +31,17 @@ threading, allocations, and test strategy.
 
 ## Test Strategy
 
-- Tests are executions of the shipping production behavior in the actual
-  playable world. Invoke the same production entry point and data flow used by
-  real gameplay; do not reimplement the algorithm in a harness.
-- Do not create a separate test project, test framework, test directory, test
-  file, test scene, test-only component, mock world, synthetic substitute,
-  debug-only validation system, or alternate implementation. The validation
-  ledger is documentation and contains no executable test logic.
-- A startup, load, null, existence, or no-exception check alone is not a feature
-  test. Cause the real operation to occur and measure its real outcome. For
-  example, terrain-edit validation must apply the canonical edit through the
-  gameplay mutation path and measure the resulting authoritative field change
-  and required downstream world effects; merely loading the terrain is invalid.
-- Test contracts and externally meaningful behavior, not private method shape.
-- Prioritize spatial boundaries, negative coordinates, deterministic seeds,
-  stale jobs, edit ordering, network convergence, and worst-case geometry.
-- When fixing a reproducible defect, preserve its real-world reproduction as a
-  fixed ledger scenario and rerun the production path after the fix.
-- One run may record both correctness and performance measurements, but every
-  claimed property needs a concrete metric and pass criterion.
-- Do not assert that generated scene, project, or build files changed. Test the
-  source behavior and inspect rendered/runtime results when visual or engine
-  integration is part of the contract.
+Follow [project validation and figure-eight acceptance](../../AGENTS.md#validation).
+The figure-eight remains the sole project-owned automated test trigger; bounded
+read-only observations can support it. Do not use direct streaming-origin
+mutation or diagnostic-only terrain implementations as substitute test paths.
+
+Prioritize spatial boundaries, negative coordinates, deterministic seeds, stale
+jobs, edit ordering, network convergence, and worst-case geometry as relevant to
+the change. Preserve a defect's real-world reproduction as a fixed ledger
+scenario. One run may cover correctness and performance, but each claimed
+property needs a concrete metric and pass criterion. Inspect actual rendered
+results when visual or engine integration is part of the contract.
 
 ## Fixed Scenario Policy
 
@@ -75,13 +64,7 @@ threading, allocations, and test strategy.
 
 ## Validation Reporting
 
-Every validation run must append a result to `Docs/ValidationResults.md`. Record
-the scenario ID/version, date, project revision or identifiable source state,
-engine build, hardware/environment, exact execution path, unchanged parameters,
-raw measurements, derived metrics, pass criteria, pass/fail outcome, and any
-remaining unmeasured risks. Link durable profiler captures or logs when they
-exist; never use an untracked console observation as the sole evidence.
-
-If the production behavior cannot be executed in the real world, report the
-validation as not run and incomplete. Do not replace it with a synthetic test or
-claim coverage from world loading alone.
+Use the [ledger's scenario and run template](../ValidationResults.md#scenario-definition-template)
+for parameters, source/environment identity, raw and derived measurements,
+criteria, decisions, and durable evidence links. Report unavailable in-world
+validation as not run and incomplete; startup alone cannot replace it.

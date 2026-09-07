@@ -1,33 +1,16 @@
 # Validation Results
 
-This is the single canonical ledger for Voxels3 validation scenarios and their
-measured results. It is documentation only; executable test logic, test-only
-systems, and alternate feature implementations do not belong here or elsewhere.
+This is the canonical append-only ledger of exact scenarios, measurements, and
+acceptance decisions. Historical failures, superseded implementations, removed
+controls, and old settings remain evidence of their recorded source state, not
+current executable instructions or proof of current acceptance.
 
-Validation must run the shipping production code through the real in-world entry
-point used by gameplay. Each run is append-only evidence. Never rewrite or
-delete an earlier result because it failed or because a scenario was superseded.
-
-## Rules
-
-1. Define the scenario and its pass criteria before the first run.
-2. Give it a stable ID and version, such as `TERRAIN-EDIT-001/v1`.
-3. Record every relevant parameter explicitly. Avoid "default," "typical,"
-   "random," or "same as before."
-4. Reuse the exact parameter set for every baseline, comparison, and regression
-   run of that scenario version.
-5. Append raw measurements as well as calculated summaries. Link any durable
-   capture or log by repository-relative path or stable external identifier.
-6. Record failures and incomplete runs; do not cherry-pick.
-7. Version a scenario only when an extraordinary, substantive issue makes the
-   old definition invalid or impossible. Add the written justification before
-   the new definition and preserve all old definitions and results.
-8. The existing figure-eight is the primary automated journey and remains the
-   sole project-owned test trigger. Read-only production-state observations may
-   support it, but direct streaming-origin mutation and diagnostic-only terrain
-   or mesh implementations are not valid substitute test paths. Historical
-   results that used removed diagnostics remain immutable evidence, not current
-   executable scenarios.
+Use the [documentation map](README.md#validation-navigation) to find scenario
+families. [AGENTS.md](../AGENTS.md#validation) owns project validation and
+figure-eight acceptance rules; the [performance route](AgentRoutes/performance-and-testing.md)
+owns fixed-scenario policy and measurement guidance. Use the templates below
+for scenario definitions and run records. Never rewrite or delete historical
+results to obtain a pass.
 
 ## Scenario Definition Template
 

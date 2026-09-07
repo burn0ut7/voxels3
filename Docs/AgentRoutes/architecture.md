@@ -4,23 +4,14 @@ Use this route for system boundaries, ownership, data flow, and any feature that
 crosses voxel storage, terrain generation, meshing, rendering, collision,
 networking, or persistence.
 
-## Current State
+## Current Design
 
-The voxel-world foundation is established in `Code/Voxels/VoxelManager.cs` and
-`Code/Voxels/VoxelChunk.cs`. `VoxelManager` owns one canonical loaded-chunk
-dictionary, bounded desired/load queues, fixed LOD0/LOD1/LOD2 clipbox placement,
-both 2:1 transition boundaries, and one `GpuVoxelMesher`. Each `VoxelChunk` owns
-the immutable parameters for the deterministic volumetric generator-v5 SDF and
-derives Grass/Air material IDs without sample arrays. The GPU mesher derives
-persistent regular and transition render geometry from that same SDF contract;
-table-derived primary positions are final, and one transition kernel closes both
-LOD boundaries with cull-compatible indices. Read `Docs/Architecture/VoxelChunkFoundation.md` and
-`Docs/Architecture/GpuVoxelMeshing.md` before changing these boundaries,
-dimensions, placement, or rendering contracts.
-
-There is no collision generation, live-edit pipeline, persistence,
-multi-origin interest manager, or voxel network protocol yet. Do not infer
-those systems from the implemented render-meshing path.
+Read [Voxel foundation](../Architecture/VoxelChunkFoundation.md) for world state,
+SDF, CPU preparation, and diagnostics, and [GPU meshing](../Architecture/GpuVoxelMeshing.md)
+for visual placement and the derived-geometry lifecycle. Keep current ownership
+and implementation status in those documents. This route defines design
+constraints; its edit, collision, and networking flow is not an implementation
+claim.
 
 ## Required Shape
 
