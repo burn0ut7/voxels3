@@ -293,6 +293,174 @@ versioned storage, I/O, serialization and upload costs; normal production curren
 does not read geometry back. Do not add geometry readback to populate a disk
 cache without evidence that repeated startup/revisit cost warrants a new contract.
 
+## Frame pacing and chunk-loading throughput
+
+Added 2026-09-07 in response to the explicit frame/loading follow-up. Source
+reference remains the runtime pinned above; the current scheduler and telemetry
+call sites were rechecked while concurrent GPU work was in progress. No new
+runtime result is introduced. These directions elaborate E2/E3 rather than
+creating another scheduler design owner.
+
+### Define what becomes faster
+
+There are three separate goals: less CPU work per frame, fewer long frames, and
+less time until the player has complete usable terrain coverage. A change can
+improve one and hurt another: submitting more batches in a frame can raise
+throughput while causing a hitch. Completing regular regions faster can still
+leave an entire placement waiting for a transition.
+
+| Existing manual-run measurement | Value | Meaning and limitation |
+| --- | --- | --- |
+| CPU preparation integrated | 93,390 / 121.93 s, about 766/s | LOD0 preparation results, including proven-empty regions; not visible meshes. |
+| Foreground regular submitted / published | About 859.9 / 859.4 regions/s | Existing non-outer regular throughput population; excludes outer and transition throughput. Empty results and inactive placement candidates can still publish. |
+| Foreground regular batch occupancy | 7.789 of 8 | Batches are already nearly full; packing alone has at most about 2.7% headroom at a fixed batch rate. This is arithmetic, not a speedup prediction. |
+| Regular schedule-to-renderable p50 / p95 / p99 | 18.778 / 74.636 / 102.353 ms | Existing foreground latency population; region publication is not complete placement coverage. |
+| Foreground count callback wait, mean / p99 | 0.558 / 2.187 ms | Callback readiness to later consumption; one possible scheduling gap, not GPU kernel time. |
+| Foreground emit-to-publication, mean / p99 | 1.833 / 4.043 ms | Includes the required render-sequence boundary and update scheduling. |
+| Foreground drain | 27.43 ms | Short at route end; does not prove every moving placement was timely. |
+| Maximum placement anchor lag | 4 level-local regions | Distinct from route-distance lag; must be assessed per the fixed scenario. |
+
+The saved `totalQueue` is only gameplay plus warm queue counts: its sampler calls
+`SampleQueueDepth(PendingGameplayCount, PendingWarmCount)`. It does not include
+near-visual, outer and transition queues. Its median zero therefore does not
+establish that the whole mesher was idle. Similarly, logical gameplay-region
+counts are analytic membership, not chunks constructed per second.
+
+Use **valid, still-required publications per second**, broken out by level and
+regular/transition type, plus **request-to-complete-placement latency** and
+time-to-first-required-coverage for loading. Keep raw submitted regions/s as a
+work counter. Do not pool coarse and fine regions into an apparent equivalent
+work rate: their world coverage and geometry cost differ.
+
+### F1: remove avoidable dependence on very high frame rates
+
+The current render rendezvous advances at most once per manager update epoch.
+`ProcessGpuRenderTick` admits at most one new regular, outer or transition count
+batch, each at most eight regions. Foreground count consumption can coexist with
+a foreground submission, but that does not allow two new count batches. Outer
+emission and transition continuations also consume service opportunities.
+
+With U claimed epochs per second, **8U is an admission ceiling**, before lane
+availability, transitions/continuations, CPU/GPU execution and publication waits:
+
+| Hypothetical claimed epochs/s | Maximum newly count-submitted region identities/s |
+| ---: | ---: |
+| 60 | 480 |
+| 120 | 960 |
+| 144 | 1,152 |
+
+This table is source arithmetic, not a benchmark at those frame rates. U is the
+actual manager/render-epoch cadence, not an assumed display refresh rate. The
+manual run's regular-count total including outer work was 133,775, or about
+1,097 per moving second when normalized by its duration; those broader counters
+span the measurement lifecycle and are not an exact steady-state demand rate.
+Nevertheless, foreground alone at roughly 859/s leaves little theoretical room
+at 120 epochs/s for outer/transition work. The high-FPS run cannot establish
+ordinary-frame-rate loading capacity.
+
+**Enhancement candidate:** allow a small, explicitly budgeted amount of additional
+eligible work within the existing single claimed epoch, using the existing lanes
+and eight-region batch size. Separate the CPU submission-time budget from count
+batch admission and completion service. A bounded credit/deadline mechanism may
+avoid tying throughput solely to frame count; cap accumulated credit so a slow
+frame cannot trigger an unbounded catch-up burst. This cannot manufacture GPU
+capacity, and no additional work is useful when lanes are occupied.
+
+This changes the current one-new-batch policy and requires a new architecture
+decision and telemetry capable of counting the actual work. It must not be
+implemented by letting extra editor cameras advance the scheduler, by removing
+the epoch guard, or by raising `MaximumDispatchesPerUpdate` indiscriminately.
+Keep resource completion, camera ownership and outer fairness intact.
+
+**Measurement gate:** first classify blocked admission by no pending work,
+no idle lane, count pending, emit/publication pending, or policy budget. Record
+how often eligible idle lanes coexist with denied work. Only then consider
+multiple bounded admissions. Preserve the canonical test's frame cap; ordinary
+60/120-epoch behavior needs a separately defined real-world supporting scenario,
+recorded before execution rather than quietly changing the accepted baseline.
+
+### F2: prioritize the last dependencies that unlock a placement
+
+The current regular-work path can defer transition service even when a transition
+is the last missing dependency. E3 should measure these cases directly and give
+required transition continuation/completion bounded service. This can improve
+visible loading latency without increasing total region throughput or memory.
+It can also lower regular regions/s while producing better complete coverage.
+
+Record the identity/type of the last dependency, its queued/ready/service times,
+and the interval from all resources ready to placement commit. Never infer
+starvation from the limited transition-deferred counter. Preserve regular
+gameplay progress and outer service guarantees; prioritizing transitions forever
+would simply move the starvation problem.
+
+### F3: reduce pipeline gaps while preserving completion boundaries
+
+Classify every occupied lane by lifecycle state and elapsed age. Examine whether
+ready metadata waits for service while unrelated work is chosen, whether emitted
+candidates wait an avoidable update after their required boundary, and whether
+needed LOD0 results wait in the integration queue. Do not treat all wait time as
+removable or force a synchronous readback to make the counters smaller.
+
+The recorded foreground readback average is 1.891 ms; exact CPU allocation averages
+0.00753 ms per batch. Those numbers do not support an allocator-ownership rewrite
+just to remove CPU allocation time. The already-measured release spikes are a
+different operation. Callback/emit waits, batch timings and schedule latency have
+different populations and nested intervals; adding their p99 values is invalid.
+
+For CPU preparation, the existing batch size is 256 and integration budget is
+0.5 ms. If a critical result waits behind unrelated preparation, a smaller bounded
+handoff batch or dependency-first ordering may reduce first-ready latency. More
+task handoffs increase scheduling/allocation overhead. The low integrated CPU
+total in the earlier review does not justify raising that budget or adding more
+workers without a demonstrated starvation interval.
+
+### F4: spend less CPU on publication bursts and steady-state frames
+
+For movement hitches, E2 plus the local allocator/visibility improvements remain
+the leading source-backed candidates. Instrument the full commit path, including
+release, activation, descriptor upload and command recording. A bounded planner
+does not bound the final commit automatically. Reducing or batching redundant
+changes before the atomic commit is preferable to spreading visible activation
+across frames and breaking coverage.
+
+For stationary frames, the capture review's final short window attributes roughly
+0.505 ms/frame to Render, 0.111 ms to Animation and 0.108 ms to Editor, versus
+0.008 ms to the manager. These scopes are not an additive frame budget, but they
+show why faster chunk planning alone is unlikely to transform stationary FPS.
+Investigate CPU render submission/attribute churn and actual animated-renderer
+work with engine evidence. Profile an equivalent packaged run separately to
+isolate editor costs; do not count hiding editor UI as a shipped optimization.
+Track GC-related spike frequency/maxima alongside frame tails: rare pauses can
+fall outside p99 even when average FPS is high.
+
+### Throughput acceptance must distinguish demand from capacity
+
+The route schedules about 861 foreground regions/s and publishes about 859/s.
+That is achieved throughput for the route, not a measured maximum loading speed.
+An optimizer may leave that rate unchanged because the same player trajectory
+requests the same work; the benefit may instead be lower queue age, less CPU,
+lower latency and more headroom. Do not reject a valid improvement because it
+cannot publish regions the route never requested.
+
+Within the fixed route, compare intervals with real pending eligible work and
+report arrival rate, useful completion rate, backlog slope, cancellation and
+coverage latency together. A sustained completion deficit grows backlog; an
+empty queue hides spare capacity. If saturation is never reached, label capacity
+unmeasured. A fixed playable-world cold-loading observation may additionally
+measure time from world entry to complete required terrain, but it requires
+predeclared scene/seed/quality/spawn/camera/cache state and its own ledger record.
+No synthetic terrain path or increased player speed is substituted for the
+canonical figure-eight.
+
+Recommended next frame/loading investigation: **classify lane stalls and final
+placement dependencies first**, then compare bounded admission (F1) or dependency
+service (F2) according to that evidence. Keep separate moving/stationary frame
+p95/p99, rare-stall counts/maxima, useful publications by type/level, placement
+latency, CPU time per useful publication, peak memory and correctness. Require
+an attributable improvement in the selected metric plus all existing gates;
+neither a larger submitted count nor smoother frames with delayed coverage is
+sufficient by itself.
+
 ## Boundaries with other slices
 
 The separate GPU work owns shader reductions and arena-size experiments. This
