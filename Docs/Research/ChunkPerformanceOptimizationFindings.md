@@ -1,5 +1,9 @@
 # Terrain Performance Research
 
+The [GPU meshing study](GpuMeshingOptimizationStudy.md) owns the 2026-09-07
+GPU source audit and extraction/renderer comparisons. Its proposed changes are
+not implemented; the accepted chunk-preparation outcome below remains distinct.
+
 Research context: 2026-09-03 measurements, reviewed against the documentation
 owners on 2026-09-06. This is a record of investigation questions and alternatives,
 not a selected implementation, approved backlog, or performance-acceptance claim.
