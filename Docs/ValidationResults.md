@@ -14737,3 +14737,37 @@ These close the bounded Stop-during-checkpoint-read and Stop-with-regional-read
 admission cases. They do not prove in-session stale completion after a replacement,
 512MiB denial/retry, or the strict sample-retirement deadline. Keep full original
 goal acceptance open and retain the earlier failed/partial cases.
+
+### Active-cancellation follow-up — eventual sample collection, 2026-09-08
+
+Read-only follow-up on source8da9a72, visible basic_example Play, engine26.09.01c,
+compile successful with0errors. At04:46:57 the original world remained106/34pages,
+epoch2/checkpoint41/Saved, authored0, with no pending reads, edits, visual or
+collision work. Resident and retained samples both equalled4456448bytes (34pages);
+reserved samples were0. The earlier04:39:25 retained observation was154402816bytes.
+No forced collection, new benchmark, world mutation or restart was used for this
+follow-up. This is an additional observation of the prior scenario, not a new
+timed acceptance run. Raw status: [retention follow-up](ValidationEvidence/ChunkStorage/retention-audit-followup.json).
+
+The accounting implementation tracks each allocated correction array with a weak
+reference; every current resident array is included. Equality with current resident
+bytes therefore establishes that no additional tracked sample arrays remained alive
+at this observation. It supports eventual collection of the prior sample versions
+in this session; it does not establish when they became unreachable or were collected,
+the strict retirement deadline, total process/GPU memory, or all future lifetimes.
+
+Source audit: TerrainFieldPage releases saved canonical arrays to weak references;
+regional reader wrappers retain their own captured arrays. VoxelCollisionWorld.Work
+clears region.Field after Build; collision mesher and GPU scratch objects do not
+store a TerrainFieldSnapshot member. These source facts alone do not prove JIT local
+lifetimes. The .vs/output/voxels3.dll timestamp was September7 01:24:41, older than
+current changes, so it was not used as evidence for the live compiled worker.
+
+Reservation audit: TakeReadBatch reserves before dequeueing and disposes an empty
+filtered batch; the read worker owns its reservation with using, including error
+and cancellation exits. PrepareBrush leaves disposal to its caller, whose using
+scope covers its early no-change return. Allocation consumption and reservation
+release share AllocationGate. These are source-path checks, not runtime proof of
+512MiB denial/retry or competing decoder coverage. No new retention defect is
+established by this audit; no speculative lifetime patch was applied. The strict
+timing, capacity-edge and in-session stale-completion gates remain open.
