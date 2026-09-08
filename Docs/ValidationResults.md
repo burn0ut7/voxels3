@@ -14123,3 +14123,107 @@ older lifecycle limitations remain outside this bounded result.
 
 Evidence export note: trailing whitespace in regional-route-interrupted.log
 was normalized for repository formatting; log messages/timestamps are retained.
+
+
+### STORAGE-SHUTDOWN-LOG-001/v1 — native editor close after saved terrain
+
+Frozen before run: visible14812, original world f58322c9-b837-4c0b-b555-6199124a290d,
+revision99/30pages/checkpoint24, idle single host, original current page bytes
+recorded by regional-reuse-before.json. Normal native close of this editor;
+no forced termination in the test. Require exit within30seconds, final completed
+checkpoint index/page checksums valid, original world/page revisions preserved,
+and no VoxelManager OnDestroy failure from logging. Preserve unrelated native
+shutdown errors separately; do not infer complete engine shutdown health from
+a valid save. Relaunch visibly, open normal basic_example Play, require automatic
+original-world recovery with authored0 and no pending/failing edit/read state.
+This tests the observed logging interruption, not capacity/cancellation edges
+or three-cycle sample-retirement acceptance. Existing REGIONAL-STORAGE-ROUTE-001/v2
+settings are retained for one post-relaunch route regression observation.
+
+Source defect: regional-route-interrupted.log shows final checkpoint publication
+then ConsoleWidget/QPushButton throws from unload success logging. Save's catch
+tries another log which throws, exiting OnDestroy before collision/GPU/field
+cleanup. Remove success-only shutdown logging; bound the error-reporting call
+so a failing log subscriber cannot interrupt cleanup. Save/MarkSaved order,
+final committed-state semantics and all normal save-completion signals remain.
+
+
+STORAGE-SHUTDOWN-LOG-001/v1 attempt1: failed. Native close requested; process14812
+remained at an Error window after30014ms. Final-save success logging no longer
+interrupted teardown; collision disposal reached bodies0, then its own success
+log threw the same ConsoleWidget/QPushButton exception. OnDestroy's existing
+finally covers GPU/field cleanup after collision disposal, but this failure still
+invalidates the no-logging-exception/normal-exit criteria. Evidence:
+shutdown-log-attempt1.log (trailing whitespace normalized).
+
+Extend the same narrowly observed correction to VoxelCollisionWorld.Dispose:
+remove shutdown success-only logging, keep failed-body reporting best-effort so
+an unavailable log UI cannot throw through component destruction. All cancellation,
+body removal, collection clearing and disposal ordering remain unchanged. Reuse
+v1 unchanged after visible relaunch; current saved world remains revision99.
+
+
+STORAGE-SHUTDOWN-LOG-001/v1 attempt2: visible44404 recovered revision99 from
+checkpoint25 with authored0. Native close03:01:53 exited normally in7589.6439ms;
+no Error window or forced termination. Checkpoint26/index SHA256 and all30 page
+hashes/lengths validated. No VoxelManager OnDestroy or ConsoleWidget exception
+in the close log. Evidence: shutdown-log-attempt2.log and
+shutdown-log-attempt2-files.json; final code hashes are explicitly named
+sourceHashesForAttempt2 in shutdown-log-attempt1-files.json (the file also holds
+attempt1's checkpoint25 check). This confirms the observed logging failure is
+resolved for this case; it is not blanket engine shutdown or power-loss proof.
+
+Post-fix regression: reuse REGIONAL-STORAGE-ROUTE-001/v2 settings unchanged,
+same original99/30pages, normal spawn, visible fresh session18972, checkpoint26.
+Startup checkpoint sequence is metadata, not route terrain input. User's other
+game remains an environmental qualification. Warmup20seconds after manual save,
+2500/50000/one loop, at least20seconds post-route settlement. Compare to immediate
+prior e1e3689d3ddd4b6c85f609f3f14e8629; retain its contextual criteria and report
+frame tails/readiness, allocations, memory, exceptions and queue/sample state.
+
+
+STORAGE-SHUTDOWN-LOG-001/v1 completion: visible18972 automatically loaded
+original revision99/30pages/checkpoint26, authored0 and Saved. Normal save then
+publishedcheckpoint27 with zero page writes. Native close/reopen criteria pass
+for attempt2; attempt1 failure remains preserved. Engine compile passed0errors.
+
+Post-fix REGIONAL-STORAGE-ROUTE-001/v2 run a8ceedcef1dc48018bbd7c1c37bb7630
+completed03:06:08, 121.93859seconds. 806.69037FPS; frame p951.8819/p994.0382/
+max27.9333ms. Allocations4038357640bytes, GC81/44/1, zero exceptions. Mesh
+readiness p9588.4853/p99115.3182/max181.7132ms. Mesh/collision pending0;
+arenas14. Peak process3919429632bytes, peak GPU2878626856bytes. At03:07:09
+(61seconds after completion, beyond minimum20), world99/30pages/checkpoint27
+remained Saved, authored0, resident/retained samples3932160bytes, reservation0,
+no storage/edit failures or pending flags. LOD handoff and reported level/
+transition/gameplay/warm queues settled, mismatch counts0, arenas14.
+
+Against immediately preceding regional route: FPS806.69 versus795.96,
+p994.0382 versus4.1501ms, allocations4.038 versus4.008GB. No material regression
+flag; concurrent-game/session qualification remains. This is regression evidence,
+not a speedup attributed to shutdown logging. Evidence: shutdown-log-route.json
+and shutdown-log-runtime.json. The visible world is left running and saved.
+
+### Remaining original-goal audit after shutdown correction
+
+The previous turn was progress: committed regional I/O improvement plus real
+save/copy/failure/dirty-page and route evidence. This turn fixes and qualifies
+the observed native-shutdown logging interruption. Neither is a full-goal pass.
+
+- One field/store/live-edit path, immutable regional checkpoint format and normal
+  save/automatic reopen: implemented; latest production round trips and failure
+  evidence preserved above. Power-loss durability is explicitly not promised.
+- Multiplayer live/history/reconnect: existing results and user acceptance stand;
+  user ended further multiplayer tests. No replacement protocol is introduced.
+- Actual disk eviction/re-entry and exact historical content: recorded HISTORY
+  evidence exists; strict sample-retirement deadline still unproven.
+- Saved-version supersession and restore ordering: bounded cases exist; active
+  read cancellation/stale completion overlap remains unqualified.
+- Capacity: normal reservation path passed; 512MiB denial/retry, competing decoder
+  reservations and unreserved decode edges remain unexercised.
+- Runtime performance: current performance accepted by user; latest bounded
+  unchanged routes show no material regression. Exact cross-Play retirement
+  and prior cold-session comparability limitations remain recorded.
+
+Current source changes do not resolve those remaining capacity/cancellation/
+retirement requirements. Keep the original goal open; do not relabel them passed
+or use the shutdown success to imply complete lifecycle coverage.

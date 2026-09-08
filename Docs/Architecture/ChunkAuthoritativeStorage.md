@@ -329,3 +329,25 @@ session changed, so this is qualified regression evidence, not a causal speedup.
 This bounded regional-storage increment is ready for user review. The original
 capacity/lifecycle limitations remain recorded; do not automatically advance
 to generated-terrain caching or the separate deferred scalability proposals.
+
+
+### Native shutdown logging and cleanup
+
+A native editor close exposed success-only logging after final save and collision
+disposal calling an already destroyed ConsoleWidget. The resulting exception
+interrupted component destruction and opened an error dialog. These shutdown
+success logs are removed; failed-save/body diagnostics are attempted but cannot
+throw through teardown if the editor logging sink is unavailable. Normal runtime
+save completion/status remain unchanged. No persistence/disposal ordering changes.
+The first targeted rerun exposed the second collision logger; both results remain
+in the ledger. With both corrected, native close exited in7.59seconds, checkpoint26
+and all30 page checksums were valid, and no manager/console logging exception was
+recorded. Automatic reopen and route evidence follow in the validation ledger.
+
+
+Automatic reopen after the corrected close recovered original99/30pages with
+zero authored changes. The unchanged route completed at807FPS/p994.04ms,
+zero exceptions,14 arenas and settled queues. This closes the observed shutdown
+logging interruption for the tested case. Capacity denial/retry, active-read
+cancellation/stale overlap and the strict sample-retirement deadline remain
+unqualified; the original full goal is not marked complete.

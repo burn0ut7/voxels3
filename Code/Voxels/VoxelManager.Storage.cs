@@ -52,9 +52,14 @@ public sealed partial class VoxelManager
 			var saved = TerrainFieldStore.Save( _terrainResetSavePath ?? TerrainFieldStore.RootPath( TerrainSaveSlot ),
 				source, System.Threading.CancellationToken.None );
 			_terrainField.MarkSaved( saved, source );
-			Log.Info( $"[TerrainStorage] unload.saved path={saved.Root} world={source.WorldId} revision={source.Revision}" );
 		}
-		catch ( Exception exception ) { Log.Error( $"[TerrainStorage] unload.save_failed reason={exception.Message}" ); }
+		catch ( Exception exception )
+		{
+			// Native shutdown can destroy the editor's log UI before components.
+			// Reporting a failed save must not interrupt the remaining teardown.
+			try { Log.Error( $"[TerrainStorage] unload.save_failed reason={exception.Message}" ); }
+			catch ( Exception ) { }
+		}
 	}
 
 	private void StartTerrainRestore( string path, bool clear = false )

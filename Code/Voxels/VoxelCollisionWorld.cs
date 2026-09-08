@@ -539,8 +539,12 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			_ready = 0; _bodies = remainingBodies; _residentGeometryBytes = 0;
 			if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
 		}
-		if ( remainingBodies > 0 ) Log.Error( $"[VoxelCollision] dispose.failed remainingBodies={remainingBodies}" );
-		else if ( Game.IsPlaying ) Log.Info( "[VoxelCollision] disposed bodies=0 verified=True" );
+		if ( remainingBodies > 0 )
+		{
+			// The native editor may already have destroyed its log UI.
+			try { Log.Error( $"[VoxelCollision] dispose.failed remainingBodies={remainingBodies}" ); }
+			catch ( Exception ) { }
+		}
 	}
 
 	private sealed class CollisionSamples
