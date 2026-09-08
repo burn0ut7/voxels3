@@ -23,6 +23,7 @@ the appropriate architecture or research owner from the [documentation map](READ
 
 | Research question | Start with | Why route here |
 | --- | --- | --- |
+| Biomes, coherent landforms, runtime population and future regional features | [Biome terrain proposal](Research/BiomeTerrainGeneration.md), [biome sources below](#biome-generation-and-regional-features) | Separates shipped-game evidence from the proposed four-environment recipe and frame-pacing acceptance. |
 | Interpreting CPU samples and managed allocation/GC markers | [CPU capture review](Research/CpuPerformanceReview20260907.md), [GC ETW events](https://learn.microsoft.com/en-us/dotnet/framework/performance/garbage-collection-etw-events), [Firefox profile schema](https://github.com/firefox-devtools/profiler/blob/main/src/types/profile.ts) | Threshold type labels are not exact byte ownership; sampled CPU weights are not frame latency. See the transfer limits below. |
 | Regular-cell isosurface topology and interpolation | [Marching Cubes paper](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf) | Primary description of the baseline surface-extraction algorithm. |
 | Crack-free 2:1 voxel LOD transitions | [Transvoxel site](https://transvoxel.org/), [official tables](https://github.com/EricLengyel/Transvoxel), [dissertation](https://transvoxel.org/) | Authoritative theory, diagrams, and lookup data for regular and transition cells. |
@@ -35,6 +36,19 @@ the appropriate architecture or research owner from the [documentation map](READ
 | Sparse large-world volume representation | [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb), [Efficient Sparse Voxel Octrees](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees), [HashDAG](https://github.com/Phyronnaz/HashDAG) | Contrasting hierarchical and compressed representations for storage and traversal research. |
 | Compact implementations for algorithm inspection | [stoyannk/voxels](https://github.com/stoyannk/voxels), [Marching-Cubes-Terrain](https://github.com/Eldemarkki/Marching-Cubes-Terrain), [Fast Unity Marching Cubes](https://github.com/Fobri/Fast-Unity-Marching-Cubes), [Scrawk/Marching-Cubes](https://github.com/Scrawk/Marching-Cubes) | Smaller codebases make topology, chunking, threading, and hot-path details easier to isolate. |
 | Shipped-game behavior and production failure modes | [Planet Nomads](https://planet-nomads.com/), [No Man's Sky community analysis](https://github.com/gistya/nomansterrain) | Useful for forming questions about scale and player experience; closed or inferred implementations are not architectural evidence. |
+
+## Biome Generation and Regional Features
+
+The [biome terrain proposal](Research/BiomeTerrainGeneration.md) records the
+adopt/defer decisions and current source constraints for these references.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Mojang: Java 1.18](https://feedback.minecraft.net/hc/en-us/articles/4415128577293-Minecraft-Java-Edition-1-18) | Official evidence that terrain shape and biome identity can vary independently. | Release behavior does not specify noise implementation, SDF composition or runtime scheduling. |
+| [Wube: Noise expressions 2.0](https://www.factorio.com/blog/post/fff-390), [Better noise](https://www.factorio.com/blog/post/fff-112) | Coordinate-local generation and reuse of intermediate work across chunks. | A 2D tile generator and its expression compiler are not a ready-made volumetric architecture or performance prediction. |
+| [Hello Games: Continuous World Generation in No Man's Sky](https://www.gdcvault.com/play/1024265/Continuous_World_Generation_in__No_Man_s_Sky_) | Official session overview describing voxel generation, polygonization, texturing, population and simulation stages. | Overview-only evidence in this review; no exact scheduler, memory budget or current implementation inferred. |
+| [Guerrilla: GPU-Based Procedural Placement in Horizon Zero Dawn](https://www.guerrilla-games.com/read/gpu-based-procedural-placement-in-horizon-zero-dawn) | Developer description of rule-driven runtime population around the player. | Talk page inspected; linked PDF unavailable during this review. No claim of s&box GPU API compatibility or infinite base-terrain generation. |
+| [Génevaux et al.: Terrain Generation Using Procedural Models Based on Hydrology](https://perso.liris.cnrs.fr/egalin/Articles/2013-river-networks.pdf) | Primary research on drainage networks preceding continuous terrain construction; motivates a future planning boundary. | Bounded input domain; infinite region agreement, runtime water and frame pacing are not solved by adopting this paper. |
 
 ## CPU and Managed-Memory Measurement
 
