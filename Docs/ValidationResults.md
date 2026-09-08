@@ -15376,3 +15376,15 @@ saved or changed by this task. Final compiler success, errors0. No new scheduler
 reports through final restoration. Fix accepted for diagnostic correctness under
 advisory performance policy; unrelated GC stutter and read-capacity recovery
 coverage remain unresolved. No temporary reservation diagnostic was added.
+
+### User acceptance of current prototype — 2026-09-08
+
+The user accepted the current implementation after the read-capacity recovery gap,
+temporary-diagnostic option and performance limitations were explained. This is
+acceptance with known limitations, not new runtime evidence or a recovery pass.
+No additional test ran, no test-hook exception is inferred, and no later slice was
+implemented. Latest scheduler-fix run remains825FPS/p993.83ms/max27.15ms with zero
+runtime exceptions, no new scheduler errors and matching geometry/saved state.
+Same-session read recovery after sample-cap exhaustion and GC-related stuttering
+remain explicit follow-up items. Preserve the original full-validation goal as
+unproven rather than marking every gate complete solely from product acceptance.

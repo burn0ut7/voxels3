@@ -1,6 +1,6 @@
 # Authoritative chunk storage: prototype plan
 
-Date: 2026-09-08. Status: regional storage is implemented with bounded validation evidence. The user explicitly directed that performance be measured and judged afterward, without exact performance pass/fail restrictions. Continue correctness work and present measurements for review; do not hold this prototype on old FPS, latency or collection-time targets. Preserve historical results and unresolved correctness coverage. Regional storage means item2 below, not the deferred storage-scale slice.
+Date: 2026-09-08. Status: the user accepted the current regional-storage prototype with the disclosed read-capacity recovery and performance limitations. This is product acceptance of the implemented increment, not proof that every original validation gate passed. Same-session read recovery after sample-cap exhaustion remains unverified; no temporary diagnostic exception was inferred or hook added. Regional storage means item 2 below, not the deferred storage-scale slice. The future slices remain unimplemented and require a selected follow-up scope.
 
 This document owns the staged implementation plan and proposed regional lifecycle contract. [Chunk streaming research](../Research/ChunkStreamingStorage.md) owns evidence and alternatives; [terrain deformation](TerrainDeformation.md) owns live tool behavior and existing acceptance status; [voxel foundation](VoxelChunkFoundation.md) owns field/spatial conventions; [validation results](../ValidationResults.md) owns executable scenarios and outcomes.
 
@@ -31,8 +31,9 @@ editing after reopen persisted correctly. These results qualify those bounded
 behaviors, not the entire slice. See the latest ledger entries and their raw
 visible2-history evidence.
 
-The latest full-capacity route measured869FPS with frame p99 3.46ms, compared
-with802FPS/p99 3.84ms in the earlier comparable route. Worst frame and total
+The latest scheduler-fix route measured825FPS with frame p99 3.83ms and a
+27.15ms worst frame. The preceding full-capacity route measured869FPS/p99 3.46ms,
+and the earlier comparable route measured802FPS/p99 3.84ms. Worst frame and total
 process memory were higher in the later editor session; this does not establish
 lower total RAM or eliminated stuttering. The earlier spatial-query regression
 was corrected from49 to780FPS. Active-load
@@ -499,3 +500,21 @@ all4913 collision regions ready, mesh/collision queues settled, exact saved hash
 The code is qualified for these bounded changes; the separate pressure-recovery
 case remains open. See the ledger and profiler evidence for timing and environment
 limitations, including the earlier760ms confounded frame.
+
+### Current prototype accepted with limitations — 2026-09-08
+
+After discussion of the recovery gap and alternatives, the user said:
+"Okay, let's go ahead and accept this. Are we fully implemented on this plan then?"
+Record acceptance of the current prototype with the disclosed limitation. Do not
+turn this into an observed recovery pass, authorization for a temporary test hook,
+or an instruction to implement every deferred slice. Normal regional persistence,
+live editing, historical reload, accepted multiplayer and the scheduler diagnostic
+fix are the delivered increment. Same-session read-capacity recovery remains an
+open reliability item; GC-related stalls remain a performance item. The original
+full-validation goal cannot be reported as fully proven from this acceptance.
+
+The remaining roadmap is storage scale/reliability (Slice 2), generation and
+transfer cost (Slice 3), and multiplayer scale/recovery (Slice 4). Select a bounded
+follow-up before implementing one. Prioritize the existing memory-pressure
+recovery concern within reliability work; do not repeatedly rerun unchanged
+pressure scenarios or reopen accepted multiplayer tests by default.
