@@ -403,3 +403,15 @@ accepted780FPS/p993.99ms. See STORAGE-IDENTICAL-RESTORE-001/v2 and
 STORAGE-IDENTICAL-CHANGED-001/v2 in [the ledger](../ValidationResults.md).
 Changed restores still broadly invalidate visuals; the strict general restore,
 capacity-edge, cancellation-overlap and sample-retirement gates remain open.
+
+### Bounded active-I/O teardown evidence
+
+Normal Stop was exercised while a large checkpoint load was preparing and while
+a live edit had64 regional page reads pending with655360 bytes still reserved.
+Reopen retained the prior saved revisions, returned reservations to0, and did
+not apply either the cancelled replacement or queued edit. Saved page identities
+and fingerprints matched. See STORAGE-ACTIVE-RESTORE-CANCEL-001/v1 and
+STORAGE-ACTIVE-PAGE-CANCEL-001/v1 in the ledger. These qualify the observed
+teardown/reopen paths; exact per-page cancellation, in-session stale-completion
+rejection, memory-limit denial/retry and strict retirement timing remain distinct
+unqualified coverage. No new lifetime or state representation was introduced.

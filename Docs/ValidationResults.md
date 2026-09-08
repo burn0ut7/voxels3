@@ -14653,3 +14653,87 @@ and timestamps match the prior acknowledged state. No runtime source changes
 were made, and no additional figure-eight was needed for this evidence-only
 increment. Evidence: [runtime](ValidationEvidence/ChunkStorage/reload-pressure-runtime.json)
 and [restored directory](ValidationEvidence/ChunkStorage/reload-pressure-restored.json).
+
+### STORAGE-ACTIVE-RESTORE-CANCEL-001/v1 — Stop during world read
+
+Freeze before run: source299d827, visible editor18972/26.09.01c, basic_example,
+normal current user world106/34/checkpoint39, seed1337/gen5/default surface,
+gameplay8/visual512, levels0-6, LOD0extent4/cache8/fps_max1000. No source changes,
+client tests, live edits or altered save files. Save bytes/directory are already
+recorded in reload-pressure-restored.json. Load storage-capacity-v1 (136/2048)
+through voxel_terrain_load, which has just taken about4seconds per repetition.
+At1second after request, read terrain status and require preparing=True while
+current revision/pages remain106/34; otherwise stop and record setup invalid.
+Immediately issue normal play_stop. Require normal completion<=10seconds and
+last-world selection still original106/34 through final save. Start Play normally,
+wait30seconds, require original106/34/Saved/authored0 and exact fingerprint/contact.
+Observe again10seconds later for no delayed replacement, no reserved samples,
+no pending/failure status. Verify current stored page hashes and identity remain
+unchanged; record checkpoint advancement separately from world history.
+
+This exercises cancellation of the real checkpoint read/replacement worker,
+whose per-page loops check the linked scene token. It is not a claim that the
+separate eight-page regional read pump was active or that every stale completion
+branch executed. Preserve that distinction; no timing delays or test hooks.
+
+STORAGE-ACTIVE-RESTORE-CANCEL-001/v1: request04:32:43; at1.052seconds status
+proved preparing=True with original106/34 still authoritative and retained
+samples216137728bytes. Normal Stop returned in32ms. Automatic reopen04:33:14
+recovered original106/34/checkpoint40/Saved/authored0, no reserved samples,
+pending edits or storage failures. No load.field_committed followed the cancelled
+capacity-load request. Original field fingerprint0267F77B...6DA07 and collision
+contact height42.4927 matched. NormalY differed slightly across Play restart
+(-0.0132 to-0.0095), consistent with earlier startup variation; exact normal
+equality is not proven. This establishes bounded cancellation/state preservation,
+not a general cross-session collision-normal or regional-read-pump pass.
+
+### STORAGE-ACTIVE-PAGE-CANCEL-001/v1 — Stop with page reads reserved
+
+Freeze before setup: source299d827, same visible engine/scene/settings as the
+active-restore case. Preserve original user106/34/checkpoint40. Load capacity
+fixture136/2048, settle<=45seconds, and save a private copy page-cancel-v1.
+Normal Stop/Start and30second warmup must reopen private136/authored0. Do not
+query the far field before the attempt, to avoid warming its sample pages.
+Submit one real dig(393216,393216,0),radius1024,strength512, on existing saved
+pages. Poll current terrain status without added sleeps, at most100 observations
+or2seconds. Require storageReads>0 and reservedSampleBytes>0 while revision136
+and authored0 remain current, then immediately Stop normally. This shows the
+regional pump admitted real page-read work before the mutation could commit.
+If the mutation commits or no active admission is observed, record setup missed;
+do not call it cancellation coverage or silently repeat with altered parameters.
+Private storage protects the user's save and the fixed capacity baseline.
+
+After successful active observation, require Stop<=10seconds, reopen private
+136/2048/authored0 with reserved0, then verify far fingerprint CA27349A...E8E2B0
+and unchanged page directory/files. Observe another10seconds for no late edit.
+Finally restore user106/34, require its fingerprint/contact height and save
+original. This observes admitted regional I/O plus teardown; without a worker
+completion counter it cannot identify precisely which page observed cancellation.
+
+STORAGE-ACTIVE-PAGE-CANCEL-001/v1 result: private copy saved136/2048 at04:35:27,
+normal reopen confirmed checkpoint2/authored0. At04:36:25,34ms after the dig
+request, first observation caught64 pending reads,655360 reserved bytes, queued1,
+preparingFalse, current136/2048/authored0. The reservation had partially consumed
+its eight-page allocation allowance; this is admitted regional read work, not
+merely a queued brush. Normal Stop returned in326ms. Reopen04:37:34 recovered
+136/2048/checkpoint3/authored0, reserved0, queued0, no storage/edit failures.
+Far fingerprint CA27349A...E8E2B0 matched. The04:37:44 observation remained
+unchanged with reserved0; no late edit appeared. All2048 saved page records and
+the canonical identity match the original capacity fixture; every file hashes
+correctly. Pass for the defined active-admission/teardown/reopen case, with the
+per-page cancellation/stale-completion branch limitation stated above.
+
+The first active-world-load case's late observation04:34:56 also retained
+original106/34/checkpoint40/authored0/reserved0, with no deferred replacement.
+This observation was later than the requested additional10seconds and does not
+establish exact retirement timing. Final original106/34 restoration after both
+cases was ready at04:39:25, with fingerprint0267F77B...6DA07 and contact height
+42.4927. Explicit save completed checkpoint41. The existing small normal variation
+across body rebuilds remains qualified. No runtime code changed in these cases.
+
+Evidence: [active cancellation](ValidationEvidence/ChunkStorage/active-cancellation-runtime.json)
+and [private directory](ValidationEvidence/ChunkStorage/page-cancel-restored.json).
+These close the bounded Stop-during-checkpoint-read and Stop-with-regional-read
+admission cases. They do not prove in-session stale completion after a replacement,
+512MiB denial/retry, or the strict sample-retirement deadline. Keep full original
+goal acceptance open and retain the earlier failed/partial cases.
