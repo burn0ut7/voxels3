@@ -1,7 +1,8 @@
 # S4: identity-only codec — human review
 
-2026-09-08. **Implemented and tested; awaiting human approval.** S3 acceptance
-is committed/pushed as a2f357a. S4 is uncommitted; S5 has not started.
+2026-09-08. **User accepted on2026-09-08:** "I accept. Move on to S5". S3 acceptance
+is committed/pushed as a2f357a. S4 implementation is committed as898ebd9. Acceptance follows disclosed
+performance/coverage limits; no unreported human-test completion is inferred.
 
 ## Simplification
 

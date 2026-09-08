@@ -118,7 +118,8 @@ Do not build a telemetry framework, reflection-based exporter or generic benchma
 2026-09-08 candidate implemented: explicit96-byte identity codec and metadata
 value replace unused whole-snapshot paths/empty snapshots. Before/after and
 production save/reopen/fingerprint/malformed-header checks completed. Awaiting
-human approval; see [S4 review](../ValidationEvidence/SimplificationS4/Review.md).
+human approval at the initial checkpoint; subsequently accepted on2026-09-08
+(898ebd9). See [S4 review](../ValidationEvidence/SimplificationS4/Review.md).
 Multiplayer exchange remains a human gate; historical description below records
 the pre-change finding.
 

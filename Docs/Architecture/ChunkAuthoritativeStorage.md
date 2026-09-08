@@ -519,7 +519,7 @@ follow-up before implementing one. Prioritize the existing memory-pressure
 recovery concern within reliability work; do not repeatedly rerun unchanged
 pressure scenarios or reopen accepted multiplayer tests by default.
 
-## Identity-only codec (S4 candidate, 2026-09-08)
+## Identity-only codec (S4 accepted, 2026-09-08)
 
 Checkpoint metadata uses TerrainFieldIdentity (settings,revision,world ID,local
 epoch), rather than an empty terrain sample snapshot. TerrainFieldCodec owns
@@ -528,4 +528,4 @@ zero for byte compatibility with existing checkpoints and protocol2 manifests.
 Local epoch remains memory-only. Page directories and payload blocks retain
 their existing owners/formats. The unused whole-snapshot codec path is removed;
 this does not add a save-format migration or change authoritative terrain data.
-S4 is awaiting human acceptance; see SIMPLIFICATION-S4-001/v1 in the ledger.
+S4 was explicitly accepted by the user; see SIMPLIFICATION-S4-001/v1 in the ledger.

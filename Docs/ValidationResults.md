@@ -16157,3 +16157,9 @@ retains exact96-byte identity/page blocks/protocol versions. Checkpoint local
 epoch preserved and not serialized. Net26runtime lines removed. Restore normal
 user999slot and pause for human save/reload/edit/travel/collision/second-peer
 checks. S4 uncommitted, no S5; approval required with disclosed measurement limits.
+
+#### S4 human acceptance — 2026-09-08
+
+User: "I accept. Move on to S5". Implementation already committed898ebd9.
+Record acceptance with disclosed GPU/publication timing and multiplayer coverage
+limits. No additional tests or exhaustive human checks claimed. Proceed to S5.
