@@ -16313,3 +16313,10 @@ Original/fixture payloads and source hashes unchanged, original selector restore
 Cold compile succeeds; pre-C2 shutdown Error log retained. Pre-run play_stop
 returned Not playing (already stopped); outside timed window. S6 uncommitted;
 human controls/camera/edit/collision/save checks remain; no S7.
+
+#### S6 human acceptance — 2026-09-08
+
+User: "I accept. Move onto S7". Accept the 10-line unused-surface removal with
+C1 p99 failure, C2 worst-frame increase and repeated placement lag4 disclosed.
+No overall measurement-pass or exhaustive human-check claim. Original world
+restored; retain all B1/C1/C2 evidence. Proceed to S7.

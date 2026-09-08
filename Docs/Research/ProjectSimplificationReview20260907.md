@@ -149,7 +149,7 @@ First simplify the shared target/placement decision after resolving the effectiv
 CopyTo (10 lines). Public optional controller and hotload guards retained.
 Before/after and user-requested C2 repeat complete. C1 CPU p99 narrowly failed;
 C2 recovered FPS/p99 but had a worse maximum frame and repeated higher placement
-lag. Awaiting human review; no overall performance acceptance or S7.
+lag. User accepted S6 on 2026-09-08 with these limits; proceed to S7.
 [S6 evidence and checks](../ValidationEvidence/SimplificationS6/Review.md).
 Historical proposal follows (the linked template file is removed in the candidate).
 

@@ -1,6 +1,6 @@
 # S6: unused surfaces — human review
 
-2026-09-08. Candidate tested; NOT performance accepted. Awaiting human review.
+2026-09-08. Accepted by the user after B1/C1/C2 review, with disclosed limits.
 S5 accepted and recorded in bec3178 (implementation3082fb6).
 
 ## Change and evidence
@@ -150,3 +150,10 @@ this occurred outside the timed run. No timed errors. No new feature test covera
 
 Human checks above remain pending. S6 uncommitted, not automatically accepted;
 pause for the user's decision before any more tests, acceptance or S7.
+
+## Human acceptance — 2026-09-08
+
+User: "I accept. Move onto S7". Acceptance includes disclosed C1 p99 failure,
+C2 worse maximum frame and repeated placement lag4. It is not an assertion that
+every performance screen passed or that all human checks were performed.
+No additional baseline run requested; proceed to S7.
