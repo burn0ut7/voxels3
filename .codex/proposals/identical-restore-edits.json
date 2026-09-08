@@ -1,0 +1,27 @@
+[
+  {
+    "path": "Code/Voxels/GpuVoxelMesher.Deformation.cs",
+    "old": "\t\t_editEpochChanged = change.Source.Epoch != field.Epoch;\n",
+    "next": "\t\t_editEpochChanged = change.Source.Epoch != field.Epoch;\n\t\tvar identicalRestore = _editEpochChanged && change.ChangedSamples == 0;\n"
+  },
+  {
+    "path": "Code/Voxels/GpuVoxelMesher.Deformation.cs",
+    "old": "\t\tforeach ( var resident in _resident.Values )\n\t\t{\n\t\t\tif ( !_editEpochChanged",
+    "next": "\t\tforeach ( var resident in _resident.Values )\n\t\t{\n\t\t\t// Exact replacement comparison proved equal samples. Rebase published\n\t\t\t// metadata only; old asynchronous work still fails its epoch checks.\n\t\t\tif ( identicalRestore && resident.Descriptor.MatchesField( change.Source ) )\n\t\t\t{\n\t\t\t\tresident.Descriptor = resident.Descriptor.WithField( field ) with { Field = null };\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tif ( !_editEpochChanged"
+  },
+  {
+    "path": "Code/Voxels/GpuVoxelMesher.Deformation.cs",
+    "old": "\t\tforeach ( var descriptor in _editTransitionRefresh ) ScheduleTransition( descriptor, routeDistance );\n\t\tchanged += _editTransitionRefresh.Count;",
+    "next": "\t\tforeach ( var descriptor in _editTransitionRefresh )\n\t\t{\n\t\t\tvar desired = _transitionDesiredDescriptors[descriptor.Key];\n\t\t\tif ( identicalRestore && desired.MatchesField( change.Source ) &&\n\t\t\t\t_transitionResident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == desired )\n\t\t\t{\n\t\t\t\tresident.Descriptor = descriptor with { Field = null };\n\t\t\t\t_transitionDesiredDescriptors[descriptor.Key] = resident.Descriptor;\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tScheduleTransition( descriptor, routeDistance );\n\t\t\tchanged++;\n\t\t}"
+  },
+  {
+    "path": "Code/Voxels/GpuVoxelMesher.cs",
+    "old": "\t\tpublic GpuSdfDescriptor Descriptor { get; }\n",
+    "next": "\t\tpublic GpuSdfDescriptor Descriptor { get; set; }\n"
+  },
+  {
+    "path": "Code/Voxels/GpuVoxelMesher.cs",
+    "old": "\t\tpublic GpuTransitionDescriptor Descriptor { get; }\n",
+    "next": "\t\tpublic GpuTransitionDescriptor Descriptor { get; set; }\n"
+  }
+]
