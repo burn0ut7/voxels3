@@ -14601,3 +14601,55 @@ identical-runtime.json, identical-regression-runtime.json, identical-route-resul
 The current user world106/34 is selected and saved. Full original-goal acceptance
 remains incomplete for memory admission edges, active-read overlap and strict
 sample-retirement timing. Multiplayer testing remains concluded by user acceptance.
+
+### STORAGE-RELOAD-PRESSURE-001/v1 — repeated capacity-world decoding
+
+Freeze before run: source1b3c344, visible editor18972/26.09.01c, basic_example,
+seed1337/gen5/default surface, gameplay8/visual512, levels0-6, LOD0extent4/cache8,
+fps_max1000; no clients, player input, source changes or forced collections.
+Current user world106/34 is saved in its original slot at checkpoint38.
+Load unchanged storage-capacity-v1 revision136/2048 and settle<=45seconds.
+Record far fingerprint(393216,393216,0),radius1024, requiring CA27349A...E8E2B0.
+Then request10 consecutive identical production loads, starting the next only
+after prior completion/readiness. Poll terrain status every0.5seconds (tool
+latency added), maximum45seconds per attempt. Record sample/reservation bytes,
+epoch/revision/page count, pending reads and failures. Require136/2048 throughout,
+no authored edits, no stale rollback and exact final fingerprint. Successful
+identical loads must retain zero visual/collision rebuild dependencies.
+
+If sample admission rejects a load, stop repetitions: require prior valid state,
+explicit failure and no false saved revision. Run one unchanged canonical
+figure-eight to allow normal gameplay allocations/collection, then retry once
+and require recovery<=45seconds. If no denial occurs, record only repeated-load
+correctness and observed accounting; do not claim512MiB denial/retry coverage.
+Reported sample accounting must remain<=512MiB, reservations must return to0;
+polling is not a claim to capture every transient peak or strict GC retirement.
+Restore current user106/34 afterward, save original slot and verify checkpoint
+identity/directory and exact current page bytes. Preserve every outcome.
+
+STORAGE-RELOAD-PRESSURE-001/v1 result: all10 identical reloads completed,
+04:25:55–04:26:38, measured request-to-ready observations4246–4269ms; each
+advanced only the local epoch (5→15), retained136/2048/checkpoint10/authored0,
+zero visual/collision rebuild dependencies and zero reserved bytes. There were
+80 status observations across the repeated loads. Observed retained sample
+accounting ranged2097152–293601280bytes (2–280MiB), falling again between
+iterations under natural collection; no capacity denial occurred. End-of-load
+canonical residency was0: existing geometry/body state was retained, while the
+new canonical directory remained recoverable from saved page handles. Final
+far-region fingerprint matched CA27349A...E8E2B0 exactly through real disk-backed
+query. No saved revision rollback or authored edit was observed.
+
+This passes the defined repeated-load correctness/accounting checks. It does
+not exercise the conditional512MiB rejection/retry branch, prove all transient
+allocation peaks, or satisfy the separate strict retirement deadline. Do not
+repeat or enlarge the workload merely to obtain an exhaustion result. The
+maximum sweep diagnostic rose to1.8756ms against the1ms soft per-update budget;
+this observation includes indivisible work and is retained, not hidden as<=1ms.
+
+Original user106/34 committed at04:27:58 (full readiness sampled04:28:25), then
+explicit save04:29:19 completed checkpoint39. Original fingerprint0267F77B...6DA07
+and collision position/normal matched; all34 current saved page records, bytes
+and timestamps match the prior acknowledged state. No runtime source changes
+were made, and no additional figure-eight was needed for this evidence-only
+increment. Evidence: [runtime](ValidationEvidence/ChunkStorage/reload-pressure-runtime.json)
+and [restored directory](ValidationEvidence/ChunkStorage/reload-pressure-restored.json).
