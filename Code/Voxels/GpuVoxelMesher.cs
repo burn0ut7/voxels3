@@ -3668,7 +3668,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private sealed class ResidentMesh
 	{
-		public GpuSdfDescriptor Descriptor { get; }
+		public GpuSdfDescriptor Descriptor { get; set; }
 		public GpuMeshResidency Residency { get; set; }
 		public GeometryHandle Handle { get; }
 		public GpuTerrainCountResult Counts { get; }
@@ -3680,7 +3680,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private sealed class ResidentTransition
 	{
-		public GpuTransitionDescriptor Descriptor { get; }
+		public GpuTransitionDescriptor Descriptor { get; set; }
 		public GeometryHandle Handle { get; }
 		public GpuTransitionCountResult Counts { get; }
 		public float ScheduleToPublicationMilliseconds { get; }

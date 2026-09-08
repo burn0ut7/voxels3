@@ -49,11 +49,19 @@ internal sealed partial class GpuVoxelMesher
 		_editedField = field;
 		_editDependencyBounds = dirtyBounds;
 		_editEpochChanged = change.Source.Epoch != field.Epoch;
+		var identicalRestore = _editEpochChanged && change.ChangedSamples == 0;
 		_editPublicationOpen = true;
 		_editPublicationPending = true;
 		_editRegularRefresh.Clear();
 		foreach ( var resident in _resident.Values )
 		{
+			// Exact replacement comparison proved equal samples. Rebase published
+			// metadata only; old asynchronous work still fails its epoch checks.
+			if ( identicalRestore && resident.Descriptor.MatchesField( change.Source ) )
+			{
+				resident.Descriptor = resident.Descriptor.WithField( field ) with { Field = null };
+				continue;
+			}
 			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
 			_editRegularRefresh[resident.Descriptor.Key] = new PendingMesh(
 				resident.Descriptor, resident.Residency, 0, routeDistance );
@@ -82,8 +90,19 @@ internal sealed partial class GpuVoxelMesher
 			var replacement = descriptor.WithField( field );
 			if ( replacement != descriptor ) _editTransitionRefresh.Add( replacement );
 		}
-		foreach ( var descriptor in _editTransitionRefresh ) ScheduleTransition( descriptor, routeDistance );
-		changed += _editTransitionRefresh.Count;
+		foreach ( var descriptor in _editTransitionRefresh )
+		{
+			var desired = _transitionDesiredDescriptors[descriptor.Key];
+			if ( identicalRestore && desired.MatchesField( change.Source ) &&
+				_transitionResident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == desired )
+			{
+				resident.Descriptor = descriptor with { Field = null };
+				_transitionDesiredDescriptors[descriptor.Key] = resident.Descriptor;
+				continue;
+			}
+			ScheduleTransition( descriptor, routeDistance );
+			changed++;
+		}
 		_editTransitionRefresh.Clear();
 		return changed;
 	}

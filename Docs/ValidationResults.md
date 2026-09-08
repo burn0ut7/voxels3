@@ -14473,3 +14473,131 @@ with a different center and edited field, not a comparable acceptance baseline.
 Collision snapshot still had84 pending and2 completed jobs at capture, so no
 settled-collision claim follows from it. Raw result:
 [manual-current-result.json](ValidationEvidence/ChunkStorage/manual-current-result.json).
+
+### STORAGE-IDENTICAL-RESTORE-001/v2 — current saved fixture
+
+Version1 never reached its workload because the user legitimately changed the
+world. Preserve its invalid setup; do not overwrite newer user edits. Version2
+freezes the actual automatic reopen04:01:52: same world, revision105/34pages,
+checkpoint33, authored0, normal spawn(-0.0009,0.147,2.1977), visible editor18972.
+All version1 engine/scene/generator/layout/commands and10second readiness gates
+remain unchanged. Both phases use normal Play startup with30second warmup.
+Stored page-file hashes/timestamps before the test are recorded in
+identical-current-pages.json (39 retained files,34 current pages). Compare the
+same105 fixture before/after; original99 is no longer the user save baseline.
+User explicitly authorized Stop/Start as needed without waiting for confirmation.
+
+Version2 before: reload04:02:27, field commit19.8062ms, visualDependencies27923,
+collisionDependencies0. First observed fully ready sample was14seconds after
+request;10second gate failed. Field fingerprint0267F77BAEE23ED05D0056CE3FBADFCF6B70460C33C53A4563EEF35803D6DA07
+and collision contact(-512,-512,42.4927), normal(-0.1385,-0.0132,0.9903) matched.
+Regular geometry digests changed despite identical field; transitions matched.
+
+Version2 correction attempt1: reload04:04:35, commit21.7632ms; ready in first
+one-second sample, but618 visual dependencies and regular digest changes.
+Zero-rebuild/digest gates fail; field/contact still exact. Source inspection
+located the residual work in VoxelManager.UpdateTerrainEdits: after mesher
+invalidation, epoch changes also schedule every prepared empty LOD0 region that
+has no resident record. These empty regions cannot gain a surface when no
+samples changed. Correction now skips that empty-region activation pass for
+zero changed samples; changed restores/edits retain it. No diagnostic bypass,
+field semantics or scenario inputs changed. Repeat unchanged version2.
+
+### STORAGE-IDENTICAL-CHANGED-001/v1 — changed-state counterexample
+
+Freeze before operations: current105/34 original world, unchanged version2
+scene/settings and player at normal spawn. Save a private copy identical-edit-v1,
+then one production dig(-512,-512,0),radius128,strength512. Require106, authored1,
+changed field fingerprint at(-512,-512,0),radius512, and settled visual/collision
+work within10seconds. At most8 touched pages may be added; exact content is
+checked by before/after/reload fingerprints and collision ray. Save106 within
+10seconds, then load original105 and private106 in order, require corresponding
+fingerprint/contact and nonzero visual rebuild for both changed replacements.
+Allow45seconds settlement per changed reload; this is a content regression for
+the unchanged-reuse branch, not a waiver of any stricter existing restore gate.
+Finally restore original105, verify its fingerprint/contact and save original
+slot. Preserve original stored page hashes/timestamps. No multiplayer tests.
+
+Post-correction figure-eight reuses STORAGE-SPATIAL-QUERY-001/v1 parameters and
+the same saved capacity fixture136/2048. Compare against the accepted indexed
+run8e338fe5b90e4d139c28f8c724a2bb7c (780.03625FPS/p993.9887ms). Same normal
+Stop/Start and30second warmup,2500/50000/one loop/Z0; environment caveat remains.
+Restore the latest user105 fixture afterward, not superseded99.
+
+Version2 corrected attempt2: reload04:09:14, commit28.6729ms, visual/collision
+dependencies0; fully ready in the first one-second sample and throughout45seconds.
+Regular and transition topology/position digests exactly unchanged across this
+reload; fingerprint0267F77B...6DA07 and collision position/normal exactly unchanged.
+800x450 game-camera screenshots before implementation and after the final reload
+were inspected: same visible edited terrain and player support, no disappearing
+geometry. Different startup spawn rounding changes warm-region coverage/digests
+between sessions; exact comparison here is within each identical reload.
+Collision normals also varied slightly between normal Play startups, while the
+within-reload contact remained exact. No cross-session bitwise-normal claim.
+Zero rebuild, exact content and10second readiness gates pass for this bounded case.
+
+STORAGE-IDENTICAL-CHANGED-001/v1 was interrupted after its first changed reload.
+Dig04:11:18 committed106/42pages/authored1 (8 new pages),7.092ms; visual49/
+collision8 dependencies, ready in first one-second sample. Save04:11:29 completed
+private checkpoint2 in the same second. New fingerprint4AA3F5C641D0BE5E85F759140B34D516D6CB62E29770F406292050B3E3C49221,
+center contactZ=-90.0078. Original105 load committed04:11:40. An external Play
+restart and one further user edit then produced original106/34pages, followed
+by a manual benchmark04:12:01. It was stopped normally under the user's explicit
+restart authorization; latest original106 was saved as checkpoint37. Preserve
+this newer user state. No uninterrupted changed-reload scenario pass is claimed.
+Its38 retained original page files are hashed in identical-latest-user-pages.json.
+
+### STORAGE-IDENTICAL-CHANGED-001/v2 — equal revision, different contents
+
+Version1 fixture changed through real user input; a repeat cannot overwrite it.
+Freeze next comparison before execution: original106/34pages/checkpoint37 versus
+private identical-edit-v1 revision106/42pages/checkpoint2. Same world identity and
+revision, different saved contents. Use current scene/layout/seed/settings from
+version1, no edits or travel. After route restore original and settle<=45seconds;
+capture fingerprint(-512,-512,0),r512 and collision contact. Load private, require
+its known4AA3F5C...49221 fingerprint and contactZ=-90.0078, nonzero visual rebuild,
+and settled queues<=45seconds. Load original again, require original fingerprint
+and contact height within0.02 units,34pages, with nonzero visual rebuild. Record
+normals but do not require cross-rebuild bitwise equality: version2 evidence
+already establishes their small startup variation. Save original and verify its
+stored page bytes/timestamps. The zero-rebuild optimization must not equate
+matching revision numbers with matching samples.
+
+STORAGE-IDENTICAL-CHANGED-001/v2 result: original106/34 fingerprint0267F77B...6DA07,
+contactZ42.4927; private load04:17:58 produced106/42 fingerprint4AA3F5C...49221,
+contactZ-90.0078,27923 visual/12 collision dependencies, settled at30seconds.
+Original load04:18:47 restored106/34 and its exact fingerprint/contact including
+normal, with27923/12 dependencies, settled at30seconds. No authored edits or
+failures in this sequence. Explicit original save04:19:17 completed checkpoint38.
+Its identity and directory match acknowledged checkpoint37 exactly; all34 current
+page files retained their original bytes and timestamps. Pass for this bounded
+same-revision/different-content counterexample, not the stricter general load gate.
+
+The initial file audit incorrectly required all38 retained files to survive
+cleanup and failed on an obsolete page filename. Checkpoint38 cleanup removed4
+superseded, unreferenced files; parsing both37 and38 proves the34 current records
+are unchanged and every referenced file hashes correctly. Preserve that audit
+failure and its resolution in identical-restored-files.json; do not equate
+obsolete checkpoint garbage with lost acknowledged pages.
+
+Full-capacity regression206fc30938ee43e386078497721fa5dc:802.2748FPS,
+framep951.9531/p993.8435/max20.4999ms; stationary883.90753FPS. Mesh readiness
+p99104.0872ms (prior127.9479ms), maximum165.5574ms.
+Published104779 regions, post-loop drain24.5038ms; mesh/collision pending0,
+14 arenas, zero exceptions. Allocations2975017208bytes versus2908179432 (+2.3%),
+per frame30409.139 versus30573.795; peak process3314929664 versus4337328128bytes,
+peak GPU2829236104 versus2879567752. Same136/2048 fixture, exact far fingerprint
+CA27349A...E8E2B0 and all2048 persisted page records unchanged. No regression gate
+triggered; user concurrent-game/session qualification remains, not causal proof
+of a movement speedup from identical-restore reuse. Post-route sample accounting
+was119930880bytes, below512MiB; this does not prove the strict retirement deadline.
+The post-route status was sampled19seconds after result publication, one second
+short of the scenario's20second observation point; timing coverage is qualified.
+
+Accept the identical-restore correction with the bounded unchanged/changed
+content results and full-capacity performance evidence above. Engine compilation
+succeeded with0errors; source hashes in identical-source.json. Runtime evidence:
+identical-runtime.json, identical-regression-runtime.json, identical-route-result.json.
+The current user world106/34 is selected and saved. Full original-goal acceptance
+remains incomplete for memory admission edges, active-read overlap and strict
+sample-retirement timing. Multiplayer testing remains concluded by user acceptance.

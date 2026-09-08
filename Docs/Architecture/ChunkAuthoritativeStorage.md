@@ -385,3 +385,21 @@ peaks fell. See STORAGE-SPATIAL-QUERY-001/v1 and STORAGE-SPATIAL-EDIT-001/v1 in
 This qualifies the query-performance fix, not full lifecycle acceptance: restore
 still invalidates broad render dependencies, and strict readiness deadlines,
 512MiB denial/retry and active-read cancellation remain unqualified.
+
+### Identical restore retains published geometry
+
+An exact replacement comparison with zero changed samples now allows the GPU
+mesher to retain published geometry that matches the prior field, updating only
+its derived epoch/revision metadata. Queued/in-flight work retains the existing
+stale-result checks. Prepared empty LOD0 regions are not activated by an unchanged
+replacement. A matching world revision alone never authorizes reuse: same-revision
+saves with different samples still take the normal invalidation path.
+
+The bounded reload fell from27923 visual rebuild dependencies and14-second
+observed readiness to0 dependencies and readiness in the first one-second
+sample; geometry digests, field fingerprint and collision contact matched.
+The unchanged full-capacity figure-eight measured802FPS/p993.84ms versus the
+accepted780FPS/p993.99ms. See STORAGE-IDENTICAL-RESTORE-001/v2 and
+STORAGE-IDENTICAL-CHANGED-001/v2 in [the ledger](../ValidationResults.md).
+Changed restores still broadly invalidate visuals; the strict general restore,
+capacity-edge, cancellation-overlap and sample-retirement gates remain open.

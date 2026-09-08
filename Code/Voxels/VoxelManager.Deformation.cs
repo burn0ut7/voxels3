@@ -110,18 +110,21 @@ public sealed partial class VoxelManager
 					_terrainEditCollisionDependencies = _collision.InvalidateField( change );
 					// Prepared LOD0 empty regions have no mesh record until their first surface.
 					var dirtyBounds = change.DependencyPageBounds;
-					foreach ( var coordinate in _renderPreparedChunks )
+					if ( change.ChangedSamples > 0 )
 					{
-						var size = _appliedCellsPerAxis * _appliedCellSize;
-						var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * size;
-						if ( change.Source.Epoch == change.Result.Epoch && !TerrainFieldChange.Intersects( new SdfWorldAabb( origin - Vector3.One * _appliedCellSize,
-							origin + Vector3.One * (size + _appliedCellSize) ), dirtyBounds ) ) continue;
-						var descriptor = CreateRegularDescriptor( 0, coordinate );
-						if ( _gpuMesher.Contains( descriptor ) ) continue;
-						_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance,
-							IsGameplayCoordinate( coordinate ) ? GpuMeshResidency.Gameplay : GpuMeshResidency.Warm );
-						_gpuMesher.SetRenderActive( descriptor.Key, _levels[0].Active.Contains( coordinate ) );
-						_terrainEditVisualDependencies++;
+						foreach ( var coordinate in _renderPreparedChunks )
+						{
+							var size = _appliedCellsPerAxis * _appliedCellSize;
+							var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * size;
+							if ( change.Source.Epoch == change.Result.Epoch && !TerrainFieldChange.Intersects( new SdfWorldAabb( origin - Vector3.One * _appliedCellSize,
+								origin + Vector3.One * (size + _appliedCellSize) ), dirtyBounds ) ) continue;
+							var descriptor = CreateRegularDescriptor( 0, coordinate );
+							if ( _gpuMesher.Contains( descriptor ) ) continue;
+							_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance,
+								IsGameplayCoordinate( coordinate ) ? GpuMeshResidency.Gameplay : GpuMeshResidency.Warm );
+							_gpuMesher.SetRenderActive( descriptor.Key, _levels[0].Active.Contains( coordinate ) );
+							_terrainEditVisualDependencies++;
+						}
 					}
 					_gpuMesher.SealFieldPublication();
 					_lastClipboxReadinessResidentRevision = -1;
