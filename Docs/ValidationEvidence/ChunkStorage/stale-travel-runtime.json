@@ -1,0 +1,956 @@
+{
+  "scenario": "STORAGE-STALE-READ-001/v2",
+  "before": {
+    "content": [
+      {
+        "type": "text",
+        "text": "1 entries, oldest first (2000 buffered):\r\n06:01:11 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=-0.0008,0.147,66.1977 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=3932160 retainedSampleBytes=114556928 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=30 evictedPages=810 reusedSamplePages=7520 readIntegrationMaxMs=0.0045 sweepMaxMs=0.2139 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=\r\nCursor: 2197"
+      }
+    ]
+  },
+  "travel": {
+    "loadResult": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Ran. Output, if any, is in the console - read_console shows it."
+        }
+      ]
+    },
+    "rows": [
+      {
+        "i": 0,
+        "elapsed": 135,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"393216,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "393216,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:29 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=393216,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=6946816 retainedSampleBytes=140771328 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=31 loadedPages=30 evictedPages=810 reusedSamplePages=7543 readIntegrationMaxMs=0.0045 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2199"
+            }
+          ]
+        }
+      },
+      {
+        "i": 1,
+        "elapsed": 493,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"397312,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "397312,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:30 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=397312,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=12582912 retainedSampleBytes=222429184 sampleBudget=536870912 reservedSampleBytes=1048576 readCapacityDeferred=False editCapacityDeferred=False storageReads=97 loadedPages=30 evictedPages=810 reusedSamplePages=7586 readIntegrationMaxMs=0.0045 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2200"
+            }
+          ]
+        }
+      },
+      {
+        "i": 2,
+        "elapsed": 865,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"401408,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "401408,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:30 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=401408,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=12582912 retainedSampleBytes=294256640 sampleBudget=536870912 reservedSampleBytes=1048576 readCapacityDeferred=False editCapacityDeferred=False storageReads=110 loadedPages=30 evictedPages=810 reusedSamplePages=7586 readIntegrationMaxMs=0.0045 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2201"
+            }
+          ]
+        }
+      },
+      {
+        "i": 3,
+        "elapsed": 1226,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"405504,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "405504,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:31 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=405504,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=12582912 retainedSampleBytes=379453440 sampleBudget=536870912 reservedSampleBytes=1048576 readCapacityDeferred=False editCapacityDeferred=False storageReads=110 loadedPages=30 evictedPages=810 reusedSamplePages=7586 readIntegrationMaxMs=0.0045 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2204"
+            }
+          ]
+        }
+      },
+      {
+        "i": 4,
+        "elapsed": 1593,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"409600,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "409600,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:31 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=409600,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=27000832 retainedSampleBytes=69337088 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=140 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2205"
+            }
+          ]
+        }
+      },
+      {
+        "i": 5,
+        "elapsed": 1952,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"413696,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "413696,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:31 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=413696,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=27000832 retainedSampleBytes=126353408 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=140 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2206"
+            }
+          ]
+        }
+      },
+      {
+        "i": 6,
+        "elapsed": 2304,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"417792,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "417792,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:32 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=417792,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=27000832 retainedSampleBytes=180092928 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=140 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2207"
+            }
+          ]
+        }
+      },
+      {
+        "i": 7,
+        "elapsed": 2654,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"421888,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "421888,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:32 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=421888,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=31195136 retainedSampleBytes=223346688 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=172 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2208"
+            }
+          ]
+        }
+      },
+      {
+        "i": 8,
+        "elapsed": 3019,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"425984,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "425984,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:32 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=425984,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=36569088 retainedSampleBytes=272760832 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=213 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2209"
+            }
+          ]
+        }
+      },
+      {
+        "i": 9,
+        "elapsed": 3376,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"430080,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "430080,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:33 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=430080,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=36569088 retainedSampleBytes=317456384 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=213 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2210"
+            }
+          ]
+        }
+      },
+      {
+        "i": 10,
+        "elapsed": 3731,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"434176,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "434176,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:33 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=434176,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=44957696 retainedSampleBytes=89260032 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=277 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2211"
+            }
+          ]
+        }
+      },
+      {
+        "i": 11,
+        "elapsed": 4104,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"438272,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "438272,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:33 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=438272,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=44957696 retainedSampleBytes=136445952 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=277 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2212"
+            }
+          ]
+        }
+      },
+      {
+        "i": 12,
+        "elapsed": 4454,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"442368,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "442368,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:34 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=442368,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=46399488 retainedSampleBytes=200015872 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=288 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2213"
+            }
+          ]
+        }
+      },
+      {
+        "i": 13,
+        "elapsed": 4872,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"446464,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "446464,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:34 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=446464,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=2 saving=False saveSlot=read-overlap-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=True residentBytes=50331648 retainedSampleBytes=265420800 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=318 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=True failure=\r\nCursor: 2215"
+            }
+          ]
+        }
+      },
+      {
+        "i": 14,
+        "elapsed": 5224,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"450560,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "450560,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:35 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=450560,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=29753344 retainedSampleBytes=270139392 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=1 loadedPages=349 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2216"
+            }
+          ]
+        }
+      },
+      {
+        "i": 15,
+        "elapsed": 5572,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"454656,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "454656,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:35 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=454656,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=38010880 retainedSampleBytes=278265856 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=412 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2217"
+            }
+          ]
+        }
+      },
+      {
+        "i": 16,
+        "elapsed": 5931,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"458752,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "458752,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:35 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=458752,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=40108032 retainedSampleBytes=280363008 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=428 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2218"
+            }
+          ]
+        }
+      },
+      {
+        "i": 17,
+        "elapsed": 6286,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"462848,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "462848,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:36 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=462848,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=42205184 retainedSampleBytes=282460160 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=444 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2219"
+            }
+          ]
+        }
+      },
+      {
+        "i": 18,
+        "elapsed": 6639,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"466944,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "466944,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:36 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=466944,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=43384832 retainedSampleBytes=283639808 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=453 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2220"
+            }
+          ]
+        }
+      },
+      {
+        "i": 19,
+        "elapsed": 6995,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"471040,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "471040,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:36 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=471040,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=47054848 retainedSampleBytes=287309824 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=481 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.0061 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2221"
+            }
+          ]
+        }
+      },
+      {
+        "i": 20,
+        "elapsed": 7371,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"475136,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "475136,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:37 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=475136,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=58589184 retainedSampleBytes=299892736 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=53 loadedPages=569 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.008 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2222"
+            }
+          ]
+        }
+      },
+      {
+        "i": 21,
+        "elapsed": 7726,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"479232,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "479232,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:37 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=479232,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=65536000 retainedSampleBytes=305790976 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=622 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2223"
+            }
+          ]
+        }
+      },
+      {
+        "i": 22,
+        "elapsed": 8076,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"483328,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "483328,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:37 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=483328,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=68550656 retainedSampleBytes=309723136 sampleBudget=536870912 reservedSampleBytes=131072 readCapacityDeferred=False editCapacityDeferred=False storageReads=25 loadedPages=645 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2224"
+            }
+          ]
+        }
+      },
+      {
+        "i": 23,
+        "elapsed": 8442,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"487424,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "487424,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:38 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=487424,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=77987840 retainedSampleBytes=319160320 sampleBudget=536870912 reservedSampleBytes=131072 readCapacityDeferred=False editCapacityDeferred=False storageReads=13 loadedPages=717 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2225"
+            }
+          ]
+        }
+      },
+      {
+        "i": 24,
+        "elapsed": 8796,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"491520,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "491520,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:38 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=491520,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=84410368 retainedSampleBytes=325320704 sampleBudget=536870912 reservedSampleBytes=393216 readCapacityDeferred=False editCapacityDeferred=False storageReads=9 loadedPages=766 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2226"
+            }
+          ]
+        }
+      },
+      {
+        "i": 25,
+        "elapsed": 9151,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"495616,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "495616,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:38 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=495616,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=92274688 retainedSampleBytes=332529664 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=826 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2227"
+            }
+          ]
+        }
+      },
+      {
+        "i": 26,
+        "elapsed": 9518,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"499712,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "499712,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:39 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=499712,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=96993280 retainedSampleBytes=338296832 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=9 loadedPages=862 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2228"
+            }
+          ]
+        }
+      },
+      {
+        "i": 27,
+        "elapsed": 9884,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"503808,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "503808,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:39 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=503808,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=100270080 retainedSampleBytes=341573632 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=32 loadedPages=887 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2229"
+            }
+          ]
+        }
+      },
+      {
+        "i": 28,
+        "elapsed": 10244,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"507904,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "507904,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:40 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=507904,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=114819072 retainedSampleBytes=119275520 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=998 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2230"
+            }
+          ]
+        }
+      },
+      {
+        "i": 29,
+        "elapsed": 10602,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"512000,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "512000,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:40 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=512000,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=124780544 retainedSampleBytes=129236992 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=1074 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2231"
+            }
+          ]
+        }
+      },
+      {
+        "i": 30,
+        "elapsed": 10969,
+        "moved": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Name\":\"terrain_player\",\"Enabled\":true,\"Parent\":null,\"Position\":\"516096,393216,4096\",\"Angles\":\"-0,0,0\",\"Scale\":\"1,1,1\"}"
+            }
+          ],
+          "structuredContent": {
+            "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+            "Name": "terrain_player",
+            "Enabled": true,
+            "Parent": null,
+            "Position": "516096,393216,4096",
+            "Angles": "-0,0,0",
+            "Scale": "1,1,1"
+          }
+        },
+        "status": {
+          "content": [
+            {
+              "type": "text",
+              "text": "1 entries, oldest first (2000 buffered):\r\n06:01:40 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=516096,393216,4160 world=f58322c9-b837-4c0b-b555-6199124a290d revision=198 pages=2048 epoch=2 savedRevision=198 checkpoint=4 saving=False saveSlot=save-edit-pressure-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=136314880 retainedSampleBytes=140771328 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=1162 evictedPages=810 reusedSamplePages=7782 readIntegrationMaxMs=0.011 sweepMaxMs=0.2595 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=4788.62 visualDependencies=54662 collisionDependencies=4790 visualPending=True collisionPending=True failure=\r\nCursor: 2232"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "setupRetry": [
+    {
+      "elapsed": 37,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:10 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,32832 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=30408704 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6097 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2115"
+    },
+    {
+      "elapsed": 569,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:11 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,32720.74 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=140902400 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6097 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2116"
+    },
+    {
+      "elapsed": 1097,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:11 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,32380.83 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=243007488 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6097 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2118"
+    },
+    {
+      "elapsed": 1643,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:12 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,31829.59 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=107085824 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6710 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2119"
+    },
+    {
+      "elapsed": 2171,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:12 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,31046.14 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=152961024 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6710 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2120"
+    },
+    {
+      "elapsed": 2701,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:13 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,30092.32 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=202768384 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6710 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2121"
+    },
+    {
+      "elapsed": 3230,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:13 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,28952.29 world=f58322c9-b837-4c0b-b555-6199124a290d revision=971 pages=160 epoch=1 savedRevision=971 checkpoint=61 saving=False saveSlot=f58322c9b8374c0bb5556199124a290d saveStatus=Saved bytes=20971520 queued=0 preparing=True residentBytes=20971520 retainedSampleBytes=263454720 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6710 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2125"
+    },
+    {
+      "elapsed": 3771,
+      "text": "1 entries, oldest first (2000 buffered):\r\n06:00:14 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0,0,27737.89 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=2 savedRevision=136 checkpoint=10 saving=False saveSlot=storage-capacity-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=80347136 retainedSampleBytes=293863424 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=6710 readIntegrationMaxMs=0 sweepMaxMs=0.2341 storageFailure= committed=0 rejected=2 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 commitMs=3466.6985 visualDependencies=28595 collisionDependencies=1546 visualPending=True collisionPending=False failure=Terrain sample memory budget exhausted.\r\nCursor: 2130"
+    }
+  ]
+}

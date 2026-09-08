@@ -14966,3 +14966,153 @@ Evidence: [runtime observations](ValidationEvidence/ChunkStorage/save-edit-press
 [private checkpoint](ValidationEvidence/ChunkStorage/save-edit-pressure-private.json),
 [user before](ValidationEvidence/ChunkStorage/save-edit-pressure-user-before.json) and
 [user after](ValidationEvidence/ChunkStorage/save-edit-pressure-user-after.json).
+
+### Live editor targeting repair — 2026-09-08
+
+The native-control transport remained closed. Closing the saved authoring tab
+also closed Play, so that workaround failed; basic_example was reopened normally.
+Corrected installed addons/tools/Code/Mcp/Scene.cs FindByGuid to prefer the active
+scene before its existing all-session fallback. This makes existing object reads
+and edits agree with scene_tree's active-scene default when Play clones share IDs.
+No terrain hook, new command or gameplay implementation was added. Original file
+SHA256 BA69262D866CA15F628E87A47A3E541F4427DCCFD3FB9233F5A44854D02D6E7B;
+backup in the system temporary directory at voxels3-native-mcp-scene-before.cs.
+The exact added lines are preserved in
+[the local tooling patch](ValidationEvidence/ChunkStorage/native-mcp-active-scene.patch).
+This is an installed editor-source change outside the game Git repository; an
+engine update may replace it. It is not a shipping terrain change. Live readback
+now returns the running player's grounded transform rather than authored spawn.
+The following controlled test will verify movement and unchanged authored data.
+
+### STORAGE-STALE-READ-001/v1 — replacement during live travel
+
+Freeze before fixture setup: game sourcec012751, engine26.09.01c/visible editor18972
+with the active-scene lookup repair above. Preserve latest selected user world and
+page hashes. Load storage-capacity-v1 revision136/2048, save an unchanged private
+copy read-overlap-v1, normal Stop/Play, and warm30seconds at authored spawn. Existing
+gameplay8/visual512, generator configuration unchanged. No client or terrain edits.
+Record baseline authored and staleReadCompletions counters and runtime player GUID.
+
+Start loading save-edit-pressure-v1 revision198/2048. Immediately move the actual
+player through31 positions (393216+i*4096,393216,256), i=0..30, at300ms intervals
+using the native object's normal WorldPosition setter. Record terrain status at
+each step. This is live player movement driving ordinary streaming, not a direct
+streaming-origin mutation. Continue observation until the replacement and derived
+queues settle, with a120second observation limit. Require198/2048, unchanged
+authored count, no storage failure, and staleReadCompletions greater than baseline
+to claim the targeted branch. If no stale completion occurs, report unexercised;
+do not retime or repeat to manufacture coverage. Keep all actual timings.
+
+Require the known far fingerprint B41B9A4D...F8EB7439 at(393216,393216,0),r1024,
+the valid saved directory and all referenced checksums, and no old field returning
+after settlement. Restore latest user save and normal spawn through normal Play
+restart; verify saved page identity unchanged. The authored .scene file hash must
+match before/after. No new performance threshold or canonical-route claim.
+
+Version1 fixture load was rejected before mutation: the current player intersected
+the restore area of the user's newer971/160-page world. Field971 remained intact,
+with rejected1 and an explicit actor-intersection error. No overlap workload ran.
+The subsequent setup repositioned the live player to(0,0,32768) and requested the
+fixture again; this setup action preceded the following amendment after its first
+documentation patch failed to apply. Preserve that ordering qualification.
+
+Before the actual overlap phase, version2 keeps all fixtures, counts and300ms
+travel intervals, but uses Z4096 for each far travel position. This keeps the actor
+outside the known changed sample bounds while ordinary render/collision interest
+determines reads. This corrects invalid actor placement, not a slow test; no guard
+is bypassed. Stop/Play setup still returns to authored spawn. Require no additional
+rejection during the actual replacement/travel phase. Keep v1's rejected setup
+separate from v2 correctness evidence.
+
+### STORAGE-STALE-READ-001/v2 observation — 2026-09-08
+
+Source c012751, visible editor18972. The high-position fixture setup initially
+failed with sample memory exhausted, preserving user971/160; retry after natural
+reclamation succeeded. Stop/Play reopened private136/2048 with authored0/rejected0.
+After30seconds warmup, replacement plus31 live moves completed in10.969seconds.
+Intervals include tool latency, approximately350ms rather than exact300ms.
+Old reads reached110 pending while replacement prepared, but completed before
+commit. Replacement198/2048, epoch2 committed in4788.62ms; authored/rejected stayed0.
+By06:02:27 visual/collision queues settled, loadedPages2170. StaleReadCompletions
+and ReadCapacityDeferrals remained0: direct discard-branch coverage is UNEXERCISED,
+not passed. The06:05:51 far fingerprint exactly matched B41B9A4D...F8EB7439.
+Evidence: [travel observations](ValidationEvidence/ChunkStorage/stale-travel-runtime.json).
+Latest user state971/160 checkpoint61 is preserved in its original slot and
+[before audit](ValidationEvidence/ChunkStorage/read-overlap-user-before.json).
+Final restoration and saved-directory checks are recorded below when performed.
+
+### STORAGE-READ-PRESSURE-001/v1 — cold reads during mutation reservation
+
+Freeze before pressure workload: c012751, engine26.09.01c, visible editor18972,
+unchanged generator/gameplay8/visual512 and512MiB sample cap, no clients. This is
+a distinct read-admission workload, not a retimed stale-read test. Fixture setup
+loads storage-capacity-v1 revision136/2048 with player at(0,0,32768); that setup
+request was issued immediately before this definition. Save private read-pressure-v1,
+normal Stop/Play, move live player to(-393216,393216,4096), warm30seconds.
+Submit31 digs at(393216+i*4096,393216,0),r1024,strength512,i0..30. After queue drains,
+save private state167 then submit the same31 digs. Poll sample accounting as fast
+as sequential tools permit for up to60seconds (retain actual timestamps).
+At the first observed retained+reserved >=511MiB with reserved>0, move the live
+player once to(0,0,4096) to demand cold saved origin pages during the reservation.
+If the trigger is never observed, report it unexercised, without repeated attempts.
+Observe up to120seconds for queue/recovery; performance is advisory. Require a
+positive readCapacityDeferrals delta to claim read-admission denial, subsequent
+loadedPages progress, zero pending work/reservations,198/2048 and62 authored edits
+with no rejection/storage failure. Sampled accounting must stay <=512MiB. Preserve
+missing transient coverage. Save198, fingerprint known far region, then restore
+latest original user971/160 and normal spawn, verify all original page hashes and
+authored scene hash. Never force GC, change caps, or add test-only paths.
+
+STORAGE-READ-PRESSURE-001/v1: setup first rejected non-idle, then decode hit the
+sample cap; after natural reclamation retry succeeded. Actual workload after
+Stop/Play began136/2048, authored0/rejected0 and resident0. Both31-edit batches
+committed exactly62 edits to198 with no rejection. Phase2 finished in3.179seconds;
+60 observations peaked532545536bytes (507.875MiB), below the511MiB movement trigger.
+The trigger did not fire; readCapacityDeferrals remained0. Direct admission denial
+is UNEXERCISED. Saved198/checkpoint4, known far fingerprint matched exactly, and
+all2048 page lengths/checksums verified. First-phase observation started after its
+queue drained, so transient first-phase peaks are not established.
+Evidence: [runtime](ValidationEvidence/ChunkStorage/read-pressure-runtime.json),
+[private checkpoint](ValidationEvidence/ChunkStorage/read-pressure-private.json).
+
+### STORAGE-READ-PRESSURE-RECOVERY-001/v1 — observed recovery failure
+
+During required original-world restoration at06:13:24, load failed safely with
+sample memory exhausted. Live private198/2048 remained saved; user971 on disk is
+unchanged. At06:13:29 retained sample accounting is exactly512MiB, resident0,
+reserved0, loadedPages1259, readCapacityDeferrals0. This is a concrete recovery
+failure, separate from the preceding workload whose conditional trigger did not
+occur. Freeze before subsequent action: same source/environment/limits and no
+further edits. Move actual player once to(0,0,4096), demanding saved origin pages
+while the observed full accounting persists. Poll at100ms for30seconds and then
+until queues settle,120seconds maximum. Require a positive denial counter followed
+by successful loadedPages increase, no read failure and zero reservations to claim
+denial/recovery. Preserve a zero counter as unexercised; no repeat. Then retry
+original-world restore after memory release, and verify user hashes and restart.
+
+STORAGE-READ-PRESSURE-RECOVERY-001/v1 result: read denial directly observed214ms
+after movement (counter2), reaching1023 by103.705seconds. Thirty cold reads remained
+queued, loadedPages stayed1259, resident0, reserved0, retained512MiB. No page read
+error or stale overwrite was reported. The pre-existing decode failure string is
+from the failed restore, not a new page-read error. Additional live tool input
+first appears at64.342seconds, queued1; no additional edit committed before Stop.
+This violates the no-further-edits parameter after that point and qualifies later
+observations. Polling has model/tool gaps; the last sample is103.705seconds, not a
+continuous120second measurement. Admission denial is verified; same-session
+recovery was NOT observed. This is an unresolved progress observation, not a new
+performance deadline or proof of permanent deadlock. Allocation tracking retains
+weak references until collection; source inspection alone does not establish
+which arrays still had strong owners during this run. No forced collection used.
+Evidence: [recovery observations](ValidationEvidence/ChunkStorage/read-pressure-recovery-runtime.json).
+
+Normal Stop/Play cancelled the uncommitted private tool request and reopened saved
+private198. Original user971/160 then restored in2574.765ms; normal Stop/Play selected
+that original slot and returned the player to spawn. At06:17:19 both derived queues
+were clear, authored0/rejected0, reservations0 and no failure. Original checkpoint62
+has exactly the same canonical identity, directory and all160 page hashes as61.
+Authored scene SHA256 is unchanged:
+521ea0f7415e17534a1fabab006caba16d0350963b23331556dac0d16ed138c2.
+Evidence: [user after](ValidationEvidence/ChunkStorage/read-overlap-user-after.json).
+No game runtime code changed in these runs. The remaining checks are same-session
+read admission recovery and direct old-epoch read discard; tooling no longer
+blocks live movement. Performance restrictions remain advisory per user decision.

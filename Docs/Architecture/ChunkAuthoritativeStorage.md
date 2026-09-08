@@ -43,9 +43,14 @@ save/edit pressure case:62 edits committed once, an older save left newer edits
 unsaved, and the deferred final edit recovered with reservations0. Largest sampled
 retained+reserved total was511.625MiB. Its final request took32.3seconds to commit;
 this responsiveness cost is reported for judgment, not hidden by a pass label.
-Remaining correctness coverage includes read-pump-specific denial/recovery
-and in-session stale-read completion after replacement. The live-player control
-transport needed for the planned overlap is currently unavailable. Exact latency
+Read-pump denial is now directly observed at the512MiB cap, but same-session
+recovery was not observed through the last103.7second sample; an extra live tool
+request entered after64.3seconds. Normal Stop/Play allowed original-world recovery.
+The travel/replacement run preserved the correct field, but old reads finished
+before commit, so direct stale-read discard remains unexercised. Native live-player
+control now works after an installed editor active-scene lookup repair; the tooling
+blocker is resolved. Remaining coverage is read-pump recovery and direct stale-read
+discard. These bounded results do not establish permanent deadlock. Exact latency
 and sample-release timing are measurements for review under the user's updated
 decision. Actual eviction, correct recovery, protected dirty state and bounded
 memory remain requirements. Preserve engine failures and earlier failed results;

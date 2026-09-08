@@ -1,0 +1,6 @@
+--- a/addons/tools/Code/Mcp/Scene.cs
++++ b/addons/tools/Code/Mcp/Scene.cs
+@@ -1018,0 +1019,3 @@
++		var active = SceneEditorSession.Active?.Scene?.Directory?.FindByGuid( guid );
++		if ( active is not null ) return active;
++
