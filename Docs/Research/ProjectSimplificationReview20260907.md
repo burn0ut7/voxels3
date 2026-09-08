@@ -131,6 +131,12 @@ Trace every caller, then investigate a canonical identity encoder/decoder that p
 
 ### S5 — Remove repeated discovery and branching only where measured
 
+2026-09-08 candidate shares target/configuration decision after resolving the
+effective visual request; before/after and invalid/valid radius checks completed.
+Awaiting human approval; [S5 review](../ValidationEvidence/SimplificationS5/Review.md).
+Player discovery remains unchanged; separate multi-player cost attribution is
+unmeasured/deferred, not a completed optimization. Historical proposal follows.
+
 **Priority: medium.** Manager `OnUpdate` repeats target/configuration movement logic in valid and invalid configuration branches. `UpdatePlayerCollisionInterests` rediscovers players, deduplicates and sorts every update before collision can reject unchanged interest. Networking already owns session player records, but editor/offline players also exist.
 
 First simplify the shared target/placement decision after resolving the effective configuration, retaining rejection behavior. Separately measure player-discovery cost with one and multiple players. Reuse existing ownership if it covers every lifecycle; do not create a second player registry or cache dynamic actor bounds at a slower cadence. The latter could miss a fast actor and alter collision safety.

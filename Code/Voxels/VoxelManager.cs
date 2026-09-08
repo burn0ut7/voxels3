@@ -437,7 +437,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		UpdatePlayerFigureEight();
 		UpdatePerformanceOverview();
 
-		if ( !TryValidateConfiguration( out var visualConfiguration, out var configurationError ) )
+		var configurationValid = TryValidateConfiguration( out var visualConfiguration, out var configurationError );
+		if ( !configurationValid )
 		{
 			if ( configurationError != _lastConfigurationError )
 			{
@@ -446,55 +447,38 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 					$"[VoxelWorld] configuration.rejected reason=\"{configurationError}\" " +
 					$"appliedVisualRevision={_appliedVisualConfigurationRevision}" );
 			}
-
-			var gameplayChanged = GameplayRadius >= 0 && GameplayRadius <= VoxelCollisionWorld.MaximumRadius &&
-				GameplayRadius != _appliedGameplayRadius;
-			if ( gameplayChanged ) _appliedGameplayRadius = GameplayRadius;
-			var targetPosition = ActiveStreamingTarget.WorldPosition;
-			var targetCoordinate = WorldToChunkCoordinate( targetPosition );
-			if ( gameplayChanged || !_hasStreamingCenter || targetCoordinate != _streamingCenterCoordinate )
-			{
-				RebuildDesiredChunks(
-					targetCoordinate,
-					gameplayChanged
-						? "gameplay radius applied"
-						: "streaming target crossed a chunk boundary",
-					_targetVisualConfiguration );
-			}
-			else
-			{
-				UpdateClipboxPlacement( targetPosition, _targetVisualConfiguration );
-			}
+			visualConfiguration = _targetVisualConfiguration;
 		}
 		else
 		{
 			_lastConfigurationError = string.Empty;
-			if ( DataConfigurationChanged() )
+		}
+
+		if ( configurationValid && DataConfigurationChanged() )
+		{
+			ApplyConfigurationAndRebuild();
+		}
+		else
+		{
+			var gameplayChanged = GameplayRadius >= 0 && GameplayRadius <= VoxelCollisionWorld.MaximumRadius &&
+				GameplayRadius != _appliedGameplayRadius;
+			var visualChanged = visualConfiguration != _targetVisualConfiguration;
+			if ( gameplayChanged ) _appliedGameplayRadius = GameplayRadius;
+			var targetPosition = ActiveStreamingTarget.WorldPosition;
+			var targetCoordinate = WorldToChunkCoordinate( targetPosition );
+			if ( gameplayChanged || visualChanged || !_hasStreamingCenter ||
+				targetCoordinate != _streamingCenterCoordinate )
 			{
-				ApplyConfigurationAndRebuild();
+				var reason = gameplayChanged
+					? "gameplay radius applied"
+					: visualChanged
+						? "visual configuration requested"
+						: "streaming target crossed a chunk boundary";
+				RebuildDesiredChunks( targetCoordinate, reason, visualConfiguration );
 			}
 			else
 			{
-				var gameplayChanged = GameplayRadius != _appliedGameplayRadius;
-				var visualChanged = visualConfiguration != _targetVisualConfiguration;
-				if ( gameplayChanged ) _appliedGameplayRadius = GameplayRadius;
-				var targetPosition = ActiveStreamingTarget.WorldPosition;
-				var targetCoordinate = WorldToChunkCoordinate( targetPosition );
-				if ( gameplayChanged || visualChanged || !_hasStreamingCenter ||
-					targetCoordinate != _streamingCenterCoordinate )
-				{
-					var reason = gameplayChanged
-						? "gameplay radius applied"
-						: visualChanged
-							? "visual configuration requested"
-							: "streaming target crossed a chunk boundary";
-					RebuildDesiredChunks( targetCoordinate, reason,
-						visualConfiguration );
-				}
-				else
-				{
-					UpdateClipboxPlacement( targetPosition, visualConfiguration );
-				}
+				UpdateClipboxPlacement( targetPosition, visualConfiguration );
 			}
 		}
 

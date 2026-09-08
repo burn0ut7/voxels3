@@ -16163,3 +16163,70 @@ checks. S4 uncommitted, no S5; approval required with disclosed measurement limi
 User: "I accept. Move on to S5". Implementation already committed898ebd9.
 Record acceptance with disclosed GPU/publication timing and multiplayer coverage
 limits. No additional tests or exhaustive human checks claimed. Proceed to S5.
+
+### SIMPLIFICATION-S5-001/v1 — shared configuration/target decision
+
+Defined2026-09-08 before runs, baseline96e530a (accepted S4), world1000/167pages
+f58322c9-b837-4c0b-b555-6199124a290d. Preserve original and private s5-perf1000
+fixture; evidence/backup/selector in ValidationEvidence/SimplificationS5.
+One cold B1/C1 pair using canonical scene basic_example authored spawn,>=30s
+warmup plus all queues settled, host only/no peers, engine26.09.01c,
+Ryzen7 9800X3D/RTX5090,fps_max1000,same graphics/viewport/FOV. Seed1337/v5,
+32cells/16units,gameplay8,visual512,levels0..6,half extents4/8. Speed2500,
+distance50000,Yreach25000,Z0,one loop; normal drain/two advances/10s stationary.
+No edits/configuration mutation in timed windows. Compare CPU/GPU p95/p99
+max(5%,0.25ms),allocation/frame and process/GPUpeak5%(process16MiB floor),
+collisionreadytails max(5%,10ms); preserve publication/maxima/lag/GC/backlog.
+All4913ready,queues0,no new exceptions/unsafecommits/mismatches,matching geometry
+at matching spatial sets and unchanged167page payloads. No promised speedup.
+
+Scope: resolve valid or retained visual configuration once, preserve warning
+suppression and data-reset precedence, then share gameplay/visual-change and
+target-movement decision. No player registry/cache/discovery changes. Per-frame
+player discovery remains necessary for offline/proxy/actor coverage; multi-player
+cost attribution is not established by this host-only scenario. No inference
+that an unmeasured discovery cache is safe or beneficial.
+
+After each timed run, run fixed normal-property checks from authored configuration:
+1)request maxVisualLOD7 (invalid), gameplay8; 2)keep invalid LOD7,gameplay7;
+3)keep invalid LOD7,gameplay-1; 4)restore valid maxLOD6,gameplay8.
+Keep minLOD0,extents4/8,cells32,size16 throughout. Observe each after>=2s;
+invalid visuals must preserve applied visual revision/levels; valid radius7
+must yield3375desired collision regions, invalid radius-1 must retain7;
+restore8 yields4913 eventually ready. Expected warning changes are not runtime
+errors. No authored scene writes. Test movement via canonical figure-eight;
+invalid-config movement, target override/fallback and multiple players remain
+explicit human checks if not exercised. No new test hooks/components.
+Pause after C1 with results and human checks before acceptance/commit/S6.
+
+#### S5 B1/C1 result and human checkpoint — 2026-09-08
+
+B1 source96e530a,coldPID43688,90d4110ce94c4627af395031c3da4fea;
+C1 PID36032,60ecf92f5fcd45799e274f5908afb560,one-file c1-source hash.
+[S5 review](ValidationEvidence/SimplificationS5/Review.md) contains full metrics.
+FPS817.85486 ->825.41205,CPUp95/p99/max1.9369/3.9303/25.1929 ->
+1.889/3.8292/22.367ms;GPUp95/p99/max1.663208/2.1357536/4.0357113 ->
+1.6200542/2.098322/11.818886ms. Stationary901.40985 ->909.88885FPS,
+CPUp95/p991.7048/2.5801 ->1.6888/2.5719ms. Allocation/frame30396.941 ->
+30336.838bytes,processpeak4004098048 ->4011249664bytes,GPU2879204496 ->2828992848.
+Collisionready3980.8418/9459.059 ->3820.3352/9427.732ms; publicationp95/p99/max
+85.4379/104.9371/185.3246 ->84.3306/103.9648/175.7741ms. Maxsynchronous
+18.6205 ->15.3422ms,preparation16.3272 ->14.594ms,lag2both,GCmax13.02 ->13.583ms.
+Declared screens pass; worse GPUmax remains unexplained; no speedup attribution.
+
+Timed errors/exceptions0,4913ready,queues0,backlog127,unsafecommits0. Matching
+startup geometry, but final centers B1(0,0,-1),C1(-1,-1,-1) differ; no final
+whole-view geometry equivalence claim. All167fixture pages and tested source
+hash unchanged. Builds and cold engine compile succeed0warnings/errors.
+Baseline shutdown Error window after engine shutdown preserved in log.
+
+Both sources normal-property sequence confirmed maxLOD7 rejected with applied
+maxLOD6/revision2; valid radius7 applied even while visuals invalid (3375ready);
+radius-1 retained3375; valid8 restored4913ready. Expected warning reasons changed
+without per-frame repetition. No scene file changes. Invalid-config movement,
+target overrides/local/fallback and multi-player cases remain human checks.
+Data reset precedence source-reviewed only. Player discovery is unchanged and
+its separate multi-player cost remains unmeasured/deferred; no caching introduced.
+
+Original1000world/settings restored. Net16lines removed from shared target/
+configuration decision. Pause for human review; S5 uncommitted, no S6.
