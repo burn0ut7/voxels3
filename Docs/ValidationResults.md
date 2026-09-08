@@ -16079,3 +16079,81 @@ S3 uncommitted/pending human review, no S4, earlier results preserved.
 User: "I accept. Move onto S4". Accept tested candidate with preserved five-run
 evidence and disclosed maxima/final-view limitations. No additional benchmark
 or exhaustive human-test completion claimed. Commit S3 and proceed to S4.
+
+### SIMPLIFICATION-S4-001/v1 — identity-only terrain codec
+
+Defined before runs2026-09-08, baselinea2f357a (accepted S3). World999/167pages,
+f58322c9-b837-4c0b-b555-6199124a290d. Preserved user world and private s4-perf999
+copy/hashes/selector in ValidationEvidence/SimplificationS4. B1 then C1 cold
+editor processes; same machine Ryzen7 9800X3D/RTX5090, engine26.09.01c, scene
+basic_example authored spawn, >=30s warmup and full visual/collision/storage
+settlement, one local host/no peers. fps_max1000, same graphics/viewport/FOV,
+seed1337/v5,32cells/16units,gameplay8,visual512,levels0..6,half extents4/8.
+Canonical speed2500,distance50000,Yreach25000,Z0,one loop; unchanged visual
+drain/two advances/10s stationary. No edits during timed routes.
+
+Scope: replace unused whole-snapshot codec with fixed96-byte identity format,
+remove empty snapshot/dictionary construction and whole-page collection loops.
+Keep exact header/checksum/zero-count bytes, page blocks and protocol versions;
+retain local checkpoint epoch without serializing it. Identity is metadata, not
+authoritative samples. Store and manifest keep directory ownership/validators.
+
+Compare CPU/GPU p95/p99 within max(5%,0.25ms), allocations/frame/process/GPU
+peaks5% (process16MiB floor), collisionready tails max(5%,10ms); disclose maxima,
+placement lag, publication/drain/GC, no hiding regressions. All4913ready/queues0,
+no new exceptions/native failures, matching geometry at matching placements,
+zero mismatches/unsafecommits. Preserve all167page payload hashes. Benefit is
+actual deletion of unused capability/allocation, not promised FPS improvement.
+
+Outside timed windows: fingerprint region center0,0,0 radius1024 before/after;
+production saves to private s4-before/s4-after; reopen pre-change checkpoint
+through normal startup and compare exact96-byte identity plus167directory
+records/page hashes. Cold candidate loading is a real backwards-compatibility
+check. Exercise malformed identity via normal load on private checkpoint copies:
+nonzero page count, checksum corruption, truncation, trailing identity byte,
+and changed generator seed (outer checksums recomputed where necessary to reach
+inner validation). Expect rejection, no live world/revision change. No test
+components/frameworks/alternate samplers. Record expected load failures apart
+from timed exceptions. No multiplayer peer currently supplied; late join and
+reconnect remain human acceptance checks, not implied by codec byte identity.
+
+Pause after C1 and compatibility evidence with save/reload, fingerprint,
+edit/travel/collision and second-player join/reconnect checks. No candidate
+commit or S5 until explicit human approval; preserve failures and limitations.
+
+#### S4 B1/C1 and compatibility checkpoint — 2026-09-08
+
+B1 a2f357a coldPID33948 run5072c50ac4e6499880c94ddbcf1b0967;
+C1 coldPID39872 run933cac137857432d900042308c03c5ad,4-file c1-source hashes.
+Full table/raw evidence in [S4 review](ValidationEvidence/SimplificationS4/Review.md).
+FPS810.44604 ->845.5348; CPUp95/p99/max1.9519/4.0388/134.761 ->
+1.8099/3.6868/46.1932ms; GPUp95/p99/max1.6613007/2.1557808/9.190321 ->
+1.5597343/2.0234585/12.201786ms. Stationary888.4339 ->914.858FPS;
+CPUp95/p991.7226/2.6139 ->1.5998/2.4674ms. Allocation/frame30444.752 ->
+30162.863bytes; processpeak4022575104 ->4007522304bytes; GPU2879324496both.
+Collisionreadyp95/p994111.0146/9592.039 ->3656.8118/9250.941ms.
+Publicationp95/p99/max86.3633/110.5906/162.3501 ->84.1648/120.5761/175.5117ms.
+Maxsynchronous19.0671 ->17.986ms,preparation17.7055 ->17.6228ms,lag4 ->2.
+Declared percentile/memory/allocation/collision screens pass; worse GPUmaximum
+and publicationp99/max remain unexplained. One pair gives no causal speedup.
+
+Timed exceptions/errors0;4913ready/queues0,backlog127,unsafecommits0; startup/
+final regular hashes match, final18C827BA6C1B1844/6F1FA10A1262AC94,center(0,0,-1).
+All167page hashes unchanged. Old checkpoint opens; production save outputs
+exactly equal96-byte identities and167directory records; fingerprint before/
+after/reopen0D20FBF41FDADFDB8E4F3EB08D0ACFD13D147DEBA3BDEDACD19523F9E1A5260B.
+
+Five malformed private normal-load inputs rejected: count,checksum,truncated,
+trailing identity byte,settings. Expected request.failed logs retained after
+benchmark; world999/167epoch1unchanged after failures. Subsequent valid old-save
+load committed same999/167epoch2 and matching fingerprint. No multiplayer peer,
+manifest exchange,late join/reconnect or exhaustive malformed page coverage.
+Initial compile failure on checkpoint replacement type corrected before C1;
+final runtime/editor and cold engine compile pass. Baseline shutdown Error window
+recorded separately. Candidate full editor shutdown untested.
+
+Change removes whole-snapshot loops/limit and empty snapshot/dictionary metadata,
+retains exact96-byte identity/page blocks/protocol versions. Checkpoint local
+epoch preserved and not serialized. Net26runtime lines removed. Restore normal
+user999slot and pause for human save/reload/edit/travel/collision/second-peer
+checks. S4 uncommitted, no S5; approval required with disclosed measurement limits.

@@ -162,8 +162,7 @@ internal sealed class TerrainField
 			}
 			_current = change.Result;
 			if ( change.Checkpoint is not null )
-				_checkpoint = change.Checkpoint with { Identity = new TerrainFieldSnapshot( _current.Settings, _current.Revision,
-					new Dictionary<Vector3Int, TerrainFieldPage>(), _current.WorldId, epoch: _current.Epoch ) };
+				_checkpoint = change.Checkpoint with { Identity = new TerrainFieldIdentity( _current.Settings, _current.Revision, _current.WorldId, _current.Epoch ) };
 			return true;
 		}
 	}

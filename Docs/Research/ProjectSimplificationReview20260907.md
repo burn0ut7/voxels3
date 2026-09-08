@@ -115,6 +115,13 @@ Do not build a telemetry framework, reflection-based exporter or generic benchma
 
 ### S4 — Narrow the obsolete whole-snapshot codec interface
 
+2026-09-08 candidate implemented: explicit96-byte identity codec and metadata
+value replace unused whole-snapshot paths/empty snapshots. Before/after and
+production save/reopen/fingerprint/malformed-header checks completed. Awaiting
+human approval; see [S4 review](../ValidationEvidence/SimplificationS4/Review.md).
+Multiplayer exchange remains a human gate; historical description below records
+the pre-change finding.
+
 **Priority: medium; conditional on completing storage integration.** Save/load orchestration now uses `TerrainFieldStore`, but `TerrainFieldCodec.WriteSnapshot/ReadSnapshot` still support complete page collections. Current visible callers in fingerprinting, replication manifests and checkpoint indexes use the format for identity/header serialization. Thus the methods are not dead; the unused whole-collection capability is the candidate.
 
 Trace every caller, then investigate a canonical identity encoder/decoder that preserves existing bytes and validation while deleting unused whole-world loops and unnecessary temporary empty snapshots. Keep page-block encoding shared by storage and transfer. Do not introduce an old/new save fallback or change existing checkpoint/network bytes merely to obtain cleaner names.

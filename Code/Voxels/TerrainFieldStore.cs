@@ -39,7 +39,7 @@ internal static class TerrainFieldStore
 	private static readonly Dictionary<(string Root, string Hash), WeakReference<Page>> FileReferences = new();
 
 	internal sealed record Page( Vector3Int Coordinate, int Revision, int Bytes, string Hash );
-	internal sealed record Checkpoint( string Root, long Sequence, TerrainFieldSnapshot Identity,
+	internal sealed record Checkpoint( string Root, long Sequence, TerrainFieldIdentity Identity,
 		IReadOnlyDictionary<Vector3Int, Page> Pages, int WrittenPages = 0,
 		long PageBytesRead = 0, long PageBytesWritten = 0 );
 
@@ -135,10 +135,9 @@ internal static class TerrainFieldStore
 				}
 				pages.Add( pair.Key, page );
 			}
-			var identity = new TerrainFieldSnapshot( source.Settings, source.Revision,
-				new Dictionary<Vector3Int, TerrainFieldPage>(), source.WorldId, epoch: source.Epoch );
+			var identity = new TerrainFieldIdentity( source.Settings, source.Revision, source.WorldId, source.Epoch );
 			var checkpoint = new Checkpoint( root, sequence, identity, pages, writtenPages, pageBytesRead, pageBytesWritten );
-			var index = EncodeIndex( checkpoint, cancellation );
+			var index = EncodeIndex( checkpoint );
 			if ( storedBytes + index.Length + 32 > MaximumStoreBytes || storedFiles + 2 > MaximumStoredFiles )
 				throw new IOException( "Terrain checkpoint exceeds the store budget." );
 			var stem = $"{root}/checkpoints/{sequence.ToString( "D20", CultureInfo.InvariantCulture )}";
@@ -249,13 +248,13 @@ internal static class TerrainFieldStore
 		return sequences;
 	}
 
-	private static byte[] EncodeIndex( Checkpoint checkpoint, CancellationToken cancellation )
+	private static byte[] EncodeIndex( Checkpoint checkpoint )
 	{
 		using var stream = new MemoryStream();
 		using var writer = new BinaryWriter( stream, Encoding.UTF8, true );
 		writer.Write( IndexMagic ); writer.Write( IndexVersion ); writer.Write( checkpoint.Sequence );
 		using var identity = new MemoryStream();
-		TerrainFieldCodec.WriteSnapshot( identity, checkpoint.Identity, cancellation );
+		TerrainFieldCodec.WriteIdentity( identity, checkpoint.Identity );
 		writer.Write( (int)identity.Length ); writer.Write( identity.ToArray() );
 		writer.Write( checkpoint.Pages.Count );
 		foreach ( var page in checkpoint.Pages.Values )
@@ -278,10 +277,9 @@ internal static class TerrainFieldStore
 		if ( reader.ReadInt32() != IndexMagic || reader.ReadInt32() != IndexVersion || reader.ReadInt64() != sequence )
 			throw new InvalidDataException( "Unsupported terrain checkpoint index." );
 		var identityBytes = reader.ReadInt32();
-		if ( identityBytes != TerrainFieldCodec.EmptySnapshotBytes ) throw new InvalidDataException( "Invalid terrain checkpoint identity length." );
+		if ( identityBytes != TerrainFieldCodec.IdentityBytes ) throw new InvalidDataException( "Invalid terrain checkpoint identity length." );
 		using var identityStream = new MemoryStream( reader.ReadBytes( identityBytes ), false );
-		var identity = TerrainFieldCodec.ReadSnapshot( identityStream, settings, cancellation );
-		if ( identity.PageCount != 0 ) throw new InvalidDataException( "Checkpoint identity contains sample data." );
+		var identity = TerrainFieldCodec.ReadIdentity( identityStream, settings );
 		var count = reader.ReadInt32();
 		if ( count < 0 || count > TerrainField.MaximumPages || stream.Length - stream.Position != count * 52L )
 			throw new InvalidDataException( "Invalid terrain directory size." );

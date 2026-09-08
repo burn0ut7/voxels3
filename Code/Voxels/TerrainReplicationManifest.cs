@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 
 /// <summary>Regional host page identities; density payloads use TerrainFieldCodec unchanged.</summary>
 internal sealed class TerrainReplicationManifest
@@ -27,8 +26,7 @@ internal sealed class TerrainReplicationManifest
 		using var writer = new BinaryWriter( stream, Encoding.UTF8, true );
 		writer.Write( ProtocolVersion );
 		using var baseline = new MemoryStream();
-		TerrainFieldCodec.WriteSnapshot( baseline, new TerrainFieldSnapshot( Settings, Revision,
-			new Dictionary<Vector3Int, TerrainFieldPage>(), WorldId ), CancellationToken.None );
+		TerrainFieldCodec.WriteIdentity( baseline, new TerrainFieldIdentity( Settings, Revision, WorldId ) );
 		var header = baseline.ToArray();
 		writer.Write( header.Length ); writer.Write( header );
 		writer.Write( Coverage.Minimum.x ); writer.Write( Coverage.Minimum.y ); writer.Write( Coverage.Minimum.z );
@@ -54,10 +52,9 @@ internal sealed class TerrainReplicationManifest
 		using var reader = new BinaryReader( stream );
 		if ( reader.ReadInt32() != ProtocolVersion ) throw new InvalidDataException( "Terrain transfer protocol does not match." );
 		var headerLength = reader.ReadInt32();
-		if ( headerLength != TerrainFieldCodec.EmptySnapshotBytes ) throw new InvalidDataException( "Terrain manifest baseline length is invalid." );
+		if ( headerLength != TerrainFieldCodec.IdentityBytes ) throw new InvalidDataException( "Terrain manifest baseline length is invalid." );
 		using var baseline = new MemoryStream( reader.ReadBytes( headerLength ), false );
-		var header = TerrainFieldCodec.ReadSnapshot( baseline, expected, CancellationToken.None );
-		if ( header.PageCount != 0 ) throw new InvalidDataException( "Terrain manifest baseline contains unexpected pages." );
+		var header = TerrainFieldCodec.ReadIdentity( baseline, expected );
 		var low = new Vector3( reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle() );
 		var high = new Vector3( reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle() );
 		if ( !float.IsFinite( low.x ) || !float.IsFinite( low.y ) || !float.IsFinite( low.z ) ||

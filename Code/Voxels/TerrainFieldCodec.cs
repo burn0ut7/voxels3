@@ -1,19 +1,20 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
-/// <summary>One lossless absolute-page format for saved worlds and host state transfer.</summary>
+// Local checkpoint epoch is not part of the stored or network identity.
+internal readonly record struct TerrainFieldIdentity( ProceduralTerrainSettings Settings, int Revision, Guid WorldId, int Epoch = 0 );
+
+/// <summary>Shared world-identity and lossless page formats for storage and host state transfer.</summary>
 internal static class TerrainFieldCodec
 {
 	private const int Magic = 0x33465856;
 	private const int HeaderBytes = 60;
-	public const int EmptySnapshotBytes = HeaderBytes + 36;
+	public const int IdentityBytes = HeaderBytes + 36;
 	public const int MaximumPagePayloadBytes = 17 + TerrainField.SamplesPerPage * sizeof( float );
 	public const int MaximumPageBlockBytes = MaximumPagePayloadBytes + 36;
-	public const long MaximumSnapshotBytes = HeaderBytes + 36L + (long)TerrainField.MaximumPages * MaximumPageBlockBytes;
 
 	public static byte[] EncodePage( Vector3Int coordinate, TerrainFieldPage page )
 	{
@@ -43,8 +44,7 @@ internal static class TerrainFieldCodec
 	public static string RegionFingerprint( TerrainFieldSnapshot snapshot, SdfWorldAabb bounds, CancellationToken cancellation )
 	{
 		using var stream = new MemoryStream();
-		WriteSnapshot( stream, new TerrainFieldSnapshot( snapshot.Settings, 0,
-			new Dictionary<Vector3Int, TerrainFieldPage>(), snapshot.WorldId ), cancellation );
+		WriteIdentity( stream, new TerrainFieldIdentity( snapshot.Settings, 0, snapshot.WorldId ) );
 		using var writer = new BinaryWriter( stream, Encoding.UTF8, true );
 		writer.Write( bounds.Minimum.x ); writer.Write( bounds.Minimum.y ); writer.Write( bounds.Minimum.z );
 		writer.Write( bounds.Maximum.x ); writer.Write( bounds.Maximum.y ); writer.Write( bounds.Maximum.z );
@@ -118,7 +118,7 @@ internal static class TerrainFieldCodec
 		return (coordinate, new TerrainFieldPage( revision, values, retainSamples: metadataScratch is null ));
 	}
 
-	public static void WriteSnapshot( Stream stream, TerrainFieldSnapshot snapshot, CancellationToken cancellation )
+	public static void WriteIdentity( Stream stream, TerrainFieldIdentity identity )
 	{
 		using var writer = new BinaryWriter( stream, Encoding.UTF8, true );
 		using var header = new MemoryStream( HeaderBytes );
@@ -126,31 +126,18 @@ internal static class TerrainFieldCodec
 		{
 			fields.Write( Magic ); fields.Write( TerrainField.FormatVersion );
 			fields.Write( ProceduralTerrainSdf.CurrentVersion ); fields.Write( TerrainField.SampleSpacing );
-			fields.Write( TerrainField.SamplesPerPageAxis ); fields.Write( snapshot.Settings.WorldSeed );
-			fields.Write( snapshot.Settings.SurfaceBaseHeight ); fields.Write( snapshot.Settings.SurfaceFrequency );
-			fields.Write( snapshot.Settings.SurfaceAmplitude ); fields.Write( snapshot.Revision ); fields.Write( snapshot.PageCount );
-			fields.Write( snapshot.WorldId.ToByteArray() );
+			fields.Write( TerrainField.SamplesPerPageAxis ); fields.Write( identity.Settings.WorldSeed );
+			fields.Write( identity.Settings.SurfaceBaseHeight ); fields.Write( identity.Settings.SurfaceFrequency );
+			fields.Write( identity.Settings.SurfaceAmplitude ); fields.Write( identity.Revision ); fields.Write( 0 ); // Reserved page count: identities contain no samples.
+			fields.Write( identity.WorldId.ToByteArray() );
 		}
 		WriteBlock( writer, header.ToArray() );
-		var keys = snapshot.Pages.Keys.ToArray();
-		Array.Sort( keys, ( a, b ) =>
-		{
-			var order = a.z.CompareTo( b.z );
-			if ( order != 0 ) return order;
-			order = a.y.CompareTo( b.y );
-			return order != 0 ? order : a.x.CompareTo( b.x );
-		} );
-		foreach ( var key in keys )
-		{
-			cancellation.ThrowIfCancellationRequested();
-			WriteBlock( writer, EncodePage( key, snapshot.Pages[key] ) );
-		}
 		writer.Flush();
 	}
 
-	public static TerrainFieldSnapshot ReadSnapshot( Stream stream, ProceduralTerrainSettings expected, CancellationToken cancellation )
+	public static TerrainFieldIdentity ReadIdentity( Stream stream, ProceduralTerrainSettings expected )
 	{
-		if ( stream.CanSeek && stream.Length > MaximumSnapshotBytes ) throw new InvalidDataException( "Terrain snapshot exceeds its byte budget." );
+		if ( stream.CanSeek && stream.Length > IdentityBytes ) throw new InvalidDataException( "Terrain identity exceeds its byte budget." );
 		using var reader = new BinaryReader( stream, Encoding.UTF8, true );
 		using var header = new MemoryStream( ReadBlock( reader, HeaderBytes ), false );
 		if ( header.Length != HeaderBytes ) throw new InvalidDataException( "Terrain header length is invalid." );
@@ -164,17 +151,10 @@ internal static class TerrainFieldCodec
 		var count = fields.ReadInt32();
 		var worldId = new Guid( fields.ReadBytes( 16 ) );
 		if ( worldId == Guid.Empty ) throw new InvalidDataException( "Terrain world identity is empty." );
-		if ( revision < 0 || count < 0 || count > TerrainField.MaximumPages || (count > 0 && revision == 0) )
-			throw new InvalidDataException( "Terrain snapshot revision or page count is invalid." );
-		var pages = new Dictionary<Vector3Int, TerrainFieldPage>( count );
-		for ( var i = 0; i < count; i++ )
-		{
-			cancellation.ThrowIfCancellationRequested();
-			var decoded = DecodePage( ReadBlock( reader, MaximumPagePayloadBytes ), revision );
-			if ( !pages.TryAdd( decoded.Coordinate, decoded.Page ) ) throw new InvalidDataException( "Terrain snapshot contains duplicate pages." );
-		}
-		if ( stream.ReadByte() != -1 ) throw new InvalidDataException( "Terrain snapshot contains trailing data." );
-		return new TerrainFieldSnapshot( settings, revision, pages, worldId );
+		if ( revision < 0 || count != 0 )
+			throw new InvalidDataException( "Terrain identity revision or page count is invalid." );
+		if ( stream.ReadByte() != -1 ) throw new InvalidDataException( "Terrain identity contains trailing data." );
+		return new TerrainFieldIdentity( settings, revision, worldId );
 	}
 
 	private static void WriteBlock( BinaryWriter writer, byte[] payload )
