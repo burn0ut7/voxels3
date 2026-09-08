@@ -14425,3 +14425,51 @@ Accept the spatial-query performance correction with exact field preservation;
 do not mark the complete regional-storage goal or timing-limited edit scenario
 passed. Engine compilation succeeded with0errors. The original visible world
 remains selected; private capacity/edit fixtures are retained separately.
+
+### STORAGE-IDENTICAL-RESTORE-001/v1 — unchanged render residency
+
+Freeze before implementation: visible editor18972, engine26.09.01c,
+basic_example, original world f58322c9-b837-4c0b-b555-6199124a290d revision99,
+30pages, seed1337/gen5, gameplay8/visual512, levels0-6, LOD0extent4/cache8,
+fps_max1000. User may have another game running. No player travel or tool input.
+Require settled visual/collision/edit queues before each phase. Capture field
+fingerprint(-512,-512,0),radius512, collision ray(-512,-512,4096,-4096), and
+LOD geometry digests. Load the original slot through voxel_terrain_load, sample
+voxel_terrain_edit_info once per second for45seconds. Before source7da7d86;
+repeat after the correction with a normal Play restart and30second warmup.
+Require revision99/30pages and exact fingerprints/contact/digests; no authored
+edits or exceptions; full visual/collision readiness within10seconds. Retain
+the before failure. Corrected identical restore must schedule0 render rebuild
+dependencies when initial queues are settled. Changed-state restore remains on
+the existing rebuild path and requires a separate content regression check.
+Run the unchanged canonical figure-eight before accepting runtime changes.
+
+STORAGE-IDENTICAL-RESTORE-001/v1 setup invalid: fresh status03:52:51 showed
+revision104/32pages/checkpoint32, five authored edits, and the player travelling.
+The manual-inspector figure-eight had started03:51:37 with center
+(183.053,433.352,0), run29754f5d9f4d4c4881126b7a0d89a3cc. This differs from the
+frozen99/30-page idle fixture. The03:53:04 load request was rejected by the
+existing idle-host guard; no replacement committed. Status samples through
+03:53:50 retained104/32 and the acknowledged save. Manual route completed
+03:53:49; do not treat it as this controlled comparison. Runtime source stayed
+7da7d86 and no hotload was introduced. Preserve the new user state; do not
+restore the earlier revision99 fixture over it. Controlled comparison is
+paused pending the user's answer about use of the world. Raw log evidence:
+[identical-interrupted.json](ValidationEvidence/ChunkStorage/identical-interrupted.json).
+
+Read-lifecycle source audit at7da7d86: TerrainField.CompleteRead rejects an old
+epoch or page object before installation. The manager owns one eight-page batch
+and checks owner identity before completion. Restore can overlap that task;
+Stop cancels its shared token, and worker reservation disposal is scoped by
+using. Teardown releases manager task/result references without awaiting the
+worker. Existing diagnostics do not separately count active/stale completions.
+These source checks establish the implementation boundaries, not runtime proof
+of cancellation overlap or a strict sample-retirement deadline.
+
+The manual route result was recovered read-only from the production result file:
+777.00305FPS moving, p99 frame4.9721ms, maximum26.1493ms; stationary888.75226FPS,
+p993.2551ms; zero sampled exceptions. This is supporting current-world evidence
+with a different center and edited field, not a comparable acceptance baseline.
+Collision snapshot still had84 pending and2 completed jobs at capture, so no
+settled-collision claim follows from it. Raw result:
+[manual-current-result.json](ValidationEvidence/ChunkStorage/manual-current-result.json).

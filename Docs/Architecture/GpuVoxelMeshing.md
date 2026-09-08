@@ -31,6 +31,17 @@ while reducing geometry arenas and draw submissions.
 
 ## Ownership and Data Flow
 
+Identical saved-state restore correction (planned): a replacement with zero
+changed samples may retain already published geometry that matches the source
+field. Rebase only its derived descriptor to the new local epoch and regional
+revision; retain allocation, geometry counts and draw placement. Pending GPU
+work keeps its old epoch and the existing stale-result rejection/rescheduling.
+Transition reuse additionally requires the resident descriptor to match the
+desired descriptor. Changed replacements retain the existing invalidation path.
+This avoids rebuilding unchanged geometry without weakening lifetime checks or
+introducing another terrain representation. Qualification is tracked by
+STORAGE-IDENTICAL-RESTORE-001/v1 in the validation ledger.
+
 `VoxelManager` owns the analytic gameplay range and one `GpuVoxelMesher`.
 `VoxelChunk` owns no engine resource. The manager conservatively rejects chunks
 whose exact density range proves them entirely solid or air. Potential surface
