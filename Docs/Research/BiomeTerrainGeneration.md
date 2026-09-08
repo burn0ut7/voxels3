@@ -1,37 +1,48 @@
 # Biome terrain generation: research and proposed architecture
 
 Date: 2026-09-08. Status: research proposal, not implemented or performance-qualified.
-Source reviewed: `d7c5da6`, with unrelated local scene, skill-cache and proposal changes present.
+Latest landform review: source `794b14f`, clean working tree at branch creation.
+Working branch: `codex/terrain-biome-generation`. Earlier research began at
+`d7c5da6`; current source and the revised scope below supersede that snapshot.
 
 ## Recommendation and scope
 
 Build one deterministic, bounded terrain recipe that separates **landform**
-(plains, hills, mountains) from **vegetation cover** (grassland, forest). Present
-four recognizable environments without needing a separate generator for every
-combination. Forested hills should arise naturally from the same controls.
+(ocean basins, plains, hills, mountains) from **biome/vegetation cover**. The
+immediate first slice is now **regional landforms only**: replace the existing
+exterior generator, retain the current cave recipe, and expose a small set of
+meaningful global controls. The [landform implementation plan](../Plans/RegionalLandformsFirstSlice.md)
+owns the selected first-slice scope, proposed defaults, execution steps and gates.
+This research owns the reasoning and the later biome architecture.
 
-Temperature and moisture are shared regional inputs to biome selection. Include
-these simple deterministic fields in the first-slice contract, with the demo
-restricted to a temperate palette. Future hot deserts and snowy biomes must have
-intervening climate transitions rather than directly bordering one another.
-This requirement was added during the 2026-09-08 design review; it supersedes the
-initial proposal's independent forest-cover noise and deferral of temperature.
+Temperature and moisture remain the proposed shared inputs for the later biome
+slice, with explicit rules separating hot deserts and snowy biomes. They are
+not implemented in the landform slice, and no placeholder climate modules are
+required. This sequencing supersedes the earlier combined landform/climate/forest
+first slice; the compatibility and deep-module design requirements remain.
 
 Prioritize frame pacing over generation throughput: admit less work when busy,
 retain valid terrain coverage, and let distant detail and vegetation arrive
 progressively. This preference does not permit missing collision beneath players,
 unbounded queues, or permanent starvation.
 
-The demonstration includes broad biome regions, smooth transitions, distinguishable
-terrain silhouettes, simple ground appearance, and a small vegetation palette.
-A forest must contain trees; a biome label or green tint alone is insufficient.
-Use one or two existing suitable tree assets and restrained grass/rock dressing.
-Asset selection and engine rendering support remain implementation checks.
+The first demonstration must read well as bare terrain: broad plains, rolling
+hills, connected-looking mountain ridges, foothills, shelves and low ocean basins.
+Ocean means terrain relative to a reference level here, not rendered water.
+The later biome demonstration adds forest/grassland and a small vegetation palette;
+a forest must contain trees rather than only a label or tint.
 
-Defer rivers, lakes, waterfalls, roads, buildings, cities, weather, ecology
+Defer climate implementation, vegetation, biome materials, water rendering,
+rivers, lakes, waterfalls, roads, buildings, cities, weather, ecology
 simulation, erosion simulation, and a general procedural graph editor. Preserve
 the ordering and ownership boundaries those features will need; do not implement
 empty framework layers for them.
+
+"Scrap previous generation except caves" replaces the old surface formula and
+its frequency/amplitude controls during implementation. It does not discard the
+field/edit store, renderer, collision, streaming, saved data or deterministic
+noise/hash primitives needed by retained caves. The cave overhaul is a separate
+future slice. This task creates research and a plan; it does not change runtime code.
 
 ## 1. Current project constraints
 
@@ -79,9 +90,56 @@ The combined lesson is regional coherence plus local evaluation. More noise
 octaves alone do not create good environment composition, and a fast generator
 does not guarantee a cheap populated scene.
 
+### Landform-focused review and decisions
+
+The desired Minecraft influence is the experience: long views, broad terrain
+regions, striking peaks, usable flat areas and variation encountered while
+traveling. It is not a requirement to copy a noise router or density algorithm.
+The official [experimental world-generation notes](https://www.minecraft.net/en-us/article/new-world-generation-java-available-testing)
+describe tuning mountain height/area, large flat areas, and local variation in
+otherwise flat terrain. They also record remaining temperature clashes during
+development. Adopt explicit visual criteria and test several scales; neither
+Minecraft's popularity nor these notes establishes a guaranteed adjacency rule.
+
+Henrik Kniberg's [terrain-generation overview](https://www.youtube.com/watch?v=CSa5O6knuwI)
+is a useful developer walkthrough, with terrain shaping at 13:04, 3D noise at
+17:37, caves at 20:10 and biomes at 21:27. Only its published description/chapter
+list was accessible during this review; no exact spline tables or backend
+implementation are attributed to unseen video content. Our fixed response curves
+below are a project proposal, not a claimed copy of Minecraft's internals.
+
+Wube's [Factorio terrain overhaul](https://www.factorio.com/blog/post/fff-401)
+describes composing distinct elevation contributions and revising them when the
+result obstructed travel. It separates water amount from feature scale and uses
+broad variation to create larger contrasting regions. Adopt meaningful controls
+and traversal-based review. Its 2D tile/cliff implementation and path rules do
+not establish our 3D topology, global connectivity, water behavior or performance.
+
+The original [libnoise complex-terrain tutorial](https://libnoise.sourceforge.net/tutorials/tutorial5.html)
+demonstrates a terrain-type control field separate from height, ridged mountain
+noise, a flatter profile, and softened selection boundaries. Adopt this separation
+and bounded profile blending. Do not import its C++ library, one-module-per-operation
+graph, full-world heightmap builder or much larger planetary example. This is
+algorithm evidence, not a modern production benchmark.
+
+The earlier single relief field made plains, hills and mountains consecutive
+bands of one variable. That is easy to prototype but couples mountain prevalence,
+hill distribution and region spacing. It also omitted ocean basins and meaningful
+user controls. Replace it with the regional hierarchy in section 4. Retain one
+canonical recipe and deep modules; do not maintain competing generator modes.
+
+Our first exterior remains a height function. It can produce dramatic ridges,
+valleys and cliffs but cannot independently produce overhangs, floating islands
+or stacked surfaces. Existing caves preserve volumetric interiors. Adding a new
+3D exterior density recipe merely to match every Minecraft formation would
+expand the selected slice and its bounds/meshing costs; defer that deliberately.
+
 ## 3. One world recipe, several derived outputs
 
-The following names describe responsibilities, not committed new classes or APIs.
+The following diagram describes the full intended architecture, including later
+biome work. Slice 1 implements only landforms, retained cave composition and
+their existing downstream field/render/collision integration. The names describe
+responsibilities, not committed new classes or APIs.
 
 ```mermaid
 flowchart TD
@@ -134,8 +192,11 @@ with separate methods, or partial files sharing all of its private state, does
 not satisfy this requirement. Module boundaries follow ownership and reasons to
 change, rather than one class per noise operation or one generator per biome.
 
-The following is the proposed first-slice responsibility map. Names are design
-labels; concrete types and signatures will be chosen from the implementation.
+The following is the overall responsibility map. Slice 1 implements Landforms
+and evolves Base terrain field, keeping caves behind a separate internal module
+boundary for their later overhaul. Climate/biomes, appearance and population are
+later work. Names are design labels; concrete types and signatures will be chosen
+from the implementation.
 
 | Module | Small consumer-facing contract | Complexity hidden inside / state owner |
 | --- | --- | --- |
@@ -211,7 +272,7 @@ Reject cycles, duplicated samplers, shared mutable configuration, one-line wrapp
 layers, per-biome subclasses with duplicated pipelines, and a manager that reaches
 into module internals. Splitting files alone is not architectural separation.
 
-## 4. Small biome recipe
+## 4. Regional landforms and later biome recipe
 
 ### When biome selection happens
 
@@ -244,10 +305,10 @@ the biome distribution is determined by seed/configuration before chunks load,
 while its values are computed locally as consumers need them. Trees and other
 objects are realized later, after suitable terrain/support is ready.
 
-### Landform and cover
+### Later landform and cover integration
 
-Use a low-frequency relief field to derive normalized plains/hills/mountain
-weights. Use shared moisture and temperature to derive forest suitability, then
+Use the regional hierarchy below to derive normalized plains/hills/mountain
+weights. Later, use shared moisture and temperature to derive forest suitability, then
 apply bounded local variation to create openings within suitable forest. Elevation
 and slope suppress trees on peaks and steep faces. Two analytic climate fields
 are sufficient initially; atmospheric simulation and a six-dimensional biome
@@ -263,7 +324,7 @@ channels in the versioned recipe. Start with broad climate variation at least
 as large as the forest regions; small placement noise must not override climate
 eligibility or create isolated incompatible biomes.
 
-For the demo, constrain the configured temperature output to a temperate interval;
+For the later biome demo, constrain the configured temperature output to a temperate interval;
 moisture controls the grassland-to-forest transition. Temperature is present in
 the query and suitability rules even though desert/snow definitions and assets
 remain deferred. Do not select an unimplemented extreme biome and then substitute
@@ -313,62 +374,112 @@ remain possible later with a sufficient intervening elevation/climate band.
 Freeze climate ranges, eligibility supports, blend widths and the spatial width
 before validation. Exact values are art-tuning decisions still to make; no
 numerical adjacency guarantee is claimed until the recipe and its bounds are
-implemented and checked. The first slice validates climate continuity with its
+implemented and checked. The later biome slice validates climate continuity with its
 temperate palette. Desert/snow eligibility and visible adjacency tests become
 mandatory when those environments are added, without adding them to this demo.
 
-### Exterior shape
+### Selected regional landform hierarchy
 
-| Demonstration environment | Terrain character | Cover and appearance |
-| --- | --- | --- |
-| Grassland | Broad gentle terrain, low relief | Mostly grass surface, very sparse trees |
-| Forest | Gentle ground or rolling foothills | Clustered trees with openings; sparse understory |
-| Hills | Rounded medium-scale rises and valleys | Grass or forest according to the same cover field |
-| Mountains | Broad raised mass with connected ridged detail and foothills | Increasing rock exposure; declining tree density |
+Evaluate a small fixed hierarchy in global XY, with independently salted channels:
 
-Use one shared broad elevation field plus weighted relief contributions. One
-possible fixed recipe, to finalize during implementation, is:
+1. **Continental context:** a broad field controls ocean basins, shelves, coasts
+   and inland ground. A response curve shapes these ranges; land amount changes
+   its occupancy bias, while continental scale changes characteristic size.
+2. **Mountain provinces:** a separate broad field controls where mountain terrain
+   is eligible. Mountain amount changes its bias; mountain region scale controls
+   the size/separation of provinces. The continental context supplies a smooth
+   coastal gate so the default does not put every mountain directly at sea level.
+3. **Plains versus hills:** a separate field selects flatter and rolling terrain
+   within the remaining land. Plains amount changes this balance without changing
+   mountain eligibility. Local landform scale controls this pattern and hill/ridge
+   wavelengths; it is intentionally distinct from mountain province scale.
+4. **Relief profiles:** bounded plains, hill and mountain functions combine using
+   smooth weights. Mountain profiles include broad uplift plus elongated/ridged
+   local structure and saddles. Plains flatten the whole relevant profile, rather
+   than merely reducing a tiny detail layer over a steep underlying surface.
+5. **Detail:** a small fixed set of bounded detail contributions follows the
+   profiles. Ruggedness changes their influence and ridge sharpness, not biome
+   placement or an unbounded octave count. Plains keep an internal roughness cap.
+
+Schematic composition, not final tuned coefficients:
 
 ```text
-t = smoothstep(a, b, reliefControl)
-m = smoothstep(c, d, reliefControl)      with a < b <= c < d
-wPlain = 1 - t
-wHill  = t * (1 - m)
-wMount = t * m                         sum of weights = 1
+L = smooth land weight from continental field and LandAmount
+M = smooth mountain eligibility from province field and MountainAmount
+P = smooth plains preference from regional field and PlainsAmount
 
-height = base + broadElevation
-       + wPlain * gentleDetail
-       + wHill  * roundedRelief
-       + wMount * (mountainUplift + ridgedRelief)
+wMountain = M
+wPlains   = (1 - M) * P
+wHills    = (1 - M) * (1 - P)       sum = 1 within land
+
+Hland = wPlains * PlainsProfile
+      + wHills * HillsProfile
+      + wMountain * MountainProfile
+height = ReferenceLevel + (1 - L) * OceanProfile + L * Hland
+baseDensity = ComposeRetainedCaves(z - height, height, globalPosition, seed)
 ```
 
-All fields share global coordinates and fixed seed channels. Use a bounded
-small number of noise evaluations; begin with one contribution per responsibility
-and at most two detail octaves where visibly necessary. Smooth the ridge profile
-if its cusp produces undesirable silhouettes or normals. Broad mountain masks
-should dominate small noise so mountain regions read as ranges, not spikes.
+The coastal gate is folded into `M`; profiles can depend on the continental
+context but must honor declared value/gradient bounds. Ocean profiles stay below
+the reference level; land profiles stay above it, with continuous coastal blending.
+The reference level is a fixed recipe-owned datum, initially Z=0, not another
+slider. Ocean amount is not a second control competing with LandAmount.
 
-Blend the continuous geometry controls before classification. A dominant label
-is useful for inspection, but must not drive a hard switch between separate
-height functions. Forest cover uses a smooth probability ramp, creating thinning
-edges rather than rectangular walls of trees. No chunk owns a biome identity.
+Use small fixed smooth response curves for basin/shelf/inland shape and relief.
+Specify knots, derivatives, output ranges and clamped ends in the implementation;
+prevent overshoot and include their derivative bounds in classification. Start
+with smoothstep/piecewise bounded curves rather than a generic spline editor.
+No actual erosion simulation is proposed. An internal flattening control can
+produce erosion-like visual contrast without being exposed as simulated geology.
 
-Proposed art-tuning starting ranges, not fixed validation inputs or promises:
+Bounded coordinate warping is a possible refinement if the first visual review
+shows obvious contour repetition; do not add it by default. It changes spatial
+bounds and sample cost and cannot be treated as free visual polish. Nor do ridge
+noise and smooth masks guarantee connected ranges, continent topology, exact
+peak counts, or minimum mountain spacing. Inspect those outcomes, and reserve a
+regional planner for any later requirement for exact topology.
 
-| Quantity | Initial range |
-| --- | --- |
-| Broad landform variation | 64–128 chunks (32,768–65,536 units) |
-| Broad temperature/moisture variation | 64–128 chunks (32,768–65,536 units), subject to transition-width bounds |
-| Within-climate forest openings/cover variation | 16–48 chunks (8,192–24,576 units) |
-| Foothill/relief detail | 4–16 chunks (2,048–8,192 units) |
-| Gentle relief amplitude | 64–192 units |
-| Hill relief amplitude | 256–768 units |
-| Mountain uplift/relief envelope | 1,024–3,072 units |
+### Meaningful controls, not a noise editor
 
-These noise scales do not guarantee exact biome diameters or traversal times.
-Select one exact configuration before runtime acceptance, record it in the ledger,
-and assess the silhouettes from player height and existing LOD distances. Existing
-scenario inputs remain unchanged; these ranges cannot be used to tune a test to pass.
+Expose **eight shaping controls plus World Seed**. The plan owns proposed numeric
+defaults/ranges; this table owns their intended semantics.
+
+| Control | User-visible effect | Important limit/coupling |
+| --- | --- | --- |
+| Land amount | More land and less below-reference basin area | A bias, not an exact world-area percentage; coastal transitions contribute intermediate areas. |
+| Continental scale | Larger landmasses/basins and longer broad transitions | Characteristic feature size, not continent placement or guaranteed connected land. |
+| Mountain amount | More terrain eligible for mountains | Changes prevalence/width of mountain provinces, not the number of individually placed mountains. |
+| Mountain region scale | Larger, typically farther-apart mountain provinces | Size and spacing are coupled by this field; an exact gap would require a different placement contract. |
+| Plains amount | More plains instead of hills in non-mountain land | Hills are the remainder, not a competing slider; excludes reserved mountain regions. |
+| Local landform scale | Wider hills, ridge structures and plains/hill patches | Scales local structure together; does not resize continents. |
+| Relief height | Taller mountains, stronger hills and deeper basins | A shared vertical scale with fixed profile ratios; plains remain restrained. Cave widths/depth constants do not scale. |
+| Ruggedness | Smoother versus sharper/richer relief within regions | Fixed sample-count ceiling; does not change regional amount or scale controls. |
+
+Amount controls are normalized biases. Do not label 0.7 as "70% mountains" unless
+an actual area-calibrated algorithm is adopted. More means a monotonic increase
+in the relevant eligibility weight for fixed other inputs; visible classification
+can change at coasts and between mixed profiles. Distinguish weighted occupancy,
+dominant classification, below-reference area and traversable flat area in metrics.
+Noise wavelengths similarly indicate characteristic scale, not a guaranteed gap.
+
+Give zero/one endpoints explicit behavior: no mountain eligibility at mountain
+amount zero; all eligible inland terrain at one; plains zero/one selects hills/
+plains in the remaining land. Land zero/one selects basin/land profiles everywhere.
+Keep hills implied so users cannot enter three incompatible percentages.
+
+Hidden constants remain named, documented and owned by Landforms: seed salts,
+curve knots, transition falloff, coastal suppression, octave limits, ridge profile
+and relative amplitudes. They are versioned recipe decisions, not an unreviewable
+collection of scattered literals. Promote a constant to a visible control only
+when it expresses a distinct, useful world-design decision. No per-mountain or
+per-plain settings, public octave/lacunarity controls, or alternate generator modes.
+
+Settings edits should be staged and applied as one validated immutable recipe.
+Avoid rebuilding on every intermediate drag value. Retain the last valid recipe
+on invalid input, reject stale work, and use an explicit new demo-world identity
+for incompatible terrain changes. A settings UI must not silently destroy or
+reinterpret an existing edited save. Reuse current lifecycle/identity facilities;
+the implementation plan specifies the necessary integration review.
 
 ### Volumetric correctness and bounds
 
@@ -394,7 +505,10 @@ Keep the same field at all LODs. Dropping density octaves by LOD can move the
 surface and break transitions. Frequency filtering would need its own measured
 seam-preserving design; it is outside this demonstration.
 
-## 5. Forests, grass and surface appearance
+## 5. Later forests, grass and surface appearance
+
+This section belongs to the later biome slice. Landform-only acceptance does not
+require its implementation or add its costs to the baseline workload.
 
 First use a small material palette driven by cover, elevation and slope. Keep
 visual material weights derived from the recipe rather than expanding authoritative
@@ -425,7 +539,7 @@ do not default to thousands of independently updating components. Collidable
 trunks belong to the nearby authoritative gameplay interests. Decorative grass
 can be client-local and reduced without changing shared terrain or tree identity.
 
-For the demo, terrain edits revalidate affected tree support and remove invalid
+For the later biome demo, terrain edits revalidate affected tree support and remove invalid
 derived instances. Logging, persistent felled trees and harvesting are deferred;
 before adding those, destruction state must use authoritative stable IDs so
 revisiting does not resurrect harvested trees. Population completion must not
@@ -458,7 +572,7 @@ native physics/resource creation. Measure those atomic operations and reduce bat
 granularity if one operation violates the budget. More workers can increase
 contention, allocation pressure and GPU backlog even if chunks finish faster.
 
-Proposed initial engineering targets: at most 0.5 ms of added main-thread biome
+For later biome work, proposed initial engineering targets: at most 0.5 ms of added main-thread biome
 and population integration per frame; begin with at most one terrain batch
 admission per update under the existing scheduler caps; aim for at most 1 ms of
 incremental GPU generation work per frame when measured. These are starting
@@ -511,9 +625,9 @@ outlets and basin levels; lakes need consistent containment; waterfalls need
 separate water geometry. The demonstration should permit a future generator-version
 change instead of promising unchanged landscapes after adding realistic water.
 
-The first slice needs pure regional landform/climate queries, compatible biome
-weights, stable coordinates, explicit versions and population separated from
-density. Do not build feature registries,
+The landform slice needs pure regional landform queries, stable coordinates and
+explicit versions. Later biome work adds climate, compatible biome weights and
+population separated from density. Do not build feature registries,
 road splines, water masks, city graphs or planner caches yet.
 
 ## 8. Determinism, saved worlds and large coordinates
@@ -560,7 +674,7 @@ unless seed transport itself is deliberately redesigned and validated.
 | --- | --- |
 | One generator selected per biome/chunk | Reject: hard boundaries and duplicated terrain ownership; normalized global controls are simpler. |
 | Voronoi biome regions with blended borders | Defer: useful for explicit territories, but adds site/neighbor rules and is unnecessary for the four-environment demo. |
-| Full climate/tectonic/erosion simulation | Defer physical simulation; adopt two simple temperature/moisture fields and bounded climate transitions now. Nonlocal atmospheric, tectonic and erosion models remain disproportionate. |
+| Full climate/tectonic/erosion simulation | Defer physical simulation. Retain simple temperature/moisture fields and bounded transitions for the later biome slice; no climate implementation in landforms. |
 | Generic noise graph or plugin framework | Reject for this slice: a fixed recipe is easier to bound, mirror and version. Revisit only with actual authoring needs. |
 | Bake all base density on CPU and upload it | Reject under the current GPU field contract; would change rendering ownership and storage costs. |
 | Maximum parallel generation | Reject as default: throughput can compete with frame-critical CPU/GPU work. |
@@ -569,30 +683,25 @@ unless seed transport itself is deliberately redesigned and validated.
 
 ## 10. Implementation sequence and acceptance
 
-1. **Freeze inputs and compatibility.** Confirm the current source and effective
-   scene settings; select a finite coordinate envelope and new world identity.
-   Record exact proposed tests before running them. Capture a comparable pre-change
-   figure-eight if the ledger has no accepted comparable baseline.
-2. **Landform and climate modules.** Establish the deep-module contracts in section 3
-   while implementing regional controls, height, temperature,
-   moisture, compatible biome weights, transition bounds and cave composition,
-   CPU/GPU mirror, conservative bounds, and settings/version propagation together.
-   Validate playable geometry before adding trees. Remove superseded recipe paths
-   in the same change; Git preserves the old version.
-3. **Appearance and population modules.** Add the small palette and deterministic bounded
-   population, near collision, culling and staged realization. Verify visible
-   transitions, support after edits, and actual steady-state rendering cost.
-4. **Qualification.** Repeat the canonical performance route unchanged, plus fixed
-   biome coverage and lifecycle cases through the real playable world. Resolve
-   unexplained regressions before accepting implementation.
+1. **Regional landforms only.** Follow the [specific first-slice plan](../Plans/RegionalLandformsFirstSlice.md):
+   new exterior, retained caves, eight shaping controls, deep modules, complete
+   identity/CPU/GPU integration and in-world qualification. Stop at this acceptance
+   boundary. No runtime implementation is part of the current research task.
+2. **Climate and biome selection, later.** Add temperature/moisture fields and
+   compatible transitions without giving biomes ownership of terrain state.
+3. **Appearance and population, later.** Add the small palette and bounded forests,
+   with separate support, residency and frame-cost acceptance.
+4. **Caves and regional features, separately selected.** Cave overhaul, drainage,
+   roads and settlements each require their own design and scoped implementation.
 
-The following are requirements for future ledger scenarios, not claims that new
-scenarios have been executed or fully parameterized:
+The following are overarching requirements for the later biome roadmap, not the
+landform-only completion checklist or executed/fully parameterized scenarios.
+The first-slice plan defines the subset and landform-control checks needed now:
 
 | Area | Required evidence and pass criteria |
 | --- | --- |
 | Demonstration | Frozen seed/settings, coordinates and camera views show all four recognizable environments; forests contain trees, hills and mountains have distinct silhouettes, and transitions are visually continuous. Record screenshots and the inspected locations. |
-| Climate | First slice: fixed coordinate transects establish deterministic continuous temperature/moisture, temperate output and climate-driven forest weights independent of load order. Check analytical gradient bounds against the configured transition width. Future extreme-biome slice: zero hot-desert/snow support overlap or direct adjacency, with measured intermediate-band width at least the frozen minimum, including steep elevation transitions and negative coordinates. Sampled transects support, but do not replace, the bound derivation. |
+| Climate | Later biome slice: fixed coordinate transects establish deterministic continuous temperature/moisture, temperate output and climate-driven forest weights independent of load order. Check analytical gradient bounds against the configured transition width. Future extreme-biome slice: zero hot-desert/snow support overlap or direct adjacency, with measured intermediate-band width at least the frozen minimum, including steep elevation transitions and negative coordinates. Sampled transects support, but do not replace, the bound derivation. |
 | Boundaries | Shared samples and candidate IDs agree across positive/negative chunk and population-cell boundaries; no duplicate owned trees; zero observed cracks in selected regular/LOD transition views. |
 | CPU/GPU | Compare production samples/geometry and collision over steep slopes, peaks, near-zero density and edited seams. Freeze numeric tolerance before the first run based on cell scale and existing arithmetic; disclose sign disagreements and near-zero cases explicitly. |
 | Bounds | Zero false-empty classifications for the production field samples/geometry exercised in the fixed cases; review conservative derivation as well. Sampling alone is not a global proof. |
@@ -605,8 +714,10 @@ scenarios have been executed or fully parameterized:
 Changing the generator changes the workload even if the route is identical.
 Retain v5 results as historical controls and label new-recipe measurements
 accordingly. If the canonical scenario pins generator identity and cannot run
-unchanged, follow the scenario-version policy and obtain explicit approval for
-the workload change before claiming a new baseline. Slower completion is a design
+unchanged, follow the scenario-version policy and record the user's explicit
+authorization of the new exterior as the reason for its content change. Unrelated
+route, speed, radius or workload changes still require explicit approval before
+claiming a new baseline. Slower completion is a design
 preference, not permission to waive an existing measured acceptance threshold.
 
 Use the existing figure-eight runner and production entry points. No separate
@@ -629,7 +740,9 @@ This document makes the architecture reviewable; it changes no runtime behavior.
 Document links, current-source claims and scope were checked. No in-world run,
 benchmark, scene mutation or visual qualification was performed for this research.
 
-Implementation still needs asset/API selection, exact recipe tuning (including
+Landform implementation follows the linked plan and still needs exact curve/
+coefficient tuning, expanded request layout verification and measured acceptance.
+The later biome roadmap still needs asset/API selection, exact recipe tuning (including
 climate ranges, gradient limits and minimum transition width), coordinate
 envelope, CPU/GPU tolerance, measured admission limits and comparable performance
 evidence. Future hydrology and city planning remain deliberately unresolved.
