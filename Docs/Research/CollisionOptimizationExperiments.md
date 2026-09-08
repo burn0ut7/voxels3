@@ -52,3 +52,30 @@ The [collision profile](CollisionProfile20260907.md) supports prioritizing CPU
 sampling/bounds; its historical timings are not this series' baseline.
 The [ledger](../ValidationResults.md) owns immutable scenarios and run outcomes.
 Record decisions here after each screen; no implementation is accepted yet.
+
+## First screen: reject and revert
+
+Bound-dominance prototype compiled and matched startup geometry/contact evidence.
+Full-route construction improved2.08%, FPS3.65%, allocations/frame1.85%; process
+peak increased4.37%. No selected primary metric crossed the predeclared5% gate.
+Work populations and post-route physics positions differ, so these small changes
+are not causal speedup claims. Reverted only ProceduralTerrainSdf.cs and retained
+the patch, baseline, candidate and decision in the ledger. No repeat is warranted.
+
+## Bounded follow-up and hold
+
+Current code already has the exact-lattice SampleCorrection fast path and local
+epoch/revision-aware collision invalidation. Do not spend another prototype on
+adding those again. Bulk correction copying might reduce lookups in edited
+regions, but would add copying/scratch work where conservative rejection avoids
+most samples; the route does not yet attribute enough time to those lookups.
+The older block-size, gradient-table and sparse-cache experiments already have
+negative evidence. Body setup is a small fraction of measured native publication.
+
+No second cheap code change has sufficient measured leverage for this screen.
+Hold the original runtime implementation; performance-improvement goal remains
+unmet. The strongest next investigation is a focused existing deformation capture
+to quantify changed samples versus rebuilt regions/native triangles, followed
+by a go/no-go decision on smaller collision sections. That is a new diagnostic
+scope, not justification to start a sectioned-collider architecture speculatively.
+No further benchmark repetitions or runtime changes are scheduled by this note.

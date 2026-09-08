@@ -15388,3 +15388,103 @@ runtime exceptions, no new scheduler errors and matching geometry/saved state.
 Same-session read recovery after sample-cap exhaustion and GC-related stuttering
 remain explicit follow-up items. Preserve the original full-validation goal as
 unproven rather than marking every gate complete solely from product acceptance.
+
+### COLLISION-FOCUSED-001/v1 — current-world optimization screen
+
+Defined before first run on2026-09-08. Starting source a6b20c8; engine26.09.01c;
+Ryzen7 9800X3D, RTX5090; one local player, visible current editor. Preserve authored
+scene SHA256521ea0f7415e17534a1fabab006caba16d0350963b23331556dac0d16ed138c2 and
+saved world f58322c9-b837-4c0b-b555-6199124a290d revision971/160pages, slot
+f58322c9b8374c0bb5556199124a290d. No terrain edits, saved-world switching or
+network peers. Checkpoint sequence may advance on normal teardown; identity,
+revision and page contents must not. Save initial selection/source/page hashes.
+
+This distinct scenario freezes the current edited user world; older unedited or
+136/2048 storage fixtures are not interchangeable baselines. Reuse canonical
+figure-eight movement unchanged: normal Stop/Play, authored spawn,30s warmup and
+full settlement, seed1337/v5,32cells/16units,gameplay8,visual512,LOD0..6,half
+extents4/8,fps_max1000,unchanged viewport/graphics. Production run_performance_test
+speed2500,distance50000,Yreach25000,Z0,one loop; normal drain,two render advances,
+10s stationary capture. Record effective settings from saved result and reject
+comparison on mismatch. Do not alter workload or shrink radius to obtain a pass.
+
+Screen baseline B1 then candidate C1 with identical start procedure. One clear
+failure/no benefit ends that hypothesis; only a promising candidate gets C2 and
+fresh control B2. Acceptance requires >5% improvement in mean collision sampling+
+extraction time per published region, or full-route frame time, or process peak
+memory, exceeding baseline repeat spread. For memory require at least16MiB too.
+No CPU frame p95/p99 or engine GPU p95/p99 regression beyond max(5%,0.25ms,baseline
+spread); allocations/frame and process/GPU peak must not regress >5% (process
+allowance at least16MiB for noise). Engine GPU timing is known not to equal frame
+wall duration; retain it without inventing per-pass attribution. No collision
+request-to-ready p95/p99 regression beyond max(5%,10ms,baseline spread), no
+material backlog/drain regression, no new exceptions/native failures, all4913
+regions eventually ready, identical settled position/geometry counts and
+visual topology/position digests at comparable coordinates. Startup native
+body/payload/support counts and19 existing terrain-contact rays must match.
+Record collision samples/rejections and phase timings, native creation tails,
+FPS/pacing,GC,allocations,memory,queues,geometry and user-save hashes. Rejection
+leads to task-only revert under latest user instruction; retain failed evidence.
+
+First candidate: reorder existing cave bounds to prove cheese/envelope dominance
+before paying for noodle bounds. Preserve canonical density and interval endpoints;
+no new collider type, topology, grid, worker count, render pass or persistent cache.
+Use existing diagnostics; no synthetic test path or new benchmark hook. A passing
+screen is provisional until repeat and unchanged figure-eight criteria pass.
+
+B1 saved e39f2d2b6be841d6a87a5c5fd78f2e5e on a6b20c8. Normal Play11:32:39UTC,
+route11:33:35UTC, matching authored settings/world. FPS816.9101,framep95/p99
+1.8277/3.9903ms,max544.8778ms; preserve the outlier, cause not isolated. Collision
+sampling2.138559+extraction0.13549635=2.27405535ms per published region,65026
+publications in the moving snapshot; native failures0. Moving snapshot pending123
+is not final settlement: subsequent production inspect has4913ready/pending0.
+Process peak2878078976bytes; GPU2956396436bytes. Raw route retains all phase,
+GC,allocation and GPU metrics. Startup1110bodies/42147432payload bytes/11support
+patches;19 old contact positions produced17hits and2misses at(-4096,4096.001)
+and(-4096.001,4096), just beyond current requested coverage. These are baseline
+limitations, not new failures or proof of contact outside coverage. Candidate
+must match comparable support and geometry; do not attribute those misses to it.
+Evidence: CollisionFocused/b1-startup.json,b1-contact.json,b1-route.json,
+b1-settled.json. Current player settles after route away from its initial center;
+compare equivalent integer placements rather than unrelated residency snapshots.
+
+C1 saved81672551e2f74847a85cdf8035eac842 on a6b20c8+bound-dominance.
+Runtime/editor builds both0warnings/0errors; live compiler success. Normal
+Play11:37:39UTC,route11:38:58UTC. Startup1110bodies/42147432payload bytes/11support
+patches, visual topology390046BB50AB729B and position digest match B1. Contact
+positions/normals and the same two outside-coverage misses match. Tiny player
+settling differences produced centers(0.090789318,-0.113682553) versus
+(0.090808064,-0.113689914); no scripted recentering or workload tuning occurred.
+
+C1 construction2.22675668ms/region versus2.27405535:2.08% lower, below5% gate.
+FPS846.72345 versus816.9101 (+3.65%,mean frame time3.52% lower);p95/p99
+1.7452/3.6735ms versus1.8277/3.9903;max25.1602ms versus544.8778. The absent B1
+outlier is not a proven benefit of this arithmetic change. Process peak
+3003707392 versus2878078976bytes (+4.37%);GPU peak unchanged2956396436.
+Allocations/frame31039.516 versus31623.717 (-1.85%);total allocated
+3204923248 versus3150165056bytes;GC maximum16.802 versus14.712ms. Native failures
+and exceptions0. Published66315 versus65026; different completed populations
+limit stage attribution. Request-to-readyp95/p99 3487.896/9110.406ms versus
+3900.9526/9550.161ms. Both eventually4913ready/pending0; final player positions
+and integer residency differ after physics resumes, so settled route digests
+are not treated as equivalent-placement checks. Startup provides that comparison.
+
+Decision: reject this screen; no qualifying targeted improvement or memory
+saving. StationaryFPS926 versus823 does not establish the shortcut helped:
+stationary physics placement/work populations differ and settled bounds calls
+are not a continuous frame cost. No repetition warranted under the fast-screen
+policy. Preserved c1-patch.json,c1-source.json,c1-startup.json,c1-contact.json,
+c1-route.json,c1-settled.json under ValidationEvidence/CollisionFocused.
+Restored ProceduralTerrainSdf.cs byte-for-byte from the starting backup; git diff
+confirms no remaining runtime source change. Normal Play restarted on baseline.
+
+Final restoration11:43:59UTC:4913ready,pending0,failures0,visual pending0; player
+grounded at normal spawn. Original world971/160,checkpoint72,committed/rejected0,
+reads/reservations0,all160 original page files match baseline SHA256. Authored
+scene unchanged and original source hash37B57BA9B66E0EA32573156215447C201DDB9B344AEEAF4C6C2724253D684AE1
+restored. Camera image inspected: player, terrain and saved arch visible. This
+is restoration evidence, not another timed trial. During work, external commit
+b2f312a captured the previously dirty scene/cache/proposal files and initial plan;
+its Code/Editor/shader diff against a6b20c8 is empty. Benchmark source identity is
+therefore unchanged except the documented candidate patch. Evidence includes
+restoration-hashes.json,restored-runtime.json,restored-world.json.
