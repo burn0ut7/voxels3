@@ -1,6 +1,6 @@
 # Authoritative chunk storage: prototype plan
 
-Date: 2026-09-08. Status: user accepted current prototype performance and requested advancement to the next main slice. This is an acceptance decision, not a claim that every original validation gate passed. Preserve the remaining lifecycle/capacity/benchmark limitations and raw results below; the next requested slice is Regional storage (item2 in the ordered implementation plan).
+Date: 2026-09-08. Status: regional storage is implemented with bounded validation evidence. The user explicitly directed that performance be measured and judged afterward, without exact performance pass/fail restrictions. Continue correctness work and present measurements for review; do not hold this prototype on old FPS, latency or collection-time targets. Preserve historical results and unresolved correctness coverage. Regional storage means item2 below, not the deferred storage-scale slice.
 
 This document owns the staged implementation plan and proposed regional lifecycle contract. [Chunk streaming research](../Research/ChunkStreamingStorage.md) owns evidence and alternatives; [terrain deformation](TerrainDeformation.md) owns live tool behavior and existing acceptance status; [voxel foundation](VoxelChunkFoundation.md) owns field/spatial conventions; [validation results](../ValidationResults.md) owns executable scenarios and outcomes.
 
@@ -31,11 +31,20 @@ editing after reopen persisted correctly. These results qualify those bounded
 behaviors, not the entire slice. See the latest ledger entries and their raw
 visible2-history evidence.
 
-Remaining acceptance work is specific: explain the changed performance under
-comparable visible conditions, verify the latest teardown reference cleanup, and
-close outstanding capacity/cancellation and exact release-timing coverage. Prior
-engine shutdown failures remain recorded. Do not repeat already accepted
-multiplayer or ordinary save round trips without a relevant change or failure.
+The latest comparable full-capacity route measured802FPS with frame p99 3.84ms;
+the earlier spatial-query regression was corrected from49 to780FPS. Active-load
+and active-page-read Stop/reopen checks preserved saved state and released all
+reservations. Later sample accounting fell to exactly the current34 pages,
+establishing eventual collection in that observation. These are bounded results,
+not promises for every workload or a new performance gate.
+
+Remaining correctness coverage includes actual memory-admission denial/recovery
+and in-session stale-read completion after replacement. The live-player control
+transport needed for the planned overlap is currently unavailable. Exact latency
+and sample-release timing are measurements for review under the user's updated
+decision. Actual eviction, correct recovery, protected dirty state and bounded
+memory remain requirements. Preserve engine failures and earlier failed results;
+do not repeat accepted multiplayer or save round trips without a relevant reason.
 
 ## Current starting evidence
 
@@ -139,7 +148,7 @@ The existing GPU resident and candidate descriptors already clear `Field` in sev
 | 2. Regional storage | Extend the existing field/codec lifecycle with indexed regional persistence, immutable I/O inputs, saved revision tracking, checkpoint/reopen handling and bounded errors. Retire superseded save orchestration as it is replaced. | Shipping entry points read/write the one store; previous valid saved state survives incomplete replacement |
 | 3. Live deformation and residency | Wire existing edit commits to regional dirty/save state; load/pin before edits, invalidate through existing consumers, release eligible saved page payloads, reload on demand. | Tool edits remain live; actual historical data survives eviction/reload; no second field or duplicated mutation path |
 | 4. Existing multiplayer path | Make its regional manifests/transfers obtain current state from that same store; preserve epochs, page revisions, interest and readiness. | Host/client live edits, late join and reconnect converge after eviction/reload/reopen |
-| 5. Qualify Slice 1 | Run frozen correctness, existing deformation and unchanged figure-eight checks through the real playable world. Inspect visible seams and physical support; record source, results, budgets, failures and comparison decisions. | All required first-slice gates pass with complete evidence; no material unexplained regression |
+| 5. Qualify Slice 1 | Run correctness checks, existing deformation and unchanged figure-eight measurements through the real playable world. Inspect visible seams and physical support; record source, results, budgets, failures and comparisons. | Required correctness has evidence; performance is reported for user judgment, without automatic numeric rejection |
 | 6. Acceptance handoff | Update actual architecture status, summarize features, limitations and measurements, commit/push only qualified task changes and present the result for user acceptance. | Slice 1 is reviewable; no automatic expansion into a subsequent slice |
 
 The goal is not complete merely because the plan exists, compilation passes or a save can be read back. If runtime tools, a comparable baseline or unresolved engine failures prevent qualification, report the specific missing evidence and keep implementation acceptance open. Do not silently broaden into unrelated engine repair or waive a failed criterion.
@@ -159,7 +168,16 @@ Required first-slice cases:
 
 Correctness gates are zero lost acknowledged saved changes, zero half-transaction completed checkpoints, zero duplicate gameplay applications, zero stale overwrites, zero client-authoritative writes, exact canonical field agreement at the acknowledged common region, and no unexplained seam/support or lifecycle errors. Matching fingerprints alone does not prove visual or physical correctness.
 
-Performance gates include existing canonical figure-eight criteria and relevant frozen deformation latency gates, plus measured page residency and I/O backlog against the fixed caps. Capture frame pacing/tails, chunk readiness, live-edit field/visual/collision latency, save/reload latency, process/GPU memory, allocations, I/O bytes and network traffic. Prove released pages no longer contribute resident sample bytes after bounded references retire, and repeated visits do not grow retained memory without bound. Fix material unexplained regressions before acceptance, commit or push of runtime changes.
+Performance is measured for subsequent user judgment, as explicitly directed on
+2026-09-08. Capture frame pacing/tails, chunk readiness, live-edit field/visual/
+collision latency, save/reload latency, process/GPU memory, allocations, I/O bytes
+and network traffic. Compare unchanged workloads and explain observed regressions;
+do not automatically reject this prototype at an exact FPS, percentile, allocation
+delta, readiness deadline or garbage-collection deadline. Runtime budgets and
+memory safety caps remain implemented safeguards, not removed settings. Actual
+page release, recoverable history and absence of unbounded retention remain
+correctness requirements. Preserve old failed measurements; do not relabel them
+as passes. New runs identify the revised assessment policy before execution.
 
 Use the existing playable scene, production tool and accepted project test entry points. Do not add separate test scenes, test components, frameworks, synthetic terrain or test-only mutation paths. Necessary bounded production diagnostics belong with the existing owner and must observe real state.
 

@@ -14834,3 +14834,42 @@ window state. No UI input was sent. Native control remains unusable in this
 observation, but the reason is the closed tool transport, not absence of the tool
 definition. The memory-criterion proposal also remains unapproved. Repeated
 acceptance audits cannot close the remaining gates under these conditions.
+
+### User decision — measure performance, judge afterward, 2026-09-08
+
+User instruction: "Let's go ahead and move forward. Let's not set exact
+restrictions on performance. We'll measure it after and make adjustments or decide
+afterwards." This explicitly changes performance assessment for this prototype.
+The narrower memory-clarification proposal is superseded by this broader decision.
+The approval blocker is resolved; the thread goal has resumed as active.
+
+FPS, frame-time tails, allocation deltas, save/load and readiness latency, reference
+retirement time and garbage-collection timing are observations for later judgment,
+not automatic numeric acceptance restrictions. Preserve fixed scenario inputs for
+comparisons, all raw measurements and historical failures. A historical failed
+threshold is not rewritten as a pass, and changing assessment does not create new
+runtime evidence. Future runs must identify this assessment revision before running;
+where a scenario's criteria are versioned, assign a new version while retaining
+the original workload parameters and record its new baseline distinctly. A bounded
+observation timeout may end a run as incomplete; elapsed time alone is not proof
+that a live operation has stopped or that its state is corrupt.
+
+Correctness remains required: one authoritative state and mutation boundary,
+preserved acknowledged saves, exact historical recovery, no stale overwrite or
+duplicate application, actual saved-page eviction, protected unsaved data, and
+safe handling of failed I/O. The existing2048-page,256MiB dirty/current and512MiB
+combined allocated/reserved sample caps, bounded workers/queues and integration
+budgets are unchanged runtime safeguards. No forced GC or memory-accounting
+subtraction was introduced. An observed leak, corruption or safety-cap violation
+still requires diagnosis; this decision is not a waiver of correctness.
+
+The latest comparable full-capacity route remains206fc30938ee43e386078497721fa5dc:
+802.2748FPS, framep99 3.8435ms, with its recorded environment qualifications.
+No new benchmark or gameplay test was run for these documentation-only changes.
+Remaining specific correctness coverage is memory-admission denial/recovery and
+in-session stale-read rejection after replacement. The live-control connection
+was rechecked once after the user reply and still returned Transport closed;
+no UI action was sent. This does not reinstate the removed performance blocker
+or claim those correctness cases passed. Multiplayer testing remains concluded
+by user acceptance. No automatic expansion into a deferred storage-scale or
+generation-caching slice is authorized by this performance decision alone.

@@ -5,6 +5,13 @@ threading, allocations, and test strategy.
 
 ## Performance Method
 
+For the authoritative chunk-storage prototype, the user's2026-09-08 decision
+overrides exact performance pass/fail thresholds: measure first, then present
+results for judgment and adjustment. Keep comparable workload parameters, raw
+results, correctness checks and runtime safety caps. Do not treat old FPS, latency
+or GC-reclamation deadlines as blockers to this prototype. This exception is
+scoped to the storage work; see its architecture document and latest ledger entry.
+
 - Define one fixed, realistic in-world workload and budget before optimizing:
   active regions, seed, coordinates, edits per second, players, view/streaming
   radius, terrain complexity, operation count, timing window, and target

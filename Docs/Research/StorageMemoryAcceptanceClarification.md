@@ -1,7 +1,11 @@
 # Storage memory acceptance clarification
 
-Date: 2026-09-08. Status: proposal only; user approval required before changing
-STORAGE-HISTORY-001/v1 or declaring its failed memory gate superseded.
+Date: 2026-09-08. Status: superseded by the user's broader performance decision:
+"Let's not set exact restrictions on performance. We'll measure it after and make
+adjustments or decide afterwards." Performance and release/collection timing are
+now reported for review, with no exact automatic rejection threshold. Correctness
+and the existing memory safety caps remain. Historical failures stay recorded.
+The narrower proposal below is retained as the decision's background, not policy.
 
 The implementation releases saved canonical page references after five seconds
 without required interest, through a bounded sweep. Captured readers retain their
@@ -32,7 +36,7 @@ no extra tracked sample arrays at that instant; it is not a timed release proof.
 See [the ledger](../ValidationResults.md), especially the HISTORY failures,
 STORAGE-RELOAD-PRESSURE-001/v1 and active-cancellation follow-up.
 
-## Proposed decision
+## Earlier proposal — superseded
 
 Keep the ten-second requirement for releasing eligible saved pages and finished
 consumer references. Keep the 512 MiB combined allocated/reserved sample cap,
@@ -57,5 +61,6 @@ relax slow save/load, frame-time or readiness gates. In-session stale-read rejec
 and actual memory-admission denial/recovery remain separate unverified cases.
 
 The project AGENTS.md requires explicit user approval when changing a workload or
-accepting a regression. Until that approval, version1 remains unchanged and failed
-or incomplete where recorded; the full goal remains open.
+accepting a regression. The subsequent user instruction supplies authorization for
+the broader assessment-policy change stated at the top. Historical version1 results
+remain unchanged. This does not prove missing correctness cases or complete the goal.
