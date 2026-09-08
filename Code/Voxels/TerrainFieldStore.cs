@@ -173,11 +173,11 @@ internal static class TerrainFieldStore
 		}
 	}
 
-	public static TerrainFieldPage ReadPage( string root, Page page, TerrainFieldPage.SampleReservation reservation = null )
+	public static TerrainFieldPage ReadPage( string root, Page page, TerrainFieldPage.SampleReservation reservation = null, float[] metadataScratch = null )
 	{
 		lock ( IoGate )
 		{
-			var decoded = TerrainFieldCodec.DecodePageBlock( ReadPageBytes( root, page ), page.Revision, reservation );
+			var decoded = TerrainFieldCodec.DecodePageBlock( ReadPageBytes( root, page ), page.Revision, reservation, metadataScratch );
 			if ( decoded.Coordinate != page.Coordinate || decoded.Page.Revision != page.Revision )
 				throw new InvalidDataException( "Stored terrain page identity does not match its directory." );
 			decoded.Page.AttachStored( root, page );
@@ -213,11 +213,13 @@ internal static class TerrainFieldStore
 		lock ( IoGate )
 		{
 			var pages = new Dictionary<Vector3Int, TerrainFieldPage>();
+			// Validation builds only canonical metadata. One budgeted scratch array
+			// serves the whole directory; no page or weak reuse handle retains it.
+			var scratch = checkpoint.Pages.Count == 0 ? null : TerrainFieldPage.AllocateValues();
 			foreach ( var page in checkpoint.Pages.Values )
 			{
 				cancellation.ThrowIfCancellationRequested();
-				var decoded = ReadPage( checkpoint.Root, page );
-				decoded.ReleaseResidentSamples();
+				var decoded = ReadPage( checkpoint.Root, page, metadataScratch: scratch );
 				pages.Add( page.Coordinate, decoded );
 			}
 			return new TerrainFieldSnapshot( checkpoint.Identity.Settings, checkpoint.Identity.Revision, pages, checkpoint.Identity.WorldId );

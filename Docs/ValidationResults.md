@@ -15116,3 +15116,137 @@ Evidence: [user after](ValidationEvidence/ChunkStorage/read-overlap-user-after.j
 No game runtime code changed in these runs. The remaining checks are same-session
 read admission recovery and direct old-epoch read discard; tooling no longer
 blocks live movement. Performance restrictions remain advisory per user decision.
+
+### STORAGE-METADATA-SCRATCH-001/v1 — bounded directory validation
+
+Freeze before runtime validation: sourcec22ec4b plus metadata-scratch change in
+TerrainField/Codec/Store, engine26.09.01c, visible editor, unchanged gameplay8,
+visual512 and generator. Save and audit latest user slot before leaving it. Normal
+Stop/Play must auto-load that save. Move actual player to(-393216,393216,4096),
+wait for readiness, load read-pressure-v1 revision198/2048, observe every500ms
+until settled (120second observation limit, not a performance gate). No edits or
+client tests. Require198/2048, authored0/rejected0, no read/load failure, zero final
+reservations, exact known far fingerprint B41B9A4D...F8EB7439 and all stored hashes.
+This saved fixture includes dense and sparse payloads; audit actual mode counts.
+Require stored samples to become resident through real gameplay interest: return
+to origin, observe loadedPages increase and derived queues settle. Run canonical
+figure-eight unchanged: speed2500,distance50000,one loop,30second warmup, compare
+with latest full-cap802FPS/p99 3.84ms with environment/source qualifications.
+No exact performance pass/fail limit. Restore latest user state and normal spawn;
+verify canonical identity, every saved page hash and authored scene hash unchanged.
+Preserve failures and missing coverage. No claim of full recovery/stale acceptance.
+
+The metadata-only directory change also changes read overlap: validation pages no
+longer supply weakly cached samples to later operations. After its figure-eight,
+repeat STORAGE-STALE-READ-001/v2 exactly once as a changed-source regression (same
+136/2048 setup, private read-overlap-v1, normal Stop/Play,30second warmup, load
+save-edit-pressure-v1/198,31 positions atZ4096 with300ms waits plus tool latency).
+This is prompted by a new code path affecting cold reads, not retiming an unchanged
+implementation to manufacture a positive counter. Keep the earlier unexercised
+result. Preserve user971/160; require no new authored/rejected edits, known fingerprint,
+settled queues and positive stale counter only if observed. No additional attempts.
+
+STORAGE-METADATA-SCRATCH-001/v1 bounded load: user971/160 reopened automatically;
+all160 required pages loaded through the read pump. Full-cap198/2048 replacement
+committed in3816.4924ms; both geometry queues settled at19.185seconds. Across36
+status samples the maximum accounted sample total was171442176bytes (163.5MiB),
+not an exhaustive transient peak or a comparable before/after allocation trace.
+Far fingerprint matched B41B9A4D...F8EB7439, all2048 stored hashes verified, and the
+fixture contained1056 sparse plus992 dense pages. Returning to origin increased
+loadedPages160->190 and settled geometry with no rejection/failure. Scratch is
+not retained by metadata pages; directory-only dense allocation is one128KiB
+array by source, rather than2048 arrays/256MiB.
+
+Figure-eight2ae2689a6d524172803898d9fa8face1:803.3559FPS,p994.0149ms,max760.0769ms,
+3599291728 managed allocated bytes, one Gen2 collection, maximum GC pause106.796ms,
+zero exceptions. A code-comment edit was made during the route, allowing engine
+recompilation/hotload; its exact relationship to the maximum frame is unproven.
+Retain this confound and do not claim clean tail-latency acceptance from this run.
+The later manually started profiler began06:31:46, after the result at06:31:33;
+it does not explain the earlier route's tail. Additional live tool activity also
+arrived after the route: private revision199 was preserved atcheckpoint7 in
+read-pressure-v1. Original user971 remains untouched. Do not overwrite either.
+Evidence: metadata-scratch-load-runtime.json, metadata-scratch-private.json,
+metadata-scratch-figure-eight.json under ValidationEvidence/ChunkStorage.
+
+### STORAGE-COLD-SWEEP-001/v1 — profiler-directed sweep fast path
+
+Freeze before code change/runtime run: c22ec4b plus metadata scratch; user capture
+sbox_2026-09-08_06_31_47 records10.8939073seconds after the earlier route, main thread
+28376 samples. SweepTerrainStorage appears in266 inclusive main-thread samples,
+VoxelManager.OnUpdate in1007; these are overlapping sample counts, not exact wall
+CPU percentages or FPS. Four depth1 AllocSmall/nonconcurrent collections last
+12.3636,11.8358,12.1549,10.6478ms. No depth2 collection recorded; generation2 and
+large-object heap sizes remain1455176704 and782282624bytes in heap-stat events.
+Allocation ticks identify many engine/editor types and are sampled attribution,
+not an object-retention graph. Do not call this proof of a terrain leak.
+
+Change only the sweep's nonresident fast path: skip bounds/interest traversal when
+the inspected page has no resident samples. Keep8pages/frame and1ms soft budget,
+current interests,5second grace and canonical eviction/epoch guards. Concurrent
+becoming-resident after the check can only defer a later sweep; installation/pin
+updates its grace timestamp. No dirty/sample allocation or mutation changes.
+
+Validate source through normal Play with full-cap storage-capacity-v1/136/2048,
+canonical seed/config/gameplay8/visual512;30second warmup at authored origin;
+figure-eight2500/50000/one loop with no source edits during run. Compare recorded
+802.2748FPS/p993.8435ms baseline206fc309 (same136fixture), preserve all tails,
+allocations/memory/queues/correctness. Performance advisory, no new pass threshold.
+Require no authored/rejected edits, exact known CA27349A...E8E2B0 far fingerprint,
+read-pump progress at origin, stable checkpoint hashes and settled geometry.
+Restore user971/160 and normal spawn; preserve private199 in read-pressure-v1.
+The previous run's760ms frame remains in history; this final-source run must not
+be described as proof of the cause of that frame.
+
+The changed-source STORAGE-STALE-READ-001/v2 run directly observed three stale
+read completions discarded at epoch2 commit (4603.348ms). At40.689seconds,
+198/2048, loadedPages2402, staleReadCompletions3, reservations0, both geometry
+queues clear, authored0/rejected0 and no failure. Known far fingerprint matched
+B41B9A4D...F8EB7439. This qualifies the previously missing in-session old-epoch
+read discard for this run; retain the earlier unchanged-source zero-counter run.
+Original user971/160 restored and reopened atcheckpoint65. Its identity/directory
+and all160 page hashes match pre-runcheckpoint63. Authored scene hash unchanged.
+Evidence: metadata-scratch-stale-runtime.json and metadata-scratch-user-after.json.
+Read-pump capacity recovery remains outstanding; do not reopen stale-read testing
+without a relevant change/failure. No more multiplayer tests.
+
+STORAGE-COLD-SWEEP-001/v1 final-source run99ae5fab827e4e5999ceb8c3ef0720be:
+868.6969FPS versus802.2748 (+8.28%); framep993.457ms versus3.8435 (-10.06%);
+maximum25.1209ms versus20.4999. No code edits during the run. The earlier760.0769ms
+frame did not recur, but its cause remains unproven. Post-route stationary911.2064FPS,
+p992.6988ms,max14.7437ms. The route's GC maximum pause14.283ms, no Gen2 collections,
+zero exceptions. Periodic collection stutter is not eliminated.
+
+Allocations3169630368bytes versus2975017208 (+6.54% total with more frames);
+29921.086bytes/frame versus30409.139 (-1.60%). Peak process3818352640bytes versus
+3314929664 (+15.19%); peak GPU3006808840 versus2829236104 (+6.27%). Same scene,
+136/2048 fixture and canonical movement/configuration, but a later long-lived
+editor session after additional Play cycles/hotloads and manual profiling. This
+is a qualified workload comparison, not isolated causal proof or evidence of
+lower total RAM. Do not hide the memory increase. User performance policy permits
+reporting these measurements for judgment rather than enforcing exact thresholds.
+
+All4913 collision regions ready, collision/mesh pending0,14 arenas, no failures.
+Collision readiness p998641.468ms versus8455.163; maximum13597.174 versus13460.919,
+with average1488.5446 versus1507.5415. These include queued distant readiness.
+At06:42:18 (56seconds after result), sample accounting8388608bytes, reservations0,
+authored0/rejected0 and both geometry queues clear. This later observation is not
+a comparable retirement-time result. Known CA27349A...E8E2B0 fingerprint and all2048
+saved page checksums verified. Scratch validation and cold-page sweep are accepted
+as bounded improvements; full memory-pressure recovery remains unqualified.
+Evidence: cold-sweep-figure-eight.json, cold-sweep-private.json and
+[profiler report](ValidationEvidence/ChunkStorage/Profiler063147.md).
+
+Final restoration: original user971/160 saved ascheckpoint66; every page hash,
+canonical identity and directory match pre-testcheckpoint63. Authored scene hash
+521ea0f7415e17534a1fabab006caba16d0350963b23331556dac0d16ed138c2 unchanged.
+The first Play restart immediately after source line-ending normalization entered
+an invalid runtime scene: prefab/type lookup warnings and the terrain diagnostic
+threw because its active scene was null. Compiler subsequently confirmed all
+projects successful (one existing SB2000 warning). Normal Stop/Play after that
+confirmation recovered the saved world and loaded all160 required pages. Preserve
+this restart failure; the timing correlation is not proof of its engine cause.
+The failed attempt did not alter the completed save. Final world is visible at
+normal spawn; private199 remains preserved in read-pressure-v1.
+Evidence: cold-sweep-user-after.json. No source files changed during the clean
+figure-eight; later line-ending normalization did not change code semantics.

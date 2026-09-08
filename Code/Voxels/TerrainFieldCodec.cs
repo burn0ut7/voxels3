@@ -73,16 +73,16 @@ internal static class TerrainFieldCodec
 		return stream.ToArray();
 	}
 
-	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePageBlock( byte[] block, int maximumRevision, TerrainFieldPage.SampleReservation reservation = null )
+	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePageBlock( byte[] block, int maximumRevision, TerrainFieldPage.SampleReservation reservation = null, float[] metadataScratch = null )
 	{
 		using var stream = new MemoryStream( block, false );
 		using var reader = new BinaryReader( stream );
-		var result = DecodePage( ReadBlock( reader, MaximumPagePayloadBytes ), maximumRevision, reservation );
+		var result = DecodePage( ReadBlock( reader, MaximumPagePayloadBytes ), maximumRevision, reservation, metadataScratch );
 		if ( stream.Position != stream.Length ) throw new InvalidDataException( "Terrain page block contains trailing data." );
 		return result;
 	}
 
-	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePage( byte[] payload, int maximumRevision, TerrainFieldPage.SampleReservation reservation = null )
+	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePage( byte[] payload, int maximumRevision, TerrainFieldPage.SampleReservation reservation = null, float[] metadataScratch = null )
 	{
 		if ( payload is null || payload.Length < 17 || payload.Length > MaximumPagePayloadBytes )
 			throw new InvalidDataException( "Terrain page length is invalid." );
@@ -100,7 +100,12 @@ internal static class TerrainFieldCodec
 		if ( count < 0 || count > TerrainField.SamplesPerPage ||
 			stream.Length - stream.Position != (long)count * (mode == 0 ? 4 : 6) )
 			throw new InvalidDataException( "Terrain sample count is invalid." );
-		var values = TerrainFieldPage.AllocateValues( reservation );
+		if ( metadataScratch is not null && (reservation is not null || metadataScratch.Length != TerrainField.SamplesPerPage) )
+			throw new ArgumentException( "Invalid terrain metadata scratch buffer." );
+		var values = metadataScratch ?? TerrainFieldPage.AllocateValues( reservation );
+		// Sparse payloads omit zero samples. A reused validation buffer must not
+		// carry those samples over from the previously validated page.
+		if ( metadataScratch is not null && mode == 1 ) Array.Clear( values );
 		var previousIndex = -1;
 		for ( var i = 0; i < count; i++ )
 		{
@@ -110,7 +115,7 @@ internal static class TerrainFieldCodec
 			values[index] = reader.ReadSingle();
 		}
 		// The canonical page constructor validates finite, bounded corrections.
-		return (coordinate, new TerrainFieldPage( revision, values ));
+		return (coordinate, new TerrainFieldPage( revision, values, retainSamples: metadataScratch is null ));
 	}
 
 	public static void WriteSnapshot( Stream stream, TerrainFieldSnapshot snapshot, CancellationToken cancellation )

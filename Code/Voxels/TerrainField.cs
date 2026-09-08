@@ -413,12 +413,13 @@ internal sealed class TerrainFieldPage
 	public float Minimum { get; }
 	public float Maximum { get; }
 
-	// Takes exclusive ownership of the array. It is never exposed for writing.
-	public TerrainFieldPage( int revision, float[] values, TerrainFieldPage previous = null, bool trackChanges = false )
+	// Resident pages take exclusive ownership of the array. Metadata-only
+	// validation derives ranges without retaining its caller-owned scratch.
+	public TerrainFieldPage( int revision, float[] values, TerrainFieldPage previous = null, bool trackChanges = false, bool retainSamples = true )
 	{
 		if ( values.Length != TerrainField.SamplesPerPage ) throw new ArgumentException( "Invalid terrain page size." );
 		Revision = revision;
-		_values = values;
+		_values = retainSamples ? values : null;
 		_blockRevisions = new int[RevisionBlocksAxis * RevisionBlocksAxis * RevisionBlocksAxis];
 		_blockMinimums = new float[_blockRevisions.Length];
 		_blockMaximums = new float[_blockRevisions.Length];

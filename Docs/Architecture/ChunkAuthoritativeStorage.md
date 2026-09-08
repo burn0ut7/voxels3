@@ -46,11 +46,13 @@ this responsiveness cost is reported for judgment, not hidden by a pass label.
 Read-pump denial is now directly observed at the512MiB cap, but same-session
 recovery was not observed through the last103.7second sample; an extra live tool
 request entered after64.3seconds. Normal Stop/Play allowed original-world recovery.
-The travel/replacement run preserved the correct field, but old reads finished
-before commit, so direct stale-read discard remains unexercised. Native live-player
+The first travel/replacement run preserved the field without exercising discard.
+After metadata-only checkpoint validation, the same changed-source run observed
+three old-epoch read completions discarded; the known fingerprint matched and
+all queues settled with no authored/rejected edits. Native live-player
 control now works after an installed editor active-scene lookup repair; the tooling
-blocker is resolved. Remaining coverage is read-pump recovery and direct stale-read
-discard. These bounded results do not establish permanent deadlock. Exact latency
+blocker is resolved. Remaining lifecycle coverage is read-pump recovery.
+These bounded results do not establish permanent deadlock. Exact latency
 and sample-release timing are measurements for review under the user's updated
 decision. Actual eviction, correct recovery, protected dirty state and bounded
 memory remain requirements. Preserve engine failures and earlier failed results;
@@ -450,3 +452,47 @@ identity rejection before installation; the second at a failed batch reservation
 They survive in-session restores and reset with a new field. They do not include
 queued requests dropped before dispatch or reads abandoned during manager teardown.
 These observations support lifecycle diagnosis without changing admission or mutation.
+
+### Checkpoint validation scratch ownership — 2026-09-08
+
+The full-cap recovery observation exposed a validation allocation cost in
+ReadDirectory: each page was decoded into a newly allocated dense array and then
+released, leaving up to256MiB of validation-only arrays awaiting collection for a
+2048-page directory. This is source-derived allocation volume, not a measured
+peak or proof that all stalled arrays were unowned. Game code cannot rely on
+GC.Collect: the pinned upstream access rules allow only GC.SuppressFinalize,
+not Collect or CollectionCount ([BaseAccess](https://github.com/Facepunch/sbox-public/blob/9de061bb0fe2dc73ff29a134a0041928f2a47166/engine/Sandbox.Access/Rules/BaseAccess.cs#L76)).
+
+ReadDirectory now owns one131072-byte scratch array allocated through the existing
+sample cap under IoGate. The existing checksum/coordinate/revision/density decoder
+fills it for each page and constructs canonical metadata without retaining either
+a strong or weak reference to scratch. Sparse input clears omitted zeros before
+reuse. Empty directories allocate no scratch. Actual resident reads still allocate
+owned arrays through the existing reservation path. No file format, mutation,
+network decoder default, authority or cap changes. The same decoder and page
+constructor derive the metadata; there is no alternate validation parser.
+
+Tradeoff: dropping validation arrays removes their opportunistic weak reuse during
+replacement comparison. Comparison can therefore reread pages from disk; measure
+that cost before acceptance. This change alone does not establish read-pump recovery
+at the cap or direct stale completion. Reject forced collection (unsupported in
+game code), higher caps (conceals pressure), and a global lifetime/pool rewrite
+before narrower costs and ownership are measured. The bounded validation results follow below.
+
+### Cold-page sweep and bounded validation outcome — 2026-09-08
+
+The user-supplied profiler capture identified avoidable interest traversal for
+already nonresident pages. SweepTerrainStorage now skips that traversal before
+building bounds;8pages/frame,1ms soft budget, grace and canonical guards stay the
+same. A later read/install stamps the required time, so a skipped cold page cannot
+be evicted before it has samples. This does not alter dirty/save ownership.
+
+Full-capacity load and sparse/dense metadata validation passed bounded checks.
+Final-source canonical136/2048 route measured868.70FPS/p993.457ms versus the earlier
+802.27FPS/p993.8435ms. Worst frame25.12ms (earlier20.50); allocations/frame fell1.60%,
+but peak process memory rose15.19% in the later long-lived editor session. Do not
+claim reduced total RAM or elimination of collection stutter. No exceptions,
+all4913 collision regions ready, mesh/collision queues settled, exact saved hashes.
+The code is qualified for these bounded changes; the separate pressure-recovery
+case remains open. See the ledger and profiler evidence for timing and environment
+limitations, including the earlier760ms confounded frame.

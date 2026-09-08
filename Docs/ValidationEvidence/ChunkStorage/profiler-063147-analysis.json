@@ -1,0 +1,529 @@
+{
+  "path": "C:\\Program Files (x86)\\Steam\\steamapps\\profiler_captures\\sbox_2026-09-08_06_31_47.json\\sbox_2026-09-08_06_31_47.json",
+  "sha256": "1f8777e1983f3ac23e06dbdae6ecc7f6a872d3bc649725f7171b8a5b969c3d7b",
+  "captureDurationMs": 10893.9073,
+  "intervalMs": 0.2,
+  "mainThreadSamples": 28376,
+  "mainThreadSampleCpuDeltaNs": 4445866372,
+  "recordedAllocationTickBytes": 188685800,
+  "topAllocationTickTypes": [
+    [
+      "<>c__DisplayClass59_0",
+      12687616
+    ],
+    [
+      "Sandbox.RenderAttributes",
+      10547432
+    ],
+    [
+      "Slot[System.Threading.Tasks.TaskReplicator+Replica][]",
+      8957976
+    ],
+    [
+      "DelayPromiseWithCancellation",
+      8626368
+    ],
+    [
+      "System.Threading.TimerQueueTimer",
+      7463456
+    ],
+    [
+      "System.String",
+      7354976
+    ],
+    [
+      "<GetDescendants>d__22`1[Editor.EditorToolButton]",
+      6609200
+    ],
+    [
+      "System.Action",
+      6186520
+    ],
+    [
+      "System.Collections.Generic.List`1[Editor.Widget]",
+      5543200
+    ],
+    [
+      "<TryGetAll>d__5",
+      4264272
+    ],
+    [
+      "<EnumerateLocked>d__13[System.Object]",
+      4054488
+    ],
+    [
+      "Sandbox.ScenePushScope",
+      4051856
+    ],
+    [
+      "System.Collections.Concurrent.ConcurrentQueueSegment`1[System.Threading.Tasks.TaskReplicator+Replica]",
+      3198000
+    ],
+    [
+      "System.Threading.Tasks.Task",
+      3198000
+    ],
+    [
+      "ContingentProperties",
+      2984800
+    ],
+    [
+      "Editor.Widget[]",
+      2878336
+    ],
+    [
+      "TwoElementAsyncLocalValueMap",
+      2772144
+    ],
+    [
+      "System.Threading.ExecutionContext",
+      2771600
+    ],
+    [
+      "Native.QObject[]",
+      2665712
+    ],
+    [
+      "Replica`1[System.Collections.IEnumerator]",
+      2452136
+    ],
+    [
+      "Enumerator[Editor.Widget]",
+      2451800
+    ],
+    [
+      "OnRenderCallback",
+      2451800
+    ],
+    [
+      "InternalPartitionEnumerator[Sandbox.SkinnedModelRenderer]",
+      2242304
+    ],
+    [
+      "Sandbox.Connection[]",
+      2240816
+    ],
+    [
+      "System.Runtime.CompilerServices.StrongBox`1[System.Int32]",
+      2025400
+    ]
+  ],
+  "collections": [
+    {
+      "startMs": 1351.2797,
+      "durationMs": 12.363599999999906,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 6928,
+      "depth": 1,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    },
+    {
+      "startMs": 3686.4111,
+      "durationMs": 11.83580000000029,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 6929,
+      "depth": 1,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    },
+    {
+      "startMs": 6035.4765,
+      "durationMs": 12.154900000000453,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 6930,
+      "depth": 1,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    },
+    {
+      "startMs": 8657.6338,
+      "durationMs": 10.647800000000643,
+      "type": "GCMajor",
+      "reason": "AllocSmall",
+      "count": 6931,
+      "depth": 1,
+      "gcType": "NonConcurrentGC",
+      "timings": {
+        "status": ""
+      }
+    }
+  ],
+  "heapEvents": [
+    {
+      "type": "dotnet.gc.heap_stats",
+      "totalHeapSize": 2241438024,
+      "totalPromoted": 3108576,
+      "generationSize0": 535432,
+      "totalPromotedSize0": 3085896,
+      "generationSize1": 3125528,
+      "totalPromotedSize1": 22680,
+      "generationSize2": 1455176704,
+      "totalPromotedSize2": 0,
+      "generationSize3": 782282624,
+      "totalPromotedSize3": 0,
+      "generationSize4": 317736,
+      "totalPromotedSize4": 0,
+      "finalizationPromotedSize": 2769288,
+      "finalizationPromotedCount": 69302,
+      "pinnedObjectCount": 2,
+      "sinkBlockCount": 12253,
+      "gcHandleCount": 256818
+    },
+    {
+      "type": "dotnet.gc.heap_stats",
+      "totalHeapSize": 2241584136,
+      "totalPromoted": 3534320,
+      "generationSize0": 535432,
+      "totalPromotedSize0": 3227664,
+      "generationSize1": 3271640,
+      "totalPromotedSize1": 306656,
+      "generationSize2": 1455176704,
+      "totalPromotedSize2": 0,
+      "generationSize3": 782282624,
+      "totalPromotedSize3": 0,
+      "generationSize4": 317736,
+      "totalPromotedSize4": 0,
+      "finalizationPromotedSize": 3134424,
+      "finalizationPromotedCount": 78361,
+      "pinnedObjectCount": 2,
+      "sinkBlockCount": 13376,
+      "gcHandleCount": 257732
+    },
+    {
+      "type": "dotnet.gc.heap_stats",
+      "totalHeapSize": 2241516608,
+      "totalPromoted": 3243752,
+      "generationSize0": 535432,
+      "totalPromotedSize0": 3160136,
+      "generationSize1": 3204112,
+      "totalPromotedSize1": 83616,
+      "generationSize2": 1455176704,
+      "totalPromotedSize2": 0,
+      "generationSize3": 782282624,
+      "totalPromotedSize3": 0,
+      "generationSize4": 317736,
+      "totalPromotedSize4": 0,
+      "finalizationPromotedSize": 3142400,
+      "finalizationPromotedCount": 78560,
+      "pinnedObjectCount": 2,
+      "sinkBlockCount": 13319,
+      "gcHandleCount": 257752
+    },
+    {
+      "type": "dotnet.gc.heap_stats",
+      "totalHeapSize": 2241409920,
+      "totalPromoted": 3063184,
+      "generationSize0": 535432,
+      "totalPromotedSize0": 3055032,
+      "generationSize1": 3097424,
+      "totalPromotedSize1": 8152,
+      "generationSize2": 1455176704,
+      "totalPromotedSize2": 0,
+      "generationSize3": 782282624,
+      "totalPromotedSize3": 0,
+      "generationSize4": 317736,
+      "totalPromotedSize4": 0,
+      "finalizationPromotedSize": 3013600,
+      "finalizationPromotedCount": 75348,
+      "pinnedObjectCount": 2,
+      "sinkBlockCount": 13065,
+      "gcHandleCount": 257438
+    }
+  ],
+  "projectInclusiveSamples": [
+    {
+      "function": "VoxelManager.OnUpdate()",
+      "inclusiveSamples": 1007,
+      "inclusiveSampleCpuDeltaNs": 190693519
+    },
+    {
+      "function": "VoxelManager.SweepTerrainStorage()",
+      "inclusiveSamples": 266,
+      "inclusiveSampleCpuDeltaNs": 50130282
+    },
+    {
+      "function": "GpuVoxelMesher.ProcessPending(int32,int64)",
+      "inclusiveSamples": 217,
+      "inclusiveSampleCpuDeltaNs": 41796097
+    },
+    {
+      "function": "VoxelManager.IsTerrainStorageRequired(value class SdfWorldAabb)",
+      "inclusiveSamples": 151,
+      "inclusiveSampleCpuDeltaNs": 28608535
+    },
+    {
+      "function": "VoxelManager.UpdateTerrainEdits()",
+      "inclusiveSamples": 113,
+      "inclusiveSampleCpuDeltaNs": 21688944
+    },
+    {
+      "function": "VoxelManager.StorageIntersectsBox(value class SdfWorldAabb,value class Vector3Int,value class Vector3Int,float32)",
+      "inclusiveSamples": 107,
+      "inclusiveSampleCpuDeltaNs": 20352454
+    },
+    {
+      "function": "TerrainField.SweepPage(value class Vector3Int,class TerrainFieldPage,int32,bool,int64)",
+      "inclusiveSamples": 74,
+      "inclusiveSampleCpuDeltaNs": 13666363
+    },
+    {
+      "function": "GpuVoxelMesher.ReportGpuSchedulerHealth()",
+      "inclusiveSamples": 65,
+      "inclusiveSampleCpuDeltaNs": 12378466
+    },
+    {
+      "function": "VoxelManager.UpdatePlayerCollisionInterests()",
+      "inclusiveSamples": 58,
+      "inclusiveSampleCpuDeltaNs": 11084574
+    },
+    {
+      "function": "VoxelManager.UpdatePerformanceOverview()",
+      "inclusiveSamples": 56,
+      "inclusiveSampleCpuDeltaNs": 10176474
+    },
+    {
+      "function": "VoxelCollisionWorld.Integrate()",
+      "inclusiveSamples": 47,
+      "inclusiveSampleCpuDeltaNs": 9200579
+    },
+    {
+      "function": "GpuVoxelMesher.get_AllPendingCount()",
+      "inclusiveSamples": 47,
+      "inclusiveSampleCpuDeltaNs": 9034074
+    },
+    {
+      "function": "GpuVoxelMesher.CommitDrawCommands()",
+      "inclusiveSamples": 42,
+      "inclusiveSampleCpuDeltaNs": 8473979
+    },
+    {
+      "function": "TerrainFieldPage.TryExpireResidentSamples(bool,int64)",
+      "inclusiveSamples": 41,
+      "inclusiveSampleCpuDeltaNs": 7701878
+    },
+    {
+      "function": "VoxelManager.TryValidateConfiguration(value class VoxelVisualConfiguration&,class System.String&)",
+      "inclusiveSamples": 39,
+      "inclusiveSampleCpuDeltaNs": 6813478
+    },
+    {
+      "function": "GpuVoxelMesher.InvalidateField(class TerrainFieldChange,float32)",
+      "inclusiveSamples": 39,
+      "inclusiveSampleCpuDeltaNs": 7809281
+    },
+    {
+      "function": "VoxelManager.UpdateTerrainStorage()",
+      "inclusiveSamples": 39,
+      "inclusiveSampleCpuDeltaNs": 7378578
+    },
+    {
+      "function": "GpuVoxelMesher.get_PendingCount()",
+      "inclusiveSamples": 38,
+      "inclusiveSampleCpuDeltaNs": 7334879
+    },
+    {
+      "function": "VoxelManager.UpdateTerrainTool()",
+      "inclusiveSamples": 29,
+      "inclusiveSampleCpuDeltaNs": 5456885
+    },
+    {
+      "function": "GpuVoxelMesher.FinalizeEmits()",
+      "inclusiveSamples": 27,
+      "inclusiveSampleCpuDeltaNs": 5270689
+    },
+    {
+      "function": "VoxelManager.IntegrateCompletedWarmChunks()",
+      "inclusiveSamples": 26,
+      "inclusiveSampleCpuDeltaNs": 4717587
+    },
+    {
+      "function": "GpuVoxelMesher.FinalizeTransitionEmits()",
+      "inclusiveSamples": 22,
+      "inclusiveSampleCpuDeltaNs": 3919687
+    },
+    {
+      "function": "VoxelManager.SamplePerformanceRuntime()",
+      "inclusiveSamples": 21,
+      "inclusiveSampleCpuDeltaNs": 3797090
+    },
+    {
+      "function": "GpuVoxelMesher.TryPublishEditedField()",
+      "inclusiveSamples": 21,
+      "inclusiveSampleCpuDeltaNs": 3901092
+    },
+    {
+      "function": "VoxelManager.Sandbox.IScenePhysicsEvents.PrePhysicsStep()",
+      "inclusiveSamples": 20,
+      "inclusiveSampleCpuDeltaNs": 2903091
+    },
+    {
+      "function": "dynamicClass.InvokeStub_VoxelMcpTools.RepairEjectedRenderCamera(class System.Object,class System.Object,int*)",
+      "inclusiveSamples": 20,
+      "inclusiveSampleCpuDeltaNs": 1347492
+    },
+    {
+      "function": "VoxelManager.UpdatePlayerFigureEight()",
+      "inclusiveSamples": 20,
+      "inclusiveSampleCpuDeltaNs": 3836785
+    },
+    {
+      "function": "VoxelManager.UpdateTerrainAutosave()",
+      "inclusiveSamples": 20,
+      "inclusiveSampleCpuDeltaNs": 3948589
+    },
+    {
+      "function": "GpuVoxelMesher.get_PendingGameplayCount()",
+      "inclusiveSamples": 19,
+      "inclusiveSampleCpuDeltaNs": 3657090
+    },
+    {
+      "function": "VoxelVisualConfiguration.op_Inequality(value class VoxelVisualConfiguration,value class VoxelVisualConfiguration)",
+      "inclusiveSamples": 18,
+      "inclusiveSampleCpuDeltaNs": 3428994
+    },
+    {
+      "function": "GpuVoxelMesher.CountInFlight(value class GpuMeshResidency)",
+      "inclusiveSamples": 18,
+      "inclusiveSampleCpuDeltaNs": 3452690
+    },
+    {
+      "function": "VoxelMcpTools.RepairEjectedRenderCamera()",
+      "inclusiveSamples": 18,
+      "inclusiveSampleCpuDeltaNs": 1260592
+    },
+    {
+      "function": "VoxelManager.UpdateClipboxPlacement(value class Vector3,value class VoxelVisualConfiguration)",
+      "inclusiveSamples": 18,
+      "inclusiveSampleCpuDeltaNs": 3435792
+    },
+    {
+      "function": "VoxelVisualConfiguration.op_Equality(value class VoxelVisualConfiguration,value class VoxelVisualConfiguration)",
+      "inclusiveSamples": 17,
+      "inclusiveSampleCpuDeltaNs": 3237094
+    },
+    {
+      "function": "GpuVoxelMesher.CommitDrawCommandsLocked(class RenderCameraState)",
+      "inclusiveSamples": 16,
+      "inclusiveSampleCpuDeltaNs": 3105192
+    }
+  ],
+  "selectedEngineEditorInclusiveSamples": [
+    [
+      "Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&)",
+      28073
+    ],
+    [
+      "Sandbox.EngineLoop.FrameStart()",
+      10889
+    ],
+    [
+      "Sandbox.EngineLoop.OnClientOutput()",
+      9714
+    ],
+    [
+      "Editor.SceneRenderingWidget.RenderAll()",
+      9683
+    ],
+    [
+      "Editor.SceneRenderingWidget.RenderScene()",
+      6605
+    ],
+    [
+      "Editor.ManagedTools.RunFrame()",
+      2666
+    ],
+    [
+      "Sandbox.Internal.EventSystem.Run(class System.String)",
+      2372
+    ],
+    [
+      "Sandbox.Internal.EventSystem+EventList.Run(class System.String,class System.Object[])",
+      2358
+    ],
+    [
+      "Sandbox.Internal.EventSystem+EventAction.Run(class System.String,class System.Object[])",
+      2301
+    ],
+    [
+      "Sandbox.Internal.EventSystem+<>c__DisplayClass11_0.<BuildDelegate>b__0(class System.Object,class System.Object[])",
+      2156
+    ],
+    [
+      "Sandbox.EngineLoop.SimulateUI()",
+      1026
+    ],
+    [
+      "Sandbox.EngineLoop.SleepForFrameRateClamp(value class Sandbox.Diagnostics.FastTimer)",
+      599
+    ],
+    [
+      "Sandbox.Scene.UpdateCameraViews()",
+      434
+    ],
+    [
+      "Editor.ControlWidget.Think()",
+      389
+    ],
+    [
+      "Editor.ControlSheetGroup.UpdateVisibility()",
+      329
+    ],
+    [
+      "Editor.ViewportTools.OnViewportToolsFrame()",
+      293
+    ],
+    [
+      "Editor.Application.StartFrame()",
+      192
+    ],
+    [
+      "Editor.ViewportTools.UpdateChildren()",
+      187
+    ],
+    [
+      "Editor.Widget+<GetDescendants>d__22`1[System.__Canon].MoveNext()",
+      172
+    ],
+    [
+      "Editor.ViewportTools.OnFrame()",
+      162
+    ],
+    [
+      "Editor.Widget.get_Parent()",
+      161
+    ],
+    [
+      "Editor.Widget.InternalPaintEvent(value class QPainter,int32)",
+      159
+    ],
+    [
+      "Editor.Widget.get_ScreenPosition()",
+      103
+    ],
+    [
+      "Editor.ViewportTools.UpdateDimensions()",
+      102
+    ],
+    [
+      "Sandbox.EngineLoop.RunAsyncTasks()",
+      101
+    ]
+  ],
+  "limitations": [
+    "Allocation ticks are sampled attribution, not an exhaustive allocation or retention graph.",
+    "Inclusive sample groups overlap and must not be summed.",
+    "Capture starts after figure-eight completed; it cannot explain its earlier 760ms frame.",
+    "Four marker events named GCMajor have depth1; they are not gen2 collections.",
+    "No object-root graph or GPU timing/frame marker track is present in this profile."
+  ]
+}

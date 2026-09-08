@@ -149,6 +149,9 @@ public sealed partial class VoxelManager
 		{
 			var pair = _terrainSweepPages[_terrainSweepIndex++];
 			if ( _terrainSweepIndex == _terrainSweepPages.Length ) _terrainSweepIndex = 0;
+			// Cold pages have nothing to evict. Pin/install stamps their grace time
+			// when samples return, so they do not need interest checks while cold.
+			if ( !pair.Value.IsResident ) continue;
 			var size = TerrainField.SampleSpacing * TerrainField.SamplesPerPageAxis;
 			var origin = new Vector3( pair.Key.x, pair.Key.y, pair.Key.z ) * size;
 			var bounds = new SdfWorldAabb( origin, origin + Vector3.One * size );
