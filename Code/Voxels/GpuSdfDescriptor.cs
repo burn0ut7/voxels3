@@ -47,11 +47,11 @@ internal readonly record struct GpuSdfDescriptor(
 	public bool MatchesField( TerrainFieldSnapshot field ) => FieldEpoch == field.Epoch &&
 		EditRevision == field.GetCorrectionRange( SamplingBounds, out _, out _ );
 
-	public GpuSdfDescriptor WithField( TerrainFieldSnapshot field )
+	public GpuSdfDescriptor WithField( TerrainFieldSnapshot field, bool captureRegion = true )
 	{
 		var revision = field.GetCorrectionRange( SamplingBounds, out _, out _ );
 		if ( EditRevision == revision && FieldEpoch == field.Epoch && (revision == 0 || Field is not null) ) return this;
-		return this with { Field = revision == 0 ? null : field.CaptureRegion( SamplingBounds, pinSamples: false ), EditRevision = revision, FieldEpoch = field.Epoch };
+		return this with { Field = !captureRegion || revision == 0 ? null : field.CaptureRegion( SamplingBounds, pinSamples: false ), EditRevision = revision, FieldEpoch = field.Epoch };
 	}
 
 	// Full immutable snapshots may differ because an unrelated page changed.
@@ -113,11 +113,11 @@ internal readonly record struct GpuTransitionDescriptor(
 	public bool MatchesField( TerrainFieldSnapshot field ) => FieldEpoch == field.Epoch &&
 		EditRevision == field.GetCorrectionRange( SamplingBounds, out _, out _ );
 
-	public GpuTransitionDescriptor WithField( TerrainFieldSnapshot field )
+	public GpuTransitionDescriptor WithField( TerrainFieldSnapshot field, bool captureRegion = true )
 	{
 		var revision = field.GetCorrectionRange( SamplingBounds, out _, out _ );
 		if ( EditRevision == revision && FieldEpoch == field.Epoch && (revision == 0 || Field is not null) ) return this;
-		return this with { Field = revision == 0 ? null : field.CaptureRegion( SamplingBounds, pinSamples: false ), EditRevision = revision, FieldEpoch = field.Epoch };
+		return this with { Field = !captureRegion || revision == 0 ? null : field.CaptureRegion( SamplingBounds, pinSamples: false ), EditRevision = revision, FieldEpoch = field.Epoch };
 	}
 
 	public bool Equals( GpuTransitionDescriptor other ) => Key == other.Key &&

@@ -3171,6 +3171,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private PendingClipboxReadiness CapturePendingClipboxReadiness()
 	{
 		if ( !_clipboxPlacementPending || _gpuMesher is null ) return default;
+		// Readiness compares descriptor identity; only mesh work needs a regional reader.
 		Array.Clear( _pendingMissingByLevel );
 		var missingTransitions = 0;
 		foreach ( var coordinate in _levels[0].Entering )
@@ -3180,7 +3181,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				_pendingMissingByLevel[0]++;
 				continue;
 			}
-			var descriptor = CreateRegularDescriptor( 0, coordinate );
+			var descriptor = CreateRegularDescriptor( 0, coordinate, captureRegion: false );
 			if ( _gpuMesher.Contains( descriptor ) && !_gpuMesher.IsResident( descriptor ) )
 			{
 				_pendingMissingByLevel[0]++;
@@ -3190,7 +3191,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			foreach ( var coordinate in _levels[level].Readiness )
 			{
-				if ( !_gpuMesher.IsResident( CreateRegularDescriptor( level, coordinate ) ) )
+				if ( !_gpuMesher.IsResident( CreateRegularDescriptor( level, coordinate, captureRegion: false ) ) )
 				{
 					_pendingMissingByLevel[level]++;
 				}
@@ -3200,7 +3201,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			foreach ( var key in pair.Readiness )
 			{
-				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key ) ) )
+				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key, captureRegion: false ) ) )
 				{
 					missingTransitions++;
 				}
@@ -3209,13 +3210,13 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
 	}
 
-	private GpuSdfDescriptor CreateRegularDescriptor( int level, Vector3Int coordinate ) => new GpuSdfDescriptor(
+	private GpuSdfDescriptor CreateRegularDescriptor( int level, Vector3Int coordinate, bool captureRegion = true ) => new GpuSdfDescriptor(
 			new GpuMeshRegionKey( level, coordinate ),
 			_appliedCellsPerAxis,
 			CellSizeForLevel( level ),
 			CurrentTerrainSettings,
 		ProceduralTerrainSdf.CurrentVersion,
-		_terrainContentRevision ).WithField( CurrentField );
+		_terrainContentRevision ).WithField( CurrentField, captureRegion );
 
 	private ChunkDensityClassification ClassifyClipboxRegion( int level, Vector3Int coordinate )
 	{
@@ -3244,14 +3245,14 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		return classification;
 	}
 
-	private GpuTransitionDescriptor CreateTransitionDescriptor( GpuTransitionKey key ) => new GpuTransitionDescriptor(
+	private GpuTransitionDescriptor CreateTransitionDescriptor( GpuTransitionKey key, bool captureRegion = true ) => new GpuTransitionDescriptor(
 		key,
 		_appliedCellsPerAxis,
 		CellSizeForLevel( key.FineLevel ),
 		CellSizeForLevel( key.CoarseLevel ),
 		CurrentTerrainSettings,
 		ProceduralTerrainSdf.CurrentVersion,
-		_terrainContentRevision ).WithField( CurrentField );
+		_terrainContentRevision ).WithField( CurrentField, captureRegion );
 
 	private bool RetainsLod0PlacementCoordinate( Vector3Int coordinate ) =>
 		_levels[0].Active.Contains( coordinate ) ||

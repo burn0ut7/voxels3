@@ -15668,3 +15668,118 @@ Final collision source SHA256186a29ee1a262be235392df03ecf7d545fdacfa3577ead3a414
 Private experiment saves and raw evidence retained. Final source is the exact
 built/tested candidate; runtime/editor builds0warnings/errors. Documentation and
 diff checks pass. See reuse-final-{runtime,world,hashes}.json.
+
+### SIMPLIFICATION-S1-001/v1 — readiness identity without regional readers
+
+Defined before runs on 2026-09-08, source 8a3138c. User requires before/after
+performance and explicit human approval for each simplification before acceptance
+or proceeding. No candidate commit/push before that approval. S1 is restricted
+to removing regional-reader construction from readiness-only comparisons;
+retain equality, source/content/epoch checks, pending/resident precedence,
+cancellation and immutable job inputs. S2 enumerator work is separate.
+
+Today's saved world is f58322c9-b837-4c0b-b555-6199124a290d revision996/167pages,
+slot f58322c9b8374c0bb5556199124a290d, not the previous971/160 fixture. This is a
+new fixed source/world comparison, not a new version or rerun of COLLISION-FOCUSED.
+Preserve the user world and all page files; backup and hashes in
+ValidationEvidence/SimplificationS1/before-source.json and world-before.json.
+No terrain mutations during timed routes. Scene authored hash and settings
+must remain unchanged. One local host/no peers, engine26.09.01c, same machine
+(Ryzen7 9800X3D/RTX5090), viewport/graphics/FOV, fps_max1000.
+
+B1 baseline then C1 candidate: cold editor process for each, normal Play at
+authored spawn, at least30s warmup plus full visual/collision/storage settlement.
+Canonical speed2500,distance50000,Yreach25000,Z0,one loop; seed1337/v5,
+32cells/16units,gameplay8,visual512,levels0..6,half extents4/8. Normal production
+visual drain/two render advances/10s stationary phase unchanged. Capture exact
+run results, source/environment, startup/final field and geometry diagnostics,
+all queues and collision readiness, process/GPU memory, allocations, GC,
+frame/GPU p95/p99/max and publication/placement metrics. No manual recentering.
+
+Benefit criterion: eliminate CaptureRegion/dictionary creation for readiness-only
+identity checks by source-path inspection, supported by allocation/CPU evidence
+where available. No FPS benefit claim merely from fewer constructors. Numerical
+nonregression screen uses the previous focused-route tolerances: frame/GPU
+p95/p99 allowance max(5%,0.25ms,observed control spread), allocations/frame and
+process/GPU peak5% (process noise allowance at least16MiB), collision ready tails
+max(5%,10ms,control spread), no material backlog/drain regression. Preserve maxima
+and isolated spikes; those tolerances do not authorize hiding unexplained harm.
+No new exceptions/native failures, all4913collision regions eventually ready,
+zero visual/transition/placement work after full drain, matching fixed-placement
+geometry fingerprints and user world/page contents. Timings describe this route
+only; existing feature qualification limits remain. If the initial pair is
+inconclusive, retain it and run one fresh B2/C2 pair unchanged; no cherry-picking.
+
+After candidate measurements, pause with exact before/after results and human
+checks: traverse streaming boundaries in both directions, inspect near/far LOD
+seams, dig/build near positive/negative chunk edges, travel away/return to edited
+terrain, reload saved edits, and observe collision/actor support and remote
+convergence where a second player is available. Unperformed checks stay pending;
+human approval is mandatory and does not follow from tool success alone.
+
+#### S1 baseline and candidate source
+
+B1 saved eb43bdf2b6064a6d8a55663c0ffb4c0f, cold editor PID6032,
+121.93613s,95314frames:781.6336FPS,p95/p99/max2.0544/4.1604/137.512ms,
+GPU p95/p991.7342567/2.2325516ms,31697.145allocated bytes/frame,
+process peak3961495552bytes,GPU peak2879324496bytes,exceptions0.
+Final production observation4913ready,all visual/transition/collision queues0,
+no placement pending,grounded. Source and raw route/startup/settled/world in
+ValidationEvidence/SimplificationS1. A results-file tail read during B1 was
+cancelled after running slowly; no source/build or diagnostic capture ran during
+the timed window beyond sparse runner/result polling. Preserve this environmental
+observation rather than treating the137.512msmaximum as an attributed terrain cost.
+
+After Stop succeeded, closing the baseline editor left an Error window. Log
+reported 'Exception when destroying prefabs/terrain_player.prefab' with
+'Assert: AreEqual 4 components weren't deleted!', then Source2Shutdown.
+The read-only MCP status timed out; no timed-out mutation was retried. Preserved
+b1-editor.log, then terminated the already-shutting-down PID6032 to reopen.
+This is a baseline lifecycle failure, not a candidate performance failure.
+
+Candidate C1 changes only GpuSdfDescriptor.cs and VoxelManager.cs. Three
+CapturePendingClipboxReadiness call sites pass captureRegion:false to the same
+existing factories/WithField implementation; GetCorrectionRange, configuration,
+revision,epoch and equality remain unchanged. Mesh work keeps default capture.
+No new cache, field/index representation, profiler schema, scheduler, collision
+or shader change. Runtime and editor builds succeeded with0warnings/errors;
+cold candidate editor PID13524 compiled successfully. Source hashes in
+c1-source.json. Candidate acceptance remains pending both measurement and human.
+
+#### S1 C1 result and human checkpoint
+
+C1 run2cb052e5075646b7b7f28effbf126ff2, cold PID13524,97879frames:
+802.6662FPS (+2.69%),framep95/p99/max1.9885/3.9422/131.6929ms;
+allocated30523.283bytes/frame (-3.70%). GPU p95/p991.676321/2.1641254ms,
+but maximum8.799553ms versus3.9362907baseline. Process peak4018667520bytes
+(+1.44%),GPU2828992848bytes (-1.75%). Stationary869.9751FPS versus880.99396;
+framep95/p991.8862/2.866ms versus1.8018/2.7673. No exceptions/failures.
+All4913collision regions ready after full drain; visual/transition/placement
+queues empty. Moving snapshot collision readiness differs from final drain.
+
+Startup and final regular fingerprints match; final topologyA6D8669EB93009A7,
+positionsF2D367D5D09CF55E. Transition digests match,zero mismatches/unsafe commits.
+Startup1110bodies/42172308payload bytes/10support patches; final1130bodies/
+43146828bytes, matching both candidates. Peak gameplay backlog127both. Scheduled
+publicationp95 90.8292to90.0519ms,p99130.0935to131.1629ms; maximum192.8351to235.0243ms.
+Maximum placement-level lag4to6; maximum synchronous streaming11.3592to17.0086ms;
+maximum placement preparation9.9011to16.3512ms. These increases remain unexplained
+and must not be hidden behind average FPS. Percentile/memory/allocation screens
+are within their predeclared tolerances; overall performance is not accepted.
+
+Final player36.386,31.368,-29.741 in B1 and3.082,8.474,-31.428 in C1 settle within
+same chunk0,0,-1; dynamic contact equivalence remains unproven. Start positions
+differed by less than0.001unit from normal physics settling, not recentering.
+A1000x562 production screenshot inspected after C1 showed edited terrain rendered
+in the player's view; no exhaustive seam or live tool acceptance is claimed.
+Candidate live compile succeeds, no new error output. Original checkpoint81and
+current83have identical identity and167 coordinate/revision/hash records; all
+167payload hashes verified. Five unreferenced older page files were removed by
+normal store cleanup and remain in the original backup; no current data changed.
+
+Decision: pause here for human feature review under the user's explicit request
+to stop after before/after performance. A fresh B2/C2 pair is warranted for the
+outliers before performance acceptance; not yet run. Human approval is absent.
+No commit/push, no S2, no blanket feature/regression claim. Candidate remains in
+Play for inspection. ValidationEvidence/SimplificationS1/Review.md contains the
+readable comparison, limitations and exact human checks. Preserve all raw data.

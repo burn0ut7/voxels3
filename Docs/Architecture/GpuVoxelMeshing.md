@@ -528,6 +528,15 @@ before a useful diagnostic reaches the console.
 
 ## Readiness lookup allocation constraint
 
+S1 candidate (2026-09-08, awaiting human acceptance): the manager's three
+`CapturePendingClipboxReadiness` descriptor factories use `captureRegion:false`.
+The same descriptor construction still computes regional correction revision and
+field epoch, but skips acquiring a regional field reader used only for equality.
+`Contains`, resident lookup, cancellation precedence and descriptor equality are
+unchanged. Every mesh scheduling caller retains the default regional capture;
+this adds no readiness cache or independently mutable field state. The
+`SIMPLIFICATION-S1-001/v1` ledger entry owns before/after results and human checks.
+
 The current working-tree candidate uses direct array/List iteration in both
 GpuVoxelMesher.Contains overloads. Repeated readiness checks must not allocate
 captured predicates. Resident/pending precedence, descriptor equality, and the
