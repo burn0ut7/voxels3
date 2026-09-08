@@ -14825,3 +14825,12 @@ live-player control or a naturally observed overlap through production streaming
 Do not substitute diagnostic fingerprint reads, bypass restore guards, add test-only
 hooks, or call a zero stale count a successful stale-rejection test. The new counters
 remain available. Original saved world106/34/checkpoint41 was not replaced.
+
+Control-capability correction: a later exact metadata search found
+mcp__node_repl__js. The earlier claim that the session exposed no such tool was
+too strong; the earlier search did not find it. Two read-only initialization /
+sky.list_windows attempts both returned `Transport closed` before yielding any
+window state. No UI input was sent. Native control remains unusable in this
+observation, but the reason is the closed tool transport, not absence of the tool
+definition. The memory-criterion proposal also remains unapproved. Repeated
+acceptance audits cannot close the remaining gates under these conditions.
