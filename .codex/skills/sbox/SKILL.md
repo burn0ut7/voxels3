@@ -21,6 +21,17 @@ description: Build and debug Facepunch s&box C# games and editor tools using ins
 - For visual outcomes, inspect targeted MCP screenshots before claiming visual success.
   Follow [visual verification](references/visuals.md); capture only when it resolves a question.
 
+## Visible, interactive clients
+
+Never launch or use a headless s&box client, including for automated validation,
+benchmarks, or multiplayer checks. Every client must have a visible game window or
+editor play view so the player can watch what is happening and interact at any time.
+Do not hide, minimize, move off-screen, or disable player input on a client. Automated
+runs must allow the player to interrupt automation and take control. Screenshots,
+streams, logs, and MCP access do not replace a visible, interactive client.
+If a visible, interactive client is unavailable, continue file-based work and report
+runtime checks as blocked; do not substitute a headless run.
+
 ## Load only what the task needs
 
 | Need | Reference |
