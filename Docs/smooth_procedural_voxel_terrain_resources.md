@@ -51,6 +51,19 @@ claims. These references do not by themselves select an optimization or change r
 
 ## Open-Source Terrain Systems
 
+### Terrain Occlusion
+
+The [terrain occlusion research](Research/TerrainOcclusion.md) owns the project's
+no-duplicate-terrain-depth-pass constraint and candidate evaluation. These
+sources establish rendering mechanisms, not an accepted occlusion implementation.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Facepunch terrain visibility, pinned source](https://github.com/Facepunch/sbox-public/blob/a0b002cdbff9abfade9afd4cb205230a55120121/engine/Sandbox.Engine/Scene/Components/Terrain/TerrainClipmapSceneObject.cs) | Inspect CPU frustum culling of instanced heightfield patches and separate shadow behavior. | No volumetric cave geometry or terrain-to-terrain occlusion test in this path; public source is not installed native-engine evidence. Related layout and heightmap sources are linked in the research owner. |
+| [NVIDIA GPU Gems: Efficient Occlusion Culling](https://developer.nvidia.com/gpugems/gpugems/part-v-performance-and-practicalities/chapter-29-efficient-occlusion-culling) | Distinguish geometry rejection from early depth rejection; study ordering, bounds, and synchronization overhead. | Legacy query APIs and performance examples do not establish s&box capabilities or timings. Its tolerance for temporal popping is not adopted. |
+
+### Volumetric Systems
+
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |
 | --- | --- | --- | --- |
 | [Zylann/godot_voxel](https://github.com/Zylann/godot_voxel) | Maintained Godot module for blocky and smooth voxel terrain, paging, generators, editing, LOD, and Transvoxel transitions. | Investigating mature chunk ownership, LOD, transitions, streaming, editing, or engine integration. | Primarily CPU-oriented and shaped by Godot APIs. Study responsibilities and failure modes; do not treat its CPU work division as the GPU-first Voxels3 design. |

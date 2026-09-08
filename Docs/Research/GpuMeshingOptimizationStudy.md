@@ -116,7 +116,7 @@ Reference searches covered authored Code, Editor, Assets and ProjectSettings inp
 
 **Decline wholesale ray rendering for this slice.** Direct sphere tracing needs conservative distance steps or derivative bounds; the project's composed density field is not established as an exact Euclidean distance field. Sparse voxel ray systems additionally change representation, traversal, depth, materials and renderer integration. They may avoid mesh storage, but replace a cached cost with view-dependent work. [John C. Hart, Sphere tracing, 1996](https://experts.illinois.edu/en/publications/sphere-tracing-a-geometric-method-for-the-antialiased-ray-tracing/).
 
-Similarly, blocky greedy meshing solves a different surface model; heightfield clipmap topology cannot preserve caves. Hi-Z occlusion could reduce hidden terrain rendering, but needs trustworthy depth timing and conservative behavior under camera motion. Frustum simplification or draw compaction should wait for measured visibility/render cost. None warrants a second renderer today.
+Similarly, blocky greedy meshing solves a different surface model; heightfield clipmap topology cannot preserve caves. The [terrain occlusion research](TerrainOcclusion.md) now owns hidden-terrain alternatives and the user's 2026-09-08 prohibition on an additional terrain depth draw. Any depth reuse needs trustworthy timing and conservative behavior under camera motion and edits; this study does not authorize a duplicate depth pass. Frustum simplification or draw compaction should wait for measured visibility/render cost. None warrants a second renderer today.
 
 ## 8. Proposed next slice and acceptance
 
