@@ -105,9 +105,10 @@ flowchart TD
     X -. exclusions and placement .-> P
 ```
 
-The recipe owns immutable parameters, explicit seed salts, landform weights,
-height evaluation, temperature/moisture fields, biome selection and conservative
-bounds. A compact XY query returns height, landform weights, climate values,
+The recipe identifies the immutable configuration shared by the modules below;
+it is not one class implementing all their algorithms. Those modules own explicit
+seed channels, landform evaluation, climate, biome selection and conservative
+bounds under one field specification. A compact XY query returns height, landform weights, climate values,
 biome weights and forest suitability. Density queries need only the landform,
 height and cave terms for this slice; avoid evaluating climate when a consumer
 only needs density. Slope can be derived from documented, fixed-offset samples of
@@ -125,6 +126,91 @@ revision. Their owner cancels obsolete work and rejects late completions. A
 recipe replacement invalidates all derivatives; a local edit invalidates only
 affected terrain and population dependencies, including necessary halos.
 
+### Deep modules and narrow contracts
+
+Design-review requirement: organize generation into deep modules that hide
+substantial implementation behind small, meaningful interfaces. A large script
+with separate methods, or partial files sharing all of its private state, does
+not satisfy this requirement. Module boundaries follow ownership and reasons to
+change, rather than one class per noise operation or one generator per biome.
+
+The following is the proposed first-slice responsibility map. Names are design
+labels; concrete types and signatures will be chosen from the implementation.
+
+| Module | Small consumer-facing contract | Complexity hidden inside / state owner |
+| --- | --- | --- |
+| Landforms | Evaluate unedited exterior height/landform weights at XY; conservatively bound height over an area. | Relief controls, ridges, octaves, blending, seed channels and height bounds. Immutable settings; build-local XY reuse belongs to its evaluator, not a global atlas. |
+| Climate and biomes | Evaluate climate and normalized biome weights from XY and the landform result; validate configured climate coverage and transition constraints. | Temperature/moisture fields, elevation adjustment, eligibility, normalization and forbidden-neighbor separation. Keep climate and selection together initially because they jointly enforce the transition invariant. Immutable settings and a small biome definition table. |
+| Base terrain field | Sample unedited volumetric density; conservatively classify a spatial bound; prepare the immutable GPU description. | Composition of the landform exterior and existing caves, CPU/HLSL agreement, sign conventions and field bounds. Evolve `ProceduralTerrainSdf` into this boundary rather than keeping an old sampler alongside a new one. |
+| Surface appearance | Resolve derived terrain appearance from biome weights and surface properties. | Small palette, slope/height blending and edited/cave appearance rules; shader-side evaluation or emitted attributes selected during implementation. Owns visual configuration, never authoritative density or new mutable voxel materials. |
+| Population | Request/retire candidates for a bounded area and source revision; return bounded instance descriptors and readiness. | Stable IDs, spacing/neighbor halos, suitability, support checks, cancellation and candidate residency. This owner also manages the bounded realization queue; engine operations occur only on supported threads. |
+
+Existing `TerrainField` remains the separate authoritative mutable-state module.
+Its canonical field access and commit/invalidation boundary are reused. Render
+meshing, collision, storage and replication stay downstream with their existing
+owners; none implements its own biome selection or edits the procedural recipe.
+
+An immutable recipe configuration supplies each module only its relevant settings
+plus shared world identity. Its configuration/version validation remains canonical
+and includes all field, climate and population dependencies. No module receives
+the manager, scene, service locator or a mutable catch-all world context merely to
+obtain its inputs. Results are immutable values or bounded owned buffers with an
+explicit lifetime, not references into another module's mutable internals.
+
+Dependency direction is explicit:
+
+```text
+landforms -> base terrain field -> TerrainField -> render/collision
+landform result + coordinates -> climate/biomes -> appearance/population
+TerrainField regional reader -> population support checks
+```
+
+The arrows describe consumed inputs, not mandatory intermediate arrays or serial
+whole-world passes. The generation boundary may call landform evaluation directly
+and reuse results in a build-local workspace. Consumers ask for density, surface
+semantics or population as needed; a density-only collision query need not pay
+for climate, appearance or tree generation. Avoid virtual dispatch per sample,
+allocations per query and a universal result that eagerly computes every module.
+Use concrete calls and compact values initially; introduce interfaces only where
+they provide an actual boundary benefit, not to satisfy a class-count target.
+
+`VoxelManager` owns lifecycle wiring: validate/apply configuration, pass bounded
+requests to existing schedulers, and publish or retire completed work. It must not
+contain biome eligibility tables, noise recipes, tree-spacing rules, appearance
+selection or future road/river algorithms. This slice does not redesign unrelated
+manager responsibilities; it prevents the new subsystem from expanding that
+coupling. A new coordinator may be justified by actual lifecycle complexity, but
+must not become another all-purpose generator.
+
+For each requested region, the owner admits work under its existing budget,
+captures immutable inputs, computes with bounded scratch, and integrates results
+only if the world epoch, recipe and relevant regional revisions still match.
+Modules do not start hidden background tasks or bypass scheduler admission.
+Pure evaluation can run on workers with supported data; engine realization
+remains at the explicit integration boundary. A cancelled result's owner releases
+its scratch and retained input references. Account for buffers and candidate
+caps per job and per active interest, not just per module instance.
+
+Keep CPU/HLSL implementations aligned with the same responsibility boundaries:
+landform arithmetic and base-field composition have corresponding shader includes
+when required, and semantic consumers share one biome rule specification. Do not
+introduce biome arithmetic into the mesher itself. A general cross-language code
+generator is not required by this proposal; manually mirrored rules remain an
+explicit parity and versioning obligation.
+
+New biomes should normally add definition/palette/population data inside these
+owners. A genuinely new landform algorithm changes Landforms; a new cave algorithm
+changes the base-field implementation; neither requires editing the manager or
+collision/streaming code. Future regional feature planning gets its own module
+only when implemented, supplying immutable bounded constraints to these existing
+inputs. No empty planner interface or plugin registry is needed now.
+
+Before accepting implementation, review that each module hides its algorithm,
+owns its state/lifetime and exposes only the operations its real consumers need.
+Reject cycles, duplicated samplers, shared mutable configuration, one-line wrapper
+layers, per-biome subclasses with duplicated pipelines, and a manager that reaches
+into module internals. Splitting files alone is not architectural separation.
+
 ## 4. Small biome recipe
 
 ### When biome selection happens
@@ -135,6 +221,21 @@ height then permits an elevation adjustment to temperature; biome weights are
 selected from those inputs before materials and vegetation are generated.
 Density and biome selection share their inputs but have separate outputs.
 The first slice does not use a selected biome label to determine terrain height.
+
+"Height first" means the landform height calculation precedes height-dependent
+biome selection. It does not mean allocating a full heightmap or finishing the
+world before choosing biomes. Broad climate fields can be evaluated independently
+of landforms; only the elevation adjustment needs their result. In the first slice,
+the landform exterior is the final unedited exterior because there are no feature
+constraints. Caves still make the complete terrain volumetric.
+
+As future features arrive, distinguish preliminary regional elevation from the
+final constrained exterior. Regional drainage/site/road planning consumes the
+preliminary context and supplies bounded terrain constraints before final field
+composition and population. The planner must not query the final field that
+depends on its own output. If biome-specific local relief is later needed, assign
+it an explicit bounded refinement step and stable climate reference height;
+do not let final height and biome selection recursively redefine one another.
 
 This is logical dependency order, not an up-front pass over the infinite world.
 Any requested coordinate can evaluate the same regional fields on demand, without
@@ -472,12 +573,13 @@ unless seed transport itself is deliberately redesigned and validated.
    scene settings; select a finite coordinate envelope and new world identity.
    Record exact proposed tests before running them. Capture a comparable pre-change
    figure-eight if the ledger has no accepted comparable baseline.
-2. **Landform and climate recipe.** Implement regional controls, height, temperature,
+2. **Landform and climate modules.** Establish the deep-module contracts in section 3
+   while implementing regional controls, height, temperature,
    moisture, compatible biome weights, transition bounds and cave composition,
    CPU/GPU mirror, conservative bounds, and settings/version propagation together.
    Validate playable geometry before adding trees. Remove superseded recipe paths
    in the same change; Git preserves the old version.
-3. **Biome appearance and forest.** Add the small palette and deterministic bounded
+3. **Appearance and population modules.** Add the small palette and deterministic bounded
    population, near collision, culling and staged realization. Verify visible
    transitions, support after edits, and actual steady-state rendering cost.
 4. **Qualification.** Repeat the canonical performance route unchanged, plus fixed
