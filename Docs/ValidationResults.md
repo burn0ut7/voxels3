@@ -15783,3 +15783,12 @@ outliers before performance acceptance; not yet run. Human approval is absent.
 No commit/push, no S2, no blanket feature/regression claim. Candidate remains in
 Play for inspection. ValidationEvidence/SimplificationS1/Review.md contains the
 readable comparison, limitations and exact human checks. Preserve all raw data.
+
+#### S1 explicit human acceptance — 2026-09-08
+
+User: "I accept let's move on to s2". S1 implementation is already committed
+as b5a354b (UPDATE S1). Record acceptance of the presented first-pair results
+and permission to advance. The GPU/placement/synchronous maxima and lifecycle
+limitations above remain unresolved observations; B2/C2 was not run. This is
+human acceptance with those disclosed limits, not a claim that every listed
+feature check was performed or that repeatability was established.

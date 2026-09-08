@@ -1,7 +1,9 @@
 # S1: readiness reader removal — human review
 
-2026-09-08. **Candidate applied; not accepted, committed or pushed.** Paused
-after the first before/after pair as requested. S2 has not started.
+2026-09-08. **Accepted by the user:** "I accept let's move on to s2".
+Implementation is committed as `b5a354b`. Acceptance follows the disclosed
+first-pair results and outliers below; no repeat pair or exhaustive completion
+of the human checklist is claimed. S2 may now proceed.
 
 ## Change
 

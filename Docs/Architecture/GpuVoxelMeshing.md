@@ -528,7 +528,7 @@ before a useful diagnostic reaches the console.
 
 ## Readiness lookup allocation constraint
 
-S1 candidate (2026-09-08, awaiting human acceptance): the manager's three
+S1 (2026-09-08, explicitly accepted by the user): the manager's three
 `CapturePendingClipboxReadiness` descriptor factories use `captureRegion:false`.
 The same descriptor construction still computes regional correction revision and
 field epoch, but skips acquiring a regional field reader used only for equality.

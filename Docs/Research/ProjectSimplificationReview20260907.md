@@ -64,13 +64,14 @@ These are candidates, not instructions to remove working code immediately. Each 
 
 ### S1 — Stop constructing job inputs for readiness-only comparisons
 
-2026-09-08 progress: candidate under evaluation on current source `8a3138c`,
+2026-09-08 progress: user accepted S1 (implementation `b5a354b`), tested against `8a3138c`,
 using saved world revision996/167pages. Storage now has a page index and
 `WithField` already reuses matching readers; the remaining three repeated
 readiness constructions are the scope of this candidate. See
 `SIMPLIFICATION-S1-001/v1` in the [ledger](../ValidationResults.md).
 Before/after performance and explicit human approval are required before
-acceptance, commit/push, or advancing to S2.
+acceptance, commit/push, or advancing to S2. The user has now supplied that
+approval; the disclosed outliers and unperformed checks remain in the ledger.
 
 **Priority: high. Confidence: high in repeated work; benefit unmeasured on current source.** `CapturePendingClipboxReadiness` calls `CreateRegularDescriptor`/`CreateTransitionDescriptor`; `WithField` queries correction bounds and captures a regional reader. `TryCaptureRegion` can enumerate the page directory and allocate a dictionary/snapshot. The same descriptor equality deliberately ignores the reader reference and compares configuration, region revision and epoch.
 
