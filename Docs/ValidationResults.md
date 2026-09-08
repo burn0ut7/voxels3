@@ -14797,3 +14797,31 @@ checkpoint41/Saved, authored0, resident/retained4456448bytes, reservations0 and
 all reported work queues settled. Engine reports compile success with0errors.
 Pass for the specified status exposure and unchanged observed world only; no
 stale completion or capacity denial occurred. [Raw status](ValidationEvidence/ChunkStorage/read-status-diagnostic.json).
+
+### In-session read-overlap setup audit — 2026-09-08
+
+Source5b6a8a9, visible basic_example Play, successful compile0errors. No fixture
+load, terrain mutation, player movement or test run was performed in this audit.
+The planned overlap needs a real streaming consumer to request old-field pages
+while a replacement prepares. Source rules out two proposed setups: queued edits
+prevent StartTerrainRestore, and TryQueueTerrainEdit rejects a pending restore;
+the regional fingerprint uses worker PinForRead directly, so it cannot establish
+an eight-page read-pump overlap. Collision traces query published geometry only.
+
+Native MCP list_scenes reported an authored Scene and active Game both named
+basic_example. find_game_objects with PlayerController, once for active scene
+and once for scenes/basic_example.scene, returned the same player GUID
+fde76e17-1db9-4ccc-a193-897fddbc6239. Installed tools/Code/Mcp/Scene.cs resolves
+SetGameObject via first matching GUID across editor sessions, with no scene
+selector; the authored session precedes Game in the observed list. Therefore
+that tool cannot reliably relocate the live player separately from authored state.
+No transform mutation was attempted. The available Computer Use skill requires
+node_repl with @oai/sky; this session exposes no such tool and its CUA interface
+explicitly disables native apps. No alternate native-control bypass was used.
+
+This establishes a setup/tooling limitation, not that stale completion is impossible
+or that its runtime rejection passes. A future overlap run requires a supported
+live-player control or a naturally observed overlap through production streaming.
+Do not substitute diagnostic fingerprint reads, bypass restore guards, add test-only
+hooks, or call a zero stale count a successful stale-rejection test. The new counters
+remain available. Original saved world106/34/checkpoint41 was not replaced.
