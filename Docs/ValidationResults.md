@@ -15886,3 +15886,196 @@ User: "I accept. Lets move onto S3". Implementation already committed as
 d4ce975. Acceptance follows the disclosed single-pair GPU/publication maxima
 and final-placement comparison limits. Preserve those observations; no extra
 performance run or exhaustive human-test completion claimed. Proceed to S3.
+
+### SIMPLIFICATION-S3-001/v1 — shared retained-sample percentiles
+
+Defined before runs2026-09-08, baseline6ed6ea1 (accepted S2), saved world
+f58322c9-b837-4c0b-b555-6199124a290d revision997/167pages/checkpoint90.
+Backup/source identities in ValidationEvidence/SimplificationS3. One cold B1/C1
+pair, same canonical scene basic_example authored spawn, >=30s warmup plus
+full visual/collision settlement. One local host/no peers, engine26.09.01c,
+Ryzen7 9800X3D/RTX5090, fps_max1000, same graphics/viewport/FOV. Seed1337/v5,
+32cells/16units,gameplay8,visual512,levels0..6,half extents4/8; speed2500,
+distance50000,Yreach25000,Z0,one loop. Existing visual drain/two render advances/
+10s stationary window unchanged. No terrain edits during timed route.
+Before each route, observe ordinary-play overview after warmup (includes its
+normal periodic completion), retaining frame/memory/profiler readings. These
+trailing histories are not isolated capture-boundary timings; do not claim an
+observer-cost improvement without attribution.
+
+Scope/contract: consolidate only nearest-rank tails of already sorted retained
+samples (ceil(n*p)-1; empty zero; retained maximum). Shared value-type result,
+no heap allocation, no mutable storage. Leave collection, invalid filtering,
+overflow, mean arithmetic, sort/copy ownership and reset at existing owners.
+GPU mean includes overflow; collision mean excludes it and accepts all values;
+frame Samples includes overflow and truncated CPU maximum is null. GPU frame
+empty zero behavior and existing reporting unchanged. No schema change. Do not
+merge these different policies or imply trailing200-frame scopes span the route.
+Source review must establish exact index/empty equivalence and retained limits;
+no new framework, test hooks or synthetic terrain/test implementations.
+
+Benefit is removal of duplicate percentile logic, not promised FPS gain. Same
+S2 screens: CPU/GPU p95/p99 max(5%,0.25ms), allocations/frame and process/GPU
+peaks5% (process16MiB noise floor); collisionready tails max(5%,10ms). Preserve
+maxima, GC, publication tails, backlog and total synchronous cost; report
+unexplained harm. No new exceptions/failures,4913collision regions eventually
+ready, zero pending visual/transition/placement work, no new mismatch/unsafe
+commit. Compare geometry at matching placement only; different physics-settled
+final positions cannot be called identical geometry. Preserve saved page hashes.
+
+Pause after C1 with raw comparison and limits; no extra pairs without presenting
+first result. Human must review ordinary status, figure-eight result fields,
+frame/memory displays and retained diagnostics, plus travel/edit/collision
+behavior before acceptance/commit/S4. Overflow and nonfinite behavior is source
+verified only unless reached naturally; no claim of runtime saturation coverage.
+
+#### S3 B1/C1 result — human checkpoint, performance screen failed
+
+2026-09-08. B1 source6ed6ea1, coldPID83108,run8c0e93757f1647dda523cd5d40dace2b;
+C1 exact4-file hashes in c1-source.json, coldPID23136,
+runa2ae574530d84fc7a108a495e9ed1e07. Full raw results and all comparisons in
+[review](ValidationEvidence/SimplificationS3/Review.md).
+
+MovingFPS855.8884 ->822.2301; framep95/p99/max1.7605/3.7432/22.6898 ->
+1.902/3.8566/24.9356ms; GPUp95/p99/max1.4851093/1.9466877/11.492729 ->
+1.6572475/2.127409/9.6206665ms. Allocation/frame30106.41 ->30352.357bytes;
+processpeak4023349248 ->4017405952bytes; GPU2828992848 ->2879324496bytes.
+StationaryFPS955.01105 ->888.86865; CPUp95/p991.4525/2.2625 ->1.7302/2.6183ms;
+GPUp991.6465187 ->1.9540787ms. These stationary deltas exceed0.25ms screen.
+Collisionreadyp953493.7346 ->3948.6938ms (+13.02%) fails5%/10ms screen;
+p999133.345 ->9565.081ms. Publicationp95/p99/max79.4845/99.3719/169.5454 ->
+84.6328/105.7128/183.3513ms. GCmax11.941 ->15.094ms; synchronousmax14.7528 ->
+17.0085ms, preparationmax13.9807 ->16.1916ms. No causal attribution from one pair.
+
+Schema26/field paths unchanged,24finite ordered distributions each, no truncations.
+Nearest-rank/empty equivalence source reviewed; overflow policies unchanged,
+not saturated at runtime. Ordinary startup overview986.9 ->979.4FPS,
+p95/p991.05/1.88 ->1.09/2.06ms. Trailing histories retained; isolated report
+completion cost not measured. No performance improvement claim.
+
+Builds0warnings/errors and live compile pass; initial missing System import
+failure preserved and corrected before candidate run. Timed exceptions0; no
+engine errors. Existing prefab destruction shutdown Error windows reproduced
+before B1 and after B1, with shutdown logs preserved; candidate shutdown untested.
+All4913ready, queues0, backlog127, placementlag2, mismatches/unsafecommits0both.
+Matching startup/final regular and transition digests; final center(0,0,-1)both
+but player contact positions differ. All167saved page hashes preserved, world997.
+
+Decision: S3 performance screen FAILED; no acceptance/commit/S4. Pause after
+candidate measurements as instructed, with concrete profiler/UI/gameplay checks
+in review. Recommend another matched pair to distinguish repeatability from
+noise; no extra run yet. Net7runtime lines removed; only shared sorted-tail
+calculation, distinct collectors and reporting semantics retained. Human review
+and overflow/nonfinite/boundary/multiplayer qualification remain unperformed.
+
+#### S3 C2 recheck preflight — 2026-09-08
+
+User requests rechecking after performance. One additional cold C2, unchanged
+candidate hashes and SIMPLIFICATION-S3-001/v1 parameters/criteria. Preserve B1/C1;
+compare C2 separately, no cherry-picking. User has authored revision999 since C1.
+Saved latest edits through production save (also private s3-user-999 checkpoint1).
+After normal Play stop/editor exit, copied preserved997 fixture to private
+s3-perf997-recheck slot and selected it using the verified last-world hash/UTF8
+format. Original user world directories are untouched. Original selector bytes
+and fixture identity recorded in c2-selection-before.bin/c2-fixture.json. Restore
+that selector and latest user world after timed C2. This permits the original997
+workload; do not silently benchmark999 as comparable. Normal editor exit succeeded
+this time. No source/build changes; fresh process, authored spawn, >=30s warmup
+and settled queues. Recheck cannot alone establish causal attribution; if the
+slowdown does not repeat, retain both outcomes and disclose baseline uncertainty.
+
+#### S3 C2 recheck result — slowdown repeated, causal attribution unresolved
+
+User-authorized after-only coldPID60840, aac18ba6903b4f9b9d2e8f943f237097.
+Same candidate source hashes,997fixture and v1 scenario. MovingFPS812.5796,
+framep95/p99/max1.9554/3.926/22.1265ms; GPUp95/p99/max1.6794205/2.158165/
+10.867596ms. StationaryFPS870.8183, CPUp95/p991.8063/2.6723ms, GPUp95/p99
+1.6064644/1.9683838ms. Collisionreadyp95/p993926.5022/9537.021ms.
+Allocation/frame30452.008bytes; processpeak4034215936bytes/GPU2828992848bytes.
+Publicationp95/p99/max85.7384/104.2131/179.1841ms; maxsynchronous18.1737ms,
+GCmax13.39ms,placementlag2. Raw evidence and three-column comparison in S3 review.
+
+C2 repeats stationary CPU/GPU and collisionp95 failures against B1; movingFPS
+-5.06% versus B1. Not proof of change causality without fresh before control.
+All4913ready, no queues/errors/exceptions, matching startup/final regular hashes,
+all167fixture pages unchanged. Candidate source remains identical/uncommitted.
+Latest user999 saved outside fixture, original selection restored after C2,
+then original normal save slot loaded through production command. Recheck is
+complete; recommend fresh B2 before acceptance/reversion. Await human decision;
+no S4. Keep B1/C1 failures and no inference that user checks are complete.
+
+#### S3 B2 fresh S2 checkout — preflight 2026-09-08
+
+User explicitly requests preserving S3 while checking out S2 commit d4ce975
+and retesting base performance. One fresh cold B2, same S3-001/v1 workload and
+criteria, preserved997 fixture, no source changes. d4ce975 and original B1
+6ed6ea1 have identical runtime/editor/assets/settings (acceptance docs only).
+Preserve full dirty tracked/untracked S3 state in a named git stash and external
+backup with hashes; detach at exact S2; restore original branch/stash after B2.
+Evidence written outside checkout until restoration. Preserve latest user999
+world separately; select the same private997 fixture for cold startup, restore
+normal999 slot afterward. This is a control to assess baseline repeatability,
+not S3 approval. Keep B1/C1/C2 and compare all four; do not discard outliers.
+
+#### S3 B2 exact S2 control — baseline slowdown also reproduces without S3
+
+2026-09-08: user-authorized clean detached d4ce975 checkout, coldPID27348,
+run0ffee769036b492887f89c792b1c7019, unchanged S3-001/v1 and997fixture.
+S3 preserved in named stash/external hash backup; restored original branch and
+all35files exactly afterward. b2-restoration.json records provenance/stash.
+Original B16ed6ea1 has identical runtime/editor/assets/settings to d4ce975.
+
+B2 FPS814.395; CPUp95/p99/max1.9349/3.958/22.5998ms; GPUp95/p99/max
+1.6634464/2.156496/10.116339ms; stationary889.5804FPS, CPUp95/p991.7385/
+2.6701ms, GPUp95/p991.5470982/1.9342899ms. Collisionready3967.703/9532.226ms.
+Allocation/frame30434.62bytes; processpeak3965829120bytes,GPU2879324496bytes.
+Publicationp95/p99/max86.2092/108.7712/171.7076ms; synchronousmax15.729ms,
+preparationmax15.1067ms,GCmax14.627ms. No errors/exceptions,4913ready,queues0,
+backlog127,lag2; matching startup/final regular and transition geometry,
+zero mismatches/unsafecommits. Existing shutdown Error window after engine
+shutdown recorded; S3 restored in fresh editor with successful live compile.
+
+C2 versus B2: movingFPS -0.22%, stationaryFPS -2.11%, allocation/frame +0.057%,
+processpeak +1.72%,GPUpeak -1.75%; all CPU/GPU p95/p99 within0.25ms allowance,
+collisionready tails within5%/10ms. Original B1 timing failures no longer appear
+against this fresh control. Preserve worse C2 synchronous/preparation/publication/
+GPU maxima in the review. This is evidence against attributing the whole observed
+slowdown to S3, not proof of environmental cause or zero regression. Retain all
+four runs and unchanged criteria. S3 remains uncommitted and pending human
+acceptance; latest999normal user world restored. No S4.
+
+#### S3 C3 preflight — 2026-09-08
+
+User requests another S3 benchmark in the same way as fresh S2 B2. One cold C3,
+unchanged c1-source hashes, same SIMPLIFICATION-S3-001/v1 parameters/criteria,
+private997fixture and >=30s warmup plus settlement. Compare directly with B2
+and retain all previous runs. Preserve latest999user world and restore normal
+slot after run. No source/build edits or workload tuning; human acceptance
+remains separate.
+
+#### S3 C3 result — fresh S3 after B2
+
+2026-09-08 user-requested coldPID43536,3eca70e31d2d4c97b993f2231cd8b7e7,
+unchanged997fixture and candidate hashes/v1 settings. FPS801.78766 versus
+B2814.395 (-1.55%); CPUp95/p99/max1.9961/3.9352/21.4319ms;
+GPUp95/p99/max1.7015934/2.195835/10.490179ms. Stationary905.0111FPS,
+CPUp95/p991.7255/2.65ms versusB21.7385/2.6701ms. Collisionready
+3872.3223/9535.97ms; allocation/frame30547.441bytes; processpeak4018135040bytes,
+GPU2879324496bytes. Publication87.5409/108.6256/173.7582ms,GCmax14.59ms.
+Numerical percentile/memory/allocation/collision screens pass versus fresh B2.
+Maxplacementlag4versus2; synchronous17.7383versus15.729ms,preparation17.0062
+versus15.1067ms remain disclosed unresolved maxima. No blanket acceptance.
+
+All4913ready/queues0, no exceptions/errors, startup regular/transition hashes
+match, mismatches/unsafecommits0. Final center(-1,0,-1) differs from B2(0,0,-1)
+through physics settling, so final regular digest comparison is not equivalent.
+All167fixture page hashes and source hashes unchanged. Latest999world restored
+in original slot. Pre-run shutdown Error window cleared itself before attempted
+termination; missing PID was not retried. Raw c3 evidence and review retained;
+S3 uncommitted/pending human review, no S4, earlier results preserved.
+
+#### S3 human acceptance — 2026-09-08
+
+User: "I accept. Move onto S4". Accept tested candidate with preserved five-run
+evidence and disclosed maxima/final-view limitations. No additional benchmark
+or exhaustive human-test completion claimed. Commit S3 and proceed to S4.

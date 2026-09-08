@@ -1551,22 +1551,15 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		Array.Sort( _sortedPerformanceFrameMilliseconds, 0, _performanceFrameSampleCount );
 		_lastMaximumFrameMilliseconds = _performanceTruncatedFrameSampleCount == 0
 			? _sortedPerformanceFrameMilliseconds[_performanceFrameSampleCount - 1] : null;
-		var p95Index = Math.Clamp(
-			(int)Math.Ceiling( _performanceFrameSampleCount * 0.95d ) - 1,
-			0,
-			_performanceFrameSampleCount - 1 );
-		var p99Index = Math.Clamp(
-			(int)Math.Ceiling( _performanceFrameSampleCount * 0.99d ) - 1,
-			0,
-			_performanceFrameSampleCount - 1 );
+		var tails = PerformanceSampleTails.FromSorted( _sortedPerformanceFrameMilliseconds.AsSpan( 0, _performanceFrameSampleCount ) );
 
 		_lastPerformanceWindowSeconds = _performanceWindowElapsedSeconds;
 		_lastPerformanceFrameSampleCount = _performanceObservedFrameCount;
 		_lastPerformanceTruncatedFrameSampleCount = _performanceTruncatedFrameSampleCount;
 		_lastAverageFramesPerSecond = (float)(
 			_performanceObservedFrameCount * 1000d / _performanceFrameMillisecondsTotal );
-		_lastP95FrameMilliseconds = _sortedPerformanceFrameMilliseconds[p95Index];
-		_lastP99FrameMilliseconds = _sortedPerformanceFrameMilliseconds[p99Index];
+		_lastP95FrameMilliseconds = tails.P95;
+		_lastP99FrameMilliseconds = tails.P99;
 		_lastAverageGpuFrameMilliseconds = _performanceGpuFrameSampleCount > 0
 			? (float)(_performanceGpuFrameMillisecondsTotal / _performanceGpuFrameSampleCount)
 			: 0f;
@@ -1642,14 +1635,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 		Array.Copy( _performanceFrameMilliseconds, _sortedPerformanceFrameMilliseconds, _performanceFrameSampleCount );
 		Array.Sort( _sortedPerformanceFrameMilliseconds, 0, _performanceFrameSampleCount );
-		var p95Index = Math.Clamp(
-			(int)Math.Ceiling( _performanceFrameSampleCount * 0.95d ) - 1,
-			0,
-			_performanceFrameSampleCount - 1 );
-		var p99Index = Math.Clamp(
-			(int)Math.Ceiling( _performanceFrameSampleCount * 0.99d ) - 1,
-			0,
-			_performanceFrameSampleCount - 1 );
+		var tails = PerformanceSampleTails.FromSorted( _sortedPerformanceFrameMilliseconds.AsSpan( 0, _performanceFrameSampleCount ) );
 		CaptureGpuPercentiles( out var gpuP95, out var gpuP99, out var gpuMaximum );
 		_lastStationaryMetrics = new PerformanceStationaryMetrics
 		{
@@ -1659,8 +1645,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				Samples = _performanceObservedFrameCount,
 				TruncatedSamples = _performanceTruncatedFrameSampleCount,
 				AverageFps = (float)(_performanceObservedFrameCount * 1000d / _performanceFrameMillisecondsTotal),
-				P95Milliseconds = _sortedPerformanceFrameMilliseconds[p95Index],
-				P99Milliseconds = _sortedPerformanceFrameMilliseconds[p99Index],
+				P95Milliseconds = tails.P95,
+				P99Milliseconds = tails.P99,
 				MaximumMilliseconds = _performanceTruncatedFrameSampleCount == 0
 					? _sortedPerformanceFrameMilliseconds[_performanceFrameSampleCount - 1] : null,
 				AverageGpuMilliseconds = _performanceGpuFrameSampleCount > 0
@@ -1690,18 +1676,12 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private void CaptureGpuPercentiles( out float p95, out float p99, out float maximum )
 	{
 		var count = Math.Min( _performanceGpuFrameSampleCount, _performanceGpuMilliseconds.Length );
-		if ( count == 0 )
-		{
-			p95 = 0f;
-			p99 = 0f;
-			maximum = 0f;
-			return;
-		}
 		Array.Copy( _performanceGpuMilliseconds, _sortedPerformanceGpuMilliseconds, count );
 		Array.Sort( _sortedPerformanceGpuMilliseconds, 0, count );
-		p95 = _sortedPerformanceGpuMilliseconds[Math.Clamp( (int)Math.Ceiling( count * 0.95d ) - 1, 0, count - 1 )];
-		p99 = _sortedPerformanceGpuMilliseconds[Math.Clamp( (int)Math.Ceiling( count * 0.99d ) - 1, 0, count - 1 )];
-		maximum = _sortedPerformanceGpuMilliseconds[count - 1];
+		var tails = PerformanceSampleTails.FromSorted( _sortedPerformanceGpuMilliseconds.AsSpan( 0, count ) );
+		p95 = tails.P95;
+		p99 = tails.P99;
+		maximum = tails.Maximum;
 	}
 
 	private static PerformanceVisibilityMetrics CreateVisibilityMetrics( GpuVisibilityMeasurement visibility ) => new()

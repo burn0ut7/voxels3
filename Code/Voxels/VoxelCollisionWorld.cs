@@ -562,16 +562,17 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		{
 			var values = _values.ToArray();
 			Array.Sort( values );
+			var tails = PerformanceSampleTails.FromSorted( values );
 			double total = 0;
 			foreach ( var value in values ) total += value;
 			return new PerformanceDistributionMetrics
 			{
 				Samples = values.Length, TruncatedSamples = _truncated,
 				Average = values.Length == 0 ? 0 : (float)(total / values.Length),
-				P50 = values.Length == 0 ? 0 : values[(int)Math.Ceiling( values.Length * 0.5 ) - 1],
-				P95 = values.Length == 0 ? 0 : values[(int)Math.Ceiling( values.Length * 0.95 ) - 1],
-				P99 = values.Length == 0 ? 0 : values[(int)Math.Ceiling( values.Length * 0.99 ) - 1],
-				Maximum = values.Length == 0 ? 0 : values[^1]
+				P50 = tails.P50,
+				P95 = tails.P95,
+				P99 = tails.P99,
+				Maximum = tails.Maximum
 			};
 		}
 	}

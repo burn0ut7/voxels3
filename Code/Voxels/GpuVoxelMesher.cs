@@ -3567,14 +3567,15 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		{
 			if ( _count == 0 ) return new GpuMetricDistribution( 0, _truncated, 0, 0, 0, 0, 0 );
 			Array.Sort( _values, 0, _count );
+			var tails = PerformanceSampleTails.FromSorted( _values.AsSpan( 0, _count ) );
 			return new GpuMetricDistribution(
 				_count,
 				_truncated,
 				(float)(_total / (_count + _truncated)),
-				Percentile( 0.50 ),
-				Percentile( 0.95 ),
-				Percentile( 0.99 ),
-				_values[_count - 1] );
+				tails.P50,
+				tails.P95,
+				tails.P99,
+				tails.Maximum );
 		}
 
 		public GpuQueueDepthMeasurement CompleteQueue()
@@ -3588,12 +3589,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				distribution.P95,
 				distribution.P99,
 				(int)distribution.Maximum );
-		}
-
-		private float Percentile( double percentile )
-		{
-			var index = Math.Clamp( (int)Math.Ceiling( _count * percentile ) - 1, 0, _count - 1 );
-			return _values[index];
 		}
 	}
 

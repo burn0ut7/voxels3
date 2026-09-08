@@ -1,3 +1,5 @@
+using System;
+
 internal sealed class PerformanceTestResult
 {
 	public int SchemaVersion { get; init; }
@@ -454,6 +456,21 @@ internal sealed class PerformanceMeshingThroughputMetrics
 	public PerformanceDistributionMetrics PlayerRouteLagWorldUnits { get; init; }
 	public PerformanceDistributionMetrics PlayerRouteLagChunks { get; init; }
 	public float PostLoopDrainMilliseconds { get; init; }
+}
+
+// Nearest-rank tails of sorted retained samples. Collection, overflow and means
+// belong to the caller; this value does not own or copy sample storage.
+internal readonly record struct PerformanceSampleTails( float P50, float P95, float P99, float Maximum )
+{
+	public static PerformanceSampleTails FromSorted( ReadOnlySpan<float> values )
+	{
+		if ( values.IsEmpty ) return default;
+		return new PerformanceSampleTails(
+			values[(int)Math.Ceiling( values.Length * 0.50d ) - 1],
+			values[(int)Math.Ceiling( values.Length * 0.95d ) - 1],
+			values[(int)Math.Ceiling( values.Length * 0.99d ) - 1],
+			values[^1] );
+	}
 }
 
 internal sealed class PerformanceDistributionMetrics

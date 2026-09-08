@@ -245,3 +245,14 @@ parameters, baseline selection, thresholds, and acceptance decisions. The
 [project instructions](../../AGENTS.md#figure-eight-performance-acceptance) own
 when this primary test must run. Runtime result files are raw evidence; the
 ledger records the reproducible comparison and decision.
+
+## Retained-sample percentile contract
+
+S3 (2026-09-08, explicitly accepted by the user): PerformanceSampleTails shares only
+nearest-rank p50/p95/p99 and retained maximum for sorted spans; empty tails are
+zero. It owns no storage. GPU, collision and manager keep their collection,
+copy/sort, invalid-value, overflow, mean and reset policies. GPU averages all
+valid observed values including overflow; collision averages retained values.
+CPU frame maximum remains null when truncated. Serialized result fields and
+moving/stationary/trailing-profiler window meanings do not change. See
+SIMPLIFICATION-S3-001/v1 in the ledger for performance failures and human gate.

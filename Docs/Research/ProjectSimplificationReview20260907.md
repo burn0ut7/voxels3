@@ -98,6 +98,15 @@ Investigate retaining concrete private dictionary ownership for internal iterati
 
 ### S3 — Consolidate bounded distribution reporting
 
+2026-09-08 candidate: share only identical nearest-rank retained-sample tails
+across GPU/collision/frame reporting. Preserve distinct collection, overflow,
+mean and window policies; no schema migration. Before/after pair completed,
+but stationary/collision timing screens failed against the original baseline.
+A fresh exact-S2 control also runs slower; latest S2/S3 screens pass with
+isolated maxima qualified. User accepted S3 on2026-09-08; see
+[S3 checkpoint](../ValidationEvidence/SimplificationS3/Review.md). Broader
+collector or measurement-semantic changes are not part of this candidate.
+
 **Priority: high for clarity; medium implementation risk.** GPU and collision sample containers, manager frame percentiles and result mappings duplicate a responsibility but currently differ in semantics. First settle the profiler contract above. Then replace only genuinely identical collection/summary logic with one small bounded production owner; remove the superseded implementations in the same change.
 
 Do not build a telemetry framework, reflection-based exporter or generic benchmark runner. Keep movement, deformation and GPU lifecycle ownership separate. Preserve historical JSON interpretation and declare schema changes when metric meaning changes. Moving methods to a partial file alone does not reduce runtime work or state complexity.
