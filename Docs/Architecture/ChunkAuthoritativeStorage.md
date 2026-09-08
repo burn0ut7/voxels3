@@ -31,8 +31,11 @@ editing after reopen persisted correctly. These results qualify those bounded
 behaviors, not the entire slice. See the latest ledger entries and their raw
 visible2-history evidence.
 
-The latest comparable full-capacity route measured802FPS with frame p99 3.84ms;
-the earlier spatial-query regression was corrected from49 to780FPS. Active-load
+The latest full-capacity route measured869FPS with frame p99 3.46ms, compared
+with802FPS/p99 3.84ms in the earlier comparable route. Worst frame and total
+process memory were higher in the later editor session; this does not establish
+lower total RAM or eliminated stuttering. The earlier spatial-query regression
+was corrected from49 to780FPS. Active-load
 and active-page-read Stop/reopen checks preserved saved state and released all
 reservations. Later sample accounting fell to exactly the current34 pages,
 establishing eventual collection in that observation. These are bounded results,

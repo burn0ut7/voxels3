@@ -15250,3 +15250,56 @@ The failed attempt did not alter the completed save. Final world is visible at
 normal spawn; private199 remains preserved in read-pressure-v1.
 Evidence: cold-sweep-user-after.json. No source files changed during the clean
 figure-eight; later line-ending normalization did not change code semantics.
+
+### STORAGE-READ-PRESSURE-001/v2 — changed-source recovery check
+
+Source13a8460, engine26.09.01c, visible editor18972. The previous goal turn made
+runtime progress: metadata validation now uses one scratch buffer and the cold
+sweep skips unnecessary interest work; direct stale-read rejection passed. These
+changes alter temporary sample retention, so one changed-source pressure regression
+is justified. Preserve prior runs and outcomes. Keep v1's workload, safety limits,
+30second warmup,31+31 brushes and511MiB/reserved>0 one-time travel trigger, polling
+as fast as sequential tools allow for60seconds after second submission. Observe
+recovery up to120seconds without forced collection. No source changes during run.
+
+Use private read-pressure-13a8460 instead of read-pressure-v1 because v1 now holds
+a later live user edit at199; saving the136 fixture there would conflict and must
+not overwrite it. This slot-only setup correction requires v2; it is not a new
+performance baseline. Initial fixture storage-capacity-v1 is136/2048. Save the
+private copy, normal Stop/Play, move to(-393216,393216,4096), warm30seconds, then
+31 digs(393216+i*4096,393216,0),r1024,+512,i0..30; save167 then repeat31 digs.
+Track first-phase read-capacity counters as well as second phase. Require any
+positive denial counter followed by actual loadedPages progress, no pending
+reads/reservations, no rejected/authored extras,198/2048/62 commits and exact known
+far fingerprint to qualify bounded read-pump denial/recovery. If denial never
+occurs, report unexercised, not passed. A failed setup/restore must preserve its
+last saved state. Original user971/160 checkpoint66 and authored scene hash are
+preserved; restore them and normal spawn when done. No multiplayer runs.
+
+STORAGE-READ-PRESSURE-001/v2 result on13a8460: first31 brushes loaded1984 cold pages
+and committed167 in4.643seconds observed, with no rejection or read-capacity denial.
+Second31 brushes plus overlapping save completed198/2048/62 commits in7.829seconds
+observed, also no rejected edits or read denial. The511MiB/reserved>0 trigger did
+not occur; it was not lowered or retimed. Read-capacity recovery therefore remains
+unexercised by this changed-source case. Preserve it as a successful normal pressure
+workload, not a branch-coverage pass. No further identical-source repetitions.
+Evidence: read-pressure-13a8460-runtime.json.
+
+Additional v2 observations: phase2 had99 sampled editCapacityDeferred=True statuses,
+then recovered automatically; no read deferral occurred. Its largest sampled
+retained+reserved value532545536bytes is507.875MiB, below the511MiB trigger. Exactly
+62 edits committed and the known B41B9A4D...F8EB7439 fingerprint matched. Latest
+private198 checkpoint6 and all2048 page checksums verified. Original971/160 restored
+and normal Play restarted; its identity/directory and all160 page hashes are
+unchanged. No source/runtime changes in this turn and no repeated multiplayer test.
+The remaining controlled-reservation diagnostic is a proposal only:
+[reviewable test scope](ValidationEvidence/ChunkStorage/ReadAdmissionDiagnosticProposal.md).
+Implementing its temporary hook requires a user override of AGENTS.md's explicit
+prohibition. Until then, keep read-pump recovery unqualified; do not weaken the
+criteria or claim automatic GC timing from a controlled reservation-release test.
+
+Final settled observation07:01:56: original971/160 checkpoint67, all160 pages
+loaded, queued/preparing/saving false or zero, reads0, reservations0, both geometry
+queues clear, no authored/rejected edits or failures. Resident20971520bytes and
+retained25427968bytes. This confirms restoration settled after startup; it is not
+a read-admission recovery observation.
