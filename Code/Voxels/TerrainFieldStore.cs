@@ -40,7 +40,8 @@ internal static class TerrainFieldStore
 
 	internal sealed record Page( Vector3Int Coordinate, int Revision, int Bytes, string Hash );
 	internal sealed record Checkpoint( string Root, long Sequence, TerrainFieldSnapshot Identity,
-		IReadOnlyDictionary<Vector3Int, Page> Pages );
+		IReadOnlyDictionary<Vector3Int, Page> Pages, int WrittenPages = 0,
+		long PageBytesRead = 0, long PageBytesWritten = 0 );
 
 	private static Page ReferencePage( string root, Vector3Int coordinate, int revision, int bytes, string hash )
 	{
@@ -93,27 +94,50 @@ internal static class TerrainFieldStore
 			var usage = StoreUsage( root );
 			var storedBytes = usage.Bytes;
 			var storedFiles = usage.Files;
+			var writtenPages = 0;
+			long pageBytesRead = 0, pageBytesWritten = 0;
 			foreach ( var pair in source.Pages.OrderBy( pair => pair.Key.z ).ThenBy( pair => pair.Key.y ).ThenBy( pair => pair.Key.x ) )
 			{
 				cancellation.ThrowIfCancellationRequested();
-				var block = EncodePageVersion( pair.Key, pair.Value );
-				var hash = Convert.ToHexString( SHA256.HashData( block ) );
-				var page = ReferencePage( root, pair.Key, pair.Value.Revision, block.Length, hash );
-				var path = $"{root}/pages/{hash}.vxp";
-				if ( fs.FileExists( path ) ) ReadPageBytes( root, page );
+				var stored = pair.Value.Stored;
+				byte[] block;
+				Page page;
+				var destinationVerified = false;
+				if ( stored.Page is not null )
+				{
+					if ( stored.Page.Coordinate != pair.Key || stored.Page.Revision != pair.Value.Revision )
+						throw new InvalidDataException( "Stored terrain page does not match its canonical version." );
+					block = ReadPageBytes( stored.Root, stored.Page );
+					pageBytesRead += block.Length;
+					page = ReferencePage( root, pair.Key, stored.Page.Revision, stored.Page.Bytes, stored.Page.Hash );
+					destinationVerified = stored.Root == root;
+				}
 				else
+				{
+					block = TerrainFieldCodec.EncodePageBlock( pair.Key, PinForRead( pair.Value ) );
+					page = ReferencePage( root, pair.Key, pair.Value.Revision, block.Length, Convert.ToHexString( SHA256.HashData( block ) ) );
+				}
+				var path = $"{root}/pages/{page.Hash}.vxp";
+				if ( !destinationVerified && fs.FileExists( path ) )
+				{
+					pageBytesRead += ReadPageBytes( root, page ).Length;
+					destinationVerified = true;
+				}
+				if ( !destinationVerified )
 				{
 					if ( storedBytes + block.Length + MaximumIndexBytes + 32 > MaximumStoreBytes || storedFiles + 3 > MaximumStoredFiles )
 						throw new IOException( "Terrain store disk budget exhausted." );
 					WriteNew( path, block );
 					storedBytes += block.Length;
 					storedFiles++;
+					writtenPages++;
+					pageBytesWritten += block.Length;
 				}
 				pages.Add( pair.Key, page );
 			}
 			var identity = new TerrainFieldSnapshot( source.Settings, source.Revision,
 				new Dictionary<Vector3Int, TerrainFieldPage>(), source.WorldId, epoch: source.Epoch );
-			var checkpoint = new Checkpoint( root, sequence, identity, pages );
+			var checkpoint = new Checkpoint( root, sequence, identity, pages, writtenPages, pageBytesRead, pageBytesWritten );
 			var index = EncodeIndex( checkpoint, cancellation );
 			if ( storedBytes + index.Length + 32 > MaximumStoreBytes || storedFiles + 2 > MaximumStoredFiles )
 				throw new IOException( "Terrain checkpoint exceeds the store budget." );

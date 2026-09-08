@@ -65,6 +65,7 @@ public sealed partial class VoxelManager
 				_terrainField.MarkSaved( saved, _terrainSaveSource );
 				_terrainResetSavePath = null;
 				_terrainSaveFailure = null;
+				Log.Info( $"[TerrainStorage] checkpoint.io revision={saved.Identity.Revision} pages={saved.Pages.Count} reusedPages={saved.Pages.Count - saved.WrittenPages} writtenPages={saved.WrittenPages} pageBytesRead={saved.PageBytesRead} pageBytesWritten={saved.PageBytesWritten}" );
 				Log.Info( $"[TerrainEdit] save.complete path={saved.Root} world={saved.Identity.WorldId} revision={saved.Identity.Revision} checkpoint={saved.Sequence} liveRevision={CurrentField.Revision}" );
 			}
 			catch ( Exception exception )

@@ -268,7 +268,7 @@ that stationary comparison remains unqualified. The benchmark currently forces
 Z0 without restoring starting height; a correction is awaiting explicit approval
 under the project's fixed-workload policy.
 
-## User acceptance and transition — 2026-09-08
+## User acceptance and transition â€” 2026-09-08
 
 The user accepted the current performance as reasonable, though below the desired
 level, and explicitly requested moving to the next main slice. Stop repeating
@@ -277,8 +277,8 @@ proposed and unapplied; performance acceptance does not authorize that separate
 benchmark change. Cross-Play cleanup, capacity-edge/cancellation coverage, and
 exact release timing retain their recorded limits. No claim of complete
 original-gate coverage is made. Existing regression evidence remains available
-for future work. Confirm whether the next main slice follows storage scaling or
-the discussed priority of persisting generated untouched terrain.
+for future work. The subsequent clarification below selects Regional storage
+from the ordered plan; generated untouched terrain remains deferred.
 
 ## Next requested slice: Regional storage (ordered plan item2)
 
@@ -296,3 +296,36 @@ gate, ordered commits and completion-record-last publication. Corrupt existing
 records must still fail explicitly, and an older save must not mark newer edits
 saved. Validate unchanged saves, changed-page saves and existing failure behavior
 through the production save path. This is not full generated-chunk persistence.
+
+
+### Regional storage increment: immutable page reuse
+
+The existing canonical store now verifies each unchanged same-slot page once
+per checkpoint, reuses its coordinate/revision/content-hash record and writes
+no page payload for that version. A different destination still validates its
+existing copy; absent destination pages are copied from the checked source.
+Dirty versions encode current samples and write only their new content blocks.
+The index and completion record continue to publish one coherent world revision.
+This is an optimization of the existing regional backend, not a new save format
+or an additional authoritative state. Unchanged saves still verify all referenced
+page bytes; this does not make save work proportional only to dirty pages.
+
+The successful checkpoint.io diagnostic separates reused/written page counts
+and page payload bytes read/written. It excludes directory/index/selection I/O.
+The three bounded production checks passed: unchanged30-page save read312894
+bytes and wrote0 page bytes; a copied-slot checksum error prevented publication;
+one live edit wrote only8 new pages/13074bytes while reusing30 existing pages.
+Original revision99 and its selected save were restored afterward. Exact cases,
+source identity and limitations are in the validation ledger. The canonical
+figure-eight regression observation is recorded separately; these checks do not
+qualify power-loss durability, capacity edges or all earlier lifecycle limits.
+
+
+Final-source visible relaunch recovered revision99 automatically and repeated
+unchanged-page save successfully. One unchanged figure-eight route completed
+at796FPS, frame p994.15ms, zero exceptions, with14 arenas before/after and all
+queues settled. The user was running another game concurrently and the Steam
+session changed, so this is qualified regression evidence, not a causal speedup.
+This bounded regional-storage increment is ready for user review. The original
+capacity/lifecycle limitations remain recorded; do not automatically advance
+to generated-terrain caching or the separate deferred scalability proposals.

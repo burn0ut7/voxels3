@@ -13946,3 +13946,180 @@ Record this as explicit acceptance of current measured performance and direction
 to advance, not a retrospective pass of unverified lifecycle, capacity or
 benchmark-return checks. No further Slice1 acceptance loop. The benchmark patch
 is still unapplied. Preserve all failures, qualifications and earlier baselines.
+
+### REGIONAL-SAVE-REUSE-001/v1 — bounded save-path validation
+
+Next requested Regional storage slice, first increment. Visible existing editor,
+normal playable host with an already-saved edited world. Freeze current world
+identity/revision before the command and require it unchanged during the check.
+Record current page-file hashes and timestamps. Manual save through the existing
+command must finish within10seconds, report writtenPages0/reusedPages equal to
+current page count, pageBytesWritten0, and pageBytesRead equal to the sum of
+encoded current page blocks. Files must retain exact bytes/timestamps. The
+checkpoint must retain the same world/revision and preserve prior valid history.
+No player movement, edit or test hook. This verifies unchanged-page reuse, not
+changed-page writes, cross-slot copies, corruption or full slice acceptance.
+
+Implementation now reads/verifies a stored same-destination page once and reuses
+its immutable record; it no longer re-hashes the already verified buffer and
+reads the same file a second time. New or cross-destination page blocks retain
+the existing verification/write path. checkpoint.io reports actual page read/write
+bytes and page reuse after successful publication. Format and quotas unchanged.
+
+REGIONAL-SAVE-REUSE-001/v1 result: current user worldf58322c9-b837-4c0b-b555-6199124a290d
+revision99/30pages, initialcheckpoint17. Normal no-argument save02:31:07
+reported reusedPages30/writtenPages0/pageBytesRead312894/pageBytesWritten0,
+matching the sum of encoded current pages. All30 page-file hashes, sizes and
+modification timestamps remained identical. Completion occurred in the same
+second and the live world stayed revision99. This bounded unchanged-save check
+passes. Source identity, initial files and runtime log: regional-reuse-before.json
+and regional-reuse-runtime.json. Changed-page/cross-slot/error paths and full
+regional slice qualification remain pending. No world reset or restart.
+
+### REGIONAL-SAVE-COPY-001/v1 — destination verification
+
+Frozen before run: current visible host world f58322c9-b837-4c0b-b555-6199124a290d,
+revision99/30pages; source checkpoint18 and 312894 encoded page bytes.
+Save to absent private slot regional-reuse-v1 through voxel_terrain_save.
+Require 30 written pages/312894 written bytes, exact source page bytes and
+revision99, completion within10seconds. Explicitly save back to original slot
+f58322c9b8374c0bb5556199124a290d and require zero new page writes.
+With canonical backing returned to original, truncate one copied destination
+page by one byte (lexicographically first .vxp; retain exact external backup).
+Save to that copied slot again: require checksum failure within10seconds,
+no new completed checkpoint, unchanged original selection/revision and no
+original page modifications. Restore the exact copied page and retry, require
+success with no page writes; finally save explicitly to the original slot.
+Only the private copied slot is damaged. This tests current save destination
+validation, not dirty edits, load failures or power-loss guarantees.
+
+REGIONAL-SAVE-COPY-001/v1: passed. At02:36:32 copied30pages/312894bytes,
+all byte-identical to source; checkpoint1/revision99. Save back02:36:46
+wrote0 pages (625788 bytes read across source and destination verification).
+At02:37:03 a one-byte truncated private destination page produced explicit
+checksum failure, preserving its checkpoint1 and original last-world selection.
+Exact page restoration enabled checkpoint2 at02:37:32 with zero page writes.
+Final explicit save returned the active/default slot to the original world.
+No terrain edits/revision change. Evidence: regional-copy-files.json and
+regional-copy-runtime.json. These are page payload I/O counts, not total filesystem
+traffic; index/cleanup/selection reads are outside those counters.
+
+### REGIONAL-SAVE-DIRTY-001/v1 — single edited page-set write
+
+Frozen before run: same visible current host, original saved revision99/30pages.
+Save to existing private regional-reuse-v1 slot, then one production edit at
+(-512,-512,0), radius128, strength+512. Require exactly one revision advance,
+then save immediately to that same private slot. Compare checkpoint directories:
+writtenPages must equal new/changed page hashes; all unchanged page records
+must be reused, and every new file must match its content hash. Require save
+within10seconds. Load the original slot through voxel_terrain_load afterwards;
+require original revision99/30pages and zero additional authored changes on load,
+then save it explicitly to restore last-world selection. No original page may
+change bytes. This does not qualify edit latency or a new multiplayer case.
+
+REGIONAL-SAVE-DIRTY-001/v1: passed. One command advanced99 to100 and added
+8 affected pages. Save02:38:28 wrote exactly those8 pages/13074bytes and reused
+all30 unchanged pages/312894bytes. Both checkpoint indexes and every referenced
+page passed independent content-hash checks. Load02:38:52 restored original
+revision99/30pages, authored count stayed1 (the one requested edit), and final
+save02:39:06 restored original selection atcheckpoint21. All original page
+bytes and modification timestamps remained unchanged. Evidence:
+regional-dirty-files.json and regional-dirty-runtime.json. Restore caused the
+existing broad render rebuild (27923 dependencies); all reported render/edit
+queues settled by02:39:34. This save change does not address restore rebuild cost.
+
+### REGIONAL-STORAGE-ROUTE-001/v1 — current-world regression observation
+
+Frozen before run: original current world f58322c9-b837-4c0b-b555-6199124a290d,
+revision99/30pages/checkpoint21, epoch2 after the above isolated-slot restoration.
+Visible editor40164, engine26.09.01c, basic_example, seed1337/gen5/default surface,
+visual512, gameplay8, LOD0 halfextent4/cache halfextent8/levels0-6, fps_max1000.
+Use unchanged production figure-eight speed2500/distance50000/one loop/Z0,
+starting XY(1.1418,0.0426), no edits or saves during the route. Wait20seconds
+after completion, then record storage state and streaming queues. Do not apply
+the proposed benchmark return-position patch. Source ef10a3f plus saved-page
+reuse change; source hash in regional-reuse-before.json. Scope is regression
+observation of this increment, not reopening accepted baseline qualification.
+
+The prior accepted route used revision98/26pages and different start XY, so it
+cannot be rerun exactly without replacing current user terrain. Preserve that
+result as contextual evidence and label this current-world case separately;
+this is not an equivalent workload or a replacement accepted benchmark version.
+Require completion, no unexpected exceptions, unchanged terrain99/30pages,
+settled queues and sample bytes within512MiB. Investigate route FPS loss>10%,
+p95/p99 increase>20%, allocations>20% or new unbounded resource growth against
+accepted51b861e066d7469b80b78327319393e5, with environmental differences retained.
+Post-route stationary position/support is not comparable due unchanged Z0 issue.
+
+
+REGIONAL-STORAGE-ROUTE-001/v1 first attempt: interrupted, no result. Began
+02:41:22.4062, editor shut down02:43:20.5692 before normal completion. User
+confirmed closing it to switch Steam account and explicitly requested visible
+relaunch; another game is running concurrently, so subsequent FPS is not a
+matched performance comparison. Preserve this attempt as incomplete.
+Shutdown log also contains the previously seen native ConsoleWidget/QPushButton
+logging exception during teardown; it is not evidence of corrupt disk data.
+
+The new page-I/O diagnostic now travels as nonserialized checkpoint result
+metadata and logs from normal save-completion integration, after MarkSaved,
+instead of inside backend publication. This keeps the added UI logging out of
+backend return/teardown. It does not fix the pre-existing unload logger issue.
+Source identity for this adjustment: regional-final-source.json. Storage format
+and save decisions are unchanged. Relaunch requested visible with original world
+selection preserved; no hidden editor process.
+
+
+### REGIONAL-STORAGE-ROUTE-001/v2 — visible relaunch after user interruption
+
+The user closed the v1 editor and switched Steam accounts; hot-session epoch2
+and its start position are no longer available. Preserve v1 as interrupted.
+Version2 uses the restored same original revision99/30pages, cold visible
+editor14812, epoch1, normal spawn XY(0.0013,0.1458), all world/LOD/route settings
+unchanged. User reports another game concurrently running; performance is an
+observational baseline for this environment, not a like-for-like comparison or
+approval of a new regression. Final source regional-final-source.json compiles
+with0errors. Startup recovered original selection automatically atcheckpoint23.
+Run unchanged2500/50000/one loop after one manual save and20seconds settlement;
+then wait20seconds after completion. Same correctness/capacity gates asv1.
+Any contextual FPS/tail differences must retain the concurrent-game and cold
+session qualifications. The unavailable v1 route is not reported as a pass.
+
+Relaunch recovery: first direct launch exited during Steam initialization; Steam
+later created a delayed error-dialog editor9888 which held the MCP port. After
+normal close failed, that extra project process was terminated; visible18444
+closed normally and a single visible14812 relaunched with the port available.
+No hidden window was requested. The interrupted session evidence is
+regional-route-interrupted.log. Account identifiers are not captured.
+
+
+REGIONAL-STORAGE-ROUTE-001/v2 result: completed run
+e1e3689d3ddd4b6c85f609f3f14e8629 at02:54:13, duration121.93671seconds.
+795.95874FPS, frame p951.9281/p994.1501/max28.9095ms; 4008266480 allocated
+bytes, GC80/44/1, zero exceptions. Mesh readiness p9590.5029/p99116.8827/
+max183.5027ms. All mesh pending0; collision4913/4913 ready, pending0/failures0.
+Peak process3964895232bytes; peak GPU2878626856bytes. Arenas14 before/after.
+At02:55:17 (64seconds after completion, later than the minimum20second check),
+original world99/30pages/checkpoint24 remained Saved, authored0, all reported
+edit/read/visual/gameplay/warm/transition queues settled. Resident and retained
+samples both3932160bytes, no reservation or capacity deferral. Geometry digests
+matched pre-route, mismatch/invalid-table counts0. This is one-trip coverage,
+not proof of arbitrarily long-lived residency behavior.
+
+Compared contextually with accepted51b861e066d7469b80b78327319393e5: FPS+8.13%,
+p95-11.22%, p99-7.11%, allocated bytes-4.37%; no configured investigation flag
+triggered. Different world revision/start/cold session/concurrent game prevent
+causal speedup claims. Correctness/capacity and bounded regression observation
+pass; broader baseline qualifications are unchanged. Evidence:
+regional-route-result.json and regional-route-state.json. Final-source normal
+save02:51:24 again reported30 reused/0 written/312894 page bytes read, then
+checkpoint24/revision99 complete. Compiler succeeded with0errors after relaunch.
+
+Regional storage first increment is reviewable: same-slot page verification is
+no longer duplicated; new/dirty/copied page handling and checksum failure paths
+were exercised. The existing indexed single-store/checkpoint implementation is
+retained. No generated-base persistence, region packing/compaction, new network
+protocol or second edit history was introduced. Power-loss, capacity-edge and
+older lifecycle limitations remain outside this bounded result.
+
+Evidence export note: trailing whitespace in regional-route-interrupted.log
+was normalized for repository formatting; log messages/timestamps are retained.

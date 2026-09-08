@@ -1,0 +1,111 @@
+2026/09/08 02:41:22.4062	[Generic] [VoxelWorld] performance.test.begin task="REGIONAL-STORAGE-ROUTE-001/v1" revision="ef10a3f-regional-page-reuse" loops=1 speed=2500 distance=50000 center=[1.142,0.043,0]
+2026/09/08 02:43:20.5692	[Generic] [TerrainStorage] checkpoint.io revision=99 pages=30 reusedPages=30 writtenPages=0 pageBytesRead=312894 pageBytesWritten=0
+2026/09/08 02:43:20.5692	[Generic] [TerrainStorage] unload.save_failed reason=QPushButton was null when calling setText
+2026/09/08 02:43:20.5692	[Generic] Exception when calling 'OnDestroy' on VoxelManager	System.NullReferenceException: QPushButton was null when calling setText
+   at Sandbox.Interop.ThrowNullSelf(String className, String methodName)
+   at Editor.ConsoleWidget.StatusBarLog.SetLog(LogEvent e)
+   at Editor.ConsoleWidget.UpdateStatusBar(LogEvent e)
+   at Editor.ConsoleWidget.OnConsoleMessage(LogEvent e)
+   at Sandbox.Diagnostics.Logging.Write(LogEvent& e)
+   at VoxelManager.SaveTerrainOnUnload() in C:\Users\Gray\Documents\s&box projects\voxels3\Code\Voxels\VoxelManager.Storage.cs:line 57
+   at VoxelManager.OnDestroy() in C:\Users\Gray\Documents\s&box projects\voxels3\Code\Voxels\VoxelManager.cs:line 539
+   at Sandbox.Component.OnDestroyInternal()
+2026/09/08 02:43:20.5692	[Generic] OnDestroy on VoxelManager failed from Term: QPushButton was null when calling setText
+   at Sandbox.CallbackBatch.Group.Execute(CallbackBatch parent)
+   at Sandbox.CallbackBatch.Execute()
+   at Sandbox.GameObject.Term()
+   at Sandbox.GameObject.<>c__DisplayClass110_0.<Clear>b__1(GameObject c)
+   at Sandbox.GameObject.ForEachChild(String name, Boolean includeDisabled, Action`1 action)
+   at Sandbox.GameObject.Clear(Boolean includeSaved)
+   at Sandbox.GameObject.Clear()
+   at Sandbox.Scene.DestroyInternal()
+   at Sandbox.Scene.Destroy()
+   at Editor.SceneEditorSession.Destroy()
+   at Editor.SceneEditorSession.StopPlaying()
+   at Editor.EditorScene.Stop()
+   at Editor.SceneEditorSession.Destroy()
+   at Editor.SceneDock.OnDestroyed() in C:\actions-runner\_work\sbox\sbox\game\addons\tools\Code\Scene\SceneView\SceneDock.cs:line 46
+   at Editor.QObject.NativeShutdown()
+   at Editor.QObject.<>c__DisplayClass12_0.<Callback>b__0(IntPtr qobj)
+   at Sandbox.EngineLoop.RunFrame(CMaterialSystem2AppSystemDict appDict, Boolean& wantsQuit)
+   at Sandbox.AppSystem.Run()
+   at Sandbox.Launcher.Main() in C:\actions-runner\_work\sbox\sbox\engine\Launcher\SboxDev\Launcher.cs:line 39
+   at Sandbox.Program.Launch() in C:\actions-runner\_work\sbox\sbox\engine\Launcher\Shared\Startup.cs:line 21
+   at Sandbox.Program.Main() in C:\actions-runner\_work\sbox\sbox\engine\Launcher\Shared\Startup.cs:line 16
+	System.Exception: OnDestroy on VoxelManager failed from Term: QPushButton was null when calling setText
+   at Sandbox.CallbackBatch.Group.Execute(CallbackBatch parent)
+   at Sandbox.CallbackBatch.Execute()
+   at Sandbox.GameObject.Term()
+   at Sandbox.GameObject.<>c__DisplayClass110_0.<Clear>b__1(GameObject c)
+   at Sandbox.GameObject.ForEachChild(String name, Boolean includeDisabled, Action`1 action)
+   at Sandbox.GameObject.Clear(Boolean includeSaved)
+   at Sandbox.GameObject.Clear()
+   at Sandbox.Scene.DestroyInternal()
+   at Sandbox.Scene.Destroy()
+   at Editor.SceneEditorSession.Destroy()
+   at Editor.SceneEditorSession.StopPlaying()
+   at Editor.EditorScene.Stop()
+   at Editor.SceneEditorSession.Destroy()
+   at Editor.SceneDock.OnDestroyed() in C:\actions-runner\_work\sbox\sbox\game\addons\tools\Code\Scene\SceneView\SceneDock.cs:line 46
+   at Editor.QObject.NativeShutdown()
+   at Editor.QObject.<>c__DisplayClass12_0.<Callback>b__0(IntPtr qobj)
+   at Sandbox.EngineLoop.RunFrame(CMaterialSystem2AppSystemDict appDict, Boolean& wantsQuit)
+   at Sandbox.AppSystem.Run()
+   at Sandbox.Launcher.Main() in C:\actions-runner\_work\sbox\sbox\engine\Launcher\SboxDev\Launcher.cs:line 39
+   at Sandbox.Program.Launch() in C:\actions-runner\_work\sbox\sbox\engine\Launcher\Shared\Startup.cs:line 21
+   at Sandbox.Program.Main() in C:\actions-runner\_work\sbox\sbox\engine\Launcher\Shared\Startup.cs:line 16
+
+ ---> System.NullReferenceException: QPushButton was null when calling setText
+   at Sandbox.Interop.ThrowNullSelf(String className, String methodName)
+   at Editor.ConsoleWidget.StatusBarLog.SetLog(LogEvent e)
+   at Editor.ConsoleWidget.UpdateStatusBar(LogEvent e)
+   at Editor.ConsoleWidget.OnConsoleMessage(LogEvent e)
+   at Sandbox.Diagnostics.Logging.Write(LogEvent& e)
+   at Sandbox.Component.OnDestroyInternal()
+   at Sandbox.CallbackBatch.Group.Execute(CallbackBatch parent)
+   --- End of inner exception stack trace ---
+2026/09/08 02:43:20.6090	[Generic] Exception when calling Children on GameObject:World: QPushButton was null when calling setText	System.NullReferenceException: QPushButton was null when calling setText
+   at Sandbox.Interop.ThrowNullSelf(String className, String methodName)
+   at Editor.ConsoleWidget.StatusBarLog.SetLog(LogEvent e)
+   at Editor.ConsoleWidget.UpdateStatusBar(LogEvent e)
+   at Editor.ConsoleWidget.OnConsoleMessage(LogEvent e)
+   at Sandbox.Diagnostics.Logging.Write(LogEvent& e)
+   at Sandbox.CallbackBatch.Group.Execute(CallbackBatch parent)
+   at Sandbox.CallbackBatch.Execute()
+   at Sandbox.GameObject.Term()
+   at Sandbox.GameObject.Term()
+   at Sandbox.GameObject.<>c__DisplayClass110_0.<Clear>b__1(GameObject c)
+   at Sandbox.GameObject.ForEachChild(String name, Boolean includeDisabled, Action`1 action)
+2026/09/08 02:43:20.6090	[Generic] QPushButton was null when calling setText	System.NullReferenceException: QPushButton was null when calling setText
+   at Sandbox.Interop.ThrowNullSelf(String className, String methodName)
+   at Editor.ConsoleWidget.StatusBarLog.SetLog(LogEvent e)
+   at Editor.ConsoleWidget.UpdateStatusBar(LogEvent e)
+   at Editor.ConsoleWidget.OnConsoleMessage(LogEvent e)
+   at Sandbox.Diagnostics.Logging.Write(LogEvent& e)
+   at Sandbox.GameObject.ForEachChild(String name, Boolean includeDisabled, Action`1 action)
+   at Sandbox.GameObject.Clear(Boolean includeSaved)
+   at Sandbox.GameObject.Clear()
+   at Sandbox.Scene.DestroyInternal()
+   at Sandbox.Scene.Destroy()
+   at Editor.SceneEditorSession.Destroy()
+   at Editor.SceneEditorSession.StopPlaying()
+   at Editor.EditorScene.Stop()
+   at Editor.SceneEditorSession.Destroy()
+   at Editor.SceneDock.OnDestroyed() in C:\actions-runner\_work\sbox\sbox\game\addons\tools\Code\Scene\SceneView\SceneDock.cs:line 46
+   at Editor.QObject.NativeShutdown()
+   at Editor.QObject.<>c__DisplayClass12_0.<Callback>b__0(IntPtr qobj)
+2026/09/08 02:43:20.9482	[Generic] Exception when destroying prefabs/terrain_player.prefab	System.Exception: Assert: AreEqual 4 components weren't deleted!
+   at Sandbox.Diagnostics.Assert.AreEqual[T](T a, T b, String message)
+   at Sandbox.GameObject.Clear(Boolean includeSaved)
+   at Sandbox.GameObject.Clear()
+   at Sandbox.Scene.DestroyInternal()
+   at Sandbox.PrefabFile.OnDestroy()
+   at Sandbox.GameResource.DestroyInternal()
+2026/09/08 02:43:21.6459	[Reflection] NullStaticReferences: force-clearing readonly field ShadowMapper.ContactShadowCompute (ComputeShader) — consider removing 'readonly'
+2026/09/08 02:43:21.7883	[Reflection] NullStaticReferences: force-clearing readonly field ModelLoader.DefaultMaterial (Material) — consider removing 'readonly'
+2026/09/08 02:43:21.7883	[Reflection] NullStaticReferences: force-clearing readonly field ModelLoader.FlatNormal (Texture) — consider removing 'readonly'
+2026/09/08 02:43:21.7883	[Reflection] NullStaticReferences: force-clearing readonly field PreviewMaterial.Plane (Model) — consider removing 'readonly'
+2026/09/08 02:43:21.7883	[Reflection] NullStaticReferences: force-clearing readonly field TileBoundsGrid._lineMaterial (Material) — consider removing 'readonly'
+2026/09/08 02:43:22.8513	[engine/ToolFramework2] Shutting down Qt windows.............
+2026/09/08 02:43:22.8513	[engine/Engine] Source2Shutdown
+2026/09/08 02:43:22.8513	[engine/Engine] ShutdownSource2Logging
