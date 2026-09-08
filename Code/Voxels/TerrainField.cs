@@ -558,8 +558,6 @@ internal sealed class TerrainFieldPage
 		Array.Copy( values, result, values.Length );
 		return result;
 	}
-	public void CopyTo( Span<float> destination ) =>
-		(_values ?? throw new InvalidOperationException( "Terrain page is nonresident; acquire it before copying." )).AsSpan().CopyTo( destination );
 }
 
 internal sealed class TerrainFieldSnapshot

@@ -145,7 +145,15 @@ First simplify the shared target/placement decision after resolving the effectiv
 
 ### S6 — Remove confirmed unused surfaces, not engine workarounds
 
-**Priority: medium for tiny deletions, low for hotload cleanup.** [MyEditorMenu.cs](../../Editor/MyEditorMenu.cs) still exposes the template menu that only displays an "It worked!" dialog. This is the clearest template-only removal candidate; it has no terrain responsibility. `CustomTopDownController` has no reference in the reviewed authored scene/prefab or source callers. `TerrainFieldPage.CopyTo` likewise had no caller in the scoped source search. Verify resource/reflection/editor use before removing either. The controller is public and potentially attachable; an authored-reference miss is not proof that no user uses it. Older research calling it player-facing is not evidence of current attachment.
+2026-09-08 candidate removes only the template editor dialog and unused page
+CopyTo (10 lines). Public optional controller and hotload guards retained.
+Before/after and user-requested C2 repeat complete. C1 CPU p99 narrowly failed;
+C2 recovered FPS/p99 but had a worse maximum frame and repeated higher placement
+lag. Awaiting human review; no overall performance acceptance or S7.
+[S6 evidence and checks](../ValidationEvidence/SimplificationS6/Review.md).
+Historical proposal follows (the linked template file is removed in the candidate).
+
+**Priority: medium for tiny deletions, low for hotload cleanup.** `Editor/MyEditorMenu.cs` originally exposed the template menu that only displays an "It worked!" dialog. This is the clearest template-only removal candidate; it has no terrain responsibility. `CustomTopDownController` has no reference in the reviewed authored scene/prefab or source callers. `TerrainFieldPage.CopyTo` likewise had no caller in the scoped source search. Verify resource/reflection/editor use before removing either. The controller is public and potentially attachable; an authored-reference miss is not proof that no user uses it. Older research calling it player-facing is not evidence of current attachment.
 
 `TerrainFieldPage.GetRange` also has a conservative missing-metadata fallback for hotloaded objects. That is not safely obsolete just because constructors now initialize metadata. `WorldId` lazily repairs an empty identity. Investigate supported hotload/migration expectations before deleting these guards; required editor behavior is a feature too.
 

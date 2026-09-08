@@ -16237,3 +16237,79 @@ User: "i ACCEPT. Let's move onto S6". Implementation already committed3082fb6.
 Acceptance retains the disclosed GPU maximum, spatial comparison and unmeasured
 discovery limits. No additional tests or exhaustive human checks claimed.
 Proceed to S6.
+
+### SIMPLIFICATION-S6-001/v1 — confirmed unused surfaces
+
+Defined 2026-09-08 before runs. Accepted S5 baseline bec3178. Current user world
+has advanced to revision1404/235pages; preserve it and select private s6-perf1404
+for both cold B1/C1 runs. This fresh pair does not compare against the older S5
+world. Backup, selector and source hashes: ValidationEvidence/SimplificationS6.
+Canonical basic_example authored spawn, >=30s warmup and all queues settled;
+host only, no peers; engine26.09.01c, Ryzen7 9800X3D/RTX5090, fps_max1000,
+unchanged graphics/viewport/FOV. Seed1337/v5,32cells/16units,gameplay8,visual512,
+levels0..6,half extents4/8. Speed2500,distance50000,Yreach25000,Z0,one loop;
+normal drain/two advances/10s stationary. No edits during timed runs.
+CPU/GPU p95/p99 tolerance max(5%,0.25ms); allocation/frame and process/GPUpeak5%
+(process16MiB floor); collisionreadytails max(5%,10ms). Retain maxima,publication,
+lag,GC,backlog. Require4913ready,queues0,no new errors/unsafecommits/mismatches,
+matching geometry only at matching spatial sets, unchanged saved page payloads.
+No speedup expected from unused code removal; benefit is less unused surface.
+Candidate removes only template MyEditorMenu dialog and unused internal-class
+TerrainFieldPage.CopyTo. Retain public attachable CustomTopDownController and
+hotload metadata/identity guards. Source/asset/reflection search, clean builds,
+Play and route are automated checks; human checks normal camera/controls,
+editing/save/reload and terrain/collision before explicit acceptance. No new
+scenes/components/hooks. Pause after C1; no commit or S7 without approval.
+
+#### S6 B1/C1 result and human checkpoint — 2026-09-08
+
+[Full S6 review](ValidationEvidence/SimplificationS6/Review.md) and raw evidence.
+B1 bec3178/PID41416/run57611464f8414feeab2a867f0d1fae0d;
+C1 source hash manifest/PID78880/runf87b22c47e414d74bfe4668f3b47d3f0.
+FPS823.8861->795.38696(-3.46%), CPU p95/p99/max1.9126/3.8679/22.8115->
+2.0143/4.1249/23.038ms. CPU p99+0.257ms FAILS max(5%,0.25ms) by0.007ms.
+GPU p95/p99/max1.629591/2.1083355/9.98807->1.7220974/2.2027493/9.21154ms.
+Stationary896.54156->878.8917FPS. Allocation30481.604->30755.215bytes/frame;
+processpeak4041596928->4019789824bytes,GPU2879324496both. Collisionready
+p95/p993927.1226/9572.255->3874.911/9431.766ms. Publication p95/p99/max
+85.2743/110.9334/168.5259->88.8902/115.2779/172.9082ms. Syncmax15.0142->
+19.2357ms,prepmax14.4022->18.5536ms,lag2->4,GCmax12.916->13ms. Other declared
+percentile/allocation/memory/collision screens pass; worse tails/lag retained.
+No causal slowdown or noise conclusion established by one pair. Performance
+qualification unresolved. Recommend matched repeat; pause now per human gate.
+Both4913ready,queues0,exceptions0,unsafe0,transitionmismatches0,backlog127.
+Startup topology/center match; final centers differ, so final whole-view hashes
+are not comparable. Original and fixture page payloads unchanged; source hashes
+unchanged; normal selector restored. Runtime/editor and cold engine compile pass.
+Known pre-change/B1 shutdown Error window logs retained. Net10lines removed;
+public controller/hotloadguards retained. S6 uncommitted; no S7. Human checks in
+review; no additional runtime coverage inferred from successful figure-eight.
+
+#### S6 C2 repeat authorization and fixed plan — 2026-09-08
+
+User requested another performance test after the C1 regression. Repeat C2 on
+unchanged S6 source (c1-source.json), same SIMPLIFICATION-S6-001/v1 fixture and
+parameters, cold editor, >=30s warmup and settled queues. Preserve B1/C1 and
+unchanged thresholds; compare C2 against both. No source edits or new baseline
+checkout in this repeat. Preserve current user save/selector and restore after.
+Pause after reporting C2; no automatic acceptance or S7.
+
+#### S6 C2 repeat result — 2026-09-08
+
+Same SIMPLIFICATION-S6-001/v1, unchanged c1-source manifest, coldPID44840,
+run2f89695e0cae47108a3d21690068ecb9. Full metrics in S6 review/c2-comparison.
+FPS838.5864 vs B1823.8861/C1795.38696; CPU p95/p99/max1.8371/3.7422/35.601ms;
+GPU1.5835762/2.0604134/9.123802ms. Stationary932.05927FPS,p95/p991.563/2.4348ms.
+Allocation30328.943bytes/frame,process4019159040,GPU2879324496bytes.
+Collisionready p95/p993822.2856/9344.4ms; publication82.8275/103.1673/max169.7316ms.
+Syncmax18.0047ms,prep17.0813ms,lag4,GCmax12.403ms. C2 declared percentile,
+allocation,memory,collision screens pass. C1 failed p99 screen retained; slowdown
+did not repeat, but C2 worst frame35.601ms and repeated lag4 remain unexplained.
+No overall clean qualification or causal conclusion. Recommend fresh B2 next;
+no extra run without user decision at this checkpoint.
+All4913ready/queues0/errors0/unsafe0/mismatch0/backlog127. Startup matches;
+finalcenter(-1,-1,-1) differs, preventing final whole-view geometry comparison.
+Original/fixture payloads and source hashes unchanged, original selector restored.
+Cold compile succeeds; pre-C2 shutdown Error log retained. Pre-run play_stop
+returned Not playing (already stopped); outside timed window. S6 uncommitted;
+human controls/camera/edit/collision/save checks remain; no S7.
