@@ -1,7 +1,8 @@
 # S2: concrete page iteration — human review
 
-2026-09-08. **Candidate tested; awaiting human approval.** S1 acceptance is
-recorded and pushed as cf8cea1. S2 is uncommitted; S3 has not started.
+2026-09-08. **Accepted by the user on 2026-09-08:** "I accept. Lets move onto S3". S1 acceptance is
+recorded and pushed as cf8cea1. S2 implementation is committed as d4ce975. Acceptance includes the disclosed
+comparison limits below; no additional run or completed human checklist is claimed.
 
 ## What changed
 

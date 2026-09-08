@@ -15879,3 +15879,10 @@ human checks and approval, per user instruction. S2 uncommitted; no S3. Source
 removes interface iteration in CopyLatticeCorrections, without new mutable
 exposure. No allocation-stack capture attributes exact saved bytes. A further
 matched comparison would be needed to resolve these limits automatically.
+
+#### S2 human acceptance — 2026-09-08
+
+User: "I accept. Lets move onto S3". Implementation already committed as
+d4ce975. Acceptance follows the disclosed single-pair GPU/publication maxima
+and final-placement comparison limits. Preserve those observations; no extra
+performance run or exhaustive human-test completion claimed. Proceed to S3.

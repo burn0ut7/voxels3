@@ -84,7 +84,7 @@ Investigate keeping readiness on the existing descriptor identity, obtaining imm
 2026-09-08 update: the historical range/capture loops below have already been
 replaced by TerrainPageIndex struct queries. Current S2 candidate narrows to
 CopyLatticeCorrections: private concrete dictionary iteration, retaining the
-read-only consumer view. Before/after completed; awaiting human approval with
+read-only consumer view. Before/after completed; user accepted S2 (d4ce975), with disclosed
 GPU maximum and final-placement comparison limits. See
 [S2 review](../ValidationEvidence/SimplificationS2/Review.md) and
 SIMPLIFICATION-S2-001/v1 in the ledger. Historical profile attribution below
