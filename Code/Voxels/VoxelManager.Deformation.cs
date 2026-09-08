@@ -291,6 +291,7 @@ public sealed partial class VoxelManager
 			$"residentBytes={manager.CurrentField.ResidentPageBytes} retainedSampleBytes={TerrainFieldPage.RetainedSampleBytes} sampleBudget={TerrainField.MaximumSampleBytes} reservedSampleBytes={TerrainFieldPage.ReservedSampleBytes} readCapacityDeferred={manager._terrainField.ReadCapacityDeferred} editCapacityDeferred={manager._terrainEditCapacityDeferred} " +
 			$"storageReads={manager._terrainField.PendingReads} loadedPages={manager._terrainField.LoadedPages} evictedPages={manager._terrainField.EvictedPages} reusedSamplePages={TerrainFieldPage.ReusedSamplePages} readIntegrationMaxMs={manager._terrainReadIntegrationMaximumMilliseconds} sweepMaxMs={manager._terrainSweepMaximumMilliseconds} storageFailure={manager._terrainField.ReadFailure} " +
 			$"committed={manager._terrainEditsCommitted} rejected={manager._terrainEditsRejected} samples={manager._terrainEditedSamples} " +
+			$"staleReadCompletions={manager._terrainField.StaleReadCompletions} readCapacityDeferrals={manager._terrainField.ReadCapacityDeferrals} " +
 			$"commitMs={manager._terrainEditLastCommitMilliseconds} visualDependencies={manager._terrainEditVisualDependencies} " +
 			$"collisionDependencies={manager._terrainEditCollisionDependencies} visualPending={manager._gpuMesher.EditRebuildPending} " +
 			$"collisionPending={manager._collision.EditRebuildPending} failure={manager._terrainEditFailure}" );

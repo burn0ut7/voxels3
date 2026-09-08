@@ -32,6 +32,8 @@ internal sealed class TerrainField
 	public bool ReadCapacityDeferred { get; private set; }
 	public long LoadedPages { get; private set; }
 	public long EvictedPages { get; private set; }
+	public long StaleReadCompletions { get; private set; }
+	public long ReadCapacityDeferrals { get; private set; }
 	public int PendingReads { get { lock ( _gate ) return _pendingReads.Count; } }
 	internal readonly record struct ReadRequest( Vector3Int Coordinate, TerrainFieldPage Page, int Epoch,
 		string Root, TerrainFieldStore.Page Stored );
@@ -63,6 +65,7 @@ internal sealed class TerrainField
 			if ( !TerrainFieldPage.TryReserveSamples( Math.Min( 8, _reads.Count ), out reservation ) )
 			{
 				ReadCapacityDeferred = true;
+				ReadCapacityDeferrals++;
 				return Array.Empty<ReadRequest>();
 			}
 			var batch = new List<ReadRequest>( 8 );
@@ -83,7 +86,11 @@ internal sealed class TerrainField
 		{
 			_pendingReads.Remove( request.Page );
 			if ( request.Epoch != _current.Epoch || !_current.Pages.TryGetValue( request.Coordinate, out var page ) ||
-				!ReferenceEquals( page, request.Page ) ) return false;
+				!ReferenceEquals( page, request.Page ) )
+			{
+				StaleReadCompletions++;
+				return false;
+			}
 			if ( error is not null ) { _failedReads.Add( page ); ReadFailure = error; return false; }
 			if ( !page.InstallResidentSamples( loaded ) ) return false;
 			LoadedPages++;

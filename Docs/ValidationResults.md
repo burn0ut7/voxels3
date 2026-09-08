@@ -14771,3 +14771,29 @@ release share AllocationGate. These are source-path checks, not runtime proof of
 512MiB denial/retry or competing decoder coverage. No new retention defect is
 established by this audit; no speculative lifetime patch was applied. The strict
 timing, capacity-edge and in-session stale-completion gates remain open.
+
+### STORAGE-READ-STATUS-001/v1 — diagnostic definition
+
+Before runtime inspection: source09ac743 plus two lifetime counters in TerrainField
+and their display in voxel_terrain_edit_info. Same visible basic_example Play,
+engine26.09.01c, original world106/34/checkpoint41, no clients, edits, movement or
+forced collection. Invoke existing status once after successful compile. Require
+the new staleReadCompletions and readCapacityDeferrals fields to be nonnegative,
+the saved world identity/revision to remain unchanged, and no compile error.
+This is a simple diagnostic-only change: counters increment only inside existing
+rejection branches under the existing field lock. No branch condition, admission
+budget, I/O, scheduling or terrain data changes. No figure-eight rerun is needed
+for displaying these counts; this check cannot qualify either rejection branch.
+
+Counters are cumulative for the TerrainField lifetime, including across in-session
+restores; a new field on Play startup starts at0. StaleReadCompletions counts only
+CompleteRead results rejected for epoch/page identity. It excludes requests removed
+before dispatch and manager teardown. ReadCapacityDeferrals counts failed batch
+reservation attempts, not unique pages or time spent waiting. They are diagnostic
+observations of the existing state owner, not another representation of terrain.
+
+Result04:50:34: both counters appeared as0. Original world106/34, epoch2,
+checkpoint41/Saved, authored0, resident/retained4456448bytes, reservations0 and
+all reported work queues settled. Engine reports compile success with0errors.
+Pass for the specified status exposure and unchanged observed world only; no
+stale completion or capacity denial occurred. [Raw status](ValidationEvidence/ChunkStorage/read-status-diagnostic.json).

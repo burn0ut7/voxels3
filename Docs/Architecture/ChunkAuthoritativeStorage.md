@@ -415,3 +415,10 @@ STORAGE-ACTIVE-PAGE-CANCEL-001/v1 in the ledger. These qualify the observed
 teardown/reopen paths; exact per-page cancellation, in-session stale-completion
 rejection, memory-limit denial/retry and strict retirement timing remain distinct
 unqualified coverage. No new lifetime or state representation was introduced.
+
+The existing terrain status also exposes cumulative per-field stale read completion
+and read capacity deferral counts. The first increments at the canonical epoch/page
+identity rejection before installation; the second at a failed batch reservation.
+They survive in-session restores and reset with a new field. They do not include
+queued requests dropped before dispatch or reads abandoned during manager teardown.
+These observations support lifecycle diagnosis without changing admission or mutation.
