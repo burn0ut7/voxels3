@@ -15303,3 +15303,76 @@ loaded, queued/preparing/saving false or zero, reads0, reservations0, both geome
 queues clear, no authored/rejected edits or failures. Resident20971520bytes and
 retained25427968bytes. This confirms restoration settled after startup; it is not
 a read-admission recovery observation.
+
+### GPU-SCHEDULER-HEALTH-001/v1 — distinguish missing progress from slow frames
+
+Freeze before changes: f92a01d, engine26.09.01c, visible current editor. Latest
+sbox-dev.log contains24 stalled/recovered pairs, latest06:48:56 age3662.391ms at
+update1/claimed0/sequence0, recovery nextupdate in8.601ms. Other pairs have
+claimed exactly update-1 and recover nextupdate. Current detector counts time
+from construction or last callback, including startup and main-thread work;
+these observations do not prove a blocked GPU scheduler or a driver error.
+
+Change health accounting only: start the observed pending-work interval at the
+first health observation and reset when a claimed render epoch advances or no
+work is pending. Retain500ms threshold, transition error/recovery reporting,
+GPU dispatch/claim/reentrancy behavior and command-commit timing diagnostics.
+Require a normal visible Stop/Play without the first-update false error, actual
+render/mesh progress and settled geometry, no new exceptions. Do not add a test
+hook to force missing callbacks; real missing-render detection remains source-
+verified only unless an actual incident occurs.
+
+Reuse STORAGE-COLD-SWEEP-001/v1 canonical fixture136/2048, gameplay8/visual512,
+authored origin,30second warmup, figure-eight2500/50000/one loop. Compare latest
+99ae5fab run868.6969FPS/p993.457ms/max25.1209ms with environment qualification;
+record FPS, tails, memory, allocations, queues and scheduler log deltas. Preserve
+current user save and all hashes, restore original slot and normal spawn. No
+multiplayer tests or edits to saved terrain. Performance is advisory.
+
+GPU-SCHEDULER-HEALTH-001/v1 setup: initial fixture restore at normal player ground
+position was rejected by the existing actor-intersection guard, leaving971/160
+unchanged. After normal restart, moved actual player to(0,0,32768) before loading;
+136/2048 committed at07:06:46 in4473.997ms. A normal Stop/Play then starts the
+canonical fixture at authored origin for its30second warmup. No cap, workload or
+production guard was changed to bypass the rejected setup. Compiler succeeded.
+
+GPU-SCHEDULER-HEALTH-001/v1 result f87cd1a33cfb4a0d8b39c9ea50d144aa:
+normal full-capacity Play startup and canonical route produced no new scheduler
+stall/recovery reports. All24 pre-fix reports had claimedEpoch=updateEpoch-1,
+including14 atupdate1 before a first render opportunity. These were watchdog
+misclassification evidence, not proof of GPU hardware failure. New detector is
+based on observed claimed-epoch progress; real sustained no-progress detection
+retains500ms and was inspected in source, not forced with a test hook.
+
+Measured824.8286FPS versus868.6969 (-5.05%); framep993.833ms versus3.457 (+10.88%);
+maximum27.1453ms versus25.1209. Later long-lived editor session, same authored
+center, route, fixture and configuration; no code edits during measurement.
+This is not a performance improvement claim or isolated causal attribution.
+User's advisory performance decision applies; retain the slower result for review.
+Peak process3394363392bytes versus3818352640; GPU3006728084 versus3006808840.
+Managed allocation3049583896bytes,30316.668bytes/frame versus29921.086;
+61Gen0/32Gen1/0Gen2 collections, maximumGC17.34ms versus14.283, exceptions0.
+Frame GPU timing remains engine-reported (average34.741642ms), not reciprocally
+consistent with CPU FPS; do not interpret it as individual frame wall duration.
+
+All4913 collision regions ready, no collision failure/pending/worker work; all GPU
+mesh pending0,14 arenas, configured/observed dispatch maximum8. Topology digest
+52F0B050D647A04A and position digest CBEFDC2771DE6EC2 exactly match baseline, as do
+8823455vertices and15276744triangles. Camera image inspected after route: player,
+checker terrain and authored arch visible. This supports rendering continuation,
+not exhaustive visual coverage. Original136/2048 fixture hashes and far-region
+CA27349A...E8E2B0 fingerprint match. No authored/rejected edits in qualified run;
+the earlier setup guard rejection remains recorded separately.
+Evidence: gpu-scheduler-figure-eight.json, gpu-scheduler-private.json and
+[log excerpts](ValidationEvidence/ChunkStorage/gpu-scheduler-runtime.json).
+
+Final restoration07:11:44: original971/160 checkpoint69, unchanged identity,
+directory and all160 page hashes againstcheckpoint68. Queued/preparing/saving0,
+reads/reservations0, both geometry queues clear, no authored/rejected mutations.
+Restoration2708.9333ms. Player back at normal spawn vicinity, world visible.
+Authored scene SHA256 remains521ea0f7415e17534a1fabab006caba16d0350963b23331556dac0d16ed138c2.
+Editor reports scene dirty after native movement; authored scene file was not
+saved or changed by this task. Final compiler success, errors0. No new scheduler
+reports through final restoration. Fix accepted for diagnostic correctness under
+advisory performance policy; unrelated GC stutter and read-capacity recovery
+coverage remain unresolved. No temporary reservation diagnostic was added.

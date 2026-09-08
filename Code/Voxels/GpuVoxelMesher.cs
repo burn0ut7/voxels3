@@ -104,7 +104,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private long _updateEpoch;
 	private long _claimedRenderEpoch;
 	private int _renderTickInProgress;
-	private long _lastGpuRenderTickTimestamp;
+	private long _gpuSchedulerObservedClaimedEpoch;
+	private long _gpuSchedulerWaitStartTimestamp;
 	private long _gpuSchedulerStallStartTimestamp;
 	private int _gpuSchedulerStallActive;
 	private long _gpuSchedulerStallCount;
@@ -335,7 +336,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
 		_transitionScratchLanes = CreateTransitionScratchLanes();
 		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
-		_lastGpuRenderTickTimestamp = Stopwatch.GetTimestamp();
 		_readbackObject = new ReadbackSceneObject( scene.SceneWorld, this );
 		Sandbox.Diagnostics.GpuProfilerStats.Enabled = true;
 		RefreshRenderCameras();
@@ -1347,7 +1347,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 
 		System.Threading.Interlocked.Exchange( ref _claimedRenderEpoch, updateEpoch );
-		System.Threading.Interlocked.Exchange( ref _lastGpuRenderTickTimestamp, Stopwatch.GetTimestamp() );
 		return true;
 	}
 
@@ -1413,12 +1412,21 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private void ReportGpuSchedulerHealth()
 	{
 		var now = Stopwatch.GetTimestamp();
-		var lastTick = System.Threading.Interlocked.Read( ref _lastGpuRenderTickTimestamp );
-		var ageMilliseconds = Stopwatch.GetElapsedTime( lastTick, now ).TotalMilliseconds;
+		var claimedEpoch = System.Threading.Interlocked.Read( ref _claimedRenderEpoch );
 		var regularPending = AllPendingCount;
 		var transitionPending = TransitionPendingCount;
-		var stalled = regularPending + transitionPending > 0 &&
-			ageMilliseconds >= GpuSchedulerStallThresholdMilliseconds;
+		var hasPending = regularPending + transitionPending > 0;
+		// Measure an observed wait for render progress, not time spent constructing the world
+		// or running a slow update after the previous render tick already claimed its work.
+		if ( !hasPending || claimedEpoch != _gpuSchedulerObservedClaimedEpoch ||
+			_gpuSchedulerWaitStartTimestamp == 0 )
+		{
+			_gpuSchedulerObservedClaimedEpoch = claimedEpoch;
+			_gpuSchedulerWaitStartTimestamp = hasPending ? now : 0;
+		}
+		var ageMilliseconds = hasPending
+			? Stopwatch.GetElapsedTime( _gpuSchedulerWaitStartTimestamp, now ).TotalMilliseconds : 0;
+		var stalled = hasPending && ageMilliseconds >= GpuSchedulerStallThresholdMilliseconds;
 		if ( !stalled )
 		{
 			if ( System.Threading.Interlocked.Exchange( ref _gpuSchedulerStallActive, 0 ) == 0 ) return;

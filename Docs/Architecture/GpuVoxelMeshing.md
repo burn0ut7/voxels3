@@ -336,11 +336,14 @@ handoff.
 The scheduler rendezvous retains `SceneCustomObject`'s native infinite bounds.
 Giving the scheduler a merely large finite box makes it eligible for per-view
 culling and can stop GPU work when a detached editor camera moves beyond that
-box. A transition-based health report emits one error if pending regular or
-transition work entered the current manager update without a GPU render tick for
-`500 ms`, followed by one recovery record when ticks resume. Health is sampled
-before current command-list work so a slow commit cannot mislabel its own elapsed
-time as a missing render tick. A separate bounded warning records any command-list
+box. A transition-based health report emits one error after pending work has
+been observed without an advancing claimed render epoch for `500 ms`, followed
+by one recovery record when progress resumes or the pending work clears. The
+observation interval starts at the first pending health check and resets on
+progress; construction time and a slow frame whose preceding render claim
+advanced are not evidence of a scheduler stall. This diagnostic measures callback
+progress, not GPU hardware completion. Health is sampled before current command-
+list work. A separate bounded warning records any command-list
 commit over `500 ms` with its duration, arena count, visibility capacity, update
 epoch, and render sequence.
 
