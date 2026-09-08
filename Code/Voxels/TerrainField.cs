@@ -566,7 +566,8 @@ internal sealed class TerrainFieldPage
 internal sealed class TerrainFieldSnapshot
 {
 	// The dictionary is owned at construction and never mutated afterward.
-	internal readonly IReadOnlyDictionary<Vector3Int, TerrainFieldPage> Pages;
+	private readonly Dictionary<Vector3Int, TerrainFieldPage> _pages;
+	internal IReadOnlyDictionary<Vector3Int, TerrainFieldPage> Pages => _pages;
 	private readonly TerrainPageIndex _pageIndex;
 	private readonly Vector3Int? _regionMinimum;
 	private readonly Vector3Int? _regionMaximum;
@@ -600,7 +601,7 @@ internal sealed class TerrainFieldSnapshot
 		_worldId = worldId;
 		Settings = settings;
 		Revision = revision;
-		Pages = pages;
+		_pages = pages;
 		_pageIndex = pageIndex ?? (pages.Count == 0 ? TerrainPageIndex.Empty : new TerrainPageIndex( pages.Keys ));
 		_regionMinimum = regionMinimum;
 		_regionMaximum = regionMaximum;
@@ -677,7 +678,7 @@ internal sealed class TerrainFieldSnapshot
 		RequirePageRange( new Vector3Int( origin.x >> TerrainField.PageShift, origin.y >> TerrainField.PageShift, origin.z >> TerrainField.PageShift ),
 			new Vector3Int( last.x >> TerrainField.PageShift, last.y >> TerrainField.PageShift, last.z >> TerrainField.PageShift ) );
 		destination.Clear();
-		foreach ( var pair in Pages )
+		foreach ( var pair in _pages )
 		{
 			var page = pair.Value;
 			if ( page.Minimum == 0f && page.Maximum == 0f ) continue;

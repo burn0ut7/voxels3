@@ -15792,3 +15792,90 @@ and permission to advance. The GPU/placement/synchronous maxima and lifecycle
 limitations above remain unresolved observations; B2/C2 was not run. This is
 human acceptance with those disclosed limits, not a claim that every listed
 feature check was performed or that repeatability was established.
+
+### SIMPLIFICATION-S2-001/v1 — concrete snapshot iteration
+
+Defined before runs 2026-09-08, baseline cf8cea1 (accepted S1). Current user
+world f58322c9-b837-4c0b-b555-6199124a290d revision997/167pages, checkpoint87;
+backup and hashes in ValidationEvidence/SimplificationS2/world-before.json.
+The earlier S2 research range/capture loops already use TerrainPageIndex's
+struct enumerator. This candidate only removes interface enumeration from
+CopyLatticeCorrections using private concrete dictionary ownership and the same
+read-only consumer view. No change to index, page selection, order, sampling,
+residency, pinning, revision, bounds, persistence, or profiler definitions.
+
+One cold-process B1/C1 pair first, identical canonical figure-eight settings:
+scene basic_example authored spawn, >=30s warmup and full queue settlement;
+one local host/no peers, engine26.09.01c, Ryzen7 9800X3D/RTX5090, fps_max1000,
+same graphics/viewport/FOV; seed1337/generator5,32cells/16units,gameplay8,
+visual512,levels0..6,half extents4/8. Speed2500,distance50000,Yreach25000,Z0,
+one loop; unchanged production drain/two advances/10s stationary window.
+No edits during timed routes. Capture source hashes, full results, startup/final
+geometry and queue status, world/page preservation and build/live diagnostics.
+
+Benefit: changed lattice loop has concrete dictionary struct iteration, with no
+new mutable exposure, copying, cache or alternate implementation. Do not infer
+measurable FPS gain or exact allocation attribution from source alone. Check
+moving/stationary CPU/GPU p95/p99 within max(5%,0.25ms); allocation/frame and
+process/GPU peaks within5% (process noise floor16MiB); collision ready tails
+within max(5%,10ms). Retain all maxima, streaming/publication tails, GC and
+placement lag; unexplained material regressions require resolution or explicit
+human judgment, not cherry-picking. If comparison is inconclusive, report it at
+the requested human pause before additional runs. No new runtime/native errors;
+4913 collision regions ready and all visual/transition/placement work drained;
+matching regular/transition geometry and zero unsafe commits/mismatches.
+
+Human checkpoint after measured candidate: dig/build across positive/negative
+page edges and corners, inspect close/far edited terrain while moving away/back,
+walk on edited collision surfaces, reload saved edits, verify remote convergence
+with a second player if available. These unperformed checks remain explicit;
+only user approval permits acceptance/commit/advance to S3. The saved edited
+world and route are regression coverage, not exhaustive boundary/multiplayer
+qualification or an allocation-stack capture.
+
+#### S2 B1/C1 result and human checkpoint — 2026-09-08
+
+B1 cf8cea1, cold PID46164, f566239c91d64596a26d88fa84528bdb,121.93851s,
+96,547frames. C1 private dictionary iteration, cold PID37176,
+78fc3e909e86469fa72ded0bec30f34a,121.93465s,100,832frames. Source hashes,
+raw results/startup/settled observations/builds/logs and readable comparison:
+[human review](ValidationEvidence/SimplificationS2/Review.md).
+
+Moving FPS791.7308 ->826.8664; framep95/p99/max2.0481/3.9923/28.5965 ->
+1.8858/3.8714/24.6987ms. GPUp95/p991.7337799/2.2449493 ->1.5516281/2.0616055ms,
+GPUmax5.236149 ->11.6689205ms. Allocation/frame30669.623 ->30359.236bytes;
+total allocation2961060040 ->3061182344bytes (more frames). Processpeak
+3991465984 ->4061843456bytes, GPU2828992848 ->2879324496bytes. StationaryFPS
+885.7643 ->930.34955; framep95/p991.7984/2.6841 ->1.5786/2.513ms.
+Collisionreadyp95/p994004.2397/9492.986 ->3835.3103/9371.467ms.
+Publicationp95/p99/max86.8339/107.5272/175.2956 ->83.1696/108.8825/188.1283ms.
+Maxplacementlag4both, maxsynchronous11.729 ->9.0426ms, totalsynchronous
+1986.7666 ->2159.2827ms; maxplacementpreparation16.7299 ->7.9654ms.
+GCpausemax12.862 ->13.398ms. Keep worse GPU/publication maxima and total
+synchronous cost; no repeatability or causal FPS/allocation claim from one pair.
+
+Builds0warnings/errors; live compile passes; timed exceptions/failures0.
+All4913collision regions ready, all visual/transition/placement work drained;
+backlog127both. Startup geometry matches CFC3EADBA35BABC5/C84BDA6FD612E0EB.
+Transition18B28FD82D91047C/D45A74DD17279E1C matches, mismatches/unsafecommits0.
+All167original page files unchanged by SHA256; saved world stays997/167.
+
+Final geometry comparison is incomplete: B1 settled center(-1,-1,-1), player
+(-0.833,-0.458,-31.801),1118bodies, hashesA80913E1599BCFDF/BF0597C6E31EB9EB;
+C1 center(0,0,-1), player(10.477,18.691,-29.891),1130bodies, hashes
+968D9276B87662B2/293292CF0AEC3519. Different final spatial sets prevent a
+matching-view conclusion; source iteration order and startup fingerprints are
+preserved but do not replace that gate. No manual recentering/workload tuning.
+Both starts within0.001unit via normal physics settling. Candidate screenshot
+inspected; no exhaustive visual, boundary edit, save/reload or peer test claimed.
+
+Existing shutdown prefab error reproduced before B1 and after B1, with
+Source2Shutdown followed by an Error window. Preserved logs; terminated only
+the already-shutting-down processes to cold-restart. Candidate shutdown untested.
+
+Decision: percentile/memory/allocation-per-frame screens pass, but final-view
+comparison and worse maxima remain unqualified. Pause after measured change for
+human checks and approval, per user instruction. S2 uncommitted; no S3. Source
+removes interface iteration in CopyLatticeCorrections, without new mutable
+exposure. No allocation-stack capture attributes exact saved bytes. A further
+matched comparison would be needed to resolve these limits automatically.

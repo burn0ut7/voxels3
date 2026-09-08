@@ -81,6 +81,15 @@ Investigate keeping readiness on the existing descriptor identity, obtaining imm
 
 ### S2 — Remove interface-enumerator allocation from canonical page queries
 
+2026-09-08 update: the historical range/capture loops below have already been
+replaced by TerrainPageIndex struct queries. Current S2 candidate narrows to
+CopyLatticeCorrections: private concrete dictionary iteration, retaining the
+read-only consumer view. Before/after completed; awaiting human approval with
+GPU maximum and final-placement comparison limits. See
+[S2 review](../ValidationEvidence/SimplificationS2/Review.md) and
+SIMPLIFICATION-S2-001/v1 in the ledger. Historical profile attribution below
+must not be read as a fresh measurement of this narrowed candidate.
+
 **Priority: high. Confidence: profile-supported allocation source.** `TerrainFieldSnapshot.Pages` is a read-only dictionary interface; `GetCorrectionRange` enumerates it in the sparse branch, and `TryCaptureRegion` scans it. The multiplayer capture attributes about 7.13 MiB of sampled ticks across threads to correction-page enumerators.
 
 Investigate retaining concrete private dictionary ownership for internal iteration while preserving read-only access for consumers. Keep the current choice between bounded coordinate probes and sparse-page iteration. Do not replace it with a dense world array, spatial-index framework, or one cache per subsystem. Treat snapshot construction separately from enumerator boxing so the measured benefit is attributable.
