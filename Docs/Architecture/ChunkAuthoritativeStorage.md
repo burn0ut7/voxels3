@@ -1,6 +1,6 @@
 # Authoritative chunk storage: prototype plan
 
-Date: 2026-09-07. Status: planned; no storage/paging implementation or acceptance is established by this document.
+Date: 2026-09-08. Status: user accepted current prototype performance and requested advancement to the next main slice. This is an acceptance decision, not a claim that every original validation gate passed. Preserve the remaining lifecycle/capacity/benchmark limitations and raw results below; the next requested slice is Regional storage (item2 in the ordered implementation plan).
 
 This document owns the staged implementation plan and proposed regional lifecycle contract. [Chunk streaming research](../Research/ChunkStreamingStorage.md) owns evidence and alternatives; [terrain deformation](TerrainDeformation.md) owns live tool behavior and existing acceptance status; [voxel foundation](VoxelChunkFoundation.md) owns field/spatial conventions; [validation results](../ValidationResults.md) owns executable scenarios and outcomes.
 
@@ -11,6 +11,31 @@ Implement and qualify **Slice 1: persisted regional edit state with real unload/
 Historical changes mean the current terrain state resulting from accepted edits, including edits made before a client arrived or before a saved world was reopened. This is not an undo feature, audit log or requirement to replay every brush operation.
 
 The observable first-slice experience is: dig/build through the existing tool, see the change live on host and one client, save the committed state, travel far enough for the edited pages to leave every required interest, release their resident sample memory, return and recover the edit from storage, then reopen the saved world and continue editing it. A late-joining/reconnecting client obtains the same history through the normal regional transfer path.
+
+## Current implementation handoff
+
+The prototype now saves the current procedural configuration and absolute edited
+sample state in the custom binary regional store. It does not replay brush
+history. Autosave runs after30seconds of dirty state; inspector Save now and
+Clear / Reset world use the same authoritative state. Normal Play teardown saves
+committed changes, and the next Play loads the selected previous save. Reset
+persists the empty correction state. Existing multiplayer terrain delivery uses
+this store; the user accepted multiplayer behavior and ended further multiplayer
+tests. There is no separate terrain-edit persistence path.
+
+Latest bounded evidence: three visible HISTORY trips preserved exact fingerprints
+and center collision contacts, with equal settled sample totals on every return.
+An older save completed after a newer edit and correctly left that newer revision
+unsaved until its own save. Two subsequent reloads completed in3978/4024ms;
+editing after reopen persisted correctly. These results qualify those bounded
+behaviors, not the entire slice. See the latest ledger entries and their raw
+visible2-history evidence.
+
+Remaining acceptance work is specific: explain the changed performance under
+comparable visible conditions, verify the latest teardown reference cleanup, and
+close outstanding capacity/cancellation and exact release-timing coverage. Prior
+engine shutdown failures remain recorded. Do not repeat already accepted
+multiplayer or ordinary save round trips without a relevant change or failure.
 
 ## Current starting evidence
 
@@ -61,6 +86,52 @@ Fix any integration defect that makes this first-slice flow stale, unsafe or div
 
 ## Ordered execution plan
 
+### Current implementation checkpoint
+
+`TerrainFieldStore` now owns page-file/checkpoint I/O, and the existing save/load commands route through it. Page files reuse the existing absolute page blocks and use content hashes as immutable names. A flat checkpoints directory holds versioned `.vxi` indexes and `.vxc` completion records; it retains two completed checkpoints after save and preserves the latest before beginning another candidate. The older `.vxt` save orchestration is removed, without adding a legacy compatibility path. The codec's identity serialization is still shared with manifests and fingerprints.
+
+The first production probe created 16 page records, reused them across three saves, cleaned the oldest checkpoint and read back identical regional content. See `BACKEND-CHECKPOINT-001/v1` in the ledger for exact results and limits. This does not establish power-loss durability, failed-write recovery, scale or real eviction. Current readback validates each checkpoint page sequentially and releases its decoded samples, then commits the metadata directory through the existing mutation boundary. Replacement comparison reads exact saved versions on a worker; regional consumers subsequently reload required samples through the bounded read pump. `TerrainField` now owns checkpoint metadata; restore preserves stored world/page revisions, and subsequent live edits advance that history once. A separate local epoch identifies job/cache lifetimes and rotates network transfer identity on restore, including same-world restore; it is absent from stored history. Per-page changed sample bounds keep restore actor checks out of unedited gaps. `STORAGE-REOPEN-PROBE-001/v1` matched both region fingerprints and a contact ray after another edit/save/Play restart, with zero authored edits attributed to restore. This is not a cold-process, multiplayer or full visual qualification. Epoch reset still broadly rebuilds render geometry. Published collision outside the replacement sample changes now retains its body and advances local metadata; pending old-epoch work is cancelled. The bounded REOPEN-READY regression reduced first-load collision rebuilds from4,913 to16 and repeated identical-load rebuilds to0, with full readiness observed below4seconds. Full HISTORY, stale-work and performance qualification remain outstanding. `CaptureRegion` narrows sample-reader dependencies. The canonical snapshot retains the bounded page metadata directory, while saved sample arrays can now be released independently.
+
+I/O uses one worker-side gate to serialize backend reads/writes/cleanup. Saved page records now act as exact file-version handles: a weak registry lets cleanup preserve files still referenced by canonical metadata or pending work without retaining their sample arrays. Handle creation and cleanup run under the same worker I/O gate. Completed saves attach handles only to their exact source page versions; later edits retain their unsaved status. The store also bounds candidate file count before writing. The bounded ownership probe preserved all saved page records across two saves and exposed resident versus unreclaimed sample bytes. The bounded FAILURE-001 case verified blocked-save recovery, ignored incomplete candidates and corruption rejection without live-state replacement. The latest visible HISTORY run established save completion for revision3 while liveRevision4 correctly remained unsaved. Capacity-edge qualification remains open. Consumer deferral and asynchronous regional reads are integrated and eviction is enabled. Earlier HISTORY attempts failed fixed-window retention or lacked reopen timing. The latest visible three-route run preserved exact content/contact with equal settled sample totals, and subsequent reloads completed in3978/4024ms. Prior-Play retention and performance comparison remain unresolved. Capacity admission/retry remain unqualified. The resumed STORAGE-MULTIPLAYER sequence matched host/client saved-history, live-update and reconnect fingerprints through revision3 with acknowledgements inside30seconds. Remote tool input and targeted multiplayer visuals were not fully instrumented; the user subsequently accepted multiplayer behavior and instructed that those tests stop. A client shutdown error is preserved separately.
+
+### Residency implementation boundary
+
+Keep one page-version object for canonical metadata (revision, block ranges and block revisions) while allowing its resident sample reference to be released. A regional reader captures a separate immutable reference to the same sample array; it never copies the samples or mutates the page. Releasing the canonical resident reference cannot invalidate an already acquired reader. Replaced saved versions now release that reference at commit even when metadata views outlive the replacement. A late save completion also releases its obsolete source versions after attaching exact stored handles; unsaved versions are protected. The bounded OBSOLETE-PAGE replacement regression retained exact hashes and readiness, but does not establish the memory deadline or late-save overlap. Global directory snapshots must not themselves pin every historical sample version after eviction. Nonresident sample access fails explicitly until the existing consumer obtains a loaded regional view.
+
+Track dense correction arrays at the single allocation boundary shared by brush creation/copy and codec decode. The prototype's 512 MiB combined sample limit includes old reader versions and decoded inputs, not just current pages. Weak allocation records observe arrays without keeping them alive; their reported bytes are conservatively unreclaimed until garbage collection confirms release. This is managed sample accounting, not a claim about process working set or GPU memory. All brush/copy/codec dense allocations pass through the same allocation cap. Brush jobs now reserve the bounding page count before dequeue, and regional disk batches reserve up to eight decoded pages before dequeue. Each consumed reservation becomes an allocated array under the same lock; other allocations include outstanding reservations in their cap check. Unused capacity is released by worker disposal, including cancellation. Capacity-deferred brush/read queues retry at most ten times per second and expose status. Unreserved restore/diagnostic/network decodes still reject capacity exhaustion explicitly; full admission coverage and capacity-edge qualification remain incomplete. No forced collection or alternate sampler is introduced.
+
+The integrated paging path now enables saved-page eviction. Mesh submissions, collision jobs and brush preparation acquire regional readers and defer when saved samples are missing. One worker reads batches of up to eight pages; the engine thread integrates at most eight results under a 1 ms soft budget. The sweep checks up to eight entries under the same soft budget and protects render/LOD, player/actor collision and mutation interests. Pin acquisition refreshes the five-second age. Reload preserves block-level metadata and authoritative revisions. Failed reads remain explicit and are not sampled as zero; capacity admission/reservation and retry recovery remain incomplete. The HISTORY workload has bounded correctness evidence; it is not an accepted overall performance result. Multiplayer testing is concluded under user acceptance.
+
+### Capability decision for Slice 1
+
+Use `FileSystem.Data` with immutable, checksummed absolute page records and a small versioned checkpoint directory. Reuse `TerrainFieldCodec.EncodePageBlock/DecodePageBlock`; do not add a second density encoding. The existing compiled save path already uses `CreateDirectory`, `OpenWrite(path, FileMode.CreateNew)`, `OpenRead` and stream disposal. Installed engine 26.09.01c evidence and the staging API schema also list directory enumeration and file deletion. Game-code compilation and real I/O still have to qualify each newly used operation. No atomic rename, native database binding or durable device flush is assumed.
+
+Write changed page versions to new filenames, close them, then write a new checksummed checkpoint index containing world identity, generator settings, authoritative revision and the complete coordinate-to-page-version directory. Publish a separate small completion record last. Never overwrite the previous completed checkpoint in place. An interrupted unpublished candidate cannot replace it. A completed checkpoint whose referenced data fails validation produces an explicit load failure; do not silently turn missing/corrupt pages into procedural terrain. Keep the previous completed checkpoint until the next is complete and cleanup is safe. Cleanup must respect current reads and checkpoint references. This establishes application-level checkpoint completeness, subject to successful real I/O tests; it does not establish power-loss durability.
+
+The field remains the canonical directory of committed versions. A directory entry can be known and nonresident. Metadata-only range/revision queries must remain available; sample readers require an acquired resident regional view. Before scheduling meshing, collision, brush preparation or transfer encoding, acquire the exact intersecting page dependencies, including each consumer's existing interpolation/normal halo. Such a view retains immutable sample payloads only for its region. Global directory snapshots must not indirectly retain all sample arrays. Missing saved dependencies defer the consumer and request a bounded read; they are never sampled as zero. Loading/pinning and eviction preserve world/page revisions and do not emit gameplay commits.
+
+Save inputs identify immutable committed versions. Completion advances the persisted revision only for the exact saved versions, even if further edits committed meanwhile. Dirty or actively read versions cannot be evicted. Lifecycle cancellation/world identity reject late I/O completions. Main-thread integration publishes only complete decoded pages under a time budget; I/O and decoding run in the supported worker path. These are implementation obligations, not claims about current code.
+
+Initial hard limits retain 2,048 known pages (256 MiB of current dense sample data) and 216 pages per mutation. Cap combined live, retained-reader and pending decoded sample payloads at 512 MiB, dirty current samples at 256 MiB, and one save plus one read worker. Bound read batches to eight pages (1 MiB decoded) and encoded I/O buffers to 4 MiB per worker. Admit work only when its worst-case reservation fits; if required interest cannot fit, hold/defer it visibly rather than evicting required data. Bound each main-thread I/O integration update to eight pages and a 1 ms soft time budget (an indivisible page may exceed it and must be measured). Saved pages without dependencies expire after five seconds; no extra warm-page count is promised. Limit store disk use to 1 GiB and retain at most two completed checkpoint directories plus one pending candidate. Failure to clean up or reserve space blocks a subsequent save visibly; it never deletes the last valid checkpoint. These are prototype capacity choices, not measured scalability claims.
+
+Alternatives rejected for this slice: continuing full-world decoded saves would not solve residency; a new database binding is not yet proven available; an edit-operation journal would introduce replay semantics the current state codec does not need. Immutable regional records cost directory/file overhead and checkpoint cleanup work, which the fixed bounded prototype must measure before scaling.
+
+### Integration boundaries verified before implementation
+
+The following source paths currently retain broad field snapshots. Each must acquire only its required regional samples before real eviction can be enabled; changing persistence alone is insufficient.
+
+| Consumer | Current retention boundary | Required regional dependency |
+| --- | --- | --- |
+| Logical chunk | `VoxelChunk` constructor stores `Field` | Chunk sample lattice and the existing descriptor sampling halo; broad-phase range queries use directory metadata |
+| Regular/transition GPU work | Both `GpuSdfDescriptor.WithField` methods store `Field`; edited publication retains `_editedField` | Each descriptor's existing `SamplingBounds`, including transition-face and normal support; release sample references after dispatch/cancellation |
+| Collision | `VoxelCollisionWorld.CreateRegion` and same-revision invalidation retain `Field` | Existing collision `SamplingBounds`, which includes one cell beyond the chunk for support fragments; retain through the actual worker, including cancellation drain |
+| Network | `PrepareTerrainTransfer` selects page versions but keeps absolute page objects in `TerrainOutgoing.Pages` | Manifest coverage and changed page versions only; hold their exact immutable versions until transfer completion/cancellation |
+| Mutation and diagnostics | Brush preparation and regional fingerprints capture `CurrentField` | Brush affected pages/interpolation support, or fingerprint bounds respectively; avoid whole-directory sample retention |
+
+The existing GPU resident and candidate descriptors already clear `Field` in several publication paths; preserve that behavior. `_editedField` must remain a metadata/version source rather than accidentally pinning the entire historical payload. Directory range queries must preserve current block-level revision/min/max semantics so residency changes do not invalidate unrelated geometry. A regional view cannot silently accept an out-of-view sample request as an absent edit.
+
+`PrepareReplacement` now preserves restored/received authoritative page and world revisions, removes pages absent from replacement, and carries an explicit local epoch for restore/session changes. Host gameplay edits alone increment authored-edit diagnostics. All replacements still use the one ordered commit boundary. The bounded Play-reopen probe verifies the restore/continue-edit portion; network epoch changes remain unqualified. Future residency-only installation must bypass replacement and must not increment history. Real paging remains part of Slice 1, not a second synchronization service.
+
 | Step | Work | Exit gate |
 | --- | --- | --- |
 | 0. Establish control | Verify current source/editor, read latest ledger decisions, inspect current ownership and supported storage APIs. Select one backend, define its limited durability contract and exact capacity budgets. Freeze first-slice scenarios and metric definitions in the ledger before any runtime run. | Reproducible source/environment, explicit design decision, immutable workload/criteria and no invented engine APIs |
@@ -99,3 +170,129 @@ Use the existing playable scene, production tool and accepted project test entry
 - **Slice 4, multiplayer scale and recovery:** more peers, disjoint exploration, bulk fairness, wider packet-fault recovery and refined synchronization if measurements show the need.
 
 These are candidate follow-ups, not promises to implement several systems or an authorization to advance before the user accepts the preceding slice. Select the next smallest complete slice from the observed result.
+
+## Normal saving workflow (2026-09-07 user-requested first slice)
+
+Host-owned edits now require a normal save lifecycle, not only a diagnostic
+command. Default to autosaving dirty committed state every30seconds, with a
+Save now inspector action and visible save status. Reuse the same checkpoint
+worker and completion integration used by voxel_terrain_save; do not introduce
+a separate autosave file format, copy of terrain or replication route. Clients
+continue receiving committed state through the existing manifest/page protocol;
+saving does not author or rebroadcast an edit.
+
+Play now restores the last successfully saved slot on the host during OnLoad,
+before normal streaming and player/session startup. A checksummed, bounded
+`terrain/last-world.vxl` selection points to the existing checkpoint store; it
+contains no terrain. Editor-scene instances neither initialize persistent terrain
+nor save on teardown; only the playable host owns the last-world selection.
+Missing selection means first use. Corrupt selection,
+checkpoint, or incompatible generator settings fail loading rather than silently
+starting and overwriting a fresh world. Existing saves without a selection can
+be opened explicitly and saved once. Clients continue receiving server state.
+
+Save now and autosave publish current committed state and remember its slot.
+Normal scene teardown synchronously saves the final committed state under the
+same storage lock before cancelling scene work. This can delay Stop for disk
+I/O; queued/uncommitted brush requests and abrupt process termination are not
+covered. Older worker saves cannot publish over a newer stored revision.
+The small selection write is checksummed but not power-loss atomic; corruption
+is an explicit load failure, not a fallback to a blank world.
+
+Clear / Reset world sits in the same World Saving inspector group as Save now
+(and is exposed as voxel_terrain_reset). It submits an empty correction field
+with the same world/settings and a newer revision through the existing ordered
+replacement path, invalidates derived terrain, then immediately saves it to the
+same slot. Reset is host-only and requires the existing idle/actor safety checks.
+It clears the active world, not every separately named save. Failed reset or save
+is logged and never reported as successful. No edit replay or second terrain
+representation is introduced. Full lifecycle/performance acceptance remains
+subject to the validation ledger.
+
+
+### Reusing uncollected immutable samples (bounded evidence, acceptance incomplete)
+
+Three fixed trips recovered identical density and actually unloaded all saved
+pages, but the weak allocation counter retained4MiB rather than2MiB at later
+settling checks. It subsequently returned to2MiB without intervention. The
+counter includes arrays not yet collected, not just active reader ownership;
+each dense page occupies131072sample bytes. Re-entry previously allocated a
+second equal-version array even when the released original still existed.
+
+Each canonical saved page now retains only a weak reference to its released
+array. Pinning that same page version may reattach the unchanged existing array;
+a collected target still uses the ordinary queued disk read. The weak reference
+does not extend array lifetime, change page/world revisions, change the file
+format, or bypass corrupt-checkpoint validation on Open/ReadDirectory. This is
+not a separate keyed cache or a second authoritative field: the canonical page
+version owns the reference, and mutations create distinct page versions.
+ReusedSamplePages exposes reuse separately from LoadedPages (actual disk reads).
+Budget accounting still counts every uncollected allocation and reservations;
+reuse makes no new dense allocation. No strong pool, forced GC, or relaxed
+memory criterion is introduced. Explicit reader disposal across all asynchronous
+consumers would be a broader ownership change and is not adopted without need.
+The same HISTORY scenario must still prove actual disk recovery after collection,
+correct hashes, capacity behavior, and bounded retirement; this change is not
+accepted merely because it can reduce duplicate allocation.
+
+### Teardown reference cleanup (2026-09-08)
+
+After cancellation, final save and downstream disposal, the manager releases
+saved canonical payloads and clears its field, task/result, sweep and warm-result
+references. Captured readers owned by finishing workers retain their immutable
+arrays independently. This removes manager-owned retention after the component
+is destroyed; it does not force garbage collection or establish that the engine
+has released all references. Compilation passed. The single post-change route
+preceded the first corrected teardown, so it does not validate cross-Play
+retirement. Repeated lifecycle validation remains incomplete.
+
+### Descriptor allocation correction (2026-09-08, unqualified)
+
+The user's full-distance edited-world route exposed materially worse frame
+times, allocation volume and post-route stationary FPS. Descriptor binding now
+skips regional snapshot creation for dependency revision0, reuses matching bound
+views, and checks stale epochs/revisions without constructing temporary views.
+The existing nonzero-edit pinning and procedural-only GPU paths remain the
+canonical paths. This removes identifiable unnecessary allocations; it is not
+yet a measured fix for the whole regression. The allocator still only trims
+empty trailing arenas; persistent arena fragmentation is a separate lead, not
+a proven leak or permission for an allocator redesign.
+
+Latest targeted full-distance observation after the descriptor correction:
+736.1FPS and4.19GB allocations versus the earlier manual run's411.2FPS and
+19.60GB. These are differing source/start/revision conditions, so the improvement
+is evidence consistent with the fix, not a matched causal attribution. The
+current run's arena count returned22 to14 and queues drained, while post-route
+stationary FPS was861.1 versus835.3 before. Player return/support differed, so
+that stationary comparison remains unqualified. The benchmark currently forces
+Z0 without restoring starting height; a correction is awaiting explicit approval
+under the project's fixed-workload policy.
+
+## User acceptance and transition — 2026-09-08
+
+The user accepted the current performance as reasonable, though below the desired
+level, and explicitly requested moving to the next main slice. Stop repeating
+Slice1 performance acceptance runs. The benchmark return-position patch remains
+proposed and unapplied; performance acceptance does not authorize that separate
+benchmark change. Cross-Play cleanup, capacity-edge/cancellation coverage, and
+exact release timing retain their recorded limits. No claim of complete
+original-gate coverage is made. Existing regression evidence remains available
+for future work. Confirm whether the next main slice follows storage scaling or
+the discussed priority of persisting generated untouched terrain.
+
+## Next requested slice: Regional storage (ordered plan item2)
+
+The user clarified that the accepted work is the baseline and requested Regional
+storage next, using the ordered implementation-plan numbering. Use that naming;
+do not substitute the separate future-slice list or begin generated-terrain
+caching. Existing page/checkpoint groundwork remains the single implementation.
+
+First bounded increment: remove duplicate reads of unchanged persisted pages
+during saves. A saved page already has an immutable coordinate/revision/hash
+record. Verify its bytes once through the existing store, reuse that record, and
+write a block only when absent from the destination. Newly edited pages still
+encode their current samples. Keep current format, quotas, checksums, one I/O
+gate, ordered commits and completion-record-last publication. Corrupt existing
+records must still fail explicitly, and an older save must not mark newer edits
+saved. Validate unchanged saves, changed-page saves and existing failure behavior
+through the production save path. This is not full generated-chunk persistence.

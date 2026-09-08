@@ -18,6 +18,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 	private readonly SemaphoreSlim _wake = new( 0, MaximumWorkers );
 	private readonly Dictionary<Vector3Int, Region> _regions = new();
 	private readonly Queue<Region> _pending = new();
+	private readonly HashSet<Region> _waitingForField = new();
 	private readonly Queue<Region> _completed = new();
 	private readonly Queue<VoxelCollisionGeometry> _availableGeometry = new();
 	private readonly Queue<Region> _retiring = new();
@@ -65,6 +66,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		public long InterestDistanceSquared;
 		public TerrainFieldSnapshot Field;
 		public int EditRevision;
+		public int FieldEpoch;
 		public long RequestedAt;
 		public readonly CancellationTokenSource Cancellation = new();
 		public bool Cancelled => Cancellation.IsCancellationRequested;
@@ -102,7 +104,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			lock ( _gate )
 			{
 				return _radius >= 0 && _ready == _regions.Count && _building.Count == 0 &&
-					_pending.Count == 0 && _completed.Count == 0 && _retiring.Count == 0;
+					_pending.Count == 0 && _waitingForField.Count == 0 && _completed.Count == 0 && _retiring.Count == 0;
 			}
 		}
 	}
@@ -193,11 +195,22 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			_leaving.Clear();
 			foreach ( var pair in _regions )
 			{
-				if ( !TerrainFieldChange.Intersects( SamplingBounds( pair.Key ), dirtyBounds ) ) continue;
-				var currentRevision = field.GetCorrectionRange( SamplingBounds( pair.Key ), out _, out _ );
-				if ( pair.Value.EditRevision != currentRevision ) _leaving.Add( pair.Key );
+				var bounds = SamplingBounds( pair.Key );
+				if ( change.Source.Epoch == field.Epoch && !TerrainFieldChange.Intersects( bounds, dirtyBounds ) ) continue;
+				var currentRevision = field.GetCorrectionRange( bounds, out _, out _ );
+				// Replacement compares the actual samples with an unchanged generator.
+				// Published geometry outside those changes is still valid. Only completed
+				// regions may cross the epoch here; all old pending work is cancelled below.
+				if ( change.Source.Epoch != field.Epoch && pair.Value.Ready &&
+					!change.ReplacementSampleBounds.Any( changed => TerrainFieldChange.Intersects( bounds, changed ) ) )
+				{
+					pair.Value.EditRevision = currentRevision;
+					pair.Value.FieldEpoch = field.Epoch;
+					continue;
+				}
+				if ( pair.Value.EditRevision != currentRevision || pair.Value.FieldEpoch != field.Epoch ) _leaving.Add( pair.Key );
 				else if ( !_building.Contains( pair.Value ) && !pair.Value.Ready && !pair.Value.QueuedResult )
-					pair.Value.Field = field;
+					pair.Value.Field = field.CaptureRegion( SamplingBounds( pair.Key ), pinSamples: false );
 			}
 			foreach ( var coordinate in _leaving )
 			{
@@ -224,14 +237,16 @@ internal sealed class VoxelCollisionWorld : IDisposable
 	private Region CreateRegion( Vector3Int coordinate, TerrainFieldSnapshot field,
 		PhysicsBody body = null, long geometryBytes = 0, bool hasPublishedCollision = false ) => new()
 	{
-		Coordinate = coordinate, Field = field, RequestedAt = Stopwatch.GetTimestamp(),
+		Coordinate = coordinate, Field = field.CaptureRegion( SamplingBounds( coordinate ), pinSamples: false ), RequestedAt = Stopwatch.GetTimestamp(),
 		EditRevision = field.GetCorrectionRange( SamplingBounds( coordinate ), out _, out _ ),
+		FieldEpoch = field.Epoch,
 		Body = body, GeometryBytes = geometryBytes, HasPublishedCollision = hasPublishedCollision
 	};
 
 	// Caller holds _gate. Cancelled requests cannot remain in the dispatch queue.
 	private void RebuildPendingOrder()
 	{
+		_waitingForField.Clear();
 		_ordered.Clear();
 		foreach ( var region in _regions.Values )
 		{
@@ -261,6 +276,17 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
 	}
 
+	public void NotifyFieldPagesLoaded()
+	{
+		lock ( _gate )
+		{
+			if ( _stopping || _waitingForField.Count == 0 ) return;
+			foreach ( var region in _waitingForField ) if ( !region.Cancelled ) _pending.Enqueue( region );
+			_waitingForField.Clear();
+			if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
+		}
+	}
+
 	private async System.Threading.Tasks.Task Work( VoxelCollisionMesher mesher )
 	{
 		while ( true )
@@ -269,11 +295,18 @@ internal sealed class VoxelCollisionWorld : IDisposable
 			lock ( _gate )
 			{
 				if ( _stopping ) return;
-				if ( _pending.Count > 0 && _completed.Count + _building.Count < MaximumCompleted && _availableGeometry.Count > 0 )
+				while ( _pending.Count > 0 && _completed.Count + _building.Count < MaximumCompleted && _availableGeometry.Count > 0 )
 				{
 					region = _pending.Dequeue();
+					if ( region.Cancelled ) { region = null; continue; }
+					if ( !region.Field.TryCaptureRegion( SamplingBounds( region.Coordinate ), out var reader ) )
+					{
+						_waitingForField.Add( region ); region = null; continue;
+					}
+					region.Field = reader;
 					_building.Add( region );
 					region.Geometry = _availableGeometry.Dequeue();
+					break;
 				}
 			}
 			if ( region is null )
@@ -469,7 +502,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 		{
 			return new PerformanceCollisionMetrics
 			{
-				Desired = _regions.Count, Ready = _ready, Bodies = _bodies, Pending = _pending.Count,
+				Desired = _regions.Count, Ready = _ready, Bodies = _bodies, Pending = _pending.Count + _waitingForField.Count,
 				Building = _building.Count > 0, ActiveWorkers = _building.Count, WorkerLimit = MaximumWorkers, Completed = _completed.Count, Retiring = _retiring.Count,
 				Failures = _failures, StaleDiscarded = _stale, Published = _published,
 				PeakCompleted = _peakCompleted, PeakCompletedBytes = _peakCompletedBytes,
@@ -502,7 +535,7 @@ internal sealed class VoxelCollisionWorld : IDisposable
 				if ( region.Body.IsValid() ) region.Body.Remove();
 				if ( region.Body.IsValid() ) remainingBodies++;
 			}
-			_regions.Clear(); _pending.Clear(); _completed.Clear();
+			_regions.Clear(); _pending.Clear(); _waitingForField.Clear(); _completed.Clear();
 			_ready = 0; _bodies = remainingBodies; _residentGeometryBytes = 0;
 			if ( _wake.CurrentCount < MaximumWorkers ) _wake.Release( MaximumWorkers - _wake.CurrentCount );
 		}

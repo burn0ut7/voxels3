@@ -78,7 +78,10 @@ internal sealed class VoxelChunk
 			? 0f
 			: (float)System.Diagnostics.Stopwatch.GetElapsedTime( boundsStart ).TotalMilliseconds;
 		_globalSampleOrigin = coordinate * cellsPerAxis;
-		Field = field;
+		var size = cellsPerAxis * cellSize;
+		var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * size;
+		Field = field.CaptureRegion( new SdfWorldAabb( origin - Vector3.One * cellSize,
+			origin + Vector3.One * (size + cellSize) ), pinSamples: false );
 		SampleCount = checked( SamplesPerAxis * SamplesPerAxis * SamplesPerAxis );
 		MinimumDensity = densityRange.MinimumDensity;
 		MaximumDensity = densityRange.MaximumDensity;
@@ -130,7 +133,13 @@ internal sealed class VoxelChunk
 		}
 
 		var global = _globalSampleOrigin + localSample;
-		density = Field.SampleWorld( new Vector3( global.x * CellSize, global.y * CellSize, global.z * CellSize ) );
+		var position = new Vector3( global.x * CellSize, global.y * CellSize, global.z * CellSize );
+		if ( !Field.TryCaptureRegion( new SdfWorldAabb( position, position ), out var reader ) )
+		{
+			density = 0f; materialId = AirMaterialId;
+			return false;
+		}
+		density = reader.SampleWorld( position );
 		materialId = density <= 0f ? GrassMaterialId : AirMaterialId;
 		return true;
 	}

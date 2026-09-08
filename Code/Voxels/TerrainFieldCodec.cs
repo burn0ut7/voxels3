@@ -56,7 +56,7 @@ internal static class TerrainFieldCodec
 			if ( !TerrainFieldChange.Intersects( bounds, new SdfWorldAabb( origin, origin + Vector3.One * size ) ) ) continue;
 			var page = pair.Value;
 			if ( page.Minimum == 0f && page.Maximum == 0f ) continue;
-			var payload = EncodePage( pair.Key, page );
+			var payload = EncodePage( pair.Key, TerrainFieldStore.PinForRead( page ) );
 			// Page coordinates and exact codec sample values remain; revision is local bookkeeping.
 			Array.Clear( payload, 12, sizeof( int ) );
 			writer.Write( SHA256.HashData( payload ) );
@@ -73,16 +73,16 @@ internal static class TerrainFieldCodec
 		return stream.ToArray();
 	}
 
-	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePageBlock( byte[] block, int maximumRevision )
+	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePageBlock( byte[] block, int maximumRevision, TerrainFieldPage.SampleReservation reservation = null )
 	{
 		using var stream = new MemoryStream( block, false );
 		using var reader = new BinaryReader( stream );
-		var result = DecodePage( ReadBlock( reader, MaximumPagePayloadBytes ), maximumRevision );
+		var result = DecodePage( ReadBlock( reader, MaximumPagePayloadBytes ), maximumRevision, reservation );
 		if ( stream.Position != stream.Length ) throw new InvalidDataException( "Terrain page block contains trailing data." );
 		return result;
 	}
 
-	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePage( byte[] payload, int maximumRevision )
+	public static (Vector3Int Coordinate, TerrainFieldPage Page) DecodePage( byte[] payload, int maximumRevision, TerrainFieldPage.SampleReservation reservation = null )
 	{
 		if ( payload is null || payload.Length < 17 || payload.Length > MaximumPagePayloadBytes )
 			throw new InvalidDataException( "Terrain page length is invalid." );
@@ -100,7 +100,7 @@ internal static class TerrainFieldCodec
 		if ( count < 0 || count > TerrainField.SamplesPerPage ||
 			stream.Length - stream.Position != (long)count * (mode == 0 ? 4 : 6) )
 			throw new InvalidDataException( "Terrain sample count is invalid." );
-		var values = new float[TerrainField.SamplesPerPage];
+		var values = TerrainFieldPage.AllocateValues( reservation );
 		var previousIndex = -1;
 		for ( var i = 0; i < count; i++ )
 		{

@@ -16,6 +16,7 @@ public sealed partial class VoxelManager
 	private int _terrainSendCursor;
 	private long _nextTerrainTransferId;
 	private Guid _terrainReplicationWorld;
+	private int _terrainReplicationFieldEpoch;
 	private long _terrainSendTimestamp;
 	private double _terrainSendCredit;
 	private long _terrainBytesSent;
@@ -153,10 +154,11 @@ public sealed partial class VoxelManager
 		_gpuMesher.SetFieldPresentationReady( presentationReady );
 		if ( !Networking.IsActive || _terrainAuthorityLost ) return;
 		if ( !Networking.IsHost ) { UpdateTerrainReceiver(); return; }
-		if ( _terrainReplicationWorld != CurrentField.WorldId )
+		if ( _terrainReplicationWorld != CurrentField.WorldId || _terrainReplicationFieldEpoch != CurrentField.Epoch )
 		{
 			if ( _terrainReplicationWorld != Guid.Empty ) _terrainNetworkEpoch = Guid.NewGuid();
 			_terrainReplicationWorld = CurrentField.WorldId;
+			_terrainReplicationFieldEpoch = CurrentField.Epoch;
 			_terrainCallers.Clear();
 			foreach ( var peer in _terrainPeerOrder )
 			{
@@ -246,7 +248,7 @@ public sealed partial class VoxelManager
 				transfer.Encoding = Task.RunInThreadAsync( () =>
 				{
 					cancellation.ThrowIfCancellationRequested();
-					var encoded = TerrainFieldCodec.EncodePageBlock( key, page );
+					var encoded = TerrainFieldStore.EncodePageVersion( key, page );
 					cancellation.ThrowIfCancellationRequested();
 					return encoded;
 				} );
@@ -383,7 +385,8 @@ public sealed partial class VoxelManager
 				incoming.RequestId = ++_nextTerrainEditId;
 				_activeTerrainEdit = new TerrainEditIntent( incoming.RequestId, default, 0, 0, Stopwatch.GetTimestamp() );
 				incoming.Applying = true;
-				_terrainEditTask = Task.RunInThreadAsync( () => TerrainField.PrepareReplacement( source, target, cancellation ) );
+				var resetEpoch = _terrainReplicaEpoch != incoming.Epoch;
+				_terrainEditTask = Task.RunInThreadAsync( () => TerrainField.PrepareReplacement( source, target, cancellation, resetEpoch ) );
 			}
 			if ( !incoming.Committed || _gpuMesher.FieldPublicationPending ) return;
 			var player = _terrainLocalPlayer;

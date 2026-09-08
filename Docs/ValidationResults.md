@@ -12359,3 +12359,1590 @@ of13,815main-thread samples. Later8–13seconds contain brush/invalidation work.
 Descriptive segment selection is not frozen idle acceptance. Full findings
 in Research/TerrainDeformationIdleProfile171551.md and derived per-second
 evidence profile-idle-171551-summary.json.900+FPS target remains unaccepted.
+
+### STORAGE-SLICE1 control preflight — 2026-09-07
+
+Source before runtime edits: `08ef45a`, clean worktree at inspection. Engine
+26.09.01c, original project root, Ryzen 7 9800X3D / RTX 5090; record actual
+process identity, display/viewport and hardware again with each run. Editor
+PID14584 was stopped, no active scene, no unsaved changes and compile success
+at this inspection. Its long-lived process is not a cold control. Close its
+main window normally, preserve teardown errors, verify exit, then launch the
+same project in a fresh process. Do not force termination or reuse a hotloaded
+process as cold evidence. No source/asset changes during a run.
+
+Run the unchanged current canonical workload recorded in the 2026-09-07
+current-source preflight above: authored basic_example, seed1337/gen5,
+32cells/16units, gameplay8/visual512/LOD0..6, surface0/frequency0.0005/
+amplitude128, authored attached camera90, fps_max1000, one local host and no
+client, normal spawn. Once all enabled visual/transition and collision work
+is settled, invoke run_performance_test with speed2500, distance50000,
+loopCount1, task storage-slice1-before and revision08ef45a. Completion includes
+the normal route, built-in final settle/stationary phases and exactly one
+structured result append. Capture source hashes, raw result, startup/teardown
+logs and native errors. Do not reinterpret earlier LoadRadius16 historical
+definitions as the current gameplay8 workload. Preserve the existing canonical
+acceptance gates and unresolved hotload-memory/lifecycle findings. Before/after
+comparison uses matching fresh processes and settings; report absolute and
+percentage FPS, CPU/GPU p95/p99/max, process/GPU peaks, allocation observations,
+readiness, failure counts and backlogs. Flag any >5% FPS loss, >10% tail or peak
+memory increase for explanation/repeat, without waiving stricter existing gates.
+
+Capture fresh-Play controls for HOLD-001/v2 and SPRINT-001/v1 using their exact
+existing production commands, timing, movement and pass criteria; each starts
+unedited and settled. These are separate from the clean figure-eight run.
+No new storage behavior is inferred from these before-change controls.
+
+### STORAGE-HISTORY-001/v1 — regional lifetime and checkpoint
+
+This is a new storage feature workload, not a replacement or altered version
+of the canonical performance workload. Production entry points: existing
+voxel_terrain_edit, voxel_terrain_save/load, figure-eight movement, field
+fingerprint and shipping terrain/collision/storage diagnostics. Use authored
+basic_example, engine26.09.01c and the same hardware/settings as the control,
+except select visual radius32 through the existing production property before
+warmup (gameplay8 unchanged). This bounded feature workload permits the normal
+50,000-unit route to leave the full visual interest. Fresh single host, no
+client or actors, no prior history, standard spawn. Wait for visual/collision
+settlement, with120second startup deadline; failure to settle fails setup.
+
+1. In order, issue dig at(-512,-512,0),radius128,strength+512 and build at
+   (1024,0,0),radius128,strength-128. Await each field/visual/collision completion
+   with10second deadline. Record world ID, revision, exact regional fingerprints
+   centered at each edit withradius512, changed page keys, seams and actual
+   terrain ray contact. Save slot storage-history-v1 and await explicit saved
+   completion within10seconds. Record committed and persisted versions.
+2. Run the existing player figure-eight at2500/50000/one loop, three times,
+   waiting for normal completion between runs. Observe shipping residency
+   counters once per second without pinning the old edit region via diagnostic
+   sample queries while away. Require every edited page without any consumer
+   dependency to release its payload within10seconds of becoming eligible;
+   record actual released bytes and retired-reader bytes separately. Returning
+   must cause disk reads and restore the same versions/hashes/contact/seams.
+   After each route, allow10seconds to retire references. Current plus retained
+   sample bytes must return to the same settled amount; no visit-to-visit growth.
+3. Apply a third edit at(-512,-512,0),radius128,+512; request save, immediately
+   queue the same edit once more through the normal mutation queue. Record both
+   completion orders. Saved revision may describe the first request, never
+   falsely the newer commit. After both drain, save again and await completion.
+   If save finishes first, record that this run did not exercise overlapping
+   completion; that specific concurrency gate remains unproven.
+4. Record new hashes; stop Play normally, start the same scene, load the same
+   slot, await history readiness within10seconds after load request and compare
+   exact identity/versions/hashes, geometry and contact. Apply one further dig
+   at(1024,0,0),radius128,+512, save, reopen once more and verify its changed
+   hash persists. Reopening must not create synthetic authored edits.
+
+Capacity limits fixed before execution: known pages<=2048; mutation<=216pages;
+current dense samples<=256MiB; total current/retained/decoded samples<=512MiB;
+dirty<=256MiB; at most one read worker and one save worker; read batch<=8pages;
+encoded I/O buffers<=4MiB/worker; integration<=8pages/update with1ms soft budget;
+disk<=1GiB. Record byte accounting, reservations, actual I/O bytes/durations,
+integration p95/p99/max, deferred work and overflow/rejection reasons. A soft
+budget overrun must remain visible; no unlimited queue or unsaved eviction is
+permitted. Reload readiness must complete within10seconds after required
+interest returns. Existing performance gates still run separately atvisual512.
+
+### STORAGE-FAILURE-001/v1 — production I/O failure
+
+Use the same single-host setup and two initial edits/save as HISTORY-001/v1,
+in a distinct private slot storage-failure-v1. Preserve an external byte copy
+of this test slot before deliberate corruption. Restrict filesystem mutations
+to that verified slot under the game's Data directory; do not touch other saves.
+Hold the destination for the next candidate checkpoint against writes using an
+external exclusive file handle, then make one further dig(-512,-512,0),r128,
++512 and request save. Require explicit failure within10seconds, no saved
+revision advancement, and dirty payload still resident/protected. Release the
+handle; save normally, require success and verify exact latest state on reopen.
+
+For interrupted-candidate recovery, retain a valid completed checkpoint and
+create an incomplete candidate using the actual production file layout (no
+valid completion record). Reopen: require prior completed history unchanged,
+no partial transaction and an explicit ignored-incomplete-candidate diagnostic.
+For corruption, truncate a referenced newest completed page file by one byte
+in the copied test slot and request load. Require explicit rejection within
+10seconds and no replacement of live state/world identity. Restore only the
+test file from the byte copy; reopen and require exact history. Record concrete
+paths, byte counts and hashes before/after. These cases qualify application
+recovery only, not power-loss durability. If an exclusive handle does not cause
+the intended write error, record unexercised failure injection; do not infer pass.
+
+### STORAGE-MULTIPLAYER-001/v1 — history through existing replication
+
+Reuse the fresh private host plus one joinlocal client environment and settings
+of RECONNECT-001/v1 (visual512, gameplay8, normal spawn, fps_max1000; client
+-joinlocal +instanceid1 -sw -720 +fps_max1000). Apply host dig(1024,0,0),r128,
++512, save slot storage-multiplayer-v1, stop/reopen host and load that slot.
+Join one client; require latest ACK within30seconds of player.joined, exactly
+two owned players and matching host/client world/hash at(1024,0,0),radius512
+with exactly one reply each within10seconds. Invoke the same host edit once,
+await latest ACK and repeat fingerprint after the10second diagnostic interval.
+Require agreement and changed hash. Close only client normally; after its
+player/connection is removed, repeat that edit once, save and reconnect the
+client. Require latest ACK, same identity/hash and exactly two players again.
+No hotloads or other edits. Separately execute unchanged CONVERGENCE-001/v1
+and RECONNECT-001/v1; do not conflate their results with this reopened history.
+
+Live remote tool qualification additionally uses ten Attack1 attempts at10Hz,
+then ten Attack2 attempts at10Hz from the normal client spawn aimed at(1024,0,0),
+through the existing player input/RPC validation. Record accepted/rejected
+attempts and reasons, no duplicate request commits, host/client publication
+and fingerprints after completion. Require at least one accepted request in
+each mode and zero lost accepted edits; no diagnostic direct client mutation.
+Preserve ray/overlap rejections, do not move the target to manufacture a pass.
+Inspect actual host and client geometry and terrain support; hashes alone do
+not qualify those. Report all network/native lifecycle errors independently.
+
+All storage cases are frozen but NOT RUN. Correctness requires zero lost
+acknowledged saves, half-checkpoints, stale overwrites, duplicate application
+or client-authored state. Basic synchronization failures are Slice1 blockers.
+Application interruption, arbitrary packet faults, power-loss durability and
+large-server scaling are not inferred from the bounded cases above.
+
+#### STORAGE-SLICE1 precontrol shutdown — incomplete baseline
+
+The normal close request for long-lived editorPID14584 reached shutdown at
+2026-09-07 17:43:14 local. Preserved log:
+[precontrol-shutdown.log](ValidationEvidence/ChunkStorage/precontrol-shutdown.log).
+It reports `Exception when destroying prefabs/terrain_player.prefab`, assertion
+`4 components weren't deleted!`, followed by Source2Shutdown. The actual modal
+text was `[mimalloc] error 11: double free detected`. This is a failed teardown
+observation of the existing source, before any storage runtime change.
+An accessibility click failed with unavailable geometry; a subsequent Return
+was sent, but dismissal was not verified. The user stopped Computer Use with
+Escape; no further UI action was taken that turn. On continuation the original
+PID14584 was still present. Requested user dismissal before another cold launch;
+no clean-process baseline has run and no forced termination was attempted.
+
+HEAD advanced through research-only commits880f9c9 andcf70605; diff from08ef45a
+contains documentation only. The initial control-source.json process inventory
+incorrectly excluded sbox-dev.exe, so its empty process list is not evidence of
+editor exit. Preserve that artifact as historical and use the separately
+corrected complete inventory for subsequent source matching. A process handle,
+not that stale inventory, determines whether restarting is safe.
+
+#### STORAGE-SLICE1 cold figure-eight a2a20b7f9e6a4cd4b9fb80b27971a624
+
+Old process absence was verified before launching editorPID17148 at17:50:23
+local on2026-09-07. Correct project/engine26.09.01c, successful initial compile,
+authored basic_example, fps_max1000, no clients. Runtime/scene source remains
+identical to08ef45a; actual HEADcf70605 adds only research documents. No source
+edits/hotloads during startup, route or result capture. Before run: all4913
+collision regions ready, visual/transition/placement pending0, grounded local
+player on VoxelManager, support hit true. A malformed voxel_chunk_info command
+without its required coordinates was rejected during setup; it did not mutate
+terrain. The existing collision diagnostic supplied readiness evidence.
+
+Run began17:51:47.5087, completed one canonical loop in121.93515seconds and
+saved17:53:59.6276. [Raw result](ValidationEvidence/ChunkStorage/control-figure-eight.json),
+[startup log](ValidationEvidence/ChunkStorage/control-startup.log),
+[run log](ValidationEvidence/ChunkStorage/control-run.log).
+Average809.4718FPS,98710samples/no truncation; CPU p95/p99/max
+2.0443/3.8219/47.7765ms; GPU p95/p99/max1.7132759/2.354145/3.9606094ms.
+Sampled process peak3960242176bytes; end-process3962032128bytes exceeds that
+sampled peak and is retained explicitly. GPU peak2916375592bytes.
+Final collision ready4913/4913, pending/completed/retiring/failures0.
+
+This is before-change numerical evidence, not an accepted overall performance
+or lifecycle pass. Compared with earlier hotloaded runb94bb84e, FPS is lower
+and GPU memory materially higher; viewport/environment comparability remains
+to be established. During approximately the first part of this route, a host
+PowerShell command attempting to read the old80MiB JSONL remained active; it
+was cancelled without altering the result file. Its interference is unmeasured,
+so a matched clean repeat without that command is required before using this
+run as the sole acceptance control. Subsequent result extraction used a bounded
+tail read. Preserve this run rather than silently replacing it.
+
+Startup contains resource-file errors in engine assets. Source2 shutdown and
+the remaining deformation controls were not yet qualified. After the result
+was saved, initial regional-reader code hotloaded before Play was stopped;
+therefore later teardown ofPID17148 cannot establish an unchanged-source cold
+teardown. These limitations are not storage regressions or permission to waive
+the unresolved existing gates.
+
+#### Regional-reader implementation checkpoint — unqualified
+
+Added immutable CaptureRegion to TerrainFieldSnapshot and wired logical chunks,
+regular/transition descriptors, collision regions and regional fingerprints to
+retain only their page dependencies. Captures retain world/revision identity;
+out-of-region reads fail explicitly, and the authoritative commit boundary
+rejects regional views as world replacements. This is a dependency-lifetime
+preparation step, not disk storage or actual eviction. The canonical current
+field still retains all pages. Persistence, residency integration and network
+transfer acquisition remain to implement.
+
+Play stopped before subsequent guard edits. Live editor reported compile
+success/zero errors and git diff --check passed. No post-change in-world
+behavior, deformation timing or performance acceptance is claimed. Runtime
+changes remain uncommitted. Exact-source HOLD/SPRINT before controls and the
+unconfounded cold figure-eight repeat remain required before acceptance.
+
+#### Exact-source control repeat setup — 2026-09-07 18:01 local
+
+Preserved the five-file regional-reader runtime change as
+`C:\Users\Gray\AppData\Local\Temp\voxels3-storage-7h7dadce\regional-readers.patch`,
+SHA256 `761dfe6f768bf4a1b9f9ec0b2c64023768f9ddcd3b6ff12d6aac4e8bf45f9c59`.
+Reverse application succeeded and Code has no diff fromHEAD. Restore this
+patch after the exact-source controls; do not lose the pending implementation.
+This staging restores original runtime inputs, not different test parameters.
+
+Editor17148 normal shutdown again displayed two native double-free dialogs,
+the second naming MimallocErrorCallback. Both were inspected and dismissed
+normally; process exit was verified before launching editor35524 at18:01:22.
+No force kill. Preserve control-first-shutdown.log. This process had hotloaded
+the reader patch after its measured route, so its shutdown is not a pristine
+source teardown comparison. The new process must run the same frozen canonical
+control without source changes or background JSONL parsing. Capture the result
+only after completion, then HOLD-001/v2 and SPRINT-001/v1 on separate fresh Play
+worlds using their unchanged production workload definitions.
+
+#### Exact-source control suite in editor35524 — results
+
+No runtime/source hotloads between process startup and all three measured
+workloads. Original runtime source matches08ef45a; HEADcf70605 differs only
+in research documentation. Canonical inputs remain unchanged. The regional
+reader patch stayed outside Code for the entire suite. Captured source controls:
+[figure-eight repeat](ValidationEvidence/ChunkStorage/control-figure-eight-repeat.json),
+[HOLDv2](ValidationEvidence/ChunkStorage/control-hold-v2.json),
+[SPRINTv1](ValidationEvidence/ChunkStorage/control-sprint-v1.json),
+[suite log](ValidationEvidence/ChunkStorage/control-repeat-suite.log).
+
+Figure-eight runf246ea65773a46ef92f3f7678766e8f1 began18:02:43 and saved18:04:56.
+One loop121.94386seconds,70064samples/no truncation,574.5544FPS; CPU
+p95/p99/max3.0808/4.3358/38.2362ms, GPU2.514124/3.3082962/10.781527ms.
+Process sampled peak4021542912bytes, end4022988800bytes; GPUpeak2966707240bytes.
+Stationary10.000971seconds averaged679.24774FPS and allocated177444064managed
+bytes with4collection frames and41.354ms total GC pause. No background result
+parsing or source work ran during this timed route. The repeated unchanged
+source varied materially from runa2a20b7f; neither result establishes a stable
+acceptance comparison with the earlier900+FPS observations.
+
+After route completion, read-only machine counters observed editorCPU122%,
+DWM52%, Discord processes29% and23% (per-core style process percentages),
+GPU74%,57C,208.09W, graphics2955MHz. A later snapshot during fresh Play startup
+attributed GPU3D utilization65% to editor35524 and21% toDWM1852; preserve
+[GPU activity](ValidationEvidence/ChunkStorage/control-gpu-activity.json).
+These are point-in-time observations outside the route, not proof of its cause.
+Other applications were not closed or modified. Environment/viewport effects
+remain unresolved; preserve the comparison limitation instead of selecting
+the fastest run. Storage acceptance must resolve the comparison before commit.
+
+HOLD-001/v2 run7b4cde1bdd3d4b9cbdb4a6f8189bcc94 used a fresh settled Play world,
+began18:06:47 and saved18:08:07 with failure=null. All600attempts committed,
+rejected0, pending0, peakqueue0, controller changes0, peakpagebytes1572864.
+Field p95/p99/max6.4431/7.9577/11.6363ms; visual40.7031/43.7052/58.9058ms;
+collision31.8731/34.9581/40.907ms. Work/drain687.1592FPS, CPU p95/p99
+2.6135/4.5714ms, GPU1.9648075/2.6316643ms. Mutation completion and edit-latency
+gates pass; do not infer full performance acceptance from failure=null.
+
+SPRINT-001/v1 run7ca06660390e47cabfb008191c889171 used another fresh settled
+Play world, began18:09:09 and saved18:10:29, failure=null.335committed,
+254rejected, pending0, peakqueue0, controller changes0. Travel12118.195units,
+maximum speed518.43304units/sec. Field p95/p99/max5.9841/7.6732/13.3254ms;
+visual52.3321/195.8558/292.6995ms; collision90.653/101.3119/198.6515ms.
+Work/drain662.89496FPS, CPU p95/p99 2.7401/4.2157ms,
+GPU2.0992756/2.8338432ms. FAIL: visualp99 exceeds150ms, CPUp95 exceeds2.5ms,
+GPUp95 exceeds2ms. These are original-source failures, not effects of the
+regional-reader patch. All attempts and declined/busy observations remain in
+the raw result; do not equate335+254 with the total scheduled600attempts.
+
+Play stopped after capture with no source edits; normal close requested for
+editor35524. Its final shutdown outcome must be recorded separately. These
+controls enable investigation and comparison but do not waive existing
+performance, lifecycle, visual or multiplayer gates. No storage runtime work
+is qualified by these tests.
+
+Unchanged-source editor35524 teardown reached Source2Shutdown18:11:57 and
+displayed both native error11 double-free dialogs, including MimallocErrorCallback.
+They were inspected and dismissed through normal UI. Preserve
+[cold source shutdown](ValidationEvidence/ChunkStorage/control-repeat-shutdown.log).
+This fresh process had no runtime hotloads and ran only the original source
+controls; the native lifecycle failure therefore reproduces without the pending
+regional-reader implementation. Cause remains unproven. After control capture,
+the exact preserved reader patch passed git apply --check and was restored to
+the working tree. Runtime changes remain uncommitted and unqualified.
+
+### BACKEND-CHECKPOINT-001/v1 — production checkpoint reuse probe
+
+Bounded backend qualification during Slice1 implementation, not the full
+STORAGE-HISTORY scenario. Source backend-source.json, editor36136 engine26.09.01c,
+single host, authored basic_example with gameplay8/visual32, seed1337/gen5,
+fps_max1000. Setup executed HISTORY-001/v1's two edits and first save: dig at
+(-512,-512,0),r128,+512, then build at(1024,0,0),r128,-128. Both accepted and
+settled, revision2,16pages/2097152dense bytes. No reader-region errors. First
+save completed within the same logged second at18:24:01, checkpoint1,
+world55e278de-8bf8-4e60-9656-70c6af8257cb. Preserve backend-first-checkpoint.json:
+16page files,952byte index,32byte completion record; total27132bytes. This
+establishes real creation/write completion only, not reopen or actual eviction.
+
+The full HISTORY scenario remains incomplete: first edit settlement was read
+after its10second observation deadline, and the second fingerprint was taken
+after save rather than before it. No timing/order acceptance is inferred.
+Observed dig-region fingerprint (center-512,-512,0,r512)
+4F0729925F4F6B5E8ED90656DB91173EAE83555D07E595150275ED6D48EACD19;
+build-region (1024,0,0,r512)
+07C2686E76E9369C091A3A69A2FA98B8DA8BF6A5B1D1D377E32641BB80252C09.
+Dig contact ray(-512,-512,512) to(-512,-512,-512) hit terrain atZ-90.008.
+Visual inspection and physical-body support are not inferred from that ray.
+
+From this exact settled revision2, issue two more saves to storage-history-v1,
+await each completion within10seconds with no intervening edits. Require
+checkpoint sequences2and3, unchanged revision/world/page hashes, still exactly
+16page files and exactly two complete indexes/markers after the third save.
+Then load the same slot in the current world, await field/derived drain within
+10seconds, and compare both regional fingerprints (space diagnostic calls by
+at least10seconds). Require exact values/world and no I/O error; capture exact
+file counts/bytes. Same-world equality is not proof of world-reopen revision
+preservation. The current replacement integration still requires that work,
+along with residency/transfer pinning and historical unload/reload.
+
+#### BACKEND-CHECKPOINT-001/v1 observed result
+
+Checkpoint2 completed18:26:56 and checkpoint3 completed18:27:16, each in the
+same logged second as its request, both world55e278de-8bf8-4e60-9656-70c6af8257cb
+revision2. Third-checkpoint file inspection found16unchanged page hashes,
+two indexes/two completion records,28116total bytes; checkpoint1 was removed.
+Preserve backend-third-checkpoint.json. This exercises real FindFile, FileSize,
+DeleteFile and OpenRead/CreateNew operations under the game's private Data API,
+including basename handling without assuming recursive path semantics.
+
+Load requested18:27:30; normal mutation worker reported23.6892ms commit latency.
+Later status showed revision2/16pages unchanged and no pending work/failure.
+The status observation was after10seconds, so strict observation-deadline
+acceptance remains incomplete despite the measured field-completion latency.
+Both fingerprints after load exactly matched the two recorded hashes; no new
+managed error was observed in the probe. Preserve backend-checkpoint-probe.log.
+Page reuse, checkpoint retention and same-world density readback were observed;
+this is not full historical reopen, geometry/contact or performance acceptance.
+
+The probe exposed existing accounting semantics: same-state restore incremented
+the authored commit count from2to3. After stopping Play, changed accounting to
+count only host gameplay commits, excluding restores and client replica
+installation. Also reject a new save while restore is pending so checkpoint
+cleanup cannot race the existing Open-to-ReadSnapshot load sequence. These
+latest guards require runtime verification; the probe predates them. Region
+residency pins and asynchronous reads still require stronger lifetime handling.
+
+### STORAGE-REOPEN-PROBE-001/v1 — frozen 2026-09-07
+
+Bounded restore integration probe, not full Slice 1 acceptance. Use the current
+editor build 26.09.01c, basic_example scene, one local host, seed1337/gen5,
+visual radius32/gameplay8/fps_max1000. Start a fresh Play world and wait60seconds.
+Load existing storage-history-v1 checkpoint3 (world55e278de-8bf8-4e60-9656-70c6af8257cb,
+revision2,16pages). Within10seconds require field commit and no pending edit
+visual/collision work; authored committed count stays0. Check both r512 hashes
+against BACKEND-CHECKPOINT-001/v1, spacing fingerprint calls by at least10seconds.
+Save unchanged state to a new private slot storage-reopen-v1; require completion
+within10seconds and matching page coordinate/revision/content records. Then issue
+one overlapping dig at(-512,-512,0),radius128,strength64; require revision3 and
+exactly one authored commit, with derived drain within10seconds. Record both
+hashes, save again to storage-reopen-v1, require completion within10seconds.
+Stop Play, restart the same scene/settings, wait60seconds and load storage-reopen-v1.
+Require world/revision3/page versions and both recorded hashes retained, authored
+count0, derived drain within10seconds. Inspect a rendered view and the existing
+dig contact ray; record observation limits. Preserve original history fixture.
+Any actor-intersection rejection is a probe failure; do not move actors or alter
+parameters to obtain a pass. This probe does not validate memory eviction,
+multiplayer, cold process reopen, or performance.
+
+#### STORAGE-REOPEN-PROBE-001/v1 first attempt — failed
+
+2026-09-07, editorPID36136, HEAD1e97e0d plus reopen-source.json WIP hashes.
+Fresh Play started18:41:54, source worldc318a25c-4e9d-47de-b697-00926b61c7d2
+revision0. Load requested18:43:13; rejected in the same second because an actor
+intersected the restore area. At18:43:17 field remained revision0/pages0/epoch0,
+committed0/rejected1; no derived work was started. Stop this attempt here.
+The existing safety check uses one enclosing AABB for all differing samples,
+so the unrelated gap between the two edited areas includes the player at the
+origin. This failure is preserved; do not move the player or alter the fixture.
+Change the production restore safety check to examine actual per-page changed
+sample bounds, keeping interpolation support, then repeat unchanged v1.
+
+#### STORAGE-REOPEN-PROBE-001/v1 unchanged repeat — partial qualification
+
+Source: HEAD1e97e0d plus reopen-repeat-source.json hashes, editorPID36136,
+26.09.01c, same frozen inputs. Compile succeeded with0errors before Play.
+The production fix computes per-page changed sample AABBs, including one
+interpolation sample of support, and uses those for restore actor exclusion.
+No actor or fixture was moved. The first rejected run remains above.
+
+Fresh Play18:44:45; history load18:46:08 committed in the same logged second,
+world55e278de-8bf8-4e60-9656-70c6af8257cb/revision2/epoch1/16pages/checkpoint3.
+At18:46:12 authored committed0/rejected0, field completion21.6479ms,
+edit visual/collision pending false. At18:46:26 all4913collision regions
+were ready with no failures, player grounded. Both region fingerprints
+matched the original revision2 fixture exactly. At18:46:49 save to the new
+private storage-reopen-v1 slot completed checkpoint1/revision2 in the same
+logged second. reopen-checkpoint-comparison.json verifies exact equality of
+all16coordinate/revision/size/hash records with history checkpoint3: eight
+revision1 and eight revision2 pages; marker and referenced file hashes valid.
+
+One overlap dig requested18:47:19, acceptedid2. At18:47:23 field revision3,
+epoch1,16pages, authored committed1/rejected0, changed samples2103, completion
+13.1242ms,12visual/8collision dependencies and edit pending false. Saved
+revision remained2 until the next save, demonstrating that a later live edit
+is not marked saved by the previous checkpoint. Updated dig-region hash:
+BC0AD56CD49653C71A73C1CCDED26788AF5BB80B41A1FC704420621CF6E18DE2.
+Build-region hash stayed
+07C2686E76E9369C091A3A69A2FA98B8DA8BF6A5B1D1D377E32641BB80252C09.
+Dig ray hitZ-92.223 (normal0.0528,-0.0736,0.9959), componentVoxelManager.
+At18:47:47 save completed checkpoint2/revision3 in the same logged second.
+
+Stopped and restarted Play18:47:48. At18:48:52 the fresh world had revision0,
+epoch0/pages0/authored0. Load18:49:07 restored the saved world/revision3,
+epoch1/pages16/checkpoint2 in the same second. At18:49:11 authored0/rejected0,
+field completion44.9028ms and edit pending false. Both hashes and the dig
+ray contact exactly matched the pre-restart revision3 observations.
+No new managed errors were reported during the repeat; Play stopped18:49:37.
+Preserve reopen-probe.log, source captures and checkpoint comparison artifacts.
+
+Limits: the restore epoch conservatively invalidated10003visual dependencies
+and4913collision regions. The edit-only pending flag was false at4seconds,
+but the full collision diagnostic then showed1243/4913ready,3668pending and
+an active worker; at15seconds all4913were ready with0pending/0failures.
+Therefore edit-only pending does not establish full restore readiness. No
+observation establishes full derived drain within10seconds; that timing gate
+remains unqualified. Do not rename this partial result a full pass or weaken
+the frozen deadline. Future restore readiness must include the complete
+required lifecycle, including unchanged-revision work.
+
+A1000x562 production camera image at18:46:50 showed the player over rendered
+terrain without an obvious missing surface in that view. It did not closely
+frame both edited areas; no dig/build visual shape or body-contact acceptance
+is claimed from that image or from the contact ray alone. This was a Play
+restart in the existing editor process, not a cold process reopen. Real
+resident sample eviction, failed I/O, multiplayer and the canonical performance
+gates remain incomplete. No runtime commit/push or Slice1 acceptance.
+
+Revision3 checkpoint inspection (reopen-revision3-checkpoint.json) found exactly
+16page records: eight revision2 and eight revision3. Referenced payload bytes
+26148; index952bytes. Completion hash
+6BDC3CE61755503FAA8223C11BD5417E3D9ECF7394BC9FE38FB159D81BABA4F5
+matched the index, and all16page length/hash checks passed. This verifies
+stored page revisions as well as density fingerprints.
+
+### STORAGE-PAGE-OWNERSHIP-001/v1 — frozen 2026-09-07
+
+Bounded integration probe for the page ownership and saved-version handles,
+not an eviction or memory-limit acceptance scenario. Same existing editor
+26.09.01c/basic_example scene, one local host, seed1337/gen5, visual32,
+gameplay8/fps_max1000. Fresh Play, wait60seconds, capture page accounting.
+Load storage-reopen-v1 checkpoint2/revision3/world55e278de-8bf8-4e60-9656-70c6af8257cb
+from the preceding probe. Check field revision3/16pages/authored0, logical and
+resident sample bytes2097152. Retained sample bytes must be at least resident
+bytes and at most the512MiB cap; GC timing is not fixed and no collection is
+forced. Within30seconds require complete visual/transition/collision drain.
+Both r512region hashes must match the preceding revision3 probe, with at least
+10seconds between fingerprint calls. Save twice to this same slot, await each
+completion within10seconds, require checkpoint3 then4, unchanged world/revision
+and exact16coordinate/page revision/content records. Final directory must have
+two indexes/two markers; payload files still referenced by live metadata may
+be retained and must remain within the documented file/disk caps. Inspect
+actual files/markers and record errors. Stop Play after observations.
+
+Pre-run compilation: the first ownership implementation was rejected for
+System.Threading.Volatile.Read<T> (SB1000, two sites). Replaced that API with
+page-level locks around pin acquisition/residency changes; no per-sample lock.
+The engine then compiled successfully. WeakReference<T> compiled under the
+game whitelist; runtime and capacity-edge behavior still require evidence.
+The eviction sweep remains disabled until all consumers defer missing reads.
+
+#### STORAGE-PAGE-OWNERSHIP-001/v1 observed result
+
+2026-09-07, HEAD1e97e0d plus ownership-source.json hashes, editorPID36136.
+Play started19:07:11. At19:08:10 fresh world had revision0/pages0 and
+resident/retained sample bytes0/0. Load requested19:08:28; field committed
+in the same logged second. At19:08:32 restored world/revision3/epoch1/16pages,
+checkpoint2, authored0/rejected0, field completion22.9248ms. Logical/resident
+samples2097152bytes, retained sample accounting4194304bytes, cap536870912bytes.
+The additional16decoded arrays from checkpoint validation remained uncollected;
+weak accounting does not keep them alive or force collection. This is not
+proof of actual sample eviction or of worst-case memory-limit behavior.
+
+At19:08:54 complete visual/transition queues were0 and collision4913/4913ready,
+0pending/0failures, player grounded, within the30second probe bound. Both
+regional hashes exactly matched the preceding revision3 observations.
+Saves at19:08:55 and19:09:11 completed in their respective logged seconds,
+checkpoint3 then4, world/revision3 unchanged. At19:09:12 resident/retained
+samples were still2097152/4194304bytes, authored0/rejected0, no edit pending
+work/failure. No new managed error was observed; Play stopped19:09:12.
+
+ownership-checkpoint.json verifies all16page length/hash records and marker
+against the saved revision3 map with no differences. Preserve ownership-probe.log
+and source identity. The bounded load/save/identity/accounting checks passed.
+Outstanding-reader overlap, file-pin retention under eviction, dirty-page
+protection under failed saves, allocation-cap edges, and performance are not
+established by this probe. Release/install primitives currently have no eviction
+sweep caller: all consumer admission/deferred-read work must land before one
+is enabled. Overall Slice1 acceptance remains incomplete; no runtime commit.
+
+#### STORAGE-HISTORY-001/v1 paging implementation attempt — setup
+
+Repeat the unchanged frozen HISTORY-001/v1 workload against the integrated
+paging implementation. The earlier private fixture is preserved outside the
+Data root before starting a fresh world; see history-fixture-backup.json. No
+other save is changed. Use the existing editor26.09.01c/PID36136 for feature
+verification only; this hotloaded process is not a comparable cold performance
+control. Capture source hashes before Play. The current pending-read pump admits
+eight-page batches and integrates at most eight pages with a1ms soft budget.
+Eviction checks eight directory entries per update with a1ms soft budget, using
+committed/staged visual boxes, warm shell, player/actor collision interests and
+queued/current edits. Actual sample acquisitions also refresh the5second age.
+Resident bytes exclude captured-reader references; retained sample bytes count
+all unreclaimed dense arrays via weak records, without forced collection.
+During each route record production edit/storage status once per second, with
+no fingerprint/sample query while away. Storage diagnostic output does not pin
+the edited region. Overall acceptance still requires all frozen gates, including
+retained memory, error/recovery paths, multiplayer and comparable performance.
+
+#### STORAGE-HISTORY-001/v1 paging implementation observed result
+
+2026-09-07, editor26.09.01c/PID36136, HEAD1e97e0d plus paging-source.json.
+The first setup at19:29 was interrupted by interactive terrain editing: at
+19:32:38 world e118c70d-0f04-4a78-b06f-630260d0c6d6 had84edits. It is not
+part of the frozen workload. Saved all84edits to storage-live-preserved at
+19:33:01 before stopping Play. User explicitly approved continuing controlled
+tests. No runtime source changed during the following attempt.
+
+Fresh basic_example Play started around19:33:25; visual32/gameplay8/fps_max1000.
+At19:33:45 visual/transition0pending, collision4913/4913ready/0failures,
+world8f238690-1632-4a9d-a0e2-859147205e19 revision0/pages0. Startup passed120s.
+Weak sample accounting still included2MiB from the previous Play; this process
+is a feature test, not a cold comparable performance acceptance.
+
+Dig at(-512,-512,0),r128,+512 at19:34:00 became revision1/8pages and complete
+by19:34:01. Build at(1024,0,0),r128,-128 became revision2/16pages and complete
+by19:34:02. Both field/visual/collision completion bounds passed10s. Save at
+19:34:07 completed checkpoint1/revision2 in the same logged second. Initial
+r512fingerprints: dig26D618EBCAC0A627AF561D2E5B3A7AE956F14737DC640BAE3766BC275CC26772;
+build438A4913C0D6518E5848514EE50E679E13B67C285E11F998094125D086BCFDAE.
+Contact hitZ: dig-90.008, build45.6859. Targeted detached runtime-camera images
+showed both edited surfaces before and after travel; no visible crack was
+identified in those views. This is limited visual coverage, not exhaustive seams.
+
+Three unchanged2500/50000/one-loop routes ran sequentially with production
+storage status observations approximately once/second (short orchestration gaps
+between batches). No fingerprints or terrain sample queries ran while away.
+RunIds9eb7fe298f264292a723ccce0117c822, c4d51a5e53034d8d9867a092791fd50a,
+0074f1942c2d4afd91b068e8973db451 completed19:37:00,19:40:01,19:43:01.
+At successive settled returns loaded/evicted counters were32/32,64/64,96/96,
+consistent with two departures/reentries per figure-eight. Current resident
+samples returned to2097152bytes. Both hashes matched after every route, with
+contact heights unchanged. Observed storage failure remained empty; revision2
+and authored2 stayed unchanged. Maximum observed read integration0.4105ms,
+sweep0.5971ms, below1ms soft budget in this bounded run. These are maxima,
+not the required p95/p99 or worst-capacity measurements. Exact eligibility
+start times were not instrumented; counters alone do not prove every10s expiry.
+
+Retained-memory gate FAILED: after routes1/2 retained samples settled to2MiB;
+after route3 they remained4MiB at19:43:20, more than10s after completion. While
+away on route2 both resident and retained counters reached0, proving sample
+arrays were reclaimed on that departure. Weak accounting includes arrays
+eligible for GC until collection; this run does not distinguish all remaining
+strong readers from delayed collection or establish a leak. No GC was forced.
+
+Third dig completed revision3 by19:44:10. Save revision3, immediately followed
+by fourth dig request, completed checkpoint2 with liveRevision3; by19:44:11
+live revision4 correctly showed savedRevision3. Saved revision4/checkpoint3
+then completed in the same second. Save won before the newer commit, so the
+late-save-completion concurrency gate remains UNPROVEN as specified.
+
+Reopened after fresh Play settled. Load revision4 requested19:45:14 and field
+committed the same second, authored0/16pages/loaded16. Visual queues drained
+by the fourth approximately0.9s observation. At the tenth observation (~9.4s)
+collision3868/4913ready,1045pending; edit status at19:45:24 still reported
+collisionPending=True. Full10s readiness was not established; eventual all
+4913ready was observed19:45:39. Exact revision4hashes matched: dig
+57A2458E70BDA623B97F73F4EDA2B0AB9E3B9F938137AD64FDFFFA677980694C;
+build unchanged. Dig contactZ-107.0276 matched before reopen.
+
+Further dig(1024,0,0),r128,+512 became revision5/authored1 and checkpoint4
+at19:45:50. Build-region hash changed to
+6F6AECDBFCEB4E44F262005908D38928C0C985822F3CC7E7B88E37E169F83083,
+contactZ-102.7699. Second fresh-Play load requested19:46:36, committed same
+second as revision5/epoch1/checkpoint4/authored0. At19:46:46 (10s) collision
+still pending: readiness gate FAILED. Both final hashes/contact heights matched
+by19:47:11; visual/transition0pending, collision4913ready/0pending/0failures.
+Play stopped normally. Full restore invalidated10003visual and4913collision
+dependencies despite16edited pages, a concrete broad-rebuild cost to address.
+
+Preserve paging-history.log and paging-history-routes.json alongside source
+identity. Result: exact disk-backed regional recovery and historical/live edit
+continuity demonstrated for this dataset; overall HISTORY acceptance FAILED/
+incomplete due retained-memory/readiness gates, overlap and detailed budget
+coverage. Multiplayer, failed I/O recovery, capacity edges and comparable
+canonical/deformation performance remain outstanding. No runtime commit/push.
+
+#### STORAGE-REOPEN-READY-001/v1 — bounded restore regression
+
+Defined2026-09-07 before execution. This targeted regression isolates the
+HISTORY-001/v1 collision readiness failure; it does not replace full HISTORY,
+figure-eight or deformation acceptance. Same editor26.09.01c/PID36136,
+basic_example fresh Play, visual32/gameplay8/fps_max1000. Freeze existing
+storage-history-v1 checkpoint4/world8f238690-1632-4a9d-a0e2-859147205e19,
+revision5/16pages from the preceding HISTORY run; do not edit or resave it.
+Wait complete fresh visual/collision readiness within120s, then load this slot.
+Observe full visual/transition and collision readiness approximately once per
+second through10s; require complete readiness by10s, no errors and authored0.
+Record changed dependency count, sample read count, world/revision, both r512
+hashes (>=10s apart) and contact heights. Expected dig hash57A2458E70BDA623B97F73F4EDA2B0AB9E3B9F938137AD64FDFFFA677980694C,
+build6F6AECDBFCEB4E44F262005908D38928C0C985822F3CC7E7B88E37E169F83083;
+contactZ-107.0276 and-102.7699 respectively. Repeat same-world load once after
+settlement with no new edits: same identity/revision/hashes, authored0,
+full readiness<=10s, no changed collision samples and no collision rebuilds.
+Stop Play normally after observations. This settled scenario does not prove
+cancellation during outstanding jobs; that remains a separate required check.
+
+Implementation change: when replacement's worker sample comparison proves a
+published collision region unchanged, advance its local field epoch/revision
+metadata without rebuilding its body. Every pending old-epoch region is still
+cancelled/recreated. Changed regions rebuild through the same existing queue.
+The procedural-settings equality requirement remains in PrepareReplacement.
+No GPU geometry reuse is claimed by this change; render rebuilds remain broad.
+
+#### STORAGE-REOPEN-READY-001/v1 observed result
+
+2026-09-07, editor26.09.01c/PID36136, reopen-ready-source.json, successful
+compile0errors. Fresh visual/collision settlement passed before first load.
+At19:51:45 checkpoint4/revision5 loaded, collisionDependencies16 versus4913
+in the preceding implementation. Collision4913/4913ready at the first~0.9s
+observation and every subsequent observation; visual/transition queues both0
+by the fourth~0.9s observation (<4s). No failures, authored0, loadedPages16.
+Both expected hashes and contact heights matched19:52:11/19:52:21.
+
+Same-world no-edit reload requested19:52:22 advanced only local epoch1->2;
+revision5/checkpoint4/authored0 unchanged. collisionDependencies0 and all4913
+collision regions ready throughout; visual queues again drained by fourth
+observation (<4s). Both fingerprints matched again after the reload. The
+bounded readiness/identity/contact regression PASSED. Full HISTORY rerun,
+outstanding-job cancellation, multiplayer and canonical performance are still
+required. Render still rebuilt10003dependencies. Retained sample bytes reached
+19922944 after the second load; memory retirement is not fixed by collision
+reuse. No forced collection, no save changed. Play stopped normally.
+
+#### STORAGE-FAILURE-001/v1 observed result
+
+2026-09-07 editor26.09.01c/PID36136, reopen-ready-source.json, same runtime
+source as preceding passing bounded restore regression. Fresh basic_example
+visual32/gameplay8/fps_max1000, settled4913collision/0visual pending before
+edits. Slot storage-failure-v1 did not exist. Initial dig/build completed as
+revision2/worlde728b737-e83c-4d71-95fc-80eb4d3cb37e/16pages; checkpoint1
+completed19:54:30. Exact18file/27132byte backup preserved outside Data in
+C:/Users/Gray/AppData/Local/Temp/voxels3-storage-failure-20260907-r2;
+file lengths/hashes in failure-fixture-backup.json.
+
+Held an exclusive FileStream on this slot's next checkpoint filename
+checkpoints/00000000000000000002.vxi (new empty file; external session60503).
+Third dig committedrevision3. Save19:55:25 explicitly failed in the same second
+because that file was in use; the failure occurs when pre-save cleanup tries
+to remove the incomplete candidate, before checkpoint publication. At19:55:26
+live3/saved2/checkpoint1, all16pages resident2097152bytes, no edit pending.
+Released the exact handle normally; process exited0. Save19:55:26 completed
+revision3/checkpoint2 in the same second. This exercises a real filesystem
+failure and dirty-state preservation at the current interest, not an arbitrary
+mid-page partial-write or out-of-interest dirty-eviction failure.
+
+Preserved latest28file byte backup in
+C:/Users/Gray/AppData/Local/Temp/voxels3-storage-failure-20260907-r3;
+failure-r3-backup.json owns exact file hashes. Created a2byte incomplete
+checkpoints/00000000000000000003.vxi with no completion record. Load19:56:03
+logged ignored incomplete checkpoint candidate, then committed the previous
+complete checkpoint2/revision3. Dig fingerprint matched its pre-load value.
+
+Corrupted only the newest referenced page coordinate(-2,-2,-1),revision3,
+74264397DEA77059B33AD00EED8A994A4EE1969790DAB403487A75D60798638E.vxp:
+1233->1232bytes. Exact path, original/corrupted/restored hashes and external
+backup path are in failure-corruption.json. Load19:56:37 failed checksum in
+the same second. At19:56:38 world/revision3/epoch1/checkpoint2 were unchanged;
+resident16pages and authored3 unchanged, rejected1. Dig fingerprint before
+and after rejection was identical. Restored that exact page from byte backup,
+verified1233bytes/original SHA256, and load19:57:06 committed successfully.
+No other page or world save was corrupted.
+
+Fresh Play then reopened the same fixture19:57:52: revision3/checkpoint2,
+authored0/rejected0, no pending edit work by19:57:57. Both hashes matched:
+dig3E5587C35B43DDD15F73ADB9F813DB0C8BF3BA3C3290F3E051C63AEC03AA3B7B;
+build4D4922EDC8CDDFF10DFA4C1E7CA28273A1870159D79A680E0F8C1684A1E409EC.
+Play stopped normally after19:58:07. Application-level failed-save recovery,
+ignored incomplete candidate and corrupt-load rejection/recovery PASSED in
+this bounded case. Full capacity/admission, interrupted writer variants and
+power-loss durability are not established. The observed existing last-error
+status remains visible after a successful same-Play retry; fresh Play clears it.
+Preserve failure-recovery.log and backup/corruption evidence. The intentional
+2byte candidate remains only in the disposable storage-failure-v1 fixture;
+normal future save cleanup can remove it. Overall Slice1 is still incomplete.
+
+#### STORAGE-MULTIPLAYER-001/v1 first attempt — interrupted
+
+2026-09-07 editor26.09.01c/PID36136, reopen-ready-source.json runtime, visual512,
+gameplay8/fps_max1000, fresh settled basic_example. Host dig(1024,0,0),r128,
++512 saved revision1/checkpoint1 at20:00:36 to new storage-multiplayer-v1,
+worldfeaae201-d4ad-4b40-8e61-0e6c4244cf31/8pages. Fresh Play restored it
+20:01:02 with stored identity/revision unchanged. Private hosting enabled,
+clientPID20180 launched with frozen arguments. Joined20:01:22.0643 as
+ca65d227-8e05-4a5d-a3fa-6e80a481bb66; transfer1/revision1ACK20:01:43.0392
+(~20.975s, within30s). Fingerprint request2c93d78d-31a5-4fdf-bf2b-87176790293f
+had exactly host/client replies20:02:00.8689/.8890, both
+638F4F9127589D918165D8B2F194E4AF9172983887470C4CC2967BBBFD3CDC49.
+
+Second identical host edit reached revision2ACK20:02:14.0104. Request
+e713ed0a-d1d5-439c-8cb3-f6a0e721ca45 had host/client replies20:02:33.5507/.5667,
+bothDFBDA2B4C85015A954FC9818CFFD83CE3363A3E0EE3654E31F013525C6FF49C5.
+Exactly2players/2active connections, bothgrounded at20:02:18; activeTransfers0,
+networkFailure=null. Cumulative bytes sent26748 (two13374byte transfers).
+These bounded initial-history and live-update density checks passed.
+
+Further interactive edits invalidated the remaining frozen sequence: at20:03:04
+revision81/pages19/authored80/rejected23. User confirmed they were editing.
+Preserved their state at20:03:39 in separate storage-multiplayer-live,
+revision81/checkpoint1; original storage-multiplayer-v1 remains revision1.
+Client screenshot showed the interactively modified world, not the frozen
+revision2geometry, so it does not qualify the prescribed visual check.
+Normal client close was requested, host Play stopped. PID20180 was absent on
+subsequent process inspection. User stopped Computer Use with physical Escape;
+no further UI inputs were issued. Reconnect and remote20-attempt input pattern
+were NOT RUN. Preserve multiplayer-interrupted-host.log/client.log, including
+client resource-loading errors. No multiplayer acceptance claimed beyond the
+specified replies/ACKs. No runtime source changed during this attempt.
+
+#### STORAGE-OBSOLETE-PAGE-001/v1 — saved version retirement regression
+
+Defined2026-09-07 before execution. Same editor26.09.01c/PID36136, fresh
+basic_example visual32/gameplay8/fps_max1000. Use the existing HISTORY fixture
+revision5/checkpoint4 without modifying it. Wait full startup settlement<=120s,
+load storage-history-v1 and require full readiness<=10s, matching both known
+r512fingerprints and authored0. Then load the identical slot once more after
+settlement; require world/revision/hash unchanged, authored0, collision rebuilds0
+and full readiness<=10s. Stop Play normally. This bounded regression checks
+that releasing old saved canonical payloads does not invalidate consumer reads
+or replacement comparison. It does not prove memory reclamation deadlines,
+late save completion, allocation-cap recovery, outstanding jobs or full HISTORY.
+
+Implementation: when a saved page version leaves the canonical directory,
+release its dense array even if old metadata views still reference the page.
+Sample-reader objects retain their separate immutable array references. Unsaved
+old versions remain available; if a pending save later supplies their backing
+file, that completion releases their obsolete canonical arrays. No forced GC,
+array pool, alternate sampler, changed memory metric or waived criterion.
+
+#### STORAGE-OBSOLETE-PAGE-001/v1 observed result
+
+2026-09-07, editor26.09.01c/PID36136, obsolete-page-source.json, compile
+success0errors. Startup fully settled before load. First load20:07:57 restored
+revision5/world8f238690-1632-4a9d-a0e2-859147205e19/checkpoint4/16pages;
+at20:08:02 all4913collision regions ready, visual/transition queues0,
+no failures/authored0. Both expected hashes matched20:08:25/20:08:36.
+
+Second identical load20:08:36 retained revision5/checkpoint4, advanced local
+epoch1->2, and rebuilt0collision regions. All4913collision ready with0visual/
+transition pending at20:08:41 (5s), no failure/authored0. Both hashes matched
+again20:08:46/20:08:57. Play stopped normally. Bounded replacement/read
+correctness and10s readiness passed; obsolete-page.log preserves observations.
+Retained weak sample accounting was19005440bytes after first load and
+25296896bytes after second. No memory-retirement deadline pass is claimed.
+This hotloaded long-lived process is not a comparable process-memory baseline.
+The patch releases obsolete saved canonical references; delayed collection,
+remaining active-reader lifetime, unsaved old versions and admission/capacity
+still need qualification. All earlier HISTORY failures remain in force until
+an unchanged full rerun passes. No runtime commit or push.
+
+#### STORAGE-MULTIPLAYER-001/v1 resumed sequence — reconnect pending
+
+2026-09-07 editor26.09.01c/PID36136, obsolete-page-source.json runtime,
+visual512/gameplay8/fps_max1000. Repeated the controlled post-save sequence from
+untouched storage-multiplayer-v1 checkpoint1/revision1 (initial creation and
+fresh-world save were already recorded). Fresh host Play loaded20:10:33;
+full visual/collision settlement observed before private-host client launch.
+ClientPID65744 joined20:11:18 as849af1aa-ecd5-478e-9285-d7f4305090c6;
+revision1ACK20:11:39 (within30s). Exactly two players/connections, bothgrounded,
+activeTransfers0/networkFailure=null at20:11:44. Request
+ddcf9e4f-d273-435c-a45c-8fb80c1cf8ab had host/client replies20:11:58, both
+638F4F9127589D918165D8B2F194E4AF9172983887470C4CC2967BBBFD3CDC49.
+Second identical edit acknowledgedrevision2 at20:11:59. Request
+c2fa2f9b-9cc5-48a2-901a-c26661844073 had host/client replies20:12:09, both
+DFBDA2B4C85015A954FC9818CFFD83CE3363A3E0EE3654E31F013525C6FF49C5.
+No additional interactive edits or hotloads occurred in this sequence.
+
+CloseMainWindow on clientPID65744 returnedTrue at20:12:11. Host removed its
+player/connection: only host remained at20:12:16. Client log reports leaked
+scene553f6036-7362-4506-9d0e-807831b8173a during shutdown and Source2Shutdown
+20:12:12. The process remained live with MainWindowTitle=Error at20:12:16 and
+20:12:55. No dialog text was captured; do not infer its content from prior
+native shutdown failures. Computer Use remained stopped; requested user dismiss
+the dialog before another client launch. Preserved complete bounded client log
+in multiplayer-reconnect-client1.log (UTF-8; initial default-encoding write
+failed and was corrected). This is a failed clean-teardown observation.
+
+With client disconnected and host retained, third identical edit saved revision3/
+checkpoint2 at20:12:40 to storage-multiplayer-v1. At20:12:41 authored2 after
+restoration, rejected0,8pages, live/saved3, no edit/visual/collision pending or
+storage failure. Reconnect must now recover this revision3; do not repeat the
+third edit on continuation. No performance or visual acceptance is inferred.
+
+#### STORAGE-MULTIPLAYER-001/v1 resumed reconnect result
+
+At20:13:34 process65744 was absent; no second client launched while it remained
+live. Relaunched frozen joinlocal arguments asPID29956, retaining the same host
+world/revision3. Joined20:13:58 asfe509ea3-0477-4cca-a6d7-b8703cd98883,slot1.
+Client applied transfer3/revision3 at20:14:19.5923 and transfer4/revision3 at
+20:14:20.4857 (total13674received bytes); hostACKtransfer4/revision3 at20:14:20,
+within30s of join. The second transfer is not proof of a duplicate gameplay edit.
+
+At20:14:39 exactly2owned players/2active connections, bothgrounded,
+activeTransfers0/networkFailure=null, total40422host bytes sent. Fingerprint
+request6e02f107-bdf8-4f65-9bca-97a1ec1e56b9 had exactly host/client replies
+in the same logged second, worldfeaae201-d4ad-4b40-8e61-0e6c4244cf31/revision3,
+both3582C2A75BCE647E37A079A18DC9E139D5C7493A22617F7E189DBFB917265C5D.
+This differs from matchedrevision2 and includes the edit made while the client
+was absent. Host-authoritative saved history, live update and reconnect density
+agreement PASSED in this controlled sequence. Preserve multiplayer-reconnect-
+host.log and client1/client2.log. Client1 clean teardown FAILED independently;
+no dialog text was captured. No full multiplayer acceptance: prescribed remote
+20-attempt input, targeted client/host visual geometry and separate unchanged
+CONVERGENCE/RECONNECT scenarios remain outstanding. Computer Use stayed stopped.
+Host and clientPID29956 remain running at this observation for subsequent work;
+do not repeat the offline third edit or assume the client has exited.
+
+#### STORAGE-RESERVATION-001/v1 — normal reservation lifecycle
+
+Defined2026-09-07 before execution. Fresh basic_example, same editor26.09.01c/
+PID36136, visual32/gameplay8/fps_max1000. Host only, no added actors or input.
+Wait complete startup readiness<=120s. Load frozen HISTORY revision5/checkpoint4;
+require full field/visual/collision readiness<=10s, loaded16pages and outstanding
+reservedSampleBytes0 after drain, read/edit capacityDeferredFalse. Apply one
+normal dig(-512,-512,0),r128,+512; require revision6/authored1/rejected0 and
+full edit readiness<=10s with reserved bytes0 afterward. Save to new private
+storage-admission-v1 (must not already exist) and require saved6<=10s. Record
+both r512hashes >=10s apart. Load same slot after settlement; require same
+world/revision6, unchanged authored1, exact hashes, readiness<=10s and reserved
+bytes0. Stop Play. Source hashes captured before run; no hotload during run.
+This normal read/brush/save/replacement check does NOT exercise512MiB exhaustion,
+reservation denial/retry, cancellation or concurrent decoder competition.
+Those remain required; do not infer their correctness from a zero drained count.
+
+#### STORAGE-RESERVATION-001/v1 observed normal-path result
+
+2026-09-07 editor26.09.01c/PID36136, reservation-source.json, compile success0
+errors. ClientPID29956 was closed normally and absent before this test; host
+Play restarted as a single host with frozen settings. Full startup settlement
+observed. Loaded HISTORY revision5/16pages; by20:20:38 loadedPages16,
+reservedSampleBytes0, both capacityDeferred flagsFalse, no edit/visual/collision
+pending status. One dig completed revision6/authored1/rejected0 by20:20:39,
+reserved0 and no edit pending; save storage-admission-v1 completedrevision6/
+checkpoint1 in the same second. Original HISTORY fixture was not modified.
+
+Dig fingerprint atrevision6:
+BC3711750ED030E4E408270CEE1C1F43627B4E236C124387C3C8AA7C08FE79B7;
+build6F6AECDBFCEB4E44F262005908D38928C0C985822F3CC7E7B88E37E169F83083.
+Load new slot20:21:14 preserved revision6/authored1/checkpoint1, localepoch2;
+at20:21:19 full visual/transition0pending,4913collisionready/0pending/0failures,
+loadedPages32, reserved0, both capacityDeferredFalse. Both fingerprints matched
+again20:21:24/20:21:35. Play stopped normally. Normal read/brush reservations
+returned to0 and persisted/reloaded content matched. Initial load/edit readiness
+observations used edit-specific status; separate full collision readiness was
+explicitly captured only at startup and final reload. Do not broaden that
+coverage. Actual512MiB denial/retry, cancellation, competing allocations and
+remaining unreserved decode paths were not exercised. Weak retained sample
+bytes rose to24117248; the earlier memory deadline failure remains unresolved.
+Preserve reservation-normal.log. No runtime commit/push or full-slice acceptance.
+
+#### STORAGE-HISTORY-001/v1 fresh-process rerun preparation
+
+2026-09-07, unchanged frozen workload and criteria, current reservation-source
+runtime. A fresh editor process is required for this repeat to remove accumulated
+hotload/previous-Play state from the feature memory observations. This remains
+visual32 HISTORY, not the visual512 canonical performance control. Preserve the
+prior storage-history-v1 fixture outside Data before a fresh world uses the
+same slot; see history-before-cold-backup.json. No forced collection or changed
+memory target is authorized by this preparation.
+
+Normal close of editorPID36136 requested20:23:54 while Play stopped. The log
+reported two static-method substitution NotImplementedExceptions, then
+Exception when destroying prefabs/terrain_player.prefab / Assert AreEqual
+4 components weren't deleted, and Source2Shutdown20:23:56. Process remained
+live with MainWindowTitle=Error afterward. Dialog text not captured; do not
+assume it is identical to earlier mimalloc failures. Preserved
+pre-cold-history-shutdown.log. Requested user dismiss the dialog; no Computer
+Use or forced termination. A replacement editor must wait until actualPID36136
+exit. This is another failed clean-teardown observation, not a completed cold
+run or evidence of a storage-specific cause.
+
+### STORAGE-AUTOSAVE-001/v1 — normal host save workflow
+
+Defined2026-09-07 before execution for the user's requested periodic/manual
+saving. Fresh editor process, basic_example visual32/gameplay8/fps_max1000,
+single host, AutoSaveTerrain defaulttrue, no prior history. Wait full startup
+settlement<=120s. Dig(-512,-512,0),r128,+512; require revision1 and unsaved
+status within10s. No save command: require save.started no earlier than30s
+from dirty observation and save.complete by35s, slot equal32characterWorldId,
+savedRevision1 and statusSaved. Record exact stored directory and fingerprint.
+Second identical dig: require revision2/unsaved status. Invoke existing
+voxel_terrain_save with no slot; it must save to that same world slot within10s
+using the same method as inspector Save now. Require savedRevision2/statusSaved.
+Record changed fingerprint. Load this slot after settlement: same world/revision2,
+fingerprint, no synthetic authored edit, normal full readiness<=10s. Third
+identical dig must autosave revision3 to the loaded slot after30s and by35s.
+No benchmark or hotload during run. Record source identity, errors and all
+save timing. This bounded case does not qualify shutdown durability, client
+status UI, visual button activation, long-run I/O load or failure retry.
+
+#### STORAGE-AUTOSAVE-001/v1 observed partial result
+
+2026-09-07, user-reopened editorPID12768/26.09.01c, autosave-source.json.
+Source hotloaded successfully/0compile errors. An extra editorPID5840 was
+mistakenly launched after process inventory already showed12768; normal close
+was requested immediately for5840, preserving user's12768 session. PID5840
+later had no main window; its final exit was not yet proven. Concurrent editor
+logging made filesystem log selection unreliable; autosave-interrupted.log is
+preserved directly from the connected editor's read_console output. No claim
+of a clean fresh-process environment or comparable performance is made.
+
+Fresh Play test edit(-512,-512,0),r128,+512 logged20:38:38; at20:38:39 world
+efbb5ecf-8340-4589-b93b-698750d89eb3/revision1 showed Unsaved changes - autosave
+pending. Without save command, save.started and save.complete logged20:39:08,
+checkpoint1, slotefbb5ecf83404589b93b698750d89eb3. StatusSaved/savedRevision1
+confirmed20:39:21. Coarse timestamps establish about30s from edit request;
+the frozen lower bound from the later status observation is not established.
+FingerprintC824ECD7EFDEF95C4E1ED4E1F222562D01574A84C6C8DF2EDE7826858D182092.
+Second edit20:39:22 became revision2; no-argument voxel_terrain_save completed
+revision2/checkpoint2 at20:39:23 in the same slot. Inspector Button and command
+both route through StartTerrainSave, but actual inspector-button activation
+was not visually tested.
+
+Interactive edits/restarts interrupted the remainder: autosave persisted
+revision51/checkpoint3 at20:40:18. At20:40:29 the running world had a new ID
+and revision0, explaining why saved edits were not automatically shown on Play
+restart. Explicit load20:40:30 recovered the original world/revision51/18pages.
+A subsequent test edit queued during restore committedrevision52 and autosaved
+to the loaded slot at20:41:19/checkpoint4. No controlled revision2 fingerprint
+roundtrip or full readiness gate is claimed for this interrupted sequence.
+Actual slot inspection showed18.vxp files and two indexes/two completion records
+before the later checkpoint4 save. Periodic save, no-argument manual save and
+continued saving to a loaded world were observed; full frozen test incomplete.
+
+Current product limit communicated: Save now/status are World Saving inspector
+controls; no in-game save panel. Play creates a fresh world unless a save is
+explicitly loaded. User asked about missing saved changes and binary format;
+clarification pending whether they mean terrain history or absent UI. Custom
+binary page/index/completion format remains unchanged, with one host save path.
+No source commit/push or overall storage-slice acceptance.
+
+
+## WORLD-LIFECYCLE-001/v1 — frozen 2026-09-07
+
+Parameters: existing basic_example playable world, engine 26.09.01c, one host,
+scene generator settings unchanged, visual radius 32, gameplay radius 8.
+Preserve the current world in its existing slot first. Save a named copy
+lifecycle-v1, edit (-512,-512,0), radius128, strength512 once. Wait for commit
+and readiness (maximum30seconds), fingerprint that region radius512. Stop
+without manual save; start Play; wait maximum30seconds and fingerprint again.
+Reset through voxel_terrain_reset; wait maximum30seconds; require pageCount0
+and Saved status; stop/start and require pageCount0 with the same world identity
+and reset revision. Restore the preserved original named slot after the test.
+Fingerprint requests remain at least10seconds apart. No human tool input.
+
+Pass criteria: exact pre/post-stop hash, world/revision equality; no authored
+edit during startup; reset survives restart; latest selection matches the saved
+slot; zero save/load errors. Observe collision readiness and targeted rendering
+separately; hashes alone do not qualify those. Record compile/source identity,
+Stop/load durations, all failures and deviations. This bounded lifecycle check
+does not replace the existing canonical figure-eight or full Slice1 gates.
+
+
+### WORLD-LIFECYCLE-001/v1 — 2026-09-07 bounded observation
+
+Engine 26.09.01c, active editor PID12768; additional PID5840 remained present.
+Source is uncommitted Slice1 work plus lifecycle changes (see lifecycle-source.json).
+Preserved slot f58322c9b8374c0bb5556199124a290d, world
+f58322c9-b837-4c0b-b555-6199124a290d, initially revision0/pageCount0.
+Named copy lifecycle-v1 saved at20:53:35. One specified brush accepted20:53:44;
+revision1,8pages,2103samples,9.4579ms commit. At20:53:52 it was still unsaved
+(savedRevision0); Stop saved revision1 at20:53:53, and immediate Play logged
+startup.loaded for the same world/revision/slot in that second. Fingerprints
+before/after matched EDEF1C3137FBAC609A9C772EFF3547029A446CA53B01727BBBBBC32134A756EA.
+Post-load authored count0. Reset20:54:12 committed revision2/pageCount0 and saved
+checkpoint3 in that second. Stop/Play20:54:51 reopened revision2/pageCount0;
+20:55:20 status Saved, authored0, no visual/collision pending. Original preserved
+slot explicitly restored20:55:20 and saved afterwards.
+
+Result: bounded state persistence and reset/restart observed successfully;
+full scenario NOT PASS. Deviations: fingerprint times20:53:52/20:54:01 were9seconds
+apart; restart used authored visual tier512 rather than maintaining requested32
+(27923 reset visual dependencies). Source was hotloaded, extra process persisted,
+and final shutdown cancellation/error guards were added during/after observations.
+Reset visual work was still pending10seconds after commit; no qualified visual
+capture or precise Stop/load duration measured. No performance acceptance claim.
+
+## WORLD-LOAD-FAILURE-001/v1 — frozen 2026-09-07
+
+One host, existing basic_example scene/settings. Save and stop normally. Back up
+exact terrain/last-world.vxl bytes outside the store, replace selection with the
+three bytes BAD, then Play. Require explicit startup.failed, no active mutable
+field, no replacement save on Stop, and unchanged BAD bytes after Stop. Restore
+exact original selection bytes, Play, require saved world/revision restored and
+no new errors. No terrain brush inputs. This is a production-I/O error check,
+not a power-loss or performance qualification.
+
+
+### WORLD-LOAD-FAILURE-001/v1 — interrupted 2026-09-07
+
+NOT RUN to completion. After Stop20:56:38, another Play started20:56:44 before
+the corruption probe could begin its own Play. The probe's Play returned
+Already playing. Live edits then advanced the original world to revision53;
+another Stop/Play20:57:02 saved and reopened revision53. The temporary BAD
+selection had already been replaced by a valid normal save when inspected.
+Original selection bytes were restored exactly from the recorded backup; same
+slot, so its latest revision53 remains selected and no terrain pages reverted.
+Controlled mutations stopped to avoid interfering with the active session.
+No corrupt-load rejection or unchanged-BAD-after-Stop criterion was established.
+Final compile reported succeeded/0errors; git diff --check passed. Runtime logs
+are [lifecycle-runtime.log](ValidationEvidence/ChunkStorage/lifecycle-runtime.log),
+source identity [lifecycle-source.json](ValidationEvidence/ChunkStorage/lifecycle-source.json),
+selection backup metadata [lifecycle-selection-backup.json](ValidationEvidence/ChunkStorage/lifecycle-selection-backup.json).
+HEAD changed concurrently to0857f7436add64a073e0b288e12f64714ab5ca75
+(Review project simplification); runtime edits remain uncommitted. Existing
+figure-eight/full Slice1 gates remain outstanding; no acceptance or push.
+
+
+### WORLD-LOAD-FAILURE-001/v1 — controlled recovery 2026-09-07
+
+After renewed exclusive-controls authorization, saved/stopped21:00 vicinity
+(exact logs:20:59:31). Preserved world f58322c9-b837-4c0b-b555-6199124a290d,
+revision94/pageCount20, slot f58322c9b8374c0bb5556199124a290d/checkpoint8.
+Exact selection backup recorded in selection-controlled-backup.json. BAD
+selection yielded explicit startup.failed20:59:45. An additional rejected
+brush request20:59:56 (accepted=False,id0) confirmed no mutable world; this
+negative request was extra to the no-input scenario, not a committed edit.
+Stop left exact three BAD bytes unchanged. Restored selection byte-for-byte;
+Play20:59:57 loaded the same slot/world/revision94. At21:00:27:20pages, Saved,
+authored0, no failure, no pending visual/collision work. No new unrelated error
+in the observed console window. Bounded failure/recovery criteria passed;
+extra rejected-request deviation retained. Source unchanged from lifecycle-source.json.
+Evidence: [runtime](ValidationEvidence/ChunkStorage/selection-controlled-runtime.log).
+Two engine processes remain (active12768, hidden5840), so this is not a clean
+performance run. Requested authorization to terminate only accidental hidden
+process5840 after its earlier normal close failed to end it.
+
+
+### User-directed scope acceptance — 2026-09-07
+
+User reports multiplayer is working well and explicitly requests moving on
+from multiplayer tests. Stop further multiplayer scenario runs. Retain earlier
+host/client convergence, late-join/reconnect evidence and its stated gaps;
+this is user acceptance of that portion, not proof of unrun cases. Remaining
+qualification focuses on canonical storage correctness, paging/memory and
+single-player streaming/deformation performance. User also authorized force
+closing accidental extra editor PID5840; verified absent after termination.
+Active editor12768 saved/stopped, then received normal CloseMainWindow for a
+cold test environment; actual exit still requires verification.
+
+
+### STORAGE-SLICE1 after-change cold run — setup 2026-09-07
+
+User accepted multiplayer and authorized exclusive controlled tests. Hidden
+PID5840 terminated with explicit authorization. Main12768 saved/stopped then
+normal shutdown hit Error; user dismissed it, process absence verified. New
+single editor PID21700 launched with same project and source after both exited.
+Preserved last-world selection by checked single-file move; metadata/hashes in
+cold-selection-backup.json. User world revision94 remains intact. Missing
+selection deliberately supplies the unchanged unedited canonical workload;
+restore the original selection/world after testing. Source changes frozen from
+new process launch. Use the existing canonical parameters exactly: authored
+basic_example, seed1337/gen5, gameplay8/visual512, speed2500/distance50000/one
+loop, fps_max1000, attached authored camera90; task storage-slice1-after,
+revision0857f74-storage-lifecycle. Compare with f246ea65773a46ef92f3f7678766e8f1,
+retaining its unresolved control variability. No performance result yet.
+Prior shutdown log sbox-dev-2026-09-07.19.log includes QPushButton.setText null
+and four undeleted terrain_player components; preserve as lifecycle failure,
+not resolved by restarting. No new native double-free text in its final80lines.
+
+
+### STORAGE-SLICE1 cold after run521286b0f25c4d27b5add62bf2777890
+
+Single fresh editor21700, engine26.09.01c, source0857f74 plus frozen uncommitted
+storage/lifecycle changes. No source hotloads or competing editor during run.
+All seven regular levels and six transition pairs pending0 before trigger;
+collision4913/4913, no failures, grounded host. Canonical parameters matched
+scene/seed1337/gen5/gameplay8/visual512/32cells/16units, speed2500/distance50000,
+one loop. Began21:04:47, result saved21:06:59. Route121.920784seconds,
+111957samples/no truncation. Average918.0935FPS; CPU p95/p99/max
+1.4833/3.1228/18.8721ms; GPU1.1520386/1.5847683/10.242701ms. Process peak
+3946745856bytes, end3944611840; GPUpeak2776220691bytes. Runtime allocated
+3195667992bytes (28543.709/frame),63collection frames,636.698ms total GC pause,
+11.563ms max; zero exceptions. Stationary983.51416FPS,248405592allocated bytes.
+All4913collision regions ready, pending0/failures0; chunk pending0; placement
+pendingFalse/unsafeCommits0; transitions pending0 and all three face mismatch
+counts/table invalid count0. These are measured correctness counters, not a
+substitute for targeted rendered seam inspection.
+
+Compared to cold controlf246ea65773a46ef92f3f7678766e8f1, frame rates/tails and
+memory improve materially; preserve unresolved control/environment variability
+rather than claim a storage-caused speedup. No runtime regression shown by this
+run, but original comparison uncertainty, edited-world residency, deformation,
+and teardown gates remain open. Raw result:
+[after-cold-figure-eight.json](ValidationEvidence/ChunkStorage/after-cold-figure-eight.json).
+
+
+### STORAGE-HISTORY-001/v1 — three-route cold-session observations
+
+World74147e92-626f-42fb-b395-9c5ea71cdfea, generator1337/v5, visual32/gameplay8,
+no clients. New Play after canonical route (same fresh process21700), initial
+revision0/pageCount0. Exact dig/build parameters produced revision2/16pages;
+first completion observations were17/24seconds after requests, so the initial
+10second visual/collision deadlines were not established (field commits8.7278
+and4.864ms). Autosave also saved revision2 before the named history save.
+The initial seed world had been saved empty by normal Stop; no prior edits.
+
+Three unchanged routes saved60a4d6b8c76f49a590d5fa5960bf130b,
+4c591c75a16443b49c3c0cd39500bd66, f2bb9f56a0df47979f1bdf55f2db93d8.
+Per-second observation files history-cold-visit1/2/3.json and raw result1/2/3
+capture the runs. Loaded/evicted totals after return32/32,64/64,96/96.
+All saved pages reached resident0 while away. First two routes also observed
+retained0; third retained minimum must be read from its observation file.
+Returned resident amount2MiB throughout. First route retained2MiB at completion;
+second and third retained4MiB at completion/settling observations, then naturally
+fell to2MiB by21:16:51 and21:19:49. No forced GC or metric change. Each route
+recorded one gen2 collection, none during its final stationary phase. The
+fixed10second retention gate is not accepted: sampled retirement missed the
+required settled amount, and exact dependency-eligibility transitions were not
+instrumented. This does not establish a permanent leak; delayed release remains
+unresolved. I/O integration maximum0.3679ms, sweep maximum0.9252ms; detailed
+per-operation p95/p99 and capacity-denial gates remain unproven.
+
+All three returned hashes matched initial revision2:
+dig0D781B9FA8D74B22691B7A370486E9B9319250C8C829C46A5E848133345D604B;
+build72DD34A73A25646425758974F4C767FD149B13B0165729FF48ED053BAAA029EF.
+Ray contact heights remained-90.0081 and45.6859; triangle normals differed,
+so do not claim identical collision geometry. Two targeted dig captures from
+(-512,-1024,512),angles45/90/0,FOV60,800x450 before/after showed matching
+continuous crater shape. Camera returned to attached mode before each route.
+Only the dig was visually compared; build/seam-wide inspection remains limited.
+
+Third/fourth dig edits, save and reopen completed through ordinary commands.
+Save revision3 completed before revision4, so overlap still UNPROVEN. Subsequent
+save/reopen revision4 was ready within10seconds (10003visual dependencies,
+zero collision dependencies for identical field). Further brush at build site
+made revision5; save/reopen likewise completed within10seconds, with matching
+before/after build fingerprint C9F7E3B874C7E0A32EF22E7FC54CD7C879D39A1B243797FFE4360071DAF2F22C.
+Authored edits stayed5 across restores. Detailed timed polling:
+history-cold-save-reopen.json and history-cold-finish.log. Overall HISTORY
+acceptance remains incomplete, not a pass based on recovered hashes alone.
+
+### Editor-instance save-selection defect — discovered21:23
+
+Cold selection backup unexpectedly pointed to blank world29f846dc024e4e8cbcb5975ad1fe4d53.
+Original main shutdown log proves gameplay revision94 saved21:01:42.8595,
+then a distinct blank world was saved21:01:43.3068 during editor teardown.
+Thus earlier cold-backup description claiming it selected revision94 was wrong;
+the actual revision94 store remained intact. Normal closing incorrectly allowed
+an editor-scene VoxelManager to publish its own selection. Fix: skip editor-scene
+OnLoad and exclude Scene.IsEditor from unload saving. The extra guard also
+covers editor instances created before hotload. Source changed only AFTER the
+cold performance/history runs; qualify this essential fix separately.
+
+
+## EDITOR-SAVE-ISOLATION-001/v1 — frozen2026-09-07
+
+Use active edited user worldf58322c9-b837-4c0b-b555-6199124a290d revision94,
+20pages, same basic_example/settings. Save now, verify selection points to its
+slot; Stop normally and record selection bytes. Close the editor normally,
+verify the bytes remain unchanged and no different-world unload save occurs.
+Preserve any shutdown errors; if process exits, reopen same project/scene/Play
+and require same world/revision/pages with Saved status. No edits or changes to
+world files during this check. Compilation must succeed; this scenario tests
+the new editor/game persistence boundary, not a performance qualification.
+
+
+### EDITOR-SAVE-ISOLATION-001/v1 — shutdown observation
+
+Guard compiled successfully with0errors. Loaded original saved user world94
+through the normal load command21:23:32, then Save now and Stop. Selection
+verified f58322c9b8374c0bb5556199124a290d; exact bytes/hash captured in
+editor-isolation-selection.json. CloseMainWindow returnedFalse for hidden
+editor21700, so issued ordinary engine quit. Selection remained byte-identical,
+but process reached Error again instead of exiting. User asked to dismiss it.
+Shutdown failure persists; guard does not claim to repair the engine teardown
+issue. Final reopen verification awaits actual process exit. No force-close
+of this process authorized or performed.
+
+
+### Retained sample follow-up — source change, runtime pending
+
+Inspection confirmed RetainedSampleBytes enumerates weak references to allocated
+float arrays, not explicit reader leases. Each page is32768floats/131072bytes;
+release previously nulled the canonical array with no reuse route. Added a
+weak same-version reuse reference to canonical pages; TryPin may reattach a
+still-existing array, otherwise the existing disk read remains required. Added
+reusedSamplePages diagnostic, kept actual loadedPages and byte accounting.
+No GC request, pool, weaker deadline, or claim of a proven root leak. Must rerun
+unchanged HISTORY and relevant performance after compile. Current editor21700
+remains confirmed live at Error; user already has the dismissal request. No new
+editor started while that handle exists.
+
+
+### Goal blocked audit — editor21700, third consecutive goal turn
+
+Revalidated process21700 alive, titleError, RespondingTrue after normal quit.
+The same editor-shutdown condition has persisted across the three consecutive
+goal turns since EDITOR-SAVE-ISOLATION shutdown. The first turn completed cold
+runtime evidence and the editor-selection guard; the second added unvalidated
+weak same-version sample reuse; the third confirms the runtime prerequisite is
+still unavailable. Whitespace checks pass, but they do not establish compilation
+or runtime behavior. No new editor launched, no forced termination of21700.
+User has an outstanding request to dismiss this dialog; force-close permission
+applied only to the distinct former process5840. Mark goal blocked rather than
+continue unvalidated implementation or repeatedly restate status. Scope remains
+Slice1 with user-accepted multiplayer testing concluded. Resume by verifying
+actual process exit, reopening the saved revision94 world, compiling latest
+source, and validating the editor boundary, memory reuse and remaining gates.
+No acceptance, commit or push.
+
+
+### Resumed editor isolation / weak reuse validation — 2026-09-08
+
+User explicitly authorized force-closing stuck21700. Verified its executable
+and original creation timestamp, terminated only that process, confirmed exit.
+Before new launch no sbox-dev process existed. Selection remained byte-identical
+to editor-isolation-selection.json and selected f58322c9b8374c0bb5556199124a290d.
+Started single editor85752, same project, source frozen in reuse-source.json.
+Next verify compilation and EDITOR-SAVE-ISOLATION reopen of user revision94,
+then unchanged HISTORY workload for actual disk eviction/recovery and memory.
+Forced shutdown means clean engine teardown remains failed; it does not erase
+that prior failure or establish normal exit success.
+
+
+### EDITOR-SAVE-ISOLATION-001/v1 — reopen confirmed2026-09-08
+
+Fresh process85752 compiled successfully0errors. Startup01:27:04 loaded the
+original user worldf58322c9-b837-4c0b-b555-6199124a290d, revision94/checkpoint11.
+01:27:19:20pages, Saved, authored0, pendingFalse for visual/collision, no field
+failure. Last-world selection remained correct across editor destruction and
+subsequent force-close/relaunch. Boundary recovery verified; clean normal exit
+still not established because the old process required user-authorized force.
+
+### STORAGE-HISTORY-001/v1 with weak reuse — interrupted third visit
+
+Source reuse-source.json, process85752, no code hotload. Full editor launched
+with WindowStyle Hidden. Same host/scene/settings; fresh unedited test world
+13d5ce89-5493-4af6-ba7d-740d84f236c7 after user-world reopen. Prior user-world
+arrays still contributed to initial retained measurement4.5MiB, so not a cold
+heap baseline. Initial visual/transition/collision pending0,4913regions ready,
+grounded. Automated readiness polling measured dig301ms/build304ms/save292ms,
+within fixed10second deadlines. Revision2/16pages, two authored edits.
+
+Visit1 aa7a44b8c1844fabad64cd4acf0ddaa5 and visit2
+c9e88dcbdb224d35a3a39ffe5b90b292 completed. At each final return and post10second
+settle: resident2MiB, retained2MiB, no pending work/failure, no extra authored
+edits. Actual regional disk completions16 then32; evictions32 then64;
+weak reuses increased16 per route above the initial20 from user-world loading.
+Both returned hashes matched initial dig
+CBC0FB338567417AFFA0F2E52E9F58EA6C259BA9F4944554CD2A4F7049FE8C93
+and build A4ADE71734CABF350A8E09E2BA5E28A76EE94A28A35F5DC598902D63D3E3E596.
+Visit2 reached resident0/retained0 while away, proving weak references did not
+prevent collection. Exact contacts and per-second observations are in
+reuse-history-visit1.json and reuse-history-visit2.json. Maximum observed read
+integration0.412ms, sweep0.5918ms. Actual eligibility-to-release timing still
+requires complete evidence; do not equate the zero observation with every
+per-page deadline.
+
+Visit3 began01:35:10; final log01:36:53.2878 showed resident0/retained0,
+loaded32/evicted96/reused68 including original20, no field failure. Process
+85752 then disappeared with no normal shutdown log and no saved third result.
+Authoritative process inventory confirmed no sbox-dev process; MCP transport
+failure alone was not treated as process exit. Third trip incomplete, not pass.
+No matching sbox Application event1000/1001/1026 found since01:26; this does
+not prove no crash. User replied that it was hidden/headless; whether termination
+was manual remains unclear. Clarification and next-window visibility requested.
+Raw engine log preserved in reuse-history-interrupted.log. The monitor timed
+out after180seconds; its unsaved third in-memory array was lost, but engine log
+retains the one-second status observations. No further test run started.
+
+Performance relative to prior same workload visits: FPS875.0884 to829.17224
+and874.2721 to822.57587 (about5-6% lower); CPU p95 1.625 to1.8379 and1.6186
+to1.8584ms; p99 3.3111 to3.6525 and3.3631 to3.7656ms. GPU p95 improved;
+process peaks decreased. Source/session/viewport conditions differ, so causality
+unproven. These changes cross comparison flags; performance remains unaccepted.
+Raw results reuse-history-result1.json and reuse-history-result2.json.
+After verified process exit, restored original user-world selection bytes from
+reuse-fixture-backup.json. User save94 and test save2 remain intact.
+
+### User clarification and visible editor requirement — 2026-09-08
+
+The user confirmed that they manually closed editor85752 and reopened the
+editor. This resolves the uncertainty recorded above: the third HISTORY visit
+was manually interrupted, not evidence of a spontaneous process crash. It still
+has no complete result and does not pass the three-visit scenario.
+
+The user explicitly requires visible windows for all subsequent work. Reuse the
+visible editor and use normal visible windows for any future launches; do not
+launch hidden windows. Process40164 has the visible basic_example editor title.
+Native editor status confirms voxels3, engine26.09.01c, Play stopped, no active
+scene or unsaved scene changes, compilation successful with zero errors. No
+additional editor was launched. Performance acceptance remains outstanding.
+
+### STORAGE-HISTORY-001/v1 — visible editor repeat preparation
+
+Reuse user-opened visible process40164, engine26.09.01c, current weak-reuse
+source unchanged from reuse-source.json. No hidden windows and no new editor.
+Repeat the fixed fresh-world three-visit workload, same edits and settings.
+Preserved prior test fixture with exact file hashes and original user selection
+outside Data; see visible-history-backup.json. Selection temporarily absent for
+fresh-world setup, and will be restored after tests. The previous hidden-window
+measurements retain their environmental limitation; this run records visibility
+explicitly and does not waive existing performance flags.
+
+### Visible HISTORY setup interrupted by live input
+
+World491d5021-6bd8-409a-9d54-98700f0089f7 received additional gameplay input
+beyond the two scripted edits: revision6/pages31 at first explicit save, then
+autosaved revision7. This violates the fixed two-edit setup and is not a valid
+HISTORY comparison. Scripted edit readiness335ms/316ms and save317ms are
+bounded observations only; see visible-history-setup.json. User confirmed ready
+to leave controls alone for a restart. Stopped Play normally and preserved this
+world with verified file hashes outside Data (visible-history-user-edits-backup.json).
+Restart the same scenario without changing its inputs or acceptance criteria.
+
+### STORAGE-HISTORY-001/v1 — visible three-visit result, 2026-09-08
+
+Visible editor40164, engine26.09.01c, runtime hashes match reuse-source.json.
+Fresh Play world e8ea45c3-27c4-4cd2-b638-697a3b07857f, fixed visual32/gameplay8,
+fps_max1000 and 2500/50000/one-loop routes. No runtime hotload or client. Prior
+Play allocations are still present: this is not a cold heap or comparable cold
+performance baseline. Setup had4913 collision regions ready, no visual or
+transition backlog. Dig329ms, build317ms, explicit save41ms, exactly2 authored
+edits/revision2/16pages. See visible2-history-setup.json.
+
+All three routes completed: 2d8e52f4807644ad8323d52f8f028929,
+411ac1247c5643f6869ce70605991733, bc957c0a205343aeb1697fd70c01095d.
+Each reached resident0; actual regional disk completions16/32/48 and
+evictions32/64/96. At each return plus10seconds, resident2097152bytes and
+retainedSampleBytes8257536bytes, equal to the initial post-edit amount. Minimum
+retained6160384bytes on each trip; the fixed residual from earlier Play worlds
+remains unexplained. Repeated visits did not grow the measured sample total,
+but this does not prove that all prior-scene references retire or establish
+per-page eligibility deadlines. No forced collection. Max read integration
+0.508ms and sweep0.7ms; exact integration percentiles remain unmeasured.
+
+Every return matched dig A4C61F83430A5775B74B827B9E709C306AF8DF97E03069879EF4ACB11A3127A4
+and build D8A90C43D23D6392249523DCBABA252EDE18335F3C4700C3A6BF283811B6B4EF.
+Contacts matched initial position and normal exactly at both centers, with
+contactZ -90.008 and45.6859. Actual detached-camera800x450 captures at
+(-512,-1024,512) and(1024,-512,512), angles45/90/0 FOV60, before and after
+the three routes showed the same continuous crater and raised surface. Camera
+returned to attached Game mode before every measured route. These are targeted
+visual checks, not exhaustive seam coverage. No extra authored edits or storage
+failures. One-second observations/contact evidence: visible2-history-visit1/2/3.json.
+
+FPS762.3814/762.6375/781.63226; CPU p95 2.1148/2.0886/1.9687ms,
+p99 4.6915/4.8313/4.5541ms; GPU p95 1.2819767/1.2938976/1.2426376ms.
+Process peaks3959119872/4040015872/4054732800bytes, GPU2525256744bytes.
+Full results visible2-history-result1/2/3.json. Relative to earlier hidden
+editor runs these cross performance flags. Visibility and heap conditions
+differ; causality is unproven and performance acceptance remains open.
+
+Save-overlap step now exercised through the production queue: revision4 was
+committed while revision3 save was still active. Save completion explicitly
+reported revision3/liveRevision4; status stayed Unsaved changes with
+savedRevision3. Subsequent save completed revision4 and status became Saved.
+No stale overwrite or false saved-revision advancement in this run. Evidence
+visible2-history-continue.json. Revision4 dig hash
+CFA93043D606EE1936FFF25C3411B277A11C8AE57AFAE9469E41B34881F3E443.
+
+Visible HISTORY continuation/reopen: normal Stop/Play automatically reopened
+revision4; subsequent explicit same-slot load readiness3978ms. Both recorded
+revision4 hashes matched and authored count was0. Further dig at(1024,0,0),
+r128/+512 committed once, saved revision5. Its new build-region fingerprint
+7FE837332B9A89794CE79A630431E23FE8C407530E4EBA80BE8B4A919F8C17D5
+and contactZ-102.7699/normal(-0.0502,0.0398,0.9979) matched after the next
+normal Stop/Play and explicit reload (4024ms, authored0). Targeted runtime
+capture after reopening showed the expected crater replacing the raised shape.
+See visible2-history-reopen.json. This validates the bounded reopen/edit/save
+sequence and prior overlap; overall acceptance still has outstanding capacity,
+per-page release, lifecycle retention and comparable performance evidence.
+
+Stopped Play normally after these checks. Restored original user-world selection
+byte-for-byte from visible-history-backup.json, selecting
+f58322c9b8374c0bb5556199124a290d. Latest test revision5 remains in
+storage-history-v1; extra user edits from the interrupted setup remain preserved
+in the documented external backup. Editor remains visible; no editor shutdown
+or new window launch occurred. No runtime changes, acceptance, commit or push.
+
+### Scene teardown retention correction — implementation, unvalidated
+
+Source inspection found OnDestroy cancelled scene work and saved current state
+but retained _terrainField, save/read/edit task references and sweep snapshots.
+The prior visible run's fixed residual6160384bytes equals47 sample pages,
+matching16 pages from the prior loaded fixture plus31 from interrupted setup;
+this arithmetic is consistent with retention, not proof of exact GC roots.
+
+OnDestroy now releases saved canonical payloads after downstream disposal and
+clears its field/task/result/sweep references. Independent captured readers keep
+their own immutable arrays until cancelled work finishes. Unsaved pages are not
+evicted by ReleaseResidentSamples; failed final-save behavior remains explicit.
+No forced GC or second storage representation. Runtime validation pending.
+
+### STORAGE-PLAY-RETENTION-001/v1 — fixed regression scenario
+
+Defined before running the teardown correction. Single visible editor, basic_example,
+seed1337/gen5, gameplay8/visual32/fps_max1000, no clients or extra live input.
+Use the existing storage-history-v1 world e8ea45c3-27c4-4cd2-b638-697a3b07857f,
+revision5/16pages with dig/build-region fingerprints recorded above. Preserve
+original user selection outside Data. Repeat three normal Stop/Play cycles,
+automatically reopening this saved world; select visual32 and settle all
+visual/collision work within120seconds. At each cycle run the unchanged
+2500/50000/one-loop figure-eight and sample residency once per second without
+away density queries. Record sample total at initial settlement and after route
+plus10seconds. Require exact saved identity/revision/fingerprints, authored0,
+no storage failures, resident2MiB at settled return, and no cycle-to-cycle growth
+in settled retained samples after natural collection. Record prior editor heap
+residual separately; no forced collection or relaxed existing HISTORY criteria.
+This targets teardown/reopen retention; it does not replace canonical performance
+or the other outstanding gates. If old pre-fix components contaminate results,
+record that limitation and use a fresh visible process for comparable evidence.
+
+### Validation scope correction after user feedback — 2026-09-08
+
+User objected to four hours spent on the first prototype slice. Cancelled the
+remaining automated STORAGE-PLAY-RETENTION cycles while allowing the already
+running first figure-eight to complete. The stopped observer lost its initial
+in-memory rows; native logs retain prior observations. Later result and settled
+status are captured separately in teardown-final-run.json. This is a partial
+scenario, not a three-cycle pass or proof that teardown fixes retention.
+The latest source compiled successfully with zero errors. No further cycles or
+multiplayer tests launched. Implementation handoff now distinguishes implemented
+features, bounded passes and the specific remaining acceptance gaps.
+
+The single in-flight route completed ec4acba7d56445e4b53f3c0e6a045b35.
+At return plus10seconds: revision5/Saved/authored0, resident2097152bytes,
+retained14548992bytes, loadedPages0/evictedPages32; weak reuse served this route.
+This did not exercise new disk reads or measure post-teardown collection, and
+therefore does not qualify the latest cleanup. Full result teardown-final-result.json.
+Stopped Play normally and restored original user-world selection byte-identically.
+Editor remains visible, Play stopped. No more test cycles were started.
+
+### Existing performance evidence audit — no new runtime test
+
+Compared reuse-history-result1 and visible2-history-result1. Both already use
+weak-sample-reuse storage, visual32/gameplay8, seed1337/gen5 and the fixed
+2500/50000/one-loop route. Thus their difference is not a storage-off/on test.
+Their result format has no viewport dimensions, FOV, window visibility, engine
+version or hardware fields. External ledger context records differing windows
+and prior Play history. The separate after-cold-figure-eight uses visual512/LOD6
+and cannot substitute for these visual32/LOD2 feature runs.
+
+Existing profiler records contain only a200-frame window, not a whole-route
+breakdown. Within those windows, average manager update0.4408195 to0.43463498ms
+was approximately flat; render0.5588975 to0.6435735ms and editor0.112584 to
+0.1912695ms increased. Whole-route allocation7,937,073,512 to8,134,369,248bytes;
+GC pause1059.101 to1054.031ms; one Gen2 collection in each; zero exceptions.
+These observations do not attribute the whole-route FPS or tail difference to
+a particular subsystem. There is no dedicated storage timing scope in these
+profiler records. Some native scope percentile/max combinations are inconsistent
+(e.g. visible ProcessPendingMeshes p990.0825 versus max0.0813), so do not infer
+strong per-scope tail claims from them. Raw selected values are preserved in
+performance-evidence-comparison.json.
+
+Conclusion: no demonstrated storage speedup or proven storage-caused regression.
+The performance concern remains open; no optimization is justified solely by
+these non-comparable measurements. No additional runtime test, scene change or
+source optimization was performed in this audit.
+
+### User full-distance regression and descriptor allocation correction
+
+User reported approximately900FPS stationary before a route and700–800FPS
+afterward, with roughly200FPS portions during movement. Captured their completed
+manual full-distance run a5df0525ab434456bf23a6a0297e7b04: average411.1966FPS,
+CPU p957.3526/p9910.0754/max163.5985ms, GPU average1.1381814ms;
+19,595,218,568 allocated bytes and22 geometry arenas. Source user-slow-full-distance.json.
+The older full-distance cold run had3,195,667,992 allocated bytes and14 arenas,
+but an unedited world and different session. This is a serious recorded failure,
+not a controlled causal comparison. Live stationary inspection after the route
+showed795.2FPS, no visual/transition/collision backlog, and4913 collision regions
+ready (user-post-route-inspect.json). No restart or movement was used to obtain
+this evidence. User world was revision98 with autosave pending at inspection;
+do not restore an earlier selection or overwrite the user's newer edits.
+
+Source inspection: both GPU descriptor WithField methods captured a regional
+snapshot/dictionary even at dependency revision0; stale checks invoked WithField
+only to compare descriptor identity. Now zero-edit regions use the existing
+procedural-only submission path without snapshot allocation, matching bound
+descriptors are reused, and MatchesField compares epoch/dependency revision
+without constructing snapshots. Nonzero dependencies still capture and pin
+through the same regional field path. This removes concrete unnecessary work;
+its contribution to the measured slowdown is not yet quantified.
+Compilation and fixed full-distance regression validation remain required.
+Existing workload/acceptance criteria unchanged. Do not attribute all19.6GB of
+allocation or the persistent stationary slowdown to this change without evidence.
+
+### STORAGE-EDITED-FULL-RANGE-001/v1 — targeted regression check
+
+Freeze current user world f58322c9-b837-4c0b-b555-6199124a290d revision98,
+26pages/checkpoint14, no further edits during observation. Single visible
+editor40164, engine26.09.01c, basic_example, visual512/LOD0–6, gameplay8,
+seed1337/gen5/default surface, fps_max1000. Current player XY(-40.0989,-55.9361),
+attached camera unchanged. Source descriptor-allocation-source.json, hotloaded
+into the existing editor; no cold-session attribution. Previous manual run used
+a different starting position and earlier edited revision, so it is not a paired
+causal control. This workload does not replace the canonical or HISTORY scenarios.
+
+Capture stationary state now and after10seconds, then the existing figure-eight
+2500/50000/one loop; no active editing or camera changes. After result completion,
+wait20seconds and capture stationary state again. Capture revision/page count,
+frame FPS/p95/p99, sample memory, GPU arena usage, all visual/collision pending
+counts, and whole-route allocation/GC/readiness. Require no terrain change, no
+errors or pending queues after settlement, and no >5% stationary FPS loss or
+>10% p95/p99 increase relative to the pre-run stationary window. Preserve all
+previous performance flags; a pass is only this bounded check. Record GPU
+arenas before/after; do not accept unexplained resource growth.
+
+### STORAGE-EDITED-FULL-RANGE-001/v1 — targeted result
+
+Run51b861e066d7469b80b78327319393e5, current edited world revision98 unchanged,
+26pages/checkpoint14, zero new edits/errors. Existing visible process40164,
+descriptor allocation fix hotloaded, source descriptor-allocation-source.json.
+Before route:835.3FPS/p951.88/p992.66ms,22arenas, grounded at
+(-40.09894,-55.93609,17.716877), no visual/transition/collision pending work.
+Route average736.10394FPS, CPU p952.1717/p994.4676/max40.5254ms,
+4,191,648,160 managed allocated bytes,84Gen0/44Gen1/1Gen2 collections,
+885.47ms totalGC pause. Mesh readiness p9596.81/p99122.3107/max180.5198ms;
+post-loop drain0.1078ms. These improve versus the preceding manual run's
+411.1966FPS/19,595,218,568allocated bytes/p99 readiness3364.4807ms, but
+source/world revision/start position/session differ; this is supporting evidence
+for the targeted correction, not a matched causal baseline.
+
+At result plus20seconds:861.1FPS/p951.81/p992.72ms,14arenas, GPU2698.3MiB,
+no visual/transition/collision backlog, saved revision98 unchanged. This satisfies
+the numeric stationary FPS/tail thresholds in this observation, but the player
+was at(-30.57267,506.13113,-108.47029), not grounded. The route forces
+worldHeight0 while the initial ground position was17.716877; cause of final
+displacement is not established. Therefore the before/after stationary windows
+are not the same camera position and do not qualify exact return/support.
+Do not report the entire scenario passed. No forced reset, reload, save-slot
+restoration or further run was performed. User's live world remains active.
+Raw evidence targeted-full-distance.json and targeted-full-distance-result.json.
+
+### Figure-eight return-position defect — source diagnosis
+
+StartPlayerFigureEight retains only starting XY, SetFigureEightPosition forces
+Z0 and clears vertical velocity only, and TryCompletePlayerFigureEightTest drops
+the target/body references without restoring the original transform. This source
+behavior explains why same-view stationary comparisons are not guaranteed;
+it does not prove that it caused every observed displacement. The targeted
+run's start Z17.716877 and post-run Z-108.47029 demonstrate invalid return
+conditions for that edited-world comparison.
+
+Proposed correction: capture full starting position, preserve the existing
+2500/50000/Z0 moving path, then restore starting position and zero body velocity
+after CompletePerformanceWindow/EndMovingThroughputWindow, before releasing
+references. No generator/storage/mesh semantics change. The post-route phase
+changes and needs a versioned comparison; explicit user approval requested per
+AGENTS.md Figure-Eight Performance Acceptance. Not implemented yet.
+
+### User accepts current performance and requests next slice
+
+2026-09-08: User: "Okay, I will accept the current performance. It is reasonable,
+albeit a little bit lower than Wanted. Let's move on with the next main slice."
+Record this as explicit acceptance of current measured performance and direction
+to advance, not a retrospective pass of unverified lifecycle, capacity or
+benchmark-return checks. No further Slice1 acceptance loop. The benchmark patch
+is still unapplied. Preserve all failures, qualifications and earlier baselines.

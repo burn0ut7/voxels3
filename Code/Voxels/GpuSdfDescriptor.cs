@@ -33,6 +33,7 @@ internal readonly record struct GpuSdfDescriptor(
 	public Vector3Int ChunkCoordinate => Key.Coordinate;
 	public TerrainFieldSnapshot Field { get; init; }
 	public int EditRevision { get; init; }
+	public int FieldEpoch { get; init; }
 	public SdfWorldAabb SamplingBounds
 	{
 		get
@@ -43,10 +44,14 @@ internal readonly record struct GpuSdfDescriptor(
 		}
 	}
 
+	public bool MatchesField( TerrainFieldSnapshot field ) => FieldEpoch == field.Epoch &&
+		EditRevision == field.GetCorrectionRange( SamplingBounds, out _, out _ );
+
 	public GpuSdfDescriptor WithField( TerrainFieldSnapshot field )
 	{
 		var revision = field.GetCorrectionRange( SamplingBounds, out _, out _ );
-		return this with { Field = field, EditRevision = revision };
+		if ( EditRevision == revision && FieldEpoch == field.Epoch && (revision == 0 || Field is not null) ) return this;
+		return this with { Field = revision == 0 ? null : field.CaptureRegion( SamplingBounds, pinSamples: false ), EditRevision = revision, FieldEpoch = field.Epoch };
 	}
 
 	// Full immutable snapshots may differ because an unrelated page changed.
@@ -54,10 +59,10 @@ internal readonly record struct GpuSdfDescriptor(
 	public bool Equals( GpuSdfDescriptor other ) => Key == other.Key &&
 		CellsPerAxis == other.CellsPerAxis && CellSize == other.CellSize &&
 		TerrainSettings == other.TerrainSettings && GeneratorVersion == other.GeneratorVersion &&
-		SourceRevision == other.SourceRevision && EditRevision == other.EditRevision;
+		SourceRevision == other.SourceRevision && EditRevision == other.EditRevision && FieldEpoch == other.FieldEpoch;
 
 	public override int GetHashCode() => System.HashCode.Combine( Key, CellsPerAxis, CellSize,
-		TerrainSettings, GeneratorVersion, SourceRevision, EditRevision );
+		TerrainSettings, GeneratorVersion, SourceRevision, EditRevision, FieldEpoch );
 
 	public static GpuSdfDescriptor FromChunk(
 		VoxelChunk chunk,
@@ -84,6 +89,7 @@ internal readonly record struct GpuTransitionDescriptor(
 {
 	public TerrainFieldSnapshot Field { get; init; }
 	public int EditRevision { get; init; }
+	public int FieldEpoch { get; init; }
 	public SdfWorldAabb SamplingBounds
 	{
 		get
@@ -104,18 +110,22 @@ internal readonly record struct GpuTransitionDescriptor(
 		}
 	}
 
+	public bool MatchesField( TerrainFieldSnapshot field ) => FieldEpoch == field.Epoch &&
+		EditRevision == field.GetCorrectionRange( SamplingBounds, out _, out _ );
+
 	public GpuTransitionDescriptor WithField( TerrainFieldSnapshot field )
 	{
 		var revision = field.GetCorrectionRange( SamplingBounds, out _, out _ );
-		return this with { Field = field, EditRevision = revision };
+		if ( EditRevision == revision && FieldEpoch == field.Epoch && (revision == 0 || Field is not null) ) return this;
+		return this with { Field = revision == 0 ? null : field.CaptureRegion( SamplingBounds, pinSamples: false ), EditRevision = revision, FieldEpoch = field.Epoch };
 	}
 
 	public bool Equals( GpuTransitionDescriptor other ) => Key == other.Key &&
 		CellsPerAxis == other.CellsPerAxis && FineCellSize == other.FineCellSize &&
 		CoarseCellSize == other.CoarseCellSize && TerrainSettings == other.TerrainSettings &&
 		GeneratorVersion == other.GeneratorVersion && SourceRevision == other.SourceRevision &&
-		EditRevision == other.EditRevision;
+		EditRevision == other.EditRevision && FieldEpoch == other.FieldEpoch;
 
 	public override int GetHashCode() => System.HashCode.Combine( Key, CellsPerAxis,
-		FineCellSize, CoarseCellSize, TerrainSettings, GeneratorVersion, SourceRevision, EditRevision );
+		FineCellSize, CoarseCellSize, TerrainSettings, GeneratorVersion, SourceRevision, System.HashCode.Combine( EditRevision, FieldEpoch ) );
 }

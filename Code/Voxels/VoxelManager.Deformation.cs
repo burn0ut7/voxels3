@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
 
 public sealed partial class VoxelManager
@@ -17,8 +16,11 @@ public sealed partial class VoxelManager
 	private System.Threading.Tasks.Task<TerrainFieldChange> _terrainEditTask;
 	private TerrainEditIntent _activeTerrainEdit;
 	private CancellationTokenSource _activeTerrainEditCancellation;
-	private System.Threading.Tasks.Task<string> _terrainSaveTask;
+	private System.Threading.Tasks.Task<TerrainFieldStore.Checkpoint> _terrainSaveTask;
+	private TerrainFieldSnapshot _terrainSaveSource;
 	private bool _terrainRestorePending;
+	private bool _terrainEditCapacityDeferred;
+	private long _terrainEditCapacityRetryAt;
 	private long _nextTerrainEditId;
 	private long _terrainEditsCommitted;
 	private long _terrainEditsRejected;
@@ -57,9 +59,21 @@ public sealed partial class VoxelManager
 		UpdateTerrainTool();
 		if ( _terrainSaveTask is not null && _terrainSaveTask.IsCompleted )
 		{
-			try { Log.Info( $"[TerrainEdit] save.complete path={_terrainSaveTask.GetAwaiter().GetResult()}" ); }
-			catch ( Exception exception ) { Log.Error( $"[TerrainEdit] save.failed reason={exception.Message}" ); }
+			try
+			{
+				var saved = _terrainSaveTask.GetAwaiter().GetResult();
+				_terrainField.MarkSaved( saved, _terrainSaveSource );
+				_terrainResetSavePath = null;
+				_terrainSaveFailure = null;
+				Log.Info( $"[TerrainEdit] save.complete path={saved.Root} world={saved.Identity.WorldId} revision={saved.Identity.Revision} checkpoint={saved.Sequence} liveRevision={CurrentField.Revision}" );
+			}
+			catch ( Exception exception )
+			{
+				_terrainSaveFailure = exception.Message;
+				Log.Error( $"[TerrainEdit] save.failed reason={exception.Message}" );
+			}
 			_terrainSaveTask = null;
+			_terrainSaveSource = null;
 		}
 		if ( _terrainEditTask is not null )
 		{
@@ -76,17 +90,20 @@ public sealed partial class VoxelManager
 					{
 						if ( !body.PhysicsBody.IsValid() || !body.MotionEnabled ) continue;
 						var bounds = body.PhysicsBody.GetBounds().Grow( TerrainField.SampleSpacing );
-						if ( TerrainFieldChange.Intersects( change.AffectedBounds, new SdfWorldAabb( bounds.Mins, bounds.Maxs ) ) )
+						if ( change.ReplacementSampleBounds.Any( region => TerrainFieldChange.Intersects( region, new SdfWorldAabb( bounds.Mins, bounds.Maxs ) ) ) )
 							throw new InvalidOperationException( "An actor intersects the restore area. Move clear before loading." );
 					}
 				}
 				if ( !_terrainField.TryCommit( change ) ) throw new InvalidOperationException( "Terrain mutation source changed before commit." );
 				if ( _terrainIncoming?.RequestId == _activeTerrainEdit.Id ) _terrainIncoming.FieldCommitted = true;
-				RecordDeformationCommit( _activeTerrainEdit.Id, change );
-				_terrainEditsCommitted++;
-				_terrainEditedSamples += change.ChangedSamples;
+				if ( Networking.IsHost && !_terrainRestorePending )
+				{
+					RecordDeformationCommit( _activeTerrainEdit.Id, change );
+					_terrainEditsCommitted++;
+					_terrainEditedSamples += change.ChangedSamples;
+				}
 				_terrainEditLastCommitMilliseconds = (float)Stopwatch.GetElapsedTime( _activeTerrainEdit.RequestedAt ).TotalMilliseconds;
-				if ( change.ChangedSamples > 0 )
+				if ( !ReferenceEquals( change.Source, change.Result ) )
 				{
 					_terrainEditVisualDependencies = _gpuMesher.InvalidateField( change, _playerFigureEightRouteDistance );
 					_terrainEditCollisionDependencies = _collision.InvalidateField( change );
@@ -96,10 +113,10 @@ public sealed partial class VoxelManager
 					{
 						var size = _appliedCellsPerAxis * _appliedCellSize;
 						var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * size;
-						if ( !TerrainFieldChange.Intersects( new SdfWorldAabb( origin - Vector3.One * _appliedCellSize,
+						if ( change.Source.Epoch == change.Result.Epoch && !TerrainFieldChange.Intersects( new SdfWorldAabb( origin - Vector3.One * _appliedCellSize,
 							origin + Vector3.One * (size + _appliedCellSize) ), dirtyBounds ) ) continue;
 						var descriptor = CreateRegularDescriptor( 0, coordinate );
-						if ( descriptor.EditRevision != change.Result.Revision || _gpuMesher.Contains( descriptor ) ) continue;
+						if ( _gpuMesher.Contains( descriptor ) ) continue;
 						_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance,
 							IsGameplayCoordinate( coordinate ) ? GpuMeshResidency.Gameplay : GpuMeshResidency.Warm );
 						_gpuMesher.SetRenderActive( descriptor.Key, _levels[0].Active.Contains( coordinate ) );
@@ -109,30 +126,56 @@ public sealed partial class VoxelManager
 					_lastClipboxReadinessResidentRevision = -1;
 				}
 				if ( _terrainIncoming?.RequestId == _activeTerrainEdit.Id ) _terrainIncoming.Committed = true;
+				if ( _terrainRestorePending )
+				{
+					_terrainSaveFailure = null;
+					_terrainAutosaveDue = 0;
+					Log.Info( $"[TerrainEdit] load.field_committed world={change.Result.WorldId} revision={change.Result.Revision} epoch={change.Result.Epoch} pages={change.Result.PageCount} checkpoint={change.Checkpoint?.Sequence}" );
+				}
 			}
-			catch ( OperationCanceledException ) { }
+			catch ( OperationCanceledException ) { _terrainResetSavePath = null; }
 			catch ( Exception exception )
 			{
 				if ( _terrainIncoming?.RequestId == _activeTerrainEdit.Id ) FailTerrainReceive( exception.Message );
 				_terrainEditsRejected++;
 				_terrainEditFailure = exception.Message;
+				_terrainResetSavePath = null;
 				Log.Error( $"[TerrainEdit] request.failed id={_activeTerrainEdit.Id} reason={exception.Message}" );
 			}
 			_terrainEditTask = null;
 			_activeTerrainEditCancellation?.Dispose();
 			_activeTerrainEditCancellation = null;
 			_terrainRestorePending = false;
+			if ( _terrainResetSavePath is not null ) StartTerrainSave( _terrainResetSavePath );
 		}
 		// Finish the coherent visual publication before the next commit. Unrelated streaming
 		// and collision jobs must not serialize all world mutations.
 		if ( _terrainEditQueue.Count == 0 || _gpuMesher.FieldPublicationPending ||
-			!_terrainEditQueue.TryDequeue( out _activeTerrainEdit ) ) return;
+			!_terrainEditQueue.TryPeek( out var intent ) ) return;
+		if ( Stopwatch.GetTimestamp() < _terrainEditCapacityRetryAt ) return;
 		var source = CurrentField;
-		var intent = _activeTerrainEdit;
+		if ( !source.TryCaptureRegion( new SdfWorldAabb( intent.Center - Vector3.One * intent.Radius,
+			intent.Center + Vector3.One * intent.Radius ), out var reader ) ) return;
+		var minimum = (intent.Center - Vector3.One * intent.Radius) / TerrainField.SampleSpacing;
+		var maximum = (intent.Center + Vector3.One * intent.Radius) / TerrainField.SampleSpacing;
+		var pageCount = (((int)MathF.Floor( maximum.x ) >> TerrainField.PageShift) - ((int)MathF.Ceiling( minimum.x ) >> TerrainField.PageShift) + 1) *
+			(((int)MathF.Floor( maximum.y ) >> TerrainField.PageShift) - ((int)MathF.Ceiling( minimum.y ) >> TerrainField.PageShift) + 1) *
+			(((int)MathF.Floor( maximum.z ) >> TerrainField.PageShift) - ((int)MathF.Ceiling( minimum.z ) >> TerrainField.PageShift) + 1);
+		_terrainEditCapacityDeferred = !TerrainFieldPage.TryReserveSamples( pageCount, out var reservation );
+		if ( _terrainEditCapacityDeferred )
+		{
+			_terrainEditCapacityRetryAt = Stopwatch.GetTimestamp() + Stopwatch.Frequency / 10;
+			return;
+		}
+		_terrainEditQueue.Dequeue();
+		_activeTerrainEdit = intent;
 		_activeTerrainEditCancellation = CancellationTokenSource.CreateLinkedTokenSource( _terrainEditCancellation.Token );
 		var cancellation = _activeTerrainEditCancellation.Token;
-		_terrainEditTask = Task.RunInThreadAsync( () => TerrainField.PrepareBrush(
-			source, intent.Center, intent.Radius, intent.Strength, cancellation ) );
+		_terrainEditTask = Task.RunInThreadAsync( () =>
+		{
+			using var reservedSamples = reservation;
+			return TerrainField.PrepareBrush( source, reader, intent.Center, intent.Radius, intent.Strength, cancellation, reservedSamples );
+		} );
 	}
 
 	private void UpdateTerrainTool()
@@ -198,35 +241,13 @@ public sealed partial class VoxelManager
 		return true;
 	}
 
-	private static string TerrainSavePath( string slot )
-	{
-		if ( string.IsNullOrWhiteSpace( slot ) || slot.Length > 32 ||
-			slot.Any( character => !(character >= 'a' && character <= 'z') &&
-				!(character >= '0' && character <= '9') && character != '-' && character != '_' ) )
-			throw new ArgumentException( "Save names use 1-32 lowercase letters, digits, hyphens or underscores." );
-		return $"terrain/{slot}.vxt";
-	}
-
 	[ConCmd( "voxel_terrain_save" )]
-	public static void SaveTerrainCommand( string slot )
+	public static void SaveTerrainCommand( string slot = "" )
 	{
 		if ( !TryGetActiveManager( "terrain.save", out var manager ) ) return;
 		try
 		{
-			if ( manager._deformationBenchmark is not null || !Networking.IsHost || manager._playerFigureEightTestRunning || manager._performanceVisibilityPending ||
-				manager._performanceCompletionPhase != PerformanceCompletionPhase.None || manager._terrainSaveTask is not null ) throw new InvalidOperationException( "Only the host may save, with one save at a time." );
-			var path = TerrainSavePath( slot );
-			var snapshot = manager.CurrentField;
-			var cancellation = manager._terrainEditCancellation.Token;
-			manager._terrainSaveTask = manager.Task.RunInThreadAsync( () =>
-			{
-				FileSystem.Data.CreateDirectory( "terrain" );
-				// CreateNew preserves any existing save, including when a write fails.
-				using var stream = FileSystem.Data.OpenWrite( path, FileMode.CreateNew );
-				TerrainFieldCodec.WriteSnapshot( stream, snapshot, cancellation );
-				return path;
-			} );
-			Log.Info( $"[TerrainEdit] save.started path={path} revision={snapshot.Revision}" );
+			manager.StartTerrainSave( TerrainFieldStore.RootPath( string.IsNullOrWhiteSpace( slot ) ? manager.TerrainSaveSlot : slot ) );
 		}
 		catch ( Exception exception ) { Log.Warning( $"[TerrainEdit] save.rejected reason={exception.Message}" ); }
 	}
@@ -237,23 +258,7 @@ public sealed partial class VoxelManager
 		if ( !TryGetActiveManager( "terrain.load", out var manager ) ) return;
 		try
 		{
-			if ( manager._deformationBenchmark is not null || !Networking.IsHost || manager._playerFigureEightTestRunning || manager._performanceVisibilityPending ||
-				manager._performanceCompletionPhase != PerformanceCompletionPhase.None || manager._terrainEditTask is not null || manager._terrainEditQueue.Count > 0 ||
-				manager._terrainSaveTask is not null || manager._gpuMesher.EditRebuildPending || manager._collision.EditRebuildPending )
-				throw new InvalidOperationException( "Only an idle host mutation boundary may load terrain." );
-			var path = TerrainSavePath( slot );
-			var source = manager.CurrentField;
-			manager._activeTerrainEditCancellation = CancellationTokenSource.CreateLinkedTokenSource( manager._terrainEditCancellation.Token );
-			var cancellation = manager._activeTerrainEditCancellation.Token;
-			manager._activeTerrainEdit = new TerrainEditIntent( ++manager._nextTerrainEditId, default, 0, 0, Stopwatch.GetTimestamp() );
-			manager._terrainRestorePending = true;
-			manager._terrainEditTask = manager.Task.RunInThreadAsync( () =>
-			{
-				using var stream = FileSystem.Data.OpenRead( path );
-				var restored = TerrainFieldCodec.ReadSnapshot( stream, source.Settings, cancellation );
-				return TerrainField.PrepareReplacement( source, restored, cancellation );
-			} );
-			Log.Info( $"[TerrainEdit] load.started path={path} request={manager._activeTerrainEdit.Id}" );
+			manager.StartTerrainRestore( TerrainFieldStore.RootPath( slot ) );
 		}
 		catch ( Exception exception )
 		{
@@ -275,8 +280,12 @@ public sealed partial class VoxelManager
 	{
 		if ( !TryGetActiveManager( "terrain.edit.inspect", out var manager ) ) return;
 		var player = manager.Scene.GetAllComponents<PlayerController>().FirstOrDefault( value => !value.IsProxy );
+		var checkpoint = manager._terrainField.Checkpoint;
 		Log.Info( $"[TerrainEdit] toolStatus={manager._terrainToolStatus} eye={player?.EyePosition} world={manager.CurrentField.WorldId} revision={manager.CurrentField.Revision} pages={manager.CurrentField.PageCount} " +
+			$"epoch={manager.CurrentField.Epoch} savedRevision={checkpoint?.Identity.Revision} checkpoint={checkpoint?.Sequence} saving={manager._terrainSaveTask is not null} saveSlot={manager.TerrainSaveSlot} saveStatus={manager.TerrainSaveStatus} " +
 			$"bytes={manager.CurrentField.PageBytes} queued={manager._terrainEditQueue.Count} preparing={manager._terrainEditTask is not null} " +
+			$"residentBytes={manager.CurrentField.ResidentPageBytes} retainedSampleBytes={TerrainFieldPage.RetainedSampleBytes} sampleBudget={TerrainField.MaximumSampleBytes} reservedSampleBytes={TerrainFieldPage.ReservedSampleBytes} readCapacityDeferred={manager._terrainField.ReadCapacityDeferred} editCapacityDeferred={manager._terrainEditCapacityDeferred} " +
+			$"storageReads={manager._terrainField.PendingReads} loadedPages={manager._terrainField.LoadedPages} evictedPages={manager._terrainField.EvictedPages} reusedSamplePages={TerrainFieldPage.ReusedSamplePages} readIntegrationMaxMs={manager._terrainReadIntegrationMaximumMilliseconds} sweepMaxMs={manager._terrainSweepMaximumMilliseconds} storageFailure={manager._terrainField.ReadFailure} " +
 			$"committed={manager._terrainEditsCommitted} rejected={manager._terrainEditsRejected} samples={manager._terrainEditedSamples} " +
 			$"commitMs={manager._terrainEditLastCommitMilliseconds} visualDependencies={manager._terrainEditVisualDependencies} " +
 			$"collisionDependencies={manager._terrainEditCollisionDependencies} visualPending={manager._gpuMesher.EditRebuildPending} " +

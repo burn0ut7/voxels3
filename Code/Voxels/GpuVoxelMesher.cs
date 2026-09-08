@@ -411,7 +411,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
 	{
 		var descriptor = GpuSdfDescriptor.FromChunk( chunk, sourceRevision );
-		if ( _editedField is not null && descriptor != descriptor.WithField( _editedField ) )
+		if ( _editedField is not null && !descriptor.MatchesField( _editedField ) )
 		{
 			Schedule( descriptor.WithField( _editedField ), playerRouteDistance, residency );
 			return;
@@ -427,13 +427,14 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public void Schedule( GpuSdfDescriptor descriptor, float playerRouteDistance, GpuMeshResidency residency )
 	{
 		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
-		if ( _editPublicationOpen && descriptor.EditRevision == _editedField.Revision ) _editRegularDependencies.Add( descriptor.Key );
 		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var staged ) && staged.Descriptor == descriptor ) return;
 		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
 		{
 			SetResidency( resident, residency );
 			return;
 		}
+		if ( _editPublicationOpen && (_editEpochChanged || TerrainFieldChange.Intersects( descriptor.SamplingBounds, _editDependencyBounds )) )
+			_editRegularDependencies.Add( descriptor.Key );
 		if ( descriptor.Key.Level >= 2 )
 		{
 			if ( _outerMeasurementActive ) _outerScheduledCount++;
@@ -461,7 +462,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			return;
 		}
 		// A stale empty classification may have become surface-containing after an edit.
-		if ( _editedField is not null && descriptor != descriptor.WithField( _editedField ) )
+		if ( _editedField is not null && !descriptor.MatchesField( _editedField ) )
 		{
 			Schedule( descriptor.WithField( _editedField ), _currentPlayerRouteDistance, residency );
 			return;
@@ -491,9 +492,10 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public void ScheduleTransition( GpuTransitionDescriptor descriptor, float playerRouteDistance )
 	{
 		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
-		if ( _editPublicationOpen && descriptor.EditRevision == _editedField.Revision ) _editTransitionDependencies.Add( descriptor.Key );
 		if ( _transitionDesiredDescriptors.TryGetValue( descriptor.Key, out var desired ) &&
 			desired == descriptor ) return;
+		if ( _editPublicationOpen && (_editEpochChanged || TerrainFieldChange.Intersects( descriptor.SamplingBounds, _editDependencyBounds )) )
+			_editTransitionDependencies.Add( descriptor.Key );
 		_transitionDesiredDescriptors[descriptor.Key] = descriptor with { Field = null };
 		RemovePendingTransition( descriptor.Key );
 		var pending = new PendingTransition(
@@ -1838,8 +1840,16 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			GpuTerrainRequest[] requests = null;
 			TerrainFieldSnapshot[] fields = null;
 			var processed = 0;
-			while ( processed < _maximumDispatchesRequested && TryDequeuePending( out var pending ) )
+			var inspected = 0;
+			List<PendingMesh> deferred = null;
+			while ( inspected++ < _maximumDispatchesRequested && TryDequeuePending( out var pending ) )
 			{
+				TerrainFieldSnapshot reader = null;
+				if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+				{
+					(deferred ??= new()).Add( pending );
+					continue;
+				}
 				var generation = ++_nextGeneration;
 				var inFlight = new InFlightMesh(
 					pending.Descriptor,
@@ -1853,10 +1863,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				if ( inFlight.Descriptor.EditRevision != 0 )
 				{
 					fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
-					fields[processed] = inFlight.Descriptor.Field;
+					fields[processed] = reader;
 				}
 				processed++;
 			}
+			if ( deferred is not null ) foreach ( var pending in deferred ) QueuePending( pending );
 			if ( processed == 0 && _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
 			if ( processed > 0 )
 			{
@@ -1911,8 +1922,16 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		GpuTransitionRequest[] requests = null;
 		TerrainFieldSnapshot[] fields = null;
 		var processed = 0;
-		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingTransition( out var pending ) )
+		var inspected = 0;
+		List<PendingTransition> deferred = null;
+		while ( inspected++ < MaximumDispatchesPerUpdate && TryDequeuePendingTransition( out var pending ) )
 		{
+			TerrainFieldSnapshot reader = null;
+			if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+			{
+				(deferred ??= new()).Add( pending );
+				continue;
+			}
 			var generation = ++_nextGeneration;
 			var inFlight = new InFlightTransition(
 				pending.Descriptor,
@@ -1925,9 +1944,15 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			if ( inFlight.Descriptor.EditRevision != 0 )
 			{
 				fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
-				fields[processed] = inFlight.Descriptor.Field;
+				fields[processed] = reader;
 			}
 			processed++;
+		}
+		if ( deferred is not null ) foreach ( var pending in deferred )
+		{
+			_transitionPending[pending.Descriptor.Key] = pending;
+			if ( _editTransitionDependencies.Contains( pending.Descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
+			else _transitionDispatchQueue.Enqueue( pending );
 		}
 		if ( processed == 0 )
 		{
@@ -1992,8 +2017,16 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		GpuTerrainRequest[] requests = null;
 			TerrainFieldSnapshot[] fields = null;
 		var processed = 0;
-		while ( processed < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( out var pending ) )
+		var inspected = 0;
+		List<PendingMesh> deferred = null;
+		while ( inspected++ < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( out var pending ) )
 		{
+			TerrainFieldSnapshot reader = null;
+			if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+			{
+				(deferred ??= new()).Add( pending );
+				continue;
+			}
 			var generation = ++_nextGeneration;
 			var inFlight = new InFlightMesh(
 				pending.Descriptor,
@@ -2007,10 +2040,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			if ( inFlight.Descriptor.EditRevision != 0 )
 			{
 				fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
-				fields[processed] = inFlight.Descriptor.Field;
+				fields[processed] = reader;
 			}
 			processed++;
 		}
+		if ( deferred is not null ) foreach ( var pending in deferred ) QueuePending( pending );
 		if ( processed == 0 ) return false;
 		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _, fields ) )
 			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle outer count batch." );
@@ -2134,7 +2168,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			if ( result.Generation != source.Generation || result.RequestIndex != (uint)index )
 				throw new InvalidOperationException( "Stale voxel terrain count metadata." );
 			var cancelled = _cancelledInFlight.Contains( source.Descriptor.Key ) ||
-				(_editedField is not null && source.Descriptor != source.Descriptor.WithField( _editedField ));
+				(_editedField is not null && !source.Descriptor.MatchesField( _editedField ));
 			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledRegularCountResults++;
 			GeometryHandle handle = null;
 			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedRegularGeometryRegions++;
@@ -2221,7 +2255,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				var key = completed.Descriptor.Key;
 				var outer = key.Level >= 2;
 				if ( _cancelledInFlight.Remove( key ) ||
-					(_editedField is not null && completed.Descriptor != completed.Descriptor.WithField( _editedField )) )
+					(_editedField is not null && !completed.Descriptor.MatchesField( _editedField )) )
 				{
 					if ( _scheduleLatencyMeasurementActive ) _levelCancelledCounts[key.Level]++;
 					if ( outer )

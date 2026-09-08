@@ -34,7 +34,7 @@ public sealed partial class VoxelManager : Component.INetworkListener
 		_terrainFingerprintBusy = true;
 		try
 		{
-			var snapshot = CurrentField;
+			var snapshot = CurrentField.CaptureRegion( bounds, pinSamples: false );
 			var cancellation = _terrainEditCancellation.Token;
 			var hash = await Task.RunInThreadAsync( () => TerrainFieldCodec.RegionFingerprint( snapshot, bounds, cancellation ) );
 			if ( !IsValid || cancellation.IsCancellationRequested ) return;

@@ -372,24 +372,53 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	public string StreamingTargetStatus { get; private set; } = "Manager object (no target assigned)";
 
-	protected override System.Threading.Tasks.Task OnLoad()
+	protected override async System.Threading.Tasks.Task OnLoad()
 	{
+		if ( Scene.IsEditor ) return;
 		ResolveStreamingTarget();
 		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis );
 		_gpuMesher.SetFieldPresentationReady( Networking.IsHost );
 		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
-		ApplyConfigurationAndRebuild();
+		var field = new TerrainField( new ProceduralTerrainSettings( WorldSeed, SurfaceBaseHeight, SurfaceFrequency, SurfaceAmplitude ) );
+		try
+		{
+			if ( Networking.IsHost )
+			{
+				var source = field.Current;
+				var cancellation = _terrainEditCancellation.Token;
+				var change = await Task.RunInThreadAsync( () =>
+				{
+					var checkpoint = TerrainFieldStore.OpenLast( source.Settings, cancellation );
+					return checkpoint is null ? null : TerrainField.PrepareReplacement( source,
+						TerrainFieldStore.ReadDirectory( checkpoint, cancellation ), cancellation, resetEpoch: true, checkpoint: checkpoint );
+				} );
+				if ( change is not null )
+				{
+					if ( !field.TryCommit( change ) ) throw new InvalidOperationException( "World changed during startup." );
+					Log.Info( $"[TerrainStorage] startup.loaded path={change.Checkpoint.Root} world={field.Current.WorldId} revision={field.Current.Revision}" );
+				}
+			}
+			_terrainEditCancellation.Token.ThrowIfCancellationRequested();
+		}
+		catch ( Exception exception )
+		{
+			_terrainSaveFailure = exception.Message;
+			Log.Error( $"[TerrainStorage] startup.failed reason={exception.Message}" );
+			return;
+		}
+		_terrainField = field;
+		ApplyConfigurationAndRebuild( preserveTerrain: true );
 		if ( VerboseLogging )
 		{
 			Log.Info(
 				$"[VoxelWorld] load.complete ready=True loaded={GetCubeCoordinateCount( AuthoritativeGameplayRadius )} " +
 				"pending=0 storage=implicit-sdf" );
 		}
-		return System.Threading.Tasks.Task.CompletedTask;
 	}
 
 	protected override void OnStart()
 	{
+		if ( _terrainField is null ) return;
 		InitializeTerrainSession();
 		_performanceSnapshotReady = false;
 		FramePerformance = "Collecting first 10-second window";
@@ -400,9 +429,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	protected override void OnUpdate()
 	{
+		if ( _terrainField is null ) return;
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
 			VoxelPerformanceProfiler.ManagerUpdate );
 		TrySaveCompletedPerformanceTest();
+		UpdateTerrainStorage();
 		UpdatePlayerFigureEight();
 		UpdatePerformanceOverview();
 
@@ -468,6 +499,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		}
 
 		UpdateTerrainEdits();
+		UpdateTerrainAutosave();
 		UpdateTerrainReplication();
 		UpdatePlayerCollisionInterests();
 		_collision?.Integrate();
@@ -496,14 +528,16 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				meshDispatches );
 		}
 		UpdateDeformationBenchmark();
+		SweepTerrainStorage();
 		TryCompletePlayerFigureEightTest();
 		TrySaveCompletedPerformanceTest();
 	}
 
 	protected override void OnDestroy()
 	{
-		FinishDeformationBenchmark( "Scene teardown interrupted the workload." );
 		_terrainEditCancellation.Cancel();
+		SaveTerrainOnUnload();
+		FinishDeformationBenchmark( "Scene teardown interrupted the workload." );
 		foreach ( var peer in _terrainPeerOrder ) CancelTerrainPeerWork( peer );
 		_terrainIncoming?.WorkCancellation.Dispose();
 		_terrainIncoming = null;
@@ -528,6 +562,23 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			_collision = null;
 			_gpuMesher?.Dispose();
 			_gpuMesher = null;
+			// The editor may retain a destroyed component beyond scene teardown.
+			// Saved canonical payloads can retire now; finishing workers own their
+			// captured readers and must not depend on the manager retaining results.
+			if ( _terrainField is not null )
+				foreach ( var page in CurrentField.Pages.Values ) page.ReleaseResidentSamples();
+			_terrainField = null;
+			_terrainSaveSource = null;
+			_terrainSaveTask = null;
+			_terrainEditTask = null;
+			_terrainReadTask = null;
+			_terrainReadOwner = null;
+			_terrainReadResults = null;
+			_terrainSweepSnapshot = null;
+			_terrainSweepPages = null;
+			_playerStatusChunk = null;
+			_completedWarmChunks.Clear();
+			_warmGenerationTask = null;
 		}
 	}
 
@@ -2360,7 +2411,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			SurfaceAmplitude != _appliedSurfaceAmplitude;
 	}
 
-	private void ApplyConfigurationAndRebuild()
+	private void ApplyConfigurationAndRebuild( bool preserveTerrain = false )
 	{
 		if ( !TryValidateConfiguration( out var visualConfiguration, out var configurationError ) )
 		{
@@ -2369,7 +2420,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			return;
 		}
 
-		if ( _terrainField is not null && (_terrainField.Current.PageCount > 0 || _terrainEditTask is not null || _terrainEditQueue.Count > 0) )
+		if ( !preserveTerrain && _terrainField is not null && (_terrainField.Current.PageCount > 0 || _terrainEditTask is not null || _terrainEditQueue.Count > 0) )
 		{
 			WorldSeed = _appliedWorldSeed;
 			SurfaceBaseHeight = _appliedSurfaceBaseHeight;
@@ -2396,7 +2447,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_warmGenerationCancellation?.Cancel();
 		_warmGenerationRevision++;
 		_terrainContentRevision++;
-		_terrainField = new TerrainField( CurrentTerrainSettings );
+		if ( !preserveTerrain ) _terrainField = new TerrainField( CurrentTerrainSettings );
 		_gpuMesher.Reset( _appliedCellsPerAxis );
 		_renderDesiredChunks.Clear();
 		_nextRenderDesiredChunks.Clear();
@@ -3523,7 +3574,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 							coordinate,
 							densityRange.Classification,
 							chunk,
-							boundsMilliseconds, field.Revision ) );
+							boundsMilliseconds, field.Revision, field.Epoch ) );
 					}
 					return results;
 				} );
@@ -3619,7 +3670,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			{
 				if ( _renderPreparedChunks.Add( result.Coordinate ) ) _renderPreparedRevision++;
 				var chunk = result.Chunk;
-				if ( result.FieldRevision != CurrentField.Revision )
+				if ( result.FieldRevision != CurrentField.Revision || result.FieldEpoch != CurrentField.Epoch )
 					chunk = new VoxelChunk( result.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField );
 				if ( chunk is not null )
 				{
@@ -3728,7 +3779,7 @@ internal readonly record struct WarmChunkResult(
 	Vector3Int Coordinate,
 	ChunkDensityClassification Classification,
 	VoxelChunk Chunk,
-	float BoundsMilliseconds, int FieldRevision );
+	float BoundsMilliseconds, int FieldRevision, int FieldEpoch );
 
 internal readonly record struct VoxelVisualConfiguration(
 	int MinimumVisualLod,

@@ -21,12 +21,106 @@ internal sealed class TerrainField
 	public const float MaximumCorrection = 65536f;
 	public const int MaximumPages = 2048;
 	public const int MaximumTransactionPages = 216;
+	public const long MaximumSampleBytes = 512L * 1024 * 1024;
 	private readonly object _gate = new();
 	private TerrainFieldSnapshot _current;
+	private TerrainFieldStore.Checkpoint _checkpoint;
+	private readonly Queue<ReadRequest> _reads = new();
+	private readonly HashSet<TerrainFieldPage> _pendingReads = new();
+	private readonly HashSet<TerrainFieldPage> _failedReads = new();
+	public string ReadFailure { get; private set; }
+	public bool ReadCapacityDeferred { get; private set; }
+	public long LoadedPages { get; private set; }
+	public long EvictedPages { get; private set; }
+	public int PendingReads { get { lock ( _gate ) return _pendingReads.Count; } }
+	internal readonly record struct ReadRequest( Vector3Int Coordinate, TerrainFieldPage Page, int Epoch,
+		string Root, TerrainFieldStore.Page Stored );
+
+	internal void RequestPage( Vector3Int coordinate, TerrainFieldPage page, int epoch )
+	{
+		lock ( _gate )
+		{
+			if ( epoch != _current.Epoch || !_current.Pages.TryGetValue( coordinate, out var current ) ||
+				!ReferenceEquals( current, page ) || page.IsResident || _failedReads.Contains( page ) || !_pendingReads.Add( page ) ) return;
+			var stored = page.Stored;
+			if ( stored.Page is null )
+			{
+				_pendingReads.Remove( page ); _failedReads.Add( page );
+				ReadFailure = "Nonresident terrain page has no saved version.";
+				return;
+			}
+			_reads.Enqueue( new ReadRequest( coordinate, page, epoch, stored.Root, stored.Page ) );
+		}
+	}
+
+	public ReadRequest[] TakeReadBatch( out TerrainFieldPage.SampleReservation reservation )
+	{
+		lock ( _gate )
+		{
+			reservation = null;
+			ReadCapacityDeferred = false;
+			if ( _reads.Count == 0 ) return Array.Empty<ReadRequest>();
+			if ( !TerrainFieldPage.TryReserveSamples( Math.Min( 8, _reads.Count ), out reservation ) )
+			{
+				ReadCapacityDeferred = true;
+				return Array.Empty<ReadRequest>();
+			}
+			var batch = new List<ReadRequest>( 8 );
+			while ( batch.Count < 8 && _reads.TryDequeue( out var request ) )
+			{
+				if ( request.Epoch == _current.Epoch && _current.Pages.TryGetValue( request.Coordinate, out var page ) &&
+					ReferenceEquals( page, request.Page ) && !page.IsResident ) batch.Add( request );
+				else _pendingReads.Remove( request.Page );
+			}
+			if ( batch.Count == 0 ) { reservation.Dispose(); reservation = null; }
+			return batch.ToArray();
+		}
+	}
+
+	public bool CompleteRead( ReadRequest request, TerrainFieldPage loaded, string error )
+	{
+		lock ( _gate )
+		{
+			_pendingReads.Remove( request.Page );
+			if ( request.Epoch != _current.Epoch || !_current.Pages.TryGetValue( request.Coordinate, out var page ) ||
+				!ReferenceEquals( page, request.Page ) ) return false;
+			if ( error is not null ) { _failedReads.Add( page ); ReadFailure = error; return false; }
+			if ( !page.InstallResidentSamples( loaded ) ) return false;
+			LoadedPages++;
+			return true;
+		}
+	}
+
+	public void SweepPage( Vector3Int coordinate, TerrainFieldPage page, int epoch, bool required, long now )
+	{
+		lock ( _gate )
+		{
+			if ( epoch != _current.Epoch || !_current.Pages.TryGetValue( coordinate, out var current ) || !ReferenceEquals( page, current ) ) return;
+			if ( page.TryExpireResidentSamples( required || _pendingReads.Contains( page ), now ) ) EvictedPages++;
+		}
+	}
+	public TerrainFieldStore.Checkpoint Checkpoint { get { lock ( _gate ) return _checkpoint; } }
+
+	public void MarkSaved( TerrainFieldStore.Checkpoint checkpoint, TerrainFieldSnapshot source )
+	{
+		lock ( _gate )
+		{
+			if ( checkpoint.Identity.WorldId != _current.WorldId || checkpoint.Identity.Epoch != _current.Epoch ) return;
+			foreach ( var pair in checkpoint.Pages )
+			{
+				var savedPage = source.Pages[pair.Key];
+				savedPage.AttachStored( checkpoint.Root, pair.Value );
+				if ( !_current.Pages.TryGetValue( pair.Key, out var currentPage ) || !ReferenceEquals( currentPage, savedPage ) )
+					savedPage.ReleaseResidentSamples();
+			}
+			_checkpoint = checkpoint;
+		}
+	}
 
 	public TerrainField( ProceduralTerrainSettings settings )
 	{
-		_current = new TerrainFieldSnapshot( settings, 0, new Dictionary<Vector3Int, TerrainFieldPage>(), Guid.NewGuid() );
+		_current = new TerrainFieldSnapshot( settings, 0, new Dictionary<Vector3Int, TerrainFieldPage>(), Guid.NewGuid(),
+			owner: new WeakReference<TerrainField>( this ) );
 	}
 
 	public TerrainFieldSnapshot Current
@@ -41,25 +135,46 @@ internal sealed class TerrainField
 	public bool TryCommit( TerrainFieldChange change )
 	{
 		if ( change is null ) throw new ArgumentNullException( nameof( change ) );
+		if ( change.Result.IsRegional ) throw new InvalidOperationException( "A regional reader cannot replace the authoritative field." );
 		lock ( _gate )
 		{
 			if ( !ReferenceEquals( _current, change.Source ) ) return false;
+			if ( _current.WorldId != change.Result.WorldId || _current.Epoch != change.Result.Epoch )
+			{
+				_checkpoint = null; _reads.Clear(); _pendingReads.Clear(); _failedReads.Clear(); ReadFailure = null;
+			}
+			// Old metadata views must not keep obsolete saved payloads resident.
+			// Captured sample readers own separate references; unsaved versions stay
+			// available until their save completes or their final owner releases them.
+			var retiredKeys = _current.Epoch != change.Result.Epoch ? _current.Pages.Keys : change.ChangedPages;
+			foreach ( var key in retiredKeys )
+			{
+				if ( _current.Pages.TryGetValue( key, out var previous ) &&
+					(!change.Result.Pages.TryGetValue( key, out var next ) || !ReferenceEquals( previous, next )) )
+					previous.ReleaseResidentSamples();
+			}
 			_current = change.Result;
+			if ( change.Checkpoint is not null )
+				_checkpoint = change.Checkpoint with { Identity = new TerrainFieldSnapshot( _current.Settings, _current.Revision,
+					new Dictionary<Vector3Int, TerrainFieldPage>(), _current.WorldId, epoch: _current.Epoch ) };
 			return true;
 		}
 	}
 
 	/// <summary>Stage absolute restored/received state through the same immutable mutation boundary.</summary>
 	public static TerrainFieldChange PrepareReplacement( TerrainFieldSnapshot source, TerrainFieldSnapshot replacement,
-		CancellationToken cancellation )
+		CancellationToken cancellation, bool resetEpoch = false, TerrainFieldStore.Checkpoint checkpoint = null )
 	{
 		if ( source.Settings != replacement.Settings ) throw new ArgumentException( "Terrain generator settings differ." );
+		if ( source.IsRegional || replacement.IsRegional ) throw new ArgumentException( "A regional reader cannot author replacement state." );
+		if ( replacement.PageCount > MaximumPages ) throw new InvalidOperationException( "Terrain world page budget exhausted." );
 		var keys = new HashSet<Vector3Int>( source.Pages.Keys );
 		keys.UnionWith( replacement.Pages.Keys );
-		var pages = new Dictionary<Vector3Int, TerrainFieldPage>( source.Pages );
+		var pages = new Dictionary<Vector3Int, TerrainFieldPage>( replacement.Pages );
 		var changed = new List<Vector3Int>();
+		var changedRegions = new List<SdfWorldAabb>();
 		var samples = 0;
-		var revision = checked( source.Revision + 1 );
+		var epoch = resetEpoch || source.WorldId != replacement.WorldId ? checked( source.Epoch + 1 ) : source.Epoch;
 		var low = new Vector3Int( int.MaxValue, int.MaxValue, int.MaxValue );
 		var high = new Vector3Int( int.MinValue, int.MinValue, int.MinValue );
 		foreach ( var key in keys )
@@ -69,28 +184,34 @@ internal sealed class TerrainField
 			replacement.Pages.TryGetValue( key, out var restored );
 			if ( ReferenceEquals( previous, restored ) ||
 				(restored is null && previous.Minimum == 0f && previous.Maximum == 0f) ) continue;
+			var previousReader = previous is null ? null : TerrainFieldStore.PinForRead( previous );
+			var restoredReader = restored is null ? null : TerrainFieldStore.PinForRead( restored );
 			var pageChanged = false;
+			var pageLow = new Vector3Int( int.MaxValue, int.MaxValue, int.MaxValue );
+			var pageHigh = new Vector3Int( int.MinValue, int.MinValue, int.MinValue );
 			for ( var index = 0; index < SamplesPerPage; index++ )
 			{
-				if ( (previous?.Sample( index ) ?? 0f) == (restored?.Sample( index ) ?? 0f) ) continue;
+				if ( (previousReader?.Sample( index ) ?? 0f) == (restoredReader?.Sample( index ) ?? 0f) ) continue;
 				pageChanged = true; samples++;
 				var point = key * SamplesPerPageAxis + new Vector3Int( index & PageMask,
 					(index >> PageShift) & PageMask, index >> (2 * PageShift) );
 				low = new Vector3Int( Math.Min( low.x, point.x ), Math.Min( low.y, point.y ), Math.Min( low.z, point.z ) );
 				high = new Vector3Int( Math.Max( high.x, point.x ), Math.Max( high.y, point.y ), Math.Max( high.z, point.z ) );
+				pageLow = new Vector3Int( Math.Min( pageLow.x, point.x ), Math.Min( pageLow.y, point.y ), Math.Min( pageLow.z, point.z ) );
+				pageHigh = new Vector3Int( Math.Max( pageHigh.x, point.x ), Math.Max( pageHigh.y, point.y ), Math.Max( pageHigh.z, point.z ) );
 			}
 			if ( !pageChanged ) continue;
-			// Zero tombstones ensure removal invalidates old derived geometry as well.
-			pages[key] = new TerrainFieldPage( revision, restored?.CopyValues() ?? new float[SamplesPerPage], previous, true );
-			if ( pages.Count > MaximumPages ) throw new InvalidOperationException( "Terrain replacement exceeds the page budget including removals." );
 			changed.Add( key );
+			changedRegions.Add( new SdfWorldAabb( new Vector3( pageLow.x - 1, pageLow.y - 1, pageLow.z - 1 ) * SampleSpacing,
+				new Vector3( pageHigh.x + 1, pageHigh.y + 1, pageHigh.z + 1 ) * SampleSpacing ) );
 		}
-		if ( samples == 0 ) return new TerrainFieldChange( source,
-			source.WorldId == replacement.WorldId ? source : new TerrainFieldSnapshot( source.Settings, revision, pages, replacement.WorldId ),
-			default, 0, Array.Empty<Vector3Int>() );
-		var bounds = new SdfWorldAabb( new Vector3( low.x - 1, low.y - 1, low.z - 1 ) * SampleSpacing,
+		var result = new TerrainFieldSnapshot( source.Settings, replacement.Revision, pages, replacement.WorldId, epoch: epoch, owner: source.Owner );
+		var bounds = samples == 0 ? default : new SdfWorldAabb( new Vector3( low.x - 1, low.y - 1, low.z - 1 ) * SampleSpacing,
 			new Vector3( high.x + 1, high.y + 1, high.z + 1 ) * SampleSpacing );
-		return new TerrainFieldChange( source, new TerrainFieldSnapshot( source.Settings, revision, pages, replacement.WorldId ), bounds, samples, changed.ToArray() );
+		return new TerrainFieldChange( source, result, bounds, samples, changed.ToArray() )
+		{
+			Checkpoint = checkpoint, ReplacementSampleBounds = changedRegions.ToArray()
+		};
 	}
 
 	public static bool IsValidBrush( Vector3 center, float radius, float strength )
@@ -107,8 +228,8 @@ internal sealed class TerrainField
 	/// Pure bounded bulk operation, suitable for the single mutation worker. Positive
 	/// strength digs; negative strength builds. A stale prepared result cannot commit.
 	/// </summary>
-	public static TerrainFieldChange PrepareBrush( TerrainFieldSnapshot source, Vector3 center,
-		float radius, float strength, CancellationToken cancellation )
+	public static TerrainFieldChange PrepareBrush( TerrainFieldSnapshot source, TerrainFieldSnapshot reader, Vector3 center,
+		float radius, float strength, CancellationToken cancellation, TerrainFieldPage.SampleReservation reservation )
 	{
 		if ( source is null ) throw new ArgumentNullException( nameof( source ) );
 		if ( !IsValidBrush( center, radius, strength ) ) throw new ArgumentOutOfRangeException( nameof( radius ), "Invalid terrain brush." );
@@ -138,7 +259,7 @@ internal sealed class TerrainField
 					if ( squaredFraction >= 1f ) continue;
 					var pageKey = new Vector3Int( x >> PageShift, y >> PageShift, z >> PageShift );
 					var index = (x & PageMask) + SamplesPerPageAxis * ((y & PageMask) + SamplesPerPageAxis * (z & PageMask));
-					source.Pages.TryGetValue( pageKey, out var previousPage );
+					reader.Pages.TryGetValue( pageKey, out var previousPage );
 					edits.TryGetValue( pageKey, out var values );
 					var previous = values is null ? previousPage?.Sample( index ) ?? 0f : values[index];
 					var weight = 1f - squaredFraction;
@@ -149,7 +270,7 @@ internal sealed class TerrainField
 						if ( edits.Count >= MaximumTransactionPages ) throw new InvalidOperationException( "Terrain transaction page budget exhausted." );
 						if ( previousPage is null && source.PageCount + ++newPageCount > MaximumPages )
 							throw new InvalidOperationException( "Terrain world page budget exhausted." );
-						values = previousPage?.CopyValues() ?? new float[SamplesPerPage];
+						values = previousPage?.CopyValues( reservation ) ?? TerrainFieldPage.AllocateValues( reservation );
 						edits.Add( pageKey, values );
 					}
 					values[index] = next;
@@ -167,7 +288,7 @@ internal sealed class TerrainField
 		foreach ( var pair in edits )
 		{
 			cancellation.ThrowIfCancellationRequested();
-			source.Pages.TryGetValue( pair.Key, out var previous );
+			reader.Pages.TryGetValue( pair.Key, out var previous );
 			pages[pair.Key] = new TerrainFieldPage( revision, pair.Value, previous, true );
 			changedKeys[keyIndex++] = pair.Key;
 		}
@@ -182,13 +303,99 @@ internal sealed class TerrainField
 		var bounds = new SdfWorldAabb(
 			new Vector3( changedMinimum.x - 1, changedMinimum.y - 1, changedMinimum.z - 1 ) * SampleSpacing,
 			new Vector3( changedMaximum.x + 1, changedMaximum.y + 1, changedMaximum.z + 1 ) * SampleSpacing );
-		return new TerrainFieldChange( source, new TerrainFieldSnapshot( source.Settings, revision, pages, source.WorldId ), bounds, changedSamples, changedKeys );
+		return new TerrainFieldChange( source, new TerrainFieldSnapshot( source.Settings, revision, pages, source.WorldId,
+			epoch: source.Epoch, owner: source.Owner ), bounds, changedSamples, changedKeys );
 	}
 }
 
 internal sealed class TerrainFieldPage
 {
-	private readonly float[] _values;
+	private float[] _values;
+	private WeakReference<float[]> _releasedValues;
+	private static long _reusedSamplePages;
+	public static long ReusedSamplePages => Interlocked.Read( ref _reusedSamplePages );
+	private readonly object _residencyGate = new();
+	private readonly bool _isReader;
+	private long _lastRequiredAt = System.Diagnostics.Stopwatch.GetTimestamp();
+	private string _storedRoot;
+	private TerrainFieldStore.Page _storedPage;
+	public (string Root, TerrainFieldStore.Page Page) Stored
+	{
+		get { lock ( _residencyGate ) return (_storedRoot, _storedPage); }
+	}
+
+	public void AttachStored( string root, TerrainFieldStore.Page page )
+	{
+		if ( page.Revision != Revision ) throw new InvalidOperationException( "Saved terrain revision does not match the page." );
+		lock ( _residencyGate ) { _storedRoot = root; _storedPage = page; }
+	}
+	private static readonly object AllocationGate = new();
+	private static readonly List<WeakReference<float[]>> Allocations = new();
+	private static int _reservedPages;
+	public static long ReservedSampleBytes { get { lock ( AllocationGate ) return _reservedPages * SampleBytes; } }
+
+	internal sealed class SampleReservation : IDisposable
+	{
+		internal int Remaining;
+		internal SampleReservation( int pages ) { Remaining = pages; }
+		public void Dispose()
+		{
+			lock ( AllocationGate ) { _reservedPages -= Remaining; Remaining = 0; }
+		}
+	}
+
+	public static bool TryReserveSamples( int pages, out SampleReservation reservation )
+	{
+		if ( pages < 1 || pages > TerrainField.MaximumTransactionPages ) throw new ArgumentOutOfRangeException( nameof( pages ) );
+		lock ( AllocationGate )
+		{
+			reservation = null;
+			if ( (Allocations.Count + _reservedPages + pages) * SampleBytes > TerrainField.MaximumSampleBytes )
+				Allocations.RemoveAll( reference => !reference.TryGetTarget( out _ ) );
+			if ( (Allocations.Count + _reservedPages + pages) * SampleBytes > TerrainField.MaximumSampleBytes ) return false;
+			reservation = new SampleReservation( pages );
+			_reservedPages += pages;
+			return true;
+		}
+	}
+	public const long SampleBytes = (long)TerrainField.SamplesPerPage * sizeof( float );
+	public bool IsResident { get { lock ( _residencyGate ) return _values is not null; } }
+
+	// All dense correction arrays enter here, including codec and mutation staging.
+	// Weak records count retained versions without prolonging their lifetime.
+	public static float[] AllocateValues( SampleReservation reservation = null )
+	{
+		lock ( AllocationGate )
+		{
+			if ( reservation is not null )
+			{
+				if ( reservation.Remaining == 0 ) throw new InvalidOperationException( "Terrain sample reservation exhausted." );
+				reservation.Remaining--; _reservedPages--;
+			}
+			else
+			{
+				if ( (Allocations.Count + _reservedPages + 1) * SampleBytes > TerrainField.MaximumSampleBytes )
+					Allocations.RemoveAll( reference => !reference.TryGetTarget( out _ ) );
+				if ( (Allocations.Count + _reservedPages + 1) * SampleBytes > TerrainField.MaximumSampleBytes )
+					throw new InvalidOperationException( "Terrain sample memory budget exhausted." );
+			}
+			var values = new float[TerrainField.SamplesPerPage];
+			Allocations.Add( new WeakReference<float[]>( values ) );
+			return values;
+		}
+	}
+
+	public static long RetainedSampleBytes
+	{
+		get
+		{
+			lock ( AllocationGate )
+			{
+				Allocations.RemoveAll( reference => !reference.TryGetTarget( out _ ) );
+				return Allocations.Count * SampleBytes;
+			}
+		}
+	}
 	// 8-sample blocks separate mutation dependencies from 32-sample storage pages.
 	private const int RevisionBlockShift = 3;
 	private const int RevisionBlocksAxis = TerrainField.SamplesPerPageAxis >> RevisionBlockShift;
@@ -231,6 +438,80 @@ internal sealed class TerrainFieldPage
 		Maximum = maximum;
 	}
 
+	private TerrainFieldPage( TerrainFieldPage source, float[] values )
+	{
+		_values = values;
+		_isReader = true;
+		Revision = source.Revision;
+		Minimum = source.Minimum;
+		Maximum = source.Maximum;
+		_blockRevisions = source._blockRevisions;
+		_blockMinimums = source._blockMinimums;
+		_blockMaximums = source._blockMaximums;
+		_storedRoot = source._storedRoot;
+		_storedPage = source._storedPage;
+	}
+
+	public bool TryPin( out TerrainFieldPage reader )
+	{
+		lock ( _residencyGate )
+		{
+			_lastRequiredAt = System.Diagnostics.Stopwatch.GetTimestamp();
+			// A saved immutable version may still be alive in readers or awaiting GC.
+			// Reuse those exact samples without keeping an evicted array alive.
+			if ( _values is null && _releasedValues is not null && _releasedValues.TryGetTarget( out var released ) )
+			{
+				_values = released;
+				_releasedValues = null;
+				Interlocked.Increment( ref _reusedSamplePages );
+			}
+			reader = _values is null ? null : _isReader ? this : new TerrainFieldPage( this, _values );
+			return reader is not null;
+		}
+	}
+
+	// Residency is the only mutable property of a canonical page version. Readers
+	// own their captured array reference and cannot be evicted by the directory.
+	public bool ReleaseResidentSamples()
+	{
+		if ( _isReader ) throw new InvalidOperationException( "Cannot evict a terrain reader." );
+		lock ( _residencyGate )
+		{
+			if ( _storedPage is null ) return false;
+			if ( _values is null ) return false;
+			_releasedValues = new WeakReference<float[]>( _values );
+			_values = null;
+			return true;
+		}
+	}
+
+	public bool InstallResidentSamples( TerrainFieldPage loaded )
+	{
+		if ( _isReader || loaded.Revision != Revision || loaded.Minimum != Minimum || loaded.Maximum != Maximum || !loaded.TryPin( out var reader ) )
+			throw new InvalidOperationException( "Loaded terrain samples do not match the requested page version." );
+		lock ( _residencyGate )
+		{
+			if ( _values is not null ) return false;
+			_values = reader._values;
+			_releasedValues = null;
+			_lastRequiredAt = System.Diagnostics.Stopwatch.GetTimestamp();
+			return true;
+		}
+	}
+
+	public bool TryExpireResidentSamples( bool required, long now )
+	{
+		lock ( _residencyGate )
+		{
+			if ( required ) { _lastRequiredAt = now; return false; }
+			if ( _isReader || _values is null || _storedPage is null ||
+				System.Diagnostics.Stopwatch.GetElapsedTime( _lastRequiredAt, now ).TotalSeconds < 5 ) return false;
+			_releasedValues = new WeakReference<float[]>( _values );
+			_values = null;
+			return true;
+		}
+	}
+
 	public int GetRange( Vector3Int key, SdfWorldAabb bounds, out float minimum, out float maximum, bool includeRevision )
 	{
 		// Existing hotloaded pages can lack derived metadata; retain conservative bounds.
@@ -262,20 +543,26 @@ internal sealed class TerrainFieldPage
 		return revision;
 	}
 
-	public float Sample( int index ) => _values[index];
-	public float[] CopyValues()
+	public float Sample( int index ) => (_values ?? throw new InvalidOperationException( "Terrain page is nonresident; acquire it before sampling." ))[index];
+	public float[] CopyValues( SampleReservation reservation = null )
 	{
-		var result = new float[_values.Length];
-		Array.Copy( _values, result, _values.Length );
+		var values = _values ?? throw new InvalidOperationException( "Terrain page is nonresident; acquire it before copying." );
+		var result = AllocateValues( reservation );
+		Array.Copy( values, result, values.Length );
 		return result;
 	}
-	public void CopyTo( Span<float> destination ) => _values.AsSpan().CopyTo( destination );
+	public void CopyTo( Span<float> destination ) =>
+		(_values ?? throw new InvalidOperationException( "Terrain page is nonresident; acquire it before copying." )).AsSpan().CopyTo( destination );
 }
 
 internal sealed class TerrainFieldSnapshot
 {
 	// The dictionary is owned at construction and never mutated afterward.
 	internal readonly IReadOnlyDictionary<Vector3Int, TerrainFieldPage> Pages;
+	private readonly Vector3Int? _regionMinimum;
+	private readonly Vector3Int? _regionMaximum;
+	private readonly bool _pinsSamples;
+	internal WeakReference<TerrainField> Owner { get; }
 	private Guid _worldId;
 	public Guid WorldId
 	{
@@ -291,19 +578,85 @@ internal sealed class TerrainFieldSnapshot
 	public ProceduralTerrainSettings Settings { get; }
 	public int Revision { get; }
 	public int PageCount => Pages.Count;
+	internal bool IsRegional => _regionMinimum.HasValue;
+	// Local cache/job lifetime, deliberately absent from stored/network history.
+	public int Epoch { get; }
 	public long PageBytes => (long)PageCount * TerrainField.SamplesPerPage * sizeof( float );
+	public long ResidentPageBytes => Pages.Values.Count( page => page.IsResident ) * TerrainFieldPage.SampleBytes;
 
-	internal TerrainFieldSnapshot( ProceduralTerrainSettings settings, int revision, Dictionary<Vector3Int, TerrainFieldPage> pages, Guid worldId )
+	internal TerrainFieldSnapshot( ProceduralTerrainSettings settings, int revision, Dictionary<Vector3Int, TerrainFieldPage> pages,
+		Guid worldId, Vector3Int? regionMinimum = null, Vector3Int? regionMaximum = null, int epoch = 0,
+		WeakReference<TerrainField> owner = null, bool pinsSamples = false )
 	{
 		_worldId = worldId;
 		Settings = settings;
 		Revision = revision;
 		Pages = pages;
+		_regionMinimum = regionMinimum;
+		_regionMaximum = regionMaximum;
+		Epoch = epoch;
+		Owner = owner;
+		_pinsSamples = pinsSamples;
+	}
+
+	/// <summary>
+	/// Retain only this reader's immutable page dependencies. This does not author a
+	/// new field revision; the owner keeps the complete world directory separately.
+	/// Bounds include the consumer's normal/mesh halo; one lattice sample here
+	/// accounts for the correction field's interpolation support.
+	/// </summary>
+	public TerrainFieldSnapshot CaptureRegion( SdfWorldAabb bounds, bool pinSamples = true )
+	{
+		if ( !TryCaptureRegion( bounds, out var reader, pinSamples ) ) throw new InvalidOperationException( "Terrain region is waiting for stored pages." );
+		return reader;
+	}
+
+	public bool TryCaptureRegion( SdfWorldAabb bounds, out TerrainFieldSnapshot reader, bool pinSamples = true )
+	{
+		reader = this;
+		if ( Pages.Count == 0 && !_regionMinimum.HasValue ) return true;
+		var size = TerrainField.SampleSpacing * TerrainField.SamplesPerPageAxis;
+		var minimum = bounds.Minimum - Vector3.One * TerrainField.SampleSpacing;
+		var maximum = bounds.Maximum + Vector3.One * TerrainField.SampleSpacing;
+		var low = new Vector3Int( (int)MathF.Floor( minimum.x / size ),
+			(int)MathF.Floor( minimum.y / size ), (int)MathF.Floor( minimum.z / size ) );
+		var high = new Vector3Int( (int)MathF.Floor( maximum.x / size ),
+			(int)MathF.Floor( maximum.y / size ), (int)MathF.Floor( maximum.z / size ) );
+		RequirePageRange( low, high );
+		if ( _regionMinimum == low && _regionMaximum == high && (!pinSamples || _pinsSamples) ) return true;
+		var pages = new Dictionary<Vector3Int, TerrainFieldPage>();
+		var ready = true;
+		foreach ( var pair in Pages )
+		{
+			var key = pair.Key;
+			if ( key.x < low.x || key.x > high.x || key.y < low.y || key.y > high.y ||
+				key.z < low.z || key.z > high.z ) continue;
+			if ( !pinSamples ) pages.Add( key, pair.Value );
+			else if ( pair.Value.TryPin( out var pageReader ) ) pages.Add( key, pageReader );
+			else
+			{
+				ready = false;
+				if ( Owner is not null && Owner.TryGetTarget( out var owner ) ) owner.RequestPage( key, pair.Value, Epoch );
+			}
+		}
+		reader = ready ? new TerrainFieldSnapshot( Settings, Revision, pages, WorldId, low, high, Epoch, Owner, pinSamples ) : null;
+		return ready;
+	}
+
+	private void RequirePageRange( Vector3Int low, Vector3Int high )
+	{
+		if ( !_regionMinimum.HasValue ) return;
+		var minimum = _regionMinimum.Value;
+		var maximum = _regionMaximum.Value;
+		if ( low.x < minimum.x || low.y < minimum.y || low.z < minimum.z ||
+			high.x > maximum.x || high.y > maximum.y || high.z > maximum.z )
+			throw new InvalidOperationException( "Terrain reader exceeded its acquired page region." );
 	}
 
 	public float SampleGlobalCorrection( Vector3Int sample )
 	{
 		var key = new Vector3Int( sample.x >> TerrainField.PageShift, sample.y >> TerrainField.PageShift, sample.z >> TerrainField.PageShift );
+		RequirePageRange( key, key );
 		if ( !Pages.TryGetValue( key, out var page ) ) return 0f;
 		return page.Sample( (sample.x & TerrainField.PageMask) + TerrainField.SamplesPerPageAxis * ((sample.y & TerrainField.PageMask) + TerrainField.SamplesPerPageAxis * (sample.z & TerrainField.PageMask)) );
 	}
@@ -312,6 +665,9 @@ internal sealed class TerrainFieldSnapshot
 	public void CopyLatticeCorrections( Vector3Int origin, int step, int size, Span<float> destination )
 	{
 		if ( step < 1 || size < 1 || destination.Length != size * size * size ) throw new ArgumentException( "Invalid correction lattice." );
+		var last = origin + new Vector3Int( (size - 1) * step, (size - 1) * step, (size - 1) * step );
+		RequirePageRange( new Vector3Int( origin.x >> TerrainField.PageShift, origin.y >> TerrainField.PageShift, origin.z >> TerrainField.PageShift ),
+			new Vector3Int( last.x >> TerrainField.PageShift, last.y >> TerrainField.PageShift, last.z >> TerrainField.PageShift ) );
 		destination.Clear();
 		foreach ( var pair in Pages )
 		{
@@ -342,7 +698,7 @@ internal sealed class TerrainFieldSnapshot
 
 	public float SampleCorrection( Vector3 position )
 	{
-		if ( Pages.Count == 0 ) return 0f;
+		if ( Pages.Count == 0 && !_regionMinimum.HasValue ) return 0f;
 		var p = position / TerrainField.SampleSpacing;
 		var x = (int)MathF.Floor( p.x );
 		var y = (int)MathF.Floor( p.y );
@@ -376,7 +732,7 @@ internal sealed class TerrainFieldSnapshot
 	{
 		minimum = 0f;
 		maximum = 0f;
-		if ( Pages.Count == 0 ) return 0;
+		if ( Pages.Count == 0 && !_regionMinimum.HasValue ) return 0;
 		var pageSize = TerrainField.SampleSpacing * TerrainField.SamplesPerPageAxis;
 		var low = new Vector3Int(
 			(int)MathF.Floor( (bounds.Minimum.x - TerrainField.SampleSpacing) / pageSize ),
@@ -386,6 +742,7 @@ internal sealed class TerrainFieldSnapshot
 			(int)MathF.Floor( (bounds.Maximum.x + TerrainField.SampleSpacing) / pageSize ),
 			(int)MathF.Floor( (bounds.Maximum.y + TerrainField.SampleSpacing) / pageSize ),
 			(int)MathF.Floor( (bounds.Maximum.z + TerrainField.SampleSpacing) / pageSize ) );
+		RequirePageRange( low, high );
 		var revision = 0;
 		var volume = ((long)high.x - low.x + 1) * ((long)high.y - low.y + 1) * ((long)high.z - low.z + 1);
 		if ( volume <= Pages.Count )
@@ -434,6 +791,9 @@ internal sealed class TerrainFieldSnapshot
 internal sealed record TerrainFieldChange( TerrainFieldSnapshot Source, TerrainFieldSnapshot Result,
 	SdfWorldAabb AffectedBounds, int ChangedSamples, Vector3Int[] ChangedPages )
 {
+	public TerrainFieldStore.Checkpoint Checkpoint { get; init; }
+	// Restore safety must not treat the gap between distant changed pages as edited terrain.
+	public SdfWorldAabb[] ReplacementSampleBounds { get; init; } = Array.Empty<SdfWorldAabb>();
 	// Descriptor revisions conservatively cover whole page ownership plus interpolation support.
 	public SdfWorldAabb DependencyPageBounds
 	{

@@ -4,6 +4,8 @@ using System.Diagnostics;
 internal sealed partial class GpuVoxelMesher
 {
 	private TerrainFieldSnapshot _editedField;
+	private SdfWorldAabb _editDependencyBounds;
+	private bool _editEpochChanged;
 	private readonly Queue<PendingMesh> _editNearDispatchQueue = new();
 	private readonly Queue<PendingMesh> _editOuterDispatchQueue = new();
 	private readonly Queue<PendingTransition> _editTransitionDispatchQueue = new();
@@ -45,12 +47,14 @@ internal sealed partial class GpuVoxelMesher
 		var field = change.Result;
 		var dirtyBounds = change.DependencyPageBounds;
 		_editedField = field;
+		_editDependencyBounds = dirtyBounds;
+		_editEpochChanged = change.Source.Epoch != field.Epoch;
 		_editPublicationOpen = true;
 		_editPublicationPending = true;
 		_editRegularRefresh.Clear();
 		foreach ( var resident in _resident.Values )
 		{
-			if ( !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
+			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
 			_editRegularRefresh[resident.Descriptor.Key] = new PendingMesh(
 				resident.Descriptor, resident.Residency, 0, routeDistance );
 		}
@@ -74,7 +78,7 @@ internal sealed partial class GpuVoxelMesher
 		_editTransitionRefresh.Clear();
 		foreach ( var descriptor in _transitionDesiredDescriptors.Values )
 		{
-			if ( !TerrainFieldChange.Intersects( descriptor.SamplingBounds, dirtyBounds ) ) continue;
+			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( descriptor.SamplingBounds, dirtyBounds ) ) continue;
 			var replacement = descriptor.WithField( field );
 			if ( replacement != descriptor ) _editTransitionRefresh.Add( replacement );
 		}
