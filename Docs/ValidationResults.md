@@ -16320,3 +16320,147 @@ User: "I accept. Move onto S7". Accept the 10-line unused-surface removal with
 C1 p99 failure, C2 worst-frame increase and repeated placement lag4 disclosed.
 No overall measurement-pass or exhaustive human-check claim. Original world
 restored; retain all B1/C1/C2 evidence. Proceed to S7.
+
+### SIMPLIFICATION-S7-001/v1 — remove sweep directory copy
+
+Defined2026-09-08 before runs. Baseline92a7051 (accepted S6). Same1404/235-page
+world in private s7-perf1404, original backed up. Cold B1/C1, canonical
+basic_example authored spawn, >=30s warmup and settled queues, host/no peers,
+engine26.09.01c,Ryzen7 9800X3D/RTX5090,fps_max1000,unchanged graphics/viewport/FOV.
+Seed1337/v5,cells32/size16,gameplay8,visual512,levels0..6,half extents4/8.
+Speed2500,distance50000,Yreach25000,Z0,one loop; normal drain/two advances/10s
+stationary. No edits in timed route. CPU/GPU p95/p99 max(5%,0.25ms),allocation
+and memory5%(process16MiB floor),collisiontails max(5%,10ms). Record maxima,
+publication,lag,GC,backlog;4913ready,queues0,no errors/unsafe/mismatches; compare
+geometry at equal spatial sets only; unchanged source/assets/page payloads.
+
+Candidate: concrete dictionary enumerator replaces copied directory array and
+index; same snapshot-identity restart, iteration order, 8-entry bound,1ms soft
+budget, cold skip, epoch/page checks, dirty/pin/grace safeguards. Do not expose a
+mutable dictionary or add another residency owner. This removes per-snapshot
+array allocation, not the existing restart-on-edit fairness limitation. No
+universal fairness claim; sustained mutation coverage must be reported honestly.
+
+### SIMPLIFICATION-S7-EDIT-001/v1 — existing sustained-edit entry point
+
+Before and after canonical run, respectively on unchanged baseline/candidate,
+use existing voxel_deformation_benchmark tool-sweep on a private fresh revision0
+world at authored spawn. Engine/settings same as S7 canonical. >=30s settled
+warmup then its fixed10s baseline,600attempts at0.1s, normal drain/failure policy;
+no synthetic edits, profiler hooks or new test implementation. Preserve initial
+empty saved world for identical starting field/settings on C1. This measures
+real mutation with repeated snapshot replacement. Record attempted/committed/
+rejected, failures, frame tails, allocations and sweep maximum before/after.
+Require same attempt semantics, no new exceptions/failures, matching final field
+fingerprint at(0,0,0),radius1024, settled edit/collision work. Existing scenario
+may expose unrelated failures; retain them. No tuning. Directory array bytes
+removed are source-derived, not isolated measured allocations. No claimed
+per-page sweep coverage without direct evidence; high-page sustained fairness,
+pressure recovery and accepted multiplayer are not silently declared passed.
+Pause after measurements and report any remaining storage qualification gaps.
+
+S7 edit setup first attempt failed before any edit: selector named a nonexistent
+checkpoint; startup failed closed and edit_info then threw on absent field.
+No benchmark result produced. Preserve errors; use normal missing-selector fresh
+world creation, then save its empty checkpoint for both sources. No scenario
+parameter change or S7 implementation change.
+
+Before edit runs: normal empty world de7b3609-193a-469b-a308-166115394e0f
+saved via s7-edit-empty and cloned to s7-edit-b1/c1. Both edit runs also use
+fresh editor processes, eliminating failed-setup retained state from timing.
+
+#### S7 B1/C1 performance and human checkpoint — 2026-09-08
+
+Full metrics/identities in [S7 review](ValidationEvidence/SimplificationS7/Review.md).
+Travel B1 PID10484/run81662aa1bf464d079057a3f01e977a48/source92a7051;
+C1 PID84136/run273c6f03517d4121b81c49774991502d/c1-source.json.
+FPS848.5067->841.8816,CPU p95/p99/max1.8027/3.6522/23.3969->
+1.8281/3.7998/22.0846ms. GPU1.5583038/2.0279884/9.831905->
+1.57547/2.0308495/11.202812ms. Allocations/frame30249.377->30304.822,
+processpeak4018368512->4019998720,GPU2879324496->2828992848bytes.
+Collision p95/p993802.593/9403.266->3926.4/9505.155ms. Publication
+83.4737/107.7174/max165.6511->81.4834/100.6459/max164.656ms.
+Syncmax18.0155->7.8003ms,prep16.8378->7.6343ms,lag2->4,backlog127both.
+Declared travel screens pass, worse GPUmax/lag retained. Both4913ready,queues0,
+exceptions0,unsafe0,mismatch0. Equal finalcenter(0,0,-1),topology
+39A8A70DBE72F9F5/positions9998F7CFE92EB441. No causal speedup claim.
+
+Edit B1 coldPID36672/runa5a6a6994b49415591f8d94f83bbf668;
+C1 coldPID85688/run6205cda517514f69bbcb5228122054f4. Both600attempts,
+450commits,0rejections/failures/pending/exceptions,revision450/25pages.
+FPS959.96405->941.72186;CPU p95/p99/max1.1587/2.1961/13.339->
+1.5066/2.6106/14.3425ms;GPU p95/p991.0023117/1.3902187->1.3422966/1.7991066.
+Edit tails exceed canonical0.25ms/5% screen. Allocation/frame30148.256->30271.363,
+processpeak4016963584->4072972288bytes; total allocation2023038480->1992703312
+with fewer frames, not an isolated directory-allocation win. Sweepmax1.1381->
+1.0604ms, no isolated per-call/per-page measurement. Final fingerprints FAIL
+exact-equality criterion: B1829AE8940F7DC9D7530E72FBB78B6B0E5524EDF5C42A86184A6873BB329C31DB;
+C1 FD2785E24E674A1C4C18C9B4EBE7406F94EF013395DF1173F794CFDCD0694579.
+Changedsamples964963->964961; source uses live EyePosition/trace and starts differ
+slightly (recorded in review/raw outputs). This limits comparability; it does not
+prove why outputs differ or establish corruption. Keep failed result unchanged.
+
+Candidate removes copy/index while retaining snapshot restart, not a fairness
+fix. High-page sustained sweep coverage, actual eviction/reload, reader overlap,
+failed-save/read, hotload and pressure recovery not newly qualified by these runs.
+Previous accepted bounded storage evidence is not a fresh S7 lifecycle pass.
+Builds/cold compile pass; existing shutdown Error windows and setup failure logs
+retained. Source and original/canonical payload hashes unchanged; original selector
+restored. Recommend HOLD approval pending edit regression/comparability and S7
+lifecycle qualification. Human checks in review. Pause; S7 uncommitted, goal not
+fully completed. No automatic extra runs or acceptance.
+
+After restoration, live user activity advanced the normal world to revision1464/
+242pages (60commits, saved checkpoint110, no pending edit work in the sampled
+status). Preserve these newer edits. Payload equality above was checked at the
+restoration boundary, not after subsequent user mutations. No human acceptance
+or exhaustive feature-check completion is inferred from this activity.
+
+#### S7 C2 repeat plan — 2026-09-08
+
+User requested performance again. Repeat both SIMPLIFICATION-S7-001/v1 and
+SIMPLIFICATION-S7-EDIT-001/v1 on unchanged c1-source manifest, each in a fresh
+editor process. Same1404fixture and copied original empty edit world s7-edit-c2;
+same parameters/warmup/thresholds and recorded comparability limitations. Preserve
+B1/C1, current user save and selector. No source change or acceptance inferred.
+Restore user world and pause after results.
+
+#### S7 C2 repeat results and checkpoint — 2026-09-08
+
+Same S7 scenarios/source/fixtures. Travel coldPID22276,
+run63fb97000c5e4c34a321f7642b98c8e5. FPS856.7985,CPU p95/p99/max
+1.7609/3.9848/132.6772ms. B1p993.6522,delta0.3326ms FAILS0.25ms/5% allowance.
+GPU1.4195442/1.9447803/max3.6945343ms. Allocation30183.201bytes/frame,
+processpeak4108480512,GPU2879324496. Stationary956.1724FPS,p992.2137ms. Collisiontails3709.447/9292.038ms,
+publication77.1406/96.5786/max159.3728ms;sync9.3707,prep7.7801,lag2,GC12.092ms.
+Other screens pass;132.6772ms stall unexplained, not dismissed as noise.4913ready,
+queues0,exceptions0,unsafe0,mismatch0,backlog127;matching startup/final geometry.
+
+Edit coldPID86612/run8c57311e60754c49b149bfe2956f975d:955.3119FPS,
+CPU1.232/2.3776/max13.2708ms,GPU p95/p990.9543896/1.3051033ms;
+allocation30201.258bytes/frame,process3987288064,GPU2805226536. Canonical
+screening allowance passes for edit tails; C1 larger slowdown did not repeat.
+600attempts/450commits,0rejections/pending/failures/exceptions,25pages,
+sweepmax0.7443ms. FingerprintABA3BDE31C846D573B8F5B070B93AA5404236284C1B74274F2F754486F74D14C
+again differs (964956changed samples). Identical C1/C2source with differing output
+establishes live-workload repeat variability, not absence of any S7 defect.
+Exact field-equality criterion still unmet. Full three-run tables and live trace
+inputs in S7 review/c2-comparison/c2-edit-comparison; all raw results retained.
+Original user save/selector restored; payload/source equality checked at restore.
+No new storage lifecycle qualification or human approval. Recommend fresh pre-S7
+baseline comparison next, not automatic acceptance. Pause; S7 uncommitted.
+
+#### S7 explicit human acceptance — 2026-09-08
+
+User: "I accept" after C2 travel/edit results. Accept tested S7 source with the
+132.6772ms worst travel frame, failed travel p99 screen, variable live-tool final
+fingerprints and remaining storage/fairness qualification gaps disclosed. No
+passing-measurement or exhaustive human-test claim. Source matches c1 manifest;
+no further tests or source changes. Commit/push accepted increment.
+
+S1–S7 sequential acceptance audit: all seven have baseline/candidate production
+figure-eight results, fixed-scenario ledger entries, source/run identifiers,
+review documents with human feature checks, and explicit user acceptance. S3,
+S6 and S7 repeats and failed comparisons remain preserved. The research document
+records the accepted increments and retained/deferred subjects. This completes
+the requested acceptance pass, not all originally proposed reliability research.

@@ -161,6 +161,16 @@ Historical proposal follows (the linked template file is removed in the candidat
 
 ### S7 — Simplify storage observation after paging is qualified
 
+2026-09-08 candidate removes the copied sweep directory/index using concrete
+immutable dictionary iteration, retaining restart semantics. Canonical and600-
+attempt edit before/after runs complete. Travel screens pass with worse GPUmax/
+lag; edit tails worsen and final density fingerprints do not match (live trace
+inputs differ slightly). Broader fairness and storage-lifecycle
+qualification remain open. User-requested C2 recovered editing tails but travel
+p99 failed with132.6772ms worst frame; unchanged-source edit fingerprints also
+vary. User accepted S7 on2026-09-08 with these limits; [S7 review](../ValidationEvidence/SimplificationS7/Review.md).
+Historical proposal follows.
+
 **Priority: later; current work is still in progress.** `SweepTerrainStorage` rebuilds `field.Pages.ToArray()` when snapshot identity changes and scans up to eight entries per update under a soft one-millisecond budget. Requiredness considers visual, collision and edit interests; readers separately retain samples and file handles. These are different lifetimes, not redundant caches.
 
 Measure directory-copy allocations and sweep coverage under sustained edits. Repeated snapshot resets are a source-backed fairness question, not a demonstrated starvation bug. Prefer reducing redundant directory copies or unnecessary sweep work over adding an LRU hierarchy or reference-counting framework. Preserve dirty-page protection, exact stored versions and weak retained-array accounting.
@@ -200,3 +210,29 @@ Suggested order: establish the current control and clarify measurement meanings;
 This review checked source owners, cross-file callers, authored integration, previous investigations and explicit ledger decisions. No engine session was restarted or benchmark run for this documentation-only task. It makes no new performance, shader-equivalence, multiplayer-scale or storage-acceptance claim. The prior profile summaries are dated evidence, not fresh captures of the current paging implementation.
 
 Before implementation, recheck changed symbols and the end of the ledger: another task is actively extending storage. Maintain current implementation facts in the architecture owners, preserve historical results, and link this shortlist from the documentation map rather than duplicating its candidate list elsewhere.
+
+## S1–S7 acceptance pass completed — 2026-09-08
+
+The user has individually accepted all seven implemented increments after their
+before/after performance reports and human-review checkpoints. This closes the
+requested sequential acceptance pass; it does not convert failed measurements or
+deferred research into passes. Each review preserves exact source/run identity,
+fixed scenarios, failures, coverage limits and human feature checks.
+
+| Finding | Accepted increment | Evidence |
+| --- | --- | --- |
+| S1 | Readiness descriptors avoid captured job inputs | [S1 review](../ValidationEvidence/SimplificationS1/Review.md) |
+| S2 | Concrete canonical page-query iteration | [S2 review](../ValidationEvidence/SimplificationS2/Review.md) |
+| S3 | Shared retained-sample percentile reporting | [S3 review](../ValidationEvidence/SimplificationS3/Review.md) |
+| S4 | Identity-only metadata codec | [S4 review](../ValidationEvidence/SimplificationS4/Review.md) |
+| S5 | Shared target/configuration decision | [S5 review](../ValidationEvidence/SimplificationS5/Review.md) |
+| S6 | Remove unused template dialog and page-copy method | [S6 review](../ValidationEvidence/SimplificationS6/Review.md) |
+| S7 | Sweep immutable directory without copied array/index | [S7 review](../ValidationEvidence/SimplificationS7/Review.md) |
+
+Retained/deferred work remains explicit: S5 multiplayer discovery cost, S6 optional
+controller and supported hotload safeguards, and S7 high-page sweep fairness,
+pressure recovery, lifecycle qualification and repeatable edit comparison. The
+C2 travel stall and failed p99 screen remain open performance findings. These
+are follow-up research/reliability items, not silently implemented or verified
+features. No additional change or test is automatically authorized by closing
+this accepted sequence.

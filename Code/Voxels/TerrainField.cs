@@ -565,6 +565,7 @@ internal sealed class TerrainFieldSnapshot
 	// The dictionary is owned at construction and never mutated afterward.
 	private readonly Dictionary<Vector3Int, TerrainFieldPage> _pages;
 	internal IReadOnlyDictionary<Vector3Int, TerrainFieldPage> Pages => _pages;
+	internal Dictionary<Vector3Int, TerrainFieldPage>.Enumerator GetPageEnumerator() => _pages.GetEnumerator();
 	private readonly TerrainPageIndex _pageIndex;
 	private readonly Vector3Int? _regionMinimum;
 	private readonly Vector3Int? _regionMaximum;

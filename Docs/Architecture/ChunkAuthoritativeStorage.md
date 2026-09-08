@@ -529,3 +529,25 @@ Local epoch remains memory-only. Page directories and payload blocks retain
 their existing owners/formats. The unused whole-snapshot codec path is removed;
 this does not add a save-format migration or change authoritative terrain data.
 S4 was explicitly accepted by the user; see SIMPLIFICATION-S4-001/v1 in the ledger.
+
+## Sweep directory iteration (S7 accepted with limitations)
+
+SweepTerrainStorage now iterates the immutable snapshot dictionary through a
+concrete struct enumerator, without a copied directory array or integer index.
+Snapshot changes still restart traversal; end-of-directory wraps. The source
+marker and enumerator are cleared together for empty fields and teardown.
+Budgets, iteration order, cold skip,5s grace, current-page/epoch and saved-version
+checks are unchanged. GetPageEnumerator provides read-only iteration capability
+without exposing dictionary mutation. No sample/file ownership changes.
+
+This eliminates the array allocation per observed snapshot replacement, not
+per-edit world dictionary creation or the existing restart fairness limitation.
+The source marker rename separates the old cursor representation during code
+migration; actual hotload migration remains untested. A full-directory fairness
+redesign could retain old pages or change eviction scheduling and is not included.
+S7 figure-eight screens pass with worse GPUmax/lag, but sustained tool-sweep tails
+worsen and final density hashes differ with slightly different live trace inputs.
+User accepted S7 on2026-09-08 after C2: editing tails recovered, but travel p99
+failed with a132.6772ms worst frame and live-tool fingerprints still varied.
+Acceptance does not supersede those observations or prior storage qualification gaps.
+See SIMPLIFICATION-S7-001/v1 and SIMPLIFICATION-S7-EDIT-001/v1 in the ledger.

@@ -558,8 +558,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			_terrainReadTask = null;
 			_terrainReadOwner = null;
 			_terrainReadResults = null;
-			_terrainSweepSnapshot = null;
-			_terrainSweepPages = null;
+			_terrainSweepSource = null;
+			_terrainSweepPages = default;
 			_playerStatusChunk = null;
 			_completedWarmChunks.Clear();
 			_warmGenerationTask = null;

@@ -123,9 +123,8 @@ public sealed partial class VoxelManager
 	private int _terrainReadResultIndex;
 	private double _terrainReadIntegrationMaximumMilliseconds;
 	private long _terrainReadCapacityRetryAt;
-	private TerrainFieldSnapshot _terrainSweepSnapshot;
-	private KeyValuePair<Vector3Int, TerrainFieldPage>[] _terrainSweepPages;
-	private int _terrainSweepIndex;
+	private TerrainFieldSnapshot _terrainSweepSource;
+	private Dictionary<Vector3Int, TerrainFieldPage>.Enumerator _terrainSweepPages;
 	private double _terrainSweepMaximumMilliseconds;
 	private readonly record struct TerrainReadResult( TerrainField.ReadRequest Request, TerrainFieldPage Page, string Error );
 
@@ -135,20 +134,23 @@ public sealed partial class VoxelManager
 		var field = CurrentField;
 		if ( field.PageCount == 0 )
 		{
-			_terrainSweepSnapshot = null; _terrainSweepPages = null; _terrainSweepIndex = 0;
+			_terrainSweepSource = null; _terrainSweepPages = default;
 			return;
 		}
 		var start = Stopwatch.GetTimestamp();
-		if ( !ReferenceEquals( _terrainSweepSnapshot, field ) )
+		if ( !ReferenceEquals( _terrainSweepSource, field ) )
 		{
-			_terrainSweepSnapshot = field;
-			_terrainSweepPages = field.Pages.ToArray();
-			_terrainSweepIndex = 0;
+			_terrainSweepSource = field;
+			_terrainSweepPages = field.GetPageEnumerator();
 		}
-		for ( var count = 0; count < Math.Min( 8, _terrainSweepPages.Length ); count++ )
+		for ( var count = 0; count < Math.Min( 8, field.PageCount ); count++ )
 		{
-			var pair = _terrainSweepPages[_terrainSweepIndex++];
-			if ( _terrainSweepIndex == _terrainSweepPages.Length ) _terrainSweepIndex = 0;
+			if ( !_terrainSweepPages.MoveNext() )
+			{
+				_terrainSweepPages = field.GetPageEnumerator();
+				_terrainSweepPages.MoveNext();
+			}
+			var pair = _terrainSweepPages.Current;
 			// Cold pages have nothing to evict. Pin/install stamps their grace time
 			// when samples return, so they do not need interest checks while cold.
 			if ( !pair.Value.IsResident ) continue;
