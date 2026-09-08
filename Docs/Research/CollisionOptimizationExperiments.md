@@ -78,4 +78,48 @@ unmet. The strongest next investigation is a focused existing deformation captur
 to quantify changed samples versus rebuilt regions/native triangles, followed
 by a go/no-go decision on smaller collision sections. That is a new diagnostic
 scope, not justification to start a sectioned-collider architecture speculatively.
-No further benchmark repetitions or runtime changes are scheduled by this note.
+No further repetitions of the rejected bounds candidate are warranted.
+
+## Second screen: actual changed bounds
+
+The continued goal's source check found128unit revision metadata can invalidate
+neighbors outside an edit's true interpolation support. New fixed diagnostic
+COLLISION-EDIT-FOCUSED-001/v1 confirmed20edits caused80collision rebuilds, about
+413ms sampling/extraction and74ms native mesh creation, despite each edit's
+changed support fitting one chunk. This evidence justifies a second narrow
+prototype without introducing sectioned collision or extra caches.
+
+Extend the existing completed-collision reuse branch: within one field epoch,
+if a ready region's expanded sampling bounds do not intersect AffectedBounds,
+retain its collider and rebase its derived revision. AffectedBounds is produced
+by the canonical mutation path from changed lattice samples plus interpolation
+support; collision sampling bounds already include its one-cell support patch.
+Epoch replacement retains its existing separate changed-region proof. Never
+reuse pending/in-flight geometry on this shortcut. Native replacement, readiness,
+field authority, workers and visual invalidation remain unchanged. Measure
+against private copies of the original user save and preserve it unmodified.
+
+The screen confirmed four-to-one dependency reduction, but normal replacement
+of the player's own collision chunk moved the resting player beyond the frozen
+2unit limit. B1's movement was detected after all20edits; C1 added per-edit
+inspection and stopped after16at2.09units. This is not an accepted matched timing
+comparison. Keep the mechanism as a promising preserved patch, revert runtime,
+and request approval for the following workload correction before further runs.
+
+### Proposed COLLISION-EDIT-FOCUSED-001/v2 (awaiting approval)
+
+Change only edit center from(384,384,-256) to(896,896,-256), and translate the
+9contact probes by(+512,+512,0). The latter point has the same position within
+its chunk/revision blocks, but is outside the player's supporting chunk. Keep
+original971/160fixture,20requests,+64then-64,radius64,1secondminimum cadence,
+10secondsettlement timeout,2unitmovement limit,private saves,all other parameters
+and gates. Both B2 and C2 use per-edit player inspection. Preserve v1 failures;
+v2 begins with a new baseline and cannot be compared as the same workload.
+
+Reason: v1 coupled the intended invalidation-cost measurement to the existing
+contact displacement caused by replacing the player's own support. This is a
+scenario-validity issue, not permission to relax contact correctness. The
+displacement remains a separate observed collision defect; avoiding it in this
+cost diagnostic does not fix or accept it. After v2 screening, ordinary contact
+and unchanged figure-eight regression qualification remain required. No runtime
+candidate is accepted and no v2 run is authorized by this proposal itself.

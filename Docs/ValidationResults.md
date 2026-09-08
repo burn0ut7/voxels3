@@ -15488,3 +15488,73 @@ b2f312a captured the previously dirty scene/cache/proposal files and initial pla
 its Code/Editor/shader diff against a6b20c8 is empty. Benchmark source identity is
 therefore unchanged except the documented candidate patch. Evidence includes
 restoration-hashes.json,restored-runtime.json,restored-world.json.
+
+### COLLISION-EDIT-FOCUSED-001/v1 — revision-block amplification
+
+Defined2026-09-08 before edits or prototype. Source4bd0afa; same engine/hardware,
+scene/hash,world971/160,gameplay8/visual512 and normal-start configuration as
+COLLISION-FOCUSED-001/v1. Original slot remains immutable. Save current971 fixture
+to private collision-edit-b1; candidates start by loading original971 then saving
+to their own private slot before any edit. No world reset, actor movement,
+networking, quality change or test hook. Original page hashes must still match
+after restoration. Candidate source is not yet implemented.
+
+Fixed production workload:20 ordinary voxel_terrain_edit requests at
+(384,384,-256),radius64,strength+64 for first10 then-64 for10. Submit the next
+only after previous field/visual/collision work settles and at least1second from
+previous submission; abort on rejection, external edits, actor movement>2units,
+or10second settlement timeout. This position intentionally tests an edit wholly
+inside a chunk but within the last128unit metadata block; its mathematical
+support does not intersect neighboring chunk sampling bounds. This is a new
+specific diagnostic workload, not a replacement for the canonical figure-eight.
+
+Capture initial and final existing collision phase counters, per-edit changed
+samples/pages/dependencies, commit time, observed settling latency and field
+revision. Primary metric: accumulated sampling+extraction CPU time per accepted
+edit, derived from timed sample counts and averages; record construction count
+and native creation separately. No claim that tool polling measures exact edit
+latency. Native failure/exception/rejection count must remain0,all4913ready after
+each edit. Capture9 vertical native traces on XY grid x/y=320,384,448 from
+z256 to-512 before and after; candidate matches baseline results. Compare final
+collision body/payload counts at the same placement and final field fingerprint.
+
+Screen B1 then C1. Candidate must save>10% accumulated collision CPU/edit and
+reduce rebuilds without changing field results/contact; otherwise revert task
+patch. A promising candidate repeats from identical971 on C2 to confirm the
+mechanism. Acceptance also requires unchanged canonical figure-eight under
+COLLISION-FOCUSED-001/v1 with no material frame/memory/allocations/streaming
+regressions; do not claim FPS benefit from dependency-count reduction alone.
+If no repeatable improvement, preserve evidence and hold original implementation.
+
+Edit B1 diagnostic:20accepted/0rejected,251changed samples each,80collision
+publications,413.4465ms aggregate sampling/extraction,73.9414ms native mesh
+creation; all4913ready,failures0. Final991/160 fingerprint centered384,384,-256
+radius128 is0F78DE5BDCF798FA31FD3FB25D475F4D900E3531F13B64B49A47E57F191A3B7C.
+Final collision1110bodies/42147432payload bytes. However player displacement
+from(0.090724,-0.113659,-31.605288) to(2.487207,-1.269873,-30.929552)
+exceeded2units. The automation checked this only after the run, not after each
+edit: record that monitoring defect and failed criterion. No baseline acceptance.
+
+Edit C1: extended only completed-region reuse to same-epoch AffectedBounds.
+Build/live compile pass. Identical private971start, same parameters; per-edit
+actor inspection added to enforce the existing abort gate. Each of16accepted
+edits invalidated1collision region instead of4. After edit16displacement2.09069
+units crossed the gate; stopped immediately, no remaining4edits. Aggregate
+sampling/extraction98.4819ms/native12.8085ms,16publications,failures0/all4913ready.
+Private result987/160 retained. These unequal-length, differently monitored
+runs prove observed dependency reduction, not a valid comparative performance
+or final-geometry acceptance. No claim that the inherited contact movement is
+fixed. Evidence edit-b1-*/edit-c1-* in ValidationEvidence/CollisionFocused.
+
+Decision: v1 blocked for acceptance by its support-contact coupling. Candidate
+is promising but unaccepted; task-only revert and original save restoration.
+Proposed v2 in CollisionOptimizationExperiments.md moves the edit one chunk on
+both horizontal axes while keeping the 2unit gate and all other parameters;
+requires explicit user approval under Figure-Eight Performance Acceptance.
+No v2 run, weakened criterion, extra test hook or speculative architecture.
+
+Restoration11:53:10UTC: original971/160 loaded and settled, save slot original,
+all160original page hashes unchanged, scene hash unchanged. Collision source
+restored byte-for-byte (6EC031F793CE04C7967D7DB5733D4DF3B1498A4E0EE142EF40C9BC925B874C19),
+git diff empty for runtime source. Normal Stop/Play restores authored spawn;
+live compiler succeeds. Private B1/C1 saved outcomes remain for inspection.
