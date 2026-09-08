@@ -38,7 +38,12 @@ reservations. Later sample accounting fell to exactly the current34 pages,
 establishing eventual collection in that observation. These are bounded results,
 not promises for every workload or a new performance gate.
 
-Remaining correctness coverage includes actual memory-admission denial/recovery
+Mutation memory-admission denial and recovery are now observed in the full-page
+save/edit pressure case:62 edits committed once, an older save left newer edits
+unsaved, and the deferred final edit recovered with reservations0. Largest sampled
+retained+reserved total was511.625MiB. Its final request took32.3seconds to commit;
+this responsiveness cost is reported for judgment, not hidden by a pass label.
+Remaining correctness coverage includes read-pump-specific denial/recovery
 and in-session stale-read completion after replacement. The live-player control
 transport needed for the planned overlap is currently unavailable. Exact latency
 and sample-release timing are measurements for review under the user's updated

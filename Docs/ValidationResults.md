@@ -14873,3 +14873,96 @@ no UI action was sent. This does not reinstate the removed performance blocker
 or claim those correctness cases passed. Multiplayer testing remains concluded
 by user acceptance. No automatic expansion into a deferred storage-scale or
 generation-caching slice is authorized by this performance decision alone.
+
+### STORAGE-SAVE-EDIT-PRESSURE-001/v1 — fixed production workload
+
+Freeze before setup: sourcea5a9d81, visible editor18972/engine26.09.01c,
+basic_example, existing gameplay8/visual512 and generator settings. Single host,
+no multiplayer tests or controlled player movement. Current user world is now
+279/64pages/checkpoint42, not the older106 fixture; preserve its latest saved
+identity and page hashes. Source tools show no pending edit or save at05:05:58.
+
+Save current user state, then load existing storage-capacity-v1 (136/2048) and
+save to the previously absent private slot save-edit-pressure-v1. Observe setup
+for up to120seconds; do not continue on a missing/failed load or save. Apply31
+production digs, radius1024/strength512, at (393216+i*4096,393216,0), i=0..30,
+using the already edited pages. Observe once per500ms until queued/preparing
+work drains, at most120seconds; expected revision167/pages2048/authored31.
+Do not suppress normal autosave; record its actual order if it occurs.
+
+Request manual save of this state and immediately submit the same31 digs again.
+Observe status every500ms for up to120seconds. Require final198/2048/authored62,
+no rejection, no lost/duplicated edit, and all reservations returning to0 after
+work drains. Combined accounted arrays plus reservations must remain<=512MiB.
+Record save.started/save.complete ordering and the actual admission flags/counts.
+Only claim denial/retry if it is observed; a run without denial establishes only
+bounded save/edit concurrency and memory observations. Do not repeat this workload
+merely to obtain denial, alter the cap, force GC or add a test-only allocator.
+
+Save final private state, fingerprint(393216,393216,0),r1024, reopen that same
+slot and require the exact fingerprint/revision/page count with no new authored
+edits. Audit every referenced private page checksum. Finally load the latest user
+slot and save it; require its preserved canonical identity/page hashes. If live
+input changes either world during the case, retain those changes and mark the
+controlled case interrupted rather than overwriting newer state. Time and memory
+traces are observations under the user's updated performance policy; no FPS or
+latency acceptance threshold is introduced. No source change or figure-eight
+performance comparison is part of this narrowly scoped case.
+
+STORAGE-SAVE-EDIT-PRESSURE-001/v1 setup revealed authored counters are cumulative
+across in-session loads: the fixture136/2048 retained173 prior user commits, not0.
+No test edit had been submitted. Therefore v1's absolute authored31/62 assumptions
+are invalid; preserve this setup result. Version2 keeps all operations, positions,
+counts, observation intervals and limits unchanged, but requires authored increments
+of31 then62 from the measured starting counter (173 here, final204 then235).
+No counter reset or source change. This corrects a demonstrably impossible counter
+expectation, not a performance threshold or permission to accept extra edits.
+
+STORAGE-SAVE-EDIT-PRESSURE-001/v2 result, sourcea5a9d81, visible editor18972:
+first batch completed167/2048/authored204, exactly31 new commits. Manual save
+completed167/checkpoint2 while liveRevision185. The second batch reached197
+with one edit queued and editCapacityDeferred=True. First observed denial was
+3.116seconds after the save/second-batch submission; it remained observed through
+29.011seconds. Retained samples at that stall were528482304bytes (504MiB), with
+reserved0. The requested brush reservation correctly could not fit.
+
+Normal autosave completed197/checkpoint3 with liveRevision198. By the47.241second
+observation the final edit had committed:198/2048/authored235, rejected0, queue0,
+reservations0, no read/storage/edit failure. Exactly62 test edits committed in total.
+The final request-to-commit diagnostic was32321.953ms; it includes time waiting
+in the normal queue, not solely the capacity-denied interval. No forced collection,
+cap change or test-only path was used. This is direct mutation-admission denial
+and eventual retry/recovery evidence, not an inference from an empty deferred flag.
+The visible32-second response cost is retained for user judgment under the new
+performance policy. Collection timing as the precise cause is not independently
+traced; the observed retained total dropped before successful recovery.
+
+Across56 second-phase observations, largest accounted retained+reserved total was
+536477696bytes (511.625MiB), below the512MiB safety cap. Status polling began
+after the first batch had already drained (10.358seconds after submission), and
+the second phase has an18.230second observation gap between29.011 and47.241s.
+Reload and final restoration each have only a settled observation. Therefore this
+run does not establish every transient peak, exact recovery instant or the planned
+continuous500ms coverage for all phases. Preserve those measurement limitations.
+
+Explicit final private save completed198/checkpoint4. In-session reload retained
+198/2048/authored235, with0 visual/collision dependencies and reservations0.
+Before/after regional fingerprint at(393216,393216,0),r1024 matched exactly:
+B41B9A4DA23821B4EE44603E34DC66ED9B5775F7730F1BEA1A477D85F8EB7439.
+All2048 current private page lengths/checksums and the completion marker verified.
+This covers that sampled region's content plus full encoded-directory integrity,
+not exhaustive geometric inspection of all far-away edits.
+
+Original user279/64 was restored with settled queues by05:11:03 and saved as
+checkpoint44. Its canonical identity, directory and all64 page hashes match
+checkpoint43 captured before the test. No newer user state was overwritten.
+The case qualifies bounded save/edit overlap, mutation memory-admission denial
+and retry, exact sampled recovery, and original-world preservation. Read-pump
+denial and in-session stale-read completion counters remained0 and are not
+qualified by this case. No runtime source changed.
+
+Evidence: [runtime observations](ValidationEvidence/ChunkStorage/save-edit-pressure-runtime.json),
+[save order and restoration](ValidationEvidence/ChunkStorage/save-edit-pressure-finish.json),
+[private checkpoint](ValidationEvidence/ChunkStorage/save-edit-pressure-private.json),
+[user before](ValidationEvidence/ChunkStorage/save-edit-pressure-user-before.json) and
+[user after](ValidationEvidence/ChunkStorage/save-edit-pressure-user-after.json).
