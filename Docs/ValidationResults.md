@@ -15558,3 +15558,113 @@ all160original page hashes unchanged, scene hash unchanged. Collision source
 restored byte-for-byte (6EC031F793CE04C7967D7DB5733D4DF3B1498A4E0EE142EF40C9BC925B874C19),
 git diff empty for runtime source. Normal Stop/Play restores authored spawn;
 live compiler succeeds. Private B1/C1 saved outcomes remain for inspection.
+
+### COLLISION-EDIT-FOCUSED-001/v2 — isolated invalidation cost
+
+Defined before runs on2026-09-08, source ba2006b. User authorized continuation
+of prototype two after the explicit proposal to move its workload. This approves
+the proposed v2: edit center896,896,-256; trace XY grid832,896,960, z256 to-512;
+fingerprint896,896,-256 radius128. All v1 parameters and gates otherwise remain:
+original971/160, normal Stop/Play,30second warmup/full settlement, private saves,
+20edits (10 strength64 then10 strength-64),radius64, minimum1second cadence,
+10second settlement timeout, per-edit player displacement<=2units,4913ready,
+zero failures/rejections. New B2 baseline then C2 and promising C3 repeat.
+Compare matched final field/contact/body/payload and accumulated phase CPU/edit.
+Require >10% CPU reduction and fewer rebuilds; unchanged figure-eight regression
+and ordinary contact qualification still required. Retain v1 failures separately.
+No extra depth draw, new hooks or workload tuning. Further prototypes require
+specific measured leverage; user's continuation lifts the initial two-screen cap.
+
+B2/C2 screen: both20accepted edits,251changed samples/edit, zero movement,
+failures/rejections0,4913ready throughout. B2:80publications,331.094875ms
+sampling/extraction,45.693857ms native mesh. C2:20publications,122.823825ms
+sampling/extraction,17.714352ms native mesh. Construction62.90% lower, native61.23%
+lower; dependency count4to1. Final991/160fingerprint8A2FFD066A2B47A264E5E93AC298BE765D6FA572F8A28EF0C84EE6241C009EC1
+matches;1110bodies,42147432payload,11support patches and visual digests match.
+These are focused construction savings, not measured full-frame FPS gains.
+Runtime/editor builds0warnings/errors, live compile succeeds. Raw edit-b2-* and
+edit-c2-* evidence retained. Proceed to repeat C3 and unchanged route regression.
+
+### COLLISION-REUSE-BOUNDARY-001/v1 — local edit correctness
+
+Defined before runs2026-09-08. Same original971/160 fixture, source ba2006b,
+engine/hardware/settings, normal30s startup and private save isolation as above.
+Four production edits in order: (1024,1024,-256,+64), same center-64,
+(-1024,1024,-256,+64), same center-64; radius64 throughout. Minimum1s cadence,
+10s settlement gate, per-edit<=2unit player movement,4913ready,zero failures.
+Baseline and reuse candidate capture field fingerprints radius128 and nine native
+vertical rays after EACH edit at centerXY offsets-32,0,32 from z-192 to-384.
+This inspects the edited underground band, including nonzero intermediate edits,
+and both positive and negative chunk boundaries. Require matching fingerprints,
+trace hits/positions/normals, body/payload counts after each edit, plus matching
+boundary rebuild counts. It adds correctness coverage, not another timing workload
+or replacement for v2. Preserve missing-ray coverage as a limitation.
+
+C3 repeated20/20 with1dependency/edit,121.354620ms construction,17.281488ms
+native,zero movement/failures. Final fingerprint,9/9exterior rays,body/payload and
+visual digests exactly match B2/C2. Construction saving63.35% versus B2.
+
+Boundary B1/C1 both preserved4necessary rebuilds for all4edits,zero movement,
+matching body/payload and36native ray outcomes. All underground rays missed:
+these positions supply no positive underground contact coverage. Fingerprint
+capture was defective after first edit: the production command has a10second
+rate limit and the reader returned the earlier revision972result for edits2-4.
+Only first fingerprint comparison is valid; retain raw failures. Repeat the same
+scenario with >=10.1seconds between fingerprint requests and verify returned
+revision before proceeding. This stays within its minimum1second edit cadence;
+positions,operation count/strength and all gates remain unchanged.
+
+Figure-eight REUSE-B1 run47b0601f00bb4ff5b400ef5415ca775e and REUSE-C1
+a47422fd64e5416aae68c1905484797a use identical configured workload/original971.
+FPS828.204to828.915 (+0.09%);p951.8574to1.8514ms,p993.8332to3.7896ms;
+max21.7896to24.4688ms. Process peak2940112896to2969718784 (+1.01%),GPU peak
+3006728084unchanged;allocations/frame31269.553to31274.270 (+0.015%).
+CPU construction/region2.251221to2.253377ms; no route speedup claimed.
+Ready-latencyp953740.179to3894.050ms (+4.11%),p999351.353to9513.928ms (+1.74%),
+within5% gate. Publications65983to65934;failures/exceptions0;both4913ready,
+pending0. Peak gameplay mesh backlog127both. Synchronous streaming maximum
+8.5966to19.403ms is retained as an isolated spike, not hidden by average FPS;
+total synchronous time2088.954to2061.475ms and frame tails do not regress.
+No changed invalidation path is exercised by this no-edit route. Drain completes
+in both. Tiny ordinary spawn settling differences and final actor positions
+(8.123,11.059,-30.247) versus(61.378,51.674,-31.199) limit dynamic-contact claims.
+Both final integer centers0,0,-1,1130bodies/43121952payload,visual topology
+492179948DFDE389/positions1C8BF8B4FE17C720match. Startup counts/digests match;
+19ordinary contact probes are retained for comparison. No arbitrary recentering.
+Route is a regression screen, not proof of resolving existing contact behavior.
+
+Boundary B2/C2 repeated the unchanged scenario with command rate-limit-aware
+capture. All4fresh fingerprints match at revisions972,973,974,975, including
+both nonzero intermediate edits. All four necessary dependency counts remain4,
+body/payload counts and36ray outcomes match; zero movement/failures,4913ready.
+All underground rays still miss, so positive cave contact is not established.
+See boundary-comparison.json and boundary-{b2,c2}-rows.json.
+
+Ordinary route contact comparison:17hits and2previously documented outside-
+coverage misses agree, all hit positions agree. Three exact-edge normals differ:
+(-512,0):(-.1167,-.5167,.8482)to(-.1043,-.6439,.7579);
+(0,0):(-.2711,.0627,.9605)to(-.2608,-.0147,.9653);
+(512,0):(.5043,.3301,.7979)to(.5392,.3219,.7782).
+Startup contains no edits/replacements and therefore does not execute the changed
+branch; this is contact variability in the unchanged collision path, not evidence
+of a new invalidation regression. Shared-edge triangle selection is a possible
+explanation, not measured native attribution. Do not claim exact-normal or final
+actor-position equivalence, or full collision-system acceptance.
+
+Decision: retain the narrow completed-region reuse optimization for its repeatable
+~63% edit construction saving and75% fewer redundant rebuilds. Measured route
+frame/memory/allocation/readiness gates pass; no material regression attributable
+to this change is observed. Exact contact equivalence remains an inherited
+qualification limit. This decision accepts only the local optimization, not the
+broader collision/deformation feature, original underfoot displacement, or cave
+traversal. No FPS/memory saving is claimed. No third code prototype is justified
+by the remaining evidence: retain source and log further hypotheses in research.
+
+Final normal-start restoration on retained prototype: original slot971/160,
+4913ready/failures0, live compile success, no new error logs during this session.
+All160original page SHA256values match starting evidence; authored scene unchanged
+521ea0f7415e17534a1fabab006caba16d0350963b23331556dac0d16ed138c2.
+Final collision source SHA256186a29ee1a262be235392df03ecf7d545fdacfa3577ead3a4140bab3f77e2924.
+Private experiment saves and raw evidence retained. Final source is the exact
+built/tested candidate; runtime/editor builds0warnings/errors. Documentation and
+diff checks pass. See reuse-final-{runtime,world,hashes}.json.

@@ -198,11 +198,12 @@ internal sealed class VoxelCollisionWorld : IDisposable
 				var bounds = SamplingBounds( pair.Key );
 				if ( change.Source.Epoch == field.Epoch && !TerrainFieldChange.Intersects( bounds, dirtyBounds ) ) continue;
 				var currentRevision = field.GetCorrectionRange( bounds, out _, out _ );
-				// Replacement compares the actual samples with an unchanged generator.
-				// Published geometry outside those changes is still valid. Only completed
-				// regions may cross the epoch here; all old pending work is cancelled below.
-				if ( change.Source.Epoch != field.Epoch && pair.Value.Ready &&
-					!change.ReplacementSampleBounds.Any( changed => TerrainFieldChange.Intersects( bounds, changed ) ) )
+				// Revision blocks can overlap a region even when changed samples do not.
+				// Rebase only completed geometry outside the actual field dependency;
+				// pending work retains the ordinary revision/cancellation checks below.
+				if ( pair.Value.Ready && (change.Source.Epoch == field.Epoch
+					? !TerrainFieldChange.Intersects( bounds, change.AffectedBounds )
+					: !change.ReplacementSampleBounds.Any( changed => TerrainFieldChange.Intersects( bounds, changed ) )) )
 				{
 					pair.Value.EditRevision = currentRevision;
 					pair.Value.FieldEpoch = field.Epoch;

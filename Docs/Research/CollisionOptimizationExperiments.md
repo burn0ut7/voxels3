@@ -106,7 +106,7 @@ inspection and stopped after16at2.09units. This is not an accepted matched timin
 comparison. Keep the mechanism as a promising preserved patch, revert runtime,
 and request approval for the following workload correction before further runs.
 
-### Proposed COLLISION-EDIT-FOCUSED-001/v2 (awaiting approval)
+### COLLISION-EDIT-FOCUSED-001/v2 (approved continuation)
 
 Change only edit center from(384,384,-256) to(896,896,-256), and translate the
 9contact probes by(+512,+512,0). The latter point has the same position within
@@ -122,4 +122,49 @@ scenario-validity issue, not permission to relax contact correctness. The
 displacement remains a separate observed collision defect; avoiding it in this
 cost diagnostic does not fix or accept it. After v2 screening, ordinary contact
 and unchanged figure-eight regression qualification remain required. No runtime
-candidate is accepted and no v2 run is authorized by this proposal itself.
+candidate was accepted by the proposal itself. The user subsequently authorized
+continuation of prototype two and beyond; v2 runs are recorded in the ledger.
+
+### Continued screen
+
+The revised diagnostic isolates the player from collider replacement. Baseline
+B2 rebuilt four regions per edit; C2 and repeat C3 rebuilt one. Across20edits,
+construction fell from331.09ms to122.82ms and121.35ms (about63% less). Native
+mesh creation fell from45.69ms to17.71ms and17.28ms. All completed with no
+player displacement or failures, matching final field, nine exterior contacts,
+collision payload and visual digests. These are edit construction savings;
+they do not establish an FPS or resident-memory improvement.
+
+Boundary checks preserve necessary rebuilds at positive and negative chunk
+edges. The first boundary fingerprint capture exposed the command's10second
+rate limit; stale hashes are excluded and the same scenario is repeated with
+fresh-revision checks. Full figure-eight regression remains a separate gate.
+
+### Beyond prototype two: evidence filter
+
+Do not repeat the rejected dominance shortcut, block-size trials, gradient
+tables or sparse caches without new attributable evidence. Surface-column
+reuse and exact-lattice correction lookup already exist. Native body wrapper
+work is too small to justify another experiment; AddMeshShape owns nearly all
+of measured native publication. Splitting collision into smaller bodies would
+add ownership, boundaries and native resources and is not justified by the
+remaining focused cost after removing redundant neighbor builds.
+
+The remaining substantial route cost is canonical field sampling/bounds.
+A further candidate needs a fresh production profile that isolates repeat work
+left after current hierarchical rejection and surface-column reuse. Fewer
+formula calls alone is not an acceptance criterion. Hold the accepted source
+when that evidence supplies no specific, inexpensive hypothesis. Extra terrain
+depth rendering remains prohibited; this collision work adds no render passes.
+
+### Decision after qualification
+
+Retain prototype two as a narrow edit-cost optimization. The full figure-eight
+showed828.2versus828.9FPS, no measured FPS benefit, and no material frame-tail,
+allocation,memory or readiness regression. Corrected boundary captures match
+fresh intermediate fingerprints and preserve all necessary rebuilds. The ledger
+records contact-normal variability, existing actor displacement and missing
+positive cave-ray coverage; this does not accept the entire collision system.
+No additional high-value, inexpensive collision change is supported by the
+current measurements. Hold this implementation instead of starting speculative
+mesh partitioning or repeating failed arithmetic/cache experiments.

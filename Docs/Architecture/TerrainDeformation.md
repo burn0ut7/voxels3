@@ -534,3 +534,24 @@ and retry are the recovery policy for gaps/out-of-order data; this protocol
 does not buffer arbitrary reorderings. Density fingerprint agreement covers
 canonical regional samples only. Visual seams, actor safety, time to readiness,
 allocation/memory peaks and multi-peer fairness require their own observations.
+
+## Completed collision reuse after local edits
+
+`VoxelCollisionWorld.InvalidateField` now retains a ready region within the same
+field epoch when its expanded sampling bounds do not intersect the mutation's
+`AffectedBounds`. The latter comes from actual changed lattice samples expanded
+for trilinear interpolation. Revision metadata can overlap unaffected neighbors;
+rebase their derived regional revision without rebuilding their native body.
+Only completed geometry can use this proof. Pending work retains existing stale
+revision cancellation; epoch replacement keeps its separate changed-sample bounds
+proof. Bounds include the collision support patch's one-cell halo and intersect
+inclusively. Field ownership, geometry, native publication and two-worker limits
+remain unchanged.
+
+COLLISION-EDIT-FOCUSED-001/v2 measured four-to-one rebuild reduction and about63%
+less collision construction across20edits, confirmed in a repeat. Positive and
+negative chunk-boundary edits still rebuild all four affected regions. The
+unchanged figure-eight showed effectively unchanged FPS and in-budget memory,
+allocation and readiness results. This accepts the narrow optimization only;
+existing contact variability and broader feature qualification above remain open.
+Exact evidence and limitations belong to the validation ledger.
