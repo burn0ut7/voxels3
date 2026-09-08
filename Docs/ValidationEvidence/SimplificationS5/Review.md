@@ -1,7 +1,7 @@
 # S5: shared target/configuration decision — human review
 
-2026-09-08. **Candidate tested; awaiting human approval.** S4 acceptance is
-recorded/pushed96e530a (implementation898ebd9). S5 uncommitted; S6 not started.
+2026-09-08. **Accepted by the user on 2026-09-08.** S4 acceptance is
+recorded/pushed96e530a (implementation898ebd9). S5 implementation committed as 3082fb6; proceeding to S6.
 
 ## Change
 
@@ -91,6 +91,6 @@ untested. Original1000user world/settings restored afterward.
 - Check your normal target/player setup, editing and collision. If you use target
   overrides or multiple players, verify spawn/disconnect and per-player coverage.
 
-Pause here. S5 remains uncommitted pending approval with the GPU/final-view
-limits and unmeasured discovery subquestion disclosed. No S6. Raw before/after,
+User accepted S5 with the GPU/final-view limits and unmeasured discovery
+subquestion disclosed. No additional human checks are inferred from approval. Raw before/after,
 configuration observations and comparison.json are beside this document.

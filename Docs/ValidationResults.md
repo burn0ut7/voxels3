@@ -16230,3 +16230,10 @@ its separate multi-player cost remains unmeasured/deferred; no caching introduce
 
 Original1000world/settings restored. Net16lines removed from shared target/
 configuration decision. Pause for human review; S5 uncommitted, no S6.
+
+#### S5 human acceptance — 2026-09-08
+
+User: "i ACCEPT. Let's move onto S6". Implementation already committed3082fb6.
+Acceptance retains the disclosed GPU maximum, spatial comparison and unmeasured
+discovery limits. No additional tests or exhaustive human checks claimed.
+Proceed to S6.

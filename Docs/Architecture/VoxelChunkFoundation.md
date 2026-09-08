@@ -257,11 +257,11 @@ CPU frame maximum remains null when truncated. Serialized result fields and
 moving/stationary/trailing-profiler window meanings do not change. See
 SIMPLIFICATION-S3-001/v1 in the ledger for performance failures and human gate.
 
-## Configuration decision consolidation (S5 candidate)
+## Configuration decision consolidation (S5 accepted)
 
 OnUpdate resolves a validated visual configuration or retains the current target
 configuration after rejection, then shares gameplay-radius and target-movement
 handling. Valid data changes still rebuild first. Rejected visual settings do
 not prevent a valid gameplay radius change or normal streaming with retained
 visual settings. Target selection, player discovery, actor interests and update
-cadence are unchanged. S5 remains pending human acceptance; see its ledger run.
+cadence are unchanged. S5 was accepted by the user on 2026-09-08; see its ledger run.
