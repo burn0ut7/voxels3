@@ -559,6 +559,7 @@ internal sealed class TerrainFieldSnapshot
 {
 	// The dictionary is owned at construction and never mutated afterward.
 	internal readonly IReadOnlyDictionary<Vector3Int, TerrainFieldPage> Pages;
+	private readonly TerrainPageIndex _pageIndex;
 	private readonly Vector3Int? _regionMinimum;
 	private readonly Vector3Int? _regionMaximum;
 	private readonly bool _pinsSamples;
@@ -586,12 +587,13 @@ internal sealed class TerrainFieldSnapshot
 
 	internal TerrainFieldSnapshot( ProceduralTerrainSettings settings, int revision, Dictionary<Vector3Int, TerrainFieldPage> pages,
 		Guid worldId, Vector3Int? regionMinimum = null, Vector3Int? regionMaximum = null, int epoch = 0,
-		WeakReference<TerrainField> owner = null, bool pinsSamples = false )
+		WeakReference<TerrainField> owner = null, bool pinsSamples = false, TerrainPageIndex pageIndex = null )
 	{
 		_worldId = worldId;
 		Settings = settings;
 		Revision = revision;
 		Pages = pages;
+		_pageIndex = pageIndex ?? (pages.Count == 0 ? TerrainPageIndex.Empty : new TerrainPageIndex( pages.Keys ));
 		_regionMinimum = regionMinimum;
 		_regionMaximum = regionMaximum;
 		Epoch = epoch;
@@ -626,20 +628,18 @@ internal sealed class TerrainFieldSnapshot
 		if ( _regionMinimum == low && _regionMaximum == high && (!pinSamples || _pinsSamples) ) return true;
 		var pages = new Dictionary<Vector3Int, TerrainFieldPage>();
 		var ready = true;
-		foreach ( var pair in Pages )
+		foreach ( var key in _pageIndex.Query( low, high ) )
 		{
-			var key = pair.Key;
-			if ( key.x < low.x || key.x > high.x || key.y < low.y || key.y > high.y ||
-				key.z < low.z || key.z > high.z ) continue;
-			if ( !pinSamples ) pages.Add( key, pair.Value );
-			else if ( pair.Value.TryPin( out var pageReader ) ) pages.Add( key, pageReader );
+			if ( !Pages.TryGetValue( key, out var page ) ) continue;
+			if ( !pinSamples ) pages.Add( key, page );
+			else if ( page.TryPin( out var pageReader ) ) pages.Add( key, pageReader );
 			else
 			{
 				ready = false;
-				if ( Owner is not null && Owner.TryGetTarget( out var owner ) ) owner.RequestPage( key, pair.Value, Epoch );
+				if ( Owner is not null && Owner.TryGetTarget( out var owner ) ) owner.RequestPage( key, page, Epoch );
 			}
 		}
-		reader = ready ? new TerrainFieldSnapshot( Settings, Revision, pages, WorldId, low, high, Epoch, Owner, pinSamples ) : null;
+		reader = ready ? new TerrainFieldSnapshot( Settings, Revision, pages, WorldId, low, high, Epoch, Owner, pinSamples, _pageIndex ) : null;
 		return ready;
 	}
 
@@ -745,7 +745,7 @@ internal sealed class TerrainFieldSnapshot
 		RequirePageRange( low, high );
 		var revision = 0;
 		var volume = ((long)high.x - low.x + 1) * ((long)high.y - low.y + 1) * ((long)high.z - low.z + 1);
-		if ( volume <= Pages.Count )
+		if ( volume <= 8 && volume <= Pages.Count )
 		{
 			for ( var z = low.z; z <= high.z; z++ )
 			{
@@ -763,11 +763,10 @@ internal sealed class TerrainFieldSnapshot
 		}
 		else
 		{
-			foreach ( var pair in Pages )
+			foreach ( var key in _pageIndex.Query( low, high ) )
 			{
-				var key = pair.Key;
-				if ( key.x < low.x || key.x > high.x || key.y < low.y || key.y > high.y || key.z < low.z || key.z > high.z ) continue;
-				revision = Math.Max( revision, pair.Value.GetRange( key, bounds, out var pageMinimum, out var pageMaximum, includeRevision ) );
+				if ( !Pages.TryGetValue( key, out var page ) ) continue;
+				revision = Math.Max( revision, page.GetRange( key, bounds, out var pageMinimum, out var pageMaximum, includeRevision ) );
 				minimum = MathF.Min( minimum, pageMinimum );
 				maximum = MathF.Max( maximum, pageMaximum );
 			}

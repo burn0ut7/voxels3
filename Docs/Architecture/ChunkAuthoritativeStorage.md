@@ -351,3 +351,37 @@ zero exceptions,14 arenas and settled queues. This closes the observed shutdown
 logging interruption for the tested case. Capacity denial/retry, active-read
 cancellation/stale overlap and the strict sample-retirement deadline remain
 unqualified; the original full goal is not marked complete.
+
+
+### Spatial lookup at the supported page cap — implemented
+
+The2048-page capacity fixture exposed directory scans in broad range queries
+and regional captures, despite its bulk edits lying outside current view. Replaced
+those scans with one immutable spatial index of page coordinates, derived when
+canonical snapshot membership changes. Balanced bounds nodes use a flat preorder
+array with subtree end offsets: queries skip disjoint subtrees without recursion,
+per-query stacks or heap allocations. Keep direct dictionary lookup for tiny
+dense query boxes. Page ranges and revisions still come from the canonical page
+objects; the index owns only coordinates/bounds and cannot author terrain.
+
+Regional readers share that immutable coordinate index but retain only their
+existing regional page dictionary/sample pins. The shared index must hold no
+page/sample references, otherwise a regional reader could retain unrelated dirty
+history again. Query bounds keep the existing interpolation halo and acquired
+reader-range validation. New world snapshots derive a fresh index; captures reuse
+it. No spatial constant changes, new field, disk format, generated cache or
+network protocol. Compared alternatives: scanning bins still scales linearly for
+widely scattered edits; a mutable global cache needs extra invalidation. A small
+immutable hierarchy supports the existing bounded2048-page world with explicit
+snapshot lifetime and one lookup responsibility.
+
+The unchanged full-capacity figure-eight improved from49.26 to780.04FPS;
+p99 frame time fell63.11 to3.99ms and startup classification342.04 to4.77ms.
+The saved-field fingerprint matched exactly, and a negative-boundary live edit
+retained its fingerprint and collision contact after save/reload. Total route
+allocations rose as streaming recovered; per-frame allocations and process/GPU
+peaks fell. See STORAGE-SPATIAL-QUERY-001/v1 and STORAGE-SPATIAL-EDIT-001/v1 in
+[the validation ledger](../ValidationResults.md) for raw evidence and limitations.
+This qualifies the query-performance fix, not full lifecycle acceptance: restore
+still invalidates broad render dependencies, and strict readiness deadlines,
+512MiB denial/retry and active-read cancellation remain unqualified.

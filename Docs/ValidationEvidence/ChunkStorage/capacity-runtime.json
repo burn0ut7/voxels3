@@ -1,0 +1,115 @@
+{
+  "commands": [
+    "voxel_terrain_edit 393216 393216 0 1024 512",
+    "voxel_terrain_edit 397312 393216 0 1024 512",
+    "voxel_terrain_edit 401408 393216 0 1024 512",
+    "voxel_terrain_edit 405504 393216 0 1024 512",
+    "voxel_terrain_edit 409600 393216 0 1024 512",
+    "voxel_terrain_edit 413696 393216 0 1024 512",
+    "voxel_terrain_edit 417792 393216 0 1024 512",
+    "voxel_terrain_edit 421888 393216 0 1024 512",
+    "voxel_terrain_edit 425984 393216 0 1024 512",
+    "voxel_terrain_edit 430080 393216 0 1024 512",
+    "voxel_terrain_edit 434176 393216 0 1024 512",
+    "voxel_terrain_edit 438272 393216 0 1024 512",
+    "voxel_terrain_edit 442368 393216 0 1024 512",
+    "voxel_terrain_edit 446464 393216 0 1024 512",
+    "voxel_terrain_edit 450560 393216 0 1024 512",
+    "voxel_terrain_edit 454656 393216 0 1024 512",
+    "voxel_terrain_edit 458752 393216 0 1024 512",
+    "voxel_terrain_edit 462848 393216 0 1024 512",
+    "voxel_terrain_edit 466944 393216 0 1024 512",
+    "voxel_terrain_edit 471040 393216 0 1024 512",
+    "voxel_terrain_edit 475136 393216 0 1024 512",
+    "voxel_terrain_edit 479232 393216 0 1024 512",
+    "voxel_terrain_edit 483328 393216 0 1024 512",
+    "voxel_terrain_edit 487424 393216 0 1024 512",
+    "voxel_terrain_edit 491520 393216 0 1024 512",
+    "voxel_terrain_edit 495616 393216 0 1024 512",
+    "voxel_terrain_edit 499712 393216 0 1024 512",
+    "voxel_terrain_edit 503808 393216 0 1024 512",
+    "voxel_terrain_edit 507904 393216 0 1024 512",
+    "voxel_terrain_edit 512000 393216 0 1024 512",
+    "voxel_terrain_edit 516096 393216 0 1024 512",
+    "voxel_terrain_edit 524288 393216 0 128 512",
+    "voxel_terrain_edit 528384 393216 0 128 512",
+    "voxel_terrain_edit 532480 393216 0 128 512",
+    "voxel_terrain_edit 536576 393216 0 128 512",
+    "voxel_terrain_edit 541184 393472 256 32 512",
+    "voxel_terrain_edit 545280 393472 256 32 512"
+  ],
+  "logs": [
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "2 entries, oldest first (136 buffered):\r\n03:12:18 [Generic] Info: [TerrainEdit] request accepted=True id=31\r\n03:12:48 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0.0004,0.2868,66.1585 world=f58322c9-b837-4c0b-b555-6199124a290d revision=130 pages=2014 epoch=1 savedRevision=99 checkpoint=1 saving=False saveSlot=storage-capacity-v1 saveStatus=Unsaved changes - autosave pending bytes=263979008 queued=0 preparing=False residentBytes=263979008 retainedSampleBytes=263979008 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=0 reusedSamplePages=30 readIntegrationMaxMs=0 sweepMaxMs=1.0679 storageFailure= committed=31 rejected=0 samples=34035241 commitMs=2507.638 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=\r\nCursor: 136"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "5 entries, oldest first (148 buffered):\r\n03:13:02 [Generic] Info: [TerrainEdit] request accepted=True id=35\r\n03:13:02 [Generic] Info: [TerrainEdit] request accepted=True id=36\r\n03:13:02 [Generic] Info: [TerrainEdit] request accepted=True id=37\r\n03:13:02 [Generic] Error: [TerrainEdit] request.failed id=37 reason=Terrain world page budget exhausted.\r\n    at VoxelManager.UpdateTerrainEdits() in C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\Code\\Voxels\\VoxelManager.Deformation.cs:line 84\r\n    at VoxelManager.OnUpdate() in C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\Code\\Voxels\\VoxelManager.cs:line 501\r\n    at Sandbox.Component.InternalUpdate()\r\n03:13:10 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0.0004,0.2868,66.1585 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 pages=2048 epoch=1 savedRevision=130 checkpoint=2 saving=False saveSlot=storage-capacity-v1 saveStatus=Unsaved changes - autosave pending bytes=268435456 queued=0 preparing=False residentBytes=8388608 retainedSampleBytes=268435456 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=1984 reusedSamplePages=30 readIntegrationMaxMs=0 sweepMaxMs=1.0679 storageFailure= committed=36 rejected=1 samples=34043680 commitMs=38.5835 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain world page budget exhausted.\r\nCursor: 148"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "4 entries, oldest first (155 buffered):\r\n03:13:40 [Generic] Info: [TerrainEdit] save.complete path=terrain/storage-capacity-v1 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 checkpoint=3 liveRevision=135\r\n03:14:22 [Generic] Info: [TerrainEdit] save.started path=terrain/storage-capacity-v1 revision=135\r\n03:14:23 [Generic] Info: [TerrainStorage] checkpoint.io revision=135 pages=2048 reusedPages=2048 writtenPages=0 pageBytesRead=165764168 pageBytesWritten=0\r\n03:14:23 [Generic] Info: [TerrainEdit] save.complete path=terrain/storage-capacity-v1 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 checkpoint=4 liveRevision=135\r\nCursor: 155"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "3 entries, oldest first (158 buffered):\r\n03:14:54 [Generic] Info: [TerrainEdit] request accepted=True id=38\r\n03:14:54 [Generic] Error: [TerrainEdit] request.failed id=38 reason=Terrain world page budget exhausted.\r\n    at VoxelManager.UpdateTerrainEdits() in C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\Code\\Voxels\\VoxelManager.Deformation.cs:line 84\r\n    at VoxelManager.OnUpdate() in C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\Code\\Voxels\\VoxelManager.cs:line 501\r\n    at Sandbox.Component.InternalUpdate()\r\n03:15:02 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0.0004,0.2868,66.1585 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 pages=2048 epoch=1 savedRevision=135 checkpoint=4 saving=False saveSlot=storage-capacity-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=3932160 retainedSampleBytes=3932160 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=2018 reusedSamplePages=30 readIntegrationMaxMs=0 sweepMaxMs=1.0679 storageFailure= committed=36 rejected=2 samples=34043680 commitMs=38.5835 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain world page budget exhausted.\r\nCursor: 158"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "3 entries, oldest first (200 buffered):\r\n03:15:02 [Generic] Info: [TerrainStorage] checkpoint.io revision=135 pages=2048 reusedPages=2048 writtenPages=0 pageBytesRead=165764168 pageBytesWritten=0\r\n03:15:02 [Generic] Info: [TerrainEdit] save.complete path=terrain/storage-capacity-v1 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 checkpoint=5 liveRevision=135\r\n03:15:54 [Generic] Info: [TerrainStorage] startup.loaded path=terrain/storage-capacity-v1 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135\r\nCursor: 200"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "4 entries, oldest first (207 buffered):\r\n03:15:02 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0.0004,0.2868,66.1585 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 pages=2048 epoch=1 savedRevision=135 checkpoint=4 saving=False saveSlot=storage-capacity-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=3932160 retainedSampleBytes=3932160 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=0 evictedPages=2018 reusedSamplePages=30 readIntegrationMaxMs=0 sweepMaxMs=1.0679 storageFailure= committed=36 rejected=2 samples=34043680 commitMs=38.5835 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=Terrain world page budget exhausted.\r\n03:15:02 [Generic] Info: [TerrainEdit] save.started path=terrain/storage-capacity-v1 revision=135\r\n03:15:02 [Generic] Info: [TerrainEdit] save.complete path=terrain/storage-capacity-v1 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 checkpoint=5 liveRevision=135\r\n03:15:57 [Generic] Info: [TerrainEdit] request accepted=True id=1\r\nCursor: 207"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "2 entries, oldest first (244 buffered):\r\n03:15:02 [Generic] Info: [TerrainEdit] save.complete path=terrain/storage-capacity-v1 world=f58322c9-b837-4c0b-b555-6199124a290d revision=135 checkpoint=5 liveRevision=135\r\n03:15:57 [Generic] Info: [TerrainEdit] request accepted=True id=1\r\nCursor: 244"
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "3 entries, oldest first (267 buffered):\r\n03:17:49 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=0.0013,0.1458,66.1979 world=f58322c9-b837-4c0b-b555-6199124a290d revision=136 pages=2048 epoch=1 savedRevision=136 checkpoint=7 saving=False saveSlot=storage-capacity-v1 saveStatus=Saved bytes=268435456 queued=0 preparing=False residentBytes=3932160 retainedSampleBytes=115605504 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=30 evictedPages=0 reusedSamplePages=30 readIntegrationMaxMs=0.0058 sweepMaxMs=0.5408 storageFailure= committed=0 rejected=0 samples=0 commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=\r\n03:19:38 [Generic] Info: [TerrainEdit] load.started path=terrain/f58322c9b8374c0bb5556199124a290d request=1\r\n03:19:41 [Generic] Info: [TerrainEdit] load.field_committed world=f58322c9-b837-4c0b-b555-6199124a290d revision=99 epoch=2 pages=30 checkpoint=27\r\nCursor: 267"
+        }
+      ]
+    }
+  ],
+  "slowLod": {
+    "content": [
+      {
+        "type": "text",
+        "text": "18 entries, oldest first (263 buffered):\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect reason=\"command\" target=W[0.001,0.146,2.198] cellsPerAxis=32 baseCellSize=16 gameplayRadius=8 visualChunkRadius=512 minimumVisualLevel=0 maximumVisualLevel=6 visualRevision=2\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.handoff pending=False staging=False requestedVisualRevision=2 stagedVisualRevision=2 appliedVisualRevision=2 maximumLevelLag=0 missingLevels=[] missingTransitions=0 requests=1 commits=1 superseded=0 deferredUpdates=0 readinessBlocks=0 unsafeCommits=0 classified=24576 rejected=17920 classificationMs=339.134\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.arenas count=14 freeSlots=793 usage=0:slots=512,vertices=558560,indices=3126291,largestVertexFree=839541,largestIndexFree=1068013;1:slots=512,vertices=569195,indices=3179970,largestVertexFree=828906,largestIndexFree=1014334;2:slots=512,vertices=498094,indices=2790504,largestVertexFree=900007,largestIndexFree=1403800;3:slots=512,vertices=350774,indices=1922094,largestVertexFree=1047327,largestIndexFree=2272210;4:slots=512,vertices=303423,indices=1569624,largestVertexFree=1094678,largestIndexFree=2624680;5:slots=512,vertices=520789,indices=2887044,largestVertexFree=877312,largestIndexFree=1307260;6:slots=512,vertices=518729,indices=2881452,largestVertexFree=879372,largestIndexFree=1312852;7:slots=512,vertices=711410,indices=3855978,largestVertexFree=686691,largestIndexFree=338326;8:slots=512,vertices=682486,indices=3717891,largestVertexFree=715615,largestIndexFree=476413;9:slots=460,vertices=803219,indices=4194294,largestVertexFree=594882,largestIndexFree=10;10:slots=403,vertices=825258,indices=4190463,largestVertexFree=572843,largestIndexFree=3841;11:slots=328,vertices=870832,indices=4189611,largestVertexFree=527269,largestIndexFree=4693;12:slots=332,vertices=935084,indices=4192074,largestVertexFree=463017,largestIndexFree=2230;13:slots=244,vertices=719696,indices=3213588,largestVertexFree=678405,largestIndexFree=980716\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.geometry topology=7C4360C0E924AB8F position=5CB17959E2071EE6 transitionTopology=B715B9702633D7A7 transitionPosition=8733B3D1BEDBD6F8 fineMismatch=0 coarseMismatch=0 lateralMismatch=0 invalidTables=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.gameplay cellSize=16 regionSize=512 anchor=C[0,0,0] gameplayRegions=[C[-8,-8,-8],C[9,9,9]) gameplayWorld=[W[-4096,-4096,-4096],W[4608,4608,4608]) gameplayDesired=4913 loaded=4913 storage=implicit-sdf pendingGameplay=0 pendingWarm=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=0 visualEnabled=True cellSize=16 regionSize=512 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-4,-4,-4],C[4,4,4]) outerWorld=[W[-2048,-2048,-2048],W[2048,2048,2048]) holeRegions=[C[0,0,0],C[0,0,0]) holeWorld=[W[0,0,0],W[0,0,0]) cached=512 active=512 resident=712 pending=0 topology=D738B3E1E4EF4511 position=776D2CC5D4197601 lastEnter=512 lastLeave=0 lastActivate=512 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=1 visualEnabled=True cellSize=32 regionSize=1024 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-8,-8,-8],C[8,8,8]) outerWorld=[W[-8192,-8192,-8192],W[8192,8192,8192]) holeRegions=[C[-2,-2,-2],C[2,2,2]) holeWorld=[W[-2048,-2048,-2048],W[2048,2048,2048]) cached=4096 active=4032 resident=4096 pending=0 topology=625FCFEDAA80DB21 position=87315CC536017832 lastEnter=4096 lastLeave=0 lastActivate=4032 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=2 visualEnabled=True cellSize=64 regionSize=2048 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-8,-8,-8],C[8,8,8]) outerWorld=[W[-16384,-16384,-16384],W[16384,16384,16384]) holeRegions=[C[-4,-4,-4],C[4,4,4]) holeWorld=[W[-8192,-8192,-8192],W[8192,8192,8192]) cached=4096 active=3584 resident=4096 pending=0 topology=1B08A826B3D3FC4E position=FE78DCB40EF3AE07 lastEnter=4096 lastLeave=0 lastActivate=3584 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=3 visualEnabled=True cellSize=128 regionSize=4096 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-8,-8,-8],C[8,8,8]) outerWorld=[W[-32768,-32768,-32768],W[32768,32768,32768]) holeRegions=[C[-4,-4,-4],C[4,4,4]) holeWorld=[W[-16384,-16384,-16384],W[16384,16384,16384]) cached=4096 active=3584 resident=4096 pending=0 topology=A6D4C4E8B7123463 position=D7BB6EA6D27258A6 lastEnter=4096 lastLeave=0 lastActivate=3584 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=4 visualEnabled=True cellSize=256 regionSize=8192 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-8,-8,-8],C[8,8,8]) outerWorld=[W[-65536,-65536,-65536],W[65536,65536,65536]) holeRegions=[C[-4,-4,-4],C[4,4,4]) holeWorld=[W[-32768,-32768,-32768],W[32768,32768,32768]) cached=4096 active=3584 resident=4096 pending=0 topology=F27342BEA0473AF1 position=F3F273E20C26FA8F lastEnter=4096 lastLeave=0 lastActivate=3584 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=5 visualEnabled=True cellSize=512 regionSize=16384 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-8,-8,-8],C[8,8,8]) outerWorld=[W[-131072,-131072,-131072],W[131072,131072,131072]) holeRegions=[C[-4,-4,-4],C[4,4,4]) holeWorld=[W[-65536,-65536,-65536],W[65536,65536,65536]) cached=4096 active=3584 resident=4096 pending=0 topology=4A3728C7CBDB7B07 position=5BAFAE0A875934DB lastEnter=4096 lastLeave=0 lastActivate=3584 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.level level=6 visualEnabled=True cellSize=1024 regionSize=32768 anchor=C[0,0,0] outerAnchor=C[0,0,0] outerRegions=[C[-8,-8,-8],C[8,8,8]) outerWorld=[W[-262144,-262144,-262144],W[262144,262144,262144]) holeRegions=[C[-4,-4,-4],C[4,4,4]) holeWorld=[W[-131072,-131072,-131072],W[131072,131072,131072]) cached=4096 active=3584 resident=4096 pending=0 topology=CCBC1A7BC816BC64 position=2D7366A357E12820 lastEnter=4096 lastLeave=0 lastActivate=3584 lastDeactivate=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.transition fineLevel=0 coarseLevel=1 desired=96 ready=96 drawable=51 pending=0 lastEnter=96 lastLeave=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.transition fineLevel=1 coarseLevel=2 desired=384 ready=384 drawable=136 pending=0 lastEnter=384 lastLeave=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.transition fineLevel=2 coarseLevel=3 desired=384 ready=384 drawable=102 pending=0 lastEnter=384 lastLeave=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.transition fineLevel=3 coarseLevel=4 desired=384 ready=384 drawable=82 pending=0 lastEnter=384 lastLeave=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.transition fineLevel=4 coarseLevel=5 desired=384 ready=384 drawable=64 pending=0 lastEnter=384 lastLeave=0\r\n03:17:49 [Generic] Info: [VoxelWorld] lod.inspect.transition fineLevel=5 coarseLevel=6 desired=384 ready=384 drawable=64 pending=0 lastEnter=384 lastLeave=0\r\nCursor: 263"
+      }
+    ]
+  }
+}

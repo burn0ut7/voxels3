@@ -14227,3 +14227,201 @@ the observed native-shutdown logging interruption. Neither is a full-goal pass.
 Current source changes do not resolve those remaining capacity/cancellation/
 retirement requirements. Keep the original goal open; do not relabel them passed
 or use the shutdown success to imply complete lifecycle coverage.
+
+
+### STORAGE-WORLD-CAPACITY-001/v1 — fixed 2048-page boundary
+
+Freeze before run: source97bf4ca, visible18972/engine26.09.01c, single host
+basic_example, original world f58322c9-b837-4c0b-b555-6199124a290d revision99,
+30pages/checkpoint27. Copy through normal save to absent storage-capacity-v1;
+all test edits/save/autosave stay in that private slot. Preserve original page
+hashes/timestamps in capacity-before.json. Leave player/camera at normal spawn,
+visual512/gameplay8, seed1337/gen5/default surface; no multiplayer or travel.
+
+Use production voxel_terrain_edit only. Submit31 disjoint digs with strength512,
+radius1024, centers (393216 + i*4096,393216,0), i=0..30 in order. Each sphere
+intersects64 previously empty pages, giving2014 total; drain queued/preparing
+within120seconds. Then four radius128/strength512 digs centered at
+(524288 + i*4096,393216,0), i=0..3, giving2046 total. Two radius32/strength512
+digs at (541184,393472,256) and (545280,393472,256) each occupy one new page,
+giving exactly2048 pages/revision136/authored37. These positions are outside
+current visual/gameplay interest but remain within the supported world bounds.
+No synthetic field, injected memory cap, or test-only entry point.
+
+At2048, one radius32/strength512 dig at (549376,393472,256) must fail explicitly
+with world-page-budget error, preserve revision136/pages2048 and drain reservation
+bytes to0 within10seconds. Then repeat the existing-page dig at
+(541184,393472,256), require revision137/pages2048/authored38 and readiness.
+Save the private slot within30seconds, validate full directory and every page's
+checksum, reopen same slot within30seconds, require same revision/page hashes
+and no additional authored edits. Record resident/retained/reserved sample bytes;
+combined accounted samples must stay<=512MiB. Do not claim512MiB reservation
+exhaustion was tested if it is not observed. Dirty current sample cap is256MiB.
+
+Finally load original slot within30seconds and save it explicitly; require
+original99/30pages and exact original bytes/timestamps, restoring last-world
+selection. If any stage fails, preserve evidence and recover original via its
+unchanged saved slot. Full dataset page-count limits are this case's scope;
+no storage-scale implementation or frame-performance claim is made.
+
+
+STORAGE-WORLD-CAPACITY-001/v1 setup result: initial31 digs completed as expected
+revision130/pages2014/authored31 by03:12:48, combined samples263979008bytes,
+reserved0, no read/edit deferred flags. Autosave published revision130/checkpoint2.
+The four radius128 digs then completed; however the specified x=541184 is
+exactly1057*512, not inside a page as the setup text incorrectly assumed.
+Its radius32 sphere touches TWO x pages. Therefore id36 reached2048/revision135,
+and id37 (x545280, also a page boundary) was already rejected for world-page
+budget. At03:13:10: authored36/rejected1, pages2048, reserved0, retained268435456,
+resident8388608, evicted1984. v1's predicted revision136/authored37 is invalid
+and is NOT recorded as a pass. No terrain implementation defect is implied by
+this fixture arithmetic error. Preserve original scenario and measurements.
+
+### STORAGE-WORLD-CAPACITY-RECOVERY-001/v1 — full-world boundary and recovery
+
+Frozen before further requests: the actual production state above, original
+world identity in private storage-capacity-v1, revision135/pages2048/authored36,
+rejected1. The earlier failed setup already reached the exact supported cap;
+do not redo it or alter its history. This distinct case starts at that verified
+full state. Capture a current checkpoint first; compare its exact page index
+and payload hashes with the state saved after rejection.
+
+Request radius32/strength512 at(549376,393472,256). Within10seconds require
+explicit world-page-budget rejection, unchanged135/2048/authored36, rejected2,
+reserved0; save and require identical canonical directory/page hashes. Then
+radius32/strength512 at existing(541184,393472,256) must commit once to136,
+retain2048 pages, authored37/rejected2, reserved0. Save<=30seconds; exactly the
+two affected page versions must change and all other2046 remain identical.
+Reopen the private slot<=30seconds, require136/2048 and no extra authored edits,
+then save and compare exact directory/page hashes again. Combined sample
+accounting must stay<=512MiB. Restore original99/30pages via its unchanged slot
+and save explicitly. This tests 2048-page atomicity/recovery, not a claimed
+512MiB memory-admission denial or a retroactive pass of the invalid setup.
+
+
+Capacity recovery interruption: external Play restarts at03:15:54 and03:16:29
+reset authored counters; the fixed uninterrupted recovery case cannot be marked
+passed. The requested existing-page edit did persist as136/2048; checkpoint7
+contains exactly two changed page records (1056,768,0 and1057,768,0), all other
+2046 identical to135, with every file hash valid. Startup recovered136/authored0.
+The new-page rejection itself was explicit at03:14:54 with unchanged135 and
+an exact unchanged2048-page checkpoint afterward. Original99/30pages restored
+03:19:41, then saved explicitly. Preserve partial evidence, not a scenario pass.
+
+User reported50FPS versus900 during a manual figure-eight in the capacity slot.
+The03:16:15 manual run was interrupted by the next Play restart, with no complete
+result. Current source GetCorrectionRange falls back to scanning every page for
+large bounds; TryCaptureRegion scans every page for all captures. Capacity-world
+startup LOD classification recorded339.134ms for24576 coordinates, versus16.746ms
+for the recent30-page world with the same coordinate count. This identifies a
+measured scaling lead, not sole-cause attribution of the user's FPS report.
+
+### STORAGE-SPATIAL-QUERY-001/v1 — full-capacity figure-eight comparison
+
+Freeze before source changes: original world identity in storage-capacity-v1,
+revision136/2048pages/checkpoint7; exact directory/page hashes in
+capacity-updated-files.json. Source97bf4ca before change. Single visible editor
+18972/engine26.09.01c/basic_example, seed1337/gen5/default surface, visual512,
+gameplay8, LOD0extent4/cacheextent8/levels0-6/fps_max1000. Other game may remain
+running as disclosed by user. Load capacity slot, then normal Stop/Start Play so
+both before/after phases start at normal spawn with the same saved terrain.
+Wait30seconds after startup, require settled collision/visual/edit state and
+record source/memory/state. Run unchanged2500/50000/one loop/Z0. No edits or
+configuration changes during route. Wait20seconds afterward and record settled
+queues, geometry digests and field state. Repeat after implementation using the
+same restart and warmup. Source may hotload between phases, never during a run.
+
+Require same terrain136/2048 with no authored edits; exact persisted hashes;
+no unexpected exceptions/mismatch, queues settled, sample accounting<=512MiB.
+Compare frame FPS/p95/p99/max, readiness tails, allocations, process/GPU memory
+and arenas. Improvement must be measured, not assumed. Investigate FPS loss>10%,
+tails/allocations increase>20% versus before and retain user concurrency caveat.
+Capture a host-only fingerprint at(393216,393216,0), radius1024 before/after,
+outside the timed route, requiring exact match. This exercises actual saved
+far-page retrieval and the common field path. Restore original save afterward.
+
+
+STORAGE-SPATIAL-QUERY-001/v1 before: run2257fe168ef54064bafe81fa5ab4992a,
+49.26038FPS, frame p9556.9376/p9963.1087/max776.4161ms; GPU average0.9243ms.
+Moving duration121.9441seconds; result publication03:28:48 after substantial
+post-route settlement. Mesh readiness p95105578.34/p99112464.84/max114193.87ms.
+Zero exceptions during measured route. Raw result spatial-before-result.json.
+Far-page fingerprint CA27349A69F9461E6347F420439D9A88A78DB61C9E7A94DE6A05BEA620E8E2B0.
+User input produced one rejected tool request after the moving window; no edit
+or saved revision change. Editor-facing get_game_object resolved the editor copy
+(default "No world"), so that result is excluded from runtime state evidence.
+
+Index implementation: immutable balanced coordinate hierarchy, shared by regional
+readers without retaining canonical page objects. Bound the direct lookup shortcut
+to at most8 page coordinates; the old volume<=Pages.Count condition also made
+sparse query boxes visit up to2048 empty coordinates as the world grew. Large
+queries now skip disjoint hierarchy nodes. Runtime source changed only after the
+before result was saved. Final source hashes in spatial-source.json. Restart
+Play before after measurement so every immutable snapshot is constructed with
+its index; compilation reports0errors.
+
+
+### STORAGE-SPATIAL-EDIT-001/v1 — snapshot membership after a live edit
+
+Freeze after the spatial-index route: load original99/30pages, save to new
+private spatial-edit-v1. Capture fingerprint(-512,-512,0),r512, then one real
+voxel_terrain_edit(-512,-512,0),r128,+512; require100/38pages/authored1 (relative
+to current authored0), no pending edit after10seconds. Save<=10seconds; capture
+post-edit fingerprint and center collision ray(-512,-512,4096,-4096). Reload
+private slot<=30seconds and require same fingerprint/contact,100/38/authored1;
+this rebuilds an index from saved membership and checks captured edited samples.
+No source changes during case. Finally load original, require original fingerprint
+and99/30pages, save explicitly to restore last-world selection. Match all original
+page bytes/timestamps against capacity-before.json. No geometry/performance
+workload inputs are retuned; test-only edits stay in the copied slot.
+
+
+STORAGE-SPATIAL-QUERY-001/v1 after: run8e338fe5b90e4d139c28f8c724a2bb7c,
+780.03625FPS, frame p952.0735/p993.9887/max25.493ms. GPU average1.0644ms.
+Moving duration121.937seconds; mesh readiness p9592.9245/p99127.9479/
+max191.5709ms. Zero measured exceptions, all mesh/collision pending0, arenas14.
+Peak process4337328128bytes versus before4889939968; peak GPU2879567752 versus
+2981292644. Far-field fingerprints match exactly before/after. Startup LOD
+classification24576/rejected17920 unchanged, time342.036ms to4.765ms. At03:38:30
+post-route world136/2048 remained Saved, authored0, sample resident/retained
+3932160bytes, reservation0, no storage/edit failures. This observation occurred
+88seconds after result publication, beyond the minimum20second wait. All reported
+LOD queues settled, mismatch/invalid-table counts0. Source stayed unchanged during
+both timed routes. Full evidence: spatial-before-result.json,
+spatial-after-result.json, spatial-runtime.json, spatial-source.json.
+
+Total route allocations increased727834600 to2908179432bytes while sampled
+frames increased6007 to95120 and substantially more geometry finished. Per-frame
+allocations fell121164 to30574bytes. This triggers the raw-total investigation
+threshold but is explained by recovered frame/streaming throughput; compare
+also the prior healthy30-page route's4038357640 total bytes. Do not claim a total
+allocation reduction versus the stalled49FPS baseline. GPU peak/process peak
+fell and readiness recovered. User concurrent-game and tiny normal-spawn float
+differences remain environmental qualifications. The measured50FPS regression
+is resolved for the unchanged2048-page fixture; no world-page cap is relaxed.
+
+STORAGE-SPATIAL-EDIT-001/v1 content result: one request added8 pages, revision99
+to100/pages38/authored1, commit15.9567ms. Save03:40:01 finished in same second.
+New-field fingerprint EDEF1C3137FBAC609A9C772EFF3547029A446CA53B01727BBBBBC32134A756EA
+matched after reload. Center collision position(-512,-512,-90.0078), normal
+(-0.0955,-0.0781,0.9924) matched exactly. Reload03:40:46 preserved100/38/authored1.
+Field/contact checks pass; full edit readiness was only sampled13seconds after
+the request, so the specified10second full-readiness deadline is not proven.
+Identical reload caused the existing27923-dependency render rebuild, pending at
+15seconds and settled at41seconds; the load's full-readiness30second timing is
+not established. These are retained lifecycle timing limits, not hidden passes.
+The spatial index change does not change epoch-wide restore invalidation.
+
+Final restoration03:42:22 loaded original99/30pages, then explicit save03:43:26
+selected the original slot and completed checkpoint29. Its original fingerprint
+31D25C4551C627DDE833CA75FE54336C400FF197F8D341A83CF41A4E6C283322 matched exactly;
+all30 original page bytes and timestamps matched capacity-before.json. Evidence:
+[spatial-edit-runtime.json](ValidationEvidence/ChunkStorage/spatial-edit-runtime.json).
+
+Throughput comparison: published regions19601 to104555; allocations per published
+region37132.52 to27814.83bytes. Post-loop drain82056.13 to38.7074ms. These support
+the explanation of higher total allocations with recovered streaming throughput.
+Accept the spatial-query performance correction with exact field preservation;
+do not mark the complete regional-storage goal or timing-limited edit scenario
+passed. Engine compilation succeeded with0errors. The original visible world
+remains selected; private capacity/edit fixtures are retained separately.
