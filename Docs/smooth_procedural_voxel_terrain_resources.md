@@ -23,6 +23,7 @@ the appropriate architecture or research owner from the [documentation map](READ
 
 | Research question | Start with | Why route here |
 | --- | --- | --- |
+| Gradual digging, nearly empty cells and dirt replacement | [Cell-aware digging proposal](Research/CellAwareDiggingAndDirtPlacement.md) | Primary content/material API comparisons, limits of Deep Rock evidence, and the distinction between field distance and remaining volume. |
 | Biomes, coherent landforms, runtime population and future regional features | [Biome terrain proposal](Research/BiomeTerrainGeneration.md), [biome sources below](#biome-generation-and-regional-features) | Separates shipped-game evidence from the proposed four-environment recipe and frame-pacing acceptance. |
 | Interpreting CPU samples and managed allocation/GC markers | [CPU capture review](Research/CpuPerformanceReview20260907.md), [GC ETW events](https://learn.microsoft.com/en-us/dotnet/framework/performance/garbage-collection-etw-events), [Firefox profile schema](https://github.com/firefox-devtools/profiler/blob/main/src/types/profile.ts) | Threshold type labels are not exact byte ownership; sampled CPU weights are not frame latency. See the transfer limits below. |
 | Regular-cell isosurface topology and interpolation | [Marching Cubes paper](https://graphics.stanford.edu/courses/cs164-10-spring/Handouts/paper_p163-lorensen.pdf) | Primary description of the baseline surface-extraction algorithm. |
