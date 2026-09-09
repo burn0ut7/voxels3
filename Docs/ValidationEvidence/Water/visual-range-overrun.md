@@ -23,6 +23,13 @@ anchor +/- cache half extent, or8*32768=262144 units around its anchor.
 Water therefore has one extra maximum-LOD chunk of padding on each side when
 the anchors coincide. Water also follows the current target independently of
 the terrain's committed placement, allowing another mismatch during streaming.
+Their snapping differs even when settled: water uses floor(position/chunkWidth),
+while WorldToLevelAnchor uses floor((position+chunkWidth/2)/chunkWidth).
+The observed player XY(-14934.208,-3734.95166) yields water anchor(-1,-1)
+and terrain target anchor(0,0) atLOD6. Consequently the computed water footprint
+extends65536 units farther on the negative X/Y sides than the settled terrain
+target, while their positive bounds coincide. Committed bounds were not read
+directly from private state during this observation.
 
 Correction indicated by source inspection: derive the water quad from the
 terrain's committed visual bounds at sea level, including its placement readiness
