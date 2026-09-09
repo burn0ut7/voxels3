@@ -9,13 +9,13 @@ public readonly record struct ProceduralTerrainSettings(
 public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 
 /// <summary>
-/// Canonical deterministic version-5 volumetric terrain field. The GPU mirror
+/// Canonical deterministic version-9 volumetric terrain field. The GPU mirror
 /// uses the same integer hash, simplex recipes, and constructive composition.
 /// </summary>
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 5;
+	public const int CurrentVersion = 9;
 	public const int DefaultWorldSeed = 1337;
 	public const float DefaultSurfaceBaseHeight = 0f;
 	public const float DefaultSurfaceFrequency = 0.0005f;
@@ -24,9 +24,11 @@ internal static class ProceduralTerrainSdf
 	public const float NoodleBWavelength = 6912f;
 	public const float ThicknessWavelength = 16384f;
 	public const float CheeseWavelength = 8192f;
+	public const float CaveRegionWavelength = 16384f;
+	public const float CaveRegionThreshold = 0.36f;
 	public const float CaveDensityScale = 512f;
 	public const float CaveMinimumDepth = 512f;
-	public const float CaveMaximumDepth = 8192f;
+	public const float CaveMaximumDepth = 32768f;
 	public const float NoodleBaseThreshold = 0.056f;
 	public const float NoodleThicknessVariation = 0.016f;
 	public const float CheeseBaseThreshold = 0.48f;
@@ -42,6 +44,7 @@ internal static class ProceduralTerrainSdf
 	private const uint NoodleBSeedSalt = 0x63D83595u;
 	private const uint ThicknessSeedSalt = 0xC2B2AE35u;
 	private const uint CheeseSeedSalt = 0x27D4EB2Fu;
+	private const uint CaveRegionSeedSalt = 0x9E3779B9u;
 	// Each of the three simplex contributions has gradient magnitude at most
 	// 27/343 before the canonical scale of 70. The exact global bound is therefore
 	// 3 * 70 * 27/343 = 16.530612... . Seventeen leaves deterministic margin.
@@ -121,9 +124,15 @@ internal static class ProceduralTerrainSdf
 		var depth = -surfaceDensity;
 		var envelope = MathF.Min( depth - CaveMinimumDepth, CaveMaximumDepth - depth );
 		// min(caves, envelope) cannot beat the surface in this range. Keep the
-		// canonical field value while avoiding four irrelevant 3D noise queries.
+		// canonical field value while avoiding irrelevant cave and region queries.
 		if ( envelope <= surfaceDensity ) return surfaceDensity;
 		var seed = unchecked((uint)settings.WorldSeed);
+		// Raising the regional cutoff removes cave-bearing areas without changing
+		// the underlying passage recipe or adding another noise evaluation.
+		var regionDensity = CaveDensityScale * (CaveRegionNoise(
+			worldPosition / CaveRegionWavelength, seed ^ CaveRegionSeedSalt ) - CaveRegionThreshold);
+		envelope = MathF.Min( envelope, regionDensity );
+		if ( envelope <= surfaceDensity ) return surfaceDensity;
 		var thickness = SimplexNoise3D(
 			worldPosition / ThicknessWavelength,
 			seed ^ ThicknessSeedSalt );
@@ -352,6 +361,21 @@ internal static class ProceduralTerrainSdf
 		var envelope = new DensityInterval(
 			MathF.Min( envelopeAtMinimum, envelopeAtMaximum ),
 			envelopeMaximum );
+		var center = worldAabb.Minimum + (worldAabb.Maximum - worldAabb.Minimum) * 0.5f;
+		var halfExtent = (worldAabb.Maximum - worldAabb.Minimum) * 0.5f;
+		var regionCenter = CaveRegionNoise( center / CaveRegionWavelength, seed ^ CaveRegionSeedSalt );
+		// Smoothed trilinear values in [-1,1] have each partial bounded by 3;
+		// sqrt(27) < 6 bounds their gradient across shared lattice boundaries.
+		var regionVariation = 6d * Math.Sqrt(
+			(double)halfExtent.x * halfExtent.x +
+			(double)halfExtent.y * halfExtent.y +
+			(double)halfExtent.z * halfExtent.z ) / CaveRegionWavelength + SimplexFinitePrecisionPadding;
+		var region = new DensityInterval(
+			(float)Math.Clamp( regionCenter - regionVariation, -1d, 1d ),
+			(float)Math.Clamp( regionCenter + regionVariation, -1d, 1d ) );
+		envelope = new DensityInterval(
+			MathF.Min( envelope.Minimum, CaveDensityScale * (region.Minimum - CaveRegionThreshold) ),
+			MathF.Min( envelope.Maximum, CaveDensityScale * (region.Maximum - CaveRegionThreshold) ) );
 		// The surface dominates the entire cave envelope; noise cannot affect
 		// the final density interval, so avoid all four volumetric bounds.
 		if ( envelope.Maximum < surface.Minimum ) return envelope;
@@ -576,6 +600,27 @@ internal static class ProceduralTerrainSdf
 		float Minimum,
 		float Maximum,
 		ChunkDensityClassification Classification );
+
+	private static float CaveRegionNoise( Vector3 position, uint seed )
+	{
+		var x = (int)MathF.Floor( position.x );
+		var y = (int)MathF.Floor( position.y );
+		var z = (int)MathF.Floor( position.z );
+		var fraction = position - new Vector3( x, y, z );
+		var blend = fraction * fraction * (new Vector3( 3f ) - 2f * fraction);
+		var value = 0f;
+		for ( var corner = 0; corner < 8; corner++ )
+		{
+			var dx = corner & 1;
+			var dy = (corner >> 1) & 1;
+			var dz = (corner >> 2) & 1;
+			var weight = (dx == 0 ? 1f - blend.x : blend.x) *
+				(dy == 0 ? 1f - blend.y : blend.y) * (dz == 0 ? 1f - blend.z : blend.z);
+			var sample = (Hash( x + dx, y + dy, z + dz, seed ) & 65535u) / 32767.5f - 1f;
+			value += sample * weight;
+		}
+		return Math.Clamp( value, -1f, 1f );
+	}
 
 	private static float SimplexNoise3D( Vector3 position, uint seed )
 	{

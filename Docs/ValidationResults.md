@@ -16464,3 +16464,202 @@ review documents with human feature checks, and explicit user acceptance. S3,
 S6 and S7 repeats and failed comparisons remain preserved. The research document
 records the accepted increments and retained/deferred subjects. This completes
 the requested acceptance pass, not all originally proposed reliability research.
+
+### CAVE-DEPTH-001/v1 — quadrupled cave support
+
+Defined 2026-09-08 before runs. User authorizes fresh worlds for both baseline
+and candidate; preserve the prior saved world and selector backup. Canonical
+basic_example authored spawn, seed1337, base0/frequency0.0005/amplitude128,
+32 cells at16 units, gameplay8, visual512, levels0..6, half extents4/8.
+Fresh unedited revision0 worlds on both sources (v5 baseline, v6 candidate);
+new scenario required because prior S7 fixture contains1404 edits and user
+explicitly requests fresh worlds. No comparison to S7 as a continuous baseline.
+Cold editor each run, engine26.09.01c, Ryzen7 9800X3D/RTX5090, fps_max1000,
+unchanged graphics/viewport/FOV, host/no peers, >=30s warmup and settled queues.
+Canonical speed2500,distance50000,Yreach25000,Z0,one loop, normal drain/two
+advances/10s stationary. No edits during runs. CPU/GPU p95/p99 allowance
+max(5%,0.25ms), allocations and memory5%(process16MiB floor), collision tails
+max(5%,10ms). Record maxima, publication, placement lag, GC, queue/streaming
+completion and geometry. Require4913ready, queues0, no errors/unsafe/mismatches.
+Geometry totals may change by design; do not require equality of deeper caves.
+Baseline794b14fc005a956c6a4d81f66bc3f73f7c3dad2f, cave limit8192;
+candidate limit32768. This surface route does not qualify traversal at every
+new depth, multiplayer compatibility, or CPU/GPU bitwise field equivalence.
+No performance acceptance if material unexplained regressions remain.
+
+C1 setup was externally stopped during warmup before the candidate benchmark.
+User confirmed closing/restarting the editor; no new Sentry crash marker or
+Windows Application1000/1001 event was observed. Preserve c1-interrupted.log.
+Restart same candidate/fresh-world scenario; no measurement or failure attributed
+to depth from this interrupted attempt. Initial baseline setup also needed a
+shutdown Error-window process cleared and a launch with the engine working
+directory. Shader asset_compile reported no source through MCP; automatic engine
+shader compilation and clean-start production execution remain the verification.
+
+User requires a visible editor. B1 used a hidden launch and is retained as
+noncomparable with the visible runs. Repeat fresh v5 baseline B2 and v6 C2
+visibly with identical route/configuration; the visible window is the scenario
+requirement. No timed candidate existed before this correction. Source is
+restored mechanically for B2; candidate manifest preserved. No benchmark input
+tuned based on performance results.
+
+#### CAVE-DEPTH-001/v1 results — visible B2/C2
+
+Full source, scenario, setup history, measurements and limits in
+[the depth review](ValidationEvidence/CaveDepth/Review.md). B2 PID82636,
+run c18aea25d2754e75b4b1fd53bd1f8cf8; C2 PID29296,
+run0fad953c1e1f45dca03789d0785cdb98, candidate hashes unchanged.
+FPS821.3057->695.2868; frame p95/p99/max2.0227/3.8664/21.0068->
+2.2884/3.4828/41.7518ms. GPU p95/p991.6605854/2.2883415->
+1.9254684/2.5348663ms. Peak process3959521280->3926749184bytes;
+GPU2878626856->3735193448bytes; allocation/frame29222.229->30623.422.
+Collision p95/p993184.7117/8740.261->3279.658/8582.035ms;
+publication p95/p9983.7021/104.1933->155.4021/194.4966ms; maxlag4->10.
+Both4913ready, queues0, failures/exceptions/unsafe/boundary mismatches0.
+Frame/GPU p95 and GPU memory FAIL recorded screens; no overall acceptance.
+Final centers differ one X chunk; geometry totals are not equal-set evidence.
+Old save preserved; new v6 world saved and selected through normal play-stop.
+Cold compile/production shaders passed, last_crash unchanged. Shutdown errors
+and externally interrupted setup remain disclosed; no candidate timed warnings.
+HOLD commit/push pending user acceptance of costs. Deep traversal/multiplayer
+and full new-depth collision qualification not run. No broader optimization.
+
+#### User-directed sparse caves candidate — before C3
+
+User requests caves and noodles50% less likely / more spaced out. Keep32768
+maximum depth and all CAVE-DEPTH-001/v1 workload inputs. Extend candidate to
+version7 with one independently seeded, continuous3D simplex region mask:
+positive half permits existing cave union, negative half is solid. Wavelength
+16384units (32 base chunks), density scale512. This targets about half eligible
+underground volume statistically, not exactly half named caves or triangles.
+No cave width thresholds or wavelengths changed; mask boundaries can end passages.
+Use independent noise rather than thickness noise to avoid selecting wider caves;
+shrinking thresholds would narrow passages, and scaling coordinates would enlarge
+caves along with spacing. One extra noise evaluation is a measured cost.
+CPU/GPU share mask recipe and conservative interval intersection. No new mutable
+state, network payload or secondary generator. Version6 saves remain preserved;
+use fresh version7 world. Repeat same visible cold scenario as C3; compare with
+B2 original and C2 depth-only. Keep all earlier failures. Same criteria; no
+acceptance inferred from the requested design change. Startup geometry at the
+same anchor supplies comparable derived-geometry counts, not a volumetric50%
+measurement. Deep traversal and exact spatial occurrence remain unqualified.
+
+C3 FAILED during warmup before benchmark: PID25860, Vulkan device lost,
+invalid GPU write in transition compute shader per core_26 Aftermath JSON.
+Log c3-crash.log; last_crash advanced2026-09-08 14:59:14. User independently
+reports crashing on play/world load. No passing C3 result or performance claim.
+Readback metadata/emission capacity guards already exist; dump does not identify
+a C# allocation defect. Replace added simplex region query with a smaller smooth
+trilinear hashed-value region query (same seed/wavelength/zero cutoff), and bound
+its gradient conservatively by6 per region cell. Remove superseded query; keep
+one canonical region function. This tests shader complexity as a hypothesis,
+not an established cause. New C4 source manifest; same fresh-world visible
+scenario and thresholds. No change to terrain mesher or output safety guards.
+
+#### CAVE-LOAD-001/v1 — normal saved-world reload
+
+Defined before reload2026-09-08. Same visible C4 process/world/source after
+CAVE-DEPTH-001/v1. Normal play_stop flushes the fresh unedited version7 world;
+normal play_start loads that selected world at authored spawn, no edits or
+configuration changes, >=30s and settled queues. Require same world identity/
+revision,4913collision regions ready, no pending geometry, no new managed errors,
+GPU device loss or crash marker advance from15:00:09. No substitute test hooks.
+This supplements the cold-load/full-route C4 check after user-reported crashes.
+
+#### C4 / CAVE-LOAD-001 results — 2026-09-08
+
+Current [review](ValidationEvidence/CaveDepth/Review.md), full c4-comparison.json,
+c4.json/log/reload.log and c4-source.json. Cold visiblePID42196,
+runf73f1c2d9b2447f38ddb234b9532521c, same CAVE-DEPTH-001/v1 scenario.
+C4FPS886.05676,CPU p95/p99/max1.6072/2.9698/20.8385ms,
+GPU1.4390945/1.9659996/max10.041237ms. Processpeak4320104448bytes(+9.11%
+vsB2),GPU3081002024(+7.03%); both FAIL5% memory screens. Allocation/frame
+28860.033(-1.24%). Collision p95/p991846.9109/2279.0913ms;
+publication80.3702/108.2534ms; maxlag4,GC11.557ms,sync15.2021ms.
+4913ready,queues0,errors/exceptions/failures/unsafe/boundary mismatches0.
+Equal startup anchor: vertices19519992->10236266(-47.56%) and
+indices104243241->52873434(-49.28%) from denseC2. Not exact cave counts.
+First simplex mask crash is preserved; smaller hashed-value replacement cold
+load and full route complete without device loss. Crash marker unchanged from
+15:00:09, after the user-reported second crash. No proven compiler root cause.
+Normal save/reload CAVE-LOAD-001/v1 PASS: sameworldbbd2bdadff1242908971ff52d7e46752,
+revision0/checkpoint1,>=30s settled,4913ready,queues0, matching startup geometry,
+grounded/motion-enabled player, no new errors or crash marker. Old saves retained.
+Visible editor left playing. Deep traversal/multiplayer/exact occurrence not run.
+HOLD commit/push for user acceptance of memory regressions; other screens pass.
+
+### CAVE-SPARSITY-002/v1 — another 50 percent reduction
+
+Defined2026-09-08 before runs. User says current noodles/caves are still too
+dense and requests another50% reduction. C4 generator7 hashes verified unchanged;
+reuse its visible fresh-world figure-eight and equal-origin startup geometry
+as the direct before evidence, with original B2 retained for overall acceptance.
+Same immutable CAVE-DEPTH-001/v1 workload/configuration/visible cold setup,
+seed1337,32cells/16units,gameplay8,visual512,levels0..6,4/8extents,base0,
+frequency0.0005/amplitude128,>=30s settled warmup,2500speed/50000distance,
+one loop,Z0 and normal drain/10s stationary, no edits, host/no peers,
+engine26.09.01c/Ryzen7 9800X3D/RTX5090,fps_max1000. Preserve current saved world;
+use fresh version8 world as previously authorized. No extra noise evaluation.
+
+Raise the existing smooth regional cutoff from0 to an initial0.25 on[-1,1].
+Both cave types are constrained by the same higher cutoff, so removed areas
+stay solid; original passage recipe and64-chunk depth remain unchanged.
+Update CPU/GPU scalar and conservative interval consistently. Target approximate
+50% additional reduction: at unchanged startup anchors[0,0,0] require45–55%
+fewer derived indices than C4's52,873,434 (surface included); also record vertices.
+This is a measurable geometry proxy, not exact cave counts or volume. If needed,
+calibrate only generator cutoff to this user-requested design target, preserving
+trial results and source manifests; never alter benchmark workload or perf bars.
+Performance/correctness screens remain CAVE-DEPTH-001/v1 unchanged. Require cold
+load, full figure-eight and normal save/reload without GPU fault; no shader
+complexity increase. No accepted memory regression inferred from this request.
+
+C5 startup calibration: cutoff0.25, fresh visiblePID88644, engine26.09.01c,
+>=30s settled, all anchors[0,0,0],4913ready/queues0. Geometry6,860,147vertices/
+34,272,906indices:35.179% fewer indices vsC4, FAIL45–55% design target.
+No timed run performed. Preserve c5-source.json/c5-startup.log. Raise cutoff
+only to0.36 for C6, keeping every workload input and performance criterion.
+C5 crash marker at startup was21:48:49 after the preceding editor shutdown,
+not the old15:00:09 marker; track against this new pre-run marker. Baseline C4
+ran earlier the same day; environment timing differs and no isolated performance
+causality should be inferred. No mask/noise function or shader stage changes.
+
+C6 startup calibration: cutoff0.36, generator9 (C5's saved trial keeps version8),
+fresh visiblePID89460, engine26.09.01c,>=30s settled, all anchors[0,0,0].
+Geometry5,648,257vertices/27,609,564indices:47.7818% fewer indices vsC4,
+PASS45–55% approximate-halving target.4913ready, queues0, safe placement.
+Run unchanged figure-eight with c6-source.json; no further cutoff changes.
+
+C6 full run83cd96d488c94d978ebd9b15a91f5eef completed, source unchanged.
+Before C6 reload: repeat CAVE-LOAD-001/v1 with current generator9/fresh saved
+world, same normal stop/start and >=30s settled criteria. Compare pre/post world
+identity and geometry; crash marker baseline21:48:49. No extra edits or workload.
+
+#### C6 acceptance / saved-world reload — 2026-09-08
+
+CAVE-SPARSITY-002/v1,run83cd96d488c94d978ebd9b15a91f5eef,PID89460,
+generator9 cutoff0.36,c6-source.json unchanged. FPS880.6407; frame p95/p99/max
+1.6397/3.1151/19.0777ms; GPU1.4653206/1.863718/max10.683775ms.
+Processpeak4084461568bytes,GPU2828295208; allocation/frame28950.246.
+Collision p95/p991736.8005/2153.468ms; publication74.6114/100.7061ms;
+lag4,GCmax13.168ms,syncmax15.7664ms.4913ready,queues0,exceptions/failures/
+unsafe/boundary mismatches0. All recorded percentile/memory/allocation/collision
+screens PASS vs both previousC4 and originalB2. GPU max+0.64ms vsC4 retained;
+overall frame max lower and tail screens pass. No material unexplained overall
+frame-pacing regression observed; single GPU maximum is not a causal result.
+Startup47.7818% index reduction vsC4 meets approximate-halving design target.
+C5 calibration miss and prior crash/memory failures remain in history.
+
+CAVE-LOAD-001/v1 repeat PASS: normal stop saves world
+edbe23e645c142cdb9aca329e18b46d2 revision0/checkpoint1; normal play reloads same
+identity and settings.>=30s settled,4913ready,queues0,no new warnings/errors,
+crash marker unchanged21:48:49. Startup/reload topology58852A27D757F48F and
+positions0C0CB20EDB2138F7 match. Old worlds/selectors preserved; editor visible
+and playing. No extra terrain source changes after measured candidate.
+
+Accept C6 combined depth/sparsity implementation under recorded checks; this
+supersedes the prior C4 memory HOLD, without retroactively accepting its failed
+screens. Commit/push task changes. Exact cave count/volume, deep traversal,
+multiplayer and exhaustive new-depth collision qualification remain unverified.
+Current [review](ValidationEvidence/CaveDepth/Review.md) and c6 raw/comparison/
+startup/reload logs preserve measurements and environment timing limits.

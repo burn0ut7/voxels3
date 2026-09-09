@@ -77,7 +77,7 @@ Source owners: [field](../../Code/Voxels/TerrainField.cs), [codec](../../Code/Vo
 
 ### One world, live and historical
 
-Retain generator v5, current sample spacing, sign convention, correction semantics, brush behavior and CPU/GPU field interpretation. Do not introduce a baked field, new terrain recipe, material painting or second sampler in this slice.
+The storage slice retained generator v5, sample spacing, sign convention, correction semantics, brush behavior and CPU/GPU field interpretation; it introduced no new terrain recipe. The later [generator v9 cave-depth/spacing change](VoxelChunkFoundation.md#procedural-generator-version-9) uses fresh worlds and leaves the strict saved-generator identity check intact.
 
 The existing terrain field responsibility gains a regional lifecycle: identity, resident state, committed revision, pending save, persisted revision and page dependency pins. The immutable procedural base plus committed corrections still defines one canonical world. Disk records and client replicas represent versions of that world; they are not independently mutable terrain systems.
 

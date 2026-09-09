@@ -287,7 +287,7 @@ geometry readback remains diagnostic-only and never participates in rendering.
 
 ## Regular Extraction and Render Lifecycle
 
-A remesh evaluates the canonical `voxel_sdf_v5.hlsl` field once into a haloed
+A remesh evaluates the canonical `voxel_sdf_v9.hlsl` field once into a haloed
 `35^3` density lattice, classifies the `32^3` regular cells from cached corners,
 counts compact region-local edge vertices and indices, and scans those counts.
 The count stage returns only bounded metadata to the CPU. It never returns
@@ -545,3 +545,13 @@ lookup retains its existing semantics. This change addresses allocation stacks
 observed during CapturePendingClipboxReadiness, without changing GPU geometry
 or dispatch ownership. See candidate 8 in the [validation ledger](../ValidationResults.md)
 for sampled attribution, the standard benchmark, and unresolved acceptance.
+
+### Sparse cave mask load failure — 2026-09-08
+
+Adding a fifth simplex query for regional cave coverage coincided with a
+reproducible play/load invalid-write device loss on26.09.01c/RTX5090; Aftermath
+named the transition compute shader. Replacing that mask with smooth trilinear
+hashed values survived cold load, full figure-eight and saved-world reload.
+This is observed repair evidence, not proof of compiler causality or a general
+noise-call limit. Keep the smaller canonical mask; details and failed evidence
+are in [the depth review](../ValidationEvidence/CaveDepth/Review.md).

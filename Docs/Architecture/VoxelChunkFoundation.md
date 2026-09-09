@@ -79,7 +79,7 @@ and defaults are owned by `VoxelManager`; scene-authored settings belong to the
 scene, and fixed test settings belong to the ledger. Logical loaded counts do
 not mean that the same number of objects or meshes have been allocated.
 
-## Procedural Generator Version 5
+## Procedural Generator Version 9
 
 `ProceduralTerrainSdf` owns the generator version, constants, gradients, hashes,
 seed salts, and default settings. The exposed settings are `WorldSeed`,
@@ -90,9 +90,30 @@ The exterior is world Z minus a seeded 2D simplex surface height. Two absolute
 3D simplex fields create noodle passages; a slower field varies their width and
 also changes the threshold of a cheese-cavern field. A surface-relative depth
 interval preserves overburden and bounds cave depth beneath the local surface.
-The final field combines the surface and depth-limited cave terms. Exact
+The depth extension increases maximum cave depth from 8,192 to 32,768 units
+(64 base chunks), retaining cave wavelengths, surface settings and the
+512-unit overburden.
+Depth is relative to the local surface and extends toward negative Z. There is
+no hard world floor. Existing version-5 saves are rejected by the identity check;
+the user chose fresh worlds, with old saves preserved, rather than migration.
+The streaming windows stay bounded, but the wider cave support can require more
+coarse meshing and GPU geometry. Performance evidence belongs in the ledger.
+Version 9 intersects both cave types with an independently seeded 3D region
+field of smooth trilinear hashed values at wavelength 16,384. The cutoff is
+0.36 on its [-1,1] range, raised from version 7's zero cutoff to target another
+50% reduction. The original passage recipe is preserved inside the remaining
+regions. This is statistical coverage, not an exact cave-count guarantee;
+measured geometry reductions and their limits belong in the validation ledger.
+The continuous mask can terminate passages at region boundaries and adds one
+regional query. CPU bounds use a gradient bound of 6 per region cell and
+intersect the same mask interval. Sharing the thickness noise would bias
+retained cave sizes; increasing wavelengths would
+enlarge passages, and reducing thresholds would narrow them. Those alternatives
+are not used. Saved earlier generator identities remain incompatible;
+fresh v9 worlds apply.
+The final field combines the surface and depth/region-limited cave terms. Exact
 formulae and constants live in the source owner and its
-[GPU field mirror](../../Assets/shaders/voxels/voxel_sdf_v5.hlsl).
+[GPU field mirror](../../Assets/shaders/voxels/voxel_sdf_v9.hlsl).
 
 CPU and GPU use the same integer hashes, gradient tables, seed salts, and
 field recipe. The CPU skips cave noise where the existing depth envelope proves
