@@ -1,3 +1,5 @@
+// Version13 landforms; sea-level water covers natural soil.
+// Uses the shared material catalog and water recipe1.
 HEADER
 {
 	Description = "Persistent GPU Voxel Terrain";
@@ -17,6 +19,7 @@ COMMON
 {
 	// Persistent geometry supplies final world-space positions and normals.
 	#include "common/shared.hlsl"
+	#include "shaders/voxels/voxel_materials.hlsl"
 }
 
 struct VertexInput
@@ -28,6 +31,7 @@ struct VertexInput
 struct PixelInput
 {
 	#include "common/pixelinput.hlsl"
+	float vMaterialDepth : TEXCOORD8;
 };
 
 VS
@@ -55,6 +59,8 @@ VS
 		output.vPositionWs = input.Position - g_vHighPrecisionLightingOffsetWs.xyz;
 		output.vPositionPs = Position3WsToPs( input.Position );
 		output.vNormalWs = normal;
+		// Preserve surface depth when coarse triangles cut below a curved hillside.
+		output.vMaterialDepth = VoxelMaterialSurfaceHeight( input.Position.xy ) - input.Position.z;
 		return output;
 	}
 }
@@ -68,8 +74,22 @@ PS
 	{
 		Material material = Material::Init( input );
 		float3 worldPosition = input.vPositionWithOffsetWs + g_vHighPrecisionLightingOffsetWs.xyz;
-		float checker = frac( (floor( worldPosition.x / 256.0 ) + floor( worldPosition.y / 256.0 )) * 0.5 ) * 2.0;
-		material.Albedo = lerp( float3( 0.14, 0.32, 0.08 ), float3( 0.26, 0.52, 0.14 ), checker );
+		float3 normal = normalize( input.vNormalWs );
+		float3 axis = abs( normal );
+		float2 coordinates = worldPosition.xy;
+		if ( axis.x > axis.y && axis.x > axis.z )
+		{
+			coordinates = worldPosition.yz;
+		}
+		else if ( axis.y > axis.z )
+		{
+			coordinates = worldPosition.xz;
+		}
+		coordinates /= VoxelMaterialRules.w;
+		float checker = frac( (floor( coordinates.x ) + floor( coordinates.y )) * 0.5 ) * 2.0;
+		float2 footprint = fwidth( coordinates );
+		checker = lerp( checker, 0.5, saturate( max( footprint.x, footprint.y ) ) );
+		material.Albedo = SampleVoxelMaterialColor( worldPosition, checker, input.vMaterialDepth );
 		material.Roughness = 0.9;
 		material.Metalness = 0.0;
 		return ShadingModelStandard::Shade( input, material );

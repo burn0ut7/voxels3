@@ -7,7 +7,10 @@ link to it elsewhere instead of copying its state, settings, or results.
 | --- | --- |
 | How should an agent work in this repository? | [AGENTS.md](../AGENTS.md): project rules and route selection. |
 | What constraints apply to a domain? | [Agent routes](../AGENTS.md#route-map): domain-specific design and validation requirements, not implementation snapshots. |
+| How do host debug flight and teleport work? | [Admin menu](Architecture/AdminMenu.md). |
 | What owns terrain state, coordinates, generation, and CPU preparation? | [Voxel foundation](Architecture/VoxelChunkFoundation.md). |
+| What owns material identity, soil layers and checker appearance? | [Voxel materials](Architecture/VoxelMaterials.md). |
+| What owns sea-level water, its medium queries and blue surface? | [Static surface water](Architecture/SurfaceWater.md); [implementation plan](Plans/SeaLevelWaterFirstSlice.md). |
 | What owns live terrain edits and their implementation gates? | [Terrain deformation](Architecture/TerrainDeformation.md): in-progress implementation, validation status and remaining scope. |
 | How do visual LOD, GPU extraction, allocation, publication, and drawing work? | [GPU meshing](Architecture/GpuVoxelMeshing.md). |
 | How is the performance test implemented and invoked? | [Performance overview](Architecture/VoxelChunkFoundation.md#performance-overview). |
@@ -31,6 +34,9 @@ link to it elsewhere instead of copying its state, settings, or results.
 | Which external sources can answer a research question? | [Research catalog](smooth_procedural_voxel_terrain_resources.md): source descriptions and transfer limits. |
 | How should mining scraps, dirt stability, and cave-ins behave? | [Terrain stability research](Research/TerrainStabilityAndCollapse.md): source-backed game comparisons, bounded connectivity and support rules, debris policy, and performance gates; proposal only. |
 | How should expensive generated terrain be saved and streamed in multiplayer? | [Chunk streaming and storage research](Research/ChunkStreamingStorage.md): server authority, regional persistence, loading/unloading, coherent joins, LOD data and implementation gates. |
+| Which loading optimization helped? | [Streaming optimization results](Research/TerrainStreamingOptimizationResults.md): tighter bounds, rejected scheduling candidates, startup/moving gains and qualification limits. |
+| What limits the 26-second startup? | [Terrain startup timing breakdown](Research/TerrainStartupBreakdown.md): repeated phase milestones, seam readback latency and scheduling evidence. |
+| Does saving generated density improve loading? | [Generated terrain cache experiment](Research/GeneratedTerrainCacheExperiment.md): rejected and removed prototype; cold/reopen/resident comparisons, failed performance results and limits. |
 | What is the first authoritative chunk storage prototype? | [Storage prototype plan](Architecture/ChunkAuthoritativeStorage.md): existing live deformation, persisted regional history, real eviction/reload and staged acceptance. |
 
 Source code and authored configuration establish actual behavior. Architecture
@@ -64,4 +70,4 @@ the relevant scenario family and follow its later runs and decisions:
 - Add a document only for a distinct responsibility that cannot fit an existing
   owner. Update incoming links when moving or removing one.
 
-- [Collision profile review: September 7, 07:22:47](Research/CollisionProfile20260907.md) — supplied capture, measured opportunities, and candidate14 results.
+- [Collision profile review: September 7, 07:22:47](Research/CollisionProfile20260907.md) - supplied capture, measured opportunities, and candidate14 results.

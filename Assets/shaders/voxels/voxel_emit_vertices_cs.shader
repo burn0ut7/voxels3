@@ -5,7 +5,8 @@ MODES
 
 FEATURES
 {
-	// Dedicated 24-byte vertex emission with bit-exact stable record identity.
+	// Decode the exact refined world-axis coordinate written by the count stage.
+	// Dedicated 24-byte vertices; consumes the 96-byte regional terrain request.
 }
 
 COMMON
@@ -16,5 +17,6 @@ COMMON
 CS
 {
 	#include "common.fxc"
+	#include "shaders/voxels/voxel_edge_position.hlsl"
 	#include "shaders/voxels/voxel_emit_vertices.hlsl"
 }

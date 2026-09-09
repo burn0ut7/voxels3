@@ -1,8 +1,18 @@
 # Empty seam job prototype
 
-2026-09-09. **Rejected; runtime changes fully removed.**
+## Acceptance decision
+
+2026-09-09: the user explicitly accepted candidate B after reviewing its measured
+startup frame-rate tradeoff. Candidate B is restored: skip strictly uniform
+unedited seams, and avoid empty-to-empty draw-command invalidation. Prior rejection
+results below are retained as history. Acceptance covers the reported startup
+tradeoff; moving behavior and integration are being verified with the unchanged
+benchmark. No return correction or unrelated terrain change is authorized.
+
+
+Initial screening: rejected and temporarily removed before the acceptance decision above.
 See [measured results](../Research/EmptySeamExperiment.md). The following records
-the historical prototype design, not retained behavior.
+the design of the accepted candidate B.
 
 Extend the retained full-bound coarse classifier experiment by
 avoiding provably uniform unedited transition jobs. This is not a terrain change,
@@ -55,7 +65,7 @@ and recipe. No return correction. Retain known stationary/collision qualificatio
 limits. Reject on geometry difference, native fault or material frame regression.
 
 
-## Rejection
+## Initial rejection
 
 A loaded15.641s but worsened the first10-second FPS/p99 window. B additionally
 avoided draw-command invalidation for empty-to-empty transition publication;
@@ -63,4 +73,5 @@ it loaded15.609s but still worsened FPS. Fresh exact pre-seam source control
 loaded20.328s with609.4FPS,p99 4.75ms, versus B481.7FPS,p99 5.62ms. Neither meets
 the frame criterion. Repeat series and moving tests were stopped at rejection;
 no performance thresholds, route or features were relaxed to obtain acceptance.
-Previous full-bound regular-chunk improvement remains. No seam skip is retained.
+Previous full-bound regular-chunk improvement remains. No seam skip was retained
+at that stage; the acceptance decision above subsequently reinstates B.

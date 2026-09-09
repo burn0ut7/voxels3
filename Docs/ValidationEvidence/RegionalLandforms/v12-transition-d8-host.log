@@ -1,0 +1,18 @@
+2026/09/09 01:52:32.5642	[engine/Engine] SteamAPI_Init succeeded.  SteamID is [U:1:84581155] (76561198044846883), AppID is 590830	
+2026/09/09 01:52:32.8500	[engine/RenderSystem] Enabling VK_LAYER_LUNARG_crash_diagnostic. Expect a large performance drop.	
+2026/09/09 01:52:32.8556	[engine/RenderSystem] Using 'VK_EXT_debug_utils' for Vulkan validation reporting.	
+2026/09/09 01:52:32.8556	[engine/RenderSystem] Crash diagnostic layer dumps will be written to C:\Program Files (x86)\Steam\steamapps\common\sbox\gpu_crash_dumps	
+2026/09/09 01:52:32.9087	[engine/RenderSystem] Vulkan Physical Device: NVIDIA GeForce RTX 5090	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] DLSS: enabling required device extension 'VK_NVX_binary_import'.	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] DLSS: enabling required device extension 'VK_NVX_image_view_handle'.	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] DLSS: enabling required device extension 'VK_KHR_buffer_device_address'.	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] DLSS: enabling required device extension 'VK_KHR_push_descriptor'.	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] Enabling VK_EXT_validation_cache for shader validation caching.	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] VK ERROR : GENERAL - Message Id Number: 0 | Message Id Name: Loader Message
+	loader_validate_device_extensions: Device extension VK_EXT_validation_cache not supported by selected physical device or enabled layers.	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] VK ERROR : GENERAL - Message Id Number: 0 | Message Id Name: Loader Message
+	vkCreateDevice: Failed to validate extensions in list	
+2026/09/09 01:52:33.3838	[engine/RenderSystem] vkCreateDevice failed, unable to create Vulkan device.	
+2026/09/09 01:52:33.3838	[engine/Localization System] CLocalize::FindSafe failed to localize: Failed to initialize Vulkan (vkCreateDevice failed.) You may need to update your drivers or your system does not meet minimum requirements.
+
+For more information see: https://sbox.game/dev/	

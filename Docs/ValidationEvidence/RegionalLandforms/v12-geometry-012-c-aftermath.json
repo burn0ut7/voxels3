@@ -1,0 +1,221 @@
+[
+  {
+    "Base info": {
+      "Application name": "sbox-dev.exe",
+      "Dump date": "Wed Sep 09 02:27:30 2026",
+      "Graphics API": "Vulkan",
+      "PID": 82608
+    }
+  },
+  {
+    "Display driver info": {
+      "Version": "616.64"
+    }
+  },
+  {
+    "OS info": {
+      "Build number": 26200,
+      "Service pack major version": 0,
+      "Service pack minor version": 0,
+      "Windows major version": 10,
+      "Windows minor version": 0,
+      "Windows product type": 1
+    }
+  },
+  {
+    "GPU info": {
+      "Adapter LUID": 1249304038,
+      "Adapter name": "GB202-A"
+    }
+  },
+  {
+    "Page fault info": {
+      "Access Type": "Unknown",
+      "Client": "Unknown",
+      "Engine": "Unknown",
+      "Fault Type": "The MMU returned an unknown reason.",
+      "GPU virtual address": 99096760320
+    }
+  },
+  {
+    "Device info": {
+      "Adapter reset occurred": false,
+      "Device state": "Error_DMA_PageFault",
+      "Engine reset occurred": true
+    }
+  },
+  {
+    "Aftermath markers": {
+      "Context": {
+        "Events": [
+          {
+            "Event": {
+              "Library": {
+                "Pointer": 2251232224894
+              },
+              "Pipe": "Unknown",
+              "Status": "NotStarted",
+              "Type": "User"
+            }
+          },
+          {
+            "Event": {
+              "Callstack": {
+                "Stack": [
+                  {
+                    "Entry": {
+                      "Module name": "nvoglv64.dll",
+                      "Pointer": 2252429142743
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "nvoglv64.dll",
+                      "Pointer": 2252430266706
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "rendersystemvulkan.dll",
+                      "Pointer": 140733026869355
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "engine2.dll",
+                      "Pointer": 140731647649777
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": null,
+                      "Pointer": 140734019255752
+                    }
+                  }
+                ]
+              },
+              "Pipe": "Unknown",
+              "Status": "NotStarted",
+              "Type": "Automatic"
+            }
+          },
+          {
+            "Event": {
+              "Library": {
+                "Pointer": 2251232224801
+              },
+              "Pipe": "Unknown",
+              "Status": "Finished",
+              "Type": "User"
+            }
+          },
+          {
+            "Event": {
+              "Callstack": {
+                "Stack": [
+                  {
+                    "Entry": {
+                      "Module name": "nvoglv64.dll",
+                      "Pointer": 2252429142743
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "nvoglv64.dll",
+                      "Pointer": 2252430266706
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "rendersystemvulkan.dll",
+                      "Pointer": 140733026869355
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "engine2.dll",
+                      "Pointer": 140731647649777
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": null,
+                      "Pointer": 140734019255752
+                    }
+                  }
+                ]
+              },
+              "Pipe": "Unknown",
+              "Status": "Finished",
+              "Type": "Automatic"
+            }
+          },
+          {
+            "Event": {
+              "Callstack": {
+                "Stack": [
+                  {
+                    "Entry": {
+                      "Module name": "nvoglv64.dll",
+                      "Pointer": 2252429142743
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "nvoglv64.dll",
+                      "Pointer": 2252430266706
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "rendersystemvulkan.dll",
+                      "Pointer": 140733026869355
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": "engine2.dll",
+                      "Pointer": 140731647649777
+                    }
+                  },
+                  {
+                    "Entry": {
+                      "Module name": null,
+                      "Pointer": 140734019255752
+                    }
+                  }
+                ]
+              },
+              "Pipe": "Unknown",
+              "Status": "Executing",
+              "Type": "Automatic"
+            }
+          }
+        ],
+        "Type": "CommandQueue"
+      }
+    }
+  },
+  {
+    "Shader infos": {
+      "Info": {
+        "Shader hash": 10924301062288587288,
+        "Shader name": "compute_02 [shaders_voxels_voxel_persistent_geometry_cs.shader_cs]",
+        "Shader size": 374272,
+        "Shader type": "Compute"
+      }
+    }
+  },
+  {
+    "ApplicationName": "core"
+  },
+  {
+    "ApplicationVersion": "2"
+  },
+  {
+    "Fingerprint": {
+      "Hash": 7189342265904925313,
+      "Quality": 0
+    }
+  }
+]

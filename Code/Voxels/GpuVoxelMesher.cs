@@ -4,6 +4,7 @@ using Sandbox.Rendering;
 
 internal sealed partial class GpuVoxelMesher : IDisposable
 {
+	internal const float MinimumTriangleAreaSquaredRelative = 0.0000000001f;
 	// Persistent geometry is disposable revisioned cache state; the SDF remains canonical.
 	public long CancelledRegularCountResults { get; private set; }
 	public long CancelledTransitionCountResults { get; private set; }
@@ -45,6 +46,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private readonly Scene _scene;
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
+	private readonly GpuVoxelMaterials _voxelMaterials = new();
+	private ProceduralTerrainSettings _materialSettings;
 	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_terrain.shader" );
 	private readonly Dictionary<GpuMeshRegionKey, ResidentMesh> _resident = new();
 	private readonly Dictionary<GpuMeshRegionKey, PendingMesh> _pending = new();
@@ -248,6 +251,14 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public long PoolReuseCount => _poolReuseCount;
 	public long ScalarReadbackCount => _scalarReadbackCount;
 	public long CountReadbackCount => _countReadbackCount;
+	// Lifetime totals observe existing readbacks, including subsequently cancelled work.
+	public long TransitionCountReadbacks { get; private set; }
+	public long TransitionUniformRegionsSkipped { get; private set; }
+	public double TransitionClassificationMilliseconds { get; private set; }
+	public double TransitionCountReadbackMilliseconds { get; private set; }
+	public double TransitionCountCallbackWaitMilliseconds { get; private set; }
+	public double TransitionMaximumCountReadbackMilliseconds { get; private set; }
+	public double TransitionMaximumCountCallbackWaitMilliseconds { get; private set; }
 	public long CountReadbackBytes => _countReadbackBytes;
 	public double CountReadbackMilliseconds => _countReadbackMilliseconds;
 	public double CountSubmissionMilliseconds => _countSubmissionMilliseconds;
@@ -426,6 +437,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	public void Schedule( GpuSdfDescriptor descriptor, float playerRouteDistance, GpuMeshResidency residency )
 	{
+		_materialSettings = descriptor.TerrainSettings;
 		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
 		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var staged ) && staged.Descriptor == descriptor ) return;
 		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
@@ -491,6 +503,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	public void ScheduleTransition( GpuTransitionDescriptor descriptor, float playerRouteDistance )
 	{
+		_materialSettings = descriptor.TerrainSettings;
 		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
 		if ( _transitionDesiredDescriptors.TryGetValue( descriptor.Key, out var desired ) &&
 			desired == descriptor ) return;
@@ -763,6 +776,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	public void BeginScheduleLatencyMeasurement()
 	{
+		System.Threading.Interlocked.Exchange( ref _densityAuditLevels, 0 );
+		System.Threading.Interlocked.Exchange( ref _transitionDensityAuditFaces, 0 );
 		_scheduleLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
 		_scheduleLatencySampleCount = 0;
 		_scheduleLatencyTruncatedCount = 0;
@@ -939,6 +954,202 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		if ( !changed || !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
 		SetVisibilityActive( resident, active );
 		MarkDrawCommandsDirty();
+	}
+
+	private int _densityAuditLevels;
+	private long _transitionDensityAuditFaces;
+
+	/// <summary>Observe forthcoming unedited regular blocks and transition faces; never schedules terrain.</summary>
+	public void RequestDensityAudit()
+	{
+		if ( _disposed || _scheduleLatencyMeasurementActive )
+		{
+			Log.Warning( "[VoxelWorld] density.audit.rejected reason=disposed-or-measuring" );
+			return;
+		}
+		System.Threading.Interlocked.Exchange( ref _densityAuditLevels, (1 << SupportedVisualLevelCount) - 1 );
+		System.Threading.Interlocked.Exchange( ref _transitionDensityAuditFaces, (1L << (6 * (SupportedVisualLevelCount - 1))) - 1 );
+		Log.Info( "[VoxelWorld] density.audit.armed awaiting normal unedited regular blocks and transition faces at each LOD" );
+	}
+
+	private void InspectDensityBlock( ScratchLane lane, int block, GpuSdfDescriptor descriptor )
+	{
+		var bit = 1 << descriptor.Key.Level;
+		if ( (System.Threading.Interlocked.CompareExchange( ref _densityAuditLevels, 0, 0 ) & bit) == 0 ||
+			descriptor.EditRevision != 0 || _scheduleLatencyMeasurementActive ) return;
+		System.Threading.Interlocked.And( ref _densityAuditLevels, ~bit );
+		var started = Stopwatch.GetTimestamp();
+		var samples = lane.Scratch.ReadDensitySamples( block );
+		var size = descriptor.CellsPerAxis + 3;
+		var origin = descriptor.ChunkCoordinate * descriptor.CellsPerAxis - Vector3Int.One;
+		var lattice = new ProceduralTerrainSdf.LatticeSampler( size );
+		lattice.Begin( origin, descriptor.CellSize, descriptor.TerrainSettings );
+		var bound = ProceduralTerrainSdf.GetConservativeDensityRange(
+			descriptor.SamplingBounds, descriptor.CellSize, descriptor.TerrainSettings );
+		var indices = new[] { 0, 1, size / 2, size - 2, size - 1 };
+		var maximumError = 0f;
+		var maximumErrorSample = Vector3Int.Zero;
+		var maximumErrorCpu = 0f;
+		var maximumErrorGpu = 0f;
+		var maximumLatticeError = 0f;
+		var nonFinite = 0;
+		var mismatches = 0;
+		var signMismatches = 0;
+		var boundsFailures = 0;
+		var nearZero = 0;
+		var nearZeroSignMismatches = 0;
+		foreach ( var z in indices )
+		foreach ( var y in indices )
+		foreach ( var x in indices )
+		{
+			var cpu = ProceduralTerrainSdf.SampleGlobal( origin + new Vector3Int( x, y, z ),
+				descriptor.CellSize, descriptor.TerrainSettings );
+			var cached = lattice.Sample( x, y, z );
+			var gpu = samples[x + size * (y + size * z)];
+			if ( !float.IsFinite( cpu ) || !float.IsFinite( cached ) || !float.IsFinite( gpu ) )
+			{
+				nonFinite++;
+				continue;
+			}
+			var error = MathF.Abs( gpu - cpu );
+			if ( error > maximumError )
+			{
+				maximumError = error;
+				maximumErrorSample = origin + new Vector3Int( x, y, z );
+				maximumErrorCpu = cpu;
+				maximumErrorGpu = gpu;
+			}
+			maximumLatticeError = MathF.Max( maximumLatticeError, MathF.Abs( cached - cpu ) );
+			if ( error > 0.1f ) mismatches++;
+			if ( MathF.Abs( cpu ) <= 0.1f || MathF.Abs( gpu ) <= 0.1f )
+			{
+				nearZero++;
+				if ( (cpu < 0f) != (gpu < 0f) ) nearZeroSignMismatches++;
+			}
+			else if ( (cpu < 0f) != (gpu < 0f) ) signMismatches++;
+			if ( cpu < bound.MinimumDensity || cpu > bound.MaximumDensity ||
+				gpu < bound.MinimumDensity || gpu > bound.MaximumDensity ) boundsFailures++;
+		}
+		// Inspect the closest stored sample on each side of zero without another
+		// readback or extra terrain work. A one-sided block has no probe for its
+		// missing sign; report that absence rather than manufacturing a crossing.
+		var closestSolid = -1;
+		var closestAir = -1;
+		var readbackNonFinite = 0;
+		for ( var i = 0; i < samples.Length; i++ )
+		{
+			var value = samples[i];
+			if ( !float.IsFinite( value ) )
+			{
+				readbackNonFinite++;
+				continue;
+			}
+			if ( value < 0f )
+			{
+				if ( closestSolid < 0 || value > samples[closestSolid] ) closestSolid = i;
+			}
+			else if ( closestAir < 0 || value < samples[closestAir] ) closestAir = i;
+		}
+		for ( var side = 0; side < 2; side++ )
+		{
+			var index = side == 0 ? closestSolid : closestAir;
+			if ( index < 0 ) continue;
+			var x = index % size;
+			var y = index / size % size;
+			var z = index / (size * size);
+			var sampleCoordinate = origin + new Vector3Int( x, y, z );
+			var cpu = ProceduralTerrainSdf.SampleGlobal( sampleCoordinate,
+				descriptor.CellSize, descriptor.TerrainSettings );
+			var cached = lattice.Sample( x, y, z );
+			var gpu = samples[index];
+			Log.Info( $"[VoxelWorld] density.audit.closest level={descriptor.Key.Level} " +
+				$"chunk={descriptor.ChunkCoordinate} sample={sampleCoordinate} cellSize={descriptor.CellSize} " +
+				$"side={side} cpu={cpu:R} cached={cached:R} gpu={gpu:R} " +
+				$"error={MathF.Abs( cpu - gpu ):R} latticeError={MathF.Abs( cpu - cached ):R} " +
+				$"finite={float.IsFinite( cpu ) && float.IsFinite( cached )} " +
+				$"signMismatch={(cpu < 0f) != (gpu < 0f)} " +
+				$"nearZero={MathF.Abs( cpu ) <= 0.1f || MathF.Abs( gpu ) <= 0.1f} " +
+				$"inBounds={cpu >= bound.MinimumDensity && cpu <= bound.MaximumDensity && gpu >= bound.MinimumDensity && gpu <= bound.MaximumDensity}" );
+		}
+		Log.Info( $"[VoxelWorld] density.audit.block level={descriptor.Key.Level} chunk={descriptor.ChunkCoordinate} " +
+			$"generator={descriptor.GeneratorVersion} settings=\"{descriptor.TerrainSettings}\" " +
+			$"cellSize={descriptor.CellSize} samples=125 readbackBytes={samples.Length * sizeof( float )} " +
+			$"maximumErrorSample={maximumErrorSample} maximumErrorCpu={maximumErrorCpu:R} maximumErrorGpu={maximumErrorGpu:R} " +
+			$"maximumError={maximumError:R} maximumLatticeError={maximumLatticeError:R} nonFinite={nonFinite} " +
+			$"densityMismatches={mismatches} signMismatches={signMismatches} nearZero={nearZero} boundsFailures={boundsFailures} " +
+			$"nearZeroSignMismatches={nearZeroSignMismatches} readbackNonFinite={readbackNonFinite} solidProbe={closestSolid >= 0} airProbe={closestAir >= 0} " +
+			$"pendingLevels={System.Threading.Interlocked.CompareExchange( ref _densityAuditLevels, 0, 0 )} elapsedMs={Stopwatch.GetElapsedTime( started ).TotalMilliseconds}" );
+	}
+
+	private void InspectTransitionDensityBlock( TransitionScratchLane lane, int block, InFlightTransition source )
+	{
+		var descriptor = source.Descriptor;
+		var bit = 1L << ((descriptor.Key.CoarseLevel - 1) * 6 + (int)descriptor.Key.Face);
+		if ( (System.Threading.Interlocked.Read( ref _transitionDensityAuditFaces ) & bit) == 0 ||
+			descriptor.EditRevision != 0 || _scheduleLatencyMeasurementActive ) return;
+		System.Threading.Interlocked.And( ref _transitionDensityAuditFaces, ~bit );
+		var started = Stopwatch.GetTimestamp();
+		var samples = lane.Scratch.ReadDensitySamples( block );
+		var request = CreateTransitionRequest( source, block );
+		var bound = ProceduralTerrainSdf.GetConservativeDensityRange(
+			descriptor.SamplingBounds, descriptor.FineCellSize, descriptor.TerrainSettings );
+		var closestSolid = -1;
+		var closestAir = -1;
+		var nonFinite = 0;
+		for ( var i = 0; i < samples.Length; i++ )
+		{
+			var value = samples[i];
+			if ( !float.IsFinite( value ) ) { nonFinite++; continue; }
+			if ( value < 0f )
+			{
+				if ( closestSolid < 0 || value > samples[closestSolid] ) closestSolid = i;
+			}
+			else if ( closestAir < 0 || value < samples[closestAir] ) closestAir = i;
+		}
+		var compared = 0;
+		var maximumError = 0f;
+		var maximumErrorPosition = Vector3.Zero;
+		var maximumErrorCpu = 0f;
+		var maximumErrorGpu = 0f;
+		var signMismatches = 0;
+		var boundsFailures = 0;
+		var nearZero = 0;
+		// Fixed sparse coverage spans all five stored planes; then inspect the
+		// closest available negative and nonnegative samples explicitly.
+		for ( var probe = 0; probe < 127; probe++ )
+		{
+			var index = probe < 125 ? probe * (samples.Length - 1) / 124 :
+				probe == 125 ? closestSolid : closestAir;
+			if ( index < 0 ) continue;
+			var position = GpuTransitionScratch.DensitySamplePosition( request, index );
+			var cpu = ProceduralTerrainSdf.SampleWorld( position, descriptor.TerrainSettings );
+			var gpu = samples[index];
+			compared++;
+			if ( !float.IsFinite( cpu ) ) nonFinite++;
+			var error = MathF.Abs( cpu - gpu );
+			if ( error > maximumError )
+			{
+				maximumError = error;
+				maximumErrorPosition = position;
+				maximumErrorCpu = cpu;
+				maximumErrorGpu = gpu;
+			}
+			var signMismatch = (cpu < 0f) != (gpu < 0f);
+			if ( signMismatch ) signMismatches++;
+			var isNearZero = MathF.Abs( cpu ) <= 0.1f || MathF.Abs( gpu ) <= 0.1f;
+			if ( isNearZero ) nearZero++;
+			if ( cpu < bound.MinimumDensity || cpu > bound.MaximumDensity ||
+				gpu < bound.MinimumDensity || gpu > bound.MaximumDensity ) boundsFailures++;
+			if ( probe >= 125 ) Log.Info( $"[VoxelWorld] density.audit.transition.closest key={descriptor.Key} " +
+				$"index={index} position={position} cpu={cpu:R} gpu={gpu:R} error={error:R} " +
+				$"signMismatch={signMismatch} nearZero={isNearZero}" );
+		}
+		Log.Info( $"[VoxelWorld] density.audit.transition key={descriptor.Key} generator={descriptor.GeneratorVersion} " +
+			$"samples={compared} readbackBytes={samples.Length * sizeof( float )} maximumError={maximumError:R} " +
+			$"maximumErrorPosition={maximumErrorPosition} maximumErrorCpu={maximumErrorCpu:R} maximumErrorGpu={maximumErrorGpu:R} " +
+			$"nonFinite={nonFinite} signMismatches={signMismatches} nearZero={nearZero} boundsFailures={boundsFailures} " +
+			$"solidProbe={closestSolid >= 0} airProbe={closestAir >= 0} " +
+			$"pendingFaces={System.Threading.Interlocked.Read( ref _transitionDensityAuditFaces )} elapsedMs={Stopwatch.GetElapsedTime( started ).TotalMilliseconds}" );
 	}
 
 	public void RequestMeshAudit( Vector3 target, int regionsPerLevel = DefaultMeshAuditRegionsPerLevel,
@@ -1235,6 +1446,9 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public bool IsResident( GpuSdfDescriptor descriptor ) =>
 		_resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor;
 
+	// Published empty-solid records can still contain another medium's surface.
+	public bool IsResident( GpuMeshRegionKey key ) => _resident.ContainsKey( key );
+
 	public bool IsTransitionResident( GpuTransitionDescriptor descriptor ) =>
 		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
 		resident.Descriptor == descriptor;
@@ -1287,13 +1501,15 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		Clear();
 		DisposeScratchLanes();
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
+		// Clear removes in-flight ownership. Both lane types must discard their
+		// pending readback state, even when only the world recipe changed.
+		DisposeTransitionScratchLanes();
+		_transitionScratchLanes = CreateTransitionScratchLanes();
 		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
 		if ( cellsPerAxis == _cellsPerAxis ) return;
 		DisposeArenas();
 		DisposeVisibilityBuffers();
-		DisposeTransitionScratchLanes();
 		_cellsPerAxis = cellsPerAxis;
-		_transitionScratchLanes = CreateTransitionScratchLanes();
 	}
 
 	public int ProcessPending( int maximumDispatches, long updateEpoch )
@@ -1719,7 +1935,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		var oversizedTriangles = 0;
 		var maximumEdgeSquared = 0f;
 		var maximumAllowedEdgeSquared = target.CellSize * target.CellSize * 3.0625f;
-		var minimumAreaSquared = MathF.Pow( target.CellSize, 4f ) * 0.0000000001f;
+		var minimumAreaSquared = MathF.Pow( target.CellSize, 4f ) * MinimumTriangleAreaSquaredRelative;
 		var triangleCount = indices.Length / 3;
 		for ( var triangle = 0; triangle < triangleCount; triangle++ )
 		{
@@ -1932,7 +2148,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		var processed = 0;
 		var inspected = 0;
 		List<PendingTransition> deferred = null;
-		while ( inspected++ < MaximumDispatchesPerUpdate && TryDequeuePendingTransition( out var pending ) )
+		while ( inspected++ < GpuTransitionScratch.MaximumBatchSize && TryDequeuePendingTransition( out var pending ) )
 		{
 			TerrainFieldSnapshot reader = null;
 			if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
@@ -1941,17 +2157,36 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				continue;
 			}
 			var generation = ++_nextGeneration;
+			if ( processed == 0 && deferred is null && pending.Descriptor.EditRevision == 0 )
+			{
+				var boundsStarted = Stopwatch.GetTimestamp();
+				var range = ProceduralTerrainSdf.GetConservativeDensityRange(
+					pending.Descriptor.SamplingBounds, pending.Descriptor.FineCellSize,
+					pending.Descriptor.TerrainSettings );
+				TransitionClassificationMilliseconds += Stopwatch.GetElapsedTime( boundsStarted ).TotalMilliseconds;
+				if ( range.MinimumDensity > 0f || range.MaximumDensity < 0f )
+				{
+					// Uniform signs have no edges or geometry. Keep normal stale/edit publication checks.
+					targetLane.EmitInFlight.Add( new CandidateTransition( pending.Descriptor, generation,
+						pending.ScheduledTimestamp, pending.ScheduledRouteDistance, null,
+						new GpuTransitionCountResult { Generation = generation } ) );
+					targetLane.SubmittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
+					targetLane.EmitSubmittedTimestamp = Stopwatch.GetTimestamp();
+					TransitionUniformRegionsSkipped++;
+					return true;
+				}
+			}
 			var inFlight = new InFlightTransition(
 				pending.Descriptor,
 				generation,
 				pending.ScheduledTimestamp,
 				pending.ScheduledRouteDistance );
 			targetLane.CountInFlight.Add( inFlight );
-			requests ??= new GpuTransitionRequest[MaximumDispatchesPerUpdate];
+			requests ??= new GpuTransitionRequest[GpuTransitionScratch.MaximumBatchSize];
 			requests[processed] = CreateTransitionRequest( inFlight, processed );
 			if ( inFlight.Descriptor.EditRevision != 0 )
 			{
-				fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
+				fields ??= new TerrainFieldSnapshot[GpuTransitionScratch.MaximumBatchSize];
 				fields[processed] = reader;
 			}
 			processed++;
@@ -2077,9 +2312,12 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			OriginAndCellSize = new Vector4( origin, descriptor.CellSize ),
 			Terrain = new Vector4(
 				descriptor.TerrainSettings.WorldSeed,
-				descriptor.TerrainSettings.SurfaceBaseHeight,
-				descriptor.TerrainSettings.SurfaceFrequency,
-				descriptor.TerrainSettings.SurfaceAmplitude ),
+				descriptor.TerrainSettings.LandAmount,
+				descriptor.TerrainSettings.MountainAmount,
+				descriptor.TerrainSettings.PlainsAmount ),
+			TerrainScales = new Vector4( descriptor.TerrainSettings.ContinentalScale, descriptor.TerrainSettings.MountainRegionScale,
+				descriptor.TerrainSettings.LocalLandformScale, descriptor.TerrainSettings.ReliefHeight ),
+			TerrainShape = new Vector4( descriptor.TerrainSettings.Ruggedness, 0f, 0f, 0f ),
 			CellsPerAxis = descriptor.CellsPerAxis,
 			Generation = inFlight.Generation,
 			RequestIndex = (uint)requestIndex,
@@ -2143,9 +2381,12 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			OriginAndFineCellSize = new Vector4( origin, descriptor.FineCellSize ),
 			Terrain = new Vector4(
 				descriptor.TerrainSettings.WorldSeed,
-				descriptor.TerrainSettings.SurfaceBaseHeight,
-				descriptor.TerrainSettings.SurfaceFrequency,
-				descriptor.TerrainSettings.SurfaceAmplitude ),
+				descriptor.TerrainSettings.LandAmount,
+				descriptor.TerrainSettings.MountainAmount,
+				descriptor.TerrainSettings.PlainsAmount ),
+			TerrainScales = new Vector4( descriptor.TerrainSettings.ContinentalScale, descriptor.TerrainSettings.MountainRegionScale,
+				descriptor.TerrainSettings.LocalLandformScale, descriptor.TerrainSettings.ReliefHeight ),
+			TerrainShape = new Vector4( descriptor.TerrainSettings.Ruggedness, 0f, 0f, 0f ),
 			BasisUAndCoarseCellSize = new Vector4( basisU, descriptor.CoarseCellSize ),
 			BasisVAndCellsPerAxis = new Vector4( basisV, descriptor.CellsPerAxis ),
 			NormalAndFace = new Vector4( normal, (int)descriptor.Key.Face ),
@@ -2178,6 +2419,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			var cancelled = _cancelledInFlight.Contains( source.Descriptor.Key ) ||
 				(_editedField is not null && !source.Descriptor.MatchesField( _editedField ));
 			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledRegularCountResults++;
+			if ( !cancelled ) InspectDensityBlock( lane, index, source.Descriptor );
 			GeometryHandle handle = null;
 			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedRegularGeometryRegions++;
 			if ( !cancelled && result.IndexCount > 0 )
@@ -2361,6 +2603,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	{
 		if ( count != lane.CountInFlight.Count )
 			throw new InvalidOperationException( "Voxel transition count batch length changed." );
+		TransitionCountReadbacks++;
+		TransitionCountReadbackMilliseconds += readbackMilliseconds;
+		TransitionCountCallbackWaitMilliseconds += callbackWaitMilliseconds;
+		TransitionMaximumCountReadbackMilliseconds = Math.Max( TransitionMaximumCountReadbackMilliseconds, readbackMilliseconds );
+		TransitionMaximumCountCallbackWaitMilliseconds = Math.Max( TransitionMaximumCountCallbackWaitMilliseconds, callbackWaitMilliseconds );
 		var arenas = new HashSet<GeometryArena>();
 		for ( var index = 0; index < count; index++ )
 		{
@@ -2372,6 +2619,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				!_transitionDesiredDescriptors.TryGetValue( source.Descriptor.Key, out var desired ) ||
 				desired != source.Descriptor;
 			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledTransitionCountResults++;
+			if ( !cancelled ) InspectTransitionDensityBlock( lane, index, source );
 			GeometryHandle handle = null;
 			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedTransitionGeometryRegions++;
 			if ( !cancelled && result.IndexCount > 0 && result.InvalidTableCount == 0 )
@@ -2458,8 +2706,10 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 					_editTransitionCandidates[key] = completed;
 					continue;
 				}
+				var geometryChanged = completed.Handle is not null ||
+					(_transitionResident.TryGetValue( key, out var previousResident ) && previousResident.Handle is not null);
 				PublishCompletedTransition( completed );
-				changed = true;
+				changed |= geometryChanged;
 			}
 			lane.EmitInFlight.Clear();
 		}
@@ -2961,6 +3211,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				commands.DispatchCompute( _visibilityShader, 1, 1, 1 );
 				commands.UavBarrier( state.AggregateCounters );
 			}
+			_voxelMaterials.Bind( commands.Attributes, _materialSettings );
 			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.IndirectArgument );
 			foreach ( var arena in _arenas )
 			{
@@ -3231,6 +3482,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	public void Clear()
 	{
+		System.Threading.Interlocked.Exchange( ref _densityAuditLevels, 0 );
+		System.Threading.Interlocked.Exchange( ref _transitionDensityAuditFaces, 0 );
 		ClearEditPublication();
 		_editedField = null;
 		_editRegularRefresh.Clear();
@@ -3312,6 +3565,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		DisposeVisibilityBuffers();
 		DisposeScratchLanes();
 		DisposeTransitionScratchLanes();
+		_voxelMaterials.Dispose();
 		_readbackObject?.Delete();
 	}
 

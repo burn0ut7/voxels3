@@ -1,0 +1,363 @@
+2026/09/09 02:01:35.4524	[engine/Engine] SteamAPI_Init succeeded.  SteamID is [U:1:84581155] (76561198044846883), AppID is 590830	
+2026/09/09 02:01:36.1702	[engine/RenderSystem] Enabling VK_LAYER_LUNARG_crash_diagnostic. Expect a large performance drop.	
+2026/09/09 02:01:36.1702	[engine/RenderSystem] Using 'VK_EXT_debug_utils' for Vulkan validation reporting.	
+2026/09/09 02:01:36.1702	[engine/RenderSystem] Crash diagnostic layer dumps will be written to C:\Program Files (x86)\Steam\steamapps\common\sbox\gpu_crash_dumps	
+2026/09/09 02:01:36.2429	[engine/RenderSystem] Vulkan Physical Device: NVIDIA GeForce RTX 5090	
+2026/09/09 02:01:36.7120	[engine/RenderSystem] DLSS: enabling required device extension 'VK_NVX_binary_import'.	
+2026/09/09 02:01:36.7120	[engine/RenderSystem] DLSS: enabling required device extension 'VK_NVX_image_view_handle'.	
+2026/09/09 02:01:36.7120	[engine/RenderSystem] DLSS: enabling required device extension 'VK_KHR_buffer_device_address'.	
+2026/09/09 02:01:36.7120	[engine/RenderSystem] DLSS: enabling required device extension 'VK_KHR_push_descriptor'.	
+2026/09/09 02:01:36.7120	[engine/RenderSystem] Enabling VK_EXT_validation_cache for shader validation caching.	
+2026/09/09 02:01:36.7120	[engine/RenderSystem] VK WARNING : VALIDATION - Message Id Number: -2030147807 | Message Id Name: WARNING-Setting-Limit-Adjusted
+	vkCreateDevice(): Warning that validation is adjusting settings:
+	Forcing VkPhysicalDeviceVulkan12Features::timelineSemaphore to VK_TRUE
+	Forcing VkPhysicalDeviceVulkan12Features::vulkanMemoryModel to VK_TRUE
+	Forcing VkPhysicalDeviceVulkan12Features::vulkanMemoryModelDeviceScope to VK_TRUE
+	Forcing VkPhysicalDeviceVulkan12Features::storageBuffer8BitAccess to VK_TRUE
+	Forcing VkPhysicalDeviceVulkan12Features::shaderInt8 to VK_TRUE
+	Forcing VkPhysicalDeviceVulkan11Features::storageBuffer16BitAccess to VK_TRUE	
+2026/09/09 02:01:36.7150	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	No device support for VK_AMD_device_coherent_memory extension, results may not be as accurate as possible.	
+2026/09/09 02:01:36.8209	[engine/RenderSystem] VK WARNING : VALIDATION - Message Id Number: -2030147807 | Message Id Name: WARNING-Setting-Limit-Adjusted
+	vkCreateDevice(): Warning that validation is adjusting settings:
+	Ray Tracing validation option was enabled, but neither the rayTracingPipeline nor the rayQuery feature are supported. [Disabling gpuav_validate_trace_ray]
+	Mesh Shading validation option was enabled, but the meshShader feature is not supported. [Disabling gpuav_mesh_shading]	
+2026/09/09 02:01:36.8253	[engine/RenderSystem] GPU breadcrumbs enabled (host coherent memory).	
+2026/09/09 02:01:36.8253	[engine/RenderSystem] Vulkan driver version: 616.64.0.0	
+2026/09/09 02:01:36.8451	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8451	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8451	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8451	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8451	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8451	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8652	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8652	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:36.8842	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	No device coherent memory found, results might not be accurate.	
+2026/09/09 02:01:38.2512	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:38.2512	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 931531651 | Message Id Name: VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter
+	(Warning - This VUID has now been reported 10 times, which is the duplicate_message_limit value, this will be the last time reporting it).
+vkCreateShaderModule(): pCreateInfo->pNext<VkShaderModuleValidationCacheCreateInfoEXT>.validationCache Invalid VkValidationCacheEXT Object 0x28cb48a0e60.
+The Vulkan spec states: validationCache must be a valid VkValidationCacheEXT handle (https://docs.vulkan.org/spec/latest/chapters/shaders.html#VUID-VkShaderModuleValidationCacheCreateInfoEXT-validationCache-parameter)	
+2026/09/09 02:01:38.7675	[Generic] Editor Startup version 26.09.08	
+2026/09/09 02:01:38.9863	[engine/AssetSystem] AssetSystem pruned 1 stale assets	
+2026/09/09 02:01:39.0139	[engine/ResourceSystem] Error loading resource "textures/dev/blue_noise_256.vtex" (Invalid header version: 8736 != 12)	
+2026/09/09 02:01:39.0139	[engine/Engine] WARNING: Local content might be corrupt or missing files. Not reporting to Steam due to disabled reporting.	
+2026/09/09 02:01:39.0870	[Generic] Compiling Tools	
+2026/09/09 02:01:41.0571	[Generic] Command screenshot_highres already exists - not overwriting (Take a high resolution screenshot you specify the width and height)	
+2026/09/09 02:01:41.1214	[Generic] Compiling base projects	
+2026/09/09 02:01:41.1581	[MCP] MCP server listening on http://127.0.0.1:7269/mcp	
+2026/09/09 02:01:42.5920	[Generic] Validating cloud assets	
+2026/09/09 02:01:42.5920	[Generic] Validating cloud packages	
+2026/09/09 02:01:42.8146	[PackageManager] Install Package (Already Mounted) local.menu#local [local]	
+2026/09/09 02:01:43.3540	[PackageManager] Install Package (Already Mounted) local.toolbase#local [local]	
+2026/09/09 02:01:43.3770	[PackageManager] Install Package (Already Mounted) local.shadergraph#local [local]	
+2026/09/09 02:01:43.4009	[PackageManager] Install Package (Already Mounted) local.actiongraph#local [local]	
+2026/09/09 02:01:43.4595	[PackageManager] Install Package (Already Mounted) local.moviemaker#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.hammer#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.dooeditor#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.menu#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.toolbase#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.shadergraph#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.actiongraph#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.moviemaker#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.hammer#local [local]	
+2026/09/09 02:01:43.4662	[PackageManager] Install Package (Already Mounted) local.dooeditor#local [local]	
+2026/09/09 02:01:43.5283	[engine/AssetSystem] AssetSystem pruned 47 stale assets	
+2026/09/09 02:01:49.8721	[PackageManager] Install Package (Already Mounted) local.voxels3#local [gamemenu]	
+2026/09/09 02:01:51.5178	[Startup] Importing custom assets	
+2026/09/09 02:01:52.7155	[Startup] ..refresh complete (took 0.006s)	
+2026/09/09 02:01:53.8563	[Generic] Bootstrap Init Done	
+2026/09/09 02:01:53.8563	[Generic] Bootstrap Networking...	
+2026/09/09 02:01:54.2956	[engine/ResourceSystem] Error loading resource file "box_test.vmdl_c" (Error: ERROR_FILEOPEN: File not found) - from scenes/reward-unbox.scene	
+2026/09/09 02:01:54.3369	[engine/ResourceSystem] Error loading resource file "particles/break/break.cardboard.vpcf_c" (Error: ERROR_FILEOPEN: File not found) - from models/citizen_props/balloonregular01.vmdl	
+2026/09/09 02:01:54.3369	[engine/ResourceSystem] Error loading resource file "materials/default/default_mask_tga_3a4f4d17.generated.vtex_c" (Error: ERROR_FILEOPEN: File not found) - from materials/generic/trash_a.vmat	
+2026/09/09 02:01:54.3789	[engine/ResourceSystem] Error loading resource file "models/props/metal_wheely_bin/metal_wheely_bin_compost.vmat_c" (Error: ERROR_FILEOPEN: File not found) - from models/sbox_props/metal_wheely_bin/metal_wheely_bin_body_gib.vmdl	
+2026/09/09 02:01:54.7545	[engine/ResourceSystem] Error loading resource file "sounds/tools/sfm/denyundo.vsnd_c" (Error: ERROR_FILEOPEN: File not found) - from sounds/player_use_fail.sound	
+2026/09/09 02:01:56.1176	[engine/ResourceSystem] Error loading resource file "models/citizen_clothes/hair/hair_looseblonde/hair.loose.brown.clothing_c" (Error: ERROR_FILEOPEN: File not found) - from models/citizen_clothes/hair/hair_looseblonde/hair.loose.grey.clothing	
+2026/09/09 02:01:56.3402	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 0 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 1 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 4 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : VALIDATION - Message Id Number: -140549851 | Message Id Name: WARNING-CoreValidation-AllocateDescriptorSets-WrongType
+	vkAllocateDescriptorSets(): pAllocateInfo->pSetLayouts[0] binding 1 was created with VK_DESCRIPTOR_TYPE_STORAGE_BUFFER but VkDescriptorPool 0x51f600000051f6 was not created with any VkDescriptorPoolSize::type with VK_DESCRIPTOR_TYPE_STORAGE_BUFFER (Some implementations will not return VK_ERROR_OUT_OF_POOL_MEMORY as they should with VK_KHR_maintenance1).	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] 
+	Objects - 2	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_DESCRIPTOR_POOL, Handle 0051F600000051F6	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] 		Object[1] - VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, Handle 0006040000000604	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 0 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 2 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 3 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 5 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 6 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location 9 not consumed by vertex shader.	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : PERFORMANCE - Message Id Number: -937765618 | Message Id Name: WARNING-Shader-OutputNotConsumed
+	(Warning - This VUID has now been reported 10 times, which is the duplicate_message_limit value, this will be the last time reporting it).
+vkCreateGraphicsPipelines(): pCreateInfos[0] (SPIR-V Interface) [VK_SHADER_STAGE_VERTEX_BIT] has an Output value declared at Location 7 Component 0, but there is no corresponding Input declared in [VK_SHADER_STAGE_FRAGMENT_BIT].
+This is not invalid, but the write to the unused Output is discarded.
+The Output variable is:
+  pointer to Output -> float32	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] VK WARNING : VALIDATION - Message Id Number: -140549851 | Message Id Name: WARNING-CoreValidation-AllocateDescriptorSets-WrongType
+	vkAllocateDescriptorSets(): pAllocateInfo->pSetLayouts[0] binding 3 was created with VK_DESCRIPTOR_TYPE_STORAGE_BUFFER but VkDescriptorPool 0x52030000005203 was not created with any VkDescriptorPoolSize::type with VK_DESCRIPTOR_TYPE_STORAGE_BUFFER (Some implementations will not return VK_ERROR_OUT_OF_POOL_MEMORY as they should with VK_KHR_maintenance1).	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] 
+	Objects - 2	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_DESCRIPTOR_POOL, Handle 0052030000005203	
+2026/09/09 02:01:56.3406	[engine/RenderSystem] 		Object[1] - VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, Handle 0005EB00000005EB	
+2026/09/09 02:02:09.4637	[Generic] [VoxelWorld] gpu.render.camera_bindings attached=1 entered=1 left=0 mainCameraValid=True	
+2026/09/09 02:02:09.5030	[Generic] [TerrainStorage] startup.loaded path=terrain/landform-v12-edits world=b60920a5-70ed-408d-afe1-5eabee43a7b9 revision=2	
+2026/09/09 02:02:09.6172	[engine/RenderSystem] Merging and flushing Vulkan pipeline cache to disk.	
+2026/09/09 02:02:09.6512	[engine/RenderSystem] Writing Vulkan pipeline cache to "shadercache\vulkan\shaders.cache.tmp" (103891025 bytes)	
+2026/09/09 02:02:09.7178	[engine/Engine] Unable to rename "C:\Program Files (x86)\Steam\steamapps\common\sbox\core\shadercache\vulkan\shaders.cache.tmp" to "C:\Program Files (x86)\Steam\steamapps\common\sbox\core\shadercache\vulkan\shaders.cache"!	
+2026/09/09 02:02:09.7567	[Generic] [VoxelWorld] gpu.render.command_list_reset total=1 descriptorUploads=0 arenas=0 visibilityCapacity=0 measurement=False settledCapture=False updateEpoch=1 renderSequence=0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4135	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4185	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4185	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.4362	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5EA610D0	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5C53E0D0	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5C53E0D0	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -896581859 | Message Id Name: VUID-vkCmdPushConstants-size-arraylength
+	(Warning - This VUID has now been reported 10 times, which is the duplicate_message_limit value, this will be the last time reporting it).
+vkCmdPushConstants(): size must be greater than 0.
+The Vulkan spec states: size must be greater than 0 (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-size-arraylength)	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5C53E0D0	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 666667206 | Message Id Name: VUID-vkCmdPushConstants-offset-01795
+	(Warning - This VUID has now been reported 10 times, which is the duplicate_message_limit value, this will be the last time reporting it).
+vkCmdPushConstants(): is called with
+  stageFlags (VK_SHADER_STAGE_COMPUTE_BIT), offset (0), size (0)
+but VkPipelineLayout 0x8ee00000008ee doesn't have any valid VkPushConstantRange:
+The Vulkan spec states: For each byte in the range specified by offset and size and for each shader stage in stageFlags, there must be a push constant range in layout that includes that byte and that stage (https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html#VUID-vkCmdPushConstants-offset-01795)	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:10.5934	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C5C53E0D0	
+2026/09/09 02:02:10.7060	[Generic] [VoxelWorld] gpu.render.command_list_reset total=2 descriptorUploads=1 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=4 renderSequence=3	
+2026/09/09 02:02:10.7771	[Generic] [VoxelWorld] gpu.render.command_list_reset total=3 descriptorUploads=2 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=5 renderSequence=4	
+2026/09/09 02:02:10.8121	[Generic] [VoxelWorld] gpu.render.command_list_reset total=4 descriptorUploads=3 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=6 renderSequence=5	
+2026/09/09 02:02:10.8314	[Generic] [VoxelWorld] gpu.render.command_list_reset total=5 descriptorUploads=4 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=7 renderSequence=6	
+2026/09/09 02:02:10.8472	[Generic] [VoxelWorld] gpu.render.command_list_reset total=6 descriptorUploads=5 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=8 renderSequence=7	
+2026/09/09 02:02:10.8654	[Generic] [VoxelWorld] gpu.render.command_list_reset total=7 descriptorUploads=6 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=9 renderSequence=8	
+2026/09/09 02:02:10.8864	[Generic] [VoxelWorld] gpu.render.command_list_reset total=8 descriptorUploads=7 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=10 renderSequence=9	
+2026/09/09 02:02:10.9242	[Generic] [VoxelWorld] gpu.render.command_list_reset total=9 descriptorUploads=8 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=11 renderSequence=10	
+2026/09/09 02:02:10.9550	[Generic] [VoxelWorld] gpu.render.command_list_reset total=10 descriptorUploads=9 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=13 renderSequence=12	
+2026/09/09 02:02:10.9881	[Generic] [VoxelWorld] gpu.render.command_list_reset total=11 descriptorUploads=10 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=14 renderSequence=13	
+2026/09/09 02:02:11.0144	[Generic] [VoxelWorld] gpu.render.command_list_reset total=12 descriptorUploads=11 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=16 renderSequence=15	
+2026/09/09 02:02:11.0300	[Generic] [VoxelWorld] gpu.render.command_list_reset total=13 descriptorUploads=12 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=17 renderSequence=16	
+2026/09/09 02:02:11.0506	[Generic] [VoxelWorld] gpu.render.command_list_reset total=14 descriptorUploads=13 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=18 renderSequence=17	
+2026/09/09 02:02:11.0693	[Generic] [VoxelWorld] gpu.render.command_list_reset total=15 descriptorUploads=14 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=19 renderSequence=18	
+2026/09/09 02:02:11.0879	[Generic] [VoxelWorld] gpu.render.command_list_reset total=16 descriptorUploads=15 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=20 renderSequence=19	
+2026/09/09 02:02:11.1048	[Generic] [VoxelWorld] gpu.render.command_list_reset total=17 descriptorUploads=16 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=21 renderSequence=20	
+2026/09/09 02:02:11.1224	[Generic] [VoxelWorld] gpu.render.command_list_reset total=18 descriptorUploads=17 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=22 renderSequence=21	
+2026/09/09 02:02:11.1419	[Generic] [VoxelWorld] gpu.render.command_list_reset total=19 descriptorUploads=18 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=23 renderSequence=22	
+2026/09/09 02:02:11.1663	[Generic] [VoxelWorld] gpu.render.command_list_reset total=20 descriptorUploads=19 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=24 renderSequence=23	
+2026/09/09 02:02:11.1869	[Generic] [VoxelWorld] gpu.render.command_list_reset total=21 descriptorUploads=20 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=25 renderSequence=24	
+2026/09/09 02:02:11.2044	[Generic] [VoxelWorld] gpu.render.command_list_reset total=22 descriptorUploads=21 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=26 renderSequence=25	
+2026/09/09 02:02:11.2233	[Generic] [VoxelWorld] gpu.render.command_list_reset total=23 descriptorUploads=22 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=27 renderSequence=26	
+2026/09/09 02:02:11.2405	[Generic] [VoxelWorld] gpu.render.command_list_reset total=24 descriptorUploads=23 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=28 renderSequence=27	
+2026/09/09 02:02:11.2593	[Generic] [VoxelWorld] gpu.render.command_list_reset total=25 descriptorUploads=23 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=29 renderSequence=28	
+2026/09/09 02:02:11.2780	[Generic] [VoxelWorld] gpu.render.command_list_reset total=26 descriptorUploads=23 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=30 renderSequence=29	
+2026/09/09 02:02:11.2997	[Generic] [VoxelWorld] gpu.render.command_list_reset total=27 descriptorUploads=24 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=32 renderSequence=31	
+2026/09/09 02:02:11.3165	[Generic] [VoxelWorld] gpu.render.command_list_reset total=28 descriptorUploads=25 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=33 renderSequence=32	
+2026/09/09 02:02:11.3360	[Generic] [VoxelWorld] gpu.render.command_list_reset total=29 descriptorUploads=26 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=34 renderSequence=33	
+2026/09/09 02:02:11.3552	[Generic] [VoxelWorld] gpu.render.command_list_reset total=30 descriptorUploads=26 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=35 renderSequence=34	
+2026/09/09 02:02:11.3731	[Generic] [VoxelWorld] gpu.render.command_list_reset total=31 descriptorUploads=26 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=36 renderSequence=35	
+2026/09/09 02:02:11.3949	[Generic] [VoxelWorld] gpu.render.command_list_reset total=32 descriptorUploads=26 arenas=1 visibilityCapacity=512 measurement=False settledCapture=False updateEpoch=37 renderSequence=36	
+2026/09/09 02:02:16.1707	[Generic] [VoxelWorld] gpu.transition.batch phase=sample batch=1 count=8 firstOrigin=2048,0,1024,16	
+2026/09/09 02:02:18.7579	[Generic] [VoxelWorld] gpu.transition.batch phase=classify_scan batch=1 count=8	
+2026/09/09 02:02:18.9664	[engine/Engine] CSwapChainBase::QueuePresentAndWait() looped for 21 iterations without a present event.	
+2026/09/09 02:02:18.9664	[Generic] [VoxelWorld] gpu.transition.batch phase=refine_count batch=1 count=8	
+2026/09/09 02:02:18.9952	[engine/RenderSystem] FrameSync: GPU fence wait exceeded 250ms, idling the queue	
+2026/09/09 02:02:19.5344	[engine/Engine] CSwapChainBase::QueuePresentAndWait() looped for 22 iterations without a present event.	
+2026/09/09 02:02:20.6572	[engine/RenderSystem] Wrote NVIDIA Aftermath GPU Crash Dump to C:\Program Files (x86)\Steam\steamapps\common\sbox\aftermath_dumps\core_38.nv-gpudmp	
+2026/09/09 02:02:20.6807	[engine/RenderSystem] Wrote NVIDIA Aftermath GPU Crash Dump JSON to C:\Program Files (x86)\Steam\steamapps\common\sbox\aftermath_dumps\core_38.nv-gpudmp.json	
+2026/09/09 02:02:20.6807	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.6807	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348328D0[], VkSemaphore: 0x0000028C34512B50[]	
+2026/09/09 02:02:20.6931	[engine/RenderSystem] VK ERROR : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Device error encountered and log being recorded
+	Output written to: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\gpu_crash_dumps\\2026-09-09-020136\\cdl_dump.yaml"
+----------------------------------------------------------------	
+2026/09/09 02:02:20.6931	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.6931	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348328D0[], VkSemaphore: 0x0000028C34512B50[]	
+2026/09/09 02:02:20.7456	[engine/RenderSystem] ERROR! VK call failed! result = VK_ERROR_DEVICE_LOST (-4) ( vkQueueWaitIdle( VulkanQueue() ) )	
+2026/09/09 02:02:20.7456	[engine/RenderSystem] FrameSync() failed waiting for 1 fences after 2.001197 seconds, error = VK_ERROR_DEVICE_LOST (-4)	
+2026/09/09 02:02:20.7456	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.7456	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.7456	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348328D0[], VkSemaphore: 0x0000028C34512B50[]	
+2026/09/09 02:02:20.7469	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348328D0[], VkSemaphore: 0x0000028C34512B50[]	
+2026/09/09 02:02:20.7469	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.7469	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348328D0[], VkSemaphore: 0x0000028C34512B50[]	
+2026/09/09 02:02:20.7469	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: -359834619 | Message Id Name: UNASSIGNED-GPU-Assisted-Validation
+	INVALID_EMPTY(): Internal Error, GPU-AV is being disabled. Details:
+Failed to wait for fence	
+2026/09/09 02:02:20.7469	[engine/RenderSystem] 
+	Objects - 1	
+2026/09/09 02:02:20.7469	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_FENCE, Handle 0004460000000446	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] VK ERROR : VALIDATION - Message Id Number: 1180184443 | Message Id Name: VUID-vkCmdDraw-None-09600
+	vkQueueSubmit2(): pSubmits[0] command buffer VkCommandBuffer 0x28c688cc0d0 expects VkImage 0x453bc00000453bc[scratchrendertarget_1568349858_2769x1436_6_0_4.vtex] (subresource: aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, mipLevel = 0, arrayLayer = 0) to be in layout VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL--instead, current layout is VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL.
+The Vulkan spec states: If a descriptor with type equal to any of VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM, VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, or VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT is accessed as a result of this command, all image subresources identified by that descriptor must be in the image layout identified when the descriptor was written (https://docs.vulkan.org/spec/latest/chapters/drawing.html#VUID-vkCmdDraw-None-09600)	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] 
+	Objects - 2	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] 		Object[0] - VK_OBJECT_TYPE_COMMAND_BUFFER, Handle 0000028C688CC0D0	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] 		Object[1] - VK_OBJECT_TYPE_IMAGE, Handle 0453BC00000453BC, Name "scratchrendertarget_1568349858_2769x1436_6_0_4.vtex"	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348314D0[], VkSemaphore: 0x0000028C34512A10[]	
+2026/09/09 02:02:20.8280	[engine/RenderSystem] VK WARNING : GENERAL - Message Id Number: 1 | Message Id Name: CDL
+	Failed to read submit semaphore. Result: -4, VkQueue: 0x0000028C348328D0[], VkSemaphore: 0x0000028C34512B50[]	

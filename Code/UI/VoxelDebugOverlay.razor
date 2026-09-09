@@ -1,0 +1,104 @@
+@using Sandbox
+@using Sandbox.UI
+@using System
+@using System.Linq
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	@if ( _visible )
+	{
+		<div class="debug-readout">
+			<div class="heading">VOXELS3 <span>@_toggleKey / DEBUG</span></div>
+			<div class="row">@_position</div>
+			<div class="row">@_chunk</div>
+			<div class="row">Biome: Not implemented</div>
+			<div class="hint">World units / Z is up</div>
+		</div>
+	}
+</root>
+
+@code
+{
+	private bool _visible;
+	private bool _inputLogged;
+	private bool _lastRawDown;
+	private bool _lastForwardDown;
+	private bool _lastActionDown;
+	private bool _lastInputSuppressed;
+	private string _lastInputBinding;
+	private string _toggleKey = "";
+	private float _refreshElapsed;
+	private PlayerController _player;
+	private VoxelManager _terrain;
+	private string _position = "XYZ: Waiting for player";
+	private string _chunk = "Chunk: Waiting for terrain";
+
+	protected override void OnUpdate()
+	{
+		var rawDown = Input.Keyboard.Down( "F9" );
+		var forwardDown = Input.Down( "Forward" );
+		var rawPressed = Input.Keyboard.Pressed( "F9" );
+		var actionDown = Input.Down( "DebugOverlay" );
+		var actionPressed = Input.Pressed( "DebugOverlay" );
+		var suppressed = Input.Suppressed;
+		var binding = Input.GetButtonOrigin( "DebugOverlay" );
+		if ( !_inputLogged || rawPressed || actionPressed || rawDown != _lastRawDown ||
+			actionDown != _lastActionDown || forwardDown != _lastForwardDown || suppressed != _lastInputSuppressed || binding != _lastInputBinding )
+		{
+			Log.Info( $"[DebugHUD] input binding={binding} rawF9Down={rawDown} rawF9Pressed={rawPressed} " +
+				$"actionDown={actionDown} actionPressed={actionPressed} suppressed={suppressed} " +
+				$"forwardDown={forwardDown} visible={_visible} proxy={IsProxy} editor={Scene.IsEditor}" );
+			_inputLogged = true;
+			_lastRawDown = rawDown;
+			_lastForwardDown = forwardDown;
+			_lastActionDown = actionDown;
+			_lastInputSuppressed = suppressed;
+			_lastInputBinding = binding;
+		}
+		if ( actionPressed )
+		{
+			_visible = !_visible;
+			_refreshElapsed = 0.1f;
+			Log.Info( $"[DebugHUD] visibility changed visible={_visible}" );
+		}
+
+		if ( _visible )
+		{
+			_refreshElapsed += Time.Delta;
+			if ( _refreshElapsed >= 0.1f )
+			{
+				_refreshElapsed = 0f;
+				_toggleKey = Input.GetButtonOrigin( "DebugOverlay" );
+				if ( !_player.IsValid() || !_player.Enabled || _player.IsProxy )
+				{
+					_player = Scene.GetAllComponents<PlayerController>()
+						.FirstOrDefault( player => player.Enabled && !player.IsProxy );
+				}
+				if ( !_terrain.IsValid() || !_terrain.Enabled )
+				{
+					_terrain = Scene.GetAllComponents<VoxelManager>()
+						.FirstOrDefault( terrain => terrain.Enabled );
+				}
+
+				if ( _player.IsValid() )
+				{
+					var position = _player.WorldPosition;
+					_position = FormattableString.Invariant( $"XYZ: {position.x:0.00} / {position.y:0.00} / {position.z:0.00}" );
+					_chunk = _terrain.IsValid() && _terrain.TryGetChunkCoordinate( position, out var chunk )
+						? $"Chunk: {chunk.x} / {chunk.y} / {chunk.z}"
+						: "Chunk: Waiting for terrain";
+				}
+				else
+				{
+					_position = "XYZ: Waiting for player";
+					_chunk = "Chunk: Waiting for player";
+				}
+			}
+		}
+
+		base.OnUpdate();
+	}
+
+	protected override int BuildHash() => HashCode.Combine( _visible, _position, _chunk, _toggleKey );
+}

@@ -12,6 +12,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 	private readonly ComputeShader _emitIndices = new( "shaders/voxels/voxel_emit_indices_cs.shader" );
 	private readonly GpuBuffer<GpuTerrainRequest> _requests;
 	private readonly GpuBuffer<float> _densitySamples;
+	private readonly GpuBuffer<int> _topology;
 	private readonly GpuBuffer<GpuCellData> _cells;
 	private readonly GpuBuffer<uint> _edgeFlags;
 	private readonly GpuBuffer<uint> _edgeVertexIds;
@@ -66,6 +67,24 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_digests = new GpuBuffer<GpuDigest>( MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Digests" );
 		_countResults = new GpuBuffer<GpuTerrainCountResult>( MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Terrain Count Results" );
 		_allocations = new GpuBuffer<GpuTerrainAllocationDescriptor>( MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Allocations" );
+		// Upload the existing generated view of the canonical topology once per scratch.
+		int[] topology = [ .. VoxelCollisionTables.RegularCellClass,
+			.. VoxelCollisionTables.RegularCellGeometryCounts, .. VoxelCollisionTables.RegularCellVertexIndices,
+			.. VoxelCollisionTables.RegularVertexData ];
+		_topology = new GpuBuffer<int>( topology.Length, GpuBuffer.UsageFlags.Structured, "Voxel Regular Topology" );
+		_topology.SetData<int>( topology );
+		foreach ( var shader in new[] { _shader, _emitIndices } )
+		{
+			shader.Attributes.Set( "RegularTopology", _topology );
+			var offset = 0;
+			shader.Attributes.Set( "RegularCellClassOffset", offset );
+			offset += VoxelCollisionTables.RegularCellClass.Length;
+			shader.Attributes.Set( "RegularCellGeometryCountsOffset", offset );
+			offset += VoxelCollisionTables.RegularCellGeometryCounts.Length;
+			shader.Attributes.Set( "RegularCellVertexIndicesOffset", offset );
+			offset += VoxelCollisionTables.RegularCellVertexIndices.Length;
+			shader.Attributes.Set( "RegularVertexDataOffset", offset );
+		}
 		BindCommonAttributes();
 		_emitVertices.Attributes.Set( "Requests", _requests );
 		_emitVertices.Attributes.Set( "DensitySamples", _densitySamples );
@@ -90,12 +109,13 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_emitIndices.Attributes.Set( "EdgeGroupCount", _edgeGroupCount );
 		_emitIndices.Attributes.Set( "CellGroupCount", _cellGroupCount );
 		CapacityBytes =
-			(long)MaximumBatchSize * 64 +
+			(long)MaximumBatchSize * 96 +
 			(long)_haloSampleCount * MaximumBatchSize * sizeof( float ) +
 			(long)_cellCount * MaximumBatchSize * 12 +
 			(long)_edgeSlotCount * MaximumBatchSize * sizeof( uint ) * 2 +
 			(long)(_edgeGroupCount + _cellGroupCount) * MaximumBatchSize * sizeof( uint ) +
-			(long)MaximumBatchSize * (sizeof( uint ) * 8 + 64 + sizeof( uint ) * 5);
+			(long)MaximumBatchSize * (sizeof( uint ) * 8 + 64 + sizeof( uint ) * 5) +
+			(long)topology.Length * sizeof( int );
 	}
 
 	public bool TrySubmitCount( GpuTerrainRequest[] requests, int count, out double submissionMilliseconds, TerrainFieldSnapshot[] fields = null )
@@ -142,15 +162,18 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_shader.Attributes.Set( "PersistentStage", 3 );
 		_shader.Dispatch( _edgeGroupCount * 256 * count, 1, 1 );
 		Barrier( _edgeVertexIds, _edgeGroupSums );
+		_shader.Attributes.Set( "PersistentStage", 6 );
+		_shader.Dispatch( _edgeSlotCount * count, 1, 1 );
+		Barrier( _digests, _edgeFlags );
+		_shader.Attributes.Set( "PersistentStage", 8 );
+		_shader.Dispatch( _cellCount * count, 1, 1 );
+		Barrier( _cells );
 		_shader.Attributes.Set( "PersistentStage", 4 );
 		_shader.Dispatch( _cellGroupCount * 256 * count, 1, 1 );
 		Barrier( _cells, _cellGroupSums );
 		_shader.Attributes.Set( "PersistentStage", 5 );
 		_shader.Dispatch( 256 * count, 1, 1 );
 		Barrier( _edgeGroupSums, _cellGroupSums, _blockCounts );
-		_shader.Attributes.Set( "PersistentStage", 6 );
-		_shader.Dispatch( _edgeSlotCount * count, 1, 1 );
-		Barrier( _digests );
 		_shader.Attributes.Set( "PersistentStage", 7 );
 		_shader.Dispatch( count, 1, 1 );
 		Barrier( _countResults );
@@ -178,6 +201,19 @@ internal sealed class GpuTerrainScratch : IDisposable
 			_state = ScratchState.EmitReady;
 			return true;
 		}
+	}
+
+	// Explicit diagnostic readback of the real count pass, before scratch reuse.
+	public float[] ReadDensitySamples( int block )
+	{
+		lock ( _stateLock )
+		{
+			if ( _disposed || _state != ScratchState.EmitReady || block < 0 || block >= _batchSize )
+				throw new InvalidOperationException( "Density inspection requires a completed live count block." );
+		}
+		var samples = new float[_haloSampleCount];
+		_densitySamples.GetData<float>( samples.AsSpan(), block * _haloSampleCount, _haloSampleCount );
+		return samples;
 	}
 
 	public double SubmitEmitPass( GpuTerrainAllocationDescriptor[] allocations, int count,
@@ -228,6 +264,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 	{
 		_shader.Attributes.Set( "Requests", _requests );
 		_shader.Attributes.Set( "DensitySamples", _densitySamples );
+		_shader.Attributes.Set( "MinimumAreaSquaredRelative", GpuVoxelMesher.MinimumTriangleAreaSquaredRelative );
 		_shader.Attributes.Set( "Cells", _cells );
 		_shader.Attributes.Set( "EdgeFlags", _edgeFlags );
 		_shader.Attributes.Set( "EdgeVertexIds", _edgeVertexIds );
@@ -265,7 +302,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 		lock ( _stateLock ) { if ( _disposed ) return; _disposed = true; }
 		_requests.Dispose(); _densitySamples.Dispose(); _cells.Dispose(); _edgeFlags.Dispose(); _edgeVertexIds.Dispose();
 		_edgeGroupSums.Dispose(); _cellGroupSums.Dispose(); _blockCounts.Dispose(); _activeCellCounts.Dispose();
-		_digests.Dispose(); _countResults.Dispose(); _allocations.Dispose();
+		_digests.Dispose(); _countResults.Dispose(); _allocations.Dispose(); _topology.Dispose();
 	}
 
 	private enum ScratchState { Idle, CountSubmitted, CountReady, EmitReady }

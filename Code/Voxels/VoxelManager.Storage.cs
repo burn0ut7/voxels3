@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-public sealed partial class VoxelManager
+public sealed partial class VoxelManager : IHotloadManaged
 {
 	private const double TerrainAutosaveSeconds = 30;
 	private long _terrainAutosaveDue;
@@ -64,7 +64,7 @@ public sealed partial class VoxelManager
 
 	private void StartTerrainRestore( string path, bool clear = false )
 	{
-		if ( _terrainField is null || _terrainAuthorityLost || _terrainEditCancellation.IsCancellationRequested ||
+		if ( _pendingTerrainRecipe is not null || _terrainField is null || _terrainAuthorityLost || _terrainEditCancellation.IsCancellationRequested ||
 			_deformationBenchmark is not null || !Networking.IsHost || _playerFigureEightTestRunning || _performanceVisibilityPending ||
 			_performanceCompletionPhase != PerformanceCompletionPhase.None || _terrainEditTask is not null || _terrainEditQueue.Count > 0 ||
 			_terrainSaveTask is not null || _gpuMesher.EditRebuildPending || _collision.EditRebuildPending )
@@ -127,6 +127,20 @@ public sealed partial class VoxelManager
 	private Dictionary<Vector3Int, TerrainFieldPage>.Enumerator _terrainSweepPages;
 	private double _terrainSweepMaximumMilliseconds;
 	private readonly record struct TerrainReadResult( TerrainField.ReadRequest Request, TerrainFieldPage Page, string Error );
+
+	void IHotloadManaged.Created( System.Collections.Generic.IReadOnlyDictionary<string, object> state )
+	{
+		// Hotload can rebuild a snapshot's dictionary while retaining its identity.
+		// Its old enumerator must not survive into the next bounded sweep.
+		_terrainSweepSource = null;
+		_terrainSweepPages = default;
+	}
+
+	void IHotloadManaged.Persisted()
+	{
+		_terrainSweepSource = null;
+		_terrainSweepPages = default;
+	}
 
 	private void SweepTerrainStorage()
 	{

@@ -9,11 +9,13 @@ internal struct TerrainVertex
 	public Vector3 Normal;
 }
 
-[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 64 )]
+[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 96 )]
 internal struct GpuTerrainRequest
 {
 	public Vector4 OriginAndCellSize;
 	public Vector4 Terrain;
+	public Vector4 TerrainScales;
+	public Vector4 TerrainShape;
 	public int CellsPerAxis;
 	public uint Generation;
 	public uint RequestIndex;
@@ -49,11 +51,13 @@ internal struct GpuTerrainAllocationDescriptor
 	public Vector4 Reserved1;
 }
 
-[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 96 )]
+[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 128 )]
 internal struct GpuTransitionRequest
 {
 	public Vector4 OriginAndFineCellSize;
 	public Vector4 Terrain;
+	public Vector4 TerrainScales;
+	public Vector4 TerrainShape;
 	public Vector4 BasisUAndCoarseCellSize;
 	public Vector4 BasisVAndCellsPerAxis;
 	public Vector4 NormalAndFace;

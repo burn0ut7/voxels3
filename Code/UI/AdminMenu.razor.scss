@@ -1,0 +1,48 @@
+AdminMenu {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	font-family: Arial;
+	font-size: 18px;
+	color: #eeeeee;
+
+	.menu-backdrop, .target-picker {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		pointer-events: all;
+		justify-content: center;
+		align-items: center;
+	}
+	.menu-backdrop { background-color: rgba(0, 0, 0, 0.4); }
+	.admin-window {
+		width: 540px;
+		max-width: 95%;
+		max-height: 95%;
+		overflow: scroll;
+		flex-direction: column;
+		padding: 24px;
+		background-color: #20252b;
+		border: 1px solid #59616a;
+		border-radius: 6px;
+		gap: 12px;
+	}
+	.heading { font-size: 24px; font-weight: bold; }
+	.section { margin-top: 8px; color: #a8c7ef; font-size: 14px; font-weight: bold; }
+	.hint { font-size: 14px; color: #b6bdc6; flex-shrink: 0; }
+	button {
+		padding: 10px 14px;
+		background-color: #354352;
+		border-radius: 3px;
+		cursor: pointer;
+		flex-shrink: 0;
+		&:hover { background-color: #48617b; }
+	}
+	.field-row { align-items: center; gap: 10px; flex-shrink: 0; }
+	textentry { width: 150px; background-color: #12171c; padding: 8px; border: 1px solid #59616a; }
+	.status { color: #e7cc95; font-size: 15px; min-height: 36px; flex-shrink: 0; }
+	.close { justify-content: center; }
+	.target-picker { cursor: crosshair; align-items: flex-start; }
+	.target-hint { margin-top: 24px; padding: 12px 20px; background-color: #20252b; pointer-events: none; }
+}

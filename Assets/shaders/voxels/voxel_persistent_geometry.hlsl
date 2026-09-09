@@ -2,6 +2,8 @@ struct TerrainRequest
 {
 	float4 OriginAndCellSize;
 	float4 Terrain;
+	float4 TerrainScales;
+	float4 TerrainShape;
 	int CellsPerAxis;
 	uint Generation;
 	uint RequestIndex;
@@ -46,6 +48,7 @@ RWStructuredBuffer<uint2> Digests < Attribute( "Digests" ); >;
 RWStructuredBuffer<CountResult> CountResults < Attribute( "CountResults" ); >;
 StructuredBuffer<AllocationDescriptor> Allocations < Attribute( "Allocations" ); >;
 
+float MinimumAreaSquaredRelative < Attribute( "MinimumAreaSquaredRelative" ); >;
 int PersistentStage < Attribute( "PersistentStage" ); >;
 int ChunkSize < Attribute( "ChunkSize" ); >;
 int SampleSize < Attribute( "SampleSize" ); >;
@@ -137,6 +140,20 @@ void PersistentExclusiveScan( uint lane, uint value )
 	}
 }
 
+// Reconstruct the exact stored edge coordinate used by the vertex writer.
+float3 PersistentRefinedPosition( uint block, uint3 cell, uint code, uint vertex )
+{
+	uint data = RegularTopology[RegularVertexDataOffset + code * 12 + vertex];
+	uint slot = PersistentEdgeSlot( cell, data );
+	uint sample = slot / 3, axis = slot - sample * 3;
+	uint3 first = PersistentDecode3D( sample, SampleSize ), second = first;
+	if ( axis == 0 ) second.x++; else if ( axis == 1 ) second.y++; else second.z++;
+	float4 origin = Requests[block].OriginAndCellSize;
+	return VoxelEdgePosition( origin.xyz + float3(first) * origin.w,
+		origin.xyz + float3(second) * origin.w,
+		asfloat( EdgeFlags[block * (uint)EdgeSlotCount + slot] - 1u ) );
+}
+
 [numthreads(256,1,1)]
 void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID, uint lane : SV_GroupIndex )
 {
@@ -160,14 +177,14 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			correction = DensitySamples[index];
 		}
 		DensitySamples[index] = SampleVoxelSdf( origin + int3(halo) - 1, request.OriginAndCellSize.w,
-			(int)request.Terrain.x, request.Terrain.y, request.Terrain.z, request.Terrain.w ) + correction;
+			request.Terrain, request.TerrainScales, request.TerrainShape ) + correction;
 		return;
 	}
 	if(PersistentStage==2)
 	{
 		if(index>=(uint)CellCount*(uint)BatchSize)return;uint block=index/(uint)CellCount,local=index-block*(uint)CellCount;uint3 cell=PersistentDecode3D(local,ChunkSize);uint code=PersistentCase(block,int3(cell));Cells[index].x=code;
-		if(code==0||code==255)return;uint cellClass=RegularCellClass[code],counts=RegularCellGeometryCounts[cellClass],vertexCount=counts>>4,indexCount=(counts&0xf)*3;Cells[index].y=indexCount;InterlockedAdd(ActiveCellCounts[block],1);
-		uint metadataDigest=0;for(uint vertex=0;vertex<vertexCount;vertex++){uint data=RegularVertexData[code*12+vertex];uint reuseDirection=data>>12,reusedVertexSlot=(data>>8)&0xf;metadataDigest^=PersistentHash((reuseDirection<<4)|reusedVertexSlot|(vertex<<8));InterlockedOr(EdgeFlags[block*(uint)EdgeSlotCount+PersistentEdgeSlot(cell,data)],1);}
+		if(code==0||code==255)return;uint cellClass=RegularTopology[RegularCellClassOffset + (code)],counts=RegularTopology[RegularCellGeometryCountsOffset + (cellClass)],vertexCount=counts>>4,indexCount=(counts&0xf)*3;Cells[index].y=indexCount;InterlockedAdd(ActiveCellCounts[block],1);
+		uint metadataDigest=0;for(uint vertex=0;vertex<vertexCount;vertex++){uint data=RegularTopology[RegularVertexDataOffset + (code*12+vertex)];uint reuseDirection=data>>12,reusedVertexSlot=(data>>8)&0xf;metadataDigest^=PersistentHash((reuseDirection<<4)|reusedVertexSlot|(vertex<<8));InterlockedOr(EdgeFlags[block*(uint)EdgeSlotCount+PersistentEdgeSlot(cell,data)],1);}
 		InterlockedXor(Digests[block].x,PersistentHash(local^(code<<16)^indexCount)^metadataDigest);return;
 	}
 	if(PersistentStage==3)
@@ -184,7 +201,46 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 	}
 	if(PersistentStage==6)
 	{
-		if(index>=(uint)EdgeSlotCount*(uint)BatchSize||EdgeFlags[index]==0)return;uint block=index/(uint)EdgeSlotCount,slot=index-block*(uint)EdgeSlotCount,sample=slot/3,axis=slot-sample*3;uint3 a=PersistentDecode3D(sample,SampleSize),b=a;if(axis==0)b.x++;else if(axis==1)b.y++;else b.z++;float da=PersistentDensity(block,int3(a)),db=PersistentDensity(block,int3(b)),denominator=da-db,t=saturate(abs(denominator)>0.000001?da/denominator:0.5);TerrainRequest request=Requests[block];float3 world=request.OriginAndCellSize.xyz+lerp(float3(a),float3(b),t)*request.OriginAndCellSize.w;InterlockedXor(Digests[block].y,PersistentHash(asuint(world.x)^PersistentHash(asuint(world.y))^PersistentHash(asuint(world.z))^slot));return;
+		if ( index >= (uint)EdgeSlotCount * (uint)BatchSize || EdgeFlags[index] == 0 ) return;
+		uint block = index / (uint)EdgeSlotCount, slot = index - block * (uint)EdgeSlotCount;
+		uint sample = slot / 3, axis = slot - sample * 3;
+		uint3 a = PersistentDecode3D( sample, SampleSize ), b = a;
+		if ( axis == 0 ) b.x++; else if ( axis == 1 ) b.y++; else b.z++;
+		TerrainRequest request = Requests[block];
+		float3 first = request.OriginAndCellSize.xyz + float3(a) * request.OriginAndCellSize.w;
+		float3 second = request.OriginAndCellSize.xyz + float3(b) * request.OriginAndCellSize.w;
+		float coordinate = RefineVoxelEdge( first, second, PersistentDensity( block, int3(a) ),
+			PersistentDensity( block, int3(b) ), request.Terrain, request.TerrainScales, request.TerrainShape, request.Reserved0 != 0 );
+		EdgeFlags[index] = asuint( coordinate ) + 1u;
+		float3 world = VoxelEdgePosition( first, second, coordinate );
+		InterlockedXor( Digests[block].y, PersistentHash( asuint(world.x) ^ PersistentHash(asuint(world.y)) ^ PersistentHash(asuint(world.z)) ^ slot ) );
+		return;
+	}
+	if ( PersistentStage == 8 )
+	{
+		if ( index >= (uint)CellCount * (uint)BatchSize ) return;
+		uint block = index / (uint)CellCount;
+		uint local = index - block * (uint)CellCount;
+		uint code = Cells[index].x;
+		if ( code == 0 || code == 255 ) return;
+		uint cellClass = RegularTopology[RegularCellClassOffset + code];
+		uint triangles = RegularTopology[RegularCellGeometryCountsOffset + cellClass] & 0xf;
+		uint3 cell = PersistentDecode3D( local, ChunkSize );
+		float size = Requests[block].OriginAndCellSize.w;
+		float minimumArea = size * size * size * size * MinimumAreaSquaredRelative;
+		uint mask = 0;
+		for ( uint triangle = 0; triangle < triangles; triangle++ )
+		{
+			uint table = RegularCellVertexIndicesOffset + cellClass * 15 + triangle * 3;
+			float3 a = PersistentRefinedPosition( block, cell, code, RegularTopology[table] );
+			float3 b = PersistentRefinedPosition( block, cell, code, RegularTopology[table + 1] );
+			float3 c = PersistentRefinedPosition( block, cell, code, RegularTopology[table + 2] );
+			float3 area = cross( b - a, c - a );
+			if ( dot( area, area ) > minimumArea ) mask |= 1u << triangle;
+		}
+		Cells[index].x = code | (mask << 16);
+		Cells[index].y = countbits( mask ) * 3;
+		return;
 	}
 	if(PersistentStage==7)
 	{

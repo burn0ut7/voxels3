@@ -152,6 +152,7 @@ public sealed partial class VoxelManager
 		var presentationReady = Networking.IsHost ? !_terrainAuthorityLost :
 			HasTerrainReplicaCoverage( TerrainCoverage( ActiveStreamingTarget.WorldPosition, false ) );
 		_gpuMesher.SetFieldPresentationReady( presentationReady );
+		_waterRenderer?.SetPresentationReady( presentationReady );
 		if ( !Networking.IsActive || _terrainAuthorityLost ) return;
 		if ( !Networking.IsHost ) { UpdateTerrainReceiver(); return; }
 		if ( _terrainReplicationWorld != CurrentField.WorldId || _terrainReplicationFieldEpoch != CurrentField.Epoch )

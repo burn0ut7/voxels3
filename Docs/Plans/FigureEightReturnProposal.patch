@@ -1,0 +1,28 @@
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -138,6 +138,7 @@
+ 	private GameObject _playerFigureEightTarget;
+ 	private Rigidbody _playerFigureEightBody;
+ 	private Vector2 _playerFigureEightCenter;
++	private Vector3 _playerFigureEightStartPosition;
+ 	private float _playerFigureEightParameter;
+ 	private float _playerFigureEightRouteDistance;
+ 	private Vector2 _playerFigureEightPreviousPosition;
+@@ -658,6 +659,7 @@
+ 		_playerFigureEightTarget = player.GameObject;
+ 		_playerFigureEightBody = player.Body;
+ 		_playerFigureEightCenter = new Vector2( start.x, start.y );
++		_playerFigureEightStartPosition = start;
+ 		_playerFigureEightParameter = 0f;
+ 		_playerFigureEightRouteDistance = 0f;
+ 		_playerFigureEightPreviousPosition = new Vector2( start.x, start.y );
+@@ -1335,6 +1337,9 @@
+ 		_playerFigureEightTestCompletionReady = false;
+ 		CompletePerformanceWindow();
+ 		_gpuMesher?.EndMovingThroughputWindow( _lastPerformanceWindowSeconds );
++		// The fixed moving measurement ends before restoring the starting position.
++		if ( _playerFigureEightTarget.IsValid() ) _playerFigureEightTarget.WorldPosition = _playerFigureEightStartPosition;
++		if ( _playerFigureEightBody.IsValid() ) _playerFigureEightBody.Velocity = Vector3.Zero;
+ 		_playerFigureEightTestRunning = false;
+ 		_playerFigureEightTarget = null;
+ 		_playerFigureEightBody = null;

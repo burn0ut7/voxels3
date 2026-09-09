@@ -542,8 +542,14 @@ without exposing dictionary mutation. No sample/file ownership changes.
 
 This eliminates the array allocation per observed snapshot replacement, not
 per-edit world dictionary creation or the existing restart fairness limitation.
-The source marker rename separates the old cursor representation during code
-migration; actual hotload migration remains untested. A full-directory fairness
+The original source marker rename separated the old cursor representation during
+code migration. Later landform qualification reproduced an invalid enumerator
+after hotload rebuilt the dictionary while retaining the snapshot reference.
+VoxelManager now clears both sweep fields in its IHotloadManaged replacement and
+persistence callbacks. LANDFORM-HOTLOAD-STORAGE-001/v1 records one passing repair
+reload with unchanged world revision, pages and edited-region fingerprint; this
+does not establish all hotload cases or new performance acceptance.
+A full-directory fairness
 redesign could retain old pages or change eviction scheduling and is not included.
 S7 figure-eight screens pass with worse GPUmax/lag, but sustained tool-sweep tails
 worsen and final density hashes differ with slightly different live trace inputs.
@@ -551,3 +557,60 @@ User accepted S7 on2026-09-08 after C2: editing tails recovered, but travel p99
 failed with a132.6772ms worst frame and live-tool fingerprints still varied.
 Acceptance does not supersede those observations or prior storage qualification gaps.
 See SIMPLIFICATION-S7-001/v1 and SIMPLIFICATION-S7-EDIT-001/v1 in the ledger.
+
+
+## Saved-area loading investigation (2026-09-09)
+
+The user's current priority is loading previously explored terrain, rather than
+first-time generation. The implemented store persists the procedural recipe and
+edited sample pages. It does not persist generated base density chunks, GPU
+geometry, or collision meshes. Saving an explored region therefore does not make
+its next cold visit a disk-only chunk load. This is a limitation of the current
+increment, not evidence of lost edits.
+
+Source-confirmed lifecycle:
+
+- `VoxelManager.OnLoad` creates new meshing/collision owners and restores the last
+  saved checkpoint. `TerrainFieldSnapshot.SampleWorld` still evaluates the
+  procedural field plus saved corrections.
+- Clipbox scheduling checks `GpuVoxelMesher.IsResident` and `Contains` before
+  requesting work, preserving matching resident and already queued chunks.
+- `CommitPendingClipboxPlacement` removes coordinates leaving the retained range
+  after a safe handoff. `GpuVoxelMesher.Remove` releases their resident geometry.
+  Returning beyond that retention range requires fresh geometry construction.
+- An identical same-session restore rebases matching resident field metadata and
+  avoids rebuilding. It cannot stand in for a cold saved-area loading benchmark.
+
+The paired WATER-START-006/v1 runs reopened the same saved world. They observed
+all surrounding derived work drained at25.516s before cave-envelope early exits
+and24.703s afterward, timed from play_start return. Neither number is disk-only
+latency, total launch latency, or a per-chunk time. See the validation ledger for
+parameters and limitations.
+
+An additional scheduling constraint is source-confirmed but its travel impact
+remains unmeasured: `ProcessGpuRenderTick` services near regular work before
+transitions and only opportunistically submits outer regular counts afterward.
+Outer work has a250ms forced-service interval, at most eight regions per count
+batch and only one outer batch in flight. Ready outer results are serviced first.
+This explains a mechanism for slow distant queue progress while other queues
+remain busy; it does not establish that this policy caused the user's regression.
+Do not increase transition batch size as a shortcut: prior larger-batch GPU
+failures remain recorded in the meshing evidence.
+
+The next performance comparison must distinguish a retained return, an evicted
+return, and a fresh reopen of the same save. Generation caching was experimentally tested and rejected; see
+[generated cache results](../Research/GeneratedTerrainCacheExperiment.md). Caching base samples alone would still require
+mesh construction; any proposal to persist derived meshes must account for
+field revisions, generator/mesher versions, LOD, storage size, and invalidation.
+No cache format or scheduling policy was changed by this investigation.
+
+
+### Rejected generated-density cache experiment
+
+The user rejected the [prototype](../Plans/GeneratedTerrainCachePrototype.md)
+after it showed no dependable loading improvement. Its implementation, inspector
+setting and runtime hooks have been removed. Persistence continues to save the
+world recipe and authoritative edited sample pages; untouched generated terrain
+is reconstructed. Existing resident geometry reuse remains unchanged. The
+[experiment report](../Research/GeneratedTerrainCacheExperiment.md) preserves the
+measurements and limitations; its implementation description is historical.

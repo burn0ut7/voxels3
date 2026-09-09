@@ -1,0 +1,377 @@
+{
+  "__guid": "aa0d578d-c729-40fe-a8f3-788c71a3e2ef",
+  "GameObjects": [
+    {
+      "__guid": "633fa436-df01-42a2-8a30-6edbc7d3371b",
+      "__version": 2,
+      "Flags": 0,
+      "Name": "Main Camera",
+      "Position": "-300,0,100",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
+      "Tags": "",
+      "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
+      "Components": [
+        {
+          "__type": "Sandbox.CameraComponent",
+          "__guid": "233da939-6378-40dd-af17-b2da0860f546",
+          "__enabled": true,
+          "Flags": 0,
+          "BackgroundColor": "0.33333,0.46275,0.52157,1",
+          "ClearFlags": "All",
+          "EnablePostProcessing": true,
+          "FieldOfView": 90,
+          "FovAxis": "Horizontal",
+          "IsMainCamera": true,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "Orthographic": false,
+          "OrthographicHeight": 1204,
+          "PostProcessAnchor": null,
+          "Priority": 1,
+          "RenderExcludeTags": "",
+          "RenderTags": "",
+          "RenderTexture": null,
+          "TargetEye": "None",
+          "Viewport": "0,0,1,1",
+          "ZFar": 100000,
+          "ZNear": 10
+        }
+      ],
+      "Children": []
+    },
+    {
+      "__guid": "1b22c1a8-cca4-40c6-95bf-c6ba5588fc51",
+      "__version": 2,
+      "Flags": 0,
+      "Name": "Directional Light",
+      "Position": "0,0,200",
+      "Rotation": "-0.161728993,0.390448302,0.346828997,0.837319016",
+      "Scale": "1,1,1",
+      "Tags": "light_directional,light",
+      "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
+      "Components": [
+        {
+          "__type": "Sandbox.DirectionalLight",
+          "__guid": "49c48e2d-e341-48f8-ac05-03d9f74bfe67",
+          "__enabled": true,
+          "Flags": 0,
+          "ContactShadows": true,
+          "Contribution": "Diffuse, Specular, Transmissive",
+          "FogMode": "Enabled",
+          "FogStrength": 1,
+          "LightColor": "0.91373,0.98039,1,1",
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "ShadowBias": 0.0005,
+          "ShadowCascadeCount": 4,
+          "ShadowCascadeSplitRatio": 0.91,
+          "ShadowHardness": 0,
+          "Shadows": true,
+          "SkyColor": "0,0,0,0",
+          "Visualizer": {}
+        },
+        {
+          "__type": "Sandbox.AmbientLight",
+          "__guid": "6ce3ad52-bcfd-4c3b-890e-53b35a83dd92",
+          "__enabled": true,
+          "Flags": 0,
+          "Color": "0.23721,0.23721,0.23721,1",
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null
+        }
+      ],
+      "Children": []
+    },
+    {
+      "__guid": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+      "__version": 2,
+      "__Prefab": "prefabs/terrain_player.prefab",
+      "__PrefabInstancePatch": {
+        "AddedObjects": [],
+        "RemovedObjects": [
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "17b2bf62-69fa-4ebd-bb3c-d3853c6bc433"
+            }
+          },
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "464d7dbb-018f-4219-ae67-9786bd17a4a0"
+            }
+          },
+          {
+            "Id": {
+              "Type": "GameObject",
+              "IdValue": "fc08525e-6d90-4f6a-b09b-1f0342add7a4"
+            }
+          },
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "2d44d92e-ffcf-456c-a2d3-c21edac8b005"
+            }
+          },
+          {
+            "Id": {
+              "Type": "GameObject",
+              "IdValue": "2a9a48ca-5484-494b-8c77-ad782d9b7a53"
+            }
+          },
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "63e1fef5-8621-42c1-aeae-2b5cc7d341e3"
+            }
+          },
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "2928c8ba-41e5-424b-b630-a73f41dac135"
+            }
+          }
+        ],
+        "PropertyOverrides": [
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "58d9fcc8-0773-4174-b8ae-9c453fed1802"
+            },
+            "Property": "BodyTarget",
+            "Value": null
+          }
+        ],
+        "MovedObjects": [
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "2ca475c0-9b96-46be-807f-a97aa6941e2e"
+            },
+            "NewParent": {
+              "Type": "GameObject",
+              "IdValue": "5ecc001a-280f-49be-a657-1ffd4c3f7385"
+            },
+            "NewContainerProperty": "Components",
+            "IsNewContainerArray": true,
+            "NewPreviousElement": null
+          },
+          {
+            "Id": {
+              "Type": "Component",
+              "IdValue": "d2e02e81-7dba-4336-b41a-c2eec5ad6784"
+            },
+            "NewParent": {
+              "Type": "GameObject",
+              "IdValue": "5ecc001a-280f-49be-a657-1ffd4c3f7385"
+            },
+            "NewContainerProperty": "Components",
+            "IsNewContainerArray": true,
+            "NewPreviousElement": {
+              "Type": "Component",
+              "IdValue": "58d9fcc8-0773-4174-b8ae-9c453fed1802"
+            }
+          }
+        ]
+      },
+      "__PrefabIdToInstanceId": {
+        "5ecc001a-280f-49be-a657-1ffd4c3f7385": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+        "2ca475c0-9b96-46be-807f-a97aa6941e2e": "37e39e8c-eeb0-42a5-8cff-52d85bb0a278",
+        "1644e9e4-cfe6-4908-baad-93c7ce00edef": "2ce2e733-19ea-4bcc-887d-e781608ea3d4",
+        "1ca00bd2-663a-4b36-96f6-219aed454f8b": "d0d53c51-1b94-4730-b6c6-d6949360db42",
+        "58d9fcc8-0773-4174-b8ae-9c453fed1802": "25b98780-f994-4d29-a86a-bde9aa94145c",
+        "fc08525e-6d90-4f6a-b09b-1f0342add7a4": "08f3a1b9-f02b-8e9a-bed7-aa2680b5bd27",
+        "2a9a48ca-5484-494b-8c77-ad782d9b7a53": "981d1873-5987-8a16-9944-447fa9c6d06d",
+        "2d44d92e-ffcf-456c-a2d3-c21edac8b005": "31181644-4d57-8211-92f6-58b9ea652c25",
+        "86be7a60-9b1a-4d99-ad6e-284dac6d0c7f": "a37d0112-ecde-8624-bea6-c67c15a73fb3",
+        "17b2bf62-69fa-4ebd-bb3c-d3853c6bc433": "4d0c2276-d383-8551-9a08-041b02e5a29e",
+        "63e1fef5-8621-42c1-aeae-2b5cc7d341e3": "3d7613d1-3662-84cd-9e8c-351501d5165c",
+        "464d7dbb-018f-4219-ae67-9786bd17a4a0": "04ba9422-69b7-8355-8808-67aebd5b276f",
+        "2928c8ba-41e5-424b-b630-a73f41dac135": "74538994-0435-89c6-aebf-b4ad44fcc58e"
+      }
+    },
+    {
+      "__guid": "d3b30a99-ed5a-42e2-9229-3888b6c1f191",
+      "__version": 2,
+      "Flags": 0,
+      "Name": "World",
+      "Position": "0,0,0",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
+      "Tags": "",
+      "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
+      "Components": [
+        {
+          "__type": "VoxelManager",
+          "__guid": "018e6829-f01c-4152-88c1-ee2438b997fb",
+          "__enabled": true,
+          "Flags": 0,
+          "AutoSaveTerrain": true,
+          "CellSize": 16,
+          "CellsPerAxis": 32,
+          "ChunkStatus": "0 logical regions; 0 prepared; 0 preparation pending; 0 GPU residents; 0 regular meshes pending",
+          "ContinentalScale": 77724.09,
+          "FigureEightDistance": 50000,
+          "FigureEightLoopCount": 1,
+          "FigureEightSpeed": 2500,
+          "FramePerformance": "Collecting first 10-second window",
+          "GameplayRadius": 8,
+          "GeneratorStatus": "Regional landforms and retained caves v13; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.6, MountainAmount = 0.35, PlainsAmount = 0.6, ContinentalScale = 131072, MountainRegionScale = 32768, LocalLandformScale = 8192, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }",
+          "LandAmount": 0.75,
+          "LastPerformanceRunId": "No saved run",
+          "LocalLandformScale": 5232.39,
+          "Lod0VisualHalfExtent": 4,
+          "LodCacheHalfExtent": 8,
+          "MaximumVisualLod": 6,
+          "MinimumVisualLod": 0,
+          "MountainAmount": 0.2,
+          "MountainRegionScale": 18681.756,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "PerformanceResultsLocation": "performance/results-v1.jsonl",
+          "PerformanceRevision": "",
+          "PerformanceTask": "",
+          "PlainsAmount": 0.6,
+          "ProcessMemoryUsage": "~5,707.7 MiB whole process",
+          "ReliefHeight": 3072,
+          "Ruggedness": 0.45,
+          "SeaLevel": 0,
+          "StreamingPerformance": "Range applied in 0.000 ms; 0 prepared results awaiting integration",
+          "StreamingTarget": {
+            "_type": "gameobject",
+            "go": "fde76e17-1db9-4ccc-a193-897fddbc6239"
+          },
+          "TerrainRecipeStatus": "Edit controls, then apply to a new world.",
+          "TerrainSaveSlot": "No world",
+          "TerrainSaveStatus": "Loading world...",
+          "VerboseLogging": false,
+          "VisualChunkRadius": 512,
+          "WaterStatus": "Waiting for terrain",
+          "WorldSeed": 1337
+        }
+      ],
+      "Children": []
+    },
+    {
+      "__guid": "6a3760e5-31f7-40ef-8e82-06a51f6c2495",
+      "__version": 2,
+      "Flags": 0,
+      "Name": "Debug HUD",
+      "Position": "0,0,0",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
+      "Tags": "",
+      "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
+      "Components": [
+        {
+          "__type": "Sandbox.ScreenPanel",
+          "__guid": "ff5050af-b685-4385-8c10-10fbb2a4d1a6",
+          "__enabled": true,
+          "Flags": 0,
+          "AutoScreenScale": true,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "Opacity": 1,
+          "Scale": 1,
+          "ScaleStrategy": "ConsistentHeight",
+          "TargetCamera": null,
+          "Timing": "AfterPostProcess",
+          "ZIndex": 100
+        },
+        {
+          "__type": "Sandbox.VoxelDebugOverlay",
+          "__guid": "ef0e15ea-fdbd-4982-885d-42f901981523",
+          "__enabled": true,
+          "Flags": 0,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null
+        }
+      ],
+      "Children": []
+    }
+  ],
+  "SceneProperties": {
+    "NetworkInterpolation": true,
+    "PhysicsMode": "Physics3D",
+    "TimeScale": 1,
+    "WantsSystemScene": true,
+    "Metadata": {},
+    "NavMesh": {
+      "Enabled": false,
+      "IncludeStaticBodies": true,
+      "IncludeKeyframedBodies": true,
+      "EditorAutoUpdate": false,
+      "AgentHeight": 64,
+      "AgentRadius": 16,
+      "AgentStepSize": 18,
+      "AgentMaxSlope": 40,
+      "ExcludedBodies": "",
+      "IncludedBodies": "",
+      "DeferGeneration": false,
+      "CustomBounds": false
+    },
+    "GameObjectSystems": {
+      "Sandbox.Clutter.ClutterGridSystem": {
+        "Storage": {
+          "$blob": "64db792e-5935-8fbc-8cfa-050cd49fa7fd",
+          "$refs": []
+        }
+      },
+      "Sandbox.SelectionSetsSystem": {
+        "Data": {
+          "SelectionSets": []
+        }
+      }
+    }
+  },
+  "ResourceVersion": 3,
+  "Title": null,
+  "Description": null,
+  "__references": [],
+  "__version": 3
+}

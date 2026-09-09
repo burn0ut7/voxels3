@@ -265,7 +265,7 @@ internal sealed class PerformanceTestDefinition
 	public int CompletedLoops { get; init; }
 	public float Speed { get; init; }
 	public float Distance { get; init; }
-	public float WorldHeight { get; init; }
+	public float TerrainClearance { get; init; }
 	public float DurationSeconds { get; init; }
 	public PerformanceVector2 StartCenter { get; init; }
 }
@@ -285,9 +285,7 @@ internal sealed class PerformanceWorldContext
 	public string Generator { get; init; }
 	public int WorldSeed { get; init; }
 	public int GeneratorVersion { get; init; }
-	public float SurfaceBaseHeight { get; init; }
-	public float SurfaceFrequency { get; init; }
-	public float SurfaceAmplitude { get; init; }
+	public ProceduralTerrainSettings TerrainSettings { get; init; }
 	public PerformanceVector3Int StreamingCenter { get; init; }
 	public PerformanceVector3 TargetPosition { get; init; }
 }
@@ -409,6 +407,11 @@ internal sealed class PerformanceMeshingMetrics
 	public long AllocationCountReadbacks { get; init; }
 	public long AllocationCountReadbackBytes { get; init; }
 	public double AllocationCountReadbackMilliseconds { get; init; }
+	public long TransitionCountReadbacks { get; init; }
+	public double TransitionCountReadbackMilliseconds { get; init; }
+	public double TransitionCountCallbackWaitMilliseconds { get; init; }
+	public double TransitionMaximumCountReadbackMilliseconds { get; init; }
+	public double TransitionMaximumCountCallbackWaitMilliseconds { get; init; }
 	public double CountStageSubmissionMilliseconds { get; init; }
 	public double EmitStageSubmissionMilliseconds { get; init; }
 	public string TopologyDigest { get; init; }

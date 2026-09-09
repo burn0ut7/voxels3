@@ -71,67 +71,84 @@ A chunk's global sample origin is its integer coordinate multiplied by cells per
 axis. Every consumer must query shared positions identically.
 
 Negative density is solid, positive density is air, and zero is the surface.
-`VoxelChunk` derives `Grass = 1` for density at or below zero and `Air = 0`
-otherwise. Material IDs have no separate mutable payload or registry.
+`VoxelChunk` delegates 16-bit material IDs to the immutable catalog and procedural
+strata module described in [Voxel materials](VoxelMaterials.md). Materials have no
+separate mutable payload; density remains the solid/air authority.
 
 Gameplay interest has no fixed world-Z floor or ceiling. Its supported radius
 and defaults are owned by `VoxelManager`; scene-authored settings belong to the
 scene, and fixed test settings belong to the ledger. Logical loaded counts do
 not mean that the same number of objects or meshes have been allocated.
 
-## Procedural Generator Version 9
+## Procedural Generator Version 10 (qualification in progress)
 
-`ProceduralTerrainSdf` owns the generator version, constants, gradients, hashes,
-seed salts, and default settings. The exposed settings are `WorldSeed`,
-`SurfaceBaseHeight`, `SurfaceFrequency`, and `SurfaceAmplitude`. There is one
-backend recipe, with no selectable generator variants.
+The landform slice is implemented but not accepted yet. Its fixed workloads and
+remaining gates are tracked in [the ledger](../ValidationResults.md#landform-001v1--regional-exterior-qualification-defined-before-runtime).
+[RegionalLandforms](../../Code/Voxels/Generation/RegionalLandforms.cs) owns the
+immutable recipe, pure XY height/landform weights and conservative local height
+bounds. Its eight controls are LandAmount, MountainAmount, PlainsAmount,
+ContinentalScale, MountainRegionScale, LocalLandformScale, ReliefHeight and
+Ruggedness, plus WorldSeed. Amounts bias continuous eligibility, not guaranteed
+world-area percentages. The source owns exact defaults, ranges, hierarchy and
+coefficients; the [plan](../Plans/RegionalLandformsFirstSlice.md) records the recipe
+and alternatives. Ocean basins are unfilled depressions relative to fixed Z=0.
+There is no climate, vegetation, water, POI or selectable legacy generator.
 
-The exterior is world Z minus a seeded 2D simplex surface height. Two absolute
-3D simplex fields create noodle passages; a slower field varies their width and
-also changes the threshold of a cheese-cavern field. A surface-relative depth
-interval preserves overburden and bounds cave depth beneath the local surface.
-The depth extension increases maximum cave depth from 8,192 to 32,768 units
-(64 base chunks), retaining cave wavelengths, surface settings and the
-512-unit overburden.
-Depth is relative to the local surface and extends toward negative Z. There is
-no hard world floor. Existing version-5 saves are rejected by the identity check;
-the user chose fresh worlds, with old saves preserved, rather than migration.
-The streaming windows stay bounded, but the wider cave support can require more
-coarse meshing and GPU geometry. Performance evidence belongs in the ledger.
-Version 9 intersects both cave types with an independently seeded 3D region
-field of smooth trilinear hashed values at wavelength 16,384. The cutoff is
-0.36 on its [-1,1] range, raised from version 7's zero cutoff to target another
-50% reduction. The original passage recipe is preserved inside the remaining
-regions. This is statistical coverage, not an exact cave-count guarantee;
-measured geometry reductions and their limits belong in the validation ledger.
-The continuous mask can terminate passages at region boundaries and adds one
-regional query. CPU bounds use a gradient bound of 6 per region cell and
-intersect the same mask interval. Sharing the thickness noise would bias
-retained cave sizes; increasing wavelengths would
-enlarge passages, and reducing thresholds would narrow them. Those alternatives
-are not used. Saved earlier generator identities remain incompatible;
-fresh v9 worlds apply.
-The final field combines the surface and depth/region-limited cave terms. Exact
-formulae and constants live in the source owner and its
-[GPU field mirror](../../Assets/shaders/voxels/voxel_sdf_v9.hlsl).
+[TerrainCaves](../../Code/Voxels/Generation/TerrainCaves.cs) owns retained version-9
+carving and its bounds: retained noodle/cheese composition and controls, 512-unit overburden,
+32768-unit maximum surface-relative depth, and independent smooth 3D region mask
+at wavelength16384/cutoff0.36. Cave dimensions do not scale with exterior relief.
+New height changes the envelope's position; it cannot promise unchanged final
+cave openings. [TerrainNoise](../../Code/Voxels/Generation/TerrainNoise.cs) owns
+shared deterministic integer hashes and the version-13 simplex numerical contract:
+world inputs quantized to1/256unit with nearest-even rounding, signed64-bit cell
+and rank selection, then retained floating-point kernel contributions. This
+changes numerical field values and uses a separate versioned save selector;
+version12 pages are not silently migrated. A near-zero CPU/GPU sign mismatch
+remains unqualified; see the [correction design](../Plans/CaveNoiseParityCorrection.md).
 
-CPU and GPU use the same integer hashes, gradient tables, seed salts, and
-field recipe. The CPU skips cave noise where the existing depth envelope proves
-it cannot affect the final density; evaluated field operations remain equivalent. Negative coordinates use floor operations. Simplex outputs
-are clamped, and conservative classification accounts for floating-point
-uncertainty; determinism does not imply unmeasured bitwise CPU/GPU equivalence.
+Cave noise bounds use the local gradient only when all eight quantized box
+corners prove one convex simplex cell/order, evaluated through equivalent
+linear interval extrema. They include quantization and
+arithmetic margins plus outward endpoint rounding; otherwise use[-1,1]. This
+is a topology proof followed by an analytic interval, not a corner-sign emptiness
+assumption. Its performance qualification remains pending.
 
-The full classifier bounds the complete closed AABB. It propagates conservative
-surface and 3D noise intervals through field composition; uncertain or
-non-finite cases remain potentially surface-containing. The cheaper coarse
-broad phase proves only regions outside the generator's global vertical support.
-Both use the canonical generator's bounds. Neither may assume that underground
-terrain is a heightfield or silently omit a possible cave.
+[ProceduralTerrainSdf](../../Code/Voxels/ProceduralTerrainSdf.cs) composes the
+negative-solid exterior `z-height` with caves, owns generator version13 and exposes
+full-field sampling/classification. It retains build-local XY reuse in
+LatticeSampler. No shared mutable generation cache or extra scheduler exists.
+The full classifier propagates height and cave intervals over a closed AABB;
+uncertainty remains potentially surface-containing. Coarse clipbox preparation
+uses this complete authoritative bound, including corrections. Its first cheap
+rejection uses global exterior support [-.7001,1.0401]*ReliefHeight and retained
+cave depth. The superseded broad-only public classifier has been removed.
+No corner-only emptiness proof or underground heightfield assumption is allowed.
 
-Changing field settings increments content/preparation revisions, cancels
-incompatible work, clears derived meshes, and rebuilds through the same manager.
-Each chunk and GPU descriptor retains the settings that produced it, making
-stale-result checks sensitive to every field-shaping input.
+The [GPU mirror](../../Assets/shaders/voxels/voxel_sdf_v13.hlsl) includes separate
+noise, landform and cave modules, with matching hashes, salts and recipes.
+Negative coordinates use floor. Published bounds include numerical padding;
+shared recipes do not establish bitwise CPU/GPU equivalence without measurement.
+Generation remains an implicit field, not Euclidean signed distance.
+
+Inspector controls are staged; [generation lifecycle](../../Code/Voxels/VoxelManager.Generation.cs)
+handles Apply to new world. The idle host saves the current revision before
+switching to a fresh world identity, then cancels/rebuilds derived work and
+replaces old collision. Mutation/benchmark/save activity and connected guests
+reject application. A recipe switch during a guest session is outside this
+slice; mismatched guest settings remain explicit protocol rejection. Startup
+and new-world placement use conservative local surface/edit bounds, then the
+existing collision readiness path supports landing. The initial playable check
+observed a grounded player; broader spawn cases remain pending.
+
+The codec includes all eight landform controls plus seed and generator version,
+and water recipe version/SeaLevel, in its format2 88-byte identity header
+(124 bytes including block framing/hash). See [surface water](SurfaceWater.md). Recipe-specific
+last-world selectors hash this canonical identity with fixed zero revision/UUID.
+Older selectors and worlds remain on disk; no migration or reinterpretation is
+attempted. Chunk descriptors, save identity and replication retain complete
+settings. Authoring surveys export the active unedited recipe on a bounded worker,
+without changing the field or substituting a reference generator.
 
 ## CPU Preparation and Lifecycle
 
@@ -227,7 +244,13 @@ manager's player-movement and measurement lifecycle. The former standalone
 `player_figure_eight` tool and toggle-button instructions are obsolete.
 
 The runner moves a valid local player along a lemniscate centered on its starting
-X/Y, at fixed world Z zero. Speed uses the local tangent, distance defines X
+X/Y, ten meters (10 / 0.0254 world units) vertically above the procedural
+exterior height at each route position, including the initial placement and final
+center crossing. RegionalLandforms supplies that height from the applied recipe;
+this benchmark follows the unedited exterior, including the seabed, independently
+of collision mesh readiness. It does not follow water, cave floors or edits.
+The player origin receives the clearance; the eye is higher by its normal offset.
+Speed uses the horizontal local tangent, distance defines X
 reach, and Y reach is half that distance. It counts complete loops itself;
 external polling or elapsed sleeps do not choose the measured boundary.
 
@@ -286,3 +309,43 @@ handling. Valid data changes still rebuild first. Rejected visual settings do
 not prevent a valid gameplay radius change or normal streaming with retained
 visual settings. Target selection, player discovery, actor interests and update
 cadence are unchanged. S5 was accepted by the user on 2026-09-08; see its ledger run.
+
+### Exact cave-envelope early exits
+
+The water/loading follow-up mirrors the CPU surface-dominance early exit in the
+GPU cave function. Both CPU and GPU also skip all cave noise when the depth
+envelope is at most-1024: normalized raw caves and the regional mask are both
+bounded above this value. CPU cave interval evaluation uses the same conservative
+condition. This preserves the selected field; it changes no world identity or
+cave settings. Loading-speed acceptance remains pending a comparable workload;
+WATER-LOAD-004 was invalidated by player movement. The first-512 shortcut was
+superseded during review because it omitted the regional mask's lower bound.
+
+
+## Debug overlay
+
+The first slice adds a local, read-only screen overlay in the playable scene.
+The DebugOverlay input action (default F9), listed as Toggle Debug Overlay in Other controls, toggles it, initially hidden. It displays the local non-proxy player's world
+XYZ in engine world units (Z up) and logical base chunk XYZ. The terrain manager's
+TryGetChunkCoordinate query delegates to its existing applied-layout floor
+conversion, preserving negative-coordinate and boundary semantics. It reports
+unavailable before a streaming center exists; the overlay never uses the camera
+or streaming target as a substitute for a missing player.
+
+The generator has no biome identity yet. The row explicitly says
+"Biome: Not implemented" until a future generation slice supplies that contract.
+Landform weights are not biome names.
+
+VoxelDebugOverlay owns only local visibility, cached component references and
+display strings. On the engine thread it checks the DebugOverlay action each frame, then samples and
+formats at most once per 0.1 seconds while visible. Hidden overlays do no player
+or terrain queries or string formatting. No terrain mutation, mesh work, worker,
+replication or persistent state is introduced. The panel has no pointer events
+and does not change camera or player controls. BuildHash rebuilds only when
+visibility or displayed text changes.
+
+This uses one scene ScreenPanel and one Razor component. Future rows should
+extend this component and query their existing state owners. A provider registry,
+new biome classifier and per-frame text rebuilding are unnecessary for this slice.
+Budget: <=10 refreshes/second while visible, zero hidden data refreshes; compare
+the canonical figure-eight with the overlay visible before runtime acceptance.

@@ -52,7 +52,7 @@ Source, rather than older architectural summaries, establishes this starting poi
 | --- | --- | --- |
 | [ProceduralTerrainSdf.cs](../../Code/Voxels/ProceduralTerrainSdf.cs), `ProceduralTerrainSettings`, `SampleSurfaceHeight`, `SampleWorld` | Generator v5 uses seed plus base height, frequency and amplitude. Exterior density is Z minus a 2D simplex height; surface-relative noodle/cheese caves produce a volumetric field. | Replace the exterior recipe within the canonical field; preserve the cave responsibility and sign convention. |
 | Same file, `LatticeSampler` | CPU sampling already reuses height per XY column in a build-local workspace. | Extend this existing reuse when adding regional controls; do not propose another height cache as if none existed. |
-| [GPU meshing](../Architecture/GpuVoxelMeshing.md#regular-extraction-and-render-lifecycle), [GPU field mirror](../../Assets/shaders/voxels/voxel_sdf_v5.hlsl) | GPU extraction samples the field into a haloed lattice. Persistent meshes are drawn without evaluating the SDF each frame. | Additional noise costs generation, while vegetation, material shading and larger meshes can cost every frame. CPU density uploads would conflict with the current GPU rendering contract. |
+| [GPU meshing](../Architecture/GpuVoxelMeshing.md#regular-extraction-and-render-lifecycle), [GPU field mirror](../../Assets/shaders/voxels/voxel_sdf_v13.hlsl) | GPU extraction samples the field into a haloed lattice. Persistent meshes are drawn without evaluating the SDF each frame. | Additional noise costs generation, while vegetation, material shading and larger meshes can cost every frame. CPU density uploads would conflict with the current GPU rendering contract. |
 | [TerrainField.cs](../../Code/Voxels/TerrainField.cs), [deformation contract](../Architecture/TerrainDeformation.md) | Canonical terrain composes the procedural base and immutable regional edit state. | Biomes cannot create independently mutable terrain arrays or bypass the edit boundary. |
 | [TerrainFieldCodec.cs](../../Code/Voxels/TerrainFieldCodec.cs), [storage handoff](../Architecture/ChunkAuthoritativeStorage.md) | Saved data includes procedural settings; regional storage and replication already exist, with remaining qualification limits. | New settings/version identity must reach persistence and multiplayer together. Do not implement another save or transport system. |
 | [Voxel foundation](../Architecture/VoxelChunkFoundation.md#spatial-contract) | 32 cells per chunk, 16 world units per cell, 512-unit chunks; shared samples and negative-coordinate floor rules. | Express scales in these units; keep boundaries independent of chunk load order. |
@@ -748,3 +748,35 @@ envelope, CPU/GPU tolerance, measured admission limits and comparable performanc
 evidence. Future hydrology and city planning remain deliberately unresolved.
 When implemented, move adopted current contracts into the existing foundation,
 GPU, deformation and storage owners; retain this document as decision history.
+
+## September 9 shape-quality direction
+
+The user's current review rejects the subdued plains-dominated result as the
+desired final appearance. The next candidate must demonstrate mountains with
+cliffs, readable valleys and smaller mounds while preserving smooth landform
+transitions. Numerical continuity is necessary but cannot substitute for that
+visual review.
+
+Primary-source comparison: [Microsoft's generation overview](https://learn.microsoft.com/en-us/minecraft/creator/documents/world-generation?view=minecraft-bedrock-stable)
+separates base landforms from later biome/features passes.
+[Ubisoft's Far Cry 5 GDC session](https://www.gdcvault.com/play/1025557/Procedural-World-Gen)
+describes distinct tools for biomes, freshwater networks and cliff rocks, with
+large-scale automatic coverage and local control.
+[Guerrilla's Horizon presentation](https://www.guerrilla-games.com/read/gpu-based-procedural-placement-in-horizon-zero-dawn)
+concerns procedural placement; it is not proof of an infinite terrain generator.
+These sources support separating feature responsibilities; they do not establish
+one universally best runtime noise formula or performance budget for Voxels3.
+
+Adopt a hierarchy of regional mountain opportunity, ridges/valleys, localized
+steep rises and smaller-scale relief. Do not try to obtain all those structures
+by increasing a uniform noise amplitude. Rivers remain a connected-layout and
+water-policy feature, not simply whichever narrow noise valley looks river-like.
+Retain bounded analytic evaluation for this infinite-world slice rather than
+copying an offline art-production pipeline. The exact proposed v11 changes and
+qualification requirements are in the landform plan. Source code is not yet
+changed by this research update.
+
+The larger Far Cry slide PDF could not be opened by the web reader due to size.
+No exact cliff erosion algorithm is inferred from its search excerpt. The
+Minecraft video endpoint likewise did not expose a usable transcript in this
+review; earlier limits on claims about exact spline internals remain in force.

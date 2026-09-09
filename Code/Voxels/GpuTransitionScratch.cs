@@ -2,7 +2,9 @@ using System;
 
 internal sealed class GpuTransitionScratch : IDisposable
 {
-	public const int MaximumBatchSize = GpuVoxelMesher.MaximumDispatchesPerUpdate;
+	// Single-face submissions pass the version-12 coarse refinement startup case;
+	// eight-face batches fault on s&box 26.09.08 / RTX 5090. See the D16 ledger run.
+	public const int MaximumBatchSize = 1;
 	private const int DensitySize = 69;
 	private const int FineNormalDensitySize = 65;
 	private const int CoarseNormalDensitySize = 33;
@@ -34,12 +36,12 @@ internal sealed class GpuTransitionScratch : IDisposable
 		CellGroupCount * MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Cell Groups" );
 	private readonly GpuBuffer<uint> _blockCounts = new(
 		MaximumBatchSize * 2, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Counts" );
-	private readonly GpuBuffer<GpuDigest> _cellAuditCounts = new(
+	private readonly GpuBuffer<GpuAuditCounts> _auditCounts = new(
 		MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Cell Audit" );
 	private readonly GpuBuffer<GpuDigest> _digests = new(
 		MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Digests" );
-	private readonly GpuBuffer<GpuDigest> _faceMismatchCounts = new(
-		MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Face Mismatches" );
+	private readonly GpuBuffer<uint> _topology = new(
+		GpuTransitionTables.Data.Length, GpuBuffer.UsageFlags.Structured, "Voxel Transition Topology" );
 	private readonly GpuBuffer<GpuLateralDigests> _lateralDigests = new(
 		MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Lateral Digests" );
 	private readonly GpuBuffer<GpuTransitionCountResult> _countResults = new(
@@ -66,16 +68,18 @@ internal sealed class GpuTransitionScratch : IDisposable
 
 	public GpuTransitionScratch()
 	{
+		_topology.SetData<uint>( GpuTransitionTables.Data );
 		_shader = new ComputeShader( "shaders/voxels/voxel_transition_geometry_cs.shader" );
 		BindCommonAttributes();
 		CapacityBytes =
-			(long)MaximumBatchSize * 112 +
+			(long)MaximumBatchSize * 144 +
 			(long)DensityCount * MaximumBatchSize * sizeof( float ) +
 			(long)CellCount * MaximumBatchSize * 16 +
 			(long)EdgeSlotCount * MaximumBatchSize * sizeof( uint ) * 2 +
 			(long)(EdgeGroupCount + CellGroupCount) * MaximumBatchSize * sizeof( uint ) +
 			(long)MaximumBatchSize * (sizeof( uint ) * 4 + 24 + 64 + 64) +
-			GpuVoxelMesher.TerrainVertexBytes + sizeof( uint );
+			GpuVoxelMesher.TerrainVertexBytes + sizeof( uint ) +
+			(long)GpuTransitionTables.Data.Length * sizeof( uint );
 	}
 
 	public bool TrySubmitCount( GpuTransitionRequest[] requests, int count, out double submissionMilliseconds, TerrainFieldSnapshot[] fields = null )
@@ -100,56 +104,22 @@ internal sealed class GpuTransitionScratch : IDisposable
 				var field = fields[block];
 				if ( field is null ) continue;
 				var request = requests[block];
-				var origin = request.OriginAndFineCellSize;
-				var u = request.BasisUAndCoarseCellSize;
-				var v = request.BasisVAndCellsPerAxis;
-				var n = request.NormalAndFace;
 				for ( var index = 0; index < DensityCount; index++ )
 				{
-					int x, y, normal;
-					var local = index;
-					if ( local < DensitySize * DensitySize )
-					{
-						x = local % DensitySize - 2;
-						y = local / DensitySize - 2;
-						normal = 0;
-					}
-					else
-					{
-						local -= DensitySize * DensitySize;
-						if ( local < FineNormalDensitySize * FineNormalDensitySize * 2 )
-						{
-							normal = local < FineNormalDensitySize * FineNormalDensitySize ? -1 : 1;
-							local %= FineNormalDensitySize * FineNormalDensitySize;
-							x = local % FineNormalDensitySize;
-							y = local / FineNormalDensitySize;
-						}
-						else
-						{
-							local -= FineNormalDensitySize * FineNormalDensitySize * 2;
-							normal = local < CoarseNormalDensitySize * CoarseNormalDensitySize ? -2 : 2;
-							local %= CoarseNormalDensitySize * CoarseNormalDensitySize;
-							x = (local % CoarseNormalDensitySize) * 2;
-							y = (local / CoarseNormalDensitySize) * 2;
-						}
-					}
-					var position = new Vector3( origin.x + (u.x * x + v.x * y + n.x * normal) * origin.w,
-						origin.y + (u.y * x + v.y * y + n.y * normal) * origin.w,
-						origin.z + (u.z * x + v.z * y + n.z * normal) * origin.w );
-					_correctionUpload[index] = field.SampleCorrection( position );
+					_correctionUpload[index] = field.SampleCorrection( DensitySamplePosition( request, index ) );
 				}
 				_densitySamples.SetData<float>( _correctionUpload.AsSpan(), block * DensityCount );
 			}
 		}
 		SetBatchSize( count );
 		foreach ( var buffer in new GpuBuffer[] { _densitySamples, _cells, _edgeFlags, _edgeVertexIds,
-			_edgeGroupSums, _cellGroupSums, _blockCounts, _cellAuditCounts, _digests,
-			_faceMismatchCounts, _lateralDigests, _countResults } )
+			_edgeGroupSums, _cellGroupSums, _blockCounts, _auditCounts, _digests,
+			_lateralDigests, _countResults } )
 			Graphics.ResourceBarrierTransition( buffer, Sandbox.Rendering.ResourceState.UnorderedAccess );
 		_shader.Attributes.Set( "TransitionStage", 0 );
 		_shader.Dispatch( Math.Max( CellCount, EdgeSlotCount ) * count, 1, 1 );
-		Barrier( _cells, _edgeFlags, _edgeVertexIds, _cellAuditCounts, _digests,
-			_faceMismatchCounts, _lateralDigests );
+		Barrier( _cells, _edgeFlags, _edgeVertexIds, _auditCounts, _digests,
+			_lateralDigests );
 		_shader.Attributes.Set( "TransitionStage", 1 );
 		_shader.Dispatch( DensityCount * count, 1, 1 );
 		Barrier( _densitySamples );
@@ -173,21 +143,24 @@ internal sealed class GpuTransitionScratch : IDisposable
 		{
 			_shader.Attributes.Set( "TransitionStage", 2 );
 			_shader.Dispatch( CellCount * _batchSize, 1, 1 );
-			Barrier( _cells, _edgeFlags, _cellAuditCounts, _digests );
+			Barrier( _cells, _edgeFlags, _auditCounts, _digests );
 			_shader.Attributes.Set( "TransitionStage", 3 );
 			_shader.Dispatch( EdgeGroupCount * 256 * _batchSize, 1, 1 );
 			Barrier( _edgeVertexIds, _edgeGroupSums );
-			_shader.Attributes.Set( "TransitionStage", 4 );
-			_shader.Dispatch( CellGroupCount * 256 * _batchSize, 1, 1 );
-			Barrier( _cells, _cellGroupSums );
-			_shader.Attributes.Set( "TransitionStage", 5 );
-			_shader.Dispatch( 256 * _batchSize, 1, 1 );
-			Barrier( _edgeGroupSums, _cellGroupSums, _blockCounts );
 			return true;
 		}
 		_shader.Attributes.Set( "TransitionStage", 6 );
 		_shader.Dispatch( EdgeSlotCount * _batchSize, 1, 1 );
-		Barrier( _digests, _faceMismatchCounts, _lateralDigests );
+		Barrier( _digests, _auditCounts, _lateralDigests, _edgeFlags );
+		_shader.Attributes.Set( "TransitionStage", 10 );
+		_shader.Dispatch( CellCount * _batchSize, 1, 1 );
+		Barrier( _cells );
+		_shader.Attributes.Set( "TransitionStage", 4 );
+		_shader.Dispatch( CellGroupCount * 256 * _batchSize, 1, 1 );
+		Barrier( _cells, _cellGroupSums );
+		_shader.Attributes.Set( "TransitionStage", 5 );
+		_shader.Dispatch( 256 * _batchSize, 1, 1 );
+		Barrier( _edgeGroupSums, _cellGroupSums, _blockCounts );
 		_shader.Attributes.Set( "TransitionStage", 7 );
 		_shader.Dispatch( _batchSize, 1, 1 );
 		Barrier( _countResults );
@@ -217,6 +190,58 @@ internal sealed class GpuTransitionScratch : IDisposable
 			_state = ScratchState.EmitReady;
 			return true;
 		}
+	}
+
+	// One owner for the stored face-plane and normal-halo coordinate layout.
+	public static Vector3 DensitySamplePosition( GpuTransitionRequest request, int index )
+	{
+		var origin = request.OriginAndFineCellSize;
+		var u = request.BasisUAndCoarseCellSize;
+		var v = request.BasisVAndCellsPerAxis;
+		var n = request.NormalAndFace;
+		int x, y, normal;
+		var local = index;
+		if ( local < DensitySize * DensitySize )
+		{
+			x = local % DensitySize - 2;
+			y = local / DensitySize - 2;
+			normal = 0;
+		}
+		else
+		{
+			local -= DensitySize * DensitySize;
+			if ( local < FineNormalDensitySize * FineNormalDensitySize * 2 )
+			{
+				normal = local < FineNormalDensitySize * FineNormalDensitySize ? -1 : 1;
+				local %= FineNormalDensitySize * FineNormalDensitySize;
+				x = local % FineNormalDensitySize;
+				y = local / FineNormalDensitySize;
+			}
+			else
+			{
+				local -= FineNormalDensitySize * FineNormalDensitySize * 2;
+				normal = local < CoarseNormalDensitySize * CoarseNormalDensitySize ? -2 : 2;
+				local %= CoarseNormalDensitySize * CoarseNormalDensitySize;
+				x = (local % CoarseNormalDensitySize) * 2;
+				y = (local / CoarseNormalDensitySize) * 2;
+			}
+		}
+		return new Vector3( origin.x + (u.x * x + v.x * y + n.x * normal) * origin.w,
+			origin.y + (u.y * x + v.y * y + n.y * normal) * origin.w,
+			origin.z + (u.z * x + v.z * y + n.z * normal) * origin.w );
+	}
+
+	// Explicit diagnostic readback of the completed real transition count pass.
+	public float[] ReadDensitySamples( int block )
+	{
+		lock ( _stateLock )
+		{
+			if ( _disposed || _state != ScratchState.EmitReady || block < 0 || block >= _batchSize )
+				throw new InvalidOperationException( "Transition density inspection requires a completed live count block." );
+		}
+		var samples = new float[DensityCount];
+		_densitySamples.GetData<float>( samples.AsSpan(), block * DensityCount, DensityCount );
+		return samples;
 	}
 
 	public double SubmitEmitPass( GpuTerrainAllocationDescriptor[] allocations, int count,
@@ -276,9 +301,13 @@ internal sealed class GpuTransitionScratch : IDisposable
 		_shader.Attributes.Set( "TransitionEdgeGroupSums", _edgeGroupSums );
 		_shader.Attributes.Set( "TransitionCellGroupSums", _cellGroupSums );
 		_shader.Attributes.Set( "TransitionBlockCounts", _blockCounts );
-		_shader.Attributes.Set( "TransitionCellAuditCounts", _cellAuditCounts );
+		_shader.Attributes.Set( "TransitionAuditCounts", _auditCounts );
 		_shader.Attributes.Set( "TransitionDigests", _digests );
-		_shader.Attributes.Set( "TransitionFaceMismatchCounts", _faceMismatchCounts );
+		_shader.Attributes.Set( "TransitionTopology", _topology );
+		_shader.Attributes.Set( "TransitionVertexDataOffset", GpuTransitionTables.TransitionVertexDataOffset );
+		_shader.Attributes.Set( "TransitionCellVertexIndicesOffset", GpuTransitionTables.TransitionCellVertexIndicesOffset );
+		_shader.Attributes.Set( "TransitionCellGeometryCountsOffset", GpuTransitionTables.TransitionCellGeometryCountsOffset );
+		_shader.Attributes.Set( "TransitionCellClassOffset", GpuTransitionTables.TransitionCellClassOffset );
 		_shader.Attributes.Set( "TransitionLateralDigests", _lateralDigests );
 		_shader.Attributes.Set( "TransitionCountResults", _countResults );
 		// The engine creates one Vulkan descriptor layout for every stage branch in
@@ -289,6 +318,7 @@ internal sealed class GpuTransitionScratch : IDisposable
 		_shader.Attributes.Set( "TransitionOutputVertices", _dummyOutputVertices );
 		_shader.Attributes.Set( "TransitionDensitySize", DensitySize );
 		_shader.Attributes.Set( "TransitionDensityCount", DensityCount );
+		_shader.Attributes.Set( "TransitionMinimumAreaSquaredRelative", GpuVoxelMesher.MinimumTriangleAreaSquaredRelative );
 		_shader.Attributes.Set( "TransitionCellCount", CellCount );
 		_shader.Attributes.Set( "TransitionEdgeSlotCount", EdgeSlotCount );
 		_shader.Attributes.Set( "TransitionEdgeGroupCount", EdgeGroupCount );
@@ -310,8 +340,8 @@ internal sealed class GpuTransitionScratch : IDisposable
 		lock ( _stateLock ) { if ( _disposed ) return; _disposed = true; }
 		_requests.Dispose(); _densitySamples.Dispose(); _cells.Dispose(); _edgeFlags.Dispose();
 		_edgeVertexIds.Dispose(); _edgeGroupSums.Dispose(); _cellGroupSums.Dispose();
-		_blockCounts.Dispose(); _cellAuditCounts.Dispose(); _digests.Dispose();
-		_faceMismatchCounts.Dispose(); _lateralDigests.Dispose();
+		_blockCounts.Dispose(); _auditCounts.Dispose(); _digests.Dispose();
+		_topology.Dispose(); _lateralDigests.Dispose();
 		_countResults.Dispose(); _allocations.Dispose(); _dummyOutputIndices.Dispose();
 		_dummyOutputVertices.Dispose();
 	}
@@ -326,7 +356,8 @@ internal sealed class GpuTransitionScratch : IDisposable
 		EmitReady
 	}
 	#pragma warning disable CS0649
-	private struct GpuCellData { public uint Case; public uint IndexCount; public uint IndexOffset; public uint VertexCount; }
+	private struct GpuCellData { public uint Case; public uint IndexCount; public uint IndexOffset; public uint TriangleMask; }
+	private struct GpuAuditCounts { public uint ActiveCells; public uint InvalidTables; public uint FineMismatches; public uint CoarseMismatches; }
 	private struct GpuDigest { public uint Topology; public uint Position; }
 	private struct GpuLateralDigests { public uint MinimumU; public uint MaximumU; public uint MinimumV; public uint MaximumV; }
 	#pragma warning restore CS0649

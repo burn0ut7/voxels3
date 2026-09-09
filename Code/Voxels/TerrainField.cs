@@ -8,7 +8,7 @@ using System.Threading;
 /// </summary>
 internal sealed class TerrainField
 {
-	public const int FormatVersion = 1;
+	public const int FormatVersion = 2;
 	public const int PageShift = 5;
 	public const int SamplesPerPageAxis = 1 << PageShift;
 	public const int PageMask = SamplesPerPageAxis - 1;

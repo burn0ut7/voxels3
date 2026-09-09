@@ -1,0 +1,177 @@
+@using Sandbox
+@using Sandbox.UI
+@using System
+@using System.Linq
+@using System.Globalization
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	@if ( _open )
+	{
+		@if ( _targeting )
+		{
+			<div class="target-picker" onclick=@TeleportToMouse>
+				<div class="target-hint">Click terrain to teleport. Q cancels.</div>
+			</div>
+		}
+		else
+		{
+			<div class="menu-backdrop">
+				<div class="admin-window">
+					<div class="heading">ADMIN / DEBUG</div>
+					<div class="hint">Host tools · @Input.GetButtonOrigin( "Menu" ) to close</div>
+					@if ( _flight.IsValid() && _flight.CanAdmin )
+					{
+						<div class="section">MOVEMENT</div>
+						<button onclick=@ToggleFlight>Noclip: @(_flight.Flying ? "ON" : "OFF")</button>
+						<div class="hint">WASD + mouse to fly · Space up · Ctrl down · Shift boost</div>
+						<div class="field-row">
+							<label>Flight speed</label>
+							<TextEntry Value:bind="@_speedText" />
+							<button onclick=@ApplySpeed>Apply</button>
+						</div>
+						<div class="hint">100–10000 world units / second</div>
+						<div class="section">TELEPORT</div>
+						<button onclick=@BeginTargeting>Teleport to terrain…</button>
+						<div class="hint">Choose a point with the mouse. Nearby loaded terrain only.</div>
+					}
+					<div class="status">@_status</div>
+					<button class="close" onclick=@Close>Close</button>
+				</div>
+			</div>
+		}
+	}
+</root>
+
+@code
+{
+	private static AdminMenu _local;
+	private bool _open;
+	private bool _targeting;
+	private AdminFlightMode _flight;
+	private VoxelManager _terrain;
+	private string _speedText = "1000";
+	private string _status = "";
+	// Keep the release of a UI click from reaching the terrain brush after closing.
+	private float _closedAt = -1f;
+
+	public static bool CapturesInput( Scene scene ) => _local.IsValid() && _local.Scene == scene &&
+		(_local._open || RealTime.Now <= _local._closedAt + 0.1f);
+
+	protected override void OnUpdate()
+	{
+		if ( Scene != Game.ActiveScene || Scene.IsEditor ) return;
+		_local = this;
+		if ( Input.Pressed( "Menu" ) ) Toggle();
+		if ( _open && Input.EscapePressed )
+		{
+			Input.EscapePressed = false;
+			Close();
+		}
+		base.OnUpdate();
+	}
+
+	[ConCmd( "voxel_admin" )]
+	public static void ToggleCommand()
+	{
+		if ( _local.IsValid() ) _local.Toggle();
+	}
+
+	private void Toggle()
+	{
+		if ( _open ) { Close(); return; }
+		_flight = Scene.GetAllComponents<AdminFlightMode>().FirstOrDefault( mode => mode.CanAdmin );
+		_terrain = Scene.GetAllComponents<VoxelManager>().FirstOrDefault( terrain => terrain.Enabled );
+		_speedText = _flight.IsValid() ? _flight.Speed.ToString( CultureInfo.InvariantCulture ) : "1000";
+		_status = _flight.IsValid() ? "Ready." : "Admin tools are available to the local host only.";
+		_open = true;
+	}
+
+	private void Close()
+	{
+		_open = false;
+		_targeting = false;
+		_closedAt = RealTime.Now;
+	}
+
+	private void ToggleFlight()
+	{
+		if ( !_flight.IsValid() || !_flight.CanAdmin ) return;
+		if ( _flight.Flying && !CanStandAt( _flight.Controller.WorldPosition ) ) return;
+		_flight.Flying = !_flight.Flying;
+		_status = _flight.Flying ? "Noclip enabled. Close the menu to fly." : "Noclip disabled.";
+	}
+
+	private void ApplySpeed()
+	{
+		if ( !_flight.IsValid() || !_flight.CanAdmin ) return;
+		if ( !float.TryParse( _speedText, NumberStyles.Float, CultureInfo.InvariantCulture, out var speed ) ||
+			!float.IsFinite( speed ) || speed < 100f || speed > 10000f )
+		{
+			_status = "Enter a speed between 100 and 10000.";
+			return;
+		}
+		_flight.Speed = speed;
+		_status = $"Flight speed set to {speed:0.##}.";
+	}
+
+	private void BeginTargeting()
+	{
+		if ( _flight.IsValid() && _flight.CanAdmin ) _targeting = true;
+	}
+
+	private void TeleportToMouse()
+	{
+		_targeting = false;
+		if ( !_flight.IsValid() || !_flight.CanAdmin || !Scene.Camera.IsValid() ) return;
+		var ray = Scene.Camera.ScreenPixelToRay( Mouse.Position );
+		var hit = Scene.Trace.Ray( ray.Position, ray.Position + ray.Forward * 32768f )
+			.WithTag( "voxel_terrain" ).Run();
+		if ( !hit.Hit || hit.StartedSolid )
+		{
+			_status = "No loaded terrain under the mouse. Move closer and try again.";
+			return;
+		}
+		var player = _flight.Controller;
+		var body = player.BodyBox();
+		// Put the standing box entirely on the air side of the hit plane.
+		var half = (body.Maxs - body.Mins) * 0.5f;
+		var normal = hit.Normal;
+		var clearance = MathF.Abs( normal.x ) * half.x + MathF.Abs( normal.y ) * half.y + MathF.Abs( normal.z ) * half.z + 32f;
+		var destination = hit.HitPosition + normal * clearance - (body.Mins + body.Maxs) * 0.5f;
+		if ( !CanStandAt( destination ) ) return;
+		player.WorldPosition = destination;
+		player.Body.Velocity = Vector3.Zero;
+		player.Body.AngularVelocity = Vector3.Zero;
+		player.WishVelocity = Vector3.Zero;
+		player.PreventGrounding( 0.2f );
+		_status = "Teleported. Close the menu to continue.";
+	}
+
+	private bool CanStandAt( Vector3 position )
+	{
+		var player = _flight.Controller;
+		var box = player.BodyBox();
+		if ( !_terrain.IsValid() || !_terrain.IsTerrainCollisionReady( new BBox( box.Mins + position, box.Maxs + position ) ) )
+		{
+			_status = "Terrain collision is still loading here. Try again shortly.";
+			return false;
+		}
+		if ( !_terrain.IsAdminDestinationClear( player, position ) )
+		{
+			_status = "Not enough room to stand here. Choose open space above terrain.";
+			return false;
+		}
+		return true;
+	}
+
+	protected override void OnDisabled()
+	{
+		Close();
+		if ( _local == this ) _local = null;
+		base.OnDisabled();
+	}
+
+	protected override int BuildHash() => HashCode.Combine( _open, _targeting, _flight.IsValid() && _flight.Flying, _status );
+}

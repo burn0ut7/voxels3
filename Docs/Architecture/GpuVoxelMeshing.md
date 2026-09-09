@@ -8,7 +8,7 @@ enable ordinary levels 3 through 6 through the same records and queues. The
 authoritative world combines the procedural SDF with the shared correction field
 owned by [terrain deformation](TerrainDeformation.md);
 indexed meshes are derived, GPU-resident, revisioned, disposable caches.
-Generator version 5 owns the exterior surface, noodle tunnels, and cheese
+Generator version 10 owns regional exterior landforms and retains version-9 noodle tunnels and cheese
 caverns. One adjacent-pair-aware transition cache closes every enabled 2:1
 interface. The subsequent in-progress deformation slice composes the edited
 field in both extractors and adds coherent local publication; its separate
@@ -188,13 +188,14 @@ Finalization still rejects them; they never become known-empty residents.
 Reporting distinguishes avoided empty batches from canceled geometry regions;
 region counts are not counts of physical GPU dispatch calls.
 
-Every coarse-level preparation first applies a constant-time conservative vertical
-support bound owned by the canonical generator. Regions wholly above the maximum
-possible exterior surface are definitely air; regions wholly below both the
-minimum exterior surface and maximum cave depth are definitely solid. All
-uncertain regions remain potential and enter the GPU mesher. This broad phase
-does not sample, approximate, or duplicate the SDF and cannot reject a possible
-surface.
+Every coarse-level preparation uses the canonical authoritative density interval
+for the entire region. The classifier first rejects regions outside global
+vertical support, then bounds regional height and caves and includes saved
+corrections. Provably uniform regions use the existing empty-region publication
+path; uncertain regions enter the GPU mesher. This avoids mesh jobs without
+sampling corners as an emptiness proof or changing the terrain function.
+The additional CPU classification cost and measured startup/streaming gains are
+recorded in [the experiment results](../Research/TerrainStreamingOptimizationResults.md).
 
 This design retains the volumetric SDF, Transvoxel topology, and single GPU
 mesher while removing fixed per-level ownership. A recursive tree, octree,
@@ -219,9 +220,9 @@ interface plane, `65x65` on each fine normal offset, and `33x33` on each coarse
 normal offset. This retains every classification, interpolation, and fine/coarse
 gradient sample while avoiding unused off-plane positions. The official 512
 transition cases, 56 geometry classes, inversion bit, vertex reuse data, and
-triangulations produce ordinary indexed triangle lists. Fine-layer intersections
-use the selected fine-level interpolation and gradients; coarse-layer
-intersections use the selected coarse-level interpolation and gradients.
+triangulations produce ordinary indexed triangle lists. Fine-layer intersections use the selected fine edge and gradients; coarse-layer
+intersections use the selected coarse edge and gradients. Both now refine the
+intersection against the procedural field as described below.
 
 Production keeps table-derived primary regular and transition geometry as the
 sole final position path. Transition cases set bits for negative-density solid
@@ -257,7 +258,7 @@ in-flight, cancellation, and resident state. Regular work always schedules and
 consumes first. Transition GPU work uses ticks where regular meshing submitted no
 GPU work and advances at most one existing batch phase per tick. Coherent SDF
 sampling, classification/scan/audit plus count readback, and emission are separate
-phases of the same at-most-eight-face batch, preventing their costs from stacking
+phases of the same single-face batch, preventing their costs from stacking
 in one frame without changing transition identity or publication. Count readback
 contains bounded scalar metadata only. Exact allocations use the unchanged shared-arena range allocator. Final
 vertex and index stages in the same transition compute resource write the existing
@@ -292,7 +293,7 @@ geometry readback remains diagnostic-only and never participates in rendering.
 
 ## Regular Extraction and Render Lifecycle
 
-A remesh evaluates the canonical `voxel_sdf_v9.hlsl` field once into a haloed
+A remesh evaluates the canonical `voxel_sdf_v13.hlsl` field into a haloed
 `35^3` density lattice, classifies the `32^3` regular cells from cached corners,
 counts compact region-local edge vertices and indices, and scans those counts.
 The count stage returns only bounded metadata to the CPU. It never returns
@@ -301,17 +302,17 @@ density, vertices, indices, or other geometry.
 After metadata readback, the existing CPU allocator reserves exact vertex and
 index ranges. The emit stage writes 24-byte position/normal vertices, 32-bit
 indices, and indexed-indirect arguments directly into persistent arena buffers.
-Ordinary drawing reads only persistent position, normal, index, visibility, and
-indirect-argument buffers. It never evaluates the procedural SDF.
+Ordinary drawing reads persistent geometry, visibility, indirect arguments and
+one shared material palette. It does not evaluate volumetric density or edits;
+the pixel shader evaluates landform heights at four XY material-node columns.
+[Voxel materials](VoxelMaterials.md) owns that derived appearance contract.
 
-The production terrain material shades emitted normals with the historical
-256-unit XY world-space green checker. The checker changes only albedo, not
-material IDs, topology, positions, normals, visibility, or meshing work. A
-recent 64-unit three-axis variant is rejected: its Z-dependent phase bands made
-smooth curved and vertical surfaces resemble torn triangle fans in same-position
-comparison. Geometry correctness is still decided by fixed digests, transition
-audits, settled counts, and direct camera inspection; the checker is supporting
-visual evidence rather than a substitute for those measurements.
+The 16-unit checker projects onto the dominant surface plane and filters distant
+checks. The previous 256-unit XY green checker is superseded. The earlier rejected
+64-unit three-axis sum produced misleading Z-phase bands; do not reintroduce that
+pattern. Geometry correctness still requires fixed digests, transition audits,
+settled counts and direct camera inspection. Color patterns are supporting visual
+evidence, not a substitute for those measurements.
 
 The infinite-bounds custom scene object is only a render-thread rendezvous. Each
 normal manager update publishes one monotonically increasing epoch after
@@ -368,7 +369,7 @@ future decision.
 
 ## Scratch Pipeline
 
-Count batches contain at most eight regions. A render tick admits at most one
+Regular count batches contain at most eight regions. A render tick admits at most one
 new count batch and consumes at most one count-ready batch for allocation and
 emit. The batch size and dispatch shape are unchanged. Regular emission retains
 the full count-batch domain for each destination arena, with disabled descriptors
@@ -560,3 +561,342 @@ hashed values survived cold load, full figure-eight and saved-world reload.
 This is observed repair evidence, not proof of compiler causality or a general
 noise-call limit. Keep the smaller canonical mask; details and failed evidence
 are in [the depth review](../ValidationEvidence/CaveDepth/Review.md).
+
+
+## Regional generator request layout (qualification pending)
+
+Regular requests now occupy96 bytes: origin/cell Vector4, seed/three amounts
+Vector4, three scales/relief Vector4, ruggedness/reserved Vector4, four scalar
+metadata words, and one reserved Vector4. Transition requests occupy128 bytes:
+origin/fine-cell, the same three recipe Vector4 values, three basis/face Vector4
+values, and four metadata words. CPU declarations in GpuTerrainContracts match
+persistent-density, transition and dedicated vertex-emission shader declarations.
+Scratch accounting includes the additional32 bytes per request. No extra storage
+buffer binding or meshing stage is introduced.
+
+On26.09.08 the initial landform visual run showed gaps after the vertex emitter's
+HLSL request layout changed without a corresponding watcher recompile. Editing its
+source layout comment triggered a successful normal shader compile; replay showed
+continuous initial ground. Native asset_compile reported the shader not
+recompilable despite its source path existing. Keep this failure and recheck in
+LANDFORM-001/v1 R1/R2; a clean editor restart is still required before acceptance.
+
+
+Recipe resets now recreate regular and transition scratch lanes together. Clearing
+in-flight records while retaining a busy transition scratch left no record able
+to consume its completion; repeated recipe application reproduced a permanent
+transition queue. LANDFORM-001/v1 R5 records the repair and complete queue drain.
+
+`voxel_density_audit` is an explicit read-only diagnostic for the next unedited
+regular count block at each LOD. It reads the actual density scratch before reuse
+and compares 125 halo samples with the canonical scalar/lattice CPU paths and
+conservative bounds. It never schedules geometry or dispatches another sampler.
+Readback is bounded to one171500-byte block per LOD; missing levels remain pending
+until ordinary work supplies them or a reset cancels the request. Arming and
+sampling are rejected/skipped during schedule-latency measurement. Do not arm it
+for a timed run. Edited blocks are excluded.
+The diagnostic also scans this existing readback for nonfinite values and
+selects the closest negative/nonnegative stored densities. It compares at most
+two additional samples per block against canonical CPU/lattice evaluation,
+logging coordinates, raw densities, errors, sign agreement and bounds. Missing
+signs are explicit; there is no invented crossing in a one-sided block. Sparse
+near-zero sign disagreements have their own counter rather than disappearing
+from the report. These operations run only for an explicitly armed diagnostic;
+there is no additional GPU dispatch/readback or recurring sampling path.
+
+Historical R6 covered875samples with max error0.01638031 and no near-zero samples.
+Current LANDFORM-DENSITY-012/v2 covers875sparse plus11closest probes with maximum
+error0.001953125, zero lattice differences and no sign/nonfinite/bounds failures.
+Two LOD3closest probes are within the +/-0.1 band and agree in sign, with maximum
+error0.0000076293945. This finite screen does not qualify all near-zero samples,
+transition buffers, edited blocks or all coordinates. The ledger owns exact
+coverage, source versions, acceptance and preserved earlier observations.
+
+
+The same arm now includes one unedited transition count block for each of six
+faces at each of six LOD pairs. A36-bit pending mask is cancelled alongside the
+regular mask on reset or performance measurement. Only noncancelled completed
+count results are inspected before scratch reuse. Each explicit readback is
+15389floats/61556bytes;125uniform indices span the face plane and four normal
+planes, with at most two additional nearest signed-density probes. All stored
+GPU samples are checked for finite values. CPU comparisons use the canonical
+field and the exact coordinate decoder shared with correction uploads. No new
+shader, generation task or authoritative state is introduced. Missing faces
+stay pending until normal work supplies them or the session resets; finite
+observations cannot prove global parity. LANDFORM-DENSITY-012/v3 owns runtime
+qualification of this extension. Its first run completed all36combinations
+and4542comparisons, maximum CPU/GPU error0.015625, zero sign/nonfinite/bounds
+failures, and no transition near-zero samples. This establishes a bounded
+transition-field screen; it does not establish near-zero transition parity,
+mesh continuity, edited-face behavior or performance acceptance.
+
+
+Deep CAVEPLAY-012/v1-v2 observations fail the same0.05density limit despite
+passing selected geometry: regular error0.16308594 at world(2048,4224,-32640)
+and transition error0.63684464 at(-2064,496,-29104). Aggregate diagnostics now
+include the maximum-error sample coordinate and raw CPU/GPU values. Sign
+agreement at these samples does not establish density acceptance; root cause
+and correction remain open. See the ledger for immutable reproduction inputs.
+
+CAVEPLAY-012/v3 tried precise GPU simplex locals and explicit scalar dot
+arithmetic matching the CPU. The visible cold start succeeded on26.09.08,
+but both previously observed maximum errors and coordinates were unchanged.
+The inspected compiled transition SPIR-V payload(266476bytes) contains zero
+NoContraction decorations. This does not prove all compiler behavior; it does
+reject that source-only candidate as a fix. The candidate is reverted, while
+the exact-coordinate diagnostic remains. HLSL language guarantees must be
+verified through this engine's compiled pipeline before relying on them.
+
+## Bounded edge refinement (R7, qualification pending)
+
+The landform review exposed a large distance between fine and coarse surfaces:
+the same smooth exterior produced a287-unit ledge because cave composition
+changed the magnitude of a solid coarse endpoint. A single linear interpolation
+of those endpoints did not locate the actual zero crossing. This was visible
+after all terrain queues drained, at the LOD5/6 boundary X131072.
+
+The count/digest stage now refines each active axis-aligned edge with up to eight
+bisections and one final secant interpolation. It evaluates the same procedural
+field at interior points; no generator version, cave coefficient, density sign,
+table case, edge admission rule or terrain setting changes. World-axis ordering
+is normalized, and finite-coordinate resolution can terminate a stalled bracket.
+This locates one root of an existing sign-changing edge. It cannot recover
+multiple surfaces whose signs were missed by the coarse lattice.
+
+After scans complete, the existing edge flag word changes phase: zero means
+inactive; an active word is asuint(refined world-axis coordinate)+1. This encoding
+preserves zero and negative coordinates without using zero as an active sentinel.
+The emit stage decodes the same world coordinate used by the digest. A shared
+position helper keeps fixed edge components exact. Explicit UAV barriers order
+the rewritten words. There are no additional buffers, buffer bindings or dispatch
+stages, and the dedicated regular vertex/index writers remain separate.
+
+For edited edges, subtract the procedural endpoint values from captured total
+densities and linearly reconstruct those endpoint corrections along the edge.
+This retains the existing coarse lattice's edit approximation; it does not claim
+to resolve fine edit detail absent from that lattice. Base-field evaluation stays
+canonical. Normals still interpolate the existing gradient samples at the refined
+position fraction. Correction/normal behavior requires the planned edited-world
+and collision checks before acceptance.
+
+Eight is an internal bounded numerical limit, not a designer control. Root work
+occurs during mesh generation, not every rendered frame. Added GPU cost remains
+unqualified until the unchanged workload is measured; retaining scheduler caps
+alone does not prove acceptable frame pacing. R7 cold play removes the reported
+wall at the original camera, with collision4913/4913 ready and no pending work.
+The existing audit still flags degenerate transition triangles; this is not a
+blanket mesh or performance acceptance.
+
+## Material appearance
+
+[Voxel materials](VoxelMaterials.md) owns the shared draw palette, layer selection
+and world-space checker. Both regular and transition geometry use that same draw
+shader without changing persistent vertex layout or extraction. Appearance
+qualification and performance comparison are recorded under MATERIALS-001/v1.
+
+## Transition stage specialization candidate — 2026-09-09
+
+D5 narrows the reproduced startup GPU failure to outstanding transition count
+work: batch104 submitted refine/count at01:37:20.5042 and has no callback before
+fault; batch119 also submitted sample/classify work. Neither batch emitted geometry.
+This does not identify one exact instruction or establish a driver defect.
+
+The next candidate specializes the existing transition resource by its ten
+stages with the engine's DynamicCombo/RenderAttributes.SetCombo mechanism.
+Inputs, buffers, ownership, stage order, synchronization, counts and geometry
+algorithms remain unchanged. Each compiled variant contains its stage's live
+code rather than the full dynamic ten-way program. There is still one canonical
+transition shader resource, not a second emitter resource or alternate mesher.
+This addresses the demonstrated failure in a large combined compute program and
+provides distinct compiled stage identities for future crash attribution.
+
+Alternatives: further blind restarts add no useful evidence; removing refinement
+would restore the known LOD wall; a second transition shader resource conflicts
+with the recorded engine limitation. Stage specialization is supported by installed
+core/shaders/postprocess/postprocess_bloom_cs.shader and RenderAttributes.SetCombo.
+It is a candidate until clean compilation/startup, real meshing/parity, edit/network
+and performance checks pass. There is no claim that program size is the proven
+cause. No generator-version change: the canonical field and arithmetic are unchanged.
+
+D6 outcome: rejected. The stage-specialized resource terminated editor36804 at
+its first sample dispatch, earlier than the original failure. No count callback
+or native root-cause attribution was captured. The specialization was removed;
+the runtime-uniform stage selector remains canonical. This is additional evidence
+that transition pipeline variants need engine-specific qualification, not proof
+that the source arithmetic is wrong or that any fallback has been accepted.
+
+### Version-12 transition batch qualification
+
+Transition scratch owns a single-face batch limit; the mesher uses that same
+limit for dequeue and request arrays. Regular/outer batch limits are unchanged.
+On s&box26.09.08 / RTX5090, eight-face batches repeatedly faulted around coarse
+edge refinement. D16 completed every transition pair with single-face batches,
+without field, cave, refinement or requested-coverage changes. Both batch work
+and scratch capacity changed, so the driver/indexing root cause remains unknown.
+This is a retained correctness candidate, not full qualification: broad geometry
+still reports degenerate triangles, multiplayer/performance remain open, and
+D17 also passed startup after temporary logging was removed. Shutdown after D16
+left an engine error window and remains unqualified. See the validation ledger.
+
+### Rejected refined-triangle compaction proposal
+
+This proposal is not implemented. GEOMETRY-012 candidates B through E failed
+GPU or native startup before the audit. All compaction code and added source
+resources were reverted to D17 at that point; the
+geometry failures remain open. The following records the rejected design.
+
+The version12 origin audit found3179 degenerate transition triangles and41
+regular triangles. Topology tables count triangles before refined edge positions
+can coincide. The candidate inserts a GPU per-cell validity pass after edge
+refinement and before index prefix scans. It stores a triangle bitmask in the
+high16bits of Cells.x, leaving the case code in low16bits; Cells.y is retained
+index count and Cells.z its prefix. No extra storage buffer or readback.
+Count and emit consume the same mask, so allocations remain exact; vertex slots
+remain stable even if unused. The relative squared-area tolerance is owned by
+GpuVoxelMesher and passed to both count shaders, matching the CPU geometry audit.
+One shared HLSL area predicate defines regular/transition rejection. Field and
+caves remain untouched. Emission-only suppression was rejected because it leaves
+holes in allocated index ranges; moving vertices was rejected because it changes
+refined geometry. Added bounded cell work requires cold startup, mesh audit,
+visual seam checks and figure-eight qualification before acceptance.
+
+
+### Transition compaction candidate F
+
+GEOMETRY-012/v1 F failed with a GPU memory fault at02:54:31 before audit and
+was fully reverted. The following is the rejected transition-only design;
+D17 was restored after F; G2 below is the subsequent retained candidate. It preserves
+all case codes, refined positions, edge vertex IDs and the existing16-buffer
+resource. After refinement, stage10 stores a retained-triangle mask in Cells.w
+(previously unused after classification) and its index count in Cells.y.
+Cell prefix scans then allocate the retained index count; stage8 consumes that
+same mask, without uninitialized gaps. Empty cells remain zero from stage0.
+GpuVoxelMesher.MinimumTriangleAreaSquaredRelative names the existing1e-10
+squared-area threshold shared with the audit; transition count receives it as
+an attribute and scales by coarseCellSize^4. Regular emission is unchanged and
+its degenerate triangles remain an unresolved acceptance gate. No new readback,
+shader resource, buffer or state owner is introduced. Added bounded per-cell
+work requires cold-start, geometry, seam and performance qualification. Earlier
+B-E failures and the last qualified D17 startup remain recorded separately.
+
+
+### Transition topology storage candidate G
+
+Current D17 SPIR-V has repeated function-storage copies of large static topology
+arrays. Driver memory allocation is not established, but removing those copies
+is a concrete alternative to expanding the already faulting shader program.
+Candidate G moves the exact MIT-licensed official transition table values into
+GpuTransitionTables, one immutable CPU source. GpuTransitionScratch owns a
+read-only-use structured buffer, uploads once during construction, and disposes
+it with scratch. Table offsets have the same C# owner and are bound as integer
+attributes. This derived lookup data is independent of world seed/edits; no
+field invalidation or per-frame upload is needed. The buffer is35KB per scratch
+(8728 uints). Cell/face audit counters share one uint4 buffer, preserving the
+16-storage-buffer limit and every counter meaning. Count/emit algorithms and
+all stage barriers remain equivalent. Field, caves and regular meshing are
+unchanged. A buffer lookup avoids large function arrays; replacing tables with
+large switches or adding shader resources is rejected because it expands code
+or conflicts with prior native startup failures. Cold startup, unchanged audit,
+visual seams and full performance qualification remain required.
+Inspection used Source2 Viewer/ValveResourceFormat dictionary resources:
+https://github.com/ValveResourceFormat/ValveResourceFormat/blob/master/ValveResourceFormat/CompiledShader/ZstdDictionary.cs
+This is a diagnostic use of reverse-engineered resource knowledge, not an engine
+contract. See the validation evidence for its limits.
+
+G initially failed because two lookup expressions masked the added offset;
+G2 fixes their parentheses. G2 cold startup, zero table/face/lateral mismatches,
+104-region audit completion and original-world fingerprint checks pass. The
+same3220degenerate triangles remain, so geometry acceptance is still open.
+G2 is the current retained table-storage candidate. Its compiled SPIR-V removes
+all large topology Function arrays (271172 to234848bytes); no frame-time or
+driver-memory improvement is claimed. See GEOMETRY-012/v1 G/G2 for both outcomes.
+
+
+### Transition triangle selection candidate H
+
+H retries F's per-cell selection using G2's table buffer. It retains exact edge
+positions and vertex slots, stores the mask in the unused Cells.w word, and
+runs index scans after selection so allocations and emitted indices agree.
+The existing relative squared-area threshold has one C# owner and is bound to
+the shader. This adds bounded work per transition cell and no new buffer or
+readback. It remains unqualified until the fixed startup/audit/seam/performance
+gates pass; regular triangle removal is still outstanding.
+
+H now passes cold startup and the48-transition-region origin audit: no transition
+degenerates or table/face/lateral mismatches. It is the retained implementation,
+with G2 table storage. The56regular-region sample still contains31degenerate
+triangles; seam, multiplayer and figure-eight acceptance remain pending. Counts
+and masks share the audit's unchanged area threshold. The field and saved edited
+fingerprint are unchanged. This bounded result does not prove the earlier native
+fault's root cause or qualify global topology/performance.
+
+
+### Regular triangle selection candidate I
+
+I extends the retained selection responsibility to regular meshes. The canonical
+regular HLSL table data and generated VoxelCollisionTables remain unchanged;
+GpuTerrainScratch concatenates that existing view once into a14KB buffer and
+binds its computed offsets to count and the dedicated index writer. Scratch
+owns upload/disposal and memory accounting. No recurring upload, world state,
+or alternate mesher is added. GPU shaders no longer compile large regular
+static arrays. After refinement, stage8 stores a triangle mask above the low16
+case bits and its index count in Cells.y. Existing scans produce exact offsets;
+the index writer consumes the same mask. Count/emit share the unchanged area
+criterion with the CPU audit. The regular output resource split remains intact.
+This bounded extra per-cell work requires cold startup, full geometry, seams
+and figure-eight qualification. Field/caves/vertex positions are unchanged.
+
+I now passes the fixed104-region origin audit, with zero degenerate triangles
+in56regular and48transition regions, zero table/face/lateral mismatches and
+unchanged saved-world fingerprint. Cold startup settles without GPU fault.
+I with H transitions is the current retained implementation. Broader seam and
+edited-site validation, multiplayer and figure-eight acceptance remain pending.
+The regular canonical table source/generator is unchanged; only GPU storage and
+triangle count/emission consume the new representation. Earlier failures remain
+in the ledger and do not establish a general GPU driver root cause.
+
+
+### Transition readback observations
+
+Existing meshing diagnostics now expose TransitionCountReadbacks, total
+TransitionCountReadbackMilliseconds and TransitionCountCallbackWaitMilliseconds,
+and the maximum of each duration. These are cumulative observations since the
+mesher was created (or these properties were introduced by hotload), not reset
+per route. CountReadbacks counts batches, not faces. The readback interval begins
+after count dispatch submission and ends in its callback; callback wait ends when
+the render scheduler consumes it. Neither is isolated GPU execution time.
+The counters observe existing callbacks and add no readbacks or scheduling work.
+Cancelled results are included. Use counter deltas for bounded observations;
+maximum values remain lifetime maxima. These fields do not supply percentiles.
+
+
+### Rejected generated-density cache
+
+The generated-density disk-cache prototype has been removed at the user's
+request. Meshing again uses the preprototype queue and sampling path; existing
+resident geometry reuse remains. The [experiment report](../Research/GeneratedTerrainCacheExperiment.md)
+retains historical results. No generated-density cache setting or IO remains in
+the runtime meshing pipeline.
+
+
+### Accepted empty transition classification
+
+Before submitting an unedited transition count, the mesher evaluates the existing
+canonical density interval over the descriptor's complete sampling bounds. A
+strictly positive minimum or strictly negative maximum proves uniform signs.
+Edited or uncertain regions retain GPU sampling. A uniform region becomes an
+empty CandidateTransition in the idle lane and goes through normal next-render
+cancellation, desired-descriptor and edit-publication checks. It skips GPU
+sampling/count/emission and readback without bypassing readiness metadata.
+Transition batches, scratch resources and view distance are unchanged.
+
+Empty-to-empty transition publication does not dirty draw commands. Replacing
+or adding drawable geometry still does; edit publication retains its existing
+atomic invalidation path. Skipped-region count and cumulative classification CPU
+time are exposed in voxel_collision_info. They count attempted jobs, including
+ones later made stale, and are not geometry-readback counters.
+
+The user accepted candidate B's measured startup frame-rate tradeoff on2026-09-09.
+See [the experiment](../Research/EmptySeamExperiment.md) for historical rejection,
+acceptance, fixed-world results and incomplete moving qualification. This does
+not accept unrelated terrain errors or alter the existing benchmark route.

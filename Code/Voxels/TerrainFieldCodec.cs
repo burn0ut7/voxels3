@@ -11,7 +11,7 @@ internal readonly record struct TerrainFieldIdentity( ProceduralTerrainSettings 
 internal static class TerrainFieldCodec
 {
 	private const int Magic = 0x33465856;
-	private const int HeaderBytes = 60;
+	private const int HeaderBytes = 88;
 	public const int IdentityBytes = HeaderBytes + 36;
 	public const int MaximumPagePayloadBytes = 17 + TerrainField.SamplesPerPage * sizeof( float );
 	public const int MaximumPageBlockBytes = MaximumPagePayloadBytes + 36;
@@ -127,8 +127,16 @@ internal static class TerrainFieldCodec
 			fields.Write( Magic ); fields.Write( TerrainField.FormatVersion );
 			fields.Write( ProceduralTerrainSdf.CurrentVersion ); fields.Write( TerrainField.SampleSpacing );
 			fields.Write( TerrainField.SamplesPerPageAxis ); fields.Write( identity.Settings.WorldSeed );
-			fields.Write( identity.Settings.SurfaceBaseHeight ); fields.Write( identity.Settings.SurfaceFrequency );
-			fields.Write( identity.Settings.SurfaceAmplitude ); fields.Write( identity.Revision ); fields.Write( 0 ); // Reserved page count: identities contain no samples.
+			fields.Write( identity.Settings.LandAmount );
+			fields.Write( identity.Settings.MountainAmount );
+			fields.Write( identity.Settings.PlainsAmount );
+			fields.Write( identity.Settings.ContinentalScale );
+			fields.Write( identity.Settings.MountainRegionScale );
+			fields.Write( identity.Settings.LocalLandformScale );
+			fields.Write( identity.Settings.ReliefHeight );
+			fields.Write( identity.Settings.Ruggedness );
+			fields.Write( SurfaceWater.CurrentVersion ); fields.Write( identity.Settings.SeaLevel );
+			fields.Write( identity.Revision ); fields.Write( 0 );
 			fields.Write( identity.WorldId.ToByteArray() );
 		}
 		WriteBlock( writer, header.ToArray() );
@@ -145,8 +153,11 @@ internal static class TerrainFieldCodec
 		if ( fields.ReadInt32() != Magic || fields.ReadInt32() != TerrainField.FormatVersion ||
 			fields.ReadInt32() != ProceduralTerrainSdf.CurrentVersion || fields.ReadSingle() != TerrainField.SampleSpacing ||
 			fields.ReadInt32() != TerrainField.SamplesPerPageAxis ) throw new InvalidDataException( "Terrain format or generator version does not match." );
-		var settings = new ProceduralTerrainSettings( fields.ReadInt32(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle() );
-		if ( settings != expected ) throw new InvalidDataException( "Terrain generator settings do not match this world." );
+		var settings = new ProceduralTerrainSettings( fields.ReadInt32(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle(), fields.ReadSingle() );
+		if ( fields.ReadInt32() != SurfaceWater.CurrentVersion )
+			throw new InvalidDataException( "Water generator version does not match." );
+		settings = settings with { SeaLevel = fields.ReadSingle() };
+		if ( !settings.IsValid || settings != expected ) throw new InvalidDataException( "Terrain generator settings do not match this world." );
 		var revision = fields.ReadInt32();
 		var count = fields.ReadInt32();
 		var worldId = new Guid( fields.ReadBytes( 16 ) );

@@ -4,6 +4,48 @@ using System;
 [McpToolset( "voxels3", "Voxels3 production smoke controls" )]
 public static class VoxelMcpTools
 {
+	/// <summary>Read a bounded vertical column of the active canonical terrain field.</summary>
+	[McpTool.ReadOnly( "inspect_terrain_column" )]
+	public static object InspectTerrainColumn( float x, float y, float minimumZ, float spacing = 16f, int count = 65 )
+	{
+		if ( !Game.IsPlaying ) throw new InvalidOperationException( "Start play mode first." );
+		return FindManager().InspectTerrainColumn( x, y, minimumZ, spacing, count );
+	}
+
+	/// <summary>Export a bounded survey of the active playable world's landform recipe.</summary>
+	[McpTool( "export_landform_survey" )]
+	public static async System.Threading.Tasks.Task<object> ExportLandformSurvey( float minimumX = -131072f,
+		float minimumY = -131072f, int pointsPerAxis = 65, float spacing = 4096f )
+	{
+		if ( !Game.IsPlaying ) throw new InvalidOperationException( "Start play mode first." );
+		return new { Path = await FindManager().ExportLandformSurvey( minimumX, minimumY, pointsPerAxis, spacing ) };
+	}
+
+	/// <summary>Stage designer controls; apply uses the same save-before-switch inspector action.</summary>
+	[McpTool( "set_landform_recipe" )]
+	public static object SetLandformRecipe( int? seed = null, float? landAmount = null,
+		float? mountainAmount = null, float? plainsAmount = null, float? continentalScale = null,
+		float? mountainRegionScale = null, float? localLandformScale = null, float? reliefHeight = null,
+		float? ruggedness = null, bool apply = false, float? seaLevel = null )
+	{
+		if ( !Game.IsPlaying ) throw new InvalidOperationException( "Start play mode first." );
+		var manager = FindManager();
+		if ( seed.HasValue ) manager.WorldSeed = seed.Value;
+		if ( landAmount.HasValue ) manager.LandAmount = landAmount.Value;
+		if ( mountainAmount.HasValue ) manager.MountainAmount = mountainAmount.Value;
+		if ( plainsAmount.HasValue ) manager.PlainsAmount = plainsAmount.Value;
+		if ( continentalScale.HasValue ) manager.ContinentalScale = continentalScale.Value;
+		if ( mountainRegionScale.HasValue ) manager.MountainRegionScale = mountainRegionScale.Value;
+		if ( localLandformScale.HasValue ) manager.LocalLandformScale = localLandformScale.Value;
+		if ( reliefHeight.HasValue ) manager.ReliefHeight = reliefHeight.Value;
+		if ( ruggedness.HasValue ) manager.Ruggedness = ruggedness.Value;
+		if ( seaLevel.HasValue ) manager.SeaLevel = seaLevel.Value;
+		if ( apply ) manager.ApplyTerrainRecipe();
+		return new { manager.WorldSeed, manager.LandAmount, manager.MountainAmount, manager.PlainsAmount,
+			manager.ContinentalScale, manager.MountainRegionScale, manager.LocalLandformScale,
+			manager.ReliefHeight, manager.Ruggedness, manager.SeaLevel, manager.TerrainRecipeStatus, manager.GeneratorStatus };
+	}
+
 	/// <summary>Start or stop the editor's private network host using its normal network controls.</summary>
 	[McpTool( "set_private_network_hosting" )]
 	public static object SetPrivateNetworkHosting( bool enabled )
@@ -105,7 +147,6 @@ public static class VoxelMcpTools
 	/// <param name="lodCacheHalfExtent">Shared coarse cache half extent in regions.</param>
 	/// <param name="cellsPerAxis">Regular region cell count; only 32 is supported.</param>
 	/// <param name="baseCellSize">LOD0 cell size; only 16 is supported.</param>
-	/// <param name="surfaceBaseHeight">Optional procedural base height; omitted keeps the current value.</param>
 	[McpTool( "set_terrain_configuration" )]
 	public static object SetTerrainConfiguration(
 		int gameplayRadius = 4,
@@ -114,8 +155,7 @@ public static class VoxelMcpTools
 		int lod0VisualHalfExtent = 4,
 		int lodCacheHalfExtent = 8,
 		int cellsPerAxis = 32,
-		float baseCellSize = 16f,
-		float? surfaceBaseHeight = null )
+		float baseCellSize = 16f )
 	{
 		if ( !Game.IsPlaying )
 		{
@@ -130,7 +170,6 @@ public static class VoxelMcpTools
 		manager.LodCacheHalfExtent = lodCacheHalfExtent;
 		manager.CellsPerAxis = cellsPerAxis;
 		manager.CellSize = baseCellSize;
-		if ( surfaceBaseHeight.HasValue ) manager.SurfaceBaseHeight = surfaceBaseHeight.Value;
 		return new
 		{
 			manager.GameplayRadius,
@@ -139,8 +178,7 @@ public static class VoxelMcpTools
 			manager.Lod0VisualHalfExtent,
 			manager.LodCacheHalfExtent,
 			manager.CellsPerAxis,
-			manager.CellSize,
-			manager.SurfaceBaseHeight
+			manager.CellSize
 		};
 	}
 
@@ -243,6 +281,14 @@ public static class VoxelMcpTools
 				ReferenceEquals( rendererScene.Camera, Game.ActiveScene.Camera ),
 			RendererSceneCameraValid = rendererScene.IsValid() && rendererScene.Camera.IsValid()
 		};
+	}
+
+	/// <summary>Read the detached game camera transform without moving the view.</summary>
+	[McpTool.ReadOnly( "get_ejected_camera" )]
+	public static object GetEjectedCamera()
+	{
+		var camera = GetEjectedViewport().Renderer.Camera;
+		return new { Position = camera.WorldPosition, Angles = camera.WorldRotation.Angles(), camera.FieldOfView };
 	}
 
 	/// <summary>

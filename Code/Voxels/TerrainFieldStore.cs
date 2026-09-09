@@ -14,14 +14,21 @@ using System.Threading;
 /// </summary>
 internal static class TerrainFieldStore
 {
-	private const string LastWorldPath = "terrain/last-world.vxl";
+	// Recipe-specific selectors preserve earlier generators and independently tuned worlds.
+	private static string SelectionPath( ProceduralTerrainSettings settings )
+	{
+		using var identity = new MemoryStream();
+		TerrainFieldCodec.WriteIdentity( identity, new TerrainFieldIdentity( settings, 0, Guid.Empty ) );
+		return $"terrain/last-world-v{ProceduralTerrainSdf.CurrentVersion}-{Convert.ToHexString( SHA256.HashData( identity.ToArray() ) )}.vxl";
+	}
 
 	public static Checkpoint OpenLast( ProceduralTerrainSettings settings, CancellationToken cancellation )
 	{
 		lock ( IoGate )
 		{
-			if ( !FileSystem.Data.FileExists( LastWorldPath ) ) return null;
-			var bytes = ReadBounded( LastWorldPath, 64 );
+			var selectionPath = SelectionPath( settings );
+			if ( !FileSystem.Data.FileExists( selectionPath ) ) return null;
+			var bytes = ReadBounded( selectionPath, 64 );
 			if ( bytes.Length <= 32 || !SHA256.HashData( bytes.AsSpan( 32 ) ).AsSpan().SequenceEqual( bytes.AsSpan( 0, 32 ) ) )
 				throw new InvalidDataException( "The last-world selection is corrupt; refusing to replace it with a fresh world." );
 			return Open( RootPath( Encoding.UTF8.GetString( bytes, 32, bytes.Length - 32 ) ), settings, cancellation );
@@ -29,7 +36,7 @@ internal static class TerrainFieldStore
 	}
 	private const int IndexMagic = 0x31535856;
 	private const int IndexVersion = 1;
-	private const int MaximumIndexBytes = 128 + TerrainField.MaximumPages * 52;
+	private const int MaximumIndexBytes = 32 + TerrainFieldCodec.IdentityBytes + TerrainField.MaximumPages * 52;
 	private const long MaximumStoreBytes = 1L << 30;
 	private const int MaximumStoredFiles = TerrainField.MaximumPages * 3 + 6;
 	// Serializes checkpoint cleanup, reads, and the final synchronous teardown save.
@@ -146,7 +153,7 @@ internal static class TerrainFieldStore
 			cancellation.ThrowIfCancellationRequested();
 			WriteNew( stem + ".vxc", SHA256.HashData( index ) );
 			var slot = Encoding.UTF8.GetBytes( root["terrain/".Length..] );
-			using ( var selection = fs.OpenWrite( LastWorldPath, FileMode.Create ) )
+			using ( var selection = fs.OpenWrite( SelectionPath( source.Settings ), FileMode.Create ) )
 			{
 				selection.Write( SHA256.HashData( slot ) );
 				selection.Write( slot );

@@ -41,7 +41,7 @@ public sealed partial class VoxelManager
 	public bool TryQueueTerrainEdit( Vector3 center, float radius, float strength, out long requestId )
 	{
 		requestId = 0;
-		if ( !Networking.IsHost || _terrainAuthorityLost || _playerFigureEightTestRunning || _performanceVisibilityPending ||
+		if ( _pendingTerrainRecipe is not null || !Networking.IsHost || _terrainAuthorityLost || _playerFigureEightTestRunning || _performanceVisibilityPending ||
 			_performanceCompletionPhase != PerformanceCompletionPhase.None || _terrainField is null || _terrainRestorePending || _terrainEditCancellation.IsCancellationRequested ||
 			!TerrainField.IsValidBrush( center, radius, strength ) ||
 			(strength < 0 && !CanBuildTerrain( center, radius )) || _terrainEditQueue.Count >= MaximumQueuedTerrainEdits )
@@ -184,6 +184,7 @@ public sealed partial class VoxelManager
 
 	private void UpdateTerrainTool()
 	{
+		if ( AdminMenu.CapturesInput( Scene ) ) return;
 		_terrainToolElapsed = Math.Min( _terrainToolElapsed + RealTime.Delta, TerrainToolTickSeconds );
 		if ( _deformationBenchmark is not null || _playerFigureEightEnabled || _terrainToolElapsed < TerrainToolTickSeconds ) return;
 		var dig = Input.Down( "Attack1" );

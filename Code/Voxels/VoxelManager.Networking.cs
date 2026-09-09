@@ -86,6 +86,7 @@ public sealed partial class VoxelManager : Component.INetworkListener
 		if ( !Networking.IsHost ) return;
 		_terrainHostPlayer = Scene.GetAllComponents<PlayerController>().FirstOrDefault( player => !player.IsProxy );
 		if ( !_terrainHostPlayer.IsValid() ) return;
+		PlaceTerrainPlayerAboveSurface( _terrainHostPlayer.GameObject );
 		_terrainPlayerSpawn = _terrainHostPlayer.WorldTransform;
 		if ( !Networking.IsActive ) return;
 		foreach ( var connection in Connection.All )
@@ -125,6 +126,7 @@ public sealed partial class VoxelManager : Component.INetworkListener
 			Log.Error( "[TerrainNetwork] player.spawn.failed reason=Network spawn rejected" );
 			return;
 		}
+		PlaceTerrainPlayerAboveSurface( remote );
 		remote.Enabled = true;
 		_terrainSessionPlayers.Add( connection.Id, remote );
 		_terrainConnectionSlots.Add( connection.Id, slot );

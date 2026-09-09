@@ -1,0 +1,370 @@
+{
+  "frame": "767.8 FPS average; p95 1.72 ms; p99 2.58 ms; GPU 0.92 ms average",
+  "memory": "CPU 4,252.0 MiB average, 4,340.0 MiB peak; GPU 1,620.3 MiB average, 1,620.4 MiB peak",
+  "profiler": {
+    "windowFrames": 200,
+    "engine": [
+      {
+        "name": "Async",
+        "calls": 1213,
+        "minimumMillisecondsPerFrame": 0.001,
+        "averageMillisecondsPerFrame": 0.002144,
+        "p95MillisecondsPerFrame": 0.0026,
+        "p99MillisecondsPerFrame": 0.0037,
+        "maximumMillisecondsPerFrame": 0.0365
+      },
+      {
+        "name": "Animation",
+        "calls": 613,
+        "minimumMillisecondsPerFrame": 0.0922,
+        "averageMillisecondsPerFrame": 0.1106205,
+        "p95MillisecondsPerFrame": 0.1431,
+        "p99MillisecondsPerFrame": 0.1664,
+        "maximumMillisecondsPerFrame": 0.2913
+      },
+      {
+        "name": "Audio",
+        "calls": 813,
+        "minimumMillisecondsPerFrame": 0.0015,
+        "averageMillisecondsPerFrame": 0.003129,
+        "p95MillisecondsPerFrame": 0.0179,
+        "p99MillisecondsPerFrame": 0.0231,
+        "maximumMillisecondsPerFrame": 0.0318
+      },
+      {
+        "name": "GcPause",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0,
+        "p95MillisecondsPerFrame": 0,
+        "p99MillisecondsPerFrame": 0,
+        "maximumMillisecondsPerFrame": 0
+      },
+      {
+        "name": "Idle",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0.0075970003,
+        "p95MillisecondsPerFrame": 0,
+        "p99MillisecondsPerFrame": 0.1746,
+        "maximumMillisecondsPerFrame": 0.2583
+      },
+      {
+        "name": "Input",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0033,
+        "averageMillisecondsPerFrame": 0.0041605,
+        "p95MillisecondsPerFrame": 0.0048,
+        "p99MillisecondsPerFrame": 0.0073,
+        "maximumMillisecondsPerFrame": 0.0246
+      },
+      {
+        "name": "NavMesh",
+        "calls": 26,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 2.3e-05,
+        "p95MillisecondsPerFrame": 0.0003,
+        "p99MillisecondsPerFrame": 0.0004,
+        "maximumMillisecondsPerFrame": 0.0006
+      },
+      {
+        "name": "Network",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0001,
+        "averageMillisecondsPerFrame": 0.0001945,
+        "p95MillisecondsPerFrame": 0.0002,
+        "p99MillisecondsPerFrame": 0.0003,
+        "maximumMillisecondsPerFrame": 0.0004
+      },
+      {
+        "name": "Particles",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0001,
+        "averageMillisecondsPerFrame": 0.000136,
+        "p95MillisecondsPerFrame": 0.0002,
+        "p99MillisecondsPerFrame": 0.0002,
+        "maximumMillisecondsPerFrame": 0.0003
+      },
+      {
+        "name": "Physics",
+        "calls": 26,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0.001837,
+        "p95MillisecondsPerFrame": 0.0233,
+        "p99MillisecondsPerFrame": 0.0375,
+        "maximumMillisecondsPerFrame": 0.043
+      },
+      {
+        "name": "Render",
+        "calls": 800,
+        "minimumMillisecondsPerFrame": 0.4465,
+        "averageMillisecondsPerFrame": 0.956775,
+        "p95MillisecondsPerFrame": 1.3768,
+        "p99MillisecondsPerFrame": 1.6289,
+        "maximumMillisecondsPerFrame": 2.4351
+      },
+      {
+        "name": "Update",
+        "calls": 213,
+        "minimumMillisecondsPerFrame": 0.0289,
+        "averageMillisecondsPerFrame": 0.0382015,
+        "p95MillisecondsPerFrame": 0.0471,
+        "p99MillisecondsPerFrame": 0.0756,
+        "maximumMillisecondsPerFrame": 0.3143
+      },
+      {
+        "name": "UI",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0365,
+        "averageMillisecondsPerFrame": 0.044766,
+        "p95MillisecondsPerFrame": 0.0541,
+        "p99MillisecondsPerFrame": 0.0626,
+        "maximumMillisecondsPerFrame": 0.3092
+      },
+      {
+        "name": "Video",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0001,
+        "averageMillisecondsPerFrame": 0.000112999995,
+        "p95MillisecondsPerFrame": 0.0002,
+        "p99MillisecondsPerFrame": 0.0002,
+        "maximumMillisecondsPerFrame": 0.0002
+      },
+      {
+        "name": "Editor",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0377,
+        "averageMillisecondsPerFrame": 0.0772955,
+        "p95MillisecondsPerFrame": 0.1163,
+        "p99MillisecondsPerFrame": 1.3889,
+        "maximumMillisecondsPerFrame": 1.692
+      }
+    ],
+    "scripts": [
+      {
+        "name": "Voxels3/VoxelManager.OnUpdate",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0102,
+        "averageMillisecondsPerFrame": 0.013664,
+        "p95MillisecondsPerFrame": 0.0144,
+        "p99MillisecondsPerFrame": 0.0211,
+        "maximumMillisecondsPerFrame": 0.2917
+      },
+      {
+        "name": "Voxels3/CollisionInterest",
+        "calls": 0,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0,
+        "p95MillisecondsPerFrame": 0,
+        "p99MillisecondsPerFrame": 0,
+        "maximumMillisecondsPerFrame": 0
+      },
+      {
+        "name": "Voxels3/CollisionIntegration",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0003,
+        "averageMillisecondsPerFrame": 0.000417,
+        "p95MillisecondsPerFrame": 0.0005,
+        "p99MillisecondsPerFrame": 0.0006,
+        "maximumMillisecondsPerFrame": 0.0007
+      },
+      {
+        "name": "Voxels3/CollisionReadiness",
+        "calls": 13,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0.000378,
+        "p95MillisecondsPerFrame": 0.0049,
+        "p99MillisecondsPerFrame": 0.0073,
+        "maximumMillisecondsPerFrame": 0.0092
+      },
+      {
+        "name": "Voxels3/FigureEightMovement",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 6.2e-05,
+        "p95MillisecondsPerFrame": 0.0001,
+        "p99MillisecondsPerFrame": 0.0001,
+        "maximumMillisecondsPerFrame": 0.0001
+      },
+      {
+        "name": "Voxels3/PerformanceSampling",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0005,
+        "averageMillisecondsPerFrame": 0.00079099997,
+        "p95MillisecondsPerFrame": 0.0008,
+        "p99MillisecondsPerFrame": 0.0009,
+        "maximumMillisecondsPerFrame": 0.0121
+      },
+      {
+        "name": "Voxels3/RebuildDesiredChunks",
+        "calls": 0,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0,
+        "p95MillisecondsPerFrame": 0,
+        "p99MillisecondsPerFrame": 0,
+        "maximumMillisecondsPerFrame": 0
+      },
+      {
+        "name": "Voxels3/PreparePlacement",
+        "calls": 0,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0,
+        "p95MillisecondsPerFrame": 0,
+        "p99MillisecondsPerFrame": 0,
+        "maximumMillisecondsPerFrame": 0
+      },
+      {
+        "name": "Voxels3/IntegrateWarmChunks",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 0.0001265,
+        "p95MillisecondsPerFrame": 0.0002,
+        "p99MillisecondsPerFrame": 0.0002,
+        "maximumMillisecondsPerFrame": 0.0002
+      },
+      {
+        "name": "Voxels3/ProcessPendingMeshes",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0031,
+        "averageMillisecondsPerFrame": 0.0038475,
+        "p95MillisecondsPerFrame": 0.0044,
+        "p99MillisecondsPerFrame": 0.0049,
+        "maximumMillisecondsPerFrame": 0.0112
+      },
+      {
+        "name": "Voxels3/RefreshRenderCameras",
+        "calls": 1,
+        "minimumMillisecondsPerFrame": 0,
+        "averageMillisecondsPerFrame": 3.5e-05,
+        "p95MillisecondsPerFrame": 0,
+        "p99MillisecondsPerFrame": 0,
+        "maximumMillisecondsPerFrame": 0.007
+      },
+      {
+        "name": "Voxels3/CommitDrawCommands",
+        "calls": 200,
+        "minimumMillisecondsPerFrame": 0.0007,
+        "averageMillisecondsPerFrame": 0.0009075,
+        "p95MillisecondsPerFrame": 0.001,
+        "p99MillisecondsPerFrame": 0.0011,
+        "maximumMillisecondsPerFrame": 0.0017
+      }
+    ]
+  },
+  "streamingCenter": "0,0,0",
+  "visualPending": 0,
+  "transitionPending": 0,
+  "placementPending": false,
+  "visualArenas": 8,
+  "visualArenaUsage": "0:slots=512,vertices=484198,indices=2708388,largestVertexFree=913903,largestIndexFree=1485916;1:slots=512,vertices=344529,indices=1864038,largestVertexFree=1053572,largestIndexFree=2330266;2:slots=512,vertices=594840,indices=3357495,largestVertexFree=803261,largestIndexFree=836809;3:slots=512,vertices=599576,indices=3386526,largestVertexFree=798525,largestIndexFree=807778;4:slots=512,vertices=668365,indices=3766542,largestVertexFree=729736,largestIndexFree=427762;5:slots=512,vertices=651175,indices=3556953,largestVertexFree=746926,largestIndexFree=637351;6:slots=512,vertices=616171,indices=3296811,largestVertexFree=781930,largestIndexFree=897493;7:slots=375,vertices=548130,indices=2888925,largestVertexFree=849971,largestIndexFree=1305379",
+  "visualTopology": "7B986DE89DD420B2",
+  "visualPositions": "B6BD0345FC86EA2D",
+  "collision": {
+    "desired": 4913,
+    "ready": 4913,
+    "bodies": 289,
+    "pending": 0,
+    "building": false,
+    "activeWorkers": 0,
+    "workerLimit": 2,
+    "completed": 0,
+    "retiring": 0,
+    "failures": 0,
+    "staleDiscarded": 0,
+    "published": 4913,
+    "peakCompleted": 2,
+    "peakCompletedBytes": 114688,
+    "residentGeometryBytes": 11960244,
+    "peakResidentGeometryBytes": 11960244,
+    "degenerateTriangles": 50,
+    "weldedIntersections": 394,
+    "supportPatchRebuilds": 0,
+    "sampleCount": 1591417,
+    "rejectedBlocks": 1176367,
+    "sampling": {
+      "samples": 4913,
+      "truncatedSamples": 0,
+      "average": 0.29174972,
+      "p50": 0.01,
+      "p95": 3.7338,
+      "p99": 5.3323,
+      "maximum": 17.1754
+    },
+    "extraction": {
+      "samples": 4913,
+      "truncatedSamples": 0,
+      "average": 0.028616427,
+      "p50": 0,
+      "p95": 0.3974,
+      "p99": 0.5207,
+      "maximum": 1.5366
+    },
+    "creation": {
+      "samples": 289,
+      "truncatedSamples": 0,
+      "average": 0.5277384,
+      "p50": 0.5044,
+      "p95": 0.7079,
+      "p99": 1.0842,
+      "maximum": 1.9128
+    },
+    "meshCreation": {
+      "samples": 289,
+      "truncatedSamples": 0,
+      "average": 0.51724046,
+      "p50": 0.4948,
+      "p95": 0.6796,
+      "p99": 1.0745,
+      "maximum": 1.8877
+    },
+    "worstCreationSetupMilliseconds": 0.0161,
+    "worstCreationMeshMilliseconds": 1.8877,
+    "worstCreationPublicationMilliseconds": 0.009,
+    "worstCreationCoordinate": {
+      "x": 0,
+      "y": -1,
+      "z": 0
+    },
+    "worstCreationVertices": 1228,
+    "worstCreationIndices": 6954,
+    "retirement": {
+      "samples": 0,
+      "truncatedSamples": 0,
+      "average": 0,
+      "p50": 0,
+      "p95": 0,
+      "p99": 0,
+      "maximum": 0
+    },
+    "requestToReady": {
+      "samples": 4913,
+      "truncatedSamples": 0,
+      "average": 2906.6292,
+      "p50": 2987.9138,
+      "p95": 4935.665,
+      "p99": 5102.3105,
+      "maximum": 5141.9385
+    }
+  },
+  "holdSteps": 10,
+  "heldBodies": 0,
+  "playerPosition": "0.00130185019,0.00126999675,193.436279",
+  "playerGrounded": true,
+  "groundComponent": "VoxelManager",
+  "playerVelocity": "0,0,0",
+  "playerMotionEnabled": true,
+  "actors": [
+    {
+      "id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+      "name": "terrain_player",
+      "isProxy": false,
+      "motionEnabled": true,
+      "worldPosition": "0.00130185019,0.00126999675,193.436279",
+      "velocity": "0,0,0",
+      "sleeping": true,
+      "held": false
+    }
+  ],
+  "supportHit": true,
+  "supportGap": -0.03024292
+}

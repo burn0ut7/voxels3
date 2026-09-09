@@ -18,9 +18,6 @@ public readonly record struct ChunkDensityRange(
 /// </summary>
 internal sealed class VoxelChunk
 {
-	public const byte AirMaterialId = 0;
-	public const byte GrassMaterialId = 1;
-
 	private readonly Vector3Int _globalSampleOrigin;
 
 	public Vector3Int Coordinate { get; }
@@ -104,53 +101,19 @@ internal sealed class VoxelChunk
 		return field.GetDensityRange( new SdfWorldAabb( minimum, minimum + new Vector3( size ) ), cellSize );
 	}
 
-	public static ChunkDensityClassification ClassifyDensityRangeBroadPhase(
-		Vector3Int coordinate,
-		int cellsPerAxis,
-		float cellSize,
-		TerrainFieldSnapshot field )
-	{
-		var size = cellsPerAxis * cellSize;
-		var minimum = new Vector3( coordinate.x * size, coordinate.y * size, coordinate.z * size );
-		field.GetCorrectionRange( new SdfWorldAabb( minimum, minimum + new Vector3( size ) ), out var low, out var high );
-		if ( low != 0f || high != 0f ) return ChunkDensityClassification.PotentiallySurfaceContaining;
-		return ProceduralTerrainSdf.ClassifyDensityRangeBroadPhase(
-			coordinate,
-			cellsPerAxis,
-			cellSize,
-			field.Settings );
-	}
-
-	public bool TryGetSample( Vector3Int localSample, out float density, out byte materialId )
+	public bool TryGetSample( Vector3Int localSample, out float density, out ushort materialId )
 	{
 		if ( localSample.x < 0 || localSample.x >= SamplesPerAxis ||
 			localSample.y < 0 || localSample.y >= SamplesPerAxis ||
 			localSample.z < 0 || localSample.z >= SamplesPerAxis )
 		{
 			density = 0f;
-			materialId = AirMaterialId;
+			materialId = VoxelMaterials.Air;
 			return false;
 		}
 
 		var global = _globalSampleOrigin + localSample;
 		var position = new Vector3( global.x * CellSize, global.y * CellSize, global.z * CellSize );
-		if ( !Field.TryCaptureRegion( new SdfWorldAabb( position, position ), out var reader ) )
-		{
-			density = 0f; materialId = AirMaterialId;
-			return false;
-		}
-		density = reader.SampleWorld( position );
-		materialId = density <= 0f ? GrassMaterialId : AirMaterialId;
-		return true;
-	}
-
-	public static string GetMaterialName( byte materialId )
-	{
-		return materialId switch
-		{
-			AirMaterialId => "Air",
-			GrassMaterialId => "Grass",
-			_ => "Unknown"
-		};
+		return ProceduralVoxelMaterials.TrySample( Field, position, out density, out materialId );
 	}
 }

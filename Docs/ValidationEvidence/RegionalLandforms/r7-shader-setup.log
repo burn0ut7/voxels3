@@ -1,0 +1,21 @@
+6 entries, oldest first (1004 buffered):
+
+23:44:31 [Generic] Info: Compiling: shaders/voxels/voxel_emit_vertices_cs.shader (3/3)
+
+23:45:14 [Generic] Info: Compiling 3 shaders..
+
+23:45:14 [Generic] Info: Compiling: shaders/voxels/voxel_persistent_geometry_cs.shader (1/3)
+
+23:45:15 [Generic] Info: Compiling: shaders/voxels/voxel_transition_geometry_cs.shader (2/3)
+
+23:45:16 [Generic] Info: Compiling: shaders/voxels/voxel_emit_vertices_cs.shader (3/3)
+
+23:45:16 [Generic] Error: Failed to compile shaders/voxels/voxel_emit_vertices_cs.shader
+
+    System.IO.IOException: The requested operation cannot be performed on a file with a user-mapped section open. : 'C:\Users\Gray\Documents\s&box projects\voxels3\Assets\shaders\voxels\voxel_emit_vertices_cs.shader_c'.
+
+    at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+
+    at System.IO.File.<WriteAllBytesAsync>g__Core|103_0(String path, ReadOnlyMemory`1 bytes, CancellationToken cancellationToken)
+
+Cursor: 1004

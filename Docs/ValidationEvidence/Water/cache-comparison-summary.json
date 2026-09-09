@@ -1,0 +1,176 @@
+[
+  {
+    "group": "cache-before",
+    "medianSeconds": 25.03200000000652,
+    "minimumSeconds": 24.17200000002049,
+    "maximumSeconds": 25.844000000040978,
+    "runs": [
+      {
+        "seconds": 25.844000000040978,
+        "frame": "539.8 FPS average; p95 4.15 ms; p99 5.65 ms; GPU 0.83 ms average",
+        "memory": "CPU 3,784.3 MiB average, 3,789.1 MiB peak; GPU 1,329.2 MiB average, 1,329.2 MiB peak",
+        "cache": null,
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      },
+      {
+        "seconds": 25.03200000000652,
+        "frame": "545.0 FPS average; p95 4.11 ms; p99 5.60 ms; GPU 0.85 ms average",
+        "memory": "CPU 3,850.4 MiB average, 3,856.6 MiB peak; GPU 1,334.5 MiB average, 1,377.2 MiB peak",
+        "cache": null,
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      },
+      {
+        "seconds": 24.17200000002049,
+        "frame": "563.3 FPS average; p95 3.84 ms; p99 5.11 ms; GPU 0.86 ms average",
+        "memory": "CPU 3,891.4 MiB average, 3,896.5 MiB peak; GPU 1,334.5 MiB average, 1,377.2 MiB peak",
+        "cache": null,
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      }
+    ]
+  },
+  {
+    "group": "cache-final-off",
+    "medianSeconds": 30.48499999998603,
+    "minimumSeconds": 30.46799999999348,
+    "maximumSeconds": 31.375,
+    "runs": [
+      {
+        "seconds": 30.46799999999348,
+        "frame": "430.5 FPS average; p95 5.26 ms; p99 7.14 ms; GPU 1.08 ms average",
+        "memory": "CPU 4,477.0 MiB average, 4,478.0 MiB peak; GPU 1,437.6 MiB average, 1,570.9 MiB peak",
+        "cache": {
+          "enabled": false,
+          "hits": 0,
+          "misses": 0,
+          "writes": 0,
+          "failures": 0,
+          "skipped": 0,
+          "pendingJobs": 0,
+          "pendingCaptures": 0,
+          "residentBytes": 0,
+          "readBytes": 0,
+          "writtenBytes": 0,
+          "entries": 0
+        },
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      },
+      {
+        "seconds": 30.48499999998603,
+        "frame": "447.3 FPS average; p95 4.99 ms; p99 6.58 ms; GPU 1.12 ms average",
+        "memory": "CPU 4,443.0 MiB average, 4,444.0 MiB peak; GPU 1,426.9 MiB average, 1,570.9 MiB peak",
+        "cache": {
+          "enabled": false,
+          "hits": 0,
+          "misses": 0,
+          "writes": 0,
+          "failures": 0,
+          "skipped": 0,
+          "pendingJobs": 0,
+          "pendingCaptures": 0,
+          "residentBytes": 0,
+          "readBytes": 0,
+          "writtenBytes": 0,
+          "entries": 0
+        },
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      },
+      {
+        "seconds": 31.375,
+        "frame": "408.3 FPS average; p95 5.89 ms; p99 7.78 ms; GPU 1.09 ms average",
+        "memory": "CPU 4,448.4 MiB average, 4,449.1 MiB peak; GPU 1,416.3 MiB average, 1,522.9 MiB peak",
+        "cache": {
+          "enabled": false,
+          "hits": 0,
+          "misses": 0,
+          "writes": 0,
+          "failures": 0,
+          "skipped": 0,
+          "pendingJobs": 0,
+          "pendingCaptures": 0,
+          "residentBytes": 0,
+          "readBytes": 0,
+          "writtenBytes": 0,
+          "entries": 0
+        },
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      }
+    ]
+  },
+  {
+    "group": "cache-final-on",
+    "medianSeconds": 30.57799999997951,
+    "minimumSeconds": 27.18700000003446,
+    "maximumSeconds": 50.921999999904074,
+    "runs": [
+      {
+        "seconds": 50.921999999904074,
+        "frame": "381.8 FPS average; p95 5.74 ms; p99 11.35 ms; GPU 1.04 ms average",
+        "memory": "CPU 5,079.6 MiB average, 5,085.5 MiB peak; GPU 1,475.1 MiB average, 1,619.1 MiB peak",
+        "cache": {
+          "enabled": true,
+          "hits": 13482,
+          "misses": 105,
+          "writes": 0,
+          "failures": 0,
+          "skipped": 0,
+          "pendingJobs": 0,
+          "pendingCaptures": 0,
+          "residentBytes": 134113000,
+          "readBytes": 2127707624,
+          "writtenBytes": 0,
+          "entries": 782
+        },
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      },
+      {
+        "seconds": 30.57799999997951,
+        "frame": "471.3 FPS average; p95 5.13 ms; p99 7.03 ms; GPU 1.03 ms average",
+        "memory": "CPU 5,342.4 MiB average, 5,469.3 MiB peak; GPU 1,449.1 MiB average, 1,593.1 MiB peak",
+        "cache": {
+          "enabled": true,
+          "hits": 13419,
+          "misses": 105,
+          "writes": 0,
+          "failures": 0,
+          "skipped": 6,
+          "pendingJobs": 0,
+          "pendingCaptures": 0,
+          "residentBytes": 134113000,
+          "readBytes": 2129062560,
+          "writtenBytes": 0,
+          "entries": 782
+        },
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      },
+      {
+        "seconds": 27.18700000003446,
+        "frame": "519.3 FPS average; p95 4.32 ms; p99 5.83 ms; GPU 0.89 ms average",
+        "memory": "CPU 5,510.9 MiB average, 5,525.1 MiB peak; GPU 1,353.1 MiB average, 1,353.1 MiB peak",
+        "cache": {
+          "enabled": true,
+          "hits": 13445,
+          "misses": 105,
+          "writes": 0,
+          "failures": 0,
+          "skipped": 6,
+          "pendingJobs": 0,
+          "pendingCaptures": 0,
+          "residentBytes": 134113000,
+          "readBytes": 2128631444,
+          "writtenBytes": 0,
+          "entries": 782
+        },
+        "topology": "473FFDE4AD1E3FE1",
+        "positions": "92FAEEE7BEE60656"
+      }
+    ]
+  }
+]

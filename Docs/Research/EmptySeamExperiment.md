@@ -1,13 +1,24 @@
 # Empty seam experiment
 
-2026-09-09. Rejected; exact pre-experiment runtime source restored.
+## Acceptance decision
+
+2026-09-09: the user explicitly accepted candidate B after reviewing its measured
+startup frame-rate tradeoff. Candidate B is restored: skip strictly uniform
+unedited seams, and avoid empty-to-empty draw-command invalidation. Prior rejection
+results below are retained as history. Acceptance covers the reported startup
+tradeoff; moving behavior and integration are being verified with the unchanged
+benchmark. No return correction or unrelated terrain change is authorized.
+
+
+Initial screening: rejected; pre-experiment source was restored before the
+subsequent user acceptance recorded above.
 
 ## Result
 
 The prototype removed1,304 of2,064 seam count readbacks at the fixed spawn,
 with matching terrain and seam fingerprints. It shortened loading, but did not
-preserve the startup frame window. The user's frame-performance constraint takes
-precedence over the shorter load time, so no seam change is retained.
+preserve the startup frame window. It was initially rejected under the frame-performance screen. The user then
+explicitly accepted candidate B's measured tradeoff; B is now retained.
 
 | Version | Full load | First reported10-second FPS | Frame p99 |
 | --- | ---: | ---: | ---: |
@@ -40,7 +51,7 @@ becomes eligible earlier. The exact cause of the FPS regression was not isolated
 B tested a concrete redundant operation: empty-to-empty publication marked draw
 commands dirty despite changing no drawable geometry. Avoiding it improved the
 observed p99 versus A but did not meet the baseline FPS criterion. Both changes
-are removed; this report does not establish that draw invalidation alone caused
+were removed during screening, then B was restored on acceptance. This report does not establish that draw invalidation alone caused
 the regression or that an independent change would be beneficial.
 
 ## Correctness and restoration
@@ -54,8 +65,9 @@ seam or multiplayer qualification. The geometry audit and figure-eight were not
 run on the rejected candidate. The previously retained regular-chunk classifier
 improvement and dirty-page persistence remain unchanged.
 
-GpuVoxelMesher.cs and VoxelManager.cs were restored byte-for-byte to their
-pre-experiment snapshots. No prototype toggle or alternate runtime path remains.
+During rejection, GpuVoxelMesher.cs and VoxelManager.cs were restored byte-for-byte
+to their pre-experiment snapshots. Candidate B has since been reinstated as the
+normal path, without a prototype toggle.
 Source hashes and metrics are in [the summary](../ValidationEvidence/Water/empty-seam-summary.json).
 [Historical prototype design](../Plans/EmptySeamPrototype.md).
 

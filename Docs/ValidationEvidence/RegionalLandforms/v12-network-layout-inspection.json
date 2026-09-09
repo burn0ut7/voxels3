@@ -1,0 +1,77 @@
+{
+  "purpose": "Read-only compiled layout inspection while diagnosing an observed in-world GPU crash; not runtime acceptance.",
+  "resource": "Assets\\shaders\\voxels\\voxel_transition_geometry_cs.shader_c",
+  "resourceSha256": "d28b28ed10b2fafb06591f93c87326528a86152ac1e2272f04d3d07bf6d91bcd",
+  "spirvOffsetInDecompressedFrame": 246,
+  "arrayStrides": [
+    {
+      "targetId": 660,
+      "arrayStride": 16
+    },
+    {
+      "targetId": 2012,
+      "arrayStride": 16
+    },
+    {
+      "targetId": 650,
+      "arrayStride": 4
+    },
+    {
+      "targetId": 2000,
+      "arrayStride": 4
+    },
+    {
+      "targetId": 655,
+      "arrayStride": 8
+    },
+    {
+      "targetId": 2006,
+      "arrayStride": 8
+    },
+    {
+      "targetId": 2473,
+      "arrayStride": 128
+    },
+    {
+      "targetId": 814,
+      "arrayStride": 128
+    },
+    {
+      "targetId": 651,
+      "arrayStride": 4
+    },
+    {
+      "targetId": 2002,
+      "arrayStride": 4
+    },
+    {
+      "targetId": 2068,
+      "arrayStride": 64
+    },
+    {
+      "targetId": 409,
+      "arrayStride": 64
+    },
+    {
+      "targetId": 2185,
+      "arrayStride": 64
+    },
+    {
+      "targetId": 526,
+      "arrayStride": 64
+    },
+    {
+      "targetId": 1669,
+      "arrayStride": 24
+    },
+    {
+      "targetId": 28,
+      "arrayStride": 24
+    }
+  ],
+  "observation": "The inspected module contains 24-byte vertex records, 128-byte requests and 64-byte allocation/count records. A 32-byte vertex stride mismatch is not supported by this module. This does not establish which buffer or instruction faulted in the guest.",
+  "decodingSources": [
+    "https://raw.githubusercontent.com/KhronosGroup/SPIRV-Headers/main/include/spirv/unified1/spirv.core.grammar.json",
+    "https://raw.githubusercontent.com/ValveResourceFormat/ValveResourceFormat/master/ValveResourceFormat/Utils/vfx_zstd_2bc2fa87.bin"
+  ]
+}

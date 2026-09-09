@@ -69,7 +69,8 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 
 	uint block = index / (uint)CellCount;
 	uint local = index - block * (uint)CellCount;
-	uint code = Cells[index].x;
+	uint code = Cells[index].x & 0xffffu;
+	uint triangleMask = Cells[index].x >> 16;
 	AllocationDescriptor allocation = Allocations[block];
 	if ( allocation.Enabled == 0 || code == 0 || code == 255 )
 	{
@@ -77,14 +78,14 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 	}
 
 	uint3 cell = DecodePoint( local, ChunkSize );
-	uint cellClass = RegularCellClass[code];
-	uint counts = RegularCellGeometryCounts[cellClass];
+	uint cellClass = RegularTopology[RegularCellClassOffset + (code)];
+	uint counts = RegularTopology[RegularCellGeometryCountsOffset + (cellClass)];
 	uint vertexCount = counts >> 4;
 	uint triangleCount = counts & 0xf;
 	uint vertices[12];
 	for ( uint vertex = 0; vertex < vertexCount; vertex++ )
 	{
-		uint data = RegularVertexData[code * 12 + vertex];
+		uint data = RegularTopology[RegularVertexDataOffset + (code * 12 + vertex)];
 		uint edge = EdgeSlot( cell, data );
 		uint groupOffset = EdgeGroupSums[
 			block * (uint)EdgeGroupCount + edge / 256];
@@ -98,7 +99,7 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 
 	uint output = CellGroupSums[
 		block * (uint)CellGroupCount + local / 256] + Cells[index].z;
-	if ( output + triangleCount * 3 > allocation.IndexCapacity )
+	if ( output + Cells[index].y > allocation.IndexCapacity )
 	{
 		return;
 	}
@@ -106,10 +107,12 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 	uint topology = cellClass * 15;
 	for ( uint triangle = 0; triangle < triangleCount; triangle++ )
 	{
+		if ( (triangleMask & (1u << triangle)) == 0 ) continue;
 		uint table = topology + triangle * 3;
-		uint target = allocation.IndexOffset + output + triangle * 3;
-		OutputIndices[target] = vertices[RegularCellVertexIndices[table]];
-		OutputIndices[target + 1] = vertices[RegularCellVertexIndices[table + 1]];
-		OutputIndices[target + 2] = vertices[RegularCellVertexIndices[table + 2]];
+		uint target = allocation.IndexOffset + output;
+		output += 3;
+		OutputIndices[target] = vertices[RegularTopology[RegularCellVertexIndicesOffset + (table)]];
+		OutputIndices[target + 1] = vertices[RegularTopology[RegularCellVertexIndicesOffset + (table + 1)]];
+		OutputIndices[target + 2] = vertices[RegularTopology[RegularCellVertexIndicesOffset + (table + 2)]];
 	}
 }

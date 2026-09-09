@@ -2,6 +2,8 @@ struct TransitionRequest
 {
 	float4 OriginAndFineCellSize;
 	float4 Terrain;
+	float4 TerrainScales;
+	float4 TerrainShape;
 	float4 BasisUAndCoarseCellSize;
 	float4 BasisVAndCellsPerAxis;
 	float4 NormalAndFace;
@@ -59,15 +61,20 @@ RWStructuredBuffer<uint> TransitionEdgeVertexIds < Attribute( "TransitionEdgeVer
 RWStructuredBuffer<uint> TransitionEdgeGroupSums < Attribute( "TransitionEdgeGroupSums" ); >;
 RWStructuredBuffer<uint> TransitionCellGroupSums < Attribute( "TransitionCellGroupSums" ); >;
 RWStructuredBuffer<uint> TransitionBlockCounts < Attribute( "TransitionBlockCounts" ); >;
-RWStructuredBuffer<uint2> TransitionCellAuditCounts < Attribute( "TransitionCellAuditCounts" ); >;
+RWStructuredBuffer<uint4> TransitionAuditCounts < Attribute( "TransitionAuditCounts" ); >;
 RWStructuredBuffer<uint2> TransitionDigests < Attribute( "TransitionDigests" ); >;
-RWStructuredBuffer<uint2> TransitionFaceMismatchCounts < Attribute( "TransitionFaceMismatchCounts" ); >;
+StructuredBuffer<uint> TransitionTopology < Attribute( "TransitionTopology" ); >;
 RWStructuredBuffer<uint4> TransitionLateralDigests < Attribute( "TransitionLateralDigests" ); >;
 RWStructuredBuffer<TransitionCountResult> TransitionCountResults < Attribute( "TransitionCountResults" ); >;
 StructuredBuffer<TransitionAllocationDescriptor> TransitionAllocations < Attribute( "TransitionAllocations" ); >;
 RWStructuredBuffer<uint> TransitionOutputIndices < Attribute( "TransitionOutputIndices" ); >;
 RWStructuredBuffer<TransitionTerrainVertexWords> TransitionOutputVertices < Attribute( "TransitionOutputVertices" ); >;
 
+int TransitionCellClassOffset < Attribute( "TransitionCellClassOffset" ); >;
+int TransitionCellGeometryCountsOffset < Attribute( "TransitionCellGeometryCountsOffset" ); >;
+int TransitionCellVertexIndicesOffset < Attribute( "TransitionCellVertexIndicesOffset" ); >;
+int TransitionVertexDataOffset < Attribute( "TransitionVertexDataOffset" ); >;
+float TransitionMinimumAreaSquaredRelative < Attribute( "TransitionMinimumAreaSquaredRelative" ); >;
 int TransitionStage < Attribute( "TransitionStage" ); >;
 int TransitionBatchSize < Attribute( "TransitionBatchSize" ); >;
 int TransitionDensitySize < Attribute( "TransitionDensitySize" ); >;
@@ -318,6 +325,20 @@ void TransitionExclusiveScan( uint lane, uint value )
 	}
 }
 
+// Selection and vertex emission consume the same refined edge coordinates.
+float3 TransitionRefinedPosition( uint block, uint2 cell, uint code, uint vertex )
+{
+	uint data = TransitionTopology[TransitionVertexDataOffset + code * 12 + vertex];
+	uint slot = TransitionEdgeSlot( cell, data );
+	uint2 first;
+	uint2 second;
+	TransitionDecodeEdge( slot, first, second );
+	TransitionRequest request = TransitionRequests[block];
+	return VoxelEdgePosition( TransitionWorldPoint( request, float2(first) ),
+		TransitionWorldPoint( request, float2(second) ),
+		asfloat( TransitionEdgeFlags[block * (uint)TransitionEdgeSlotCount + slot] - 1u ) );
+}
+
 [numthreads( 256, 1, 1 )]
 void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID, uint lane : SV_GroupIndex )
 {
@@ -335,9 +356,8 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		}
 		if ( index < (uint)TransitionBatchSize )
 		{
-			TransitionCellAuditCounts[index] = uint2( 0, 0 );
+			TransitionAuditCounts[index] = uint4( 0, 0, 0, 0 );
 			TransitionDigests[index] = uint2( 0, 0 );
-			TransitionFaceMismatchCounts[index] = uint2( 0, 0 );
 			TransitionLateralDigests[index] = uint4( 0, 0, 0, 0 );
 		}
 		return;
@@ -371,10 +391,9 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		TransitionDensitySamples[index] = SampleVoxelSdf(
 			sample,
 			request.OriginAndFineCellSize.w,
-			(int)request.Terrain.x,
-			request.Terrain.y,
-			request.Terrain.z,
-			request.Terrain.w ) + correction;
+			request.Terrain,
+			request.TerrainScales,
+			request.TerrainShape ) + correction;
 		return;
 	}
 	if ( TransitionStage == 2 )
@@ -392,21 +411,21 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		{
 			return;
 		}
-		uint cellClass = TransitionCellClass[code];
-		uint counts = TransitionCellGeometryCounts[cellClass & 0x7f];
+		uint cellClass = TransitionTopology[TransitionCellClassOffset + code];
+		uint counts = TransitionTopology[TransitionCellGeometryCountsOffset + (cellClass & 0x7f)];
 		uint vertexCount = counts >> 4;
 		uint indexCount = (counts & 0xf) * 3;
 		TransitionCells[index].y = indexCount;
-		TransitionCells[index].w = vertexCount;
-		InterlockedAdd( TransitionCellAuditCounts[block].x, 1 );
+		TransitionCells[index].w = 0;
+		InterlockedAdd( TransitionAuditCounts[block].x, 1 );
 		uint metadataDigest = 0;
 		for ( uint vertex = 0; vertex < vertexCount; vertex++ )
 		{
-			uint data = TransitionVertexData[code * 12 + vertex];
+			uint data = TransitionTopology[TransitionVertexDataOffset + code * 12 + vertex];
 			uint slot = TransitionEdgeSlot( cell, data );
 			if ( slot >= (uint)TransitionEdgeSlotCount )
 			{
-				InterlockedAdd( TransitionCellAuditCounts[block].y, 1 );
+				InterlockedAdd( TransitionAuditCounts[block].y, 1 );
 				continue;
 			}
 			InterlockedOr( TransitionEdgeFlags[block * (uint)TransitionEdgeSlotCount + slot], 1 );
@@ -508,23 +527,24 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		{
 			if ( slot < 8320 )
 			{
-				InterlockedAdd( TransitionFaceMismatchCounts[block].x, 1 );
+				InterlockedAdd( TransitionAuditCounts[block].z, 1 );
 			}
 			else
 			{
-				InterlockedAdd( TransitionFaceMismatchCounts[block].y, 1 );
+				InterlockedAdd( TransitionAuditCounts[block].w, 1 );
 			}
 		}
 		if ( !actual )
 		{
 			return;
 		}
-		float denominator = firstDensity - secondDensity;
-		float interpolation = saturate( abs( denominator ) > 0.000001 ?
-			firstDensity / denominator : 0.5 );
 		TransitionRequest request = TransitionRequests[block];
-		float3 world = TransitionWorldPoint( request,
-			lerp( float2( first ), float2( second ), interpolation ) );
+		float3 firstWorld = TransitionWorldPoint( request, float2(first) );
+		float3 secondWorld = TransitionWorldPoint( request, float2(second) );
+		float coordinate = RefineVoxelEdge( firstWorld, secondWorld, firstDensity, secondDensity,
+			request.Terrain, request.TerrainScales, request.TerrainShape, request.Reserved0 != 0 );
+		TransitionEdgeFlags[index] = asuint( coordinate ) + 1u;
+		float3 world = VoxelEdgePosition( firstWorld, secondWorld, coordinate );
 		uint worldHash = TransitionHash( asuint( world.x ) ^ TransitionHash( asuint( world.y ) ) ^
 			TransitionHash( asuint( world.z ) ) );
 		InterlockedXor( TransitionDigests[block].y, TransitionHash( worldHash ^ slot ) );
@@ -546,6 +566,32 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		}
 		return;
 	}
+	if ( TransitionStage == 10 )
+	{
+		if ( index >= (uint)TransitionCellCount * (uint)TransitionBatchSize ) return;
+		uint block = index / (uint)TransitionCellCount;
+		uint local = index - block * (uint)TransitionCellCount;
+		uint code = TransitionCells[index].x;
+		if ( code == 0 || code == 511 ) return;
+		uint cellClass = TransitionTopology[TransitionCellClassOffset + code] & 0x7f;
+		uint triangleCount = TransitionTopology[TransitionCellGeometryCountsOffset + cellClass] & 0xf;
+		uint2 cell = TransitionDecodeCell( local );
+		float size = TransitionRequests[block].BasisUAndCoarseCellSize.w;
+		float minimumArea = size * size * size * size * TransitionMinimumAreaSquaredRelative;
+		uint mask = 0;
+		for ( uint triangle = 0; triangle < triangleCount; triangle++ )
+		{
+			uint table = TransitionCellVertexIndicesOffset + cellClass * 36 + triangle * 3;
+			float3 a = TransitionRefinedPosition( block, cell, code, TransitionTopology[table] );
+			float3 b = TransitionRefinedPosition( block, cell, code, TransitionTopology[table + 1] );
+			float3 c = TransitionRefinedPosition( block, cell, code, TransitionTopology[table + 2] );
+			float3 area = cross( b - a, c - a );
+			if ( dot( area, area ) > minimumArea ) mask |= 1u << triangle;
+		}
+		TransitionCells[index].w = mask;
+		TransitionCells[index].y = countbits( mask ) * 3;
+		return;
+	}
 	if ( TransitionStage == 7 )
 	{
 		if ( index >= (uint)TransitionBatchSize )
@@ -557,16 +603,16 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		result.IndexCount = TransitionBlockCounts[index * 2 + 1];
 		result.Generation = TransitionRequests[index].Generation;
 		result.RequestIndex = index;
-		result.ActiveCells = TransitionCellAuditCounts[index].x;
+		result.ActiveCells = TransitionAuditCounts[index].x;
 		result.TopologyDigest = TransitionDigests[index].x;
 		result.PositionDigest = TransitionDigests[index].y;
-		result.FineFaceMismatchCount = TransitionFaceMismatchCounts[index].x;
-		result.CoarseFaceMismatchCount = TransitionFaceMismatchCounts[index].y;
+		result.FineFaceMismatchCount = TransitionAuditCounts[index].z;
+		result.CoarseFaceMismatchCount = TransitionAuditCounts[index].w;
 		result.MinimumUDigest = TransitionLateralDigests[index].x;
 		result.MaximumUDigest = TransitionLateralDigests[index].y;
 		result.MinimumVDigest = TransitionLateralDigests[index].z;
 		result.MaximumVDigest = TransitionLateralDigests[index].w;
-		result.InvalidTableCount = TransitionCellAuditCounts[index].y;
+		result.InvalidTableCount = TransitionAuditCounts[index].y;
 		result.Reserved0 = 0;
 		result.Reserved1 = 0;
 		TransitionCountResults[index] = result;
@@ -587,15 +633,15 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		{
 			return;
 		}
-		uint cellClass = TransitionCellClass[code];
-		uint counts = TransitionCellGeometryCounts[cellClass & 0x7f];
+		uint cellClass = TransitionTopology[TransitionCellClassOffset + code];
+		uint counts = TransitionTopology[TransitionCellGeometryCountsOffset + (cellClass & 0x7f)];
 		uint vertexCount = counts >> 4;
 		uint triangleCount = counts & 0xf;
 		uint vertices[12];
 		uint2 cell = TransitionDecodeCell( local );
 		for ( uint vertex = 0; vertex < vertexCount; vertex++ )
 		{
-			uint slot = TransitionEdgeSlot( cell, TransitionVertexData[code * 12 + vertex] );
+			uint slot = TransitionEdgeSlot( cell, TransitionTopology[TransitionVertexDataOffset + code * 12 + vertex] );
 			if ( slot >= (uint)TransitionEdgeSlotCount )
 			{
 				return;
@@ -611,7 +657,7 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		}
 		uint output = TransitionCellGroupSums[
 			block * (uint)TransitionCellGroupCount + local / 256] + cellData.z;
-		if ( output + triangleCount * 3 > allocation.IndexCapacity )
+		if ( output + cellData.y > allocation.IndexCapacity )
 		{
 			return;
 		}
@@ -621,11 +667,13 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		bool flip = (cellClass & 0x80) == 0;
 		for ( uint triangle = 0; triangle < triangleCount; triangle++ )
 		{
+			if ( (cellData.w & (1u << triangle)) == 0 ) continue;
 			uint table = topology + triangle * 3;
-			uint first = TransitionCellVertexIndices[table];
-			uint second = TransitionCellVertexIndices[table + 1];
-			uint third = TransitionCellVertexIndices[table + 2];
-			uint target = allocation.IndexOffset + output + triangle * 3;
+			uint first = TransitionTopology[TransitionCellVertexIndicesOffset + table];
+			uint second = TransitionTopology[TransitionCellVertexIndicesOffset + table + 1];
+			uint third = TransitionTopology[TransitionCellVertexIndicesOffset + table + 2];
+			uint target = allocation.IndexOffset + output;
+			output += 3;
 			TransitionOutputIndices[target] = vertices[first];
 			TransitionOutputIndices[target + 1] = vertices[flip ? third : second];
 			TransitionOutputIndices[target + 2] = vertices[flip ? second : third];
@@ -655,14 +703,12 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		uint2 second;
 		TransitionDecodeEdge( slot, first, second );
 		int gradientStep = slot < 8320 ? 1 : 2;
-		float firstDensity = TransitionDensity( block, int2( first ) );
-		float secondDensity = TransitionDensity( block, int2( second ) );
-		float denominator = firstDensity - secondDensity;
-		float interpolation = saturate( abs( denominator ) > 0.000001 ?
-			firstDensity / denominator : 0.5 );
 		TransitionRequest request = TransitionRequests[block];
-		float2 point = lerp( float2( first ), float2( second ), interpolation );
-		float3 position = TransitionWorldPoint( request, point );
+		float3 firstWorld = TransitionWorldPoint( request, float2(first) );
+		float3 secondWorld = TransitionWorldPoint( request, float2(second) );
+		float3 position = VoxelEdgePosition( firstWorld, secondWorld, asfloat( TransitionEdgeFlags[index] - 1u ) );
+		float3 edge = secondWorld - firstWorld;
+		float interpolation = saturate( dot( position - firstWorld, edge ) / dot( edge, edge ) );
 		float3 normal = TransitionSafeNormalize( lerp(
 			TransitionGradient( block, int2( first ), gradientStep, request ),
 			TransitionGradient( block, int2( second ), gradientStep, request ),

@@ -2,6 +2,8 @@ struct TerrainRequest
 {
 	float4 OriginAndCellSize;
 	float4 Terrain;
+	float4 TerrainScales;
+	float4 TerrainShape;
 	int CellsPerAxis;
 	uint Generation;
 	uint RequestIndex;
@@ -139,15 +141,12 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 		secondPoint.z++;
 	}
 
-	float firstDensity = Density( block, int3( firstPoint ) );
-	float secondDensity = Density( block, int3( secondPoint ) );
-	float denominator = firstDensity - secondDensity;
-	float interpolation = saturate(
-		abs( denominator ) > 0.000001 ? firstDensity / denominator : 0.5 );
 	TerrainRequest request = Requests[block];
-	float3 outputPosition = request.OriginAndCellSize.xyz +
-		lerp( float3( firstPoint ), float3( secondPoint ), interpolation ) *
-		request.OriginAndCellSize.w;
+	float3 first = request.OriginAndCellSize.xyz + float3(firstPoint) * request.OriginAndCellSize.w;
+	float3 second = request.OriginAndCellSize.xyz + float3(secondPoint) * request.OriginAndCellSize.w;
+	float3 outputPosition = VoxelEdgePosition( first, second, asfloat( EdgeFlags[index] - 1u ) );
+	float3 edge = second - first;
+	float interpolation = saturate( dot( outputPosition - first, edge ) / dot( edge, edge ) );
 	float3 outputNormal = SafeNormalize( lerp(
 		Gradient( block, int3( firstPoint ) ),
 		Gradient( block, int3( secondPoint ) ),

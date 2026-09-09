@@ -11,11 +11,11 @@ FEATURES
 COMMON
 {
 	#include "system.fxc"
-	#include "shaders/voxels/transvoxel_regular_tables.hlsl"
 }
 
 CS
 {
 	#include "common.fxc"
+	#include "shaders/voxels/voxel_regular_topology.hlsl"
 	#include "shaders/voxels/voxel_emit_indices.hlsl"
 }

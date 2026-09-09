@@ -16664,6 +16664,3082 @@ multiplayer and exhaustive new-depth collision qualification remain unverified.
 Current [review](ValidationEvidence/CaveDepth/Review.md) and c6 raw/comparison/
 startup/reload logs preserve measurements and environment timing limits.
 
+
+## LANDFORM-001/v1 — regional exterior qualification (defined before runtime)
+
+Date: 2026-09-08. Status: defined, not run. Source starts at `8045b77` plus
+uncommitted landform implementation; generator 10 preserves generator-9 caves.
+Engine discovered through native editor MCP: 26.09.08; visible editor,
+`scenes/basic_example.scene`, host. Record exact source hashes and process identity
+with each run. Builds are file checks, not runtime qualification.
+
+Recipe: seed 1337; LandAmount .60, MountainAmount .35, PlainsAmount .60,
+ContinentalScale 131072, MountainRegionScale 32768, LocalLandformScale 8192,
+ReliefHeight 3072, Ruggedness .45. Canonical field spacing 16, region cells 32.
+Ocean means unfilled terrain below Z=0; no water or biome implementation.
+
+Fixed numerical survey: seeds 1337, 42, 9001; XY [-131072,131072] inclusive,
+4096 spacing (4225 positions per seed). Amount sweeps independently
+0/.25/.5/.75/1, with other settings at the above defaults. Each scale independently
+.5x/1x/2x; skip and explicitly report configurations violating scale hierarchy.
+Relief 1536/3072/6144; ruggedness 0/.45/1. All variants call the production
+landform sampler; no reference generator. Report min/max height and mean land,
+mountain, plains and hills weights, eligible-point counts, finite samples,
+slopes from +/-16 XY samples, exact repeat mismatches, and height-bound violations
+for XY rectangles +/-256 around surveyed points. Bound violation tolerance is
+zero against the outward-rounded published bounds; repeated scalar samples must
+match exactly. All heights/weights must be finite; weights in [0,1] within 1e-6,
+land-category weights sum to one within 1e-6. Increasing amount must not decrease
+its eligible weight at any fixed point (tolerance 1e-6); empty/full endpoints
+apply before the documented coast/nonmountain gates. Relief scales height
+proportionally within 0.01 unit. Pure plains (L>.99, plains>.99) must have slope
+<=0.05 at default recipe. Record empty sample classes as uncovered, never passed.
+
+Transects: Y=-32768/0/32768, X=-131072..131072 every 512 units; additional local
+samples at +/-16 for slope. Grid boundaries and negative coordinates use the
+same world coordinates through the actual lattice sampler and world sampler;
+density disagreement tolerance 0.01 unit (CPU/GPU 0.10 unit), sign disagreements
+outside +/-0.10 density fail. At coordinate magnitude 1048576 report float
+resolution and shared-position agreement; do not extrapolate to mathematical
+infinity. GPU output and collision must be observed through production meshing.
+
+Playable captures: first qualifying point in Y-then-X order of the default-seed
+survey for ocean (L<.05), coast (.2<L<.8), plains (L>.99, plains>.8), hills
+(L>.99, hills>.7), mountains (L>.99, mountains>.7). Freeze these coordinates before
+viewing; record any absent class. Ridges/saddles require inspection of the selected
+mountain region and cannot pass by weight alone. Evaluate terrain from player
+height and elevated camera; no holes, cracks, exposed LOD walls, contour steps or
+obvious lattice alignment. First slice acceptance requires all five regions and
+observed ridges/saddles, plus useful flat space. If unavailable, retain failure
+and revise recipe in a documented follow-up, without changing survey coordinates.
+
+Lifecycle case: stage LandAmount=.75; confirm active world/settings unchanged
+until Apply to new world; apply during idle host, old save completes before new
+world identity. Stage NaN, out-of-range 2, and invalid hierarchy; reject without
+field change. Restore staged defaults. Apply while save/edit/benchmark pending
+or guests connected must reject, preserving active world. Repeat .75/default
+switches three times after each prior save/apply completes; ensure old world,
+collision and GPU requests never publish into new state. Read settings and world
+IDs before/after. Reopen default recipe and verify recipe-specific selector,
+identity and corrections; old version-9 selector and world bytes must be unchanged.
+
+Edit case: actual remove/build tool operations at the first plains region,
+including a 512-unit chunk boundary, then save/reload. Record concrete hit positions,
+brush radius/strength and operation order before execution. Replication case:
+visible host and one visible guest, same settings, one boundary edit, late join,
+converged region fingerprints. A mismatched recipe must fail explicitly. No
+hidden/headless clients. Pending exact edit/peer run definitions are a gate:
+do not run those cases until their concrete coordinates and inputs are appended.
+
+## LANDFORM-PERF-001/v1 — fixed figure-eight comparison
+
+Defined before runtime. Reference: accepted CAVE-SPARSITY-002/v1 C6 run
+83cd96d488c94d978ebd9b15a91f5eef, generator 9, source cave manifest in
+ValidationEvidence/CaveDepth/c6-source.json. Workload unchanged: seed1337;
+32 cells, 16-unit cells; gameplay radius8; visual radius512; LOD0–6;
+extents4/8; host/no peers; >=30s settled warmup; speed2500, distance50000,
+one loop, Z=0; normal drain plus10s stationary; fps_max1000;
+Ryzen7 9800X3D/RTX5090. Candidate uses LANDFORM-001/v1 default recipe.
+Generator content change is the intended experimental variable. Engine version
+has advanced from C6's26.09.01c to26.09.08: retain this confound in conclusions.
+Do not call the fixed-Z route a surface traversal demonstration.
+
+Criteria fixed before measurement: no exceptions, invalid geometry, unsafe
+publication, boundary mismatches or undrained queues; 4913 collision regions ready
+at completion. Investigate increases >10% over C6 in frame p95/p99/max, GPU
+p95/p99/max, process/GPU peak memory and allocation/frame. Generation/collision
+completion may be slower if bounded and drained, but report p95/p99 latency and
+publication lag. These are review screens, not permission to ignore regressions;
+material unexplained regression requires resolution or explicit user acceptance.
+C6 frame p95/p99/max1.6397/3.1151/19.0777ms; GPU1.4653206/1.863718/10.683775ms;
+process4084461568B, GPU2828295208B; allocations28950.246B/frame;
+collision1736.8005/2153.468ms; publication74.6114/100.7061ms; lag4.
+
+Clean-start shader acceptance: successful live compile followed by a visible
+editor restart, unchanged Sentry crash marker, no fresh shader/parser/dispatch
+errors, and successful production terrain rendering. Hot compilation alone is
+insufficient. No runtime result is recorded yet.
+
+
+### LANDFORM-001/v1 R1 — first playable integration
+
+Started 2026-09-08, visible editor PID20028, engine26.09.08. Source manifest
+`ValidationEvidence/RegionalLandforms/r1-source.json`; previous save metadata
+hashes `prior-save-metadata.json`. Default recipe and scenario above. Runtime
+and editor dotnet builds passed; native compile status passed (four existing
+SB2000 description warnings). Both terrain compute shaders live-compiled.
+Scene reopened without discarding unsaved changes (editor reported none).
+This run checks startup, authoring survey and first visual state; cold start,
+figure-eight, edits, peer convergence and full sweeps remain pending.
+
+
+R1 outcome: **visual failure**, screenshot
+`ValidationEvidence/RegionalLandforms/r1-render-failure.png` shows large missing
+surface sections/exposed interiors. Default authoring survey in `r1-default/`:
+4225 points, height [-2034.324,2822.44], zero nonfinite/repeat/bound violations
+at sampled centers. All five semantic classes present (ocean1153, coast497,
+plains833, hills682, mountains51). This is not an exhaustive bound proof.
+First-view coordinates are frozen in `r1-default/summary.json` before inspection.
+Play stopped. Vertex-emission shader had not appeared in dependency-triggered
+compile logs after its request layout changed; native asset_compile rejected the
+shader as not recompilable. Updating its source layout comment triggered the
+normal shader watcher; successful compile at22:36:54.2697. Corrected scratch
+request-byte accounting (+32 bytes/request). No recipe coefficient change.
+
+### LANDFORM-001/v1 R2 — vertex-emitter integration recheck
+
+Same recipe, scene, engine and PID as R1; vertex emitter now live-compiled with
+96-byte request. Start after R1 failure above; inspect identical initial camera
+for missing geometry. Cold-start and all broader acceptance remain pending.
+
+
+R2 initial result: ground is continuous in `r2-initial.png`, with distant hills;
+this view does not qualify the selected mountain/ocean regions. Collision inspect
+at22:38:09 reported player grounded on VoxelManager, motion enabled, supportHit=true,
+supportGap=-0.030571, position approximately(-.00104,-.00117,116.4718),4913 ready,
+no held bodies. No fresh warning/error since R1 stop. Fixed figure-eight started
+with task LANDFORM-PERF-001/v1-R2, revision8045b77+landform-r2, unchanged
+speed2500/distance50000/one loop. This is a warm-editor exploratory run; repeated
+hotloads and a legacy-results file read during the run are environmental confounds.
+A clean-start candidate is still required before final performance acceptance.
+
+
+R2 additional survey **failure**: 659 points met L>.99/plains>.99, but four
+exceeded slope0.05 (max0.08502866 at106496,65536). Three lie in the low-weight
+mountain transition; one in the low-weight hills transition. All weights stayed
+in range and summed to one within1e-6. The criterion and grid remain unchanged.
+Implementation correction: square mountain eligibility before its coastal gate;
+use `1-(1-P)^2` for plains preference, flattening the small residual mountain/hill
+contribution near plains. Endpoints and monotonicity are preserved, as are all
+settings, spatial noise scales and cave expressions. This is a recorded recipe
+revision before acceptance; generator10 is not yet an accepted save format.
+
+R2 performance result61c1aff6de954845840f6a029a68bdd7 retained in
+`r2-performance.json`: average830.1013FPS; frame p95/p99/max
+1.9171/3.324/687.5696ms; GPU1.0783672/1.4779568/15.345335ms;
+process peak5550460928B, GPU2049136424B. Frame p95/max, GPU max and process peak
+exceed the fixed C6 review screens. **Not accepted.** A fresh process will separate
+startup/hotload residency from persistent regressions; the large stall remains
+unresolved until supported by profiling. Workload, screens and failed run stay.
+
+
+R2 stall attribution: structured runtime counters report maximum GC pause
+682.373ms versus frame maximum687.5696ms, two Gen2 collections,1485.446ms total
+GC pause. Allocation/frame28961.129B is near C6's28950.246B. This identifies GC
+as the stall contributor, not its root retention cause; fresh-process comparison
+is required. No exemption is granted for the failed frame screen.
+
+### LANDFORM-001/v1 R3 — revised flatland transitions / clean start
+
+Same fixed survey, controls, scene and workload; only the documented squared
+eligibility correction above changes recipe arithmetic. Before restarting, normal
+shader watcher must compile both density resources. Record new PID and source
+manifest. Repeat default survey first; retain any slope failure. Prior selected
+view coordinates remain frozen. Full acceptance remains pending.
+
+
+R3 restart setup: first editorPID20028 reached Source2Shutdown but retained an
+Error dialog/process; its shutdown log is `r2-shutdown.log`. Crash marker remained
+2026-09-08T21:48:49.3377217-04:00. PID89104 was launched before that old process
+fully exited; its MCP listener consequently failed to bind7269. No R3 gameplay
+or measurement ran in that process. Retired the already-shut-down old process,
+then closed89104 and will relaunch only after it exits. Preserve this setup failure;
+it is not a clean-start pass or a benchmark result.
+
+
+R3 actual cold-start process78432, engine26.09.08; native compile success,
+no fresh terrain shader/parser/dispatch errors; crash marker unchanged from
+r3-crash-marker-before.json. Runtime source hashes in r3-runtime-source.json.
+Default survey r3-default:4225 samples, zero bound/repeat mismatches;767 pure-plains
+points, **one slope failure**0.058743954 at(-57344,32768), mountains=.00983896.
+The squared tails removed three of the four previous violations but do not meet
+the fixed threshold everywhere. No R3 performance run was started.
+
+### LANDFORM-001/v1 R4 — cubic mountain tail
+
+Retain fixed scenarios, hill/plains preference and all inputs. Cube mountain
+eligibility instead of squaring it, reducing the remaining small mountain
+contribution near pure plains. Update the analytic interval and GPU mirror in the
+same change. Recheck all three fixed seeds before another performance run.
+This revision remains unaccepted and all earlier failures remain recorded.
+
+
+R4 three-seed results in `r4-seeds/`: each4225 samples, zero bound/repeat
+violations. Pure-plains max slopes1337=.02693415,42=.033843983,9001=.03679419,
+all below0.05. Seed1337 was then reapplied through the normal save/switch action
+and resurveyed; compare its CSV hash to the initial1337 for order independence.
+Next executes the already-defined full amount/scale/relief/ruggedness sweep for
+all three seeds. Default settings reused from r4-seeds instead of duplicating
+1x/default runs;25 nondefault variants per seed,75 surveys. Each variation applies
+through the same inspector action, then exports the active recipe; its metadata
+must match every requested control before analysis. Raw CSVs retained compressed
+in r4-controls. No performance measurement overlaps these authoring operations.
+
+
+R4 control analysis:75 surveys/316875 grid positions, zero finite/repeat/bound
+failures. `r4-control-analysis.json` records zero monotonic/endpoint failures for
+all three amounts across three seeds; relief proportionality max error0.0002
+unit; each independent scale changes height (RMS259–1090 units depending on seed
+and control); ruggedness changes355–556 positions by>.01 unit. Default1337
+reapplied in a different world UUID produced an identical survey CSV hash.
+Native readback confirmed defaults active after all sweeps.
+
+Invalid controls: LandAmount2 and ContinentalScale32768 with MountainRegionScale
+32768 were rejected; active GeneratorStatus retained the complete default recipe.
+Staging LandAmount.75 without Apply also retained the default active recipe.
+Returned staged controls to defaults. NaN deserialization and pending/guest
+rejection still need separate coverage.
+
+R2 completion audit additionally found collision ready210/desired4913, pending4701
+in the saved performance result. Source inspection shows completion waits for GPU
+work but not collision; after fixed-Z0 movement ends, physics resumes inside the
+new positive-height terrain. The post-run stationary/ready claim is invalid.
+Requested explicit user approval for a safe return and new scenario version;
+do not alter the benchmark until that answer arrives.
+
+R4 selected views keep R1's five frozen XY coordinates. Teleport the actual player
+through native set_game_object (normal streaming/collision entry point) to:
+ocean(-131072,-131072,-1500), coast(-69632,-131072,-256),
+plains(-49152,-131072,384), hills(8192,-131072,768), mountain region
+(-8192,-131072,2560). These Z values provide clearance above local bound maxima.
+Let collision settle and capture support plus player/elevated views. The revised
+mountain point now has weight.3507; keep it rather than selecting a better-looking
+replacement. Assess the surrounding province for ridges/saddles.
+
+
+R4 rapid-switch/teleport **failure**: after75 recipe changes and the first ocean
+teleport, collision settled4913/4913 with grounded support, but visual transition
+pending stayed4000 and placement remained pending. `r4-views/ocean-state.json`
+and `ocean-stalled-state.json` retain observations; lod.inspect at23:01:54 showed
+zero ready transitions across all six pairs while regular pending was zero.
+Initial-view capture cannot qualify seams while placement is stalled.
+Source: GpuVoxelMesher.Reset called Clear (dropping transition CountInFlight and
+EmitInFlight tracking), then only recreated transition scratch lanes when the
+cell count changed. With unchanged32 cells, an interrupted scratch remained
+non-idle with no tracked request capable of consuming its completion.
+Fix: recreate transition scratch on every reset, matching regular scratch
+lifetime. This is required by staged recipe changes; no workload or terrain
+coefficient adjustment. Reproduce the same repeated recipe changes and teleport,
+then require all transition/placement queues to drain.
+
+### LANDFORM-001/v1 R5 — reset lifecycle repair
+
+Recipe arithmetic unchanged from R4. Repeat three .75/default LandAmount pairs
+through Apply, each after prior save/apply completion, then the fixed ocean
+teleport. Require4913 collision ready, zero visual/transition pending, placement
+false, no failures, and grounded support. Source manifest to be captured after
+repair; all selected-region views and final acceptance remain pending.
+
+R5 reset result: all visual and transition pending zero, placement false,
+collision4913/4913 ready with zero failures, grounded support at
+(-131072,-131072,-1756.52454), support gap -0.03112793. Evidence r5-ocean-state.json.
+Selected-view captures retain the five positions above. Elevated cameras use
+(position.x-4096, position.y, prescribedTeleportZ+3072), angles(25,0,0), FOV60,
+1280x720, after normal player collision/visual queues drain; restore player camera
+between positions. These observations are outside performance windows.
+
+LANDFORM-001/v1 edited-world case fixed before execution: default seed1337,
+current R5 world, player at plains(-49152,-131072,384). After support settles,
+request dig at(-49152,-131072,112), radius128, strength64; then build at
+(-48640,-131072,112), radius128, strength-64. Both centers lie on512-unit
+chunk/page boundaries. Wait for queued/preparing and edit rebuild work to drain
+between operations. Fingerprint region(-48896,-131072,112),radius512 before edits,
+after both, and after save/load of slot landform-r5-edits. Require both accepted,
+revision+2, edited fingerprint changed from initial and preserved by reload,
+settings/world identity preserved by reload, zero visual/collision failures,
+support retained at the player or collision-readiness hold until safe. Capture
+actual edit state, collision and screenshots. No performance claim from this case.
+R5 selected views: all five coordinates settle4913/4913 with zero visual/transition
+pending. Player/elevated screenshots saved in r5-views. No obvious holes in these
+views, but silhouettes are subdued and these views do not establish distinct
+mountain ridges/saddles; visual quality acceptance remains open. Mesh geometry
+coverage audit requested at fixed mountain position with8 regions per level.
+
+R5 edit/reload result: both requests accepted; revision0->2, six edited pages,
+4206 samples changed. Fingerprint changed from
+ECED044B6FCC0D2A162A43488827EAB26DAC23473BD1A828AA56FD37118D8AE3 to
+117553A6030F2EB1B37BCACB101864A88585A301CB295A636517E275279650B0 and reload
+preserved the latter exactly, world6bd8dc42-eab2-4a7b-ad48-78685cbc65e2,
+revision2, epoch0->1, full default settings unchanged. All4913 collision chunks
+ready, grounded atZ67.7346878 after the dig, gap-0.0362854, no pending work or
+failures. r5-edits*.json/png/log and r5-edit-fingerprints.log retain evidence.
+This passes the specified single-host boundary-edit/save/load case, not multiplayer.
+
+R5 mesh audit:104/104 regions read, zero stale/mutation/index/nonfinite/bounds/
+identity/oversized/draw failures;38 regions flagged with2070 degenerate triangles.
+Audit status remains FAIL. Prior GPU audits also contain degenerates (e.g.
+1838 in Candidate B at ledger9024ff;3491 in coverage at8726ff), so their existence
+predates landforms. Different content/selections prevent a regression conclusion.
+No blanket geometry pass is claimed; exact log in r5-mesh-audit.log.
+
+Remaining detailed transects use the frozen seeds and spacing512. Existing square
+survey exports four129x129 grids per seed with minimumX=-131072,-65536,0,65536,
+minimumY=-32768; retain the three frozen Y rows(-32768,0,32768), deduplicating
+shared X endpoints. This samples the specified513 points per transect through the
+production authoring path. Other rows are retained as supporting observations.
+Restore default seed1337 and the saved edited world after seed-changing surveys.
+
+R5 detailed transects: nine513-point lines across three seeds,4617 retained
+positions, zero height-bound/repeat failures; shared endpoints from overlapping
+exports match exactly. Supporting grids and line summaries are in r5-transects.
+These finite height observations do not substitute for CPU/GPU density agreement
+or the pending full interval/boundary checks. Default recipe restored, then the
+saved edited world explicitly reopened after the study.
+
+LANDFORM-001/v1 coordinate boundary case frozen before execution: default recipe,
+current edited world. Inspect XY(0,0),(-512,-512), and each combination of
+X/Y=-1048064 or1048064. For each, export the existing2x2 authoring grid at512-unit
+spacing; place the actual player at the first height+256, wait for ordinary
+streaming/collision readiness. Query the eight gameplay chunks at the base chunk
+floor(X/512),floor(Y/512),floor(height/512) plus each0/1 offset. Compare each
+reported positive-axis face sample with its neighboring origin (12 shared edges
+per site), tolerance0.01 unit; require all finite and every reported sample inside
+its chunk density interval. Record skipped/missing queries as incomplete, not pass.
+Require zero collision failures and queues drained. This covers sparse actual
+consumer points near the edit-coordinate ceiling, not arbitrary-distance precision
+or a proof for unsampled interiors. Restore player to the saved plains dig center.
+
+R6 coordinate case partial: origin12 shared samples match exactly with no sampled
+bound violations. The next(-512,-512) player stayed at the teleported height
+370.999634 despite all4913 collision chunks ready and zero visual/transition work;
+no support hit or grounded state after60seconds. Preserve this failed settling
+observation in r6-boundaries/negative-stalled-state.json. No precision failure was
+observed there because its chunk queries had not run. Continue the four previously
+fixed near-limit sites unchanged; do not call the six-site case a pass.
+
+R6 limit results: four near-limit sites each12 shared face/origin checks, maximum
+error0, zero reported sample-bound violations, zero collision failures; all
+settled. Together with origin this is60 matching shared samples. The negative
+near-origin settling failure remains open and is not included as a pass.
+
+LANDFORM-001/v1 real GPU-density observations: new production console diagnostic
+voxel_density_audit observes the next noncancelled unedited regular count block
+at each enabled LOD. It reads that actual scratch density buffer before reuse;
+it does not dispatch a diagnostic shader, reschedule terrain, or change density.
+For each35^3 halo, compare indices{0,1,17,33,34} on each axis (125 samples) with
+canonical scalar and build-local lattice CPU paths, including its corners and
+boundary samples. Use existing tolerances GPU0.10 and lattice0.01, sign agreement
+outside +/-0.10, finite values and conservative halo interval containment.
+Only one block per LOD is read (171500 bytes/block); reports include exact observed
+chunk/recipe, max errors, near-zero count and pending-level mask. Reports with
+missing LODs remain incomplete. Explicit diagnostic work is outside performance
+windows and is rejected during performance measurements; it is cleared on reset.
+First observation: default seed1337, current edited world; arm then teleport actual
+player from saved plains to frozen mountain(-8192,-131072,2560), allow normal work.
+Edited blocks are skipped to isolate the base recipe; edited composition has its
+separate fingerprint/save case. Transition direct-density readback is not covered
+by this regular-buffer observation; existing transition geometry checks remain.
+
+Density diagnostic setup failure: first native compile rejected Volatile.Read
+(SB1000); .NET build alone had passed. The initial arm/teleport sequence therefore
+cannot count as density evidence. Replaced that read with the already-used
+Interlocked.CompareExchange; native compile now succeeds with zero errors.
+The player reached the prescribed mountain before the corrected diagnostic was
+armed. Arm now and use the previously fixed(-1048064,-1048064) limit site at its
+recorded exterior height+256 to admit fresh normal work at all LODs. Preserve
+this setup deviation separately from numerical results.
+
+R6 real GPU density result: all seven LODs observed,875 samples total,
+1200500 readback bytes. Maximum CPU/GPU error0.01638031 unit; scalar/lattice
+error0; zero nonfinite, >0.1 discrepancies, sign mismatches or interval failures.
+No exercised sample was in the +/-0.1 near-zero band, so near-zero behavior remains
+unsampled. Source/header/native build evidence must include the density diagnostic
+addition; the earlier r5 manifest does not cover it. r6-density-audit.log contains
+exact chunks/settings/LOD readbacks. This is sparse regular-buffer evidence, not
+transition direct-density parity or a full-field proof.
+
+LANDFORM-NETWORK-001/v1 defined before execution: engine26.09.08, current visible
+editor78432, default v10 recipe, saved edited world6bd8dc42-eab2-4a7b-ad48-78685cbc65e2
+revision2. Host returns to plains(-49152,-131072,384) and settles. Start normal
+private editor hosting, launch one visible interactive sbox.exe using -joinlocal
++instanceid1 -sw -720 +fps_max1000. Require one owned player per connection, initial
+terrain ACK and matching fingerprint(-48896,-131072,112),radius512 within60seconds
+of join. Attempt staged LandAmount.75 Apply while guest active: require rejection,
+active recipe unchanged; return staged control. Then one additional dig at
+(-49152,-131072,112),radius128,strength64; require revision3 and matching host/client
+fingerprint after drain. Close only that exact guest normally, retain host/world,
+relaunch one guest and repeat fingerprint as a late join. Log all runtime errors,
+transfer failures and support states independently; matching content is not a
+performance or visual-seam pass. No benchmark overlaps the multi-process session.
+
+Correction to the post-transect restore statement: the explicit load was attempted,
+not completed. The current field remained the fresh default world because the
+production restore safety guard rejected an actor intersecting the restore area.
+Earlier same-world R5 save/reload fingerprint evidence remains valid; this later
+cross-world restore has not passed. r6-restore-attempts.log preserves observations.
+R6 density readbacks report full default settings at23:24:24–23:24:33 and are valid
+for that fresh default base field; it was not the edited world stated in setup.
+
+Multiplayer setup stopped before launching a guest. At23:25:18 the live inspector
+applied PlainsAmount0.28658536/world229f6a61-81f1-44a0-9218-fca13ab43497, an action
+outside the agent sequence. Asked whether the user is exploring and paused live
+mutations, preserving the new recipe. Private hosting briefly started, then was
+stopped with no guest launched. LANDFORM-NETWORK-001/v1 has not run; its expected
+saved-world/default-recipe setup was not present. Do not infer any multiplayer pass.
+
+Offline scale-study analysis definition (existing R4 grids; no new runtime inputs):
+For each seed/0.5x/1x/2x scale, report four-neighbor connected dominant-class patch
+counts, median/largest cell counts (basin if Land<0.5, otherwise highest of
+mountain/plains/hills with that tie order). Report Pearson height and relevant
+weight correlations along X/Y for integer lags1..16, and first1/e crossing with
+linear lag interpolation. Continental uses land weight, mountain-region uses
+mountain weight, local uses hills weight. A missing crossing is censored beyond
+65536 units; zero variance is unavailable. This finite-window/coarse-grid analysis
+cannot promise per-seed exact spacing or connected hydrology. It supplies the
+correlation/patch statistics requested by the plan, beyond the earlier RMS check.
+
+
+R6 offline scale structure: mountain-weight correlation median across six axes
+is9005/14091/21403 units for0.5x/1x/2x; local hills-weight median6033/11313/21865,
+all axes observed. Dominant patch totals across three seeds decrease155/112/101
+for mountain scale and269/112/63 for local scale. This supports larger regional
+features in aggregate. Continental crossings are censored beyond65536 on1/2/5
+of six axes respectively; the isolated observed2x crossing36233 must not be
+reported as the overall median or evidence of reversed scale behavior. Full
+per-seed/axis correlations and patch metrics are in r6-scale-structure.json.
+
+R6 legacy-save preservation: rehashed all194 previously recorded legacy selector
+and checkpoint metadata files; zero missing and zero changed. Evidence
+r6-prior-save-check.json. This scope does not include page payloads absent from the
+original manifest and does not establish runtime rejection of old identities.
+
+Remaining implementation observation from source review: a partially pending
+density-audit mask is skipped while schedule measurement is active but can resume
+afterward. Cancel it when beginning measurement before final benchmark qualification,
+so an earlier diagnostic request cannot unexpectedly resume after that run.
+No runtime source change was made while live-control availability is pending.
+
+User-reported vertical ridge review: captured detached and player cameras without
+moving either. Actual detached camera position(131583.078,38577.3984,924.296082),
+angles(7.33404636,-95.963501,0),FOV60. Stock get_editor_camera returned0,0,0 and
+does not identify this detached view; added read-only get_ejected_camera using the
+same verified viewport owner as the existing screenshot tool. Native call succeeds.
+Detached screenshot user-ridge-ejected.png visibly shows a long vertical seam;
+player screenshot user-ridge-world.png does not show that distant seam. LOD state
+is fully drained and anchored atorigin: the LOD5/6 boundary isX131072, adjacent to
+the observed wall. This supports an LOD interface defect rather than pending loads
+or biome assignment (biomes are absent).
+A33x33 production height survey at minXY(130816,36864),spacing16, default recipe,
+straddles that interface: heights754.99115..763.1511; max adjacent X delta0.10574;
+max height difference fromX131056 to131088 across the boundary0.00655. The sampled
+base exterior is smooth at that crossing. This does not yet isolate the GPU seam
+mechanism or quantify the rendered vertical gap; coarse sampling, retained cave
+composition and transition interpolation need direct follow-up. No rendering fix
+or appearance pass is claimed. Raw survey/recipe in user-ridge-survey.
+
+
+Ridge diagnosis: bounded canonical column inspection added through the active field
+(no terrain mutations or alternate sampler), native/runtime/editor compilation pass.
+AtX131072,Y36864 the surface is755.8385, while canonical densities atZ0/512/1024
+are-226.6182/-243.8385/268.1615. Retained cave composition changes solid-side density
+magnitude even without an opening at the surface. The production emitters use
+one linear endpoint interpolation without root refinement: these values predict
+LOD5 height755.8385 and LOD6 height469.01083, a286.82767-unit gap. AtY37888 and38912,
+the same actual column inspection predicts fine heights768 and coarse349.05371/
+580.87733, gaps418.94629/187.12267; true heights783.5304/850.73914. Thus even the
+fine512-unit mesh can flatten the surface to a cell midpoint. This explains both
+the vertical stitch and flat ledges while canonical exterior samples remain smooth.
+Columns are preserved in user-ridge-column-*.json. Predicted emitter heights are
+arithmetic from its current formula, not GPU vertex readback measurements.
+
+The required correction belongs to mesh edge intersection placement; changing
+biome blending or cave noise would address a different problem. A bounded canonical
+field root refinement shared by regular and transition position/digest paths is a
+candidate. It must account for authoritative corrections, consistent edge ordering,
+coarse topology aliasing and added GPU work; no claim that refining existing edges
+recovers surfaces missed entirely by coarse sign sampling. Preserve the current
+camera and recipe as the visual reproduction. No root-refinement fix is implemented
+yet. Final geometry, cave/edited terrain and performance acceptance remain open.
+
+The pending density-audit mask now cancels when schedule-latency measurement
+starts, resolving the earlier deferred diagnostic-lifecycle observation without
+changing the figure-eight route or workload. Verify current native compilation
+before the next runtime sequence.
+
+LANDFORM-RIDGE-001/v1 R7 candidate defined before gameplay: default v10 recipe,
+scene basic_example, engine26.09.08, same origin-centered LOD0–6 placement. Preserve
+caves/base field and all controls. Existing sign-changing edges use8 bounded
+bisections and a final secant step; normalize axis ordering to global coordinates.
+Refinement runs once in the existing count/digest stage. Reuse the post-scan edge
+word as asuint(world-axis coordinate)+1; zero remains inactive. Emitters decode
+that exact coordinate, preserving consistent digest/vertex values without a new
+buffer or shader stage. Explicit UAV barriers cover the overwritten edge words.
+Authoritative correction endpoints reconstruct linearly along the current LOD
+edge, as in its existing coarse lattice approximation. Unsampled fine edits and
+multiple crossings hidden by coarse signs are not recovered by this change.
+Normals still interpolate the captured density gradients at the refined fraction.
+
+Compare original detached camera(131583.078,38577.3984,924.296082),
+angles(7.33404636,-95.963501,0),FOV60,1600x900 with user-ridge-ejected.png after
+all queues drain. Require the long vertical ledge absent, continuous surrounding
+surface and no new visible holes; log transition mismatch/collision failures and
+mesh audit separately. Then restore latest user camera(131460.297,41194.5234,
+948.463379),angles(6.2008338,-95.8982239,0),FOV60. No performance acceptance is
+inferred from this stationary visual case. Current .NET build passes.
+
+R7 shader setup failure: normal watcher compiled persistent and transition roots,
+but writing voxel_emit_vertices_cs.shader_c failed because a mapped file section
+was open. Do not play mixed decoder/encoder resources. Stop/close the already-idle
+clean editor normally, change the emitter root source comment to retrigger compile,
+then relaunch visibly and verify all resource/compiler errors before gameplay.
+Generated shader files are not edited manually or included in the task commit.
+
+
+R7 cold playable result: old editor78432 reached Source2Shutdown but remained in
+an Error dialog; its shutdown log was retained and that already-shut-down process
+retired. New visible PID71088, native compilation0 errors. Emitter compiled file
+was refreshed at23:47:12 before play. Startup stock-resource warnings remain in
+the log; no new terrain shader/parser error was observed. Source r7-source.json.
+
+At original ridge camera the vertical wall is visibly absent and the immediate
+surface joins continuously: r7-ridge-refined.png versus user-ridge-ejected.png.
+Collision4913/4913 ready, pending0, visual/transition0, placementfalse, grounded
+host, support gap-0.03050232 (r7-start-state.json). This passes the specific
+reported-wall view, not all landforms, deep caves or edited meshes.
+
+GPU audit104/104 regions, zero stale, mutation, invalid-index, out-of-bounds,
+nonfinite, identity, oversized-edge or draw-argument failures. It still reports47
+transition regions with3187 degenerate triangles; full audit status remains FAIL.
+Different target/content from R5 prevents a count regression conclusion. LOD1–6
+topology digests match pre-fix origin placement; LOD0 digest differs and is not
+claimed equivalent. Current world remains default recipe/revision0. Exact logs
+r7-mesh-audit.log and r7-lod.log.
+
+The requested latest camera restore was applied and read back successfully.
+The later r7-restored-camera.png was captured after the detached camera moved
+again to approximately(-535,1093,758); it is not a controlled before/after view.
+The original ridge comparison above used its explicitly recorded camera.
+
+Pending before accepting R7: edited-edge/collision behavior, geometry and
+transition coverage, coarse missing-root/near-zero cases, source review and moving
+GPU/frame measurements. Benchmark safe return remains awaiting the user's
+explicit decision; no workload change was made.
+
+## MATERIALS-001/v1 — material identification slice
+
+Defined before runtime on 2026-09-08. Use LANDFORM-PERF-001/v1 unchanged:
+default v10 seed1337, basic_example, 32 cells/16 units, gameplay8, visual512,
+LOD0–6 extents4/8, host/no peers, fps_max1000, >=30s settled warmup,
+speed2500/distance50000/one loop at Z0, normal drain and10s stationary.
+Current world3bf248e4976f4925bab308c5deea4b96; capture pre-change source manifest
+and current origin-centered player/camera. Engine26.09.08, Ryzen7 9800X3D/RTX5090.
+No accepted v10/root-refinement comparable baseline exists: record B1 before any
+material code changes and compare A1 with it, retaining the older C6 context.
+Criteria: no new runtime errors, boundary mismatches or undrained queues; report
+4913 collision-ready count, frame/GPU p95/p99/max, publication/chunk latency,
+process/GPU memory and allocations/frame. Investigate >10% increases in these
+performance screens. Existing transition degeneracy audit failures predate this
+slice (3187 triangles/47 of104 regions); preserve them, do not claim global
+geometry acceptance. Material shader work must not alter geometry or density.
+
+Functional criteria: stable IDs Air0/Grass1/Dirt2/Stone3/Water4 with16-bit capacity;
+water is registered only and never generated. Green grass top layer (16 units),
+eight brown dirt layers (next128 units), gray stone below, stone on steep exposed
+faces; no grass on covered samples or deep cave walls. World-anchored16-unit
+checker must show on horizontal and vertical surfaces and remain stable across
+chunk boundaries/negative coordinates. Inspect native compilation, actual world
+screenshots, and bounded queries through the real chunk sample API. Freeze exact
+functional sample positions before their first run. Require clean visible editor
+restart and fresh shader/error/crash-marker check after shader changes.
+
+R7 follow-up source review (2026-09-09): regular/transition callers, all six
+signed face bases, scan/coordinate phase ownership and emit barriers inspected.
+The CPU collision mesher still uses linear interpolation with endpoint welding;
+render/collision alignment remains unqualified on edited surfaces. Detailed
+evidence: [R7 source review](ValidationEvidence/RegionalLandforms/r7-edge-source-review.md).
+The live preflight was fully drained but at a deep-cave player location, not the
+frozen edit site. No runtime mutation was performed because the concurrent
+"Add biome voxel materials" task was running its live validation. This observation
+does not count as an edited-world or cave-envelope acceptance run.
+
+MATERIALS-001/v1 setup: B1 completed run6a49418e30944a98a914166907a420ba.
+Initial material adapter build failed because CommandList.AttributeAccess is not
+RenderAttributes; corrected to the actual command-list attribute API. Subsequent
+.NET build passed with zero warnings/errors and native compile status succeeded.
+Shader watcher emitted capability/profile warnings (not a compile failure).
+At00:02:01 hotload triggered repeated existing SweepTerrainStorage dictionary
+enumerator exceptions. Stopped play, closed clean editor71088 normally and started
+a fresh visible editor. No storage-source repair is included in this slice;
+check recurrence after restart. Preserve this failed hotload observation.
+
+Functional points fixed before first material queries: (0,0,128) Air,
+(0,0,112) Grass, (0,0,96) Dirt, (0,0,0) Dirt, (0,0,-32) Stone;
+repeat X/Y=-16,-16 at the same Z values for negative coordinates. These points
+use the actual logical chunk sampler and the active default recipe. Inspect
+player-view close grass checks and a real excavated wall with exposed strata;
+freeze edit/camera coordinates before any excavation. No water generation expected.
+
+## R7 cross-reference: MATERIALS-001/v1-B1 (not accepted)
+
+The concurrently executed materials before-change run provides additional R7
+evidence without rerunning or altering its workload. Saved run
+6a49418e30944a98a914166907a420ba, captured2026-09-09T03:59:21Z,
+source8045b77+preexisting-v10-root-refinement, engine26.09.08. The materials
+before-source manifest matches all28 overlapping R7 source hashes. That manifest
+does not cover the scene or editor tools; saved world settings match the default
+v10 scenario. Warmup and external activity are not independently established by
+this cross-reference, so this is contextual evidence, not a new accepted baseline.
+
+Saved inputs: seed1337/default eight settings, basic_example,32 cells/16 units,
+gameplay8, visual512,LOD0-6 extents4/8, speed2500,distance50000,one loop,Z0.
+Start XY approximately(0,0),duration121.938805 seconds,100336 moving samples.
+Raw result: [B1 captured result](ValidationEvidence/RegionalLandforms/r7-materials-b1-cross-reference.json).
+Comparison below uses recorded accepted C6 figures and retains its engine/version
+difference; it cannot isolate refinement cost from the whole generator change.
+
+| Metric | B1 | Change versus C6 |
+| --- | ---: | ---: |
+| Average FPS | 822.80634 | -6.57% |
+| Frame p95/p99/max ms | 1.8184 / 3.2139 / 61.0528 | +10.90% / +3.17% / +220.02% |
+| GPU p95/p99/max ms | 1.2183189 / 1.5568733 / 40.92598 | -16.86% / -16.46% / +283.07% |
+| Peak process bytes | 4197642240 | +2.77% |
+| Peak GPU bytes | 1924422696 | -31.96% |
+| Allocated bytes/frame | 32441.535 | +12.06% |
+| Schedule-to-renderable p95/p99 ms | 135.8987 / 180.0712 | +82.14% / +78.81% |
+
+Maximum GC pause15.71ms, one Gen2 collection, zero recorded exceptions.
+Generation dispatch maximum8 equals configured cap8. Visual pending0, chunk
+preparation pending0, but collision ready201/4913 and pending4710, failures0.
+Saved target(-260.3196,145.00264,-30932.883) and streaming Z-61 demonstrate that
+the post-route state is underground again. A completed outcome and recorded
+10.000874-second stationary window do not establish valid supported post-run
+completion. The correctness gate fails; frame tails/allocations also require
+investigation. Slower generation is reported, not automatically disallowed.
+
+No acceptance, workload revision or regression waiver follows from this run.
+The requested safe-return decision remains separate. Current material edits
+postdate this before-change source capture; a later combined run must identify
+those changes rather than attributing their costs to R7 alone.
+
+B1 detail review: hierarchy also records placementPending=true and208 pending
+transitions, despite meshing.allPending=0. Therefore the regular meshing queue
+alone must not be described as a fully drained world. Transition fine/coarse/
+lateral mismatch and invalid-table counts are all0. The captured profiler covers
+only200 frames versus100336 moving samples; its maximum script Update6.2439ms
+does not locate or explain the run's61.0528ms worst frame. The15.71ms maximum
+recorded GC pause likewise does not establish the cause of that worst frame.
+No optimization is justified from an assumed correlation between these maxima.
+
+MATERIALS-001/v1 cold-start/function result: visible editor87188, engine26.09.08,
+opened basic_example and started normal play. Native compile succeeded, no fresh
+errors, and Sentry last_crash metadata unchanged (before/after JSON retained).
+No storage enumeration exception recurred in this fresh session before A1.
+All10 fixed point queries returned expected IDs: Air at128, Grass112, Dirt96/0,
+Stone-32, for both XY pairs. Origin density values were11.530754,-4.469246,
+-20.469246,-116.469246,-148.46924; negative XY11.532356,-4.4676437,-20.467644,
+-116.46764,-148.46765. Actual1280x720 player screenshot inspected: green16-unit
+checks on the surface, brown at the edge and gray checks on an existing excavation
+to the right. No new excavation was required or performed. This single view does
+not establish every slope or LOD boundary. Water remains a catalog-only entry.
+Before A1: visual/transition queues0, placement false, collision4913/4913 ready,
+0pending/0failures. Active player(-0.00045821158,0.00105028425,116.472107).
+A1 starts from this settled origin location using unchanged figure-eight inputs.
+B1 used the previously running process; A1 uses a fresh process after the required
+shader restart, which remains an environment confound for memory/maxima.
+
+B1 raw record: b1-performance.json, run6a49418e30944a98a914166907a420ba.
+Moving FPS822.80634; frame p95/p99/max1.8184/3.2139/61.0528ms;
+GPU1.2183189/1.5568733/40.92598ms; process peak4197642240B,
+GPU1924422696B; allocation32441.535B/frame;0exceptions; all hierarchy transition
+mismatch counters0. Publication p95/p99/max135.8987/180.0712/268.8295ms.
+The saved moving collision snapshot had201ready/4710pending,0failures. This is not
+the end-of-drain snapshot: verify live4913ready after completion separately.
+
+B1 completion-path source diagnosis: VoxelManager.TryCompletePlayerFigureEightTest
+ends forced Z0 movement and releases its target/body references before settling.
+TrySaveCompletedPerformanceTest checks regular/transition/placement queues in
+AwaitingMovingSettle, but omits collision readiness. After that phase, the render
+advance and stationary-window phases do not recheck those queues. SavePerformanceResult
+then captures current world/queue state and assigns Outcome="completed"
+unconditionally. Consequently movement after the initial settle can produce
+pending work in the final saved result without contradicting that earlier check.
+This source path explains the reporting semantics; it does not establish the
+cause of every player displacement or the worst performance frame.
+
+The completed label is a recording lifecycle result, not a qualification verdict.
+The recorded collision/hierarchy evidence remains the acceptance authority for
+these runs. A prospective completion-gate or safe-return change must preserve the
+old scenario/results and follow the workload approval rule where it changes the
+measured stationary behavior. No benchmark runtime edit was made during the
+concurrent materials clean-start validation.
+
+MATERIALS-001/v1 A1 was interrupted: startup.loaded appeared at00:07:14 before
+performance.result.saved. No A1 record was produced; it is incomplete, not a pass.
+The user then reported incorrect material merging and supplied the current live
+view. Screenshot inspected: steep excavated soil faces were being relabeled stone
+by the rendered-normal threshold. This violates the clarified requirement that a
+voxel retains its material when exposed. The first slope-based candidate is rejected.
+
+MATERIALS-BLEND-001/v1 defined before corrected runtime: remove surface-normal
+material selection. Classify immutable procedural material at each base16-unit
+lattice node from original landform strata; blend only the eight surrounding
+nodes with trilinear weights, omit air and normalize remaining weights. Blend
+support is exactly one base voxel, independent of render triangle size/LOD.
+The shader must query the canonical landform heights at the four actual XY node
+corners, not infer material from interpolated terrain-mesh normals/heights.
+Keep the same existing user excavation, player and camera for before/after visual
+comparison; make no edits or camera movement. Require brown upper walls and gray
+only at the stone stratum, a bounded green/brown rim, no normal-driven color fans.
+Retain the prior10 logical sample criteria and add full column Z{112,96,80,64,48,
+32,16,0,-16,-32}:1Grass/8Dirt/1Stone atXY0,0, before any subsequent user edits there.
+Measure corrected figure-eight using the existing fixed workload when live control
+is available; preserve B1/A1 history. User is currently inspecting/altering terrain,
+so do not overwrite their world or force the previous checkpoint for comparison.
+
+MATERIALS-BLEND-001/v1 corrected candidate: .NET build succeeded with zero warnings
+or errors; native compiler status succeeded. Inspected the actual1280x720 player
+camera again after shader compilation: upper excavated wall is brown, lower stone
+is gray, with a narrow interpolated border instead of the prior angle-driven gray
+fans. Saved node-blend.png. The user moved the camera during this work, so these
+are observations of the existing excavation, not an identical-camera image diff.
+No camera or terrain mutations were performed for this correction.
+
+C# hotload again reproduced the pre-existing storage enumerator exception at
+SweepTerrainStorage:148; no such exception is attributed to the shader. The later
+console cursor1556->1603 showed no new errors after the live session recovered.
+Keep this hotload failure open rather than claiming a general hotload pass. The
+previous crash-marker comparison covered startup after the old editor closed;
+its marker records04:03:14UTC, and the old shutdown log also contains a prefab
+component-destruction exception. It does not prove the preceding shutdown clean.
+
+Final corrected-shader clean restart, full logical column and comparable
+figure-eight remain NOT RUN. The user is actively inspecting and modifying the
+world; A1 was interrupted and no after-change performance acceptance exists.
+The corrected fragment shader's four canonical landform evaluations per pixel
+remain an explicit unmeasured cost. Commit/push are deferred under the project's
+performance-acceptance policy. Earlier uncommitted generation/meshing changes
+remain separate and have not been staged or committed by this material task.
+
+### MATERIALS-LOD-001/v1 — surface attachment (2026-09-09)
+
+Defined before runs. Existing user world slot3bf248e4976f4925bab308c5deea4b96,
+seed1337/default v10 recipe; basic_example;32cells/16units;gameplay8,visual512,
+LOD0..6 extents4/8; host/no peers;26.09.08,Ryzen9800X3D/RTX5090,fps_max1000.
+Preserve world edits. B1/C1 use canonical figure-eight speed2500,distance50000,
+one loop,Z0, normal drain/two advances/10s stationary; initial center
+XY809.254883,-678.4422. At least30s settled before each run, no source changes
+or terrain edits during timed runs. This is a new paired comparison in the
+existing edited slot, not a replacement for accepted historical baselines.
+Record source hashes and structured results. Investigate >10% degradation in
+FPS, frame/GPU p95/p99, peak memory or allocations; require no new exceptions,
+unsafe placement commits or mesh failures, and final streaming drain.
+
+Visual criterion: same camera and visible hillside before/after,1280x720;
+remove distant interior brown speckles caused by coarse triangle sag, retain
+brown excavation walls and gray deep strata, no broad grass repaint of cuts.
+Capture camera transforms with evidence. Then inspect the hillside with nearby
+LOD geometry and record the target/camera positions. Shader hot compile plus
+clean editor restart and unchanged Sentry marker are required separately.
+Candidate: interpolate vertex depth relative to the canonical natural surface,
+then reconstruct the fine material lookup position at each pixel. Material IDs
+and base-node blend weights remain evaluated locally, not interpolated colors.
+No runtime acceptance is established by this scenario definition.
+
+MATERIALS-LOD-001/v1 visual R1: ejected camera position550,-720,300,
+angles0,30,0,FOV35,1280x720; player restored to809.254883,-678.4422,128.107376
+after B1. Captured lod-hill-before.png and lod-hill-after.png with identical
+camera/settings/world edits. Scattered brown hillside patches disappear in C1;
+near excavation walls remain brown with local grass rims. Some brown remains at
+a distant low ledge, so this is not a claim of every surface being uniform grass.
+Hot compile00:37:50->00:37:52 succeeded (2 combos); warning E41012 reports an
+implicit SPIR-V profile upgrade, not a failed shader. No new managed errors in
+the inspected interval. C1 timed run begins only after returning to Game view.
+B1 run da10c2845d7844b9bbc136174d15efbe saved; full record lod-b1-performance.json.
+The figure-eight ends at Z0 and the player settles underground in this edited
+slot; restored the recorded original position after completion. Preserve this
+existing benchmark behavior rather than counting it as surface gameplay proof.
+
+MATERIALS-LOD-001/v1 C1: run ccbfee12e34048e398ea75ea01abca93,
+483.97424FPS vs B1 569.85095 (-15.07%); frame p95/p99 3.7004/5.253ms vs
+2.8731/4.152ms; GPU p95/p99 2.1660328/2.571106ms vs1.9671917/2.3026466ms.
+Max frame345.708ms includes maximum GC pause340.958ms (B1 max GC14.99ms).
+Zero measured exceptions; peak GPU2026983396B unchanged; peak process3799904256B
+vs4837949440B; allocation/frame35495.574 vs32837.863. NOT ACCEPTED: exceeds
+investigation criteria. Full result lod-c1-performance.json. An out-of-range
+read-only column query(count1) was rejected after the timed window; count2 retry
+succeeded. This is a tool argument failure, not evidence of shader failure.
+
+C2 removes the fifth pixel height query by using the bilinear height of the four
+already-sampled base-lattice columns as material reference surface. Vertex depth
+still uses canonical analytic height. This introduces only the fixed base16-unit
+surface reconstruction difference, not coarse-LOD triangle sag. Reuse exactly
+v1 workload and recorded center; record fresh source hash and keep C1 failure.
+
+MATERIALS-LOD-001/v1 near/far visual R2 parameters defined before capture:
+fixed ejected camera63000,30000,3500,angles45,0,0,FOV60,1280x720. First capture
+with player at recorded origin; then move the actual player to64000,30000,3200
+and allow normal streaming/collision queues to drain, keeping the camera fixed.
+This changes residency through the existing player target, not a diagnostic
+streaming-origin override. Require hill surface remains grass in coarse and
+near geometry; inspect seams and terrain continuity. Restore original player
+position and Game camera afterwards. Read-only column at65536,30000 measured
+natural height2820.0034 in this recipe. This visual observation is outside timed
+performance runs and does not change the canonical figure-eight workload.
+
+## LANDFORM-CLIFFS-001/v1 — requested terrain-shape revision
+
+Defined before candidate implementation/runs on2026-09-09. Preserve
+LANDFORM-001/v1 seeds1337,42,9001,default eight controls and the same
+65x65/4096-unit production survey over[-131072,131072]XY. Report strong-land
+coverage using land>=0.9, mountain dominance using mountains>0.5, finite/bounds/
+repeat checks and previously defined views. Target at least5% mountain-dominated
+strong-land samples for each seed, while preserving some plains-dominated land.
+This is a finite-window visual-design screening target, not a promised global
+mountain area percentage.
+
+Existing v10 baseline reanalysis: seed1337 25/2287=1.0931%; seed42
+140/2281=6.1377%; seed9001 167/2771=6.0267%. Baseline fails the new mountain
+presence screen for1337. Source CSVs remain unchanged. Exact derived counts and
+selection rule: v11-baseline-mountain-coverage.json.
+
+For detailed before/after shape, freeze seed1337 cross-transects centered at
+(65536,32768), the first maximum-mountain-weight sample in the unchanged baseline
+survey. East/west X49152..81920 atY32768 and north/south Y16384..49152 atX65536,
+spacing64,513points/line. Use production export tiles129x129,spacing64:
+EW minimumX49152,57344,65536,73728 and minimumY28672;
+NS minimumX61440 and minimumY16384,24576,32768,40960.
+Retain overlapping endpoints and all raw grids; extract only the declared lines
+for transect summaries. Report total relief, maximum adjacent slope, crest/valley
+positions and extent of slope>=1 (45degrees). Target relief>=512 on at least one
+line and at least one adjacent64-unit run with slope>=1; these screens supplement
+actual cliff/ridge/valley views and do not establish global mountain quality.
+
+Keep existing fixed landform view locations; freeze any additional camera
+coordinates before their first before/after capture. Require visible mountains,
+cliffs and valley separation without holes or LOD walls, and grounded supported
+player views after all relevant queues drain. Preserve near-zero/boundary/
+CPU-GPU and unchanged-cave checks from the landform plan. Run the unchanged
+figure-eight inputs, recording the concurrent materials source revision; no
+new safe-return behavior is authorized by this scenario.
+
+No candidate source or runtime survey was changed/run during this definition.
+The user accepted finishing the materials check first after delegating the
+ordering decision. Its confirmed live task is still measuring/qualifying changes,
+so terrain source and live mutations remain deferred until it releases the editor.
+
+MATERIALS-LOD-001/v1 C2 moving run384007c1c7754db69ba0d00d5d9307ab:
+566.3031FPS(-0.62% vs B1),frame p95/p99 2.8995/4.1692ms(+0.92/+0.41%),
+GPU p95/p99 1.9729137/2.307415ms(+0.29/+0.21%). Zero exceptions, collision
+failures0, meshing pending/allPending0, unsafe commits0. Peak process3474096128B,
+GPU1976651748B, allocation/frame34227.906(+4.23%). Moving criteria pass.
+Stationary GPU average/p95 1.1122231/1.3277531ms vs B1 0.9435254/1.1408329ms
+(+17.88/+16.38%); stationaryFPS659.05383 vs723.61255. Not a blanket pass:
+post-route physics settled player at797.7624,-675.32806,-164.41273 in C2,
+versus809.1642,-676.8669,-158.64952 in B1. Same nominal run parameters do not
+prove an identical stationary camera/view. Investigate with fixed-view A/B.
+
+Fixed-view diagnostic D1, defined before shader A/B: retain R2 ejected camera
+63000,30000,3500,angles45,0,0,FOV60,1280x720 and player64000,30000 on hillside;
+no movement or edits. Observe normal production 10-second FramePerformance
+windows; wait at least30s after each shader compile before reading, then read
+three windows at12s intervals. Compare original material lookup and C2; no new
+test component, measurement path or benchmark workload. Record source variants,
+FPS/frame tails/GPU average strings. This supports attribution of the stationary
+flag and does not replace the canonical figure-eight results.
+
+R2 result: inspected lod-close-coarse.png and lod-close-fine.png at the identical
+fixed camera. Coarse/fine surfaces remain green; geometry/checker projection
+changes with tessellation, but no brown soil takeover appears in either view.
+Near player was on the visible surface and regular mesh queues drained. This
+is a bounded visual observation of that hillside, not all hills or transitions.
+
+D1 interrupted at00:50:00: play restarted during collection, manager reinitialized
+and player returned to authored spawn. Retained all three observations in
+lod-stationary-interrupted.json; second window was startup with11473 regular
+meshes pending. No baseline shader swap was performed and no paired stationary
+conclusion is claimed. C2 remains active. Requested a user control window before
+continuing controlled camera observations and the clean editor restart. The
+restart/marker check and stationary attribution remain pending; no commit/push
+or blanket performance acceptance while these requirements remain unresolved.
+
+LANDFORM-CLIFFS-001/v1 baseline live acquisition: initial export failed because
+play had stopped between editor status and survey invocation. No grid was
+returned. Started normal visible play and repeated the unchanged scenario.
+Both513-point v10 lines passed sampled bounds/repeat/shared-endpoint checks.
+EW relief2721.38459,max adjacent slope0.784282813,steep segments0;
+NS relief2825.33433,max adjacent slope0.908453125,steep segments0.
+Raw grids/summary: v11-before-transects. This fails the new cliff slope screen.
+
+Version11 candidate source now implemented; .NET/native C# builds pass. Initial
+transition shader compilation could not write its mapped compiled file. Preserved
+v11-shader-setup.log and prior shutdown log. Stopped play and closed clean editor
+87188 normally; it reached Source2Shutdown but remained in Error. Retired that
+already-shut-down process and launched visible65100 with source retrigger.
+Shader/cold-play qualification still pending. No performance workload changed.
+
+LANDFORM-CLIFFS-001/v1 candidate A, version11: cold editor65100 compiled the
+transition root successfully at00:56:51 before play. Native C# compile0 errors;
+stock missing-resource warnings remain. Same detailed transects:
+EW relief2757.04779,max adjacent slope2.68438906,47 steep segments;
+NS relief2579.41813,max adjacent slope3.2435,65 steep segments.
+All sampled bounds/repeat/shared endpoints pass. Raw v11-after-transects.
+
+Three-seed production surveys v11-seeds: mountain-dominated strong-land counts
+1337 1150/2287=50.2842%;42 1033/2281=45.2872%;9001 1458/2771=52.6164%.
+These pass the new minimum coverage screen; their visual balance still needs
+review. All three4225-point grids pass sampled bounds and exact repeated heights.
+1337 roundtrip through a new world produces an identical CSV hash.
+
+Existing pure-plains slope screen FAILS on42 at(61440,-53248),slope0.05598622,
+mountain weight0.008630117; and(110592,-40960),slope0.067553535,
+mountain weight0.009769766. Other seeds pass that screen. Preserve candidate A
+before correcting cliff influence near low mountain weights. The first origin
+settle is grounded with4913/4913 ready and zero pending work (v11-origin-state).
+No performance or full visual acceptance yet.
+
+Candidate A fixed-view run: ocean, coast, plains and hills settled with4913
+collision chunks ready. Mountain spawnZ2560 was below the new surface
+(grounded recovery Z2810.61938), invalidating that spawn for v11. The script
+failed its60-second settle; during its final polling interval the player was
+returned toZ4096 to prevent continued falling. Preserve mountain-failed.json and
+v11-view-progress.json. That intervention is not a pass of the frozen spawn.
+Recovery then drained all queues and grounded the player, support gap-0.03491211.
+
+Additional v11-only observations: original elevated mountain camera
+(-12288,-131072,5632),angles(25,0,0),FOV60,1600x900 in
+v11-mountain-recovery.png. Ground-level detached view
+(-16384,-131072,480),angles(-5,0,0),sameFOV/resolution in
+v11-mountain-ground-observation.png. A steep hillside is visible; broad grass
+coverage/limited shading still make overall mountain-form quality provisional.
+These are observations, not controlled v10/v11 image comparisons.
+
+Candidate B correction before rerun: multiply the cliff rise by
+smooth(2*mountainWeight). Full mountain regions retain their cliff profiles;
+the localized steep rise fades toward plains instead of perturbing nearly-pure
+plains. CPU/GPU and bound propagation change together. Preserve candidate A
+surveys and failures. Stop/close the editor before rebuilding mapped shaders.
+
+LANDFORM-CLIFFS-001/v1 candidate B, currentsource v11b-source.json:
+.NET build0 warnings/errors; clean visible editor26244. Between initial editor
+status and scene-open/start calls, play had already started; those two calls were
+rejected as already playing and did not restart play. The following production
+surveys ran in the active world and confirm Generator11. No mixed-scene result
+is inferred from the rejected calls.
+
+All three4225-point grids pass sampled bounds/repeat and the existing pure-plains
+slope screen. Maximum pure-plains slopes1337 0.028307363;42 0.04629834;
+9001 0.019493535. Seed1337 roundtrip CSV hashes match. Mountain weights/coverage
+are unchanged from candidate A. Raw v11b-seeds.
+
+Detailed513-point lines pass sampled bounds/repeat/shared endpoints. EW
+relief2757.04779,max slope2.68438906,47 steep segments;NS relief2579.41813,
+max slope3.2435,70 steep segments. Raw v11b-after-transects. These pass the new
+numerical cliff screens, not full visual/performance acceptance.
+
+Current state v11b-current-state:4913 collision ready,pending/failures0,
+regular/transition/placement pending0,grounded nearoriginZ193.439575,
+support gap-0.028076172. CPU and GPU cave-file hashes exactly match R7.
+Version11 candidates are provisional: candidate B was initially observed in an
+unedited candidate-A world identity after restarting, before seed roundtrips
+created fresh worlds. No v11 saved-edit compatibility claim is made; stable
+identity/version handling must be finalized before accepting or saving edits
+against the chosen new formula. The accepted v10 field must not be used to
+interpret v11 terrain edits or vice versa.
+
+Still open: final visual balance (default mountain coverage is much higher),
+remaining boundary/GPU/edited collision tests, current-formula identity finalization,
+full performance comparison and the original nine-section acceptance gates.
+
+## LANDFORM-IDENTITY-012/v1 — finalize candidate identity
+
+Defined before runtime on2026-09-09. Generator12 is exactly the candidate-B
+exterior formula with a distinct generator identity; no shape/cave arithmetic
+changes. It must select a fresh version12 world and reject the version10
+landform-r5-edits slot without replacing the active world or deleting that slot.
+Preserve prototype v11 saves; no reinterpretation or migration. Confirm the
+production default1337 survey CSV equals v11b-seeds/1337 (all4225 samples),
+with recipe metadata nowGenerator12. Record world IDs before/after rejected load,
+native compilation and settled collision state. No peers, default settings.
+
+Then exercise the canonical edit/save path in a new v12 world:
+player placement(-49152,-131072,768), wait grounded and all queues drained.
+The baseline v11B survey puts the unchanged v12 surface at384.5166 there.
+Dig(-49152,-131072,384),radius128,strength64; build(-48640,-131072,384),
+radius128,strength-64. Both brush centers cross512-unit chunk boundaries.
+Require each edit accepted once, revision0->2, no collision failures or stale
+geometry, and grounded support after drain. Fingerprint center
+(-48896,-131072,384),radius512 before/after/reload using existing command.
+Save unique slotlandform-v12-edits, reload same world, require identical post-edit
+fingerprint and settings. Keep separate recovery/visual logs if player support
+fails; do not treat a saved result alone as acceptance.
+
+Source change: generator12 constant and versioned GPU include replace11.
+Compute roots use12; material/landform/cave formulas are unchanged fromB.
+Previous editor26244 stopped and closed normally, reachedSource2Shutdown and
+exited. .NET build and fresh visible editor startup recorded separately.
+This identity repair is not a benchmark workload change.
+
+LANDFORM-IDENTITY-012/v1 result: PASS for the defined single-host identity and
+same-world edit/save case. Visible editor86344,engine26.09.08,sourcev12-source.json.
+.NET/native compilation0 errors. Version12 default survey matches v11B exactly,
+CSV SHA256 5e98a89ee87f92785f2e50cac065c8995d47c9e15f080f43837978533a1446ae.
+New worldb60920a5-70ed-408d-afe1-5eabee43a7b9,revision0. Loading
+landform-r5-edits rejects with "Terrain format or generator version does not match."
+Active world/revision/pages remain unchanged. This intentionally rejected load
+logs an error; it is not an unexplained runtime exception.
+
+At the prescribed new edit site, both brush requests accepted once(ids2,3).
+Revision2,six pages,4206 changed samples. Savedlandform-v12-edits,checkpoint1;
+same-world reload committed revision2,epoch1 with six pages. Fingerprint region
+before:4C577D7D2D64CE00587C20BC364CBA48FF16EAF5781310B74EE56E32597CA12D.
+After edits and after reload both:
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+All4913 collision chunks ready,0pending/failures,0regular/transition/placement
+pending,groundedZ337.898987,support gap-0.036224365 after reload.
+v12-edits-player.png shows the excavated bowl and added mound; this view is not
+a broad terrain silhouette or all-LOD geometry acceptance.
+Evidence:v12-default,v12-after-old-load.json,v12-edits-before/after/reloaded.json,
+v12-identity-edits.log. Cross-world restoration of a matching v12 save, multiplayer,
+coarse edited-edge geometry and performance qualification remain unproven.
+
+## LANDFORM-NETWORK-012/v1 — matching and late-join v12 world
+
+Defined before hosting/client launch2026-09-09. Source v12-source.json, editor86344,
+engine26.09.08,default recipe1337. Host worldb60920a5-70ed-408d-afe1-5eabee43a7b9,
+revision2,six edit pages from LANDFORM-IDENTITY-012/v1. Host grounded at
+(-49152.0391,-131071.984,337.898987),4913ready and all queues drained.
+Editor scene is now marked unsaved; preserve it, do not restart/save the scene
+as part of this test.
+
+Enable existing private local hosting; launch one visible interactive sbox.exe
+with -joinlocal +instanceid1 -sw -720 +fps_max1000. Require manifest ACK,
+two owned players,matching world/recipe/revision, and equal host/guest fingerprint
+for(-48896,-131072,384),radius512 within60 seconds after join readiness.
+Attempt LandAmount.75 apply while connected; require rejection and unchanged
+active recipe/world. Restore stagedLandAmount.6 without applying.
+Dig(-49152,-131072,384),radius128,strength64 once; require revision3 and
+matching updated fingerprints within60 seconds. Close only the launched guest
+normally; relaunch visibly and require late-join revision3/fingerprint agreement.
+Record readiness, collision failures and runtime errors separately. Shut down
+the guest and turn private hosting off after completion; preserve host edits.
+No benchmark or shared scene contents are changed by this scenario.
+LANDFORM-NETWORK-012/v1 result: FAIL before initial transfer acknowledgement.
+Visible guest PID40168 joined at 01:11:20 on 2026-09-09, then reported
+VK_ERROR_DEVICE_LOST at 01:11:32, frame3625. Diagnostics report an instruction
+pointer fault and WRITE_INVALID address with no resource attribution. Device
+local memory was5859MiB against31419MiB budget; this does not establish memory
+exhaustion. Host recorded a GPU stall. Transfer had25864 bytes sent,0 received,
+0 applied and1 active transfer at observation. Recipe guard, revision3 edit,
+fingerprint convergence and late join were not exercised. Root cause remains
+unknown. Evidence: v12-network-preflight.json, v12-network-client-failure.log,
+v12-network-host-failure.log in Docs/ValidationEvidence/RegionalLandforms.
+Private hosting was disabled and the failed guest closed normally. Follow-up
+process inspection confirms PID40168 exited; editor86344 remains playing with
+unsaved scene changes preserved and successful compilation. No network pass
+or performance acceptance is claimed.
+
+LANDFORM-NETWORK-012/v1 diagnostic D1 defined before launch: repeat the initial
+visible guest join on the same unchanged host world/recipe, adding only the
+engine -gpu_diagnostics flag for GPU resource fault attribution. Stop at the
+first GPU fault or after60 seconds of joined observation; do not execute the
+recipe/edit/late-join steps during D1. This is fault diagnosis, not a comparable
+performance run or a replacement for the failed acceptance run. Preserve logs,
+reported resource names and crash metadata; close the exact guest normally and
+disable private hosting afterward. Preserve the unsaved editor scene.
+
+D1 result: reproduced GPU crash in visible guest81364 at01:18:22, frame3565,
+after host logged join at01:18:06. NVIDIA dump core_29 identifies the same
+transition compute shader/hash7266247986651921871 as initial core_28.
+Address tracking enabled but neither fault address was covered by its4096
+recorded ranges. WRITE_INVALID was0x183B2A5000. Breadcrumbs show last compute
+work under the translucent-forward render callback, without stage attribution.
+Device-local5901MiB/31419MiB. Client scheduler reported36544regular pending,
+272transition pending and23659residents at stall. No transfer completion logged.
+This narrows the failure to the transition shader, not a particular write or
+proven root cause. Source inspection alone has not established a faulty range.
+The host reused slot2 and retained a timed-out initial peer entry, so D1 is not
+a clean comparable multiplayer acceptance run. Guest closed normally and its
+PID is absent; hosting disabled. Editor remains playing, compilation successful,
+unsaved scene preserved. Evidence: v12-network-d1-client.log,
+v12-network-d1-host.log, v12-network-first-aftermath.json,
+v12-network-d1-aftermath.json. No recipe/edit operations were performed.
+
+D1 follow-up: read-only inspection of the compiled transition module's SPIR-V
+layout found24-byte vertex records,128-byte requests and64-byte allocation/count
+records, matching the source contracts. This does not support a32-byte vertex
+stride explanation. It is diagnostic evidence, not runtime validation or proof
+that the guest faulted in that particular buffer. The inspection record and
+source links are v12-network-layout-inspection.json. No runtime source was
+changed during this diagnosis. The plan now prominently identifies the current
+version12 recipe and open gates, separating superseded version10/11 history.
+
+LANDFORM-NETWORK-012/v1 diagnostic D2 defined before launch. Repeat D1's visible
+initial guest join with -gpu_diagnostics on the current preserved host world.
+The only source change is bounded startup tracing in GpuTransitionScratch:
+first four batches per scratch lane log sample, classify/scan, refine/count,
+completed count readback and emit submission. Counts/layouts, stage ordering,
+terrain recipe and workloads are unchanged. Logs identify CPU submission phases;
+only the asynchronous count callback establishes GPU count completion. No new
+readbacks, forced synchronization or alternate generator/mesher is introduced.
+Stop at first GPU fault or60 seconds after join, preserve logs, close exact guest,
+disable hosting. The reused host's retained peers make this diagnostic only.
+
+D2 result: inconclusive for GPU reproduction. Trace observed initial batches
+complete count readback and enter emission; no GPU crash was logged during the
+bounded observation. Host code reload introduced repeated InvalidOperationException
+from SweepTerrainStorage at line148 (dictionary enumeration invalidated), changing
+host progress and timing. No transfer acceptance follows. Preserve D2 client/host
+logs. Guest93108 closed normally; hosting disabled.
+
+LANDFORM-HOTLOAD-STORAGE-001/v1 defined before repair: existing visible editor86344,
+version12 worldb60920a5-70ed-408d-afe1-5eabee43a7b9 revision2, six saved edit pages.
+Code reload currently leaves a persisted Dictionary enumerator invalid although
+its containing snapshot reference remains equal. Reset only the storage sweep
+cursor through IHotloadManaged replacement/persistence callbacks. Require native
+compilation success, no new sweep enumeration exceptions for30 seconds after
+reload, unchanged world/revision/pages and edited-region fingerprint
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+at(-48896,-131072,384),radius512. No scene restart/save, terrain edits or recipe
+changes. This repairs a reload lifecycle defect found during landform qualification;
+it does not qualify multiplayer or the original GPU fault.
+
+LANDFORM-HOTLOAD-STORAGE-001/v1 result: PASS for the initial repair reload.
+Native compilation0 errors,1 SB2000 Description warning. No further sweep
+exceptions in01:28:01–01:28:36; previous errors retained. Worldb60920a5-70ed-408d-afe1-5eabee43a7b9
+revision2,six pages,epoch1,savedRevision2/checkpoint1,slotlandform-v12-edits.
+Fingerprint matches the prescribed hash. Host remains grounded with support
+gap-0.036224365,9826ready collision chunks (retained former guests),zero pending
+visual/transition/placement work. Evidence:v12-hotload-storage-after.json and
+v12-hotload-storage-log.txt. Subsequent reload persistence and full performance
+acceptance remain separate; no source edit outside cursor lifecycle is implied.
+
+LANDFORM-NETWORK-012/v1 diagnostic D3 setup: prior host retains two disconnected
+player objects and stale peer work after stopped hosting. Restart play through
+the normal editor controls to clear transient state, preserving the authored
+unsaved scene. Load existinglandform-v12-edits through production storage if not
+already restored; verify worldb60920a5-70ed-408d-afe1-5eabee43a7b9,revision2,six
+pages and frozen region fingerprint before launching. Return host to its recorded
+position(-49152.0391,-131071.984,337.898987). Require no stale guests and drained
+work. Then repeat initial visible diagnostic join with-gpu_diagnostics;60seconds
+maximum after join, stop on fault, preserve logs, close guest and disable hosting.
+No edits, recipe changes or timed benchmark. Source includes bounded phase trace
+and the storage-sweep hotload repair. This is a separately recorded diagnosis.
+
+D3 setup failed before guest launch: normal play restart reproduced the same
+transition GPU shader fault in editor86344 at01:29:29.7966. This establishes a
+single-player reproduction; networking is not required. Initial traces show
+successful count callbacks and emissions for16- and32-unit fine-cell batches.
+The trace budget ends before the fault, so the exact failing stage remains unknown.
+Aftermath core_30 identifies shader hash7266247986651921871 again; WRITE_INVALID
+address0xF70E58000. Evidence:v12-network-d3-host-crash.log and
+v12-network-d3-aftermath.json. No D3 guest, reload or fingerprint comparison ran.
+The play restart changed MCP's dirty flag tofalse; authored scene file timestamp
+remained2026-09-08 22:48:27,8317bytes, so no scene-file write was observed. The
+previous true flag's contents are not independently proven preserved. Saved terrain
+slotlandform-v12-edits still holds the verified revision2 checkpoint. Pending
+read-only MCP observation timed out after the GPU crash; no mutation is retried.
+
+D3 recovery: failed editor86344 closed normally and exited. Visible editor25440
+reopened the same project in edit mode with-gpu_diagnostics_dev. Startup reports
+VK_LAYER_LUNARG_crash_diagnostic missing and falls back to-gpu_diagnostics;
+per-command layer attribution is unavailable. Native compilation0 errors,
+1 SB2000 warning. No further play or guest launch after recovery. Official LunarG
+BUILD.md documents a source build; no verified portable release artifact was
+found. No CMake/Ninja commands or Visual Studio C++ installation were found by
+PATH/vswhere checks. No system SDK was installed. This tooling limitation does
+not establish a root cause or prevent further source-based diagnosis.
+
+LANDFORM-TRANSITION-CRASH-001/v1 D4 defined before play. Visible editor25440,
+engine26.09.08, normal basic_example startup, current authored scene and default
+v12 recipe, no guest/hosting, no movement or terrain mutations. Extend bounded
+per-lane transition trace from4 to64 startup batches so D3's late phase is covered.
+This may affect timing and is not a performance acceptance run. No shader,
+terrain, allocation, scheduling or readback changes. Observe at most60seconds,
+stop immediately on fault; preserve source hashes, phase traces, crash metadata.
+D3 suggests an origin-area startup reproduction; exact active save identity and
+player position must be recorded if startup reaches inspection. Arena trimming
+is benchmark-only in source and does not explain D3's unbenchmarked startup.
+
+D4 result: reproduced GPU crash01:35:15 in editor25440. Default startup restored
+worldb60920a5-70ed-408d-afe1-5eabee43a7b9 revision2,six pages,checkpoint2,
+slotlandform-v12-edits before the fault. Trace reached64 batches in a lane,
+including128-unit fine-cell requests; count callbacks and emit submissions
+completed up to the trace limit. The limit again preceded the fault, so no failing
+phase is proven. Retain v12-transition-d4-host.log and -aftermath.json. Editor
+closed normally after GPU Crash. No guest or terrain mutation occurred.
+
+D5 diagnostic definition: same fresh editor project/scene/startup and saved world,
+-gpu_diagnostics, no network/movement/edits; extend the startup trace limit to512
+batches per lane to cover the complete bounded initial transition work. This is
+instrumented diagnosis only, not a benchmark comparison. Stop at first fault or
+60seconds after play, retain logs/source, recover editor to edit mode afterward.
+
+D5 result: reproduced GPU fault01:37:22.3384. Captured outstanding batch104
+(firstOrigin131072,-65536,-32768,512) refine/count submission without callback,
+and batch119(firstOrigin131072,-98304,0,512) sample/classify submission. No emit
+for those batches. Other lanes' same numeric batch counters are not globally
+unique; phase attribution is bounded by these observed origins and log ordering.
+Evidence:v12-transition-d5-host.log and-aftermath.json. Failed editor88848 closed
+normally and exited. No network/movement/edits.
+
+D6 candidate scenario defined before launch: fresh editor/project/basic_example,
+normal default v12 saved-world startup, no guest/hosting/movement/edits. Change
+only transition stage selection from a runtime uniform to ten compiled variants
+of the same shader resource, preserving stage order and algorithms. Keep bounded
+trace512. Require compile and60seconds playable startup without GPU fault, missing
+compute pipeline or unexpected managed errors; record full queue/player state.
+This is a correctness screen, not geometry or performance acceptance. Distinct
+stage variants also improve crash attribution if it still fails. Preserve failed
+results and compare source identity before subsequent qualification.
+
+D6 result: FAIL. Editor36804 exited during the first transition sample submission
+at01:40:13.8089, before a count callback. No GPU fault details were emitted in the
+preserved host log; the exact native termination cause is not yet established.
+Stage specialization is rejected for this candidate. Reverted DynamicCombo,
+SetCombo and stage macros together; the one runtime-stage shader remains the
+canonical implementation. Preserved v12-transition-d6-source.json and-host.log;
+no generator recipe, saved terrain or scene contents were changed by the candidate.
+
+D6 recovery: Sentry last_crash advanced to2026-09-09T05:40:15.188553Z. Record this
+native-crash marker separately from the earlier GPU fault dumps. After reverting
+the candidate, visible editor16540 restarted successfully with zero compile errors
+and no play session. Reopened authored basic_example via normal scene open. The
+extended bounded trace remains for ongoing diagnosis; it must be reviewed before
+performance qualification. No all-nine-step acceptance or commit/push follows.
+
+LANDFORM-TRANSITION-CRASH-001/v1 D7 candidate defined before source change/run.
+Same fresh basic_example startup, default version12 saved world, no movement,
+network or edits,60second maximum. Rewrite only RefineVoxelEdge's exact-midpoint
+loop exit: collapse low/high to that midpoint, break, then return the collapsed
+coordinate outside the loop. Preserve endpoint handling, eight-step limit,
+corrections, ordinary interpolation and signed coordinate result. No SDF/cave,
+request, storage or stage-selection changes. This is a control-flow candidate,
+not a proven driver fix. Recompile both compute roots that include the shared
+routine; clean editor restart required. Preserve source/logs/last_crash marker;
+startup must remain playable with no GPU/native failure before broader checks.
+
+D7 result: FAIL. GPU fault reproduced01:44:13, after refine/count for the same
+firstOrigin131072,-65536,-32768,512 batch as D5 (lane-local batch118 this time),
+without that batch's count callback. The next sample batch begins at
+131072,-98304,0,512. This repeat narrows the data-dependent workload independently
+of lane-local batch numbers. The loop-exit candidate did not resolve the fault
+and is rejected; restore the original routine rather than retaining an unqualified
+change. Evidence:v12-transition-d7-host.log,-source.json,-aftermath.json.
+
+D7 recovery confirmed: original RefineVoxelEdge exact-midpoint return restored.
+Visible editor19588 reports basic_example in edit mode, clean scene, successful
+compile and zero compile errors. This establishes recovery only.
+
+LANDFORM-TRANSITION-CRASH-001/v1 D8 diagnostic defined before run. Same fresh
+basic_example startup, default version12 saved world, no movement/network/edits,
+60second observation maximum after play start. No source algorithm changes.
+Use engine -gpu_diagnostics_dev with LunarG Crash Diagnostic Layer SDK1.4.357.0
+installed copy_only=1 under task-specific TEMP. Installer Authenticode status
+Valid, signer LunarG Inc.; install log reports successful completion. Process-only
+VK_ADD_LAYER_PATH points to its Bin, CDL_INSTRUMENT_ALL_COMMANDS=true and
+CDL_OUTPUT_PATH points to task TEMP. Keep default synchronization settings.
+This instrumented run is fault attribution only, not performance acceptance.
+Preserve crash log and layer output; report absent/failed layer explicitly.
+
+D8 result: diagnostic setup FAIL before scene load. Crash layer enabled, but
+engine requested VK_EXT_validation_cache without a supporting layer, and
+vkCreateDevice failed. No terrain workload ran. Preserved v12-transition-d8-host.log.
+D9 setup correction, same scenario: explicitly enable VK_LAYER_KHRONOS_validation
+via process VK_INSTANCE_LAYERS in addition to engine-enabled crash layer. Installed
+validation manifest advertises VK_EXT_validation_cache. No source changes.
+
+D9 result: FAIL, original device loss reproduced01:53:41 with per-command CDL
+markers enabled. Dump confirms instrument_all_commands=true, sync_after_commands=false.
+Engine overrides output_path to its gpu_crash_dumps directory. Preserved host log
+and cdl YAML as v12-transition-d9-host.log and v12-transition-d9-cdl.yaml.
+CDL reports one incomplete graphics command buffer at sequence170284; last
+started/completed command38 is vkCmdWriteBufferMarkerAMD. Default running-only
+dump omits preceding dispatch context. Invalid Write and Instruction Pointer Fault
+remain unattributed. Standard validation also reports invalid validation-cache
+handle, zero-size/push-range errors and a descriptor-pool type warning; these
+are observations, not established causes of the terrain fault.
+D10 defined before run: same fixed startup, additionally request engine
+-vulkan_enable_gpu_validation and CDL_DUMP_COMMANDS=all to retain dispatch
+context. Keep source unchanged. Confirm GPU validation activation in log;
+if unavailable report that limitation. Same60second correctness-only screen.
+
+D10 result: FAIL, device loss01:55:37. Preserved v12-transition-d10-host.log
+and-cdl.yaml. Effective dump still says dump_commands=running despite legacy
+CDL_DUMP_COMMANDS=all; requested expanded configuration was not applied.
+GPU-assisted activation was not confirmed by log. Do not infer a GPU-AV pass.
+D11 configuration correction before run: same source/scenario, use current
+VK_LUNARG_CRASH_DIAGNOSTIC_DUMP_COMMANDS=all and
+VK_KHRONOS_VALIDATION_GPUAV_ENABLE=true from official current layer docs.
+Retain both layers and engine diagnostic flags. Same60second post-play screen.
+
+D11 result: FAIL, instrumented device loss01:57:50. Effective CDL dump now
+confirms dump_commands=all; modern prefix is required for this installed layer.
+GPU-AV activation confirmed by SharedMemoryDataRace-RaceOnStore/Load reports
+in engine shaders/downsample_cs.shader_cs before play, plus GPU-assisted fence
+failure after device loss. These are not demonstrated terrain source defects.
+Terrain only reaches first sample/classify batch (origin2048,0,1024,16), unlike
+original coarse-batch failure. Do not equate this instrumented failure with D5.
+Full CDL identifies pending transition dispatch groupCountX326 and another
+transition dispatch; GPU-AV adds descriptor set31. Preserved
+v12-transition-d11-host.log and-cdl.yaml. No source changes. Next useful
+comparison retains modern full-command dump but omits GPU-AV to recover the
+original workload attribution. All-nine-step acceptance remains incomplete.
+
+LANDFORM-TRANSITION-CRASH-001/v1 D12 defined before run: same fresh basic_example
+version12 saved-world startup, default recipe, no movement/network/edits,60second
+maximum after play. Source unchanged. Process-only SDK1.4.357.0 layer path and
+VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation, engine -gpu_diagnostics_dev,
+VK_LUNARG_CRASH_DIAGNOSTIC_DUMP_COMMANDS=all,
+VK_KHRONOS_VALIDATION_GPUAV_ENABLE=false. This isolates full command reporting
+from D11 shader instrumentation. Diagnostic only, no performance acceptance.
+Recovery89296 confirmed clean basic_example edit mode, zero compile errors.
+
+D12 result: FAIL02:00:16. Same coarse firstOrigin131072,-65536,-32768,512
+(batch110), no count callback. Full effective dump_commands=all, no GPU-AV
+messages. Incomplete command buffer has last complete command38 breadcrumb,
+then command39 transition dispatch326x1x1 and command48 dispatch1x1x1. This
+matches stage6 refinement plus stage7 count, while markers label both dispatches
+NOT_STARTED; marker state alone does not identify the precise shader instruction.
+Preserved v12-transition-d12-host.log and-cdl.yaml.
+D13 defined before run: same fixed startup source/world, scoped GPU-AV with
+VK_KHRONOS_VALIDATION_GPUAV_ENABLE=true, GPUAV_SAFE_MODE=true,
+GPUAV_SELECT_INSTRUMENTED_SHADERS=true,
+GPUAV_SHADERS_TO_INSTRUMENT=.*voxel_transition_geometry.* and
+GPUAV_SHARED_MEMORY_DATA_RACE=false (all keys use VK_KHRONOS_VALIDATION_).
+Retain full CDL. Installed layer manifest documents these keys and regex scope.
+This targets transition access checks without instrumenting engine downsample
+shared-memory races from D11.60second post-play limit, attribution only.
+
+D13 result: FAIL02:02:20, first transition batch again. GPU-AV reports internal
+fence wait failure, no attributed out-of-bounds access before device loss.
+Preserved v12-transition-d13-host.log and-cdl.yaml. Do not claim original
+coarse workload was validated; shader instrumentation remains too disruptive.
+D14 candidate defined before change: mirror CPU TerrainCaves.SampleWorld depth
+envelope early-out in GPU SampleVoxelCaves. Evaluate existing depth/envelope
+first; if envelope <= surfaceDensity, return surfaceDensity. Since final value
+is max(surfaceDensity,min(caves,envelope)), skipped noises cannot change it.
+No noise, constants, recipe, storage, topology or root-search changes. This is
+an exact field-preserving candidate to reduce repeated surface-query work, not
+a proven GPU fault cause/fix. Same fixed fresh startup60second screen, ordinary
+engine -gpu_diagnostics only (no Vulkan layers). Cold shader restart mandatory.
+
+D14 result: FAIL02:04:42 at same coarse batch103 origin131072,-65536,-32768,512.
+Shader artifact regenerated02:04:18 (78950bytes), confirming candidate compiled.
+Preserved v12-transition-d14-source.json and-host.log. Revert GPU cave shortcut:
+it did not resolve the failure and has no performance qualification.
+D15 candidate defined before change: replace the GPU 12-way simplex gradient
+switch with equivalent four-sign/three-plane selection. For h=hash%12, bit0
+selects first component sign, bit1 second sign; h<4 mapsXY, h<8 XZ, elseYZ.
+Use same float diagonal and explicit zero components. Every h retains its
+original vector exactly; cave formula and seed/hash unchanged. This isolates
+control-flow shape in repeated root queries, not a proven fault cause.
+Same60second cold startup and ordinary -gpu_diagnostics as D14.
+
+D15 result: FAIL02:06:53, GPU device fault persists. Preserved
+v12-transition-d15-host.log and-source.json. Reverted sign/plane gradient
+candidate and both root comments; D14 cave change also fully reverted. Neither
+field-preserving simplification resolves the transition refinement failure.
+Full pipeline remains unqualified, no commit/push or goal completion.
+
+LANDFORM-TRANSITION-CRASH-001/v1 D16 candidate defined before change. Same fixed
+fresh basic_example/default v12 saved world, no movement/network/edits,60second
+startup screen. Set transition MaximumBatchSize=1 and use that owner for its
+request-building limit/arrays. Regular and outer batches unchanged. Preserve
+all requested transition regions and all refinement iterations, field and cave
+formulas. This tests per-dispatch workload/capacity, not reduced terrain quality.
+Failure-free startup without reaching the known coarse region is inconclusive.
+Use ordinary -gpu_diagnostics, no Vulkan layers. No performance acceptance.
+
+D16 result: PASS bounded startup screen with single-region transition batches.
+At02:11:25 all visual/transition queues0, placement settled, collision4913/4913
+ready, no failures, grounded playerZ193.436/supportGap-.03048706. Still healthy
+after60seconds at02:11:57: all six transition pairs ready96/384/384/384/384/384,
+including coarsest5/6, pending0 and missingTransitions0, unsafeCommits0.
+Saved world b60920a5-70ed-408d-afe1-5eabee43a7b9 revision2 fingerprint at the
+recorded edit site remains D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+at02:12:18. Thus no omitted coarse workload or saved-field change explains this
+pass. Preserve d16-source,host,state,final-state and startup image.
+Retain single-region candidate for qualification. This changes both submission
+size and scratch capacity; it does not prove a driver, scheduling or indexing
+root cause. Broad mesh/parity/multiplayer and fixed performance acceptance remain
+open; diagnostic timing is not a performance baseline.
+
+LANDFORM-GEOMETRY-012/v1 defined before run: D16 source, basic_example, default
+v12 saved world/revision2, no peers, settled startup player(-.0010629535,
+-.00122561888,193.436035), visual512 LOD0..6, gameplay8. Existing production
+voxel_mesh_audit 8 coverage then voxel_density_audit; no edits or movement.
+Mesh criteria: every selected region completed, zero stale/mutation/invalid
+indices/nonfinite/bounds/oversized/degenerate results. Density criteria: zero
+nonfinite/sign/region-bound failures and maximum CPU/GPU error<=.05. Preserve
+actual coverage, including absence of near-zero probes; sparse samples cannot
+prove global field parity. Readbacks are outside performance measurement.
+
+GEOMETRY-012/v1 result: mesh FAIL.104/104 selected/completed,48 failed regions,
+3220 degenerate triangles; zero stale/mutation/invalid indices/out-of-bounds/
+nonfinite/identity/oversized/draw-argument failures. Maximum edge1.725cells,
+210readbacks/3495460bytes,259.4ms diagnostic completion. Evidence
+v12-geometry-012-audit.log. Density audit ARMED only: the settled world has no
+new normal count blocks. No density result is claimed; reset session before
+using another scenario so this pending audit cannot mix later observations.
+D17 defined before cleanup/run: repeat D16 single-region fixed startup with
+all temporary gpu.transition.batch logging/counter removed. Same60second
+screen and requirements, ordinary -gpu_diagnostics, no movement/network/edits.
+Record queue completion and collision support; no performance acceptance.
+
+D16 shutdown note: after normal play_stop and editor close, process88960
+remained at an Error window after Source2Shutdown/ShutdownSource2Logging.
+Preserved d16-shutdown.log. A second normal close did not terminate it.
+Verified process name/title, then terminated stalled editor after completed
+scene teardown. Error text/root cause unavailable; shutdown is not accepted.
+
+D17 result: PASS startup screen without temporary batch logging. Startup
+loaded02:16:51; final state02:18:10 remains playable/grounded, support gap
+-.028900146, collision4913/4913 ready, failures0, visual/transition pending0,
+placement settled. All compilers report success with zero errors/warnings.
+Preserved d17-host.log, source.json, state.json and-final-state.json. No
+transition batch logs remain in source. Current editor90672 remains playing.
+The single-face candidate now passes two bounded startup observations; broad
+geometry, shutdown, multiplayer and performance remain unaccepted.
+
+GEOMETRY-012/v1 candidate B defined before implementation: refined triangle
+mask shared by count/emit for regular and transition geometry, unchanged1e-10
+relative squared-area threshold. Same fixed origin/default recipe/world and
+8 coverage audit as candidate A. Cold startup must complete all queues without
+GPU fault before audit. Require zero degenerate/index/nonfinite/bounds failures;
+retain all failures. Visual seam and performance checks remain separate gates.
+
+D17 shutdown also remained on Error after Source2Shutdown. Preserved
+d17-shutdown.log and terminated verified stalled90672 before geometry B cold
+launch. This repeated shutdown issue remains open independently of startup.
+
+GEOMETRY-012/v1 B result: startup FAIL02:25:00, before audit. Aftermath core41
+identifies voxel_persistent_geometry_cs, shader374272bytes/hash10924301062288587288.
+Preserved b-source.json, b-host.log and b-aftermath.json. State probe timed out
+and is not a completed measurement.
+Candidate C defined before change: same geometry compaction and fixed scenario,
+reduce GpuVoxelMesher.MaximumRegionsPerBatch from8 to1 (regular/outer). Transition
+already1. Keep all regions, geometry and refinement work; test bounded batch
+size without weakening the geometry criteria. Cold startup then same audit.
+
+GEOMETRY-012/v1 C result: startup FAIL02:27:30, same regular shader hash
+10924301062288587288 and374272bytes even at batch1. Preserved c-host.log and
+c-aftermath.json. Restore regular batch8; it was not a successful mitigation.
+Candidate D defined before change: regular triangle selection moves from
+PersistentStage8 to a small dedicated compute resource, preserving the same
+mask/count/emission algorithm and ordering. The main regular shader retains
+original responsibilities. Transition selection remains in its one resource
+under the documented engine constraint; transition batch remains1. Same fixed
+startup/audit criteria and cold restart required.
+
+GEOMETRY-012/v1 D result: native startup FAIL. Process12876 absent by02:31:11;
+last log02:30:37 first render tick, no geometry result. Dedicated selector
+shader compiled to17003bytes but did not qualify native usage. Preserve
+d-host.log. Candidate E defined before change: remove new selector resource,
+reuse existing small index shader for selection then index emission with
+an explicit phase attribute. Bind a valid one-element dummy index buffer
+during selection. Same four selector inputs plus existing index inputs,
+no field sampling in the index shader. Preserve mask/prefix algorithm, regular
+batch8 and transition1. Same fixed cold startup and geometry audit gates.
+
+GEOMETRY-012/v1 E result: native startup FAIL. Process82392 absent after first
+render tick02:33:24, before any audit. Preserved e-host.log. Reverted ALL
+compaction candidates, area helper/constant, cell-mask packing, extra/double-phase
+selector resources, scratch attributes and dispatch reordering. GpuVoxelMesher
+and GpuTransitionScratch hashes match the D17 manifest exactly. Regular/outer
+batch8 and transition1 retained; no new geometry pass accepted. The original
+3179 transition/41 regular degenerate triangles remain an open defect.
+Windows Application events1000/1001 from02:14–02:25 contained no matching
+sbox crash events; this search did not establish a native/shutdown cause.
+
+LANDFORM-CROSSWORLD-012/v1 defined before run. Restored D17 source, editor90104,
+engine26.09.08, single host/no peers, basic_example, default recipe1337, saved
+world b60920a5-70ed-408d-afe1-5eabee43a7b9 revision2 in landform-v12-edits.
+Start and settle. Capture world/settings/pages and fingerprint(-48896,-131072,
+384),radius512. Normal apply seed1338 saves original and creates W1; wait
+queues/collision, then apply1337 creates W2. Require distinct UUIDs, zero edits
+in fresh worlds, W2 original unedited fingerprint4C577D7D2D64CE00587C20BC364CBA48FF16EAF5781310B74EE56E32597CA12D.
+Load original landform-v12-edits through normal command. Require original UUID,
+revision2/sixpages, fingerprintD2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9,
+matching settings, no stale queues/identity errors and grounded support after
+drain. No new edits, player movement or authored-scene changes. Preserve every
+failed application/load and restore original if the scenario cannot finish.
+Each stage has a120second observation cap, not a performance criterion.
+
+CROSSWORLD-012/v1 comparison defect: W1=b0f6816e-6feb-4934-bb01-917820ddcd0e,
+W2=364cdeeb-b6a9-4d1e-9fa6-f8cc4e79400c each revision0/pages0; both settled.
+W2 fingerprint77AE745EB0886A4310655EDC2F85200A6DAD48B739608DB6081C9A1C1B7C9E22
+differs from the prescribed original-UUID hash. TerrainFieldCodec.RegionFingerprint
+line47 hashes snapshot.WorldId via WriteIdentity; same-recipe fresh UUIDs cannot
+be required to equal. This is an invalid scenario assertion, not a field
+regression or grounds to rewrite history. Original load committed UUID/rev2/
+sixpages02:39:36. Preserve v1 as NOT ACCEPTED due to invalid fingerprint assertion.
+CROSSWORLD-012/v2 defined before rerun: identical actions/inputs/caps and final
+original UUID/fingerprint requirements. Replace only impossible W2 cross-UUID
+hash equality with authoritative revision0/pages0 and exact default settings.
+Region fingerprint remains required to equal the original only after loading
+its original UUID. Repeat the complete sequence; do not reuse v1 as a v2 pass.
+
+LANDFORM-INVALID-012/v1 defined before run. Current restored original world,
+D17 source, default active settings, no peers/movement/edits. Through existing
+set_landform_recipe stage and apply landAmount=-.1, then restore staged.6
+without apply; stage/apply continentalScale=32768 with mountainRegionScale32768
+(invalid ratio), then restore staged131072. Require both invalid applications
+rejected, active original UUID/revision2/sixpages/settings and saved fingerprint
+unchanged, zero new world-applied logs and queues settled. This covers finite
+range and coupled-scale rejection, not NaN/Infinity or busy/guest guards.
+
+
+LANDFORM-INVALID-012/v1 result (2026-09-09, 02:47-02:48): PASS for the
+specified finite-range and coupled-scale cases. Existing set_landform_recipe
+returned "Invalid recipe: check ranges and scale hierarchy." for both
+landAmount=-0.1 and continentalScale=32768. GeneratorStatus retained all eight
+active defaults and seed1337 after each rejection. Restoring each staged value
+without applying returned "These settings are already active."
+At02:47:59 original world b60920a5-70ed-408d-afe1-5eabee43a7b9 remained revision2,
+sixpages, savedRevision2/checkpoint6, no storage failure or pending edits.
+At02:47:52 fingerprint(-48896,-131072,384),radius512 remained
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Visual/transition/placement queues were zero, collision4913/4913 ready with
+zero failures; player grounded at(-0.00517005054,0.0145584187,193.436279),
+supportGap=-0.031555176. Last recipe.applied remains02:41:29, before these tests.
+Source: restored D17 candidate on codex/terrain-biome-generation; engine26.09.08,
+existing visible editor/basic_example, single host/no peers, unchanged scenario.
+Evidence: ValidationEvidence/RegionalLandforms/v12-invalid-final-state.json and
+v12-invalid-host.log. Tool-return rejection text is recorded above; native log
+records world identity and fingerprint. NaN/Infinity, busy and guest guards
+remain unqualified. No performance acceptance follows from this bounded check.
+
+
+LANDFORM-CROSSWORLD-012/v2 result: PASS for the fixed single-host sequence.
+Full rerun began02:40:51 with seed1338, W1=b24e3530-1ab8-40fc-864f-f1e30ed6bc11;
+then02:41:29 seed1337, W2=10efe8ad-be15-49c5-9b4e-4cd2166a7435.
+Both distinct fresh worlds had revision0/pages0, exact prescribed settings,
+zero visual/transition/placement pending and collision4913/4913 ready with
+zero failures and grounded support. At02:41:57 load committed original
+b60920a5-70ed-408d-afe1-5eabee43a7b9, revision2/sixpages/checkpoint6.
+By02:42:49 all queues settled, collision4913 ready, player grounded; storage
+reported no failure or stale read completions. At02:42:50 original-region hash
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9 matched.
+Evidence: ValidationEvidence/RegionalLandforms/v12-crossworld-v2-host.log
+lines102-115 and v12-crossworld-v2-w1-state.json, v12-crossworld-v2-w2-state.json,
+v12-crossworld-v2-restored-state.json. The same host log also contains the v1
+sequence at lines85-100; those earlier UUIDs/results are not this v2 run.
+Environment/source unchanged from the scenario definition; D17 mesher/scratch
+hashes rechecked on02:49 with exact matches. Native compile reports zero errors
+and warnings. This closes the matching cross-world restore scenario only;
+multiplayer, broader geometry and performance acceptance remain open.
+
+
+GEOMETRY-012/v1 A2 repeat defined before run: same origin/default1337 recipe,
+world b60920a5-70ed-408d-afe1-5eabee43a7b9 revision2/sixpages, no peers, settled
+queues, 32cells/16units, gameplay8/visual512/LOD0..6/extents4/8. Run unchanged
+voxel_mesh_audit 8 coverage on restored D17 source; current source hashes match
+D17. Preserve results; require zero degenerates/invalid indices/nonfinite or
+out-of-bounds positions, stale results and draw argument failures. No threshold
+or topology change. This repeat confirms the defect before a transition-only
+candidate; it is not a performance run.
+
+
+GEOMETRY-012/v1 A2 result: FAIL02:51:15. selected/completed104, failures46,
+degenerateTriangles3493, zero stale/mutation/index/position/bounds/record/oversized/
+draw failures; maxEdgeCells1.725,210readbacks3591968bytes,214.358ms. Preserve
+v12-geometry-012-a2-host.log and a2-start.json. Coverage selection is not identical
+to A1 (counts/bytes differ); do not infer geometry regression from the aggregate
+count difference. The current source still demonstrably emits degenerates.
+Candidate F defined before implementation: transition-only per-cell selection
+after refinement, before cell prefix scan; store mask in previously unused
+Cells.w, keep case unmodified, retain exact emitted count. No new shader resource,
+no regular pipeline change except naming its existing audit threshold for sharing.
+Use unchanged audit squared-area threshold (cellSize^4 *1e-10), existing16buffers,
+single-face batches, same field/refined positions/vertex IDs. Cold startup then
+same8coverage audit. Require zero transition degenerates and all existing geometry
+criteria; regular degenerates remain an unresolved gate, not an accepted exemption.
+This is a bounded correction candidate, not overall acceptance. Preserve failures.
+
+
+GEOMETRY-012/v1 F result: startup FAIL02:54:31, GPU memory fault with invalid
+write address; editor79332 displayed GPU Crash. No geometry audit result.
+Preserved f-source.json, f-host.log and f-aftermath.json. Reverted all three
+candidate source files byte-for-byte from pre-F backup, restoring D17. No
+triangle mask, selector pass or shared threshold candidate remains implemented.
+The preceding A2 shutdown also left Error after Source2Shutdown; preserved
+v12-geometry-012-a2-shutdown.log before terminating verified stalled90104.
+
+F Aftermath core43 identifies transition compute shader hash13610551913613180286,
+size891392bytes, Error_DMA_PageFault. This isolates the startup failure to the
+transition-only candidate without modifying regular emission. It does not identify
+the offending instruction or establish whether the cause is shader compilation,
+resource access or driver behavior. D17 mesher and scratch hashes match after
+reversal. Restored visible editor27620 launched for recovery verification.
+
+F recovery: restored D17 source cold play completed all visual/transition/placement
+queues with zero pending, collision4913/4913 ready and zero failures. Player
+(0.0000471476924,-0.0000657738346,193.43602) grounded, supportGap=-0.028900146.
+Evidence: v12-geometry-012-f-recovered-state.json and f-recovered-host.log.
+This verifies recovery of the previous candidate; it does not qualify F or
+resolve the original degenerate geometry. No runtime source change retained.
+
+
+GEOMETRY-012/v1 G defined before implementation: move unchanged transition
+topology tables into one structured read-only GPU buffer; merge cell/face audit
+counters into uint4 to keep16storage buffers. Preserve stages, all topology,
+refinement, batch1 and scenario inputs; do not add compaction yet. Current D17
+SPIR-V declares multiple function-storage topology arrays including two6144uint
+and three2016uint arrays (v12-transition-table-storage.txt). This motivates a
+bounded storage change but does not prove native per-thread allocation or fault
+cause. Require cold startup, zero table/face mismatch errors, complete queues,
+original saved fingerprint and existing8coverage audit. Degenerates remain an
+open gate until separately corrected. No performance acceptance from startup.
+
+
+GEOMETRY-012/v1 G result: FAIL correctness, despite cold startup staying alive
+and all queues/collision settling. At03:05:05 fineMismatch25267, coarseMismatch12353,
+lateralMismatch11, invalidTables448. Audit104selected did not finish: GetData
+ArgumentOutOfRangeException(count) at GpuVoxelMesher.cs1581. Fingerprint retained
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Cause found in source: two translated expressions used offset + cellClass &0x7f,
+which masks away the512 offset. Candidate G2 defined before correction: add
+parentheses around cellClass &0x7f in both count and emit lookups. Identical
+scenario, cold startup and all prior criteria; retain G failure and do not
+accept startup as geometry evidence. Independent table comparison found8728
+values with zero changes; exactly16storage buffers remain.
+
+
+GEOMETRY-012/v1 G2 result: bounded storage-change correctness checks PASS;
+overall geometry remains FAIL because the original degenerates are unchanged.
+Cold editor87028/basic_example stayed alive; zero compile errors, unchanged
+Sentry last_crash2026-09-09T06:33:25.484851Z. All visual/transition/placement queues
+zero,4913collision ready/zero failures, grounded player(-.00107749319,-.00123107387,
+193.436035), supportGap=-.03048706. At03:07:27 fine/coarse/lateralMismatch=0,
+invalidTables=0. Audit104/104 complete,48failed,3220degenerate (matches A1 count),
+zero stale/mutation/index/nonfinite/bounds/record/oversized/draw failures,
+maxEdgeCells1.725,210readbacks3495460bytes,208.368ms. At03:07:36 originalUUID/rev2
+fingerprint retained D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Evidence g2-source.json, g2-state.json, g2-host.log and v12-transition-table-storage.txt.
+Current compiled SPIR-V234848bytes has no large topology Function arrays,
+versus271172bytes in D17. This is IR evidence, not driver memory or speed proof.
+G2 is retained for subsequent compaction work; performance, multiplayer and
+visual seams remain unqualified. No other terrain/cave/regular algorithm changed.
+
+
+GEOMETRY-012/v1 H defined before implementation: apply F's transition-only
+refined-triangle selection to retained G2 table-buffer source. Same default
+seed1337, original world b60920a5-70ed-408d-afe1-5eabee43a7b9 revision2/sixpages,
+origin camera/player, gameplay8/visual512/LOD0..6/extents4/8, engine26.09.08,
+single host/no peers,32cells/16units. Stage10 reads exact refined positions,
+sets mask in Cells.w/count in Cells.y, then scans; stage8 consumes that mask.
+No field/vertex/refinement/regular emission change, no new resource or readback.
+Cold startup must settle within120s without fault; unchanged8coverage audit
+requires zero transition degenerates and all other existing geometry criteria,
+original fingerprint, zero table/face/lateral errors. Regular degenerates remain
+an unresolved acceptance gate, not an exemption. Preserve all failed results.
+
+
+GEOMETRY-012/v1 H result: transition selection PASS for fixed origin audit;
+overall remaining regular degenerates, seams and performance still unqualified.
+Visible editor1540 cold startup completed without GPU/native fault; Sentry
+unchanged2026-09-09T06:33:25.484851Z. All queues zero,4913collision ready/no
+failures, grounded at(0.0000479051778,-0.0000659546204,193.43602),gap=-.028900146.
+At03:11:33 audit104/104 complete:48transition regions have ZERO degenerate
+triangles;56regular regions retain31. Zero failed regions, stale/mutation/index/
+nonfinite/bounds/record/oversized/draw failures; maxEdgeCells1.724,
+210readbacks3172612bytes,175.006ms. Coverage differs from the negative-origin
+sample, so do not treat aggregate triangle count reduction as paired performance.
+Fine/coarse/lateralMismatch=0, invalidTables=0. At03:11:39 originalUUID/rev2
+fingerprint D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+unchanged. Evidence h-source.json, h-state.json, h-host.log and h-startup.png.
+Screenshot inspected: grounded player on continuous checker plains/hills;
+this origin view does not establish mountain/cliff quality or all LOD seam views.
+The preceding G2 editor87028 exited after normal close (no forced termination),
+with Source2Shutdown logged; g2-shutdown.log retained. One normal close is not
+a general resolution of prior shutdown failures. H is retained; no commit/push
+until all nine sections and performance acceptance are complete.
+
+
+GEOMETRY-012/v1 I defined before implementation: regular triangle selection
+using the same refined positions and1e-10relative squared-area criterion as H.
+Preserve H transitions. Move regular GPU topology lookups into one structured
+buffer uploaded from the existing generated CPU view of canonical HLSL tables;
+no new source of table truth. Count stage8 packs mask in Cells.x high16, case
+remains low16; scans follow selection; dedicated index writer consumes mask.
+Retain separate regular output resources, batch8, unchanged field/caves/vertices.
+Same original edited world/default1337/origin/LOD settings and no peers as H.
+Cold startup within120s must settle without faults; unchanged8coverage audit
+requires zero degenerates in both regular and transition meshes and all prior
+index/bounds/identity/table/face/lateral criteria, original saved fingerprint.
+No performance acceptance until the canonical figure-eight qualification.
+
+
+GEOMETRY-012/v1 I result: PASS fixed origin geometry scenario. Cold visible
+editor80628/basic_example settled all visual/transition/placement queues,4913
+collision ready with no failures; player grounded at(0.000047402511,-0.0000658495046,
+193.43602),supportGap=-.028900146. At03:17:11 audit104/104 completed:56regular and
+48transition regions, ZERO degenerate triangles in both groups. Zero failed
+regions, stale/mutation/index/nonfinite/bounds/record/oversized/draw failures,
+maxEdgeCells1.724,210readbacks3172240bytes,167.543ms. Fine/coarse/lateralMismatch=0,
+invalidTables=0. OriginalUUID/rev2 saved-region fingerprint remained
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Sentry last_crash unchanged2026-09-09T06:33:25.484851Z; native compile had zero
+errors/warnings. All3584existing CPU topology values matched canonical HLSL
+before upload. Evidence i-source.json, i-state.json and i-host.log. This qualifies
+only fixed origin geometry, not broader seams, edited sites, multiplayer or
+figure-eight performance. I is retained with H transitions. Prior H shutdown
+left Error after Source2Shutdown; h-shutdown.log preserved before terminating
+stalled1540. The intermittent shutdown issue remains open.
+
+
+LANDFORM-SITES-012/v1 defined before run (2026-09-09). Current I regular/H
+transition source, default1337, original b60920a5-70ed-408d-afe1-5eabee43a7b9,
+revision2/sixpages; visible editor80628/engine26.09.08/no peers/basic_example,
+32cells16units/gameplay8/visual512/LOD0..6/extents4/8. Move actual player through
+set_game_object first to edited plains(-49152,-131072,768), then mountain
+(-8192,-131072,4096), then origin(0,0,768). These retain the recorded safe v12
+edited-site and corrected mountain recovery coordinates; no edits/recipe changes.
+At each site allow120s to settle: require grounded support,4913collision ready,
+zero failures, zero visual/transition/placement queues, no held bodies. Then
+voxel_mesh_audit8coverage and voxel_lod_info: require zero degenerates/index/
+nonfinite/bounds/record/stale/oversized/draw errors and zero table/face/lateral
+mismatches. Capture1280x720 main camera at edited plains and mountain, inspect
+visible terrain for holes/walls; retain actual camera/player state. Restore
+origin and verify saved-region fingerprint unchanged. This is a geometry/site
+scenario, not a performance baseline or full mountain visual acceptance.
+Custom ejected-camera tools are absent from current66-tool native inventory;
+only the available production player camera is used in this scenario.
+
+
+LANDFORM-SITES-012/v1 result: PASS fixed site geometry/settling sequence.
+Edited plains03:20:17: player(-49151.9727,-131072.031,337.893921),grounded,
+gap=-.036132812; audit104/104,zero all listed errors/degenerates, maxEdgeCells1.727,
+210readbacks3269444bytes,169.989ms. Cut and build mound visible in screenshot;
+foreground rim occludes the lower player view, so this is not a traversal test.
+Mountain03:21:59: player(-8192.00391,-131072,2810.61963),grounded,gap=-.03466797;
+audit104/104,zero all listed errors/degenerates,maxEdgeCells1.721,
+210readbacks3030392bytes,168.265ms. Screenshot shows broad high ground and distant
+ridges; it does not show the mountain face well enough for full shape acceptance.
+Return origin03:22:51: player(0.0000347953719,-.000141777462,193.43602),grounded,
+gap=-.028244019; audit104/104,zero all listed errors/degenerates,maxEdgeCells1.726,
+210readbacks3516116bytes,188.172ms. All three sites had4913collision ready,
+zero failures/queues/held bodies and zero table/fine/coarse/lateral mismatches.
+Final originalUUID/rev2 fingerprint D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+unchanged. Evidence v12-sites-{edited,mountain,origin}-state.json, edited/mountain
+PNGs and v12-sites-host.log. These timings are audit overhead, not frame benchmarks.
+
+LANDFORM-FOOTVIEW-012/v1 defined before observation. Same source/world/settings
+as SITES. Actual player to(-16384,-131072,768), default player camera,1280x720
+noUI. Canonical v11B survey (unchanged v12 values) gives height383.72586 here;
+this moves the player safely above the former detached ground-view location.
+Wait120s maximum for grounded/no-held-body/4913collision-ready/no-queue state.
+Inspect view for rise/cliff profile and visible holes; run unchanged8coverage
+mesh audit and LOD info with zero all geometry criteria. Restore actual player
+to(0,0,768),settle and verify original fingerprint. No edits, detached camera,
+recipe changes or timed performance workload. Preserve failures.
+
+
+MCP-REGISTRY-001/v1 defined before recovery attempt. Current editor80628 with
+I/H source and original edited world. Native search_tools reports66 tools;
+all13 VoxelMcpTools methods are absent although native editor compiler reports
+zero errors. Existing set_landform_recipe direct call returns Unknown tool.
+After FOOTVIEW return settles, touch only Editor/VoxelMcpTools.cs modification
+time (no byte change) to request normal file-watcher refresh. Require custom
+tools to return, native compilation zero errors, world/fingerprint unchanged.
+No scene reset, source-code edits, toolset replacement or benchmark in this check.
+Preserve failure if normal refresh does not restore registration.
+
+
+LANDFORM-FOOTVIEW-012/v1 result: PASS bounded geometry/settling and local visual
+screen. Foot player(-16383.998,-131072,383.730652),grounded,gap=-.031677246,
+4913collision ready,zero failures/queues/held bodies. At03:24:31 audit104/104,
+zero all listed geometry errors/degenerates,maxEdgeCells1.724,
+210readbacks3464036bytes,206.587ms. Fine/coarse/lateralMismatch=0,invalidTables=0.
+Inspected v12-footview.png: a substantial steep face rises from the low ground,
+with continuous visible terrain; this single direction is not global ridge,
+saddle or seam acceptance. Return origin(-.00207155873,-.00219867215,193.435959)
+grounded,gap=-.031082153,4913collision ready/no pending/failures. At03:26:01
+originalUUID/rev2 saved fingerprint remained
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Evidence v12-footview-state.json, v12-footview-restored-state.json, PNG and
+v12-footview-host.log. I/H source unchanged throughout SITES and FOOTVIEW.
+
+MCP-REGISTRY-001/v1 observation: timestamp-only refresh did not restore custom
+tools at the subsequent query (still66tools; no set_landform_recipe). No source
+bytes were changed. The normal native tools and playable world remain usable;
+custom detached-camera/recipe/benchmark controls still require recovery. This
+is a tooling limitation, not a terrain test pass/failure or global blocked state.
+
+
+MCP-REGISTRY-001/v2 defined before run. Installed ToolRegistry.All() directly
+queries EditorTypeLibrary.GetMethodsWithAttribute on every call; no separate
+registry refresh API/cache is involved. Timestamp-only v1 did not change tools.
+Use the same live original world/I-H source with settled queues, append one
+nonfunctional comment to Editor/VoxelMcpTools.cs to trigger an actual editor
+assembly hotload, then restore exact original bytes after observation. Require
+79tools including project controls, zero compile errors, unchanged original
+world fingerprint and settled queues. No new methods or diagnostic hooks.
+Preserve both intermediate and restored tool availability; v1 remains failed.
+
+
+MCP-REGISTRY-001/v2 observation: comment-only change left66tools; no completed
+editor assembly reload was observed. Restored original bytes. v3 defined before
+run: temporarily replace the existing toolset description with "Voxels3 terrain
+production controls" (attribute metadata only), observe compile/tool discovery,
+then restore exact original file. Same world and criteria as v2; no new API or
+registration workaround. This distinguishes an actual metadata change from
+comment/timestamp-only watcher events; it does not presume the discovery cause.
+
+
+MCP-REGISTRY-001/v3 result: PASS recovery. Temporary attribute-description change
+restored79tools; restoring original bytes retained79tools and callable recipe/
+benchmark controls. Editor/VoxelMcpTools.cs SHA256 restored exactly to
+b87d44e5146d78635efefd2ee34baaed88fa6431d938a4bf93c5a722175f0d49.
+Native compile zero errors/warnings, original defaults active, queues0,
+collision4913ready/0failures and grounded support. At03:31:54 originalUUID/rev2
+fingerprint remained D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Evidence v12-mcp-registry-restored-state.json and v12-mcp-registry-host.log.
+No permanent source change or manual registration mechanism retained. This
+recovers the current editor; cold-start discovery reliability is not proven.
+The pending benchmark return correction is now reviewable in
+Plans/FigureEightReturnProposal.md and .patch; it remains unapplied pending
+explicit approval. No benchmark workload or acceptance criterion changed here.
+
+
+LANDFORM-ELEVATED-012/v1 defined before run. I/H source, original v12 edited
+world/default1337, editor80628/engine26.09.08, gameplay8/visual512/LOD0..6,
+no peers,1280x720. Current editor reports unsaved scene state; do not save or
+replace the authored scene. Move actual player to(-8192,-131072,4096), wait
+120s maximum for grounded4913collision/zero queues. Detach existing camera
+through production tools. Capture A(-12288,-131072,5632),angles(25,0,0),FOV60,
+then B(-24576,-147456,8192),angles(20,35,0),FOV60. A retains the recorded elevated
+mountain viewpoint; B is a predefined wider oblique view for silhouette/foothill
+assessment. Inspect actual images for connected surface, substantial relief,
+ridges and saddles; do not infer all-world quality from these two views.
+Return to player camera, actual player(0,0,768), settle and verify original
+saved fingerprint. No scene save, recipe changes, edits or performance run.
+
+LANDFORM-ELEVATED-012/v1 result: visual acceptance NOT ESTABLISHED. Inspected
+v12-elevated-a.png and v12-elevated-b.png. A shows broad elevated terrain with
+steep scooped faces; B shows a subdued silhouette with distant checker-pattern
+aliasing and insufficient visual separation to establish distinct ridges and
+saddles. Neither image shows an obvious hole, but these views do not qualify
+all-world continuity or the requested mountain character. Retain this limitation.
+Restored Game camera and actual player to origin; settled position
+(-0.00207476038,-0.00222765608,193.436035), grounded, support gap -0.03100586,
+4913/4913 collision ready, zero failures, visual/transition/placement queues0.
+At03:43:15 original world b60920a5-70ed-408d-afe1-5eabee43a7b9 revision2
+fingerprint D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+unchanged. Evidence: v12-elevated-restored-state.json and the two images above.
+No source, recipe, edit, authored scene save or benchmark workload change.
+
+LANDFORM-DENSITY-012/v1 defined before run. Current I/H source, generator12,
+original edited world b60920a5-70ed-408d-afe1-5eabee43a7b9, default seed1337,
+basic_example, engine26.09.08 editor80628, no peers, gameplay8/visual512,
+LOD0..6. From settled origin, arm existing voxel_density_audit then move actual
+player to (131072,131072,4096). Observe normal unedited regular blocks for up to
+120seconds; do not force scheduling or regenerate terrain. Require one125point
+block at each of seven LODs, maximum CPU/GPU error<=0.05, lattice error<=0.05,
+zero nonfinite/sign/bounds failures. Report nearZero count and exact chunks;
+no near-zero or transition coverage claim if absent. This is a finite parity
+screen, not a global proof or performance measurement. Return player to
+(0,0,768), allow120seconds for queues0/grounded4913collision ready, and verify
+original edited-world fingerprint. No edits, recipe changes or scene saves.
+
+LANDFORM-DENSITY-012/v1 density result: PASS bounded regular-field screen.
+At03:44:28-03:44:46 all seven LODs completed125samples each (875total),
+pendingLevels0. Maximum GPU/CPU error0.001953125; maximum cached-lattice/CPU
+error0. All nonfinite, densityMismatch, signMismatch and boundsFailure counts0.
+NearZero0 at every level: no near-zero or transition parity claim is supported.
+LOD0..6 selected chunks: (256,256,0), (128,128,3), (64,64,1), (32,32,0),
+(16,16,0), (8,8,0), (8,4,0). Maximum errors respectively
+0.000061035156,0,0.00024414062,0.00024414062,0.0010986328,0.001953125,
+0.00024414062. Each block read171500bytes; diagnostic elapsed1.3749-2.127ms
+is not a benchmark result. Away player grounded at(131072,131072.016,125.450241),
+support gap-0.02935791,4913collision ready/0failures. Visual work still pending
+at that observation; return completion is recorded separately below. Evidence:
+v12-density-source.json, v12-density-host.log, v12-density-away-state.json.
+
+Section2 source inventory recheck: bounded searches of Code/, Assets/shaders/voxels/
+and Assets/scenes/basic_example.scene found no SurfaceFrequency, SurfaceAmplitude,
+SurfaceBaseHeight, TerrainFrequency or TerrainAmplitude references. Current
+SampleSurfaceHeight definition/callers remain in ProceduralTerrainSdf.cs; facade
+and lattice paths delegate to RegionalLandforms. Both regular and transition
+count shader roots include voxel_sdf_v12.hlsl. TerrainNoise, TerrainCaves and
+RegionalLandforms are distinct current owners; cave wavelengths remain cave-owned.
+This bounded search does not establish arbitrary stale-name absence or runtime
+integration acceptance. No runtime code changes in this inventory pass.
+
+LANDFORM-DENSITY-012/v1 return result: PASS. Player grounded at
+(-0.00130090665,0.00232034503,193.436234), support gap-0.031600952,
+4913collision ready,0failures, visual/transition/placement queues0. At03:45:30
+originalUUID/revision2 fingerprint remained
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Evidence v12-density-restored-state.json and v12-density-host.log. Authored scene
+and recipe unchanged; player camera remains Game. No performance acceptance.
+
+LANDFORM-DENSITY-012/v2 defined before diagnostic run. Same world, source
+geometry, settings, editor, movement and120second limits as v1. Diagnostic
+measurement extension only: retain125sparse comparisons unchanged, additionally
+scan the already-read density buffer for nonfinite values and closest negative/
+nonnegative samples. At most two additional canonical CPU/lattice comparisons
+per observed block; no added readback, scheduling, generation or field state.
+Report each selected lattice coordinate and CPU/cached/GPU density, sign,
+error, nearZero and bounds status. Count sparse near-zero sign disagreements
+separately instead of excluding them from all disagreement reporting. Require
+all7LODs, original v1 criteria, full readbackNonFinite0, and all available
+closest probes finite/in bounds/error<=0.05/latticeError<=0.05/signMismatchFalse.
+Report missing signs in one-sided blocks and actual nearZero coverage; no
+transition or global parity claim. Repeat origin -> (131072,131072,4096) ->
+(0,0,768) with normal production player controls. No recipe, edits or scene save.
+
+LANDFORM-DENSITY-012/v2 result: PASS bounded regular-field screen. Native
+compilation succeeded with0errors/warnings. At03:47:26-03:47:45 all7LODs
+completed, pendingLevels0. Sparse875samples retain maximum error0.001953125,
+zero lattice/sign/nonfinite/bounds/density mismatch counts, sparseNearZero0.
+Full readback scan found0nonfinite values across300125stored values. Eleven
+closest probes (LOD0:2,1:1,2:1,3:2,4:2,5:2,6:1) were finite/inBounds with zero
+sign mismatches and zero lattice errors; max closest CPU/GPU error0.000061035156.
+LOD1,2,6blocks contain no negative samples and explicitly report solidProbeFalse.
+Two LOD3probes were near-zero: global sample(1026,1045,1),cell128,
+CPU/cache=-0.0024719238,GPU=-0.0024642944,error0.0000076293945;
+sample(1030,1043,1),cell128,CPU/cache/GPU=0.030265808,error0.
+Both preserve strict negative-solid classification. Source review confirms
+CPU collision and regular GPU classification treat exact zero as nonnegative,
+with equivalent sign-preserving epsilon handling. This does not qualify
+transition buffers or every near-zero point. Diagnostic durations1.5961-2.9293ms
+are not a performance comparison. Away player grounded at
+(131072,131072.016,125.450241),support gap-0.02935791,4913collision ready,
+0failures and all visual/transition/placement queues0. Source and away-state
+manifests: v12-density-v2-source.json and v12-density-v2-away-state.json.
+
+LANDFORM-DENSITY-012/v2 return: PASS. Player grounded at
+(-0.00206230627,-0.00218690629,193.435959),gap-0.031082153,4913collision ready,
+0failures,allqueues0. At03:48:45 original world UUID/revision2 fingerprint
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9 unchanged.
+Evidence v12-density-v2-restored-state.json and v12-density-v2-host.log.
+Runtime change is limited to the explicitly armed diagnostic; generator,
+geometry, shader resources and authored scene unchanged. Full figure-eight
+qualification remains outstanding; no commit/push or whole-plan acceptance.
+
+LANDFORM-DENSITY-012/v3 defined before run. Same original world/default recipe,
+engine26.09.08 editor80628, no peers, gameplay8/visual512LOD0..6 as v2. Current
+regular diagnostic plus transition extension through the same explicit arm.
+One completed unedited normal transition count block per six faces/sixLOD pairs,
+maximum36readbacks of15389floats (61556bytes each). For each block compare125
+uniform linear buffer indices including endpoints across all five stored planes,
+plus up to2closest signed probes, with canonical CPU field/bounds. Full GPU
+buffer scan counts nonfinite values; all sign disagreements including near-zero
+are counted. CPU coordinate mapping is shared with existing correction uploads.
+No shader, sampler dispatch or scheduling change. Require all36faces observed,
+maximumError<=0.05,nonfinite/sign/boundsFailures0; record actual nearZero coverage.
+Retain v2 regular criteria. From settled origin arm, move actual player to
+(131072,131072,4096), observe up to120seconds, return(0,0,768), allow120seconds
+for full queue drain, grounded4913collision support and original fingerprint.
+Missing faces after the full route remain unqualified, not a pass. Source hashes
+and native compiler results recorded. No edits, recipe changes or authored saves.
+
+LANDFORM-DENSITY-012/v3 field result: PASS bounded regular/transition screen.
+Native compile0errors/warnings. All36distinct coarse-level/face combinations
+completed (6faces x6pairs); pendingFaces0. Transition4542comparisons,
+2216016readbackBytes, maximumError0.015625, zero nonfinite/sign/boundsFailures.
+Transition nearZero0: no near-zero transition claim. Regular7blocks/875sparse
+comparisons retain maxError0.001953125 and zero nonfinite/sign/bounds/readback
+nonfinite/near-zero-sign failures. Exact closest probes and face coordinates
+are retained in v12-density-v3-audit.log; source hashes in v12-density-v3-source.json.
+CPU/GPU layout source inspection agrees on plane ranges0..4760 (69x69,normal0),
+4761..8985 (65x65,-1),8986..13210 (65x65,+1),13211..14299 (33x33,-2),
+14300..15388 (33x33,+2), including central-plane -2XY offset and coarse-plane
+2xXY stride. Readback requires EmitReady after completed count callback, and
+both masks cancel on reset/performance measurement. CPU correction mapping
+was extracted unchanged for shared use; no shader or terrain recipe change.
+Away player grounded(131072,131072.016,125.450241),gap-0.02935791,4913collision
+ready/0failures and allqueues0. No performance acceptance; diagnostic readbacks
+are explicit and outside timed runs. Near-zero transition, cave-envelope,
+coordinate extremes and edited-face parity remain separate coverage limits.
+
+LANDFORM-DENSITY-012/v3 return: PASS. Player grounded
+(-0.00205833348,-0.00218524365,193.435959),support gap-0.031082153,
+4913collision ready,0failures,allqueues0. At03:53:27 original UUID/revision2
+fingerprint D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+unchanged. Evidence v12-density-v3-restored-state.json and v12-density-v3-host.log.
+No scene save or source recipe mutation. Full plan acceptance remains pending.
+
+LANDFORM-CAVES-012/v1 defined before run. Current v12 original edited world,
+seed1337/eight defaults, engine26.09.08/editor80628, same live playable manager.
+Read-only inspect_terrain_column through production field:25XYpoints from
+{-131072,-65536,0,65536,131072} squared, plus edited plains(-49152,-131072),
+mountain(-8192,-131072),foothill(-16384,-131072). At each position first read
+height using two samples Z0/16; then129samples at Z=height-32768..height,
+spacing256. Add three1-unit-spaced samples centered on each depth cutoff512
+and32768. Preserve raw returned data, world identity and settings. Require
+finite densities, BaseDensity>=SurfaceDensity-0.01; outside the512..32768 depth
+envelope require BaseDensity<=0.01 for underground points (no cave air); within
+the envelope record positive base-density cave samples and crossings. At least
+one cave-air sample must occur somewhere in this fixed set; absence is missing
+coverage, not permission to move samples. Record base versus edited differences
+without treating intentional edits as a cave defect. These CPU field observations
+are not GPU/mesh/traversal proof. Preserve player/world, verify fingerprint and
+queues after inspection. Source comparison against8045b77 is separate evidence.
+
+LANDFORM-CAVES-012/v1 result: PASS bounded CPU field/envelope screen.28columns,
+3780profile/envelope samples (excluding initial height queries), surface-height
+range[-2034.324,2810.6025],123positive cave-air samples in12columns. Zero
+nonfinite,base-below-surface or outside-envelope cave-air failures under the
+predefined0.01tolerance. Named foothill column has6cave-air samples; named
+mountain/edited-plains columns have0, retained rather than replaced. One edited
+sample at(-49152,-131072,384.51562) has base=-0.0009765625 and final=63.935074,
+consistent with the preserved edited-site distinction; no edit was performed.
+Initial orchestration stopped on a non-JSON tool response after8complete saved
+columns; response text was not retained, so its cause is unknown. Remaining
+fixed coordinates resumed without altering criteria; full28column data and
+summary are under v12-caves-columns/. No additional errors occurred on resume.
+
+Source preservation comparison against8045b77 confirms exact cave constants,
+salts and CPU sampling arithmetic in the relocated TerrainCaves.SampleWorld;
+GPU cave body retains scale/threshold/salt/envelope/min-max composition in
+voxel_terrain_caves.hlsl, with changed exterior input kept outside this module.
+Current source hashes in v12-caves-source.json; original source remains available
+at8045b77:Code/Voxels/ProceduralTerrainSdf.cs and
+8045b77:Assets/shaders/voxels/voxel_sdf_v9.hlsl. This does not require identical
+combined density under different old/new surface heights.
+
+Player unchanged/grounded(-0.00205833348,-0.00218524365,193.435959),gap-0.031082153,
+4913collision ready/0failures,allqueues0. At03:56:23 originalUUID/revision2
+fingerprint D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9
+unchanged. Evidence v12-caves-state.json and v12-caves-host.log. No source/scene/
+recipe/edit mutation. These production CPU observations do not qualify cave
+mesh traversal, deep GPU parity or arbitrary coordinate/parameter combinations.
+
+LANDFORM-CAVEPLAY-012/v1 defined before run. Current v12/I-H geometry and
+extended density diagnostic, original edited world/default1337, basic_example,
+engine26.09.08/editor80628, no peers,gameplay8/visual512LOD0..6. Use origin-column
+maximum positive cave sample from CAVES-012/v1: actual player(0,0,-30014.566),
+base density37.965424,depth30208. This is a selected existing cavity, not a
+modified recipe or artificial chamber. Arm density diagnostic before teleport;
+observe actual regular/transition coverage, retaining absent coarse faces.
+Allow120seconds for grounded4913collision ready,0failures and queues0; failure
+to obtain support is a failure, not permission to choose another cavity. Once
+settled run voxel_mesh_audit 8 coverage and capture1280x720 game-camera view.
+Require104/104 audits and zero degenerate/invalid/nonfinite/bounds/stale/mutation/
+oversized/draw errors; density maximum error<=0.05,zero sign/nonfinite/bounds
+failures for actual samples. A screenshot alone does not prove traversability.
+Return player(0,0,768),allow120seconds for support and queue drain,verify original
+fingerprint. No edits,recipe mutation,scene save or benchmark workload change.
+
+LANDFORM-CAVEPLAY-012/v1 result: FAIL density; PASS selected support/geometry.
+At selected cavity player settled(-41.6624641,56.9521828,-30821.334),grounded,
+gap-0.04296875,4913collision ready/0failures,allqueues0. At03:58:40 mesh audit
+104/104 completed,zero failures/stale/mutation/indices/nonfinite/bounds/record/
+oversized/degenerate/draw errors,maxedge1.725cells,210readbacks3403256bytes,
+265.265ms diagnostic duration. Viewed v12-caveplay.png: player on visible gray
+cave surface; no obvious hole in this view, not a cave traversal-route proof.
+Underground regular coverage4blocks(LOD0..3): LOD3chunk(0,0,-9),cell128,
+maximum CPU/GPU error0.16308594 exceeds0.05. Transition36faces complete;
+maximum error0.63684464 at pair0/1,coarse(-3,0,-29),PositiveX. Both failed blocks
+report0sign/nonfinite/bounds failures. Two closest transition near-zero probes
+on that face preserve sign (errors0.00024414062 and0.000015258789). Exact worst
+sample coordinates were not logged by v1 diagnostic, so root cause unresolved.
+Evidence v12-caveplay-audit.log,-host.log,-state.json,-restored-state.json and PNG.
+Returned origin grounded(-0.00207536761,-0.00222766632,193.436035),gap-0.03100586,
+4913collision ready,0failures,allqueues0. Fingerprint verification below.
+
+CAVEPLAY-012/v2 defined before repeat: same fixed world/settings/route/cavity,
+limits and criteria. Diagnostic-only extension logs maximum-error coordinate
+and CPU/GPU values in regular/transition aggregate records; sample selection
+and thresholds unchanged. Repeat to locate failing samples; retain v1 failure.
+No terrain recipe or shader change. Mesh/camera criteria remain as v1.
+
+CAVEPLAY-012/v1 return fingerprint at03:59:23: originalUUID/revision2,
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9 unchanged.
+CAVEPLAY-012/v2 result: density FAIL reproduced at the same blocks. Transition
+pair0/1,coarse(-3,0,-29),PositiveX: worst position(-2064,496,-29104),CPU
+-50.058445,GPU-50.69529,error0.63684464. Regular LOD3chunk(0,0,-9): sample
+(16,33,-255),cell128 -> world(2048,4224,-32640),CPU-251.88573,GPU-251.72264,
+error0.16308594. Both preserve sign but exceed0.05. Exact worst coordinates
+are now retained by the production diagnostic; neither field nor thresholds
+changed. Source review finds equivalent simplex algorithms but different
+floating expression grouping (CPU sequential attenuation subtraction versus
+GPU dot reduction); arithmetic/compilation remains a hypothesis, not a proven
+cause. No corrective shader patch applied in this run.
+
+Cavity player settled(-41.6660042,56.9563332,-30821.3379),grounded,gap-0.041015625,
+4913collision ready,0failures,allqueues0. At04:01:41 audit104/104 completed with
+zero recorded geometry errors,maxedge1.725cells,210readbacks3403256bytes,
+337.819ms. Viewed v12-caveplay-v2.png: supported player on cave surface, no
+obvious hole in this view. Exact source/state/host evidence uses v12-caveplay-v2
+prefix. This is a reproducible deep-field defect despite passing geometry.
+
+CAVEPLAY-012/v2 return: grounded(-0.000904122251,0.00192323094,193.436234),
+gap-0.031600952,4913collision ready,0failures,allqueues0. At04:02:26 original
+UUID/revision2 fingerprint remained
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+No scene save,recipe or edit change; full acceptance remains failed/pending.
+
+CAVEPLAY-012/v3 candidate defined before runtime. Preserve CPU cave recipe,
+world identity and saved edits. GPU shared simplex uses explicit scalar
+attenuation/gradient dot arithmetic matching CPU order; precise qualifiers on
+skew/unskew/offsets/accumulation and contribution result prevent contraction/
+reassociation along those expressions. This tests a hypothesis prompted by
+reproducible v2 coordinates, not an established root cause. Microsoft HLSL
+variable-syntax documentation defines precise operation-order constraints:
+https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-variable-syntax
+No shader resource/layout, buffers, noise salts, constants, CPU field or version
+change. Preserve candidate rollback bytes outside repo. Require hot compile,
+clean visible editor startup and unchanged Sentry marker before repeating exact
+CAVEPLAY-012/v2 route/criteria. Also repeat DENSITY-012/v3 surface route if deep
+parity passes. Shader qualification is not performance acceptance. Saved world
+b60920a5-70ed-408d-afe1-5eabee43a7b9/rev2, landform-v12-edits; baseline Sentry
+2026-09-09T06:33:25.484851Z. Preserve authored scene file and do not save it.
+
+CAVEPLAY-012/v3 result: FAIL correction hypothesis. Visible cold editor85912
+compiled shaders in2.819s and started original world/rev2/sixpages without new
+shader-load errors or Sentry advancement. Previous editor80628 normal shutdown
+reached Source2Shutdown/ShutdownSource2Logging but remained in Error window;
+preserved v3-shutdown.log and terminated verified stopped sbox-dev process.
+This recurring shutdown issue remains unresolved.
+
+Deep regular4blocks/transition36faces reproduced exact v2 maxima and values:
+regular0.16308594 at(2048,4224,-32640); transition0.63684464 at(-2064,496,-29104).
+Thus precise-local/scalar-dot candidate does not repair the defect. Inspected
+compiled transition resource payload SPIR-V266476bytes,zero NoContraction
+decorations; shader_c write time is after modified include. This is evidence
+for this payload, not a claim about all VFX compilers/targets. Before-source
+rollback preserved in TEMP/voxels-noise-before-precise.hlsl; no CPU cave change.
+At04:09:43 geometry104/104passes,zero all recorded errors,maxedge1.725cells,
+210readbacks3403256bytes,166.261ms. Supported cave player/screenshot match prior
+bounded view; inspected v12-caveplay-v3.png. Source/startup/state/host evidence
+uses v12-caveplay-v3 prefix. Candidate will be reverted and cold-start screened;
+no performance acceptance or tolerance change.
+
+CAVEPLAY-012/v3 return before rollback: original player grounded
+(-0.00205788156,-0.00218559918,193.435959),gap-0.031082153,4913collision ready,
+0failures,allqueues0. Original fingerprint unchanged at04:10:07. Reverted exact
+noise source bytes, SHA2565030180668A03C392FD88CC6A9EEBD509CB3C02056E1DBA917B41DFF3CF1E3CF,
+matching pre-candidate backup. No candidate arithmetic retained. Normal editor
+85912 close again reached completed shutdown but remained Error; preserved log,
+verified process and stopped it. Fresh visible editor82356,79tools,compile
+0errors/warnings,Sentry unchanged. Rollback startup now being checked through
+normal basic_example entry point; require grounded support, full drain and
+saved fingerprint before handing back the live editor.
+
+CAVEPLAY-012/v3 rollback screen: PASS restoration only. Visible editor82356
+plays original world/rev2,sixpages. Grounded origin
+(0.0000471266758,-0.000065788794,193.43602),gap-0.028900146,4913collision ready,
+0failures,allqueues0. At04:13:05 fingerprint remains
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Sentry unchanged. Fresh log retains five unrelated missing stock-resource
+messages (trash texture/bin material/cardboard particle/denyundo sound/hair
+clothing); no observed terrain shader-load/HLSL/compute or managed exception
+error. Evidence v12-caveplay-v3-rollback-state.json and-rollback-host.log.
+
+Compiled-payload comparison confirms candidate did change output: rollback
+SPIR-V249196bytes SHA256a547e8041185fe012ad62d3f34551e10682572936df8ca0876e01f219d759dff;
+candidate266476bytes SHA256ca3a02ca8c99832faf3c67d215f51dd6ce51bc0f4b920f7544b867b36e591cc7.
+The failed result is not explained by an identical inspected compiled payload.
+Installed Sandbox.System.dll Vector3 operator/(Vector3,float) delegates to
+System.Numerics.Vector3.Divide; exact CPU machine code was not inspected.
+Arithmetic input/cell selection at the two fixed failing points remains the
+next diagnosis, with the original numerical tolerance unchanged.
+
+CAVEPLAY-012 compiler follow-up (source research only, no runtime candidate):
+Slang issue12198 reports local precise ignored by direct SPIR-V emission;
+PR12208 remains open and identifies a separate global/per-function mode path.
+s&box update26-08-05 documents its switch to Slang. This matches the observed
+missing NoContraction decorations, but installed compiler revision and causal
+connection to the two cave errors remain unproven. Installed ShaderCompileOptions
+exposes only SingleThreaded, ForceRecompile and ConsoleOutput. Bounded ASCII
+inspection of vfx_vulkan.dll/slang.dll found floating-point compiler/SPIR-V
+symbols, but no established project-facing configuration. No engine binaries,
+compiled resources or runtime source changed. Next bounded check is whether the
+upstream per-function override has source syntax supported by installed VFX.
+See the research-library Slang entry for primary links and transfer limits.
+
+Compiler override retrieval result: upstream source only creates
+IRFloatingPointModeOverrideDecoration for generated autodiff functions (Fast).
+No source-language attribute or test invoking a function override was found in
+the bounded source/tests search. Source precise still lowers to the ineffective
+local decoration. This closes that source-attribute lead; it does not prove that
+every possible VFX compiler configuration is unavailable.
+Source: https://github.com/shader-slang/slang/blob/master/source/slang/slang-ir-autodiff-fwd.cpp
+
+Focused arithmetic analysis (not a terrain oracle or runtime validation):
+rounding each operation to binary32 at the transition failing world position
+(-2064,496,-29104), noodle scale6144, changes the skewed X boundary depending on
+whether scaling is division or multiplication by a rounded reciprocal:
+- division: scaled(-0.3359375,0.0807291641831398,-4.736979007720947),
+  skew-1.6640625, skewedX-2.0, selected X cell-2;
+- reciprocal multiplication: scaled(-0.3359375,0.0807291716337204,-4.7369794845581055),
+  skew-1.664062738418579, skewedX-2.000000238418579, selected X cell-3.
+This calculation covers only input scaling/skew/floor, not hashes, gradients,
+noise or densities; it is not proof of either processor's actual evaluation.
+The other failing point and remaining scales did not change selected cells in
+this bounded comparison. Actual compiled input arithmetic and simplex ranking
+must be checked before adopting a correction. No cave recipe/source/runtime
+change or new performance claim follows from these calculations.
+
+CAVE-SCALING-012/v1 defined before candidate: diagnostic-only source experiment
+through existing inspect_terrain_column in visible basic_example, engine26.09.08,
+original worldb60920a5-70ed-408d-afe1-5eabee43a7b9/rev2/default1337, no peers.
+The preceding two read-only queries recheck frozen CAVEPLAY maxima and reproduce
+CPU-50.058445 and-251.88573 (evidence v12-cave-scaling-*-before.json).
+Candidate changes only the two CPU noodle input expressions from division by
+wavelength to multiplication by its constant reciprocal. No salts, thresholds,
+envelope, GPU source or surface changes. This mirrors the inspected SPIR-V
+OpFMul inputs; it is not yet a compatible adopted field change. Save exact source
+bytes in TEMP; query each same column at original failing Z,spacing1,count2.
+Success criterion for this hypothesis: both original failing positions agree
+with retained live GPU values(-50.69529,-251.72264) within0.05. Partial results
+must remain partial, and this is not a fresh GPU validation or performance run.
+Restore exact CPU source after two queries, confirm compilation, repeat original
+queries and fingerprint; no world save, regeneration or recipe/version change.
+Candidate must not remain active between turns. Do not draw whole-field parity
+or save compatibility conclusions from these four CPU samples.
+
+CAVE-SCALING-012/v1 result: PARTIAL diagnosis, overall criterion FAIL.
+Compiled candidate CPU query at transition position changed from-50.058445 to
+-50.695316, within0.000026 of recorded GPU-50.69529. Adjacent Z-29103 changed
+from-50.148224 to-50.14827. Regular failure remained exactly-251.88573 versus
+GPU-251.72264; adjacent Z-32639 remained-251.70201. Thus reciprocal scaling
+explains the first bounded discrepancy but is insufficient for full parity.
+Evidence v12-cave-scaling-*-candidate.json. The candidate was reverted in the
+query script's finally block; exact original bytes restored, engine compile
+0errors/warnings, both original queries reproduced their pre-candidate values.
+Player remained grounded at origin,gap-0.028900146;4913collisionready,0failures,
+allqueues0 (v12-cave-scaling-restored-state.json). No shader or cave arithmetic
+candidate retained, no new version or compatibility/performance acceptance.
+Actual candidate SPIR-V input uses OpFMul by constant reciprocal, followed by
+left-associated adds and multiply by1/3 before Floor (first noodle at lines1508
+onward, second at1963 onward); offset0 remains two OpFSub instructions after
+unskew multiplication. With no NoContraction decoration, driver contraction is
+not ruled out. The remaining regular discrepancy needs separate evidence.
+
+CAVE-SCALING restoration fingerprint at04:26:44 matches original revision2
+D2E9AAA5076A34F12C6C61D92BD1EC3B0F8FA4CF3013A7ADFE12AAA31EF8F7F9.
+Initial console filter terrain.fingerprint returned no match; corrected filter
+fingerprint retrieved the completed request95618ddc-2e48-4801-9a24-e8373145815e.
+
+CAVE-UNSKEW-012/v1 defined before candidate: same visible editor/world/settings,
+two coordinates and two-sample columns as CAVE-SCALING-012/v1. Change only CPU
+simplex origin subtraction to MathF.FusedMultiplyAdd(-(i+j+k),G3,axisCell),
+then subtract that origin from position. Preserve original division scaling.
+Hypothesis: downstream GPU contraction of unskew multiply/subtract changes
+simplex rank near tied offsets. No GPU machine-code proof is claimed. Compile
+first (including s&box access checks); if successful query both fixed columns.
+Criterion: regular failing position moves within0.05 of retained GPU-251.72264;
+transition result is separately recorded and not expected resolved by this test.
+Restore exact original noise source in finally, compile and reproduce original
+queries; no saved field change, new version or full parity acceptance. Existing
+inspector only; no test-only entry point or second noise implementation.
+
+CAVE-UNSKEW-012/v1 result: bounded hypothesis PASS, full parity NOT established.
+Compiled and accessible MathF.FusedMultiplyAdd candidate changed regular point
+from-251.88573 to-251.72249 (recorded GPU-251.72264, difference0.00015).
+Adjacent Z-32639 changed-251.70201 to-251.7021. Transition point remained outside
+tolerance:-50.058456 versus GPU-50.69529; adjacent-50.148235. Evidence
+v12-cave-unskew-*-candidate.json. Restored exact CPU noise bytes immediately;
+compile0errors/warnings and both original query values reproduced, evidence
+v12-cave-unskew-*-restored.json. This associates contraction with the second
+failure but does not inspect actual driver machine code or prove other samples.
+A combined CPU/GPU arithmetic contract still needs implementation, generated
+code verification, full deep/surface audits and explicit field identity handling.
+Do not retain CPU-only emulation of one driver as a completed correction.
+
+FMA portability follow-up: reject adopting the CPU-only candidate as a complete
+fix. Slang source at commitff22f4b108f60236107932cd1366ca976759f274,
+hlsl.meta.slang lines11351-11380, maps float fma to GLSL.std.450 Fma for SPIR-V.
+The Khronos extended-instruction specification does not require fused precision
+without NoContraction. Therefore replacing shader arithmetic with fma alone
+would not establish the intended CPU/GPU contract. No shader experiment was
+started on that unsupported assumption. Next correction must stabilize the
+noise cell/rank decisions themselves or establish enforced compiler precision;
+keep cave salts/scales/envelope and account for any numerical field-identity
+change. Primary source links and limits added to the research library.
+
+INTEGER-CAVE-013/v1 defined before candidate: version13 changes simplex input
+quantization/cell/rank decisions to signed64-bit arithmetic at256/worldunit.
+Cave composition/salts/scales/thresholds/envelope and v12 surface unchanged.
+Play stopped before source edits; v12 original save remains separately selected
+by its versioned recipe key. New v13 world starts from authored basic_example,
+seed1337/eight defaults, host/no peers,32cells16units,LOD0..6. No migration or
+silent reuse of v12 pages. Exact source backup TEMP/voxels-v13-integer-backup.
+First gate: CPU and GPU compile with no access/type errors, generated SPIR-V
+contains Int64 arithmetic, clean visible editor startup, unchanged Sentry marker
+2026-09-09T06:33:25.484851Z and no fresh terrain shader/dispatch exceptions.
+Then query two known coordinates and repeat CAVEPLAY-012/v2 route/coverage and
+0.05parity threshold under new identity; source/identity differences explicit.
+Later repeat surface audit before broader acceptance. No timing comparison
+across versions is implied. Initial conservative cave-noise interval is[-1,1]
+because the prior gradient-only interval does not prove bounds across the
+observed simplex boundary jumps. Cost remains unqualified; optimize only with
+a conservative proof and real measurements. Do not commit/push this candidate
+without full plan gates. If compilation fails, restore exact prior source and
+visible v12 world; preserve failed logs and do not add a different fallback.
+
+INTEGER-CAVE-013 preflight: CPU compile0errors/warnings; both VFX resources
+compiled in~0.6s each. First transition SPIR-V payload266456bytes contains
+Int64 capability/type and56OpSDiv instructions. Its rounding emitted GLSL Round,
+not RoundEven; corrected GPU quantization to explicit floor/fraction/tie parity
+before any v13 play. Initial compiled payload is not the final candidate.
+Editor82356 normal close again reached completed Source2Shutdown and remained
+in Error window; preserve shutdown log and terminate only verified stopped PID.
+
+INTEGER-CAVE-013/v1 observations: newUUIDc66b3bf6-03c6-4c6d-ac06-0442de75af85,
+revision0/defaults. Cold editor1936alive,79tools,compile0errors/warnings,Sentry
+unchanged. Final transition SPIR-V284984bytes,Int64 capability,56OpSDiv; one
+remaining Round belongs to existing transition world-to-lattice mapping, not
+new quantization. Shader resource/storage-buffer layout unchanged.
+Deep density4regularblocks/36transitionfaces completed with maxerror0.00022888184
+and0.015625 respectively, zero recorded sign/nonfinite/bounds failures. Former
+regular failing block nowmax0.00015258789. See v13-integer-density-summary.json
+and-audit.log for exact recorded sample counts/coverage. Selected cave grounded
+(-41.6615944,56.9530754,-30821.3359),gap-0.04296875. At first~30s observation,
+collision2860ready/2051pending; later observation at04:47:23 had4913ready/0failures
+and allqueues0. The observation times do not prove the120s completion deadline.
+At04:47:23 mesh audit104/104pass,zero recorded errors,maxedge1.725cells,
+210readbacks3403388bytes,168.807ms. Viewed v13-integer-caveplay.png: supported
+player on cave surface, no obvious hole in bounded view, not traversal proof.
+
+Return protocol deviation: initially issued(0,0,4096), then read the exact old
+scenario and corrected to(0,0,768). Retain deviation; do not call the full
+scripted scenario PASS. Deep density and geometry observations precede this
+return and remain bounded evidence. Return support/drain is being checked as
+restoration only. No performance acceptance. Original v12 saved world was not
+loaded, rewritten or migrated; it remains under its earlier selector/slot.
+
+INTEGER-CAVE-013/v1 full log correction: the earlier statement of zero sign
+failures was premature. Aggregation found ONE near-zero transition sign mismatch,
+at(528,2048,-28848),pair0/1,coarse(0,2,-29),NegativeY,index2332: CPU0.000076293945,
+GPU-0.000030517578,error0.00010681152. Transition nearZero12, regular nearZero2.
+Retain strict-sign failure; the candidate is not fully qualified. Large original
+errors are absent in this bounded coverage, but ordinary float contribution
+arithmetic remains different near the iso-surface. Do not silently weaken the
+criterion or claim portable bit-exact generation. Original incorrect observation
+is preserved above with this explicit correction.
+Return player remained asleep at(0,0,768),not grounded despite allqueues0.
+For restoration only, toggled existing Rigidbody.MotionEnabled false/true and
+restored true. No scene save, no controller source or test workload change.
+This recovery is outside the frozen route and does not rescue the scenario.
+
+INTEGER-CAVE-013 restoration: motion toggle did not wake the teleported player;
+preserved v13-integer-final-state.json failure. Restarted normal play without
+source changes. At subsequent observation player grounded at origin
+(0.0000471266758,-0.000065788794,193.43602),gap-0.028900146,4913collisionready,
+0failures and allqueues0. Evidence v13-integer-restarted-state.json;Sentry
+unchanged. Candidate remains active and unqualified; no commit or push.
+
+CAVE-BOUNDS-013/v1 defined before baseline: same version13 default1337 world,
+engine26.09.08, visible basic_example, host/no peers,32cells16units,LOD0..6.
+Use normal play stop/start to clear derived state,30s warmup at authored origin,
+require4913collisionready/0failures and queues0. Arm existing density diagnostic,
+teleport(0,0,-30014.566); capture production state at30,60,120seconds from completed
+teleport. At120 run existing104-region mesh audit. Record source hashes, all
+states/timings/density logs. Compare global-noise-interval baseline with a stable
+simplex-cell bound candidate under identical setup. Primary correctness: no
+boundsFailures/nonfinite values,104/104geometrypass, grounded support and full
+streaming drain by120s. Preserve the known near-zero sign failure separately;
+this scenario does not waive strict parity. Report collision sample counts,
+ready/pending state and timing distributions rather than claim FPS acceptance.
+Any canonical field sample change invalidates this optimization comparison.
+Return(0,0,768) after observations; restoration may require ordinary play restart
+if sleeping-body teleport repeats. No scene save or edits. Figure-eight acceptance
+is still required before committing/pushing; this diagnostic does not replace it.
+
+CAVE-BOUNDS-013/v1 baseline completed: warmup4913ready/0pending;30s2107/2804,
+60s4913/0,120s4913/0;zero collision failures. Candidate compiled0errors/warnings.
+Three existing two-sample production columns(known regular/transition failures
+and near-zero location) are identical before/after the shared-location refactor,
+including identity/revision/height/densities. This is bounded value-preservation
+evidence, not a whole-field proof. Candidate repeat uses the exact same script.
+
+CAVE-BOUNDS-013/v1 first candidate:30s3084ready/1827pending,60s/120s4913ready,
+0failures;104/104meshpass. Total collision density samples at60s decrease from
+113588001 to33521811, but per-chunk sampling p95 increases36.3643->42.9946ms,
+p9939.3606->52.9923ms and max63.4343->83.3844ms; average10.950012->7.445372ms.
+These tails are material and prevent accepting this implementation on timings.
+Next candidate replaces up to8cell lookups with direct interval checks of the
+same linear inequalities: one minimum-cell lookup, upper skew limits and all
+three pairwise rank comparisons with their original tie rules. This removes
+repeated integer division; it is a measured-bottleneck hypothesis, not a proven
+improvement. Field formulas and scenario unchanged. Repeat as v13-bounds-after2.
+
+CAVE-BOUNDS-013/v1 baseline/first-candidate full-log aggregation uses each file
+only after its last density.audit.armed marker, excluding older runs. Both
+observe4regularblocks/36transitionfaces and the known single near-zero sign
+failure; no boundsFailures/nonfinite records. Exact comparisons are retained in
+v13-bounds-comparison.json. Snapshot timing files record30/60/120s checkpoints.
+
+CAVE-BOUNDS-013/v1 second candidate completed: warmup4913ready/0pending,
+30s4285/628,60s/120s4913/0,zero failures. Mesh104/104pass with zero recorded
+errors,maxedge1.725,210readbacks3403388bytes,170.347ms. Density coverage and
+max errors remain4regular/36transition,0.00022888184/0.015625,0bounds/nonfinite,
+one known near-zero sign mismatch. v13-bounds-comparison.json owns all runs.
+At120s: sampling average5.712847ms,p9534.0291,p9943.8428,max56.0267ms,
+33518359density samples,12328079rejectedblocks. Global-bound baseline average
+10.950012,p9536.3643,p9939.3606,max63.4343ms,113588001samples. Average,p95,max
+and readiness improve; p99 remains~11.4percent higher. This tradeoff is not
+blanket performance acceptance; canonical figure-eight and unresolved tails
+remain open. Source keeps the direct interval proof; the superseded eight-cell
+lookup implementation is removed. No field sample change in the six fixed
+before/after observations. Candidate remains unqualified for strict sign parity.
+The script returned to(0,0,768); normal play restart will restore supported
+player state if the sleeping-body teleport persists, outside timed observations.
+
+CAVE-BOUNDS-013 restoration after normal play restart: grounded origin
+(0.0000614821838,-0.0000695543931,193.43602),gap-0.03050232,4913collisionready,
+0failures,allqueues0. Evidence v13-bounds-restored-state.json. Source/diff checks
+pass; no commit or push and no full-goal acceptance.
+
+CAVE-ENDPOINT-013/v1 defined before observation: version13 default1337 active
+world, engine26.09.08, visible basic_example, host/no peers. Read-only existing
+InspectTerrainColumn at x528,y2048,minimumZ-28848.0625,spacing0.001953125,
+count65. This spans64 binary32 Z increments around the retained transition
+sign mismatch. Record full canonical samples, identity and source hashes.
+Require65 distinct ordered coordinates, finite values, unchanged identity/revision
+and BaseDensity==Density in this unedited world. Report all sign changes and
+zero plateaus without treating a CPU column as GPU vertex or collision evidence.
+No terrain/camera mutation. This characterization does not waive the strict
+sign gate, change the field, or replace geometry/performance acceptance.
+
+CAVE-ENDPOINT-013/v1 observation:65 distinct ordered samples, all finite,
+BaseDensity==Density at all65;32 adjacent equal-density pairs and one sign
+change. At Z-28848 and its immediate binary32 neighbors, density is
++0.000076293945. The positive plateau continues to Z-28847.998046875; next
+representable Z-28847.99609375 has density-0.00044250488. JSON renders these
+coordinates using shortest float round-trip decimal strings. The three-point
+plateau is consistent with the documented1/256 world input quantization.
+No zero-density sample was observed. This CPU observation cannot establish a
+GPU edge position, crack size, collision agreement or portable sign parity.
+
+Protocol qualification: current world UUID is unchanged but revision is2, whereas
+the preceding bounds run used revision0. No mutation was requested in this
+observation; preserve the user's current edits. Thus this is not an accepted
+repeat of an unedited-world scenario. At these samples, equality of base and
+authoritative density establishes only that these positions have no net edit
+correction. Evidence: v13-endpoint-column.json and v13-endpoint-summary.json
+with source hashes. Strict transition sign failure remains unresolved.
+
+Coordination check: Add biome voxel materials is notLoaded with its latest turn
+completed; no live task benchmark handle was reported. No message was sent to
+that task and no material/shader source was changed by this observation.
+
+WATER-001/v1 defined before runtime: engine26.09.08, visible basic_example,
+host/no peers, generator13, format2/water1, default1337 landform settings and
+SeaLevel0,32cells16units, gameplay8,visualLOD0..6/4/8. Start normal play with
+the new recipe selector; no migration of the preserved pre-water-v13 save.
+Warm up30seconds. Inspect columns: (0,0) and(-73728,-131072), minimumZ-1024,
+spacing16,count129; deep column(0,0),minimumZ-32768,spacing256,count129.
+Require finite samples; solid density unchanged by water; for every point
+D<=0=>Solid, otherwise H<z<0=>Water, elseAir. ExactZ0 must not be Water;
+sealed cave-air points belowH must remainAir. Read material nodes at ocean
+(-73728,-131072,-16),(-73728,-131072,0),(-73728,-131072,-1024): expect
+Water4,Air0,solidStone3 respectively. These heights come from the existing
+v12-default production survey; version13 exterior is unchanged.
+Capture1280x720 noUI ejected water view at(-73728,-131072,2048),angles(30,0,0),
+FOV60; inspect for a flat blue surface and land occlusion. Restore normal camera.
+No edits or gameplay teleport in this initial observation. Source hashes,
+compile status, raw columns/logs and image must be retained. This is only the
+initial domain/presentation check, not edit, multiplayer, cold-start shader or
+performance acceptance. Preserve all failures and qualification limits.
+
+WATER-001/v1 initial attempt was not a fresh-world run: play resumed externally
+at05:23:47 before the code changes finished, loading pre-water-v13 revision24.
+The later start command returned Already playing, so it did not restart play.
+Hotload retained worldc66b3bf6-03c6-4c6d-ac06-0442de75af85/revision24.
+Preserved15 original checkpoint/page files with hashes in pre-water-backup.json
+before saving the water session separately to water-hotload-v1; save completed
+at05:31:54 revision24. No original-save migration was intentionally executed.
+
+The first water shader load raced its initial compile: missing shader_c warnings
+occurred before the compiled resource appeared. Native asset_compile cannot
+compile shader assets through its generic asset route (CanRecompileFalse),
+despite SourceFile being present; the shader watcher produced the resource.
+Initial image initial-water.png shows red/black fallback rendering and does not
+pass appearance. The first screenshot call rejected includeUi, then the valid
+width/height-only call supplied the recorded image. Restarted normal play after
+the compiled water resource existed, retaining the separate water save.
+This is recovery and preserves the initial failure, not a clean-start pass.
+
+WATER-001/v1 bounded measurements at revision24: dry column129samples
+(77Solid,52Air); ocean129(12Solid,52Water,65Air); deep129(122Solid,7Air).
+All387samples are finite, BaseDensity==Density and have zero violations of
+the frozen medium rule. None of the deep positive-density samples is belowH,
+so dry-cave behavior is not exercised by this column. Ocean material queries
+return Water4 atZ-16, Air0 atZ0, Stone3 atZ-1024. Raw files: initial-dry-column.json,
+ocean-column.json, cave-column.json, material-queries.txt.
+
+Red fallback persisted through normal play restart and mat_reloadshaders;
+restarted-water.png and reloaded-water.png preserve those failures. User camera
+movement changed framing during these observations, so they are not exact-view
+comparisons. The user independently reported the red checker. Editor1936
+closed normally with completed Source2Shutdown; cold visible editor22704
+loaded compiled water shader and water-hotload-v1 at revision40 (later user
+edits preserved). cold-water.png visibly shows blue checker water, no red
+fallback. This proves the reported color failure is cleared in this session,
+not every shoreline, underneath view or clean-checkout compile sequence.
+The initial shader compile succeeded but first material creation preceded its
+output; cold startup clears the cached failure. Restored normal Game camera.
+Source hashes and compile-final.json are retained. No full water/performance
+acceptance or commit/push. The landform cave investigation remains paused.
+
+WATER-CAVE-002/v1 defined before observation: current visible water world,
+generator13/water1,default1337 settings,SeaLevel0, no mutation. Inspect the known
+positive-density cave endpoint column x528,y2048,minimumZ-28848,spacing1,count3;
+inspect ocean cave-depth column x-73728,y-131072,minimumZ-32768,spacing256,count129.
+Require any positive-density samples below originalH to reportAir, neverWater;
+report actual underground-air coverage rather than assume it. All samples finite
+and medium classification must follow the same frozen WATER-001 rule. Capture
+identity/revision; player edits may exist, and D is authoritative including edits.
+This supplements the previous deep column's missing cave-air coverage, without
+replacing that result or changing its parameters. No cave arithmetic changes.
+
+WATER-VIEW-002/v1 defined before observation: same world/settings,1280x720,
+FOV60 ejected camera at(-73728,-131072,-256),angles(-30,0,0), followed by
+shoreline(-68000,-131072,1024),angles(15,0,0). Water should be blue from below
+and terminate against land in the shoreline image. Record images and actual
+camera readback; user movement invalidates fixed framing, not permission to
+disable their input. Return to normal Game camera. This does not measure
+water collision, swimming, drainage or full-world shoreline accuracy.
+
+WATER-BOUNDARY-003/v1 defined before observation: current generator13/water1
+default1337/SeaLevel0, read-only ocean column x-73728,y-131072. Query A:
+minimumZ-0.00390625,spacing0.00390625,count3, expect Water,Air,Air. Query B:
+minimumZ-838.65906 (the stored round-trip float natural height),spacing0.125,
+count3, expect Solid,Water,Water if no authoritative edit crosses these points.
+Record actual identity/revision and edit correction. Failure of that precondition
+must not be presented as a failed water formula or an unedited comparison.
+No camera, player, recipe or density mutations. This explicitly checks the
+half-open domain at both sea level and the original seabed.
+
+WATER-CAVE-002/v1 observations at revision172: known endpoint column3samples
+contains one underground positive-density sample, reportedAir with noWater.
+Ocean-depth column129samples contains no underground positive-density samples,
+so ocean-cave coverage remains missing. All132samples finite and follow the
+medium rule. This verifies the known cave-air point stays dry, not all caves.
+Evidence: cave-known-air.json and ocean-cave-depth.json.
+
+WATER-VIEW-002/v1 is unqualified: underwater.png is a uniform background;
+underwater-settled.png shows an above-water shoreline despite the specified
+underwater camera. Camera movement invalidates fixed framing; no underwater
+pass or culling-defect conclusion follows. Shoreline camera was staged but
+not accepted from these mismatched images. Restored normal Game camera.
+
+WATER-BOUNDARY-003/v1 precondition changed during observations: returned world
+1466c46a-0381-445d-9cd2-8d283908d14f revision0 has natural height729.0696
+at the selected XY, rather than the earlier-838.65906 ocean. Both queries return
+threeSolid samples; no net edit correction. Settings and exact values are retained
+in sea-boundary.json and seabed-boundary.json. This is not the specified ocean
+boundary scenario and does not count as water boundary acceptance. Preserve the
+new active recipe/world; do not restore old parameters over ongoing authoring.
+Further fixed-view/recipe checks remain open. No runtime code changed in these
+observations, no cave numerical investigation resumed, no commit/push.
+
+WATER-LOAD-004/v1 defined before execution: current worlddd143c7b-25a5-4c8a-
+97ed-4fddb5135925/revision0,seed1337,LandAmount0.75,remaining default settings,
+SeaLevel0,engine26.09.08,visiblebasic_example,host/nopeers,32cells16units,
+4913collision regions,visualLOD0..6/4/8. Initial player approximately
+(0.0013,0.0012,584.7701),grounded,allqueues0. Save a snapshot to
+water-load-comparison and reload that same snapshot through the normal storage
+command to invalidate derived mesh epochs without changing terrain or recipe.
+Time from load-command completion; inspect existing production state every0.5s
+for up to60s. Require observing nonzero pending work before accepting a drain
+time. Record all states and final identity; player XY movement>1unit, edits or
+recipe/world changes invalidate timing comparability. Do not disable controls.
+Compare unchanged baseline with GPU envelope early-out candidate using the same
+operation. Primary metric: visual/transition/placement drain time; also collision
+queues and frame distributions. Correctness requires same density formula, no
+new errors and successful actual geometry checks outside timed observations.
+This diagnostic does not replace canonical figure-eight acceptance.
+
+WATER-LOAD-004/v1 baseline invalidated by movement: start player
+(-4654.56152,-34930.0391,-48382.332), first observation0.672s later
+(-5585.85986,-38719.5156,-57098.9766). Script stopped as specified. It observed
+5368visualpending,placementpending,4613collisionpending,313.3FPS window,
+but cannot report a comparable drain time. World/recipe stayeddd143.../revision0
+withLandAmount0.75. Full states and timing preserved in load-before-*.
+
+Candidate design: skip GPU cave noise when the depth envelope<=surfaceDensity,
+matching the existing CPU identity max(surface,min(caves,envelope))=surface.
+Also, normalized noodle noise is bounded[-1,1] and its positive threshold makes
+tunnelDensity>=-512. Therefore max(tunnelDensity,cheeseDensity)>=-512, and
+when envelope<=-512 the result is exactly max(surface,envelope), independent
+of all cave noise. Apply that second conservative bound to CPU sampling and
+CPU interval evaluation as well. No salts, wavelengths, heights, cave layout,
+water rule or version changes. This removes mathematically irrelevant work,
+not a cave numerical redesign. Frozen performance acceptance remains open.
+
+Source review correction before qualification: the initial far-depth shortcut
+used-512 but also must include the regional mask, whose lower bound is
+-(1+0.36)*512=-696.32. The-512 candidate was immediately superseded; no
+acceptance follows from it. Current shortcut uses conservative-1024 (two density
+scales), below both raw cave and regional-mask minima. CPU scalar, CPU interval
+and GPU all use that bound. Preserve this correction and do not claim the
+superseded shortcut was field-equivalent in the intervening depth band.
+
+WATER-FAST-005/v1 defined before observation: current visible world/settings,
+production column inspector atXY0,0. Query A Z1024..1056 spacing16 count3;
+query B Z-50000..-49968 spacing16 count3. Require unchanged source identity
+between queries, finite values and BaseDensity==SurfaceDensity in A when its
+depth envelope<=surface. In B require BaseDensity==SurfaceDensity+32768 when
+its depth envelope<=-1024. Report coverage preconditions rather than changing
+coordinates to force a pass. Arm existing GPU density audit for normally
+generated incoming chunks while controls remain interactive; report only observed
+coverage/errors. Compile status and shader logs must reference current source.
+This checks the algebraic early-exit regions, not cave-interior parity or timing.
+
+WATER-FAST-005 initial CPU checks: six samples meet the exact early-exit
+identities, no net edit corrections, same worlddd143.../revision5 and0.75 land.
+CPU compiles0errors/warnings. The first observed GPU audit has5regularblocks
+and6transitionfaces,maxerror0.0009765625,0sign/near-zero-sign/bounds/nonfinite.
+However it sampled the OLD GPU payload: shader_c timestamps remained04:43:33.
+Installed ShaderHooks explicitly ignores included HLSL changes. This audit is
+therefore CPU-candidate versus old-GPU evidence, not new-GPU validation.
+Updated the three owning shader resource comments to trigger recompilation of
+the two compute entry points and the water-aware soil shader. Qualification
+requires fresh payload timestamps and a newly armed audit after compile.
+
+Owning GPU payloads recompiled at05:49:47 and soil shader05:49:49. Compute
+compiles completed successfully; soil shader emitted profile-upgrade warning
+E41012 and completed. Newly armed density observation follows those payloads;
+previous old-payload audit remains separately qualified. No timing improvement
+is claimed from shader compilation or algebraic correctness alone.
+
+WATER-LOAD-004/v2 defined before runs. Version1 cannot be repeated without
+reverting subsequent user edits and relocation, so preserve its invalid result
+and establish a separate comparison in the current authoring state. World
+dd143c7b-25a5-4c8a-97ed-4fddb5135925,revision5,LandAmount0.75,seed1337,
+remaining defaults/SeaLevel0,engine26.09.08,host/nopeers,32cells16units,
+gameplay8,visualLOD0..6/4/8. Player approximately(805.414856,499.999664,568.050537),
+grounded and allqueues0. Save current state to water-load-comparison-v2; use
+that same snapshot for both reloads. Controls remain enabled. Stop and mark
+unqualified if player XY moves>1unit, authoring changes or new edits occur.
+Restore the exact pre-optimization CPU/GPU source for baseline, compile owning
+compute shaders, arm the existing density audit, then run the same0.5second
+state polling procedure from v1, maximum60seconds. Repeat with current early
+exits, identical saved snapshot and newly armed audit. Keep all state/identity
+outputs. Require pendingworkobserved before recording drain; compare visual/
+transition/placement drain, frame metrics and collision completion. A drained
+queue alone does not establish normal exploration throughput or figure-eight
+acceptance. Do not combine these timings with v1. No field parameters change.
+
+WATER-LOAD-004/v2 is invalid as a loading workload: same-sample restores
+rebase resident metadata in GpuVoxelMesher.Deformation.cs:identicalRestore
+and deliberately avoid regenerating meshes. Its60.594s observation saw no
+pending work and is not a load time. Restore committed correctly. The first
+v1 pendingwork was movement-driven. Do not disable this valid storage reuse.
+
+WATER-START-006/v1 defined before execution to measure actual fresh derived
+state: normal play_stop/play_start, same authoredbasic_example (disk LandAmount
+0.75,seed1337,remaining defaultlandforms,SeaLevel0,LOD0..6/4/8,gameplay8,
+32cells16units), current savedworlddd143... revision5,engine26.09.08,nopeers.
+No scene/source parameters change between runs. Compile exact old/candidate
+CPU/GPU versions before each run. Time from play_start return, poll production
+state every0.5s to60s; record actual XYZ,identity,frames and queues. Drain requires
+4913collisionready,0collisionpending/failures,0visual/transitionpending and no
+placementpending. Normal spawn/fall stays enabled; player input interruption
+invalidates comparability. Record first observed pending and completion upper
+bound (0.5s polling granularity plus RPC time), not fabricated exact timing.
+Do not arm expensive density readbacks during this measurement. This startup
+scenario replaces no existing figure-eight gate and changes no world values.
+
+
+WATER-START-006/v1 results (2026-09-09, visible editor PID22704): baseline
+first observed full drain25.516s; exact cave-envelope early-exit candidate
+24.703s, approximately3.2% shorter. Collision drain8.062/7.985s;
+transition drain18.109/17.985s. Final reported frame windows baseline546.0FPS,
+p954.02ms,p995.41ms; candidate552.5FPS,p953.94ms,p995.27ms. These are
+single paired observations, not an established performance acceptance.
+Raw start-before/start-after timing, state and identity JSON are in
+ValidationEvidence/Water. Both restored saved world
+dd143c7b-25a5-4c8a-97ed-4fddb5135925 revision5 with the recorded settings.
+The severe streaming delay remains unresolved; the early exit did not explain it.
+
+User clarified that saved-world/revisited-chunk loading is the priority.
+These startup runs reopened an existing save, but measured fresh derived
+geometry completion after play_start returned, not disk-only load latency or
+entire launch-to-ready time. Current persistence stores procedural identity and
+edited sample pages; it does not persist generated base chunks or render/collision
+meshes. VoxelManager.OnLoad opens the selected checkpoint; TerrainFieldSnapshot
+sampling still calls ProceduralTerrainSdf.SampleWorld plus stored corrections.
+Consequently a saved world still rebuilds procedural terrain and geometry after
+fresh startup or cache eviction. Do not describe this architecture as loading
+already-generated chunks directly from disk. Same-session resident reuse is a
+separate path and its no-work reload observation is not cold-disk throughput.
+
+
+Saved-area investigation follow-up: current visible world is settled with4913
+collision regions ready, zero visual/transition/collision pending, grounded player
+at(-158.587601,109.74633,584.785095); see Water/return-preflight.json.
+No travel benchmark was started: the recorded end-of-route underground placement
+problem still invalidates its stationary return measurement. The pending
+FigureEightReturnProposal.patch passes git apply --check against current source;
+it remains unapplied pending the required workload-change approval.
+
+Source comparison against HEAD confirms OuterMaximumServiceDelayMilliseconds250
+already existed, so its existence alone is not a new regression. In contrast,
+GpuTransitionScratch.MaximumBatchSize changed from eight to one in the current
+candidate due to recorded GPU failures. This reduces faces per submission; the
+observed18s transition drain makes it relevant to investigate. No measured causal
+attribution or safe batch-size increase is established. Preserve the crash
+workaround until a replacement is qualified.
+
+
+WATER-DIAGNOSTICS-007/v1 defined before observation: use the running visible
+basic_example host without movement, edits, restart or workload changes. Compile
+the transition readback counters and request the existing voxel_collision_info
+snapshot once. Require current runtime/editor compile success and all five new
+transition fields present, finite and nonnegative. This is exposure validation
+only; zero counters on a settled world do not validate interval measurements or
+improved throughput. No additional GPU readbacks are introduced. Meaningful
+latency/performance qualification remains pending actual generated work.
+
+WATER-DIAGNOSTICS-007 first exposure check failed: fields were wired to the
+structured performance result but absent from voxel_collision_info. No runtime
+measurement was established. Added the same existing counters to that production
+inspection command; repeat the unchanged exposure check after compilation.
+
+WATER-DIAGNOSTICS-007/v1 repeat exposure check passed: all five counters
+present and zero in Water/transition-diagnostics-repeat.json. Runtime/editor
+compile succeeded with0errors and one runtime SB2000 Description-attribute
+warning (unspecified file,line6). Grounded player remains within0.001unitXY
+of preflight, allqueues0 and4913collisionready. This verifies exposure only;
+no interval or speed claim follows from zero-work observations. Benchmark
+return correction remains unapplied pending workload-change approval.
+
+
+2026-09-09 saved-reopen preflight: revision advanced from5 to64 in the same
+world before any restart. WATER-START-006/v1 was not rerun, and no old snapshot
+was restored. Current player movement and authoring make this a different
+workload. Preserve the current revision; no new comparable baseline was claimed.
+
+Read-only natural-play observation: Water/transition-live-authoring.json reports
+457 transition count readbacks, total callback latency1510.7742ms (mean3.30585ms),
+total scheduler callback wait428.9231ms (mean0.93856ms), maximum readback9.7475ms
+and maximum callback wait40.9475ms. These cumulative counters include normal
+movement and edits since instrumentation hotload, with no controlled timing
+window. Intervals can overlap; totals are not wall-clock loading time or isolated
+GPU execution. They provide actual nonzero observations, not a performance pass.
+At capture all visual/transition/collision queues were empty and4913collisions
+ready. Existing storage status reported revision64 savedRevision64,23pages,
+resident3014656bytes,storageReads0,loadedPages3,evictedPages0,no storage failure.
+This observation did not exercise saved-page eviction/reentry.
+
+The pending figure-eight return workload correction still lacks explicit user
+approval. The patch remains unapplied. No task acceptance, commit, or push is
+claimed; the original nine-step plan remains incomplete and user-paused.
+
+
+GENERATED-CACHE-001/v1 defined before runs (2026-09-09): use the exact recipe,
+radii and host setup in Plans/GeneratedTerrainCachePrototype.md, engine26.09.08,
+visible editor36600, saved worlddd143c7b-25a5-4c8a-97ed-4fddb5135925 expected
+revision64. Verify restored identity; a mismatch invalidates comparison rather
+than restoring an older save. Three baseline starts before source edits, then
+empty generated cache population and three disk-cache reopen starts. Each starts
+through normal Play; measure from play_start return with0.5s requested polling,
+actual RPC timestamps recorded, maximum60s. Require4913collisionready, zero
+collisionfailures/pending, visual/transitionpending0 and placementfalse for full
+drain. PlayerXYmustremainwithin1unitofspawn0,0. Inputs remain enabled; movement
+or authoring interruption invalidates a run. No density audit during timing.
+Record spawn collision-ready separately where available, frame pacing and memory.
+New cache completion/counters are observational additions, not readiness changes.
+Report timing distributions across valid repeats, correctness fingerprint equality,
+cache reuse and all errors; no invented warm/cold speedup acceptance threshold.
+These measurements do not replace canonical travel acceptance.
+
+
+GENERATED-CACHE-001 baseline: three valid starts25.844/25.032/24.172s,
+same worldrevision64. Raw cache-before-1/2/3 evidence and cache-before-source.json
+are in ValidationEvidence/Water. Prototype initial compile exposed missing Task
+owner, then unsupported IncrementalHash and Array.Clone APIs. Replaced with
+installed GameTask and repository-supported SHA256.HashData/Span copies. No
+runtime experiment used the uncompilable versions. Transition shader first
+compile failed because the previous payload was still mapped; stopped-world
+recompile succeeded06:47:18,regular06:46:53. Preserve these integration failures.
+
+
+GENERATED-CACHE-001/v1 population candidate compiled runtime/editor0errors,
+0warnings. Empty-cache population took30.687s, final frame window496.7FPS,
+p954.77ms,p996.25ms,GPU0.93ms. Cache hits0,misses13891,writes12668,
+skipped1118,failures0; written1936073608bytes,retained134113000bytes,
+pendingjobs/captures0. Capacity/backpressure skip counts mean this is partial
+population, not every generated region saved. Final topology473FFDE4AD1E3FE1
+and position92FAEEE7BEE60656 match all three baseline runs. Process peak5788.7MiB
+versus baseline3789.1/3856.6/3896.5MiB; scene hotloads/restarts and GC retention
+confound steady-state memory attribution. Do not equate128MiB retained cache
+with total process cost. Baseline final framewindows539.8/545.0/563.3FPS,
+p995.65/5.60/5.11ms. First population is slower; no speedup accepted from it.
+
+
+GENERATED-CACHE-001/v1 first disk-reopen failed60s observation cap: at60.109s
+538transitions remained,placementpending. Do not report60s as completion time.
+Subsequent read-only snapshot found full drain but has no precise drain timestamp.
+Cache counters12666hits,1223misses,329additionalwrites,0failures; read2847553968
+bytes, larger than populated disk data. Root cause in candidate queue handling:
+unready cache requests were rotated to the tail of thousands of pending regions;
+loaded arrays could be evicted before those requests were consumed. Corrected
+read admission to preserve queue heads with bounded eight-request look-ahead.
+Same batch sizes, terrain fields and scenario remain; no timing-cap increase.
+Cache has gained56323020bytes from misses during the failed run; subsequent runs
+must disclose that population difference, not claim strict same-file-set speedup.
+
+
+GENERATED-CACHE-WARM-002/v1 defined before runs: after full drain of the same
+saved world/revision64/recipe and playerXYwithin1unitofspawn, call production
+voxel_terrain_load water-load-comparison-v2 three times, waiting each time for
+load.field_committed with incremented epoch,preparingFalse and all queues0.
+Measure existing commitMs from voxel_terrain_edit_info and elapsed tool/poll
+upper bound (poll0.1s,30s cap). Compare cache-on then cache-off using the same
+saved state; no terrain edits or player repositioning. Identity/digest changes
+invalidate comparison. This is same-session resident-world restoration, not
+an evicted-region or physical disk-cold traversal test. Expect matching resident
+geometry to survive; record cache counter deltas to prove whether any generation
+work occurred. This workload does not replace figure-eight performance acceptance.
+
+
+GENERATED-CACHE-001 corrected queue candidate still failed60s cap: at60.140s,
+2262visual regions and placementpending remained. Final window264.5FPS,
+p958.87ms,p9912.02ms,GPU0.90ms. Stop repeat series; do not call this accepted.
+Later postlimit snapshot found full drain and matching original geometry digests,
+but exact completion time is unmeasured. Hits12997,misses894,writes789,
+read1992396628bytes,written135310996bytes,failures0,skipped0,pending0.
+Queue fix eliminated excess repeat reads in this observation, but did not provide
+a usable performance result. Prototype will be disabled by default; preserving
+it as an opt-in experiment is not accepting its runtime regression.
+
+GENERATED-CACHE-WARM-002 enabled observations: restore commit49.7893/51.0067/
+55.8564ms,tool/poll elapsed upper bounds0.187/0.187/0.203s. Resident geometry
+digests unchanged, all queues0, cache counters unchanged (no new generation or
+cache IO). This measures metadata restore with retained geometry, not disk chunk
+loading or terrain generation. Raw cache-warm-on.json preserves exact state.
+
+
+Attempted disabled validation cache-disabled-1 was invalid as an off-mode run:
+the editor retained CacheGeneratedTerrain=true through hotload. Actual enabled
+run drained38.781s,457.2FPS,p954.94ms,p996.67ms,GPU0.90ms,13786hits,
+105misses,0writes/failures,matching geometry digests and worldrevision64. This
+is a useful single more-populated-cache observation, not one of three disabled
+runs or a controlled comparison with earlier partial population. Scene source
+contains no authored CacheGeneratedTerrain override. Restart editor before off
+validation. Editor36600 logged Source2Shutdown and ShutdownSource2Logging after
+normal Stop/close, but retained an Error window; terminated that residual process
+only after shutdown confirmation. Editor31784 launched visibly with same project.
+No runtime benchmark is considered validated by this shutdown sequence.
+
+
+Disabled clean-editor candidate runs31.437/30.421/31.375s matched geometry,
+cacheflagfalse/counters0. Framewindows406.6/430.7/382.9FPS,p997.30/6.73/7.89ms.
+This did NOT recover original baseline performance; new-editor environment and
+changed shader compilation both differ. Warm disabled restore commits24.2933/
+33.1357/37.7354ms,elapsedupperbounds0.204/0.188/0.172s,unchangeddigests.
+Removed the prototype shader branch entirely: hits now skip a complete density
+sampling dispatch only if every request in its batch is cached; mixed batches
+regenerate normally. This restores the exact original kernel source and keeps
+cache handling in CPU orchestration. Default remains off. This new candidate
+requires separate results; prior cache timings do not validate it.
+
+
+GENERATED-CACHE-001 final dispatch-skip disabled series:30.468/30.485/31.375s,
+cacheflagfalse/allcachecounters0,originalgeometrydigests. Same editor31784 for
+forthcoming explicit-on comparison. Overall performance differs from initial
+editor36600 baseline, so compare the final mode pair within31784 rather than
+attributing the entire difference to the prototype.
+
+One additional source control is defined before execution: after final enabled
+runs, stop Play, restore the exact preprototype CPU files from the preserved
+cache-before source snapshot (GPU kernels already match), compile, run one same
+GENERATED-CACHE-001/v1 startup as cache-original-control, then restore final
+prototype source/default-off. No recipe, scene, save, camera or timing changes.
+This checks whether the disabled-prototype delta is attributable to its code in
+the current editor environment. Preserve both source manifests and all results.
+
+
+GENERATED-CACHE-001/v1 final dispatch-skip enabled series (editor31784,
+engine26.09.08, world dd143c7b-25a5-4c8a-97ed-4fddb5135925, revision64,
+saved slot water-load-comparison-v2, unchanged declared recipe/scenario):
+50.922 / 30.578 / 27.187 seconds; median30.578 versus disabled30.485 seconds.
+FPS381.8/471.3/519.3; p99 11.35/7.03/5.83ms; CPU peaks5085.5/5469.3/5525.1MiB.
+Actual hits13482/13419/13445, misses105 each, writes0/failures0 each.
+Every run drained all queues, collisionready4913, placementfalse, with matching
+topology473FFDE4AD1E3FE1 and positions92FAEEE7BEE60656. Loading/correctness
+criteria passed; no dependable speed benefit demonstrated. First enabled run
+substantially slower. Keep disabled; this does not accept a gameplay regression.
+Evidence: cache-final-on-1/2/3-* and cache-comparison-summary.json.
+
+The declared source-control pair completed: cache-original-control25.719s,
+535.9FPS,p95 4.15ms,p99 5.49ms,GPU0.86ms; cache-restored-off25.735s,
+537.1FPS,p95 4.13ms,p99 5.63ms,GPU0.86ms. Final prototype source restored,
+cache disabled and counters0. Same scenario/identity/digests, all queues drained.
+No meaningful off-mode slowdown in this consecutive pair; earlier slower results
+remain visible. This single pair does not establish travel acceptance.
+
+GENERATED-CACHE-WARM-002/v1 final enabled restore commits21.5884/30.0598/
+44.3619ms (tool/poll bounds0.203/0.141/0.187s); final disabled commits22.9382/
+33.0520/29.2028ms (bounds0.156/0.171/0.156s). Same revision64/savedrevision64,
+epoch advanced per restore, queues0, original geometry fingerprints retained.
+Cache counters unchanged throughout: resident geometry reuse, no generated-cache
+IO. Scenario correctness passed; no disk-load benefit can be inferred. Raw files:
+cache-final-warm-on.json and cache-final-warm-off.json.
+
+Post-timing cache-final-view.png shows ordinary playable spawn terrain without
+visible missing/red terrain. This bounded view is not exhaustive seam, edit,
+corruption, multiplayer or figure-eight qualification. The pending figure-eight
+return correction remains unapplied; no shipping performance acceptance or
+commit/push is claimed for this experimental change.
+
+
+Generated-cache rejection, 2026-09-09: user explicitly requested removal and
+retention of prior dirty-chunk persistence. Restore the seven cache-integrated
+CPU files byte-for-byte from the preprototype snapshot after confirming they
+still match the final prototype snapshot; remove GeneratedTerrainCache.cs.
+Preserve authoritative storage/codec, scene and all unrelated work. Historical
+experiment results remain. Before running, reuse GENERATED-CACHE-001/v1 unchanged
+as cache-removed-check: original identity/revision64, recipe and spawn, 60s cap,
+full queue drain, 4913 collision ready, zero failures and matching geometry
+fingerprints required. Compile must pass. This bounded removal check does not
+replace outstanding canonical figure-eight qualification; its return correction
+remains unapplied. No new performance acceptance is claimed.
+
+Removal check GENERATED-CACHE-001/v1, cache-removed-check: full drain25.938s,
+528.6FPS,p95 4.31ms,p99 5.61ms,GPU0.87ms. World ID and revision64, complete
+recipe and grounded spawn match declared scenario. All queues0, collisionready
+4913/failures0. Seven integrated CPU files, two GPU kernels and authored scene
+match preserved preprototype bytes (cache-removal-source-check.json). Removed
+obsolete cache-only shader comments; no shader behavior changes. Compilation
+passed with zero errors and the existing SB2000 Description warning. Runtime
+cache symbols/settings absent. Dirty-page store and codec were not changed.
+Bounded startup check passed; broader figure-eight qualification remains pending.
+
+
+Startup timing investigation 2026-09-09: read-only analysis plus one repeat of
+GENERATED-CACHE-001/v1, prefix startup-breakdown-1. Reuse exact world/revision64,
+recipe, spawn, visible editor and 60s cap from cache-removed-check; no runtime
+source or scheduler changes. Capture existing queue/collision/readback counters
+at the existing 0.5-second requested cadence. Require matching identity, geometry,
+4913 ready collision regions and all queues drained. Classify milestone times
+as overlapping wall-clock observations, collision metrics as summed worker CPU
+work, and readback metrics as request-to-callback latency (not GPU kernel time).
+Goal is bottleneck evidence, not acceptance of an optimization. No density audit,
+camera motion or figure-eight workload correction during this timing run.
+
+Startup-breakdown-1, GENERATED-CACHE-001/v1: identity/recipe/revision64 and
+geometry fingerprints matched cache-removed-check. Collision ready8.187s,
+transitions drained18.375s, full visual/placement drain25.797s. Collision ready
+4913/failures0. Final frame window530.3FPS,p95 4.26ms,p99 5.72ms,GPU0.90ms.
+Transition readbacks2064, cumulative request-to-callback8983.8196ms and callback
+wait1681.5043ms. Regular queue drain31.19 regions/s during observations3..17s,
+984.10 regions/s after first seam-complete observation. CPU collision sampling
+sum1755.085ms, extraction156.053ms, creation163.232ms. Criteria passed for this
+read-only repeat. No runtime changes or new optimization acceptance. See
+Research/TerrainStartupBreakdown.md and startup-breakdown-summary.json for
+comparison, source mechanism and timing limits. Figure-eight was not run.
+
+
+SCHEDULER-START-001/v1 prototype plan, 2026-09-09: reuse unchanged
+GENERATED-CACHE-001/v1 startup workload and 60s cap (world dd143c7b-25a5-4c8a-97ed-4fddb5135925,
+revision64, seed1337, Land.75 Mountains.35 Plains.6 Continental131072 Mountain32768
+Local8192 Relief3072 Ruggedness.45 Sea0; 32 cells16units; LOD0..6 near4/cache8,
+gameplay8; spawn XY0; editor31784 engine26.09.08; host/no peers; time from Play
+return, poll0.5s). Baseline cache-removed-check25.938s and startup-breakdown-1
+25.797s. Candidate A changes only outer forced-service delay250ms to16ms.
+One outer batch in flight, regular batch8, transition batch1, three existing
+lanes and one forced action per render tick remain unchanged. Test three fresh
+Play runs as scheduler-a-1/2/3. Require same recipe/revision/geometry fingerprints,
+4913 collision ready, zero failures, all queues drained. Seek >=10% median full
+load improvement; reject >10% worsening of comparable rolling p99 or FPS windows
+pending fuller moving comparison. Capture memory and queues. Startup is screening,
+not moving acceptance; figure-eight workload correction approval pending.
+Alternative adding concurrent submissions within each tick is deferred because
+it raises per-tick work; sample/disk caching remains rejected.
+
+Candidate A screening stopped after two runs:24.531/24.563s, final windows
+478.2/463.1FPS,p99 6.02/6.60ms versus baseline528.6/530.3FPS,p99 5.61/5.72ms.
+Only ~5% faster loading, with second-run FPS and p99 worsening beyond the declared
+10% screen. Geometry fingerprints matched. Third run omitted due rejection;
+restore250ms delay. No candidate A shipping or streaming acceptance.
+
+Candidate B, same SCHEDULER-START-001/v1 inputs/criteria and three-run target:
+retain250ms forced-service interval and permit one outer count submission after
+transition work on the same render tick when no near regular work was submitted.
+Existing independent scratch resources and one outer batch in flight bound added
+work; no batch-size, shader, field, edit priority, or memory capacity change.
+This explicitly tests overlap rather than replacing transition service ticks.
+Reject on correctness/runtime failure or >10% frame regression as above. Keep
+baseline source backup. User chose existing figure-eight unchanged; no return
+correction is authorized or applied. Moving baseline/candidate will use existing
+speed2500,distance50000,one loop,Z0 and normal10s stationary phase; known terminal
+underground/falling behavior must remain visible and cannot qualify grounding.
+
+Candidate B first startup aborted during sample4 after four state captures;
+editor process exited and MCP refused connections. No clean completion or exact
+native fault cause established from available log. Compile was still building
+immediately before Play, so compilation/hotload timing is a confound. Reject this
+candidate without repeated crash experiments; restore exact baseline mesher.
+Preserve scheduler-b-engine.log and scheduler-b-1-state-0..3.json. Relaunch visible
+editor for baseline recovery. No result is a speedup. Existing benchmark remains
+unchanged by explicit user choice.
+
+Recovery baseline startup25.140s,544.2FPS,p99 5.46ms. Fresh visible editor after B
+exit; baseline source restored, compilers finished successfully before Play.
+Moving comparison begins with scheduler-moving-baseline using canonical existing
+figure-eight unchanged: scene basic_example, worldrevision64, same startup recipe
+and radii, settled origin, speed2500,distance50000,one loop,Z0, normal drain plus
+10s stationary. Read-only polling every10s,360s external observation cap; preserve
+existing end-position defect and report unavailable final qualification. No save
+or scene edits. Capture moving FPS/tails, throughput and missing readiness,
+queues, memory, allocations and geometry correctness. Source/environment hashes
+and result file retained. Before/after FPS/p99 must not worsen >10%; aim >=10%
+streaming completion/latency gain without increasing correctness failures.
+
+Candidate C declared before execution: keep exact baseline scheduler and change
+ClassifyClipboxRegion to the existing VoxelChunk.ClassifyDensityRange(...).Classification
+(full authoritative bound) instead of ClassifyDensityRangeBroadPhase. Same
+SCHEDULER-START-001/v1 recipe/identity/digests/drain/frames criteria; compare to
+same-editor recovery baseline25.140s as well as historical25.8s. Three startup
+runs if first screens pass, followed by unchanged canonical moving comparison.
+Potential gain: omit provably uniform coarse regions before GPU sampling/count.
+Potential cost: CPU bound evaluation per newly classified region. Existing
+field/cave/edit bounds and empty publication path own correctness; do not add
+corner sampling or second classifiers. Numerical/geometry mismatch rejects C.
+
+C startup screening passed three runs19.797/19.797/19.672s (median19.797,
+21.3% faster than same-editor recovery baseline25.140). All original fingerprints,
+worldrevision64/recipe,4913collisionready/failures0,queues0 retained. Final frame
+windows584.8/594.6/596.1FPS,p99 5.22/5.06/5.07ms versus baseline544.2FPS,p99 5.46ms.
+Begin classifier-moving-c using unchanged declared moving scenario, same editor
+37320 and recipe, current fresh settled spawn. C only changes coarse classifier;
+original scheduler and return behavior unchanged. Must compare complete moving
+metrics, bounds costs, tails and correctness before selecting C.
+
+C moving result0356a14228484cf6be5e734a1b2cc985 versus baseline4c8f8cf73dbb41a68189663f4b25e41c:
+FPS541.6983 vs499.1501;p99 5.0806 vs5.6593ms;p95 3.5759 vs4.1068ms;
+max117.3843 vs107.7852ms. Outer schedule-to-renderable p50 14.2364 vs19.4985s,
+p95 21.2588 vs25.5861s; outer queueaverage3046.7 vs3713.3. Zero exceptions,
+unsafe placement commits and transition face/lateral/table mismatches in both.
+All final coarse LOD1..6 fingerprints match, as do transition fingerprints.
+LOD0/aggregate differ with final player/retained gameplay positions after the
+unchanged underground release (baselineXY363.127/443.309,Z-30737.598;
+C XY-163.261/-11.738,Z-30829.252). Do not claim identical final LOD0 workload.
+Fixed-spawn startup fingerprints matched all three times. Moving GPU p99 nearly
+identical2.6133 vs2.6128ms; maximumGPU13.080 vs11.561ms is a single-event increase,
+not a tail-distribution regression. Process peak4.3766 vs4.1358GB (+5.8%), but
+C starts higher after repeated Play/hotloads; GPU peak2.0730 vs2.1225GB. Managed
+allocations2.0938 vs1.9717GB (+6.2% total); perframe31696 vs32392bytes. Existing
+zero-recurring-allocation target remains unmet. Coarse bound cost198.233 vs18.799ms
+cumulative, maxquery0.3414 vs0.165ms. Moving frame/tail and latency screening pass;
+no fully qualified stationary/surface-exploration claim from this route.
+C external snapshots were sparse (~65s apart), a deviation from requested10s;
+in-engine frame/throughput results remain complete (no truncated frame samples).
+
+Select C; remove unused broad-only classifier wrappers after confirming no other
+callers. Keep global vertical-support rejection inside the canonical full bound.
+Final startup classifier-final-check reuses the same scenario/criteria after
+cleanup; no further algorithm change. A/B scheduler changes are removed.
+
+Important qualification limit from full C result: collisionready3392/pending1519,
+failures0 at result save; baseline4913/pending0. Existing benchmark stationary
+phase gates visual settlement only. C stationary546.57FPS versus baseline622.54
+is not comparable settled-collision work: C reached the phase sooner and collision
+was still active, with different post-release position. Source-confirmed existing
+behavior retained by user instruction. Candidate retained as prototype with
+startup/moving benefits, not full performance acceptance; do not commit/push with
+this qualification gap. No collision-ready or fully settled stationary claim from
+C moving result. Final fresh-spawn validation separately requires4913 ready.
+
+Final cleanup check classifier-final-check passed19.797s,588.4FPS,p95 3.18ms,
+p99 5.10ms,GPU0.90ms, original fixed-spawn fingerprints and4913collisionready,
+pending0/failures0,allvisualqueues0. Unused broad-only wrappers removed; original
+scheduler byte-match confirmed. Compilation passed with zero errors/warnings.
+No source changes to shaders, generator formulas, persistence or authored scene.
+Final source manifest classifier-final-source.json. This final fixed-spawn run
+confirms successful recovery and cleanup, not missing stationary qualification.
+
+
 EMPTY-SEAM-001/v1 declared before mutation,2026-09-09: use unchanged
 GENERATED-CACHE-001/v1 / SCHEDULER-START-001/v1 startup recipe/worldrevision64,
 scene basic_example, editor37320 engine26.09.08, seed1337 Land.75 Mountains.35
@@ -16707,6 +19783,105 @@ Keep previous regular full-bound classifier; no seam runtime path retained.
 Summary/sourcehashes: ValidationEvidence/Water/empty-seam-summary.json. Historical
 design and result: Plans/EmptySeamPrototype.md, Research/EmptySeamExperiment.md.
 This closes the bounded experiment as rejected, not a new performance acceptance.
+
+
+EMPTY-SEAM acceptance decision,2026-09-09: user explicitly accepts candidate B
+following the reported15.6s load /482FPS /5.62ms p99 tradeoff versus20.3s /609FPS /
+4.75ms p99. Restore exact saved B mesher and manager after verifying unchanged
+pre-seam snapshots. This overrides the earlier startup FPS/p99 acceptance screen
+for this specific candidate; preserve its failed measurements. It is not blanket
+approval for new correctness failures or unknown moving regressions. Verify
+seam-accepted-start using unchanged EMPTY-SEAM-001/v1 inputs/60s cap, all original
+regular/seam fingerprints,4913 collisionready/pending0/failures0. Run production
+voxel_mesh_audit8 after timing. Then unchanged canonical figure-eight task
+seam-accepted-moving, speed2500,distance50000,one loop,Z0, same worldrevision64,
+recipe/radii and settled spawn; normal drain/10s stationary, no return correction.
+Capture in-engine result and10s observations up to360s; report existing stationary
+collision gating limitation separately. Commit only this accepted slice.
+
+### WATER-CHUNK-RANGE-001/v1 — chunk-owned water coverage
+
+Defined before baseline,2026-09-09. Scene basic_example, stored world
+water-load-comparison-v2 (preserve edits), seed1337 generator13, Land.75,
+Mountains.35 Plains.6 Continental131072 Mountain32768 Local8192 Relief3072,
+Ruggedness.45 Sea0;32cells16units,gameplay8,visual512,LOD0..6 extents4/8.
+Engine26.09.08,Ryzen9800X3D/RTX5090,visible editor play,host/no peers,fps_max1000.
+Before/after each use normal Stop/Play, authored spawnXY0, Game camera, >=30s
+warmup and settled visual/collision queues. Run canonical figure-eight unchanged:
+speed2500,distance50000,one loop,Z0,normal drain/two advances/10s stationary.
+No code edits, camera movement or terrain edits during measured runs. Preserve
+known benchmark post-release falling behavior and record final position/collision
+readiness; stationary results are not assumed comparable if those differ.
+Capture source manifests, complete result JSON and compare FPS,frame/GPU p95/p99,
+maximums, process/GPU peaks, allocations, exceptions, mesh/collision failures,
+placement safety and queue drain. Investigate >10% moving regressions; do not
+accept material unexplained regressions. Compare existing baseline as context,
+not substitute for this paired before/after run.
+
+Visual R1: preserve detached-camera repro position
+-269342.938,69160.0938,47589.8047,angles41.090435,89.2311554,0,FOV60,1280x720;
+player position-14934.208,-3734.95166,2812.72412, normal streaming settled.
+Require water ends at published terrain coverage, no extra skirt at negative
+coordinates, and continuous shoreline within coverage. Additional fixed R2:
+player0,0,400000 (entire outer vertical range above sea level), same detached
+camera; require no rendered water after placement settles. Restore R1 afterwards.
+R3: transition target across outer-anchor midpoint in X (player16383,0,3000
+then16385,0,3000); observe pending and settled publication. Water must use only
+committed coverage, never staged target coverage. These checks are outside timed
+runs. Record observed evidence and coverage limitations; do not infer simulation.
+
+seam-accepted-start drained21.719s,474.1FPS,p99 7.64ms,1304skips/760readbacks,
+classification12.837ms. INVALID against revision64 fixed-world baseline: identity
+reports revision65, savedRevision65; regular fingerprints changed, and later
+geometry capture changed again. Another active task Add biome voxel materials
+shares the editor. Preserve all evidence; do not restore user edits or attribute
+this difference to the seam algorithm. No moving benchmark started amid concurrent
+world work. Candidate source byte-matches previously tested B; compilation passed
+with existing SB2000warning. Await editor validation priority; accepted startup
+tradeoff remains authorized, current-world timing is not a comparable speed claim.
+
+B1 saved e48ae7c45c4f41328185224b37dc0e7d:547.0218FPS,frame p95/p99
+3.4284/4.7021ms,GPU p95/p99 1.2788773/1.9233227ms,maxframe128.721ms,
+zeroexceptions,peakprocess2782081024B,peakGPU1922850827B,32017.322B/frame.
+Full record chunk-range-b1.json. Stopped play after result publication.
+
+Candidate first .NET build passed with zero warnings/errors, but native engine
+whitelist rejected the volatile field modifier (IsVolatile) at08:20:29. Removed
+that modifier and synchronized readiness through the same existing geometry lock.
+Transient missing-member errors also occurred while related files were being
+written; no native compile success is inferred from the standalone .NET build.
+Play had resumed externally before the native check; stopped it for the repair.
+No candidate benchmark was run against the rejected build.
+
+Candidate native runtime/editor compilation passed with0 errors/warnings after
+the synchronization repair. Fresh Play at12:22:15UTC; first settled inspection
+12:23:13 showed1200 published surface chunks/7200 vertices, no visual/preparation
+pending, no new console errors. C1 starts from fresh authored spawn after this
+58s warmup, using the same v1 figure-eight command. No shader or generator edits
+were made for this correction, so shader cold-parser acceptance is not newly
+triggered by these C# changes. Earlier water-slice qualifications remain separate.
+
+WATER-CHUNK-RANGE-001/v1 C1 completed:77264791356b430c8d866de50f7ef1f8.
+Moving FPS547.02->540.93(-1.11%); frame p95/p99 3.4284/4.7021->3.4547/4.6574ms;
+GPU p95/p99 1.2789/1.9233->1.4048/1.8287ms (p95+9.84%,+0.126ms).
+Peak process2782081024->2538160128B; GPU1922850827->1872505999B;
+allocation/frame32017.322->31923.082B. Exceptions/unsafe commits0 in both,
+all meshing queues drained; collision ready/pending/failures3223/1688/0->4913/0/0.
+Moving comparison passes predefined investigation screen. Stationary comparison
+excluded: B1 final target fell below terrain, collision pending1688; C1 remained
+near surface, pending0. No stationary speedup claim. Full records and source
+manifests:ValidationEvidence/Water/chunk-range-{b1,c1,before-source,after-source}.json.
+R1 PASS: fixed repro screenshot chunk-range-r1-after.png shows water contained at
+terrain edge,1216 surface chunks/7296 vertices, regular/transition queues0,
+geometry mismatches0/invalid tables0. R2 INTERRUPTED by external play restart at
+08:28:32 after target relocation; observed authored spawn, detached camera reset.
+R3 NOT RUN. User subsequently said Looks good; no further runtime manipulation.
+Local visual correction accepted; vertical/midpoint edge cases and multiplayer
+remain unverified. Final native runtime/editor compilation0 errors/warnings.
+Detailed comparison and limitations:ValidationEvidence/Water/chunk-range-results.md.
+Runtime changes depend on pre-existing uncommitted foundation changes and remain
+in the shared working tree; evidence-only commit does not claim a code release.
+
 
 ### READINESS-001/v1 — short-circuit publication readiness prototype
 
@@ -16913,3 +20088,243 @@ run/restart history; this task does not claim those results as HUD validation.
 Visible screenshot, movement/boundary checks, missing-state lifecycle checks and
 comparable figure-eight performance acceptance remain incomplete. No commit or
 push pending required runtime acceptance.
+
+DEBUG-HUD-001/v1 input correction, 2026-09-09. User reported F3 did nothing
+in the preceding integration attempt: functional input result FAIL. Added the
+DebugOverlay action to ProjectSettings/Input.config, Other group, title Toggle
+Debug Overlay, keyboard F3, no gamepad default. Overlay now uses the normal
+Input.Pressed action path instead of raw keyboard polling. Native compile passed
+zero errors and warnings. Current play scene had no HUD; the source file had it
+but the already-open editor scene remained stale. Explicitly selected the authored
+scene tab, attached the HUD there and saved through save_scene (non-null correct
+resource path, no unsaved changes). JSON comparison excluding Debug HUD verified
+all other scene content unchanged. Stopped play, confirmed stopped state, then
+started from the updated authored scene. Earlier save attempt targeted the game
+session and returned Saved=null; it was not treated as successful persistence.
+Visible F3 interaction and figure-eight acceptance still await runtime verification.
+Final readback: editor is stopped with the authored scene active and one saved HUD. A post-start UI probe found no UI; editor_status confirmed play had stopped again, so no visible/input success is claimed. Keyboard binding JSON parses with exactly one DebugOverlay action. No commit/push: original runtime acceptance remains pending.
+
+
+### FIGURE-EIGHT-TERRAIN-001/v1 — ten-meter terrain clearance
+
+Predeclared 2026-09-09 before the first run. The user explicitly requested a
+terrain-following route ten meters above terrain, superseding fixed world Z0.
+The old workload intersects regional hills and cannot validate this requested
+flight path. Preserve all old scenarios/results; this is a new baseline, not a
+continuous performance comparison with fixed-Z runs.
+
+Parameters: basic_example, engine26.09.08, one visible interactive local player,
+current applied generator13 world59a2134f5cb94e84893c5313a42f798f, seed1337,
+LandAmount.75, MountainAmount.2, PlainsAmount.6, ContinentalScale77724.09,
+MountainRegionScale18681.756, LocalLandformScale5232.39, ReliefHeight3072,
+Ruggedness.45, SeaLevel0. Layout32x16, gameplay radius8, visual radius512,
+LOD0..6, extents4/8. Start center approximately(0.001512,0.001150), exact center
+saved in result. Speed2500 horizontal units/s, distance50000, one loop, normal
+drain, two render advances and10s stationary;10s observation cadence,360s cap.
+No recipe, edits, world reload, renderer settings or player input changes.
+Use the normal player camera. Source is the shared working tree plus this task's
+height and result metadata changes; preserve its pre-existing unrelated edits.
+
+Criteria: native compile zero errors; full loop and final result saved within
+360s; sampled moving player positions have canonical unedited surface clearance
+10/0.0254=393.700787 units within1unit (physics/update timing tolerance), across
+both lobes, with varying world Z and no new exceptions. Inspect a moving camera
+image. Record moving/stationary FPS, frame/GPU tails, completion/streaming,
+memory and allocations. This first run establishes measurements only; there is
+no accepted comparable terrain-following baseline. Result schema27 replaces
+WorldHeight with TerrainClearance in world units. Clearance applies to player
+origin above the unedited exterior/seabed, not water or deformation surfaces.
+
+DEBUG-HUD-001/v2 binding change, 2026-09-09: user requested a different key
+to avoid the editor shortcut conflict. Same functional parameters as v1 except
+all toggle presses now use F9. F3 conflicts with the installed editor fullscreen
+shortcut (ViewportTools.cs:91); no F9 keybinding was found in installed editor/
+tools C# sources or project input settings. This search does not establish all
+user/OS shortcuts. DebugOverlay default changed to F9; the visible hint now reads
+the effective input binding rather than duplicating a fixed key. Temporary
+callback/toggle logs removed. Original v1 failures remain preserved. No runtime
+or performance pass is claimed by this binding change.
+
+
+FIGURE-EIGHT-TERRAIN-001/v1 run1, 2026-09-09: completed and saved
+run db0d7dca2d9348658becff83519cb9d8 at13:35:54UTC after the13:33:31UTC start
+(approximately144s overall, below360s cap). Moving loop121.97135s; one loop,
+normal drain and10.000107s stationary. Exact start XY(0.0015119504,0.0011498714).
+Native runtime/editor compile succeeded with zero errors; existing SB2000 warning.
+Source identity is [recorded hashes](ValidationEvidence/FigureEightTerrain/source-identity.json)
+over shared HEAD3951450 plus pre-existing dirty/untracked development and this edit.
+Full [result](ValidationEvidence/FigureEightTerrain/result.json) and
+[observations](ValidationEvidence/FigureEightTerrain/runtime-samples.json) retained.
+
+Six moving samples on the negative-X lobe had Z869.742..1222.592 and clearance
+393.700787 within0.0001unit of the live column's exterior height. Zero-surface
+field density was0 or0.0000305. Numeric sampling began late, so the positive-X
+lobe and exact initial/final placement were not independently sampled. Source
+uses the same height assignment for every point. One moving960x540 player camera
+image was inspected: player visibly airborne above the exterior, terrain visible.
+After the loop the normal player physics resumes and the player lands; the
+stationary phase is not held ten meters above terrain.
+
+Moving652.4874FPS, frame p95/p99/max2.5619/3.6326/833.125ms; GPU average/p95/p99/max
+0.84965/1.36948/1.78576/51.03183ms. Stationary807.5214FPS, frame p95/p99/max
+2.0581/2.7999/74.2736ms; GPU average0.66620ms,p95/p99/max1.11580/1.55997/9.43518ms.
+Moving process average/peak3309063688/3505852416bytes; GPU1873948669/1932040591bytes.
+Moving allocated3322578000bytes (41748.27/frame), GC57/42/1, pause878.522ms total,
+113.347ms max. Stationary allocated225023984bytes, GC4/2/0, pause40.393ms total.
+Both windows zero exceptions. Final preparation and regular mesh queues zero;
+collision4913/4913ready,zero failures; transitions2016/2016ready,zero pending,
+zero fine/coarse/lateral mismatches,zero unsafe placement commits.
+
+Decision: requested movement implemented and full production run completed;
+observed moving clearance passes. Full both-lobe numeric coverage remains
+incomplete. Retain the833ms frame outlier; no comparable accepted terrain-following
+baseline exists, so no regression acceptance is claimed. No commit/push: this
+small change also depends on the existing uncommitted RegionalLandforms subsystem;
+committing only this task would reference a type absent from HEAD, while including
+that subsystem would publish unrelated work. Existing changes remain preserved.
+
+Final source check: Code/UI/VoxelDebugOverlay.razor changed externally between
+the recorded source identity and final verification. All other recorded sources
+matched. This further limits reproducibility/performance acceptance; preserve
+the concurrent HUD edit. It does not change the route-height implementation.
+
+DEBUG-HUD-001/v2 diagnostic logging, 2026-09-09: user reports F9 still does
+nothing (functional result FAIL) and explicitly requests key-press logging.
+Production HUD now logs its first update, raw F9 press/release state, DebugOverlay
+action press/release state, resolved binding changes, input suppression changes,
+and each visibility toggle. Logs include proxy/editor state and use [DebugHUD].
+No fallback input/mutation path or test component is introduced. This is diagnostic
+instrumentation; no successful key delivery or visual/performance pass is implied.
+Native compile succeeded with zero errors/warnings. First new live log at09:38:41 reports binding=F9, raw/action Down/Pressed=False, suppressed=False, visible=False, proxy=False, editor=False. This confirms the diagnostic callback is running and the effective binding, not reception of an F9 press. Runtime acceptance and commit/push remain pending.
+
+### ADMIN-001/v1 — debug menu qualification (predeclared 2026-09-09)
+
+Use the current basic_example visible local host, engine26.09.08 and unchanged
+FIGURE-EIGHT-TERRAIN-001/v1 world, recipe, layout, speed2500, distance50000,
+one loop, terrain clearance393.700787, normal drain and10s stationary,360s cap.
+Capture a pre-change run because no accepted comparable terrain-following baseline
+exists. Repeat after integration with menu closed and flight off; record FPS,
+p95/p99/max frame/GPU time, streaming completion, memory/allocations, failures.
+Material regression screens: >5% FPS decrease, >10% frame tails or memory/allocation
+increase; preserve outliers and explain before acceptance. Same source except admin
+changes; external edits invalidate strict comparability.
+Functional: open/close menu three times; toggle flight; WASD/mouse, Space/Ctrl
+vertical movement, Shift boost; cross terrain with collisions disabled and exit
+only with clear full player bounds. Set speed1000 then2500; reject empty/NaN/negative
+input. Arm teleport, click nearby terrain then sky, cancel; no terrain edits or
+movement/look while menu captures input. Teleport must clear velocity and retain
+collision-readiness protection; reject blocked destinations. Host-only admission.
+Inspect actual menu for clipping and readable controls. Keyboard/mouse tests remain
+unverified if no interactive input route is available; do not replace with test hooks.
+
+ADMIN-001/v1 implementation and user acceptance, 2026-09-09.
+User tested the live menu and reported: "Okay, this mostly works. We'll call this
+good". Accept this functional debug slice at that requested stopping point; this
+is not evidence that every predeclared edge case or multiplayer case passed.
+Observed menu shows Noclip ON after user interaction. No further automated
+movement is started after acceptance.
+
+Pre-change run f9fd2a4c611648c49243155db7c66df0 completed09:42:25 local,
+started09:40:07, one loop121.93951s, speed2500,distance50000,
+clearance393.7008,startXY(-75.81263,34.02044). Moving695.1421FPS,
+frame p95/p99/max2.4429/3.5518/91.4329ms; GPU average/p95/p99/max
+0.900044/1.336575/1.852512/12.556553ms. Allocation33598.86B/frame,
+2848108016bytes total, GC57/37/1, max pause22.122ms, zero moving exceptions.
+Full measurements: [before result](ValidationEvidence/Admin/before-result.json).
+[Pre-change hashes](ValidationEvidence/Admin/before-source.json) captured before
+runtime source edits. This run's starting center differs from the original
+terrain-following baseline; do not present it as an unchanged accepted comparison.
+No post-change figure-eight was run: functional user acceptance arrived first.
+Performance regression acceptance therefore remains unmeasured.
+
+Integration initially failed compilation on nonexistent Time.FrameCount; changed
+to a short RealTime close guard. Initial text binding rendered blank; Blazor-style
+binding failed compilation; corrected to installed TextEntry Value:bind syntax.
+Native compiler now reports runtime/editor Success=true,zero errors/warnings.
+During prefab hotload, duplicate inserted component records were removed before
+final source validation; the editor retained a broken player instance and emitted
+prefab-clear assertions/PlayerController OnAwake errors. Saved both authored and
+editor-session JSON under ValidationEvidence/Admin before closing and reopening
+the authored scene. Fresh play restored the complete player, renderer, colliders,
+and menu; subsequent console check had no new errors. Earlier failures remain
+recorded here. Authored prefab has exactly one AdminFlightMode component.
+
+Actual .admin-window screenshot inspected: all controls/readout readable, no
+clipping. Corrected live textentry readback shows1000. Host menu and normal camera
+are integrated. Hand-driven flight/teleport were accepted by the user collectively;
+no precise movement speeds, collision-crossing measurements, invalid-input matrix,
+sky-target rejection, guest denial, or lifecycle safety pass is inferred from that.
+
+No commit/push: this scene attaches the menu to the existing uncommitted Debug HUD
+object, which is absent from HEAD along with its overlay source. Publishing that
+scene dependency would include earlier work outside this task; committing just the
+new code would omit its authored menu integration. Preserve all changes locally.
+
+### EROSION-001/v1 — selective exterior erosion prototype (predeclared 2026-09-09)
+
+Performance reuses FIGURE-EIGHT-TERRAIN-001/v1 unchanged: basic_example,
+engine26.09.08a, one visible interactive local host, seed1337; LandAmount.75,
+MountainAmount.2, PlainsAmount.6, ContinentalScale77724.09,
+MountainRegionScale18681.756, LocalLandformScale5232.39, ReliefHeight3072,
+Ruggedness.45, SeaLevel0. Cells32, cell size16, gameplay radius8, visual radius512,
+LOD0..6, extents4/8. Normal player camera, admin menu closed, flight off, no edits.
+Fresh Play per candidate, at least30s warmup and all preparation/visual/collision
+queues settled. Same authored spawn; actual XY center recorded in each result.
+Speed2500, distance50000, one loop at393.700787 units above the generated exterior,
+normal drain, two render advances,10s stationary,10s observation cadence,360s cap.
+The erosion feature is the intentional independent variable; never compare to Z0 runs.
+
+Before source: shared HEAD3951450 with pre-existing dirty/untracked development,
+recorded in [source identity](ValidationEvidence/Erosion/before-source.json).
+Branch codex/selective-erosion-prototype was created from the complete current
+biome branch working tree. No existing user changes are part of this task's ownership.
+
+Pass criteria: native runtime/editor compilation with zero errors, full saved
+result within360s, no new exceptions/failures, final queues drained and collision
+ready, no unsafe placement or boundary mismatches. Record FPS, frame/GPU p95/p99/max,
+streaming/chunk throughput, memory, allocations and GC. Material regression screens
+are >5% moving/stationary FPS loss or >10% frame tails, memory or allocated-byte rate
+increase relative to this task's before run; investigate outliers before acceptance.
+The current source already follows terrain: prior unapplied Z0 return notes are historical.
+
+Visual/correctness scenario: normal production terrain, fixed survey -131072,-131072,
+65x65 points at4096 spacing, before/after; inspect matching mountain and hill views,
+coast/plain preservation, repeated sample identity, finite samples and conservative
+bounds, shared sample coordinates and CPU/GPU diagnostics where available. Do not
+substitute a synthetic terrain, alternate generator or test-only runtime entry point.
+A new generator revision intentionally rejects old-version saved-world reconstruction;
+do not delete, migrate or overwrite the prior save to make the prototype run.
+
+EROSION-001/v1 before-readiness attempt1: no benchmark was started. Player input
+changed the authored starting location while streaming; preserved readiness observations
+are not performance results. User explicitly agreed to leave controls idle for benchmarks.
+Restarted Play for attempt2; same scenario parameters. Source remains unchanged.
+
+EROSION-001/v1 before run, 2026-09-09: completed run
+c1b67a77fdc84d13a35c22fcb5e32220, start14:15:20UTC, saved14:17:37UTC,
+121.94025s moving, one loop, unchanged speed/distance/terrain clearance. Task label
+in native result is EROSION-001; revision3951450-working-tree-before-erosion.
+Exact start XY(-0.11841733,0.037881315). No runtime source changed during the run;
+all before-source.json hashes matched afterward. Native compilation zero errors.
+Raw [result](ValidationEvidence/Erosion/before2-result.json) is retained.
+Moving778.2847FPS; frame p95/p99/max2.1085/3.0416/75.0817ms;
+GPU average/p95/p99/max0.7783532/1.0535717/1.5451908/13.86261ms.
+Stationary940.35046FPS; frame p95/p99/max1.4242/1.8644/10.7192ms;
+GPU average/p95/p99/max0.7292527/0.72050095/0.9646416/8.358955ms.
+Moving process average/peak4263963161/4273246208bytes;
+GPU1844215027/1873918951bytes; allocated2859708816bytes,30131.379/frame,
+GC57/37/1, pause600.201ms total16.298ms max. Stationary allocated239585072bytes.
+Zero exceptions; collision4913/4913ready,zero pending/workers/completed/failures.
+Full run completed within360s. This is the new pre-erosion reference, not an erosion pass.
+Survey65x65 at recorded coordinates exported after measurement; reference views
+are outside the measured interval. Reference mountain camera(-11000,4000,2600),
+angles(10,-138,0),FOV60,1280x720. Normal player camera restored afterward.
+
+Consolidation authorization, 2026-09-09: user explicitly requests all accumulated
+project work on main before erosion. Main was70commits behind biome HEAD3951450;
+all local/remote branch tips were already ancestors of that biome history.
+Fast-forward main and commit current source/assets/settings/documentation/evidence,
+preserving earlier validation failures and pending qualifications. This resolves
+prior no-commit notes caused by uncommitted cross-task dependencies. No erosion code
+is included. Tool lookup caches remain local. This consolidation does not assert
+that every earlier multiplayer, geometry or manual-control acceptance gate passed.
