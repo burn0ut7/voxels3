@@ -1,0 +1,56 @@
+{
+  "runs": [
+    {
+      "run": "seam-a-1",
+      "completionSeconds": 15.641000000061467,
+      "frame": "465.2 FPS average; p95 3.40 ms; p99 8.65 ms; GPU 0.90 ms average",
+      "memory": "CPU 4,378.8 MiB average, 4,384.8 MiB peak; GPU 1,346.6 MiB average, 1,351.9 MiB peak",
+      "uniformSkipped": 1304,
+      "classificationMs": 12.969000000000086,
+      "readbacks": 760,
+      "topology": "473FFDE4AD1E3FE1",
+      "positions": "92FAEEE7BEE60656",
+      "collisionReady": 4913,
+      "collisionPending": 0,
+      "collisionFailures": 0
+    },
+    {
+      "run": "seam-b-1",
+      "completionSeconds": 15.609000000054948,
+      "frame": "481.7 FPS average; p95 3.35 ms; p99 5.62 ms; GPU 2.25 ms average",
+      "memory": "CPU 4,360.9 MiB average, 4,374.1 MiB peak; GPU 1,346.6 MiB average, 1,351.9 MiB peak",
+      "uniformSkipped": 1304,
+      "classificationMs": 12.683100000000053,
+      "readbacks": 760,
+      "topology": "473FFDE4AD1E3FE1",
+      "positions": "92FAEEE7BEE60656",
+      "collisionReady": 4913,
+      "collisionPending": 0,
+      "collisionFailures": 0
+    },
+    {
+      "run": "seam-current-baseline",
+      "completionSeconds": 20.32799999997951,
+      "frame": "609.4 FPS average; p95 3.36 ms; p99 4.75 ms; GPU 0.95 ms average",
+      "memory": "CPU 4,679.5 MiB average, 4,682.9 MiB peak; GPU 1,427.2 MiB average, 1,592.9 MiB peak",
+      "uniformSkipped": 0,
+      "classificationMs": 0,
+      "readbacks": 2064,
+      "topology": "473FFDE4AD1E3FE1",
+      "positions": "92FAEEE7BEE60656",
+      "collisionReady": 4913,
+      "collisionPending": 0,
+      "collisionFailures": 0
+    }
+  ],
+  "restoredSource": [
+    {
+      "path": "Code/Voxels/GpuVoxelMesher.cs",
+      "sha256": "4c07e5a02df54e0dc0c2214a52dbaf0cc44d41481011f7816b8b263a733300be"
+    },
+    {
+      "path": "Code/Voxels/VoxelManager.cs",
+      "sha256": "faa1de9e83232b29abedd100f29fc2331f195f9c7028b305a28f29eda951c19d"
+    }
+  ]
+}

@@ -16663,3 +16663,47 @@ screens. Commit/push task changes. Exact cave count/volume, deep traversal,
 multiplayer and exhaustive new-depth collision qualification remain unverified.
 Current [review](ValidationEvidence/CaveDepth/Review.md) and c6 raw/comparison/
 startup/reload logs preserve measurements and environment timing limits.
+
+EMPTY-SEAM-001/v1 declared before mutation,2026-09-09: use unchanged
+GENERATED-CACHE-001/v1 / SCHEDULER-START-001/v1 startup recipe/worldrevision64,
+scene basic_example, editor37320 engine26.09.08, seed1337 Land.75 Mountains.35
+Plains.6 Continental131072 Mountain32768 Local8192 Relief3072 Ruggedness.45 Sea0,
+32cells16units, gameplay8,visual512,LOD0..6 extents4/8,spawnXY0. Poll0.5s,60s cap,
+time from Playreturn. Retained classifier C baseline19.797s and moving result
+0356a14228484cf6be5e734a1b2cc985. Baseline full seam geometry captured in
+seam-before-geometry.txt. Prototype skips only strictly uniform unedited seam
+SamplingBounds via existing CandidateTransition finalization. No shader/scheduler
+batch changes. See Plans/EmptySeamPrototype.md for ownership and exact pass criteria.
+Run seam-a-1/2/3 if first checks pass; abort/reject on fault, geometry mismatch or
+>10% frame regression. Moving route remains unchanged by explicit user choice.
+
+EMPTY-SEAM A first run15.641s,1304proven-uniform skips,760readbacks (baseline2064),
+bounds12.969ms cumulative. Regular/seam fingerprints match; mismatch/table0.
+Frame465.2FPS,p99 8.65ms versus baseline588.4FPS,p99 5.10ms: startup frame screen
+FAIL. Stop A repeats. Finalization dirties draw command lists even for empty-to-empty
+publication; this is unnecessary source-confirmed work, not yet an established
+cause of the observed regression. Candidate B retains same empty proof/path and
+only marks transition draw commands dirty when new or replaced geometry has a
+handle. Metadata/identity/latency/edit finalization still runs for empty results.
+Same workload/pass criteria. At most three startup runs if first passes; reject on
+fault, geometry mismatch or frame regression. No shader or field formula change.
+
+Empty-seam B first run15.609s,481.7FPS,p99 5.62ms,GPU2.25ms. Relative to prior
+classifier baseline588.4FPS,p99 5.10ms this still fails FPS screen, despite reduced
+p99 versus A. Stop B repeats pending attribution. Before further candidate work,
+restore exact pre-seam mesher/manager snapshots and run seam-current-baseline with
+same EMPTY-SEAM-001/v1 inputs in same editor. This controls accumulated editor
+state; preserves all prior failed comparisons. No change to criteria/workload.
+If baseline itself changed, report environment variability and compare consecutive
+baseline/candidate source runs rather than erase earlier failures.
+
+Fresh pre-seam source control seam-current-baseline20.328s,609.4FPS,p99 4.75ms,
+GPU0.95ms confirms A/B did not meet startup frame requirements. B is23.2% faster
+loading but21.0% lowerFPS and18.3% worsep99 in the first10s window. Reject both;
+no repeats/moving/geometry-audit runs after screening failure. GpuVoxelMesher.cs
+and VoxelManager.cs restored byte-for-byte to before seam experiment. Original
+regular/seam fingerprints restored, all queues0,4913collisionready/failures0.
+Keep previous regular full-bound classifier; no seam runtime path retained.
+Summary/sourcehashes: ValidationEvidence/Water/empty-seam-summary.json. Historical
+design and result: Plans/EmptySeamPrototype.md, Research/EmptySeamExperiment.md.
+This closes the bounded experiment as rejected, not a new performance acceptance.
