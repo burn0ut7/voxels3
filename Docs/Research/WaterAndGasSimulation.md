@@ -3,6 +3,15 @@
 Date: 2026-09-07. Research proposal only; no fluid implementation, engine
 integration test, or performance acceptance is established by this document.
 
+## September 9 sequencing update
+
+The user next requested generated sea-level water using the registered Water
+material. [Sea-level water generation](SeaLevelWaterGeneration.md) owns that
+new proposed first slice and its cave policy. It puts static surface-water
+generation before the finite-fluid prototype below. The transport, conservation,
+and networking analysis here remains future-simulation research, not current
+implemented behavior or a prerequisite for static initialization.
+
 ## Recommendation
 
 Start with finite water amounts on a sparse, fixed-resolution 3D grid and

@@ -152,6 +152,23 @@ validation gates; adding these references does not adopt a new world format.
 | [Factorio map transfers](https://www.factorio.com/blog/post/fff-136) | Bulk transfer flow control and recovery lessons from a developer postmortem. | Dated 2016 lockstep design; whole-map transfer and custom transport are not adopted. |
 | [SQLite WAL](https://www.sqlite.org/wal.html), [synchronous settings](https://sqlite.org/pragma.html#pragma_synchronous), [backup API](https://www.sqlite.org/backup.html) | Transaction durability, checkpoints, version qualification and coherent backups. | Database guarantees require a correct supported binding/VFS and real recovery tests; no s&box SQLite integration is established. |
 
+## Generated Surface and Cave Water
+
+[Sea-level water generation](Research/SeaLevelWaterGeneration.md) owns the
+September 9 surface-water proposal and the decision to defer cave aquifers.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Mojang Java 1.18 release](https://www.minecraft.net/en-us/article/caves---cliffs--part-ii-out-today-java) | Local aquifer levels independent of sea level and cave-water behavior. | Release behavior does not expose exact current solver internals or scheduling. |
+| [Microsoft generation overview](https://learn.microsoft.com/en-us/minecraft/creator/documents/world-generation?view=minecraft-bedrock-stable) | Generation passes and distinct sea/seafloor materials. | Bedrock creator overview, not exact Java code or a prescribed SDF pipeline. |
+| [Luanti V7 source](https://github.com/luanti-org/luanti/blob/master/src/mapgen/mapgen_v7.cpp) | Terrain-first surface fill, later cave calls and cave-liquid ordering constraints. | Mutable master, inspected September 9; native block engine, no Voxels3 performance evidence. |
+| [Luanti mapgen aliases](https://api.luanti.org/aliases/) | Separate water sources, flowing nodes and river source policy. | Configuration contract, not a recommendation to copy renewal/flow behavior. |
+| [Hello Games Worlds Part II](https://www.nomanssky.com/worlds-part-ii-update/) | Deep oceans, waves/wakes and underwater presentation. | Does not disclose fluid occupancy, cave connectivity or mass transport algorithms. |
+
+The existing Worlds Part I entry under Production and Observational References
+also supports the documented mesh-based water presentation; it does not prove
+a particular fluid simulation architecture.
+
 ## Water and Gas Simulation
 
 The [water and gas investigation](Research/WaterAndGasSimulation.md) records the
