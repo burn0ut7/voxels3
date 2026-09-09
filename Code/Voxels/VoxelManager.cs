@@ -3001,7 +3001,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		}
 		_lastClipboxReadinessResidentRevision = residentRevision;
 		_lastClipboxReadinessRenderPreparedRevision = _renderPreparedRevision;
-		var readiness = CapturePendingClipboxReadiness();
+		var readiness = CapturePendingClipboxReadiness( stopAtFirstMissing: true );
 		if ( !readiness.IsReady )
 		{
 			_clipboxPlacementDeferredUpdates++;
@@ -3132,10 +3132,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_clipboxPlacementSuperseded++;
 	}
 
-	private PendingClipboxReadiness CapturePendingClipboxReadiness()
+	private PendingClipboxReadiness CapturePendingClipboxReadiness( bool stopAtFirstMissing = false )
 	{
 		if ( !_clipboxPlacementPending || _gpuMesher is null ) return default;
-		// Readiness compares descriptor identity; only mesh work needs a regional reader.
+		// Runtime handoff needs only a failed predicate; diagnostics request complete counts.
+		// A ready result still checks every dependency against the current field identity.
 		Array.Clear( _pendingMissingByLevel );
 		var missingTransitions = 0;
 		foreach ( var coordinate in _levels[0].Entering )
@@ -3143,12 +3144,14 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			if ( !_renderPreparedChunks.Contains( coordinate ) )
 			{
 				_pendingMissingByLevel[0]++;
+				if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
 				continue;
 			}
 			var descriptor = CreateRegularDescriptor( 0, coordinate, captureRegion: false );
 			if ( _gpuMesher.Contains( descriptor ) && !_gpuMesher.IsResident( descriptor ) )
 			{
 				_pendingMissingByLevel[0]++;
+				if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
 			}
 		}
 		for ( var level = 1; level < SupportedVisualLevelCount; level++ )
@@ -3158,6 +3161,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				if ( !_gpuMesher.IsResident( CreateRegularDescriptor( level, coordinate, captureRegion: false ) ) )
 				{
 					_pendingMissingByLevel[level]++;
+					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
 				}
 			}
 		}
@@ -3168,6 +3172,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key, captureRegion: false ) ) )
 				{
 					missingTransitions++;
+					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
 				}
 			}
 		}

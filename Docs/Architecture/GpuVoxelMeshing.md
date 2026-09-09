@@ -158,7 +158,12 @@ conservative known-empty
 regular result is a resident descriptor with no arena allocation and therefore
 satisfies the same readiness contract. Readiness is reconsidered only when the
 mesher publishes a resident descriptor or the manager's prepared LOD0 set changes;
-settled frames do not rescan the staged sets. Once every dependency is resident,
+settled frames do not rescan the staged sets. Automatic readiness checks stop at
+the first missing dependency; explicit diagnostics use the same method to count
+all missing dependencies. A ready result still checks every dependency against
+the current descriptor identity, without caching readiness across field changes.
+The accepted short-circuit prototype and its GPU-maximum qualification limit are
+recorded under READINESS-001 in the validation ledger. Once every dependency is resident,
 the manager changes all changed active sets, releases leaving residents, and
 records the new anchors and applied configuration revision in one main-thread
 commit. Preparation records the exact entering, leaving, activation, and

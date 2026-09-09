@@ -16707,3 +16707,209 @@ Keep previous regular full-bound classifier; no seam runtime path retained.
 Summary/sourcehashes: ValidationEvidence/Water/empty-seam-summary.json. Historical
 design and result: Plans/EmptySeamPrototype.md, Research/EmptySeamExperiment.md.
 This closes the bounded experiment as rejected, not a new performance acceptance.
+
+### READINESS-001/v1 — short-circuit publication readiness prototype
+
+Defined before runtime, 2026-09-09. Reuse WATER-CHUNK-RANGE-001/v1 moving
+workload unchanged: basic_example, saved water-load-comparison-v2 (preserve current
+edits; record exact world/revision before each run), seed1337 generator13,
+Land.75 Mountains.35 Plains.6 Continental131072 Mountain32768 Local8192
+Relief3072 Ruggedness.45 Sea0; 32cells16units, gameplay8, visual512, LOD0..6,
+extents4/8. Engine26.09.08, Ryzen9800X3D/RTX5090, visible editor Game camera,
+host/no peers, fps_max1000. Fresh normal Stop/Play for each run, authored spawnXY0,
+at least30s warmup AND complete visual/preparation/collision settlement. Existing
+canonical figure-eight speed2500,distance50000,one loop,Z0; normal drain, two
+render advances and10s stationary; external360s cap. No edits, camera movement,
+configuration changes or external profiler during timed runs. Observe read-only
+at10s cadence. Preserve known underground release and stationary qualification
+limits; no return correction or weakened collision/terrain features.
+
+Capture one fresh baseline B1, candidate C1 then C2 if screening passes; preserve
+all results. Historical manual profiler run is diagnostic context only. Pass
+criteria: lower moving p95/p99 (target >=10% p99 reduction), no lower moving FPS,
+no >5% reduction in regular publication throughput, no >5% increase in regular
+and outer p95 schedule-to-renderable or route lag, no >10% increase in maximum
+frame/GPU tails, allocation/frame or process/GPU peak; explain variability with
+repeat paired runs rather than accepting unexplained regressions. These are
+predeclared noise/investigation screens, not authorization to knowingly degrade
+loading. Require zero runtime exceptions, mesh/collision failures, unsafe commits
+and seam mismatch counters; complete visual drain. Record collision state and
+exclude mismatched final-position/still-building stationary comparisons. Compare
+fixed-spawn geometry fingerprints before runs.
+
+Candidate changes only the existing readiness scan: runtime handoff returns on
+the first missing dependency, while explicit diagnostic calls retain complete
+counts. Ready requires the identical complete predicate traversal. No cached
+readiness, descriptor identity change, scheduling/order/budget change, shader or
+field change. Full-count diagnostics use the same method. This is the first
+smallest candidate; more complex incremental dependency caching is deferred
+until measured need justifies its invalidation/lifetime costs. Main thread owns
+the scan and publication; no new state owner, worker or network payload.
+Source/evidence: ValidationEvidence/Readiness/. Source starts at8d4e360 plus
+pre-existing shared uncommitted work captured in before-source.json.
+
+READINESS-001/v1 B1 completed run4a371f44c0ef4a2280ada9abdc4d0534.
+Fresh Play12:45:26UTC, fully settled inspection12:46:12, timed start12:46:23,
+result12:48:55. Worlddd143c7b-25a5-4c8a-97ed-4fddb5135925 revision65,24pages,
+savedRevision65; spawn0.0015205316,0.00145994709,584.769653,grounded.
+Startup fingerprints4AED38EEDEE009F3/EF8E0982A1F95F1D;4913collisionready,
+all visual/collision queues0. Moving553.98224FPS,p95 3.3348ms,p99 4.5108ms,
+max115.6634ms,GPUavg.8058589ms,p95 1.199007ms,p99 1.6908646ms,max11.81674ms.
+Managed2163628104B,total;32027.178B/frame,GC493.282ms total,max13.328ms,
+exceptions0. Full metrics/source/start state/identity/10s observations preserved
+in ValidationEvidence/Readiness/b1*.json. Baseline only; no speedup claim.
+Candidate native compilation succeeded0errors before Play. Exact candidate.patch
+changes only VoxelManager.cs versus before-source manifest; four failed-predicate
+early returns and one runtime call option. Fresh candidate Play follows normal
+Stop. No descriptor caching or changes to identity/correction bounds.
+
+READINESS-001/v1 C1 completed9c7d40f3331e409daeafe9ef98ed6242, saved12:53:13UTC.
+Fresh spawn/identity matched B1: same worldrevision65/24pages, fingerprints
+4AED38EEDEE009F3/EF8E0982A1F95F1D,4913collisionready and all queues0.
+Moving717.8709FPS(+29.58%),p95 2.2622ms(-32.16%),p99 3.2502ms(-27.95%),
+max89.5643ms(-22.56%). Regular508.87964regions/s(+15.94%),readinessp95
+553.9081ms(-21.15%); outerp95 9072.62ms(-36.94%); route-lagp95
+2.907837chunks(-20.11%); visual drain14513.66ms(-27.67%). Allocation/frame
+30251.5B(-5.54%),peakprocess2371579904B(+4.94%),peakGPU1922837647B(+2.69%).
+Exceptions/collisionfailures/unsafecommits/seammismatches0,visual queues0.
+Finalcollision2225ready/2686pending; finalposition-1461.5756,1999.686,-31457.848.
+Stationary is not matched settled-surface evidence. Spawn camera inspected:
+terrain continuous in visible foreground and player grounded; not exhaustive
+seam/multiplayer qualification.
+
+C1 investigation screen: GPUmax13.114214ms versus11.81674ms(+10.98%) slightly
+exceeds10% screen; GPUp99 1.8439293ms versus1.6908646ms(+9.05%). Preserve this
+result as a flagged candidate, not accepted. Repeat paired B2 then C2 with exact
+same parameters/source variants to distinguish repeatable GPU regression from
+individual maxima variability. No workload or criteria change. Restore exact
+pre-change manager after hash check; source candidate saved outside workspace.
+Continue only after native compile. Complete results c1.json and source/state/
+identity/observations retained; no timing-window observations discarded.
+
+READINESS-001/v1 B2 INTERRUPTED/INVALID,2026-09-09 12:55UTC. Native baseline
+compilation passed; exact before-source manifest restored. Pre-run inspection
+showed externally changed worldrevision253/pages75/savedRevision253 versus
+B1/C1 revision65/pages24. New fingerprints0DE65F0E3B3FE562/3728AB3D6450327A,
+spawn0.00227561011,0.000795855245,584.770142; all4913collisionready. Console
+records save.started revision221 at12:54:26 and later revision253. The automatic
+start call followed the inspection in the same tool invocation before the result
+was evaluated; stopped immediately on inspecting mismatch. No complete result
+or performance comparison from B2. Existing terrain edits preserved; no saved
+world rollback. Source manifest matches B1 exactly (no external source changes).
+B2 identity/start snapshot retained. Baseline source currently active; measured
+candidate preserved as candidate.patch and exact external snapshot. Requested
+user approval for a new fixed-world repeat pair on current edits, with terrain
+editing paused during measurement, because AGENTS.md requires workload changes
+to be explicitly approved. C1 GPUmax repeat qualification remains pending.
+
+Final read-only check after pausing: Assets/scenes/basic_example.scene also changed
+externally versus before-source.json; all captured C# and shader files match the
+restored baseline. Scene edit preserved. No further runtime tests or source
+restoration performed. All saved evidence JSON parses successfully.
+
+
+### READINESS-001/v2 — approved current-world repeat
+
+2026-09-09: user replied "I accept" to proceeding on the updated world with
+terrain editing paused during measurements. The current authored scene now uses
+an unedited recipe, not the earlier edited revision253 world: seed1337, v13,
+LandAmount.75, MountainAmount.2, PlainsAmount.6, ContinentalScale77724.09,
+MountainRegionScale18681.756, LocalLandformScale5232.39, ReliefHeight3072,
+Ruggedness.45, SeaLevel0. Preserve the user's scene; no restoration of old
+terrain or recipe. v2 is a separate baseline, not a continuous comparison with
+v1. Exact scene and unchanged baseline runtime/shader hashes recorded in
+ValidationEvidence/Readiness/v2-before-source.json.
+
+Use fresh normal Stop/Play, authored spawn, Game camera, >=30s warmup and all
+visual/preparation/collision queues settled. Both runs use this identical saved
+scene and unedited procedural recipe (runtime world UUID may differ when no
+checkpoint exists). Same engine26.09.08/hardware, fps_max1000, host/no peers,
+32cells16units, gameplay8, visual512, LOD0..6 extents4/8. Unchanged canonical
+figure-eight speed2500,distance50000,one loop,Z0, normal visual drain/two render
+advances/10s stationary,10s observation cadence,360s external cap. No terrain,
+scene or source edits during measurement. B1 then candidate C1, checking all
+v1 predeclared criteria unchanged. Record world/recipe/start geometry identities
+before starting each run; only start after inspecting the actual output.
+Preserve all v1 successes, GPUmax flag, interruption and comparison limits.
+
+READINESS-001/v2 B1 completed43b8a90e3c754e7dbfb713d1d5928ac4, saved13:20:53UTC.
+Same scene/source manifest before and after. Fresh settled spawn
+0.00147949567,0.00100167282,584.776672, grounded,4913collisionready, all queues0;
+world59a2134f-5cb9-4e84-893c-5313a42f798f revision0/pages0,checkpoint1;
+startup fingerprints81A74B1D3363407B/CDBFD7B44F3C92F9. Full result v2-b1.json;
+exact prototype restored after baseline completion and source-hash check.
+
+READINESS-001/v2 C1 INTERRUPTED before final result publication. Starting world
+UUID/revision0/pages0 and geometry fingerprints matched v2 B1; same source/scene
+manifest throughout. Spawn XY differed only by normal floating-point grounding
+noise (~0.000007 units X). The completed moving-window status reported788.5FPS,
+p95 1.95ms,p99 2.76ms,GPUavg0.77ms versus baseline610.3208FPS,2.8518/3.822ms,
+GPUavg0.79355586ms. These are partial status observations, not a saved complete
+run: no v2 C1 record exists in results-v1.jsonl. During post-route completion,
+play returned to fresh spawn and collision published count reset to ~4913.
+Subsequent terrain edits reached revisions2 and3. No stop/restart was issued by
+this task during that candidate window. Preserve v2 observations/interruption
+log; do not claim repeat GPU maxima/loading/acceptance checks passed. No more
+editor manipulation; current source still byte-matches the measured candidate.
+
+User acceptance,2026-09-09: "I accept" followed the reported complete v1
+comparison and explicit GPUmax11.8->13.1ms limitation. Retain that exact small
+prototype as accepted with this known limitation. The follow-up repeat was
+attempted for additional evidence; its interruption neither disproves the v1
+gains nor resolves its GPUmax uncertainty. This acceptance is scoped to the
+reported prototype, not a claim of stutter-free gameplay, full multiplayer
+qualification or a general waiver for future regressions. Commit only the
+readiness short-circuit and its documentation/evidence. Preserve user world,
+scene and all unrelated working-tree changes. Final native compiler/readback
+and task-only diff checks required; no further timed runs.
+
+
+### DEBUG-HUD-001/v1 — F3 location overlay
+
+Predeclared 2026-09-09. Source: this task's overlay additions over the shared
+working tree; engine 26.09.08, basic_example, one local player, normal visible
+Game camera. Existing terrain recipe, edits, layout and controls stay unchanged.
+First wait for the concurrent readiness task to release the editor.
+
+Functional sequence: fresh Play (hidden); press F3 (visible); hold F3 for 1s
+(no repeated toggles); release; walk across positive and negative X/Y base chunk
+boundaries; compare displayed XYZ to PlayerController.WorldPosition within
+0.01 world units at the sampled instant and displayed chunk to floor(XYZ/512)
+for the applied 32x16 layout. Re-press F3 (hidden), release and press (visible).
+Observe missing player/terrain handling when those production lifecycle states
+are available. Keep movement and mouse look active throughout. Inspect rendered
+text at 1280x720: top-left, legible, no row clipping, no mouse capture.
+Biome row must say "Not implemented"; no biome classification is claimed.
+Refresh budget <=10Hz visible and no hidden data refreshes by source inspection.
+
+Performance: run the existing canonical figure-eight with unchanged recorded
+parameters (2500 speed, 50000 distance, one loop, Z0, normal drain, two render
+advances and 10s stationary, 10s observation cadence, 360s cap), with HUD visible,
+against an accepted baseline of the same recipe/source/environment. Preserve
+all measurements and compare FPS, frame/GPU tails, completion/streaming, memory,
+allocations, exceptions and correctness. Do not accept unexplained material
+regressions or manufacture a comparable baseline from different world inputs.
+
+Final checks: native engine26.09.08 reports IsCompiling=false,
+LastCompileSucceeded=true,LastCompileErrors=0; no console errors since candidate
+start. Runtime C# and shader hashes match v2-candidate-source.json. The authored
+scene changed externally after repeat interruption; preserve it unstaged.
+Evidence JSON parses, report links resolve locally, and task-only staged changes
+are checked before commit. Candidate remains active; play is left running.
+
+DEBUG-HUD-001/v1 integration check, 2026-09-09. User explicitly requested
+applying the previously staged overlay. Added Code/UI/VoxelDebugOverlay.razor,
+its stylesheet, and VoxelManager.Debug.cs; persisted one Debug HUD object in
+basic_example and attached ScreenPanel/VoxelDebugOverlay to the already running
+visible world without restarting play. Native editor26.09.08 compiled runtime
+and editor successfully, zero errors; existing SB2000 warning remains.
+MCP get_game_object confirms both live components enabled and active in hierarchy.
+ui_panel_dump at1847x959 confirms the actual voxeldebugoverlay root exists with
+zero children in its initial hidden state. This establishes attachment and hidden
+startup only, not F3 input, visible styling, coordinate correctness or performance.
+Awaiting the player's F3 check; no native keyboard automation is available.
+No figure-eight was started by this task. Concurrent readiness work had its own
+run/restart history; this task does not claim those results as HUD validation.
+Visible screenshot, movement/boundary checks, missing-state lifecycle checks and
+comparable figure-eight performance acceptance remain incomplete. No commit or
+push pending required runtime acceptance.
