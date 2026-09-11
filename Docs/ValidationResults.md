@@ -20328,3 +20328,187 @@ preserving earlier validation failures and pending qualifications. This resolves
 prior no-commit notes caused by uncommitted cross-task dependencies. No erosion code
 is included. Tool lookup caches remain local. This consolidation does not assert
 that every earlier multiplayer, geometry or manual-control acceptance gate passed.
+
+## HILLS-PLACEMENT-PRIORITY-001/v1 - visible work versus cache fill
+
+2026-09-11 continued user report10-20s first-visible delay. Current source includes
+exterior publication and three-way service. Real queue ordering prioritizes all
+LOD0 Gameplay residency (including hidden cache chunks) before LOD1 visual work;
+active handoff requests have no dedicated admission priority. This is a proposed
+queue correction, not yet a measured cause of the entire reported delay.
+
+Fixed standard figure-eight: visible basic_example,26.09.08b,RTX5090,
+2769x1436,oneplayer; current saved world1575/320pages/originalslot,seed1337,
+generator44, recipe and 32cells/16/gameplay8/LOD0..5/radius256/near4/cache8
+unchanged from HILLS-SERVICE-STANDARD-001. StartXY0,0, fully settled then30s
+warmup;2500speed/50000distance/1loop, clearance393.7008, normal10s stationary,
+240s cap. New baseline necessary because user's saved field advanced from1572;
+no rollback. Baseline=exterior/three-way current; after=only placement-priority fix.
+Pass: no errors/unsafe/mismatch, allqueues0; prepmax<=16.67ms/full drain<=10s;
+no material unexplained frame/alloc/memory regression. Report regular/outer queue
+latencies and whether drawable exterior appears while global handoff is pending.
+Supporting2s handoff diagnostics record actual interval, without claiming cached
+return latency proves first arrival in previously unseen terrain. If movement or
+field differs, preserve run but reject matched-comparison claims.
+
+HILLS-PLACEMENT-PRIORITY-001/v1 baseline327745f2331f4fc396f1b938e1a00d49,
+priority-before.json: origin0/world1575,531.46954FPS,p952.8683/p994.4996/
+max116.7267ms,prep10.8133ms,full drain9337.982ms. Managed5749987512,
+maxframe46232904,GC12.762ms,CPU5020438528/GPU1894824935.
+Regular p953738.7676ms/outer1070.575ms,commits8/maxlag96,allqueues0,
+exceptions/unsafe/mismatches0. Actual partial exterior drawable counts0..197
+while global placement remained pending establish partial publication, not a
+universal first-visible delay. Snapshot capture started late and continued past
+save03:28:07 into restart; priority-before-handoffs.json retains those samples,
+which must be excluded from the benchmark interval. Polling during hotload caused
+two voxel_lod_info NullReferenceExceptions03:28:40/42 in existing manager lookup;
+hotload also logged TaskFactory<HttpListenerContext>.FromAsyncImpl resolution
+failure03:28:38. These occurred outside both measured runs and are preserved.
+Candidate started03:29:47 after confirmed origin0/allqueues0 and30s warmup,
+completed03:32:09 run018052cd058949ebad5dfac47067c955. Field confirmed unchanged
+1575/320pages03:32:27; editorcompile0errors. Candidate metrics pending extraction.
+
+Priority candidate018052cd058949ebad5dfac47067c955, priority-after.json and
+priority-comparison.json:523.19965FPS,p953.0693/p994.6453/max35.9272ms;
+prep12.568ms,drain9555.502ms; managed5546532392/maxframe46218416,
+GC14.397ms,CPU5275996160/GPU1894676219; regularp951261.4106ms(-66.3%),
+outer1121.1399ms(+4.7%),commits8/maxlag96 unchanged. Allqueues/errors/unsafe/
+mismatches0. Audit88/88 allcategories0,186.78ms. AggregateLOD0p95 increased
+338.4624 to1394.837ms, LOD1 decreased5199.864 to1015.2047ms; do not conceal
+that tradeoff or equate aggregate request latency with visible handoff latency.
+Priority improves the LOD1 queue, but unchanged8commits does not resolve the
+user's continuous-flight complaint. Current fine-box cancellation can restart
+stages every few chunk widths even though staged coarse coverage contains the
+viewer. Next candidate changes only cancellation containment from finest box to
+the staged coarsest box. Same HILLS-PLACEMENT-PRIORITY-001/v1 inputs and baseline,
+restarted origin/30s settled warmup; require more moving handoffs without unsafe
+commits, source correctness/frame/memory regressions or full-drain budget failure.
+
+## HILLS-SERVICE-FAST-002/v2 - current saved world, retained coverage
+
+Version1 (world1572) never ran and cannot be used after the user's edits. Version2
+preserves the current saved world1575/320pages/originalslot/epoch1, with the same
+basic_example/26.09.08b/RTX5090/2769x1436/oneplayer/seed1337generator44 recipe
+and32cells/16/gameplay8/LOD0..5/radius256/near4/cache8 as the current standard
+comparison. No old save restore. Production figure-eight10000/50000/1 from
+restarted originXY0,0, allqueues0 then30s stationary warmup,clearance393.7008,
+normal10s stationary collection,120s cap. These are the existing fast-flight
+workload values, not a longer route substituted for the standard regression.
+Candidate coverage-retention source only. Require errors/unsafe/mismatches0,
+allqueues0,prepmax<=16.67ms,full drain<=10s. Record actual moving handoffs and
+partial exterior counts at2s requested cadence, frames/allocations/memory.
+No matched fast before/after improvement claim; cached origin return does not
+establish universal first-arrival latency at a remote edge. Standard comparison
+is retained separately and remains required. Declare before first run.
+
+Coverage-retention26a53037ae874005a74de25cc016368a, coverage-retention.json:
+437.54022FPS,p954.295/p995.9905/max69.1256ms,prep3.4855ms,drain10452.912ms
+FAIL10s. Managed5472236624/maxframe46168832,GC13.456,CPU5163319296/
+GPU1898952443;regularp953782.653/outer6814.324ms,commits18 vs8,maxlag98,
+allqueues/errors/unsafe/mismatches0. More real moving updates do not erase frame
+and queue regressions; candidate NOT accepted. The sampled final transition to
+pending=false was03:37:58. Reported2s commit gaps are sampling-limited, not exact
+per-handoff latency; use snapshots/run counters. Audit88/88 failures0,278.94ms.
+Next source candidate keeps useful coverage but prioritizes remaining seam stages
+when all placement-required regular work has completed. Hidden regular cache
+work otherwise consumes preferred turns despite being irrelevant to the handoff.
+Same fixed standard scenario/baseline/world1575/origin0/30s warmup, unchanged
+criteria. Fastv2 is not run until this standard regression is resolved.
+
+Handoff-service b55ddfced69b4d57b1eef1a4869a2d34:467.50992FPS,
+p953.9356/p995.4027/max70.9111ms,prep9.143ms,drain10429.673ms FAIL10s.
+Managed6357432448/maxframe45928992,GC14.674ms,CPU5298974720/
+GPU1850586875;regularp954212.298/outer6206.161ms,commits23 vs8,maxlag80,
+allqueues/errors/unsafe/mismatches0. Allocation and frame regressions remain,
+so more handoffs do not constitute acceptance. Source hashes handoff-service-source.json;
+audit88/88 failures0,269.083ms. Candidate remains unaccepted/uncommitted.
+
+Fastv2 will now run for characterization of this concrete candidate, not final
+acceptance; this supersedes only the prior sequence condition that standard
+regression be resolved first. Its recorded inputs and pass criteria are unchanged.
+This supplies evidence for the unresolved tradeoff rather than hiding the standard
+failure or treating a fast result as its replacement. Before fast characterization,
+seam-only completion priority is guarded off during an edit publication so it
+cannot override existing edit-priority queues. Benchmark edit admission is disabled,
+so this guard does not change the exercised standard-test branch; capture final
+source and compile/runtime checks separately. No live terrain edits are introduced.
+
+
+### 2026-09-11 boundary-step candidate: pre-run declaration
+
+Use HILLS-PLACEMENT-PRIORITY-001/v1 unchanged: saved revision1575/320pages, originXY0,0, settled then30s warm, visible basic_example,2500/50000/1, LOD0..5/radius256 and all recorded settings/criteria. Source variant `boundary-step-placement` adds fine-first nested-boundary staging and canonical warm-interest refresh to handoff-service including its edit guard. Compare against priority-before.json; preserve intervening failures. Fast characterization has not run: the remaining shared barrier has a concrete narrower design. No acceptance criteria or workload parameters change.
+
+
+### 2026-09-11 boundary-step standard result
+
+HILLS-PLACEMENT-PRIORITY-001/v1, source boundary-step-placement, run005b276915784a5faf17606cb652ce0c, JSONL236. Same world1575/320pages, startXY0,0, speed2500/distance50000/one loop; all other declared parameters unchanged. Raw profiler viewport1847x959 matches all four Sept11 comparison records (earlier physical2769x1436 description is not the recorded render viewport). Warmup completed before trigger. Raw evidence: [result](ValidationEvidence/Hills/boundary-step.json), [comparison](ValidationEvidence/Hills/boundary-step-comparison.json), [source](ValidationEvidence/Hills/boundary-step-source.json), [2s observations](ValidationEvidence/Hills/boundary-step-handoffs.json).
+
+FPS520.86383; frame p95/p99/max2.8852/4.4299/30.7371ms; managed3090999976bytes; max/frame45991104; maxGC14.264ms; peak process3416944640/GPU1793734395bytes. Preparation max13.2573ms, full drain9735.742ms, regular p952029.9589ms, outer p952300.7537ms. Moving commits169 vs8; maxlag82 vs96. Final queues all0, placement pendingfalse, exceptions/collision failures/unsafe commits/mismatch counters0. Audit04:01:22 selected88/completed88, every failure category0, elapsed179.645ms. Midflight screenshot showed continuous terrain at that sampled view; no whole-route crack-free claim.
+
+Frame p95+0.0169ms and FPS-2.0% are small; p99/max and memory/allocations improve. Outer p95 increased1.230s, while maximum eligible service gap33.4438ms and outer maximum completion2956.918ms show regular service rather than prior multi-second dispatch starvation. Hidden cache and near-boundary ordering intentionally favor earlier nearby publication; exact first visible arrival is not measured by schedule-to-renderable. Standard absolute drain/preparation/correctness criteria pass; retain the outer latency tradeoff for final assessment alongside fast flight. Fast run now uses HILLS-SERVICE-FAST-002/v2 unchanged on this source; characterize without a matched fast baseline.
+
+
+### 2026-09-11 boundary-step fast result and tail observation declaration
+
+HILLS-SERVICE-FAST-002/v2, revision boundary-step-placement-fast, run4807b9fea47c4e7390d2be256187bc75, JSONL237. Raw [result](ValidationEvidence/Hills/boundary-step-fast.json), [handoffs](ValidationEvidence/Hills/boundary-step-fast-handoffs.json). Source unchanged, all declared parameters matched. FPS608.7902, frame p95/p99/max3.2642/4.8799/24.91ms, managed1014819600bytes, peak process2985496576/GPU1694810163bytes. Preparation max9.9232ms, full drain10609.644ms: FAIL10s criterion, not accepted as a full pass. Moving commits62, maxlag94; all final queues, unsafe commits, exceptions and mismatch categories0. Audit04:04:47 completed88/88 with all failure categories0,131.878ms.
+
+Repeat this same immutable scenario and source for diagnosis only, revision label boundary-step-fast-tail. Add read-only one-second collision/LOD snapshots around movement completion to identify which production queue dominates the remaining tail. No changed workload or thresholds; preserve the failed first run regardless of repeat outcome.
+
+
+### 2026-09-11 bounded third collision worker candidate
+
+The boundary-step fast-tail observation retained regular visualPending0 at3.0s after the30.49s moving window while collision still had3997pending regions and10seams remained. The later snapshot has all queues0; the observation gap prevents an exact visual-settle claim. Runb0dcb7e9838848c0b9136f3693f49f20, JSONL238, full drain10805.887ms FAIL, p995.1514ms, max25.2179ms, all final queues/errors0. Raw result and observations are retained under Hills/boundary-step-fast-tail*.json. Collision sampling p9532.1138ms vs extraction0.8227ms; two worker slots and two total in-flight/completed geometry objects bound processing.
+
+Source candidate boundary-step-three-collision raises the existing CPU worker and geometry slot cap from2 to3, without changing the0.5ms integration budget, pending priority, field sampling, geometry algorithm, cancellation or GPU concurrency. This is the smallest bounded throughput trial for the measured collision tail; no alternate mesher. Run the unchanged HILLS-PLACEMENT-PRIORITY-001/v1 standard first, then HILLS-SERVICE-FAST-002/v2. Compare to the2-worker boundary-step records; all criteria remain unchanged. Hardware confirmed by Win32_Processor before run.
+
+
+### 2026-09-11 three-worker standard result
+
+HILLS-PLACEMENT-PRIORITY-001/v1 unchanged, run04dddead84974f32b60e02d833f95d30, JSONL239, revision boundary-step-three-collision. FPS569.0036, frame p95/p99/max2.4832/4.2345/24.6706ms, preparation max12.8349ms, full drain5606.966ms. These improve the two-worker boundary-step frame/drain results and pass the absolute budgets. Full raw result/source captured in Hills/boundary-step-three-collision*.json. Proceed to the unchanged fast scenario with source revision label boundary-step-three-collision-fast; no further runtime edits.
+
+
+### 2026-09-11 final streaming acceptance
+
+Accepted for the measured standard and fast scenarios: nested boundary publication,
+required-region priority, existing two-face seam batches, and three bounded CPU
+collision workers. Standard run04dddead84974f32b60e02d833f95d30 completed197
+moving placements versus8 in the matched initial baseline, FPS569.0036 versus
+531.46954, p994.2345 versus4.4996ms, allocation2988425336 versus5749987512bytes,
+peak process3249348608/GPU1796833331bytes, drain5606.966ms. Standard audit
+04:12:17 completed88/88, all failure categories0,143.484ms. No material standard
+frame/allocation/memory regression remains. Outer service remains bounded;
+prioritizing near publication is the intended user-requested ordering.
+
+Fast HILLS-SERVICE-FAST-002/v2, run27fbef353c9f4be4b42537b7b28c2e78, JSONL240,
+revision boundary-step-three-collision-fast: FPS544.1403, p95/p99/max
+3.5957/5.5007/41.3911ms; allocation937091928bytes; peak process3288293376/
+GPU1696546867bytes; prepmax3.066ms, full drain7508.841ms,50 moving commits.
+Regular visual/seam/placement pending were all0 at elapsed35.021s, versus
+30.4904s moving duration: caught up by about4.53s at one-second observation
+resolution. Collision reached4913ready/allqueues0 by38.128s. This is catch-up
+at the route's final origin, not universal remote first-arrival latency.
+Outer p951560.4093ms/max1852.4689ms, maximum eligible service gap31.9154ms.
+Final errors, collision failures, unsafe commits and mismatch counters0; final
+audit04:14:55 completed88/88 with all failure categories0,161.356ms. Raw result
+and observations are in Hills/boundary-step-three-collision-fast*.json.
+
+Fast frame tails were higher than the failed two-worker characterization
+(p995.5007 versus4.8799ms; max41.3911 versus24.91ms); the final run also collected
+one-second full collision/profiler observations instead of two-second LOD-only
+observations, so those runs do not isolate the worker-count effect on frames.
+No fast FPS improvement is claimed. The required unchanged standard comparison
+improved, both final absolute drain/preparation/correctness budgets pass, and the
+fast workload has no previously accepted comparable baseline. Retain these
+measurements and earlier failures rather than substitute a different workload.
+
+Exact shared recipe: seed1337, generator44, Land0.75, Mountain0.3, Plains0.6,
+ContinentalScale77724.09, MountainRegionScale18681.756, LocalLandformScale5232.39,
+Relief3072, Ruggedness0.45, SeaLevel0;32cells/base16/gameplay8/LOD0..5/radius256/
+near4/cache8; savedworld3950b968a6ff411ca8f5923a82f348a1 revision1575/320pages,
+epoch1, originXY0,0, one player,30s settled warmup. Hardware Ryzen7 9800X3D
+8cores/16threads,RTX5090, engine26.09.08b, raw viewport1847x959. Saved revision
+and pages unchanged at04:15:10; no terrain edits were made during this work.
+Live validation used the current dirty workspace including existing river,
+material and shadow work; source hashes identify that environment. Commit only
+streaming changes, preserving those unrelated edits. Broader multiplayer load,
+manual arbitrary-distance flight and edit-specific worker stress were not run.

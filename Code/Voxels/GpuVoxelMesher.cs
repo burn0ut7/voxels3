@@ -55,6 +55,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private readonly Queue<PendingMesh> _nearVisualDispatchQueue = new();
 	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
 	private readonly Queue<PendingMesh> _outerVisualDispatchQueue = new();
+	private readonly Queue<PendingMesh> _activeOuterDispatchQueue = new();
+	private readonly Queue<PendingMesh> _placementNearDispatchQueue = new();
+	private readonly Queue<PendingMesh> _placementOuterDispatchQueue = new();
+	private readonly HashSet<GpuMeshRegionKey> _placementRequired = new();
+	private readonly HashSet<GpuMeshRegionKey> _placementQueued = new();
 	private readonly List<GeometryArena> _arenas = new();
 	private ScratchLane[] _scratchLanes;
 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
@@ -173,6 +178,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private bool _transitionMeasurementActive;
 	private long _outerLastServiceTimestamp;
 	private long _transitionLastServiceTimestamp;
+	private int _nextGpuService;
 	private long _outerEligibleSinceTimestamp;
 	private long _outerScheduledCount;
 	private long _outerPublishedCount;
@@ -511,6 +517,33 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			_editTransitionDependencies.Add( descriptor.Key );
 		_transitionDesiredDescriptors[descriptor.Key] = descriptor with { Field = null };
 		RemovePendingTransition( descriptor.Key );
+		_transitionScheduledCount++;
+		_transitionScheduledByCoarseLevel[descriptor.Key.CoarseLevel]++;
+		if ( descriptor.EditRevision == 0 )
+		{
+			var boundsStarted = Stopwatch.GetTimestamp();
+			var range = ProceduralTerrainSdf.GetConservativeDensityRange(
+				descriptor.SamplingBounds, descriptor.FineCellSize, descriptor.TerrainSettings );
+			TransitionClassificationMilliseconds += Stopwatch.GetElapsedTime( boundsStarted ).TotalMilliseconds;
+			if ( range.MinimumDensity > 0f || range.MaximumDensity < 0f )
+			{
+				var generation = ++_nextGeneration;
+				var completed = new CandidateTransition( descriptor, generation, boundsStarted,
+					playerRouteDistance, null, new GpuTransitionCountResult { Generation = generation } );
+				TransitionUniformRegionsSkipped++;
+				if ( _editTransitionDependencies.Contains( descriptor.Key ) )
+				{
+					if ( _editTransitionCandidates.Remove( descriptor.Key, out var previous ) ) Release( previous.Handle );
+					_editTransitionCandidates[descriptor.Key] = completed;
+				}
+				else
+				{
+					PublishCompletedTransition( completed );
+					MarkDrawCommandsDirty();
+				}
+				return;
+			}
+		}
 		var pending = new PendingTransition(
 			descriptor,
 			Stopwatch.GetTimestamp(),
@@ -518,8 +551,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		_transitionPending[descriptor.Key] = pending;
 		if ( _editTransitionDependencies.Contains( descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
 		else _transitionDispatchQueue.Enqueue( pending );
-		_transitionScheduledCount++;
-		_transitionScheduledByCoarseLevel[descriptor.Key.CoarseLevel]++;
 	}
 
 	public void SetTransitionActive( GpuTransitionKey key, bool active )
@@ -948,9 +979,23 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 	}
 
+	public void SetPlacementRequired( GpuMeshRegionKey key )
+	{
+		if ( _placementRequired.Add( key ) && _pending.TryGetValue( key, out var pending ) )
+			QueuePending( pending );
+	}
+
+	public void ClearPlacementPriority()
+	{
+		_placementRequired.Clear();
+		_placementQueued.Clear();
+	}
+
 	public void SetRenderActive( GpuMeshRegionKey key, bool active )
 	{
 		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
+		if ( changed && active && key.Level >= 2 && _pending.TryGetValue( key, out var pending ) )
+			QueuePending( pending );
 		if ( !changed || !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
 		SetVisibilityActive( resident, active );
 		MarkDrawCommandsDirty();
@@ -1449,6 +1494,9 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	// Published empty-solid records can still contain another medium's surface.
 	public bool IsResident( GpuMeshRegionKey key ) => _resident.ContainsKey( key );
 
+	public bool IsDrawable( GpuMeshRegionKey key ) =>
+		_renderActive.Contains( key ) && _resident.TryGetValue( key, out var resident ) && resident.Handle is not null;
+
 	public bool IsTransitionResident( GpuTransitionDescriptor descriptor ) =>
 		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
 		resident.Descriptor == descriptor;
@@ -1476,6 +1524,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		_editRegularDependencies.Remove( key );
 		if ( _editRegularCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
 		_renderActive.Remove( key );
+		_placementRequired.Remove( key );
 		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( key ) )
 		{
 			_levelCancelledCounts[key.Level]++;
@@ -2022,7 +2071,31 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private void ProcessGpuRenderTick()
 	{
 		if ( _disposed || _scratchLanes is null ) return;
+		// Once required terrain is complete, its seams outrank hidden cache fill.
+		if ( !_editPublicationPending && _placementRequired.Count > 0 && _placementQueued.Count == 0 &&
+			!_scratchLanes.Any( lane =>
+				lane.CountInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ) ||
+				lane.EmitInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ) ) &&
+			ProcessTransitionGpuRenderTick() )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+			return;
+		}
+		// A placement needs near regions, outer regions and seams together.
+		// Each gets a preferred turn; unavailable work falls through to normal service.
+		var preferredService = _nextGpuService;
+		_nextGpuService = (_nextGpuService + 1) % 3;
 		var outerServiceGap = ObserveOuterServiceGap();
+		if ( preferredService == 2 && (TryEmitReadyOuter() || TrySubmitOuterCount()) )
+		{
+			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
+			return;
+		}
+		if ( preferredService == 1 && ProcessTransitionGpuRenderTick() )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+			return;
+		}
 		if ( TryEmitReadyOuter() )
 		{
 			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
@@ -2034,13 +2107,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			return;
 		}
 
-		// During edits, transition seams must progress even under continuous regular work.
-		if ( _editPublicationPending && Stopwatch.GetElapsedTime( _transitionLastServiceTimestamp ).TotalMilliseconds >= 16 &&
-			ProcessTransitionGpuRenderTick() )
-		{
-			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
-			return;
-		}
 		var regularGpuWorkSubmitted = false;
 		foreach ( var lane in _scratchLanes )
 		{
@@ -2113,8 +2179,20 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		{
 			TransitionDeferredRenderTicks++;
 		}
+		// With no near work submitted, share ticks between outer counts and seams.
+		// Each still consumes its own tick; a long seam queue must not reduce
+		// outer progress to only the forced-service deadline.
+		if ( !regularGpuWorkSubmitted && _outerLastServiceTimestamp <= _transitionLastServiceTimestamp &&
+			TrySubmitOuterCount() )
+		{
+			RecordOuterService( outerServiceGap, false );
+			return;
+		}
 		var transitionGpuWorkSubmitted = !regularGpuWorkSubmitted && ProcessTransitionGpuRenderTick();
-		if ( transitionGpuWorkSubmitted ) _transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+		if ( transitionGpuWorkSubmitted )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+		}
 		if ( !regularGpuWorkSubmitted && !transitionGpuWorkSubmitted && TrySubmitOuterCount() )
 		{
 			RecordOuterService( outerServiceGap, false );
@@ -2157,25 +2235,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				continue;
 			}
 			var generation = ++_nextGeneration;
-			if ( processed == 0 && deferred is null && pending.Descriptor.EditRevision == 0 )
-			{
-				var boundsStarted = Stopwatch.GetTimestamp();
-				var range = ProceduralTerrainSdf.GetConservativeDensityRange(
-					pending.Descriptor.SamplingBounds, pending.Descriptor.FineCellSize,
-					pending.Descriptor.TerrainSettings );
-				TransitionClassificationMilliseconds += Stopwatch.GetElapsedTime( boundsStarted ).TotalMilliseconds;
-				if ( range.MinimumDensity > 0f || range.MaximumDensity < 0f )
-				{
-					// Uniform signs have no edges or geometry. Keep normal stale/edit publication checks.
-					targetLane.EmitInFlight.Add( new CandidateTransition( pending.Descriptor, generation,
-						pending.ScheduledTimestamp, pending.ScheduledRouteDistance, null,
-						new GpuTransitionCountResult { Generation = generation } ) );
-					targetLane.SubmittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
-					targetLane.EmitSubmittedTimestamp = Stopwatch.GetTimestamp();
-					TransitionUniformRegionsSkipped++;
-					return true;
-				}
-			}
+
 			var inFlight = new InFlightTransition(
 				pending.Descriptor,
 				generation,
@@ -2953,6 +3013,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 		RemovePending( pending.Descriptor.Key );
 		_pending[pending.Descriptor.Key] = pending;
+		if ( _placementRequired.Contains( pending.Descriptor.Key ) ) _placementQueued.Add( pending.Descriptor.Key );
 		_pendingLevelCounts[pending.Descriptor.Key.Level]++;
 		if ( _editRegularDependencies.Contains( pending.Descriptor.Key ) )
 		{
@@ -2960,6 +3021,15 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
 			var queue = pending.Residency == GpuMeshResidency.Visual && pending.Descriptor.Key.Level >= 2
 				? _editOuterDispatchQueue : _editNearDispatchQueue;
+			queue.Enqueue( pending );
+			return;
+		}
+		if ( _placementRequired.Contains( pending.Descriptor.Key ) &&
+			!(pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key )) )
+		{
+			if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount++;
+			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
+			var queue = pending.Descriptor.Key.Level >= 2 ? _placementOuterDispatchQueue : _placementNearDispatchQueue;
 			queue.Enqueue( pending );
 			return;
 		}
@@ -2975,7 +3045,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 		else if ( pending.Residency == GpuMeshResidency.Visual )
 		{
-			_outerVisualDispatchQueue.Enqueue( pending );
+			if ( _renderActive.Contains( pending.Descriptor.Key ) ) _activeOuterDispatchQueue.Enqueue( pending );
+			else _outerVisualDispatchQueue.Enqueue( pending );
 		}
 		else
 		{
@@ -2987,9 +3058,22 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private bool TryDequeuePending( out PendingMesh pending )
 	{
 		if ( TryDequeuePendingFrom( _editNearDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePlacement( _placementNearDispatchQueue, out pending ) ) return true;
 		if ( TryDequeuePendingFrom( _gameplayDispatchQueue, out pending ) ) return true;
 		if ( TryDequeuePendingFrom( _nearVisualDispatchQueue, out pending ) ) return true;
 		if ( TryDequeuePendingFrom( _warmDispatchQueue, out pending ) ) return true;
+		pending = default;
+		return false;
+	}
+
+	private bool TryDequeuePlacement( Queue<PendingMesh> queue, out PendingMesh pending )
+	{
+		while ( TryDequeuePendingFrom( queue, out pending ) )
+		{
+			if ( _placementRequired.Contains( pending.Descriptor.Key ) ) return true;
+			// A canceled placement demotes unfinished work without losing its request.
+			QueuePending( pending );
+		}
 		pending = default;
 		return false;
 	}
@@ -3003,6 +3087,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				continue;
 			}
 			_pending.Remove( queued.Descriptor.Key );
+			_placementQueued.Remove( queued.Descriptor.Key );
 			_pendingLevelCounts[queued.Descriptor.Key.Level]--;
 			if ( queued.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
 			else if ( queued.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
@@ -3016,6 +3101,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private void RemovePending( GpuMeshRegionKey key )
 	{
 		if ( !_pending.Remove( key, out var pending ) ) return;
+		_placementQueued.Remove( key );
 		_pendingLevelCounts[key.Level]--;
 		if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
 		else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
@@ -3024,6 +3110,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private bool TryDequeuePendingOuter( out PendingMesh pending )
 	{
 		return TryDequeuePendingFrom( _editOuterDispatchQueue, out pending ) ||
+			TryDequeuePendingFrom( _activeOuterDispatchQueue, out pending ) ||
+			TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ||
 			TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
 	}
 
@@ -3499,6 +3587,10 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		_nearVisualDispatchQueue.Clear();
 		_warmDispatchQueue.Clear();
 		_outerVisualDispatchQueue.Clear();
+		_activeOuterDispatchQueue.Clear();
+		_placementNearDispatchQueue.Clear();
+		_placementOuterDispatchQueue.Clear();
+		ClearPlacementPriority();
 		_pendingGameplayCount = 0;
 		_pendingWarmCount = 0;
 		Array.Clear( _pendingLevelCounts );

@@ -8,8 +8,8 @@ internal sealed class VoxelCollisionWorld : IDisposable
 	public const int MaximumRadius = 8;
 	public const int MaximumPlayerInterests = 64;
 	public const int MaximumActorRegions = 4096;
-	private const int MaximumCompleted = 2;
-	private const int MaximumWorkers = 2;
+	private const int MaximumCompleted = 3;
+	private const int MaximumWorkers = 3;
 	private const double IntegrationBudgetMilliseconds = 0.5;
 	private readonly VoxelManager _owner;
 	private readonly int _cells;

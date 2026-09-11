@@ -2,9 +2,9 @@ using System;
 
 internal sealed class GpuTransitionScratch : IDisposable
 {
-	// Single-face submissions pass the version-12 coarse refinement startup case;
-	// eight-face batches fault on s&box 26.09.08 / RTX 5090. See the D16 ledger run.
-	public const int MaximumBatchSize = 1;
+	// Two-face qualification uses the current table-buffer pipeline. Older eight-face
+	// batches faulted on s&box 26.09.08 / RTX 5090; see HILLS-SEAM-BATCH-001.
+	public const int MaximumBatchSize = 2;
 	private const int DensitySize = 69;
 	private const int FineNormalDensitySize = 65;
 	private const int CoarseNormalDensitySize = 33;

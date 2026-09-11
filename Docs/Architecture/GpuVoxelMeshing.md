@@ -96,8 +96,9 @@ region sizes double per level. Gameplay residency is still owned only by
 Gameplay membership and bounded CPU preparation are defined in the
 [voxel foundation](VoxelChunkFoundation.md#canonical-ownership-and-data-flow).
 
-`VoxelManager` computes the changed regular boxes and adjacent transition
-boundaries in one placement update. Each transition identity contains its fine
+`VoxelManager` computes changed regular boxes and adjacent transition boundaries
+through one placement builder. Ordinary movement advances one nested boundary
+at a time, as described in the qualified boundary-step section below. Each transition identity contains its fine
 level, coarse level, coarse coordinate, and face. The same identity,
 descriptor, queue, scratch pipeline, resident cache, allocator, visibility path,
 and draw path serve every enabled pair. Transition work is ordered by coarse
@@ -900,3 +901,35 @@ The user accepted candidate B's measured startup frame-rate tradeoff on2026-09-0
 See [the experiment](../Research/EmptySeamExperiment.md) for historical rejection,
 acceptance, fixed-world results and incomplete moving qualification. This does
 not accept unrelated terrain errors or alter the existing benchmark route.
+
+### Boundary-step placement candidate (2026-09-11)
+
+The manager retains the canonical staged-set builder, readiness checks and atomic
+publication. For movement within committed outer coverage at unchanged settings,
+it selects the finest outer box that can advance toward its target while keeping
+one coarse-region gap to both its committed parent and child. Anchors below the
+outermost level remain even; each parent hole is exactly its staged child's box
+halved. Only this outer box and its parent's hole change, requiring at most one
+transition pair. Subsequent commits continue toward the latest target. Startup,
+configuration changes and destinations outside committed outer coverage use the
+same builder with all target boxes, retaining independent exterior publication.
+This supersedes whole-hierarchy staging for ordinary movement; it does not add
+mixed per-chunk LOD boundaries, another mesher or change authoritative terrain.
+
+The manager owns selection and all staged state on the engine thread. New LOD0
+intermediate interest outside the viewer's warm window marks that interest dirty;
+the existing desired-chunk rebuild restarts the single canonical preparation
+worker on the next update, even if the viewer has stopped. Resets clear the flag.
+Edits retain existing source-revision invalidation. GPU lanes, two-face batches,
+render publication and collision ownership are unchanged. Integer containment
+and fixed finest-first ordering determine selection; the authoritative field is
+independent of placement timing. One coarse-region gap prevents adjacent LOD
+transition surfaces from sharing a boundary during intermediate placements.
+
+This replaces the large shared completion barrier implicated by the matched
+8/18/23-commit experiments. Raising GPU batch sizes was rejected by measured
+frame regressions; arbitrary per-chunk refinement would require a new boundary
+topology. Acceptance requires the unchanged standard figure-eight criteria,
+including <=10 s full drain, frame/allocation comparison and boundary audits.
+
+The boundary-step candidate is accepted for the2026-09-11 standard/fast scenarios in the validation ledger. Required active chunks precede hidden cache fill; near, outer and seam work share preferred GPU turns. Coarsest chunks outside committed coverage publish independently as each finishes, and are hidden wherever the subsequent finer placement replaces them. Preparation classification is sliced with a2ms target checked every32regions. No GPU lane count increases.

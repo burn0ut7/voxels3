@@ -555,3 +555,9 @@ unchanged figure-eight showed effectively unchanged FPS and in-budget memory,
 allocation and readiness results. This accepts the narrow optimization only;
 existing contact variability and broader feature qualification above remain open.
 Exact evidence and limitations belong to the validation ledger.
+
+### 2026-09-11 streaming collision-tail candidate
+
+The canonical collision world now trials three CPU workers and three combined in-flight/completed geometry slots after measured two-worker sampling dominated fast-flight catch-up. Each worker still owns one mesher, uses captured authoritative field data, obeys region cancellation and publishes through the unchanged engine-thread0.5ms integration budget. Pending actor/nearest ordering and source-revision rejection remain unchanged. This supersedes the two-worker cap only if the unchanged standard and fast streaming scenarios pass; see the validation ledger. No GPU lane or terrain representation changes.
+
+The three-worker cap passed the2026-09-11 standard and fast streaming drain/preparation/correctness criteria. This qualifies streaming on the recorded machine; it does not establish multiplayer capacity or replace edit-specific stress coverage.
