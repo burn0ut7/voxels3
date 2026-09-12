@@ -25,7 +25,6 @@ struct VertexInput
 struct PixelInput
 {
 	#include "common/pixelinput.hlsl"
-	float CoverageClip[4] : SV_ClipDistance0;
 };
 VS
 {
@@ -35,11 +34,6 @@ VS
 		output.vPositionWs = input.Position - g_vHighPrecisionLightingOffsetWs.xyz;
 		output.vPositionPs = Position3WsToPs( input.Position );
 		output.vNormalWs = float3( 0.0, 0.0, 1.0 );
-		// Clip geometry before rasterization so shared edges keep their MSAA samples.
-		output.CoverageClip[0] = input.Position.x - WaterCoverage.x;
-		output.CoverageClip[1] = input.Position.y - WaterCoverage.y;
-		output.CoverageClip[2] = WaterCoverage.z - input.Position.x;
-		output.CoverageClip[3] = WaterCoverage.w - input.Position.y;
 		return output;
 	}
 }
@@ -51,6 +45,11 @@ PS
 	float4 MainPs( PixelInput input ) : SV_Target0
 	{
 		float3 worldPosition = input.vPositionWithOffsetWs + g_vHighPrecisionLightingOffsetWs.xyz;
+		// Half-open tiles make old/new LOD coverage disjoint, including dry results.
+		if ( any( worldPosition.xy < WaterCoverage.xy ) || any( worldPosition.xy >= WaterCoverage.zw ) )
+		{
+			discard;
+		}
 		float2 coordinates = worldPosition.xy / WaterCheckerSize;
 		float checker = frac( (floor( coordinates.x ) + floor( coordinates.y )) * 0.5 ) * 2.0;
 		float2 footprint = fwidth( coordinates );

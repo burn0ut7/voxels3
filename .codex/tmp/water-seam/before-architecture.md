@@ -290,23 +290,10 @@ last presentation until their replacement arrives. Only final requested areas
 retain tiles; fallback references keep their CPU/GPU source alive until replaced.
 
 The renderer uploads one buffer per source descriptor and draws its coverage
-tiles with world-XY geometry clip planes. Empty replacements remove fallback
+tiles with half-open world-XY shader clipping. Empty replacements remove fallback
 coverage too, avoiding overlapping coplanar water. Buffer reuse avoids remeshing
 or re-uploading a retained source. Temporary subdivided fallback may need several
 draw calls from one buffer; this cost requires the fixed runtime comparison.
 A four-child atomic handoff was not chosen because it would delay an independently
 ready child. Generation and terrain publication remain independent. This contract
 is source behavior; visual and performance acceptance remain in the ledger.
-
-### Rasterized water coverage edges (2026-09-12)
-
-Coverage uses four vertex-stage SV_ClipDistance planes against exact world-XY
-bounds. The rasterizer owns shared-edge sample coverage, including MSAA. The
-previous fragment-stage half-open comparisons discarded covered edge pixels
-when interpolated world positions rounded onto the neighboring tile, visibly
-opening thin cracks at large coordinates. Clip distances are computed directly
-from generated vertex positions and tile bounds before camera-relative fragment
-interpolation. No epsilon, overlapping expansion, remeshing, or upload is added.
-The manager still owns the disjoint presentation partition and dry replacements;
-only its draw-time clipping stage changes. Visual and runtime evidence is recorded
-under WATER-PIXEL-SEAM-001/v1 in the validation ledger.
