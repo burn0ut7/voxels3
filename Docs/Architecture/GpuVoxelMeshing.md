@@ -543,6 +543,17 @@ Treat the following as hard requirements for terrain compute shaders:
   repeat the clean-start check. Never hide this failure by disabling scratch
   construction or leaving an empty kernel in production.
 
+On engine26.09.08b, editing an included HLSL file does not automatically rebuild
+its dependent shaders. The installed `ShaderHooks.OnShaderWasEdited` handles
+`.shader` source changes only. Explicitly rebuild each dependent `.shader` with
+the editor's `EditorUtility.CompileShader` and `ForceRecompile` before restarting
+Play. The existing editor toolset exposes this as `compile_source_shader` for
+mounted source paths. The general `asset_compile` route rejects these shader
+assets as non-recompilable in this build. Verify successful compiler results and
+loaded geometry identity; source hashes alone did not establish the running
+variant in DISTANT-REFINEMENT-001/v1. This does not replace the clean-editor-start
+requirement above.
+
 When diagnosing a similar crash, bisect valid shader programs by complete
 stage boundaries. Keep every intermediate variant syntactically valid; an
 invalid preprocessor guard can remove a function's closing brace, and cold

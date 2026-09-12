@@ -24397,3 +24397,90 @@ invalid indices/bounds/nonfinite/identity/oversized/degenerate/draw-argument fai
 is under Docs/ValidationEvidence/ChunkWaterLifecycle; no tests/scenes/hooks added.
 
 Final checks: engine compiler succeeded with0errors; task diff whitespace check passed. New lifecycle/readiness documentation links resolve. A broader scan also found the pre-existing VoxelChunkFoundation link to absent voxel_sdf_v22.hlsl; that unrelated historical link was not changed. Original-slot save completed at10:00:47EDT,checkpoint120,revision1584; original selection restored.
+
+### DISTANT-REFINEMENT-001/v1 — pre-run definition, 2026-09-12
+
+User authorizes a prototype comparing cheaper distant geometry with closed joins and deterministic region generation. Design: [DistantEdgeRefinementExperiment](Plans/DistantEdgeRefinementExperiment.md). Baseline helper: eight bisections; A: eight for edge lengths <=32 units, four otherwise; B (only if A remains viable): eight/two. Shared regular/transition helper and edge-length rule preserve matching inputs on both faces. No world, topology, collision, batch or scheduling changes.
+
+Reuse HILLS-PLACEMENT-PRIORITY-001/v1 exactly: visible basic_example, engine26.09.08b, RTX5090, viewport2769x1436, one player, seed1337/generator44, land0.75/mountain0.3/plains0.6, scales77724.09/18681.756/5232.39, relief3072/ruggedness0.45/sea0, 32cells/16base spacing, gameplay8/LOD0..5/radius256/near4/cache8. Play reset, originXY0,0, all terrain/collision/water settled then30s warmup; speed2500/distance50000/one loop, clearance393.7008,10s stationary,240s cap. Current world3950b968a6ff411ca8f5923a82f348a1 now revision1585/pages328/epoch1/checkpoint128, saved at preflight10:42:01EDT. Preserve newer user state; revision1584 results are not matched controls. Baseline runtime tracked source533bfd1; pre-existing SurfaceWater.md and ledger edits preserved.
+
+Criteria unchanged: no exceptions/unsafe commits/shared-edge mismatch, all queues settle, preparation maximum<=16.67ms, full drain<=10s, no material unexplained frame/allocation/memory regression. Compare regional latency and work separately from drain. Observe local presentation with existing voxel_chunk_readiness after movement, outside the moving timing window; do not infer universal arrival from return-to-origin. Geometry audit: voxel_mesh_audit 8 coverage after timed windows, no invalid/index/winding/degenerate/shared-edge failures. Fixed visual camera positions and baseline images will be recorded before candidate changes. Existing upper-bank water/terrain sky-gap defect is present in baseline and remains outside this single-variable refinement experiment; no blanket no-sky-hole claim is permitted.
+
+For viable A, reuse EDGE-PARTIAL-002/v1 unchanged (speed10000/distance200000/one loop, same remaining parameters, 240s cap) with its original ledger criteria; source/world matched baseline required. Shader changes additionally require clean visible editor restart, unchanged Sentry last_crash, successful compile and fresh-log inspection. Save structured evidence in Docs/ValidationEvidence/DistantRefinement. No candidate accepted before the recorded comparison and relevant visual/boundary checks.
+
+DISTANT-REFINEMENT-001/v1 fixed visual observations (defined before first capture): after the standard route and settled audit, leave player/streaming origin at its normal final position and use the detached game camera only. View A position27000,-8000,7000/angles30,30,0; view B position59000,-8000,7000/angles30,30,0; FOV60,1600x900. These target the positive-X LOD3/4 and LOD4/5 boundary neighborhoods respectively. Capture baseline and candidate at identical transforms after camera command-list attachment has advanced. Require no new visible sky cracks or missing join surfaces; approximate displacement/shape is explicitly allowed. These views and the bounded geometry audit do not cover every cave, angle or batch permutation. Return to the player camera before restarting timed scenarios.
+
+Baseline2155c6807aa141c7bfa7af9d38b24aa5 completed with exact recorded workload/world:443.32553FPS,p95/p99/max3.746/5.3495/165.128ms,allocated2,792,711,688bytes,averageprocess5,133,905,214/GPU1,936,817,657bytes,prepmax2.9084ms,drain6390.819ms,exceptions0. All final queues/mismatch/unsafe counters0. Postrun coverage audit88/88all failures0,184.314ms. Startup settled observation10:43:46EDT,30s warmup, run call14:44:25.816UTC. LOCAL OBSERVATION INVALID: first sample10:47:07EDT is161.184s after trigger instead of122.1s;40late samples prove settled presentation only. Preserve raw observations; no first-arrival claim. A comparison of nearby arrival requires a fresh matched baseline observation.
+
+Both fixed baseline images captured; A includes a thin dark segmented line already present before the prototype, B includes abrupt river shape changes. No new candidate conclusions. First set_ejected_camera reported a NullReferenceException at line273 after setting viewport state; subsequent get_ejected_camera confirmed exact requested position/angles/FOV, screenshots succeeded. Image export initially exceeded Windows command-line limit; images were saved through an intermediate encoded file instead.
+
+Candidate A activated in the single shared helper after all94other source hashes matched baseline; normal Play restart performed for hot-load smoke, then editor clean restart. Editor34852 shutdown logged the existing terrain_player.prefab destruction assertion (five components not deleted), reached Source2Shutdown10:50:16 and retained an Error window. Terminated the already-shut-down process and launched a new visible editor. Sentry last_crash remained2026-09-10T14:09:52.761278Z. Preserve shutdown failure separately from candidate shader qualification; fresh-process memory will differ from long-lived baseline.
+
+
+Candidate A fdd1b9d6eaf0417bae1447fd3807ef96,14:52:56.167UTC trigger:41 correctly scheduled local samples122.101..142.101s, all27/27presented from first sample while736regular/106seams remained. PERFORMANCE COMPARISON INVALID: clean editor restart changed viewport to1847x959 versus2769x1436baseline.468.4828FPS,p99=5.2496ms,alloc2,991,740,952bytes,drain6031.057ms are preserved but not accepted as a speedup; geometry coverage audit88/88allfailures0,152.262ms. Sentry unchanged, both affected shaders rebuilt at10:51:13/14EDT.
+
+User prohibits Computer Use/desktop automation and authorizes continuing with project/sbox tools. The stock editor API SceneViewWidget.SetForceResolution is implemented in installed addons/tools/Code/Scene/SceneView/SceneViewWidget.Game.cs:117. Expose this normal editor operation as set_game_render_resolution in existing VoxelMcpTools; it adds no terrain/test path. Both matched control and candidate use the same editor tool source, explicit2769x1436 after Play start, verified by the production profiler before warmup/run. Revert helper to eight for a new matched baseline with corrected local-observer timing. Keep all workload parameters and criteria unchanged.
+
+Repeated control 9d8e0ac3b74c42cdaf002d4946f25dcf (15:09:21.309UTC): INVALID AS EIGHT-STEP BASELINE. Although source was restored, both compiled shader timestamps remained10:51:13/14EDT and settled position digests exactly matched A at LOD2..5 and transitions, differing from original eight-step baseline. Source hashes alone did not establish loaded shader identity. Moving437.06873FPS,p99=5.4284ms,drain6060.582ms; viewport2769x1436. Preserve raw baseline-repeat.json with its original trigger label; do not use as a control. Local observer also blocked: request started122.100s but completed176.759s, after export; its timestamp does not establish arrival. Future comparisons must verify actual loaded geometry signatures as well as source and viewport.
+
+Candidate A repeat f13901b4668a4bd4bf99785d01d0ea20 (15:13:55.662UTC), actual2769x1436:434.6702FPS,p95/p99/max3.8392/5.3926/22.6124ms,GPUavg1.7503641ms,allocated2,823,465,456bytes,averageprocess5,498,504,813/GPU1,907,178,466bytes,prepmax13.9052ms,drain6631.229ms. Exceptions/unsafe/mismatch/finalqueues0. LOD0 p99=2768.2134ms versus original baseline2784.5044ms: no clear near-latency benefit. Correctly timed first local sample122.101s had27prepared/0presented,132seams pending; later samples settled27/27. Coverage audit88/88,allfailures0,154.573ms. Both fixed images show the baseline dark segmented line/river shape discontinuities without a newly visible sky crack in those views. All settled per-level and transition position signatures match A initial and the mislabeled repeated control; LOD0/1 match the original eight-step baseline. This supports repeat geometry determinism on this device, not all batch permutations or universal crack prevention.
+
+Before further comparisons: installed ShaderHooks.OnShaderWasEdited explicitly ignores HLSL dependency rebuilds (addons/tools/Code/Shaders/ShaderHooks.cs:9-12). Native asset_compile rejects the shader as having no recompilable source even though its mounted source exists. Expose installed EditorUtility.CompileShader with ForceRecompile through the existing editor MCP toolset; verify both shader outputs and settled geometry identity before treating a run as baseline. An initial ambiguous FileSystem compile error was fixed by explicitly using Editor.FileSystem; no timed run used the failed editor build. For fast-flight diagnostics use the existing post-movement unpolled variant documented at EDGE-PARTIAL-002/v1 on2026-09-12: no moving diagnostics, local readiness122.1..200.1s, same route10000/200000/1 and full240s cap. No claim for the original one-second exterior-service criterion from this observation mode. All other fixed parameters and current saved1585/328world remain unchanged.
+
+A-repeat local first27/27 occurred at124.600s (completion124.632s), with799regular/118seams stillpending. Original baseline local timing is invalid, so this has no matched local improvement claim. Native explicit baseline compilation succeeded for both shaders with empty diagnostics at11:18:10/11:18:11EDT. Pre-run settled transitionPosition=FEAC77431D2353C1 matches the original baseline and differs from A69D829DEB3533ED5; shared-edge mismatch counters0. This confirms the stale A shader was replaced before the fast-flight control. Source identity retained in baseline-edge-source.json.
+
+Fast control50acebb328eb4af599c0f1d549826879 (15:19:33.876UTC), explicit eight-step shader rebuild and same saved world:345.55508FPS,p95/p99/max5.9037/8.1161/50.8984ms,GPUavg1.5307716ms,allocated5,419,680,240bytes,averageprocess5,801,046,116/GPU2,148,950,843bytes,prepmax10.165ms,drain8038.0483ms. Final queues/errors/unsafe/mismatches0. Nearby27prepared at122.600s,0presented then; first27presented at123.600s (completion123.624s), while846regular/185transition requests remained. Full settled geometry matches the original eight-step standard baseline including all per-level digests and transitionPositionFEAC77431D2353C1. This return-to-origin observation does not reproduce the user-reported25s new-destination delay and cannot establish arbitrary new-destination arrival.
+
+Output-shape qualification: standard A retains3,949,099regular vertices but emits7,281,988regular triangles versus baseline7,283,327; transition indices48,984 versus34,896 with33,488vertices in both. Lookup case/topology fingerprints are unchanged, but the existing area-based triangle rejection uses refined positions (persistent_geometry:262-271,transition_geometry:592-601), so exact emitted index topology is not invariant under reduced root precision. Do not describe A as byte-identical topology or infer lower emitted-geometry cost merely from fewer SDF refinements.
+
+Fast A4d97ba1e5ec24d99861ae4203b8cd79e (15:25:01.691UTC): FAIL / WITHDRAW.
+342.2478FPS,p95/p99/max5.957/8.2198/73.3065ms,GPUavg1.4871044ms,
+allocated5,425,620,080bytes,averageprocess4,245,176,588/GPU2,187,896,282bytes,
+prepmax11.41ms,full drain60286.258ms versus control8038.0483ms. Stationary
+454.24808FPS,p99=4.1926ms versus507.37784FPS,p99=3.9038ms. Moving FPS is
+about0.96% lower and allocation about0.11% higher; similar moving averages do
+not excuse the recovery regression. Lower process memory is affected by
+retained engine/GC state and is not a memory-optimization acceptance claim.
+Nearby27prepared at123.101s but first27presented only at177.100s (completion
+177.125s), with1065regular/184transition requests still pending. First nearby
+presentation was53.5s later than control at the same0.5s observation spacing.
+Relative to the approximately121.94s route end, this is about55.2s recovery
+versus1.7s in control. Do not interpret the final first-near sample as whole-world
+completion or extend this pair to every destination.
+
+A one-off read-only handoff diagnostic at11:27:50EDT, outside the moving window,
+found stagedFine=C[-34,-34,0],finePreparationMissing0,missingLevels=[0,740,0,0,0,0,0],
+missingTransitions218,waterReadyFalse,maximumLevelLag34. MissingLevels includes
+regular and water readiness failures, not necessarily distinct chunks. Nearby
+CPU preparation therefore did not imply publication; the staged hierarchy was
+still processing an intermediate location away from the player. Final placement
+commits70 versus44 in control. These observations identify the blocking mechanism,
+not isolated seam execution time or proof of a single causal GPU bottleneck.
+The extra diagnostic is retained in a-edge-blocked-handoff.json and is not a
+matched moving performance observation.
+
+Final fast A queues, exceptions, unsafe commits and shared-edge mismatch counters
+all0. Coverage audit88/88,allfailure counters0,146.016ms. Settled per-level geometry
+and transition fingerprints repeat the earlier A runs. Correct geometry does
+not override failed latency acceptance. B is not advanced because A fails the
+viability gate. Restore the sole helper to the original eight-step bytes, rebuild
+both source shaders explicitly, and restart Play; no experimental quality mode
+or mesher remains. Preserve all raw results, including invalid comparisons.
+The architectural next target is smaller closed local replacement groups with
+coarse fallback, not removal of readiness checks or unqualified downward skirts.
+
+Restoration verified11:30:42EDT: helper bytes exactly match533bfd1 and original
+baseline SHA256fac35e11c683268c84cb6d48de0e8ada7171a2066b23651863269d804d3ae996.
+Both explicit shader rebuilds succeeded with empty diagnostics; editor compiler
+succeeded with0errors. Play settled visualPending0,transitionPending0,
+placementPendingFalse,waterCellsReadyTrue,collision4913/4913. Startup regular
+position83F9183AAE380F46 and transitionFEAC77431D2353C1 match the explicitly
+compiled eight-step preflight. Saved world3950b968-a6ff-411c-a8f5-923a82f348a1
+remains revision1585/pages328,epoch1,savedRevision1585,checkpoint136; this task
+made no terrain edits. Native render resolution returned to normal free sizing
+after the fixed-resolution checks. No desktop automation was used after the
+user prohibited it. Final diff whitespace check passed. Retained changes are
+editor operations and experiment/validation documentation only; generated
+shader binaries and unrelated shoreline changes are excluded from the commit.
+
+Evidence packaging: the complete pre-restart engine log is preserved losslessly as pre-restart-log.txt.gz (decompressed SHA2567b85a1e299861d8a888a1a1c455cb52ac9305b46c0dec9591d2c3978ba6bec51). Compression avoids modifying engine-emitted trailing tabs; decompression was byte-verified. Final staged whitespace check passes. Numeric result table and restored-state fields were checked against raw JSON; the plan's local ledger link resolves.

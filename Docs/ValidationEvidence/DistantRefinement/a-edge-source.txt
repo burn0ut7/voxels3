@@ -1,0 +1,51 @@
+#include "shaders/voxels/voxel_edge_position.hlsl"
+
+// Refines existing sign-changing edges; it does not introduce missing topology.
+// Corrections retain the captured lattice's linear edge reconstruction.
+float RefineVoxelEdge( float3 first, float3 second, float firstDensity, float secondDensity,
+	float4 terrain, float4 scales, float4 shape, bool hasCorrections )
+{
+	float3 axis = abs( second - first ) > 0.0;
+	float low = dot( first, axis );
+	float high = dot( second, axis );
+	if ( low > high )
+	{
+		float saved = low; low = high; high = saved;
+		saved = firstDensity; firstDensity = secondDensity; secondDensity = saved;
+		float3 savedPosition = first; first = second; second = savedPosition;
+	}
+	if ( abs( firstDensity ) <= 0.000001 ) return low;
+	if ( abs( secondDensity ) <= 0.000001 ) return high;
+	float correctionA = 0.0;
+	float correctionB = 0.0;
+	if ( hasCorrections )
+	{
+		correctionA = firstDensity - SampleVoxelSdfWorld( first, terrain, scales, shape );
+		correctionB = secondDensity - SampleVoxelSdfWorld( second, terrain, scales, shape );
+	}
+	float originalLow = low;
+	float inverseLength = rcp( high - low );
+	// A shared edge uses the same budget in regular and transition meshes.
+	// Keep LOD0/1 precision; coarser edges trade root accuracy for fewer field queries.
+	uint refinementSteps = high - low <= 32.0 ? 8u : 4u;
+	[loop] for ( uint iteration = 0; iteration < refinementSteps; ++iteration )
+	{
+		float midpoint = low + (high - low) * 0.5;
+		if ( midpoint == low || midpoint == high ) break;
+		float3 position = VoxelEdgePosition( first, second, midpoint );
+		float value = SampleVoxelSdfWorld( position, terrain, scales, shape ) +
+			lerp( correctionA, correctionB, (midpoint - originalLow) * inverseLength );
+		if ( abs( value ) <= 0.000001 ) return midpoint;
+		if ( (value < 0.0) == (firstDensity < 0.0) )
+		{
+			low = midpoint; firstDensity = value;
+		}
+		else
+		{
+			high = midpoint; secondDensity = value;
+		}
+	}
+	float denominator = firstDensity - secondDensity;
+	float fraction = saturate( abs( denominator ) > 0.000001 ? firstDensity / denominator : 0.5 );
+	return low + (high - low) * fraction;
+}

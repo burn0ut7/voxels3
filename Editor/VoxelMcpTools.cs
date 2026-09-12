@@ -4,6 +4,53 @@ using System;
 [McpToolset( "voxels3", "Voxels3 production smoke controls" )]
 public static class VoxelMcpTools
 {
+	/// <summary>Rebuild a mounted source shader, including changes to its HLSL includes.</summary>
+	[McpTool( "compile_source_shader" )]
+	public static async System.Threading.Tasks.Task<object> CompileSourceShader( string path )
+	{
+		if ( string.IsNullOrWhiteSpace( path ) || !path.EndsWith( ".shader", StringComparison.OrdinalIgnoreCase ) ||
+			!Editor.FileSystem.Mounted.FileExists( path ) )
+		{
+			throw new ArgumentException( "Provide an existing mounted .shader source path.", nameof(path) );
+		}
+		var result = await Editor.EditorUtility.CompileShader( path,
+			new Sandbox.Engine.Shaders.ShaderCompileOptions { ConsoleOutput = false, ForceRecompile = true },
+			System.Threading.CancellationToken.None );
+		var output = new System.Collections.Generic.List<string>();
+		foreach ( var program in result.Programs )
+		{
+			if ( program.Output is not null )
+			{
+				output.AddRange( program.Output );
+			}
+		}
+		return new { Path = path, result.Success, Output = output };
+	}
+
+	/// <summary>Set the playable viewport's render resolution through the stock editor API. Use zero for both dimensions to restore free sizing.</summary>
+	[McpTool( "set_game_render_resolution" )]
+	public static object SetGameRenderResolution( int width = 0, int height = 0 )
+	{
+		if ( width != 0 || height != 0 )
+		{
+			if ( width is < 16 or > 8192 || height is < 16 or > 8192 )
+			{
+				throw new ArgumentOutOfRangeException( nameof(width), "Use dimensions from 16 to 8192, or zero for both to restore free sizing." );
+			}
+		}
+		var view = Editor.SceneViewWidget.Current
+			?? throw new InvalidOperationException( "Open a scene viewport first." );
+		if ( width == 0 )
+		{
+			view.SetFreeSize();
+		}
+		else
+		{
+			view.SetForceResolution( new Vector2( width, height ) );
+		}
+		return new { RequestedWidth = width, RequestedHeight = height };
+	}
+
 	/// <summary>Read a bounded vertical column of the active canonical terrain field.</summary>
 	[McpTool.ReadOnly( "inspect_terrain_column" )]
 	public static object InspectTerrainColumn( float x, float y, float minimumZ, float spacing = 16f, int count = 65 )
