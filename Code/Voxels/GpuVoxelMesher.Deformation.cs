@@ -113,6 +113,8 @@ internal sealed partial class GpuVoxelMesher
 		if ( !_editPublicationPending || _editPublicationOpen ||
 			_editRegularDependencies.Count != _editRegularCandidates.Count ||
 			_editTransitionDependencies.Count != _editTransitionCandidates.Count ) return;
+		foreach ( var candidate in _editRegularCandidates.Values )
+			if ( !_chunkContentPrepared( candidate.Descriptor ) ) return;
 		foreach ( var candidate in _editRegularCandidates.Values ) PublishCompletedRegular( candidate, candidate.Residency );
 		foreach ( var candidate in _editTransitionCandidates.Values ) PublishCompletedTransition( candidate );
 		_editRegularCandidates.Clear();

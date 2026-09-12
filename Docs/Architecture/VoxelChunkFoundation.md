@@ -505,3 +505,15 @@ checks. Versions42and43remain preserved, without migration or reinterpretation.
 HILLS-001/v1 owns qualification. Current status: applied, managed compilation
 and local survey checks pass; inspected views show lower rolling crests.
 Full performance, density and clean-start qualification remain pending.
+
+## Regional chunk readiness
+
+`voxel_chunk_readiness` observes the 27 LOD0 regions within one chunk of the
+current streaming center on each axis. It reports terrain preparation separately
+from committed draw eligibility with matching sea-plane water. Empty completed
+terrain counts as ready. This is a local snapshot, not whole-world queue drain or
+pixel visibility, and it does not move the player or schedule work.
+The manager owns [shared terrain/water publication](SurfaceWater.md#shared-chunk-lifecycle-prototype-2026-09-12);
+`voxel_collision_info` also reports published water owners, waiting dependencies
+and mismatched presentations. Arrival measurements must record the changing center
+and observation cadence; mesh-resource publication alone is not visible readiness.

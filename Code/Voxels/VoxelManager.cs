@@ -398,7 +398,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	{
 		if ( Scene.IsEditor ) return;
 		ResolveStreamingTarget();
-		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis );
+		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks );
 		_gpuMesher.SetFieldPresentationReady( Networking.IsHost );
 		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
 		if ( !StagedTerrainSettings.IsValid )
@@ -528,8 +528,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			}
 		}
 		AdvanceClipboxPreparation();
+		UpdateWaterCellGeneration();
 		if ( _clipboxPlacementPending ) TryCommitPendingClipboxPlacement();
-		UpdateSurfaceWater();
 		var meshDispatches = _gpuMesher.ProcessPending(
 			GpuVoxelMesher.MaximumDispatchesPerUpdate,
 			++_gpuRenderUpdateEpoch );
@@ -1200,6 +1200,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				CameraRotation = manager.Scene.Camera?.WorldRotation.ToString(),
 				StreamingCenter = manager._streamingCenterCoordinate,
 				Water = manager.WaterStatus,
+				ChunkPresentation = manager.CaptureWaterPresentation(),
 				RiverAtlas = GpuRiverAtlas.CaptureMetrics(),
 				WaterPreparation = manager._waterCellPreparation?.Status.ToString(),
 				WaterCellsReady = manager.SurfaceWaterPrepared,
@@ -1249,6 +1250,40 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			manager.LogChunkData( new Vector3Int( x, y, z ) );
 		}
+	}
+
+	[ConCmd( "voxel_chunk_readiness" )]
+	public static void LogChunkReadinessCommand()
+	{
+		if ( !TryGetActiveManager( "chunk.readiness", out var manager ) ) return;
+		var center = manager._streamingCenterCoordinate;
+		var terrainPrepared = 0;
+		var presented = 0;
+		for ( var z = center.z - 1; z <= center.z + 1; z++ )
+		for ( var y = center.y - 1; y <= center.y + 1; y++ )
+		for ( var x = center.x - 1; x <= center.x + 1; x++ )
+		{
+			var coordinate = new Vector3Int( x, y, z );
+			var descriptor = manager.CreateRegularDescriptor( 0, coordinate, captureRegion: false );
+			var empty = manager._renderPreparedChunks.Contains( coordinate ) && !manager._gpuMesher.Contains( descriptor.Key );
+			var prepared = manager._renderPreparedChunks.Contains( coordinate ) &&
+				(empty || manager._gpuMesher.IsResident( descriptor ));
+			if ( prepared ) terrainPrepared++;
+			if ( !prepared || !manager._levels[0].Active.Contains( coordinate ) ||
+				!empty && !manager._gpuMesher.IsRegionPresented( descriptor ) ) continue;
+			var size = descriptor.CellsPerAxis * descriptor.CellSize;
+			var waterZ = (int)MathF.Ceiling( descriptor.TerrainSettings.SeaLevel / size ) - 1;
+			if ( z == waterZ && (!manager._waterCoverage.TryGetValue( descriptor.Key, out var water ) ||
+				water.Descriptor != descriptor) ) continue;
+			presented++;
+		}
+		Log.Info( "[VoxelWorld] chunk.readiness " + JsonSerializer.Serialize( new
+		{
+			Center = center, Requested = 27, TerrainPrepared = terrainPrepared, Presented = presented,
+			VisualPending = manager._gpuMesher.AllPendingCount,
+			TransitionPending = manager._gpuMesher.TransitionPendingCount,
+			PlacementPending = manager.HasClipboxPlacementWork
+		}, PerformanceJsonOptions ) );
 	}
 
 	[ConCmd( "voxel_lod_info" )]
@@ -2800,7 +2835,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			targetChanged |= _candidateLevelAnchors[level] != _targetLevelAnchors[level];
 		}
 		if ( !targetChanged ) return;
-		_waterRequestSerial++;
 		if ( exteriorTargetChanged ) _gpuMesher.SetStreamingPosition( viewerPosition );
 
 		if ( _clipboxPlacementTargetAvailable && HasClipboxPlacementWork )
@@ -3051,6 +3085,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_lastClipboxReadinessResidentRevision = -1;
 		_lastClipboxReadinessRenderPreparedRevision = -1;
 		_clipboxPlacementPending = true;
+		_waterRequestSerial++;
 		if ( _levels[0].PlacementChanged )
 		{
 			foreach ( var coordinate in _levels[0].NextActive )
@@ -3094,6 +3129,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			} );
 		}
 		_partialOuterLevel = enabled ? level : -1;
+		_waterRequestSerial++;
 		if ( enabled ) _exteriorPreparation = PrepareExteriorMeshes( state, anchor, minimum, maximum ).GetEnumerator();
 	}
 
@@ -3117,7 +3153,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			// A hierarchy commit may adopt this region between preparation slices.
 			if ( IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) continue;
 			var descriptor = CreateRegularDescriptor( state.Level, coordinate );
-			_partialOuterChunks.Add( coordinate );
+			if ( _partialOuterChunks.Add( coordinate ) ) _waterRequestSerial++;
 			_gpuMesher.SetRenderActive( descriptor.Key, true );
 			if ( _gpuMesher.Contains( descriptor ) ) continue;
 			if ( ClassifyClipboxRegion( state.Level, coordinate ) != ChunkDensityClassification.PotentiallySurfaceContaining )
@@ -3267,15 +3303,18 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private void TryCommitPendingClipboxPlacement()
 	{
 		if ( _gpuMesher is null || !_clipboxPlacementPending || _clipboxPreparation is not null ) return;
+		RefreshWaterCellRequests();
 		var residentRevision = _gpuMesher.ResidentPublicationRevision;
 		if ( residentRevision == _lastClipboxReadinessResidentRevision &&
-			_renderPreparedRevision == _lastClipboxReadinessRenderPreparedRevision )
+			_renderPreparedRevision == _lastClipboxReadinessRenderPreparedRevision &&
+			_waterCellRevision == _lastClipboxReadinessWaterRevision )
 		{
 			_clipboxPlacementDeferredUpdates++;
 			return;
 		}
 		_lastClipboxReadinessResidentRevision = residentRevision;
 		_lastClipboxReadinessRenderPreparedRevision = _renderPreparedRevision;
+		_lastClipboxReadinessWaterRevision = _waterCellRevision;
 		var readiness = CapturePendingClipboxReadiness( stopAtFirstMissing: true );
 		if ( !readiness.IsReady )
 		{
@@ -3380,6 +3419,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_appliedVisualConfiguration = _stagedVisualConfiguration;
 		_appliedVisualConfigurationRevision = _stagedVisualConfigurationRevision;
 		_clipboxPlacementPending = false;
+		_waterRequestSerial++;
 		_gpuMesher.ClearPlacementPriority();
 		_gpuMesher.PrioritizePlayerDetail = _targetVisualConfiguration.MinimumVisualLod == 0 &&
 			_targetLevelAnchors[0] != _levels[0].OuterAnchor;
@@ -3420,6 +3460,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_stagedVisualConfiguration = _appliedVisualConfiguration;
 		_stagedVisualConfigurationRevision = _appliedVisualConfigurationRevision;
 		_clipboxPlacementPending = false;
+		_waterRequestSerial++;
 		_clipboxPlacementSuperseded++;
 	}
 
@@ -3471,6 +3512,16 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				}
 			}
 		}
+		// Cached and known-empty regular regions can enter without a mesh request.
+		// Their water must still be ready before the shared LOD partition changes.
+		foreach ( var descriptor in _waterCellRequests.Keys )
+		{
+			var state = _levels[descriptor.Key.Level];
+			if ( !state.PlacementChanged || !state.NextActive.Contains( descriptor.Key.Coordinate ) ||
+				state.Active.Contains( descriptor.Key.Coordinate ) || _waterCells.ContainsKey( descriptor ) ) continue;
+			_pendingMissingByLevel[state.Level]++;
+			if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
+		}
 		foreach ( var pair in _transitionPairs )
 		{
 			foreach ( var key in pair.Readiness )
@@ -3487,11 +3538,17 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	private bool IsClipboxRegionReady( int level, Vector3Int coordinate )
 	{
-		if ( level == 0 && !_renderPreparedChunks.Contains( coordinate ) ) return false;
 		var descriptor = CreateRegularDescriptor( level, coordinate, captureRegion: false );
-		// Uniform LOD0 preparation deliberately has no GPU resident. Bootstrap
-		// and subsequent handoffs must use that same completion contract.
-		return _gpuMesher.IsResident( descriptor ) || level == 0 && !_gpuMesher.Contains( descriptor );
+		return IsTerrainRegionPrepared( descriptor );
+	}
+
+	private bool IsTerrainRegionPrepared( GpuSdfDescriptor descriptor )
+	{
+		var key = descriptor.Key;
+		if ( key.Level == 0 && !_renderPreparedChunks.Contains( key.Coordinate ) ) return false;
+		// Uniform LOD0 preparation deliberately has no GPU record. An old or
+		// pending record must never be mistaken for a completed empty chunk.
+		return _gpuMesher.IsResident( descriptor ) || key.Level == 0 && !_gpuMesher.Contains( key );
 	}
 
 	private GpuSdfDescriptor CreateRegularDescriptor( int level, Vector3Int coordinate, bool captureRegion = true ) => new GpuSdfDescriptor(

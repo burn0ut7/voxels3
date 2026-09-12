@@ -1402,3 +1402,18 @@ Status: the boundary-local readiness and deferred-cache experiments above were
 rejected and reverted after both increased work and allocations. Current runtime
 retains the original atomic boundary handoff with exact cancellation ownership
 and bounded water reuse. See the validation ledger for preserved measurements.
+
+### Shared chunk content publication (2026-09-12 prototype)
+
+[Surface water](SurfaceWater.md#shared-chunk-lifecycle-prototype-2026-09-12)
+owns the new terrain/water lifecycle contract. Terrain residency still releases
+GPU scratch lanes immediately and satisfies terrain preparation. Draw activation
+additionally requires the requested chunk's water output, when applicable. The
+manager publishes water in the main-thread mesher completion phase before draw
+commands are committed; the same phase refreshes blocked regular visibility.
+This distinguishes prepared GPU resources from complete visible chunk content.
+LOD handoff readiness includes those requested water owners, and edited candidate
+groups retain their previous presentation until affected water is ready. There
+is no second world state, alternate mesher or global water-loading barrier.
+Validation remains in CHUNK-WATER-LIFECYCLE-001; prior independent-publication
+water results do not establish performance for this prototype.

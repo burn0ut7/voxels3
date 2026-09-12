@@ -49,17 +49,8 @@ internal sealed class SurfaceWaterRenderer
 					_chunks.Add( chunk.Descriptor, draw );
 					UploadedVertices += chunk.Vertices.Length;
 				}
-				if ( draw.Publication != _publication )
-				{
-					draw.Coverage.Clear();
-					draw.Publication = _publication;
-					VertexCount += chunk.Vertices.Length;
-				}
-				var tile = pair.Key;
-				var size = (chunk.Cells.Bounds.Maximum.x - chunk.Cells.Bounds.Minimum.x) *
-					MathF.Pow( 2f, tile.Level - chunk.Descriptor.Key.Level );
-				draw.Coverage.Add( new Vector4( tile.Coordinate.x * size, tile.Coordinate.y * size,
-					(tile.Coordinate.x + 1) * size, (tile.Coordinate.y + 1) * size ) );
+				draw.Publication = _publication;
+				VertexCount += chunk.Vertices.Length;
 			}
 			_retiring.Clear();
 			foreach ( var pair in _chunks )
@@ -91,7 +82,7 @@ internal sealed class SurfaceWaterRenderer
 		private GpuBuffer<SurfaceWaterGeometry.WaterVertex> _vertices;
 		private readonly int _count;
 		public long Publication;
-		public readonly List<Vector4> Coverage = new();
+		private readonly Vector4 _coverage;
 
 		public ChunkDraw( SurfaceWaterRenderer owner, SurfaceWaterGeometry.Chunk chunk ) : base( owner._world )
 		{
@@ -101,6 +92,7 @@ internal sealed class SurfaceWaterRenderer
 			_vertices.SetData( chunk.Vertices.AsSpan() );
 			var minimum = chunk.Cells.Bounds.Minimum;
 			var maximum = chunk.Cells.Bounds.Maximum;
+			_coverage = new Vector4( minimum.x, minimum.y, maximum.x, maximum.y );
 			minimum.z = chunk.Cells.SeaLevel - 1f;
 			maximum.z = chunk.Cells.SeaLevel + 1f;
 			Bounds = new BBox( minimum, maximum );
@@ -119,11 +111,8 @@ internal sealed class SurfaceWaterRenderer
 			{
 				if ( _owner._presentationReady && Publication == _owner._publication && _vertices is not null )
 				{
-					foreach ( var bounds in Coverage )
-					{
-						_owner._attributes.Set( "WaterCoverage", bounds );
-						Graphics.Draw( _vertices, _owner._material, 0, _count, _owner._attributes );
-					}
+					_owner._attributes.Set( "WaterCoverage", _coverage );
+					Graphics.Draw( _vertices, _owner._material, 0, _count, _owner._attributes );
 				}
 			}
 		}

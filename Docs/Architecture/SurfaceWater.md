@@ -1,8 +1,8 @@
 # Static surface water
 
-Status, 2026-09-10: connected river appearance approved by the user; hillside bank
-refinement and full runtime acceptance remain in progress. Current generation is42,
-river recipe13, water recipe7. [The drainage design](../Plans/RiverDrainageBasins.md)
+Status, 2026-09-12: connected river appearance approved by the user; the shared
+chunk lifecycle prototype passed the recorded local, edit and figure-eight checks. Current generation is44, river recipe13,
+water recipe7. [The drainage design](../Plans/RiverDrainageBasins.md)
 records the branching method that the user explicitly asked to preserve.
 
 ## Canonical terrain and medium
@@ -34,6 +34,10 @@ ProceduralVoxelMaterials uses this same carved height and water level for medium
 and submerged soil. InspectTerrainColumn reports both natural and carved heights.
 
 ## Rendering and publication
+
+The current lifecycle is [shared chunk publication](#shared-chunk-lifecycle-prototype-2026-09-12).
+Dated experiments below retain design history; the independent target partition
+and water-only fallback are superseded by that contract.
 
 Local-edit handoff (2026-09-10, visual validation pending): invalidating a water
 generation request no longer retires its published surface. The manager retains
@@ -123,10 +127,10 @@ property and therefore use the corrected density/clearance path. If a future
 generator adds solid above the bed, this compression contract must be revisited.
 
 VoxelManager owns bounded committed/staged water-chunk requests and immutable
-results. One worker generates and meshes at most8chunks per batch. Requests use
+results. One worker generates and meshes one chunk per task. Requests use
 the existing regular descriptor's regional revision and epoch; edit readers pin
 only required pages. Stale completions are discarded; reset cancels work. Leaving
-the committed/staged union releases cells and meshes. Handoffs wait for their
+the terrain-owned committed/staged cache releases cells and meshes. Handoffs wait for their
 water data, while bootstrap publishes completed cells only with resident terrain.
 The maximum current/staged request count is bounded by existing visual coverage;
 an unedited payload uses8712 bytes, and a dense edited payload152460 bytes (exact
@@ -310,3 +314,48 @@ interpolation. No epsilon, overlapping expansion, remeshing, or upload is added.
 The manager still owns the disjoint presentation partition and dry replacements;
 only its draw-time clipping stage changes. Visual and runtime evidence is recorded
 under WATER-PIXEL-SEAM-001/v1 in the validation ledger.
+
+## Shared chunk lifecycle prototype (2026-09-12)
+
+This section supersedes independent target publication and its separate coverage
+partition above. This contract is implemented and qualified by
+CHUNK-WATER-LIFECYCLE-001 and CHUNK-WATER-EDIT-001 in the validation ledger.
+
+VoxelManager owns chunk requests using its committed/staged terrain active sets and
+progressive exterior regions. Water requests are derived only for sea-plane owners
+in those sets. Terrain and water retain their existing GPU/CPU preparation stages;
+there is no synchronous combined mesh job. Descriptor identity includes region,
+LOD, recipe, epoch and regional edit version. Worker inputs remain immutable and
+main-thread integration rejects results whose descriptor is no longer requested.
+Cached cells survive only while the same revision's terrain cache owns them.
+
+The manager supplies the GPU mesher with chunk-content readiness and publication
+callbacks. Initial regular geometry can become resident without becoming drawable;
+its scratch lane is immediately reusable. The manager uploads matching water and
+refreshes regular visibility during the same main-thread publication phase, before
+the mesher commits draw commands. Known-empty terrain counts as completed terrain.
+Unrelated dry chunks and workers have no water dependency. A terrain LOD handoff
+requires matching water only for its requested sea-plane owners and uses the
+existing seam-safe terrain active-set commit. The water-only quadtree fallback and
+independent target anchors are removed: old committed terrain/water remain paired
+until the shared partition switches. Water buffers remain one per source chunk.
+
+Edited terrain uses its existing retained candidate group. The group additionally
+requires matching water for its affected published owners before replacement.
+Only changed descriptors rebuild water; unloaded owners are retired. This does not
+add mutable liquid amounts, transport, arbitrary-height fluid extraction, or fluid
+replication. A future water-only mutation should invalidate water derivatives through
+the same chunk owner without scheduling unchanged solid geometry.
+
+Budgets remain existing 32-cell chunks, current LOD coverage, one water worker and
+existing GPU lanes/batches. Request rebuilding visits only sea-plane slices when
+placement or field identity changes. Publication checks run only when water, terrain
+residency or LOD0 preparation changes; settled frames perform no region scan.
+No new per-cell render objects, global water mesh or mesh subdivision is introduced.
+Additional held-ready geometry, water reuse, draw cost and latency must be measured.
+
+Alternatives: serial terrain-then-water generation would add a dependency to loading;
+independent water publication causes the reported early surfaces; a whole-world
+readiness barrier blocks unrelated chunks. Chunk-local preparation with shared
+publication is selected. Smaller mesh sections remain a measured future option,
+not another active implementation. Visual LOD changes derived geometry only.

@@ -369,8 +369,14 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) +
 			sizeof( uint ) * (VisibilityFrameCounterCount + VisibilityAggregateCounterCount);
 
-	public GpuVoxelMesher( Scene scene, int cellsPerAxis )
+	private readonly Func<GpuSdfDescriptor, bool> _chunkContentPrepared;
+	private readonly Action _publishChunkContent;
+
+	public GpuVoxelMesher( Scene scene, int cellsPerAxis,
+		Func<GpuSdfDescriptor, bool> chunkContentPrepared, Action publishChunkContent )
 	{
+		_chunkContentPrepared = chunkContentPrepared;
+		_publishChunkContent = publishChunkContent;
 		_scene = scene;
 		_cellsPerAxis = cellsPerAxis;
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
@@ -1350,7 +1356,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			{
 				var resident = pair.Value;
 				if ( resident.Handle is null ) continue;
-				var expected = _renderActive.Contains( pair.Key );
+				var expected = _renderActive.Contains( pair.Key ) && resident.ContentPrepared;
 				var drawable = _sourceArgumentData[resident.Handle.GlobalSlot].IndexCount > 0;
 				if ( expected ) expectedRegular++;
 				if ( drawable ) drawableRegular++;
@@ -1540,7 +1546,16 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public bool IsResident( GpuMeshRegionKey key ) => _resident.ContainsKey( key );
 
 	public bool IsDrawable( GpuMeshRegionKey key ) =>
-		_renderActive.Contains( key ) && _resident.TryGetValue( key, out var resident ) && resident.Handle is not null;
+		_renderActive.Contains( key ) && _resident.TryGetValue( key, out var resident ) &&
+		resident.Handle is not null && resident.ContentPrepared;
+
+	/// <summary>Read actual draw eligibility; empty completed regions need no draw command.</summary>
+	public bool IsRegionPresented( GpuSdfDescriptor descriptor )
+	{
+		if ( !_resident.TryGetValue( descriptor.Key, out var resident ) || resident.Descriptor != descriptor ) return false;
+		if ( resident.Handle is null ) return true;
+		lock ( _visibilityDescriptorLock ) return _sourceArgumentData[resident.Handle.GlobalSlot].IndexCount > 0;
+	}
 
 	public bool IsTransitionResident( GpuTransitionDescriptor descriptor ) =>
 		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
@@ -1548,7 +1563,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	public bool Contains( GpuMeshRegionKey key )
 	{
-		if ( _resident.ContainsKey( key ) || _pending.ContainsKey( key ) ) return true;
+		if ( _resident.ContainsKey( key ) || _pending.ContainsKey( key ) || _editRegularCandidates.ContainsKey( key ) ) return true;
 		if ( _scratchLanes is null ) return false;
 		foreach ( var lane in _scratchLanes )
 		{
@@ -1619,6 +1634,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		System.Threading.Interlocked.Exchange( ref _updateEpoch, updateEpoch );
 		var processed = System.Threading.Interlocked.Exchange( ref _processedRenderDispatches, 0 );
 		ReportGpuSchedulerHealth();
+		// All chunk content is published before rendering observes the new frame.
+		_publishChunkContent();
 		CommitDrawCommands();
 		TryIssueMeshAuditReadbacks();
 		ReportSuppressedRenderCallbacks();
@@ -3577,10 +3594,19 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		oldArguments.CopyTo( _sourceArgumentData, 0 );
 	}
 
+	public void RefreshChunkPresentation( GpuSdfDescriptor descriptor )
+	{
+		if ( !_resident.TryGetValue( descriptor.Key, out var resident ) ||
+			resident.Descriptor != descriptor || resident.Handle is null ||
+			resident.ContentPrepared == _chunkContentPrepared( descriptor ) ) return;
+		SetVisibilityActive( resident, _renderActive.Contains( descriptor.Key ) );
+	}
+
 	private void SetVisibilityActive( ResidentMesh resident, bool active )
 	{
 		if ( resident.Handle is null ) return;
-		lock ( _visibilityDescriptorLock ) SetVisibilityActiveLocked( resident, active );
+		resident.ContentPrepared = _chunkContentPrepared( resident.Descriptor );
+		lock ( _visibilityDescriptorLock ) SetVisibilityActiveLocked( resident, active && resident.ContentPrepared );
 		MarkVisibilityDescriptorsDirty();
 	}
 
@@ -4138,6 +4164,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		public GpuMeshResidency Residency { get; set; }
 		public GeometryHandle Handle { get; }
 		public GpuTerrainCountResult Counts { get; }
+		public bool ContentPrepared { get; set; }
 		public ResidentMesh( GpuSdfDescriptor descriptor, GpuMeshResidency residency, GeometryHandle handle, GpuTerrainCountResult counts )
 		{
 			Descriptor = descriptor with { Field = null }; Residency = residency; Handle = handle; Counts = counts;

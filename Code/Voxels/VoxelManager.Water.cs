@@ -8,21 +8,21 @@ public sealed partial class VoxelManager
 	private SurfaceWaterRenderer _waterRenderer;
 	private readonly Dictionary<GpuSdfDescriptor, SurfaceWaterGeometry.Chunk> _waterCells = new();
 	private readonly Dictionary<GpuSdfDescriptor, SdfWorldAabb> _waterCellRequests = new();
+	private readonly HashSet<GpuSdfDescriptor> _waterUnpublished = new();
 	private Dictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> _waterCoverage = new();
 	private Dictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> _nextWaterCoverage = new();
-	private readonly HashSet<GpuMeshRegionKey> _waterCoverageBranches = new();
-	private readonly Vector3Int[] _waterCacheMinimum = new Vector3Int[SupportedVisualLevelCount];
-	private readonly Vector3Int[] _waterCacheMaximum = new Vector3Int[SupportedVisualLevelCount];
 	private CancellationTokenSource _waterCellCancellation;
 	private Task<SurfaceWaterGeometry.Chunk> _waterCellPreparation;
 	private long _waterCellRevision;
 	private long _waterRenderedCellRevision = -1;
+	private long _waterRenderedTerrainRevision = -1;
+	private long _waterRenderedPreparedRevision = -1;
+	private long _lastClipboxReadinessWaterRevision = -1;
 	private int _waterRequestSerial;
 	private int _waterObservedSerial = -1;
 	private int _waterObservedFieldRevision = -1;
 	private int _waterObservedFieldEpoch = -1;
 	private long _waterCellsGenerated;
-	private long _waterReadyToPublishTimestamp;
 	private double _waterMaximumPublishDelayMilliseconds;
 	private double _waterCellGenerationMilliseconds;
 
@@ -43,12 +43,13 @@ public sealed partial class VoxelManager
 		}
 	}
 
-	private void UpdateSurfaceWater()
-	{
-		if ( !_clipboxPlacementTargetAvailable ) return;
-		UpdateWaterCellGeneration();
-		UpdateSurfaceWaterChunks();
-	}
+	// This is a chunk-content dependency, not a GPU scheduling dependency.
+	private bool IsChunkContentPrepared( GpuSdfDescriptor descriptor ) =>
+		!_waterCellRequests.ContainsKey( descriptor ) || _waterCells.ContainsKey( descriptor );
+
+	private bool IsWaterRegionActive( GpuMeshRegionKey key ) =>
+		_levels[key.Level].Active.Contains( key.Coordinate ) ||
+		key.Level == _partialOuterLevel && _partialOuterChunks.Contains( key.Coordinate );
 
 	private void RefreshWaterCellRequests()
 	{
@@ -56,46 +57,62 @@ public sealed partial class VoxelManager
 		if ( _waterObservedSerial == _waterRequestSerial && _waterObservedFieldRevision == field.Revision &&
 			_waterObservedFieldEpoch == field.Epoch ) return;
 		_waterCellRequests.Clear();
-		var configuration = _targetVisualConfiguration;
-		for ( var level = configuration.MinimumVisualLod; level <= configuration.MaximumVisualLod; level++ )
+		foreach ( var state in _levels )
 		{
-			var size = _appliedCellsPerAxis * CellSizeForLevel( level );
+			AddWaterCellRequests( state, staged: false );
+			if ( _clipboxPlacementPending && state.PlacementChanged ) AddWaterCellRequests( state, staged: true );
+		}
+		if ( _partialOuterLevel >= 0 )
+		{
+			var size = _appliedCellsPerAxis * CellSizeForLevel( _partialOuterLevel );
 			var z = (int)MathF.Ceiling( field.Settings.SeaLevel / size ) - 1;
-			var extent = level == 0 ? configuration.Lod0VisualHalfExtent : configuration.LodCacheHalfExtent;
-			var anchor = TargetOuterAnchor( level, configuration );
-			var minimum = anchor - new Vector3Int( extent );
-			var maximum = anchor + new Vector3Int( extent );
-			_waterCacheMinimum[level] = minimum;
-			_waterCacheMaximum[level] = maximum;
-			if ( z < minimum.z || z >= maximum.z ) continue;
-			var hasHole = level > configuration.MinimumVisualLod;
-			var childExtent = level == 1 ? configuration.Lod0VisualHalfExtent : configuration.LodCacheHalfExtent;
-			var childAnchor = hasHole ? TargetOuterAnchor( level - 1, configuration ) : default;
-			var holeMinimum = (childAnchor - new Vector3Int( childExtent )) / 2;
-			var holeMaximum = (childAnchor + new Vector3Int( childExtent )) / 2;
-			for ( var y = minimum.y; y < maximum.y; y++ )
-			for ( var x = minimum.x; x < maximum.x; x++ )
+			foreach ( var coordinate in _partialOuterChunks )
 			{
-				var coordinate = new Vector3Int( x, y, z );
-				if ( hasHole && IsInsideHalfOpenBox( coordinate, holeMinimum, holeMaximum ) ) continue;
-				var descriptor = CreateRegularDescriptor( level, coordinate, captureRegion: false );
-				var origin = new Vector3( x * size, y * size, z * size );
+				if ( coordinate.z != z ) continue;
+				var descriptor = CreateRegularDescriptor( _partialOuterLevel, coordinate, captureRegion: false );
+				var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * size;
 				_waterCellRequests[descriptor] = new SdfWorldAabb( origin, origin + Vector3.One * size );
 			}
 		}
-		foreach ( var key in _waterCells.Keys.Where( key => !_waterCellRequests.ContainsKey( key ) &&
-			(key != CreateRegularDescriptor( key.Key.Level, key.Key.Coordinate, captureRegion: false ) ||
-				key.Key.Level < configuration.MinimumVisualLod || key.Key.Level > configuration.MaximumVisualLod ||
-				!IsInsideHalfOpenBox( key.Key.Coordinate, _waterCacheMinimum[key.Key.Level], _waterCacheMaximum[key.Key.Level] )) ).ToArray() )
+		foreach ( var key in _waterCells.Keys.Where( key =>
+			key != CreateRegularDescriptor( key.Key.Level, key.Key.Coordinate, captureRegion: false ) ||
+			!_levels[key.Key.Level].DesiredCache.Contains( key.Key.Coordinate ) &&
+			!(_clipboxPlacementPending && _levels[key.Key.Level].PlacementChanged &&
+				_levels[key.Key.Level].NextDesiredCache.Contains( key.Key.Coordinate )) &&
+			!(key.Key.Level == _partialOuterLevel && _partialOuterChunks.Contains( key.Key.Coordinate )) ).ToArray() )
+		{
 			_waterCells.Remove( key );
+			_waterUnpublished.Remove( key );
+		}
 		_waterObservedSerial = _waterRequestSerial;
 		_waterObservedFieldRevision = field.Revision;
 		_waterObservedFieldEpoch = field.Epoch;
 		_waterCellRevision++;
 	}
 
+	private void AddWaterCellRequests( TerrainClipboxLevelState state, bool staged )
+	{
+		var minimum = staged ? state.StagedOuterMinimum : state.OuterMinimum;
+		var maximum = staged ? state.StagedOuterMaximum : state.OuterMaximum;
+		var active = staged ? state.NextActive : state.Active;
+		var size = _appliedCellsPerAxis * CellSizeForLevel( state.Level );
+		var z = (int)MathF.Ceiling( CurrentField.Settings.SeaLevel / size ) - 1;
+		if ( z < minimum.z || z >= maximum.z ) return;
+		// Visit only the sea-plane slice; membership comes from the terrain owner.
+		for ( var y = minimum.y; y < maximum.y; y++ )
+		for ( var x = minimum.x; x < maximum.x; x++ )
+		{
+			var coordinate = new Vector3Int( x, y, z );
+			if ( !active.Contains( coordinate ) ) continue;
+			var descriptor = CreateRegularDescriptor( state.Level, coordinate, captureRegion: false );
+			var origin = new Vector3( x * size, y * size, z * size );
+			_waterCellRequests[descriptor] = new SdfWorldAabb( origin, origin + Vector3.One * size );
+		}
+	}
+
 	private void UpdateWaterCellGeneration()
 	{
+		if ( !_clipboxPlacementTargetAvailable ) return;
 		RefreshWaterCellRequests();
 		if ( _waterCellPreparation is not null )
 		{
@@ -104,7 +121,7 @@ public sealed partial class VoxelManager
 			if ( _waterCellRequests.ContainsKey( item.Descriptor ) )
 			{
 				_waterCells[item.Descriptor] = item;
-				_waterReadyToPublishTimestamp = item.CompletedTimestamp;
+				_waterUnpublished.Add( item.Descriptor );
 			}
 			_waterCellsGenerated++;
 			_waterCellGenerationMilliseconds += item.Milliseconds;
@@ -132,8 +149,7 @@ public sealed partial class VoxelManager
 		if ( !found || !CurrentField.TryCaptureRegion( descriptor.SamplingBounds, out var field ) ) return;
 		_waterCellCancellation ??= new CancellationTokenSource();
 		var cancellation = _waterCellCancellation.Token;
-		// Each immutable result can publish on the next update. No batch, neighbor
-		// mesh, terrain placement, or other water result participates in readiness.
+		// Prepare independently; the owning chunk coordinates presentation with terrain.
 		_waterCellPreparation = GameTask.RunInThreadAsync( () =>
 		{
 			cancellation.ThrowIfCancellationRequested();
@@ -146,69 +162,62 @@ public sealed partial class VoxelManager
 
 	private void UpdateSurfaceWaterChunks()
 	{
-		if ( _waterRenderedCellRevision == _waterCellRevision ) return;
+		if ( !_clipboxPlacementTargetAvailable || _waterRenderer is null ) return;
+		RefreshWaterCellRequests();
+		var terrainRevision = _gpuMesher.ResidentPublicationRevision;
+		if ( _waterRenderedCellRevision == _waterCellRevision &&
+			_waterRenderedTerrainRevision == terrainRevision &&
+			_waterRenderedPreparedRevision == _renderPreparedRevision ) return;
 		_nextWaterCoverage.Clear();
-		_waterCoverageBranches.Clear();
-		// Index only ancestors of existing coverage. Missing branches never recurse.
-		foreach ( var pair in _waterCoverage )
-		{
-			var key = pair.Key;
-			while ( key.Level + 1 < SupportedVisualLevelCount )
-			{
-				key = new GpuMeshRegionKey( key.Level + 1,
-					new Vector3Int( key.Coordinate.x >> 1, key.Coordinate.y >> 1, key.Coordinate.z >> 1 ) );
-				if ( !_waterCoverageBranches.Add( key ) ) break;
-			}
-		}
 		foreach ( var request in _waterCellRequests.Keys )
 		{
-			if ( _waterCells.TryGetValue( request, out var ready ) )
+			if ( !IsWaterRegionActive( request.Key ) ) continue;
+			if ( _waterCells.TryGetValue( request, out var ready ) && IsTerrainRegionPrepared( request ) )
 			{
-				// Empty results also own coverage: dry replacements must hide old water.
+				// Dry and empty-solid results participate in the same completion contract.
 				_nextWaterCoverage.Add( request.Key, ready );
-				continue;
+				if ( _waterUnpublished.Remove( request ) )
+					_waterMaximumPublishDelayMilliseconds = Math.Max( _waterMaximumPublishDelayMilliseconds,
+						System.Diagnostics.Stopwatch.GetElapsedTime( ready.CompletedTimestamp ).TotalMilliseconds );
 			}
-			RetainWaterCoverage( request.Key );
+			else if ( _waterCoverage.TryGetValue( request.Key, out var previous ) &&
+				previous.Descriptor == (request with { EditRevision = previous.Descriptor.EditRevision }) )
+			{
+				// The existing terrain edit group retains the corresponding old solid mesh.
+				_nextWaterCoverage.Add( request.Key, previous );
+			}
+			_gpuMesher.RefreshChunkPresentation( request );
 		}
 		(_waterCoverage, _nextWaterCoverage) = (_nextWaterCoverage, _waterCoverage);
 		_waterRenderer.Update( _waterCoverage, _waterCells );
 		_waterRenderedCellRevision = _waterCellRevision;
-		if ( _waterReadyToPublishTimestamp != 0 )
-		{
-			_waterMaximumPublishDelayMilliseconds = Math.Max( _waterMaximumPublishDelayMilliseconds,
-				System.Diagnostics.Stopwatch.GetElapsedTime( _waterReadyToPublishTimestamp ).TotalMilliseconds );
-			_waterReadyToPublishTimestamp = 0;
-		}
+		_waterRenderedTerrainRevision = terrainRevision;
+		_waterRenderedPreparedRevision = _renderPreparedRevision;
 	}
 
-	private void RetainWaterCoverage( GpuMeshRegionKey tile )
+	private object CaptureWaterPresentation()
 	{
-		var ancestor = tile;
-		while ( true )
+		var waterWithoutTerrain = 0;
+		var terrainWithoutWater = 0;
+		var awaitingTerrain = 0;
+		var awaitingWater = 0;
+		foreach ( var pair in _waterCoverage )
 		{
-			if ( _waterCoverage.TryGetValue( ancestor, out var chunk ) )
-			{
-				var descriptor = chunk.Descriptor;
-				var current = CreateRegularDescriptor( descriptor.Key.Level, descriptor.Key.Coordinate, captureRegion: false );
-				// Local edits can retain their last presentation; different worlds cannot.
-				if ( descriptor == (current with { EditRevision = descriptor.EditRevision }) )
-					_nextWaterCoverage.Add( tile, chunk );
-				return;
-			}
-			if ( ancestor.Level + 1 >= SupportedVisualLevelCount ) break;
-			ancestor = new GpuMeshRegionKey( ancestor.Level + 1,
-				new Vector3Int( ancestor.Coordinate.x >> 1, ancestor.Coordinate.y >> 1, ancestor.Coordinate.z >> 1 ) );
+			if ( !IsWaterRegionActive( pair.Key ) || !IsTerrainRegionPrepared( pair.Value.Descriptor ) )
+				waterWithoutTerrain++;
 		}
-		if ( tile.Level == 0 || !_waterCoverageBranches.Contains( tile ) ) return;
-		// Coarsening retains independently ready child footprints until this parent
-		// is ready. Refinement clips a retained parent to each unfinished child.
-		var childLevel = tile.Level - 1;
-		var childSize = _appliedCellsPerAxis * CellSizeForLevel( childLevel );
-		var z = (int)MathF.Ceiling( CurrentField.Settings.SeaLevel / childSize ) - 1;
-		for ( var y = 0; y < 2; y++ )
-		for ( var x = 0; x < 2; x++ )
-			RetainWaterCoverage( new GpuMeshRegionKey( childLevel,
-				new Vector3Int( tile.Coordinate.x * 2 + x, tile.Coordinate.y * 2 + y, z ) ) );
+		foreach ( var descriptor in _waterCellRequests.Keys )
+		{
+			if ( !IsWaterRegionActive( descriptor.Key ) ) continue;
+			if ( !_waterCells.ContainsKey( descriptor ) ) awaitingWater++;
+			if ( !IsTerrainRegionPrepared( descriptor ) ) awaitingTerrain++;
+			if ( _gpuMesher.IsDrawable( descriptor.Key ) &&
+				(!_waterCoverage.TryGetValue( descriptor.Key, out var water ) ||
+					!_gpuMesher.IsResident( water.Descriptor )) ) terrainWithoutWater++;
+		}
+		return new { Published = _waterCoverage.Count, AwaitingTerrain = awaitingTerrain,
+			AwaitingWater = awaitingWater, WaterWithoutTerrain = waterWithoutTerrain,
+			TerrainWithoutWater = terrainWithoutWater };
 	}
 
 	[ConCmd( "voxel_water_info" )]
@@ -263,14 +272,16 @@ public sealed partial class VoxelManager
 		_waterCellRequests.Clear();
 		_waterCoverage.Clear();
 		_nextWaterCoverage.Clear();
-		_waterCoverageBranches.Clear();
+		_waterUnpublished.Clear();
 		_waterObservedSerial = -1;
 		_waterObservedFieldRevision = -1;
 		_waterObservedFieldEpoch = -1;
 		_waterRenderedCellRevision = -1;
 		_waterCellRevision++;
 		_waterCellsGenerated = 0;
-		_waterReadyToPublishTimestamp = 0;
+		_waterRenderedTerrainRevision = -1;
+		_waterRenderedPreparedRevision = -1;
+		_lastClipboxReadinessWaterRevision = -1;
 		_waterMaximumPublishDelayMilliseconds = 0;
 		_waterCellGenerationMilliseconds = 0;
 	}

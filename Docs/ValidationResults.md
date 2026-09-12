@@ -24254,3 +24254,146 @@ WATER-PIXEL-SEAM-001 initial candidate: float4 SV_ClipDistance0 was rejected by 
 Matched baseline2b10a6000b44435799305a02eace15b1 completed13:05:07UTC:454.45108FPS,p995.6314ms,max26.1813ms, original shader. Source HEAD3aadc77 after user's safe2 commit of pre-existing work; shader matches pre-task SHA25614644ECCF5F3AB1AB00340CD59418C89B1702C922BD31B0D3BEB5AA0CE105A66. Restore final float-array clip-plane shader for clean restart and unchanged canonical after-run. Short result inspection used binary read/close; an unexpectedly slow PowerShell tail read after run completion was interrupted. No held read during result export is intended.
 
 Clean-restart environment: old editor PID32968 closed after Play stopped and saved world was confirmed. Shutdown logged a terrain_player.prefab destruction assertion (5 components not deleted), reached Source2Shutdown, then retained an Error window; the already-shut-down process was terminated. This is preserved as a shutdown failure, not a water shader result. Earlier09:00:57 redundant source rewrite had also logged shader_c file-mapping write failure;09:01 baseline source restoration was followed by Play reset. New visible editor PID13896 opened project/basic_example with successful managed compile and0errors. Sentry last_crash unchanged2026-09-10T14:09:52.761278Z. Fresh startup includes missing stock asset references (hair, sound, particle, generic material, wheely-bin and box_test); keep these separate from project shader checks. After-run retains original canonical parameters and saved field; fresh process memory differs from long-lived baseline and must be reported.
+
+## CHUNK-WATER-LIFECYCLE-001/v1 (2026-09-12, before baseline)
+
+Prototype requested: one chunk owner for terrain/water requests, asynchronous build stages,
+coordinated per-region presentation, shared LOD/lifetime and local revision invalidation.
+No fluid simulation, per-block draw objects, mesh subdivision or recipe changes.
+
+Reuse HILLS-PLACEMENT-PRIORITY-001/v1 exactly: visible basic_example, engine26.09.08b,
+RTX5090, viewport2769x1436, one player, seed1337/gen44, 32cells/16 spacing,
+gameplay8/LOD0..5/radius256/near4/cache8, originXY0,0 following Play reset,
+fully settled then30s warmup,2500/50000/1, clearance393.7008,10s stationary,240s cap.
+Current saved world3950b968a6ff411ca8f5923a82f348a1 revision1584/pages327/epoch1,
+checkpoint113. Preserve this world; older field revisions are not matched controls.
+Baseline source77a4ea8, clean tracked working tree. Capture a new matched baseline.
+Keep existing no-errors/unsafe/seam-mismatch/allqueues0, prepmax<=16.67ms and drain<=10s
+criteria and no material unexplained frame/alloc/memory regression. Report moving and
+stationary FPS,p95,p99,max,allocations,process/GPU memory,regional completion and drain.
+
+Additional correctness observations after implementation: current visible water owners
+must match the committed terrain region/LOD/revision; initial terrain/water presentation
+must wait for both required outputs, including empty results. Local replacements retain
+previous complete presentation; no independent target water partition. Inspect startup
+and settled shore visuals in the actual world, plus existing geometry diagnostic.
+Record startup time from play_start return to first observed all queues/placement/water
+settled using10s read-only polling (upper bound, not precise completion time); use the same
+observation cadence in before/after. Screenshots outside timed comparative movement.
+Evidence directory Docs/ValidationEvidence/ChunkWaterLifecycle. No performance acceptance
+is inherited from older experiments. Preserve failed runs and environment differences.
+
+User clarification during implementation: individual/regional chunk arrival is the primary
+loading concern; whole-queue completion is a separate diagnostic, not a substitute.
+The baseline's scheduleToRenderable is terrain-resource publication, including cache work;
+it does not establish actual on-screen local readiness. Preserve that distinction.
+Add a read-only production chunk-readiness diagnostic for the27LOD0 regions in center+/-1
+on each axis, centered on the existing player streaming chunk. A region is presented only
+when its committed active terrain is current (empty counts as ready) and any sea-plane
+water owner is published at the exact same descriptor. No scheduling or movement occurs
+in this diagnostic. Observe at0.5s intervals from122.1s to142.1s after the unchanged
+figure-eight trigger, outside its ~121.946s moving window; record actual times. Compare
+same-world diagnostic baseline/after, report first local27/27 upper bound separately
+from full drain, and reject local regressions unexplained by observation cadence.
+Keep the earlier uninstrumented baseline. Diagnostic-only additions must be identical
+in the extra baseline and candidate. No total-drain improvement can establish a local win.
+
+
+Initial candidate smoke (13:32:23UTC Play start): compiled and ran through real startup.
+At13:32:44 the27nearbyLOD0 regions were prepared and presented while3,176regular
+requests and placement work remained. Same-frame pairing diagnostic:706published
+water owners,366awaiting terrain,0awaiting water,0waterWithoutTerrain,0terrainWithoutWater.
+This21s observation is not a measured first-arrival time or before/after comparison.
+A returned960x540 detached top-down view at(-1100,-800,1600),pitch90,FOV60 showed
+continuous blue river and banks; candidate-shore.png retained. No runtime warnings
+since console253. Source review then found cached/known-empty staged entrants are
+absent from the mesher's pending readiness list; add explicit water checks for those
+active entrants before the shared LOD switch. This correction precedes the first
+candidate performance run. Smoke is not full acceptance.
+
+
+Uninstrumented baseline a1143e09d1a0464fa5270468f133349b: source77a4ea8, same saved1584 world,
+visible basic_example/26.09.08b/2769x1436. Moving465.4012FPS,p95=3.465ms,
+p99=5.3513ms,max19.789ms; stationary492.95734FPS. Allocated3,235,186,056bytes;
+average process6,168,927,315bytes/GPU1,938,589,818bytes; prepmax12.0886ms;
+full post-loop drain6,264.63ms. Runtimeexceptions0,finalregular/transitionqueues0,
+collision4913/4913ready. LOD0 terrain-resource publication p50/p95/p99
+795.707/2554.669/2779.5996ms; LOD1=318.4625/939.3943/1397.495ms. These include
+cache requests and are NOT visible local arrival times. Raw before-performance.json
+and before-final-status.json retained. The worker report labeled local09:22:28/09:24:46
+as UTC; native console timestamps are local EDT (13:22:28/13:24:46UTC).
+Initial startup polling lacks a complete timestamped series, so no precise startup
+comparison is asserted. Prior unknown voxel_world_state command warning is a tooling
+lookup error outside the benchmark; no shipping command or source was added for it.
+
+Diagnostic control now runs77a4ea8 plus the same read-only voxel_chunk_readiness and
+GPU draw-eligibility query used by the candidate. Candidate snapshot is preserved
+outside the repository while the control runs; no alternate shipping path or switch
+is retained. The diagnostic checks actual draw-command eligibility, not per-pixel
+camera visibility. Screenshots separately qualify the visible surface.
+
+Diagnostic control fcd7159ef97a4accbd87eaa9a0c254e5 (13:36:54.385UTC): moving442.82227FPS,p95=3.5995ms,p99=5.3441ms,max22.3461ms; stationary465.40985FPS; allocated3,100,817,696bytes; average process6,384,316,416bytes/GPU1,937,409,229bytes; drain6169.4834ms; exceptions0; finalqueues0. LOCAL MEASUREMENT INVALID: observer started200.507s after trigger, missing the required122.1s start. All41 late samples27/27 cannot establish arrival. Raw local-before evidence retained. Repeat the unchanged scenario with observation deadlines anchored directly to the trigger.
+
+Repeated diagnostic control945a570e8b47451eba570120a48158d7 triggered13:46:11.262UTC, identical scenario/field/viewport. Fixed observer captured122.101..142.100s: first nearby27/27 at122.600s (previous122.101s:27prepared,0presented); center changed0,0,1 to0,0,0 then-1,-1,0 as player settled. Global queues still883regular/120transition at first local completion. Moving439.39777FPS,p95=3.6682ms,p99=5.4365ms,max22.1674ms; allocated3,161,797,224bytes; averageprocess3,990,413,076bytes/GPU1,937,364,375bytes; prepmax4.6331ms; full drain6232.758ms; exceptions0. Raw local-before-repeat files retained. Startup first recorded settled observation44.192s is only an upper bound; do not compare it as precise latency. Process-memory baseline differs from earlier controls; preserve all values. This repeated run is the matched local-observation control.
+
+Candidate9793264d2e7f45e485389dd82f13c0fd,13:50:27.353UTC, same parameters/source snapshot recorded externally: nearby27/27 at first122.100s observation, one0.5s interval earlier than repeated control; all41samples27/27. At first completion900regular/116transition remained. Moving441.1793FPS,p95=3.7227ms,p99=5.3112ms,max22.264ms; stationary438.926FPS. Allocated2,851,904,744bytes; averageprocess3,335,875,097bytes/GPU1,935,079,478bytes; prepmax12.8195ms; drain6608.7466ms; exceptions0. Finalqueues0,collision4913/4913,1,072waterowners,0pairingmismatches,909,315vertices matching control. Watergenerated10,460 versus18,087,uploaded2,592,729vertices versus5,183,250. LOD0 resource-publication median1199.3698ms versus903.7058ms with20,638 versus17,910completed samples and fewer cancellations; p95/p99 improve2448.424/2748.760ms versus2537.0354/2805.266ms. Route-lag p50 increases2.3226318versus2.081726chunks; p99 improves12.642609versus12.815765. These population metrics do not replace local presentation. Repeat unchanged candidate to qualify stationary438.926versus466.25986FPS and median shift; preserve this run.
+
+CHUNK-WATER-EDIT-001/v1, defined before mutation: same visible world/seed/settings after the fixed figure-eight; player at original origin, build site(-1024,-800,0), radius128, strength-512, then same site/radius strength+512, each only after previous edit completes. This crosses the X chunk boundary between LOD0(-3,-2,-1) and(-2,-2,-1), away from the actor. Inspect column at(-1024,-800),minimumZ=-64,spacing32,count5. Initial inspected bed=-45.83489; z=-32 isWater. Save a complete copy to chunk-water-edit-20260912 before editing; verify saved destination, so autosave cannot write the original3950b968a6ff411ca8f5923a82f348a1slot. Capture regional fingerprint center(-1024,-800,0),radius512 and both water mesh digests before edits. Poll pairing/edit status at0.1s for2s then1s up to30s after each operation. Criteria: both boundary-owner water meshes regenerate, invalid/degenerate/reversed vertices0; center changesWater->Solid->Water; settled pairingmismatches0; no exceptions or rejected mutations; replacement finishes<=30s. Inspect topdown camera(-1100,-800,1600),pitch90,FOV60 outside performance timing. Restore the original slot through normal load, wait for complete publication, verify original regional fingerprint, both original water digests, revision1584/pages327, and save the original to restore last-world selection. Preserve temporary copy; never delete user data. This checks derived static shore changes, not flowing-liquid mutations or multiplayer synchronization.
+
+Candidate repeat c2a1dd80bd964eb793716a9b41a10fed,13:55:19.461UTC, unchanged scenario/source:
+nearby27/27 at122.101s (first sample), all41samples27/27. Moving428.68085FPS,
+p95=3.8311ms,p99=5.3105ms,max22.3043ms; stationary457.56506FPS,p95=3.0016ms,
+p99=4.1597ms. Allocated2,854,834,488bytes; averageprocess3,392,373,407bytes/
+GPU1,935,121,513bytes; prepmax13.8283ms; drain6519.8857ms. LOD0 resource
+publication p50/p95/p99=1074.556/2510.7576/2741.5266ms,n19134; route-lag
+p50/p95/p99=2.3109741/10.928658/12.81781chunks. All measured runs completed,
+exceptions0, hierarchy.placementUnsafeCommits0 and hierarchy transition fine,
+coarse and lateral mismatch counters0. Final queues0 and collision4913/4913.
+Source identity is in source-sha256.json; before/after source bytes were verified.
+
+Comparison decision: accept this shared-publication prototype. Both candidates
+satisfy the primary nearby presentation check at the first sample, versus the
+control's second sample; this establishes no end-of-route local regression at
+0.5s observation resolution, not a universal per-chunk speedup. The repeat moving
+FPS is2.44% below the matched control; p95 increases0.1629ms, p99 improves0.126ms,
+max increases0.1369ms. Stationary repeat is1.86% below control. The first candidate
+stationary window had659visible indirect draws versus626 in control/repeat,
+despite identical final terrain topology/position signatures; do not treat that
+single differing visibility population as a measured lifecycle CPU regression.
+Its sampled manager update cost was0.1561ms versus0.1698ms in control. The repeat
+restores626visible draws. Small timing variation remains; no FPS improvement is
+claimed. Allocation volume falls about9.7%, GPU memory is effectively unchanged,
+and process memory is lower but subject to retained engine/GC state. Both candidate
+prep maxima stay below16.67ms. Global drain is0.29-0.38s longer but remains below10s;
+this is explicitly separate from nearby arrival. Resource-publication medians and
+median route lag are somewhat higher, with changed completion/cancellation cohorts;
+they do not establish identical per-request latency. Tail route lag is essentially
+unchanged. No material visible-local or frame-tail regression is established by
+these measurements. Future acceptance must retain these metrics and compare the
+same workload; this is not evidence for arbitrary fluid edits or multiplayer load.
+
+CHUNK-WATER-EDIT-001/v1 passed. Save-copy completion was verified before mutation;
+autosave stayed in chunk-water-edit-20260912. Build revision1585 changed2103samples,
+36visual/4collision dependencies; publication174.5467ms. Dig revision1586 changed
+2103samples,24visual/4collision dependencies; publication101.3905ms. Each20sample
+0.1s observation series reported0waterWithoutTerrain/terrainWithoutWater. Both
+X-boundary owners changed geometry after build:555->741 and381->321vertices;
+invalid/degenerate/reversed counts0. Dig restored555/381vertices and original
+FC5F625178ACA04A/E92FCF9E7846D2B7digests. Column z=-32 changedWater->Solid->Water.
+The actual detached-camera image edit-island.png shows the island occupying the
+river surface cleanly. These are terrain-driven static-water changes, not fluid flow.
+
+Original slot restored through normal load: revision1584/pages327/epoch2,
+publication29685.2408ms, original regional SHA256
+0BBE4543DD46E64370EB9A6F6F68E710339DF188D62E0703637F8B0416E98FAA
+and both original water digests verified. Settled pairing counts0, all queues0.
+Saved original slot again to restore last-world selection; test copy retained.
+Existing save/restore worker paths emitted two >1000ms no-yield warnings during
+the edit scenario; no exception or mutation rejection. These warnings concern
+storage tasks, are preserved here, and are not measured water-generation failures.
+Final production mesh audit:88selected/88completed,0stale/failures/mutationFailures,
+invalid indices/bounds/nonfinite/identity/oversized/degenerate/draw-argument failures0;
+178readbacks,3,713,820bytes,201.328ms. Main game camera restored. Full raw evidence
+is under Docs/ValidationEvidence/ChunkWaterLifecycle; no tests/scenes/hooks added.
+
+Final checks: engine compiler succeeded with0errors; task diff whitespace check passed. New lifecycle/readiness documentation links resolve. A broader scan also found the pre-existing VoxelChunkFoundation link to absent voxel_sdf_v22.hlsl; that unrelated historical link was not changed. Original-slot save completed at10:00:47EDT,checkpoint120,revision1584; original selection restored.
