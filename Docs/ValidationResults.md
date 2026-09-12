@@ -24520,6 +24520,38 @@ worked through the real command to performance/lod-arrivals/3ff97f844c12401abb3e
 This initial smoke precedes the final per-LOD milestone fields; retain it as
 smoke, not an observed25s arrival or final-schema acceptance.
 
+### EROSION-CREST-001/v1 — predeclared 2026-09-12
+
+Correct the discontinuous input ridge derivative by replacing abs(x) only inside
+|x|<0.08 with x*x/(2*0.08)+0.08/2; use its exact continuous derivative and
+matching interval bounds on CPU and GPU. Preserve erosion kernel/strength/masks.
+Generator44 control versus45 candidate; old saved worlds are preserved, not migrated.
+The existing HILLS-PLACEMENT-PRIORITY-001/v1 route parameters remain unchanged:
+visible basic_example,26.09.08b,RTX5090,2769x1436,seed1337,land.75/mountains.3/
+plains.6,scales77724.09/18681.756/5232.39,relief3072,ruggedness.45,sea0,
+32cells/16spacing,gameplay8,LOD0..5,radius256,near4/cache8,Play resetXY0,0,
+all terrain/collision/water settled then30s warmup,2500/50000/1,
+clearance393.7008,10s stationary,240s cap. A new erosion scenario is necessary:
+generator compatibility prevents reusing a v44 edited save as a v45 control.
+Both measured worlds therefore have zero correction pages; make/reset only a
+separate control save copy, preserving original3950b968a6ff411ca8f5923a82f348a1
+revision1586/pages331/checkpoint139. This is not a continuation of edited-world
+performance results. Capture matched current-source control before changes.
+Criteria: no errors/unsafe/shared-edge failures; all queues settle; prep<=16.67ms,
+drain<=10s; no material unexplained FPS/frame-tail/allocation/memory regression.
+Record all runs, including failures. Concurrent unrelated LOD-report source edits
+are pre-existing; preserve them and verify source identity for comparisons.
+Visual reproduction camera -1563128.38,170447.562,2231.47974,
+angles19.1839333,130.360107,0,FOV60,1280x720. This is beyond the field's supported
+1048576 coordinate limit; retain it as visual evidence, not supported-range
+correctness proof. Before/after views must remove upright crest fins while keeping
+flank gullies. In-range production survey: minimumXY-32768,-32768,129x129 at512;
+require finite heights, repeat equality and enclosing reported bounds. Use existing
+production mesh/density audits after timing; no test implementations or hooks.
+Shader qualification requires explicit dependent recompiles and clean visible
+editor restart, unchanged Sentry marker and fresh-log checks.
+
+
 #### LOD-ARRIVAL-REPORT-001/v1 — corrected source and smoke qualification
 
 Pre-run source/world correction before any overhead benchmark: coordination from
@@ -24686,3 +24718,63 @@ The report's PerformanceTask/PerformanceRevision fields identify the last
 benchmark metadata retained by the manager; their presence on user arrivals
 does not mean those arrivals were part of that benchmark. World revision and
 UTC samples identify the actual observation context.
+
+EROSION-CREST-001/v1 preflight update16:07UTC: editor was shared with the LOD
+arrival task and no erosion source was hotloaded during its runs. User added two
+edits after its candidate: revision1588/pages333/checkpoint3 in
+ erosion-crest-control-20260912. That slot is now user state and MUST NOT be reset.
+Preserve it, create erosion-crest-bench-20260912 as a separate copy, and clear only
+that benchmark copy for the zero-correction control. Original1586 slot also stays.
+Actual viewport needs native1846x957 to render2769x1436 at current DPI; verify
+actual profiler resolution rather than assuming native requested dimensions.
+EROSION-CREST-001/v1 additional save: user made another edit during handoff.
+Latest preserved source is revision1589/pages335 in erosion-crest-control-20260912
+checkpoint4. Benchmark copy saved same1589/pages335 at checkpoint1 before reset.
+EROSION-CREST-001/v1 setup interruptions: initial reset was cancelled by immediate
+Play stop; startup loaded1589/pages335, so no empty control was established.
+Second reset was rejected while world work was pending. At16:09UTC user movement
+and two additional edits produced1591/pages335 in the benchmark copy itself.
+Do not reset that live user state. No performance run has started. Requested an
+idle validation window or permission to defer performance qualification; retain
+all user edits in erosion-user-preserved-20260912 before proceeding.
+
+### EROSION-CREST-001/v1 — correction applied, performance deferred
+
+User explicitly chose "Apply now; defer performance validation" at16:09UTC.
+No figure-eight control or candidate run was started; no performance acceptance
+or improvement is claimed. This instruction supersedes the pre-commit timing
+requirement for this application; retain the deferred comparison as outstanding.
+Latest user world was saved at16:09:35 in erosion-user-preserved-20260912,
+revision1608/checkpoint1, before stopping Play and changing the generator.
+Older saved slots remain available under generator44; no save migration occurred.
+
+Applied to source0b8d93c plus the three crest source changes, generator45.
+Both dependent source shaders rebuilt successfully with empty diagnostics.
+Clean visible editor restart completed; engine26.09.08b compiler succeeded with
+zero errors; Sentry last_crash remains2026-09-10T14:09:52.761278Z. Old editor
+shutdown emitted the previously observed terrain_player prefab destruction
+assertion and an EditorMainWindow/GetUnsavedResources null reference. It reached
+Source2Shutdown before the remaining process was stopped. Fresh editor log has
+no managed exceptions/HLSL parser/shader-load failures in the inspected window.
+
+Production survey fad35999b21f4cc0871d405c2b7bbe9c used exactly the predeclared
+129x129/512/minimumXY-32768 grid and authored recipe:16,641 samples,0nonfinite,
+0repeat-height mismatches,0reported-bound violations. Evidence: candidate-recipe.json
+and candidate-samples.csv in ValidationEvidence/ErosionCrest. This is sampled
+coverage, not a proof over every coordinate or every possible recipe.
+Production coverage mesh audit selected/completed80regions,0stale/failures/
+mutationFailures/invalidIndices/outOfBounds/nonfinite/identity/oversized/degenerate/
+draw-argument failures;162readbacks,1,976,244bytes,130.072ms. Captured density audit
+covers four125-sample blocks atLOD2..5:0density/sign/bounds/nonfinite mismatches,
+maximum reported CPU/GPU error0.0024414062units, maximum lattice error0. This
+partial audit is not claimed as completion of all queued audit blocks or coverage
+of every crest. Extracted production results are in candidate-audits.log.
+
+Visual overview at7000,-35000,5500,angles12,45,0,FOV60,1280x720 was inspected:
+continuous rounded foreground ridges with flank detail; candidate-overview.png
+retained. The original distant ridge is outside the freshly loaded origin's
+streaming coverage, so the exact prior camera reproduction remains unverified.
+No player/streaming-origin teleport or alternate terrain path was used to claim
+that check. Detached camera was returned to the player and free render sizing
+restored. Implementation is live for manual review; exact-artifact visual
+acceptance and the deferred figure-eight comparison remain open.

@@ -299,3 +299,49 @@ analytic gradients carry the warp Jacobian. Risks include overly broad shelves,
 remaining contour artifacts, and looser classification intervals; use real-world
 survey, visual and performance evidence before acceptance. No result is assumed
 from this design or from staging the implementation.
+
+### Crest continuity correction (generator45, 2026-09-12)
+
+Implemented on CPU and GPU. Clean restart, sampled field and mesh checks passed;
+exact reported-ridge visual acceptance remains open. User deferred performance
+validation; EROSION-CREST-001/v1 records the scope and retained evidence.
+The input mountain ridges previously used max(0,1-abs(4*noise-2)) squared.
+Their height is continuous, but their derivative jumps across the fold. Rune's
+slope-based erosion fade cannot suppress a nonzero slope that reverses without
+approaching zero. Fixed mass-height exposure additionally does not identify each
+shorter local crest. This identifies a source-level continuity defect; it does not
+attribute every observed mesh spike to erosion.
+
+MountainMasses owns a narrow C1 rounding of the absolute value: for folded
+coordinate x and width w=0.08, use x*x/(2*w)+w/2 inside abs(x)<w and abs(x)
+outside. Value and first derivative match at +/-w; derivative passes continuously
+through zero at the crest. Both weighted ridge fields use the exact derivative
+clamp(x/w,-1,1). Shelf blending, warp chain derivatives and height modulation
+remain part of the combined analytic gradient. This supplies a continuous input
+to the existing slope fade without an extra erosion eligibility mask. Rounding
+slightly lowers the original sharp crest; outside the rounding band both ridge
+height and derivative retain their previous definition. This is a landform-input
+correction, not Rune's optional rounding of generated gully octaves.
+
+CPU and GPU use the same expression. The CPU interval Ridge evaluates the rounded
+absolute value at nearest/farthest distances; its monotonicity preserves enclosing
+bounds. Global bounds remain conservative because the rounded absolute value is
+never smaller than abs(x), and erosion's maximum offset is unchanged. No new
+samples, octaves, allocations, caches, mutable state or rendering passes are added.
+CPU queries/collision, GPU geometry/materials and river generation consume the
+canonical field as before. Local crests are handled independently of altitude;
+existing mountains-only eligibility, exposure and coastline protection remain.
+
+Generator45 separates the new base field from generator44 save identities and
+network compatibility. Existing edited worlds are preserved and not reinterpreted
+or migrated. Multiplayer convergence on the new generator still needs qualification.
+Alternatives: an altitude cutoff misses shorter ridges; smoothing just the guidance
+would make it disagree with the input height; a new crest mask could hide the fold
+but leaves the discontinuous input derivative. Rounded input height with its exact
+derivative repairs that mismatch together. Full erosion-kernel replacement and
+hill-coverage changes remain separate work.
+
+Reference: [Rune's preserving peaks, fade approach and straight gullies sections](https://blog.runevision.com/2026/03/fast-and-gorgeous-erosion-filter.html).
+The article explains slope-shaped fading around extrema and discontinuity masking;
+it is not evidence that an arbitrary pre-folded input ridge satisfies those
+conditions or that this adaptation has passed engine/performance validation.

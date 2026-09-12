@@ -33,10 +33,17 @@ float SampleVoxelMountainMass( float2 position, float scale, uint seed, out floa
 	gb = float2( 0.6 * gb.x + 0.8 * gb.y, -0.8 * gb.x + 0.6 * gb.y ) * 1.15;
 	ga = ga + 1.8 * (ga.x * gx + ga.y * gy);
 	gb = gb + 1.8 * (gb.x * gx + gb.y * gy);
-	float ra = max( 0.0, 1.0 - abs( 4.0 * a - 2.0 ) );
-	float rb = max( 0.0, 1.0 - abs( 4.0 * b - 2.0 ) );
+	// Match MountainMasses.CrestWidth and its C1 rounded absolute value.
+	const float crestWidth = 0.08;
+	float da = 4.0 * a - 2.0;
+	float db = 4.0 * b - 2.0;
+	float aa = abs( da );
+	float ab = abs( db );
+	float ra = max( 0.0, 1.0 - (aa < crestWidth ? da * da / (2.0 * crestWidth) + crestWidth * 0.5 : aa) );
+	float rb = max( 0.0, 1.0 - (ab < crestWidth ? db * db / (2.0 * crestWidth) + crestWidth * 0.5 : ab) );
 	float ridges = 0.72 * ra * ra + 0.28 * rb * rb;
-	float2 ridgeGradient = ga * (-5.76 * ra * sign( 4.0 * a - 2.0 )) + gb * (-2.24 * rb * sign( 4.0 * b - 2.0 ));
+	float2 ridgeGradient = ga * (-5.76 * ra * clamp( da / crestWidth, -1.0, 1.0 )) +
+		gb * (-2.24 * rb * clamp( db / crestWidth, -1.0, 1.0 ));
 	float st = clamp( (a - 0.28) / 0.40, 0.0, 1.0 );
 	float shelf = st * st * (3.0 - 2.0 * st);
 	float2 shelfGradient = ga * (6.0 * st * (1.0 - st) / 0.40);

@@ -10,7 +10,7 @@ public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 44;
+	public const int CurrentVersion = 45;
 	public const int DefaultWorldSeed = 1337;
 	public static float SampleGlobal(
 		Vector3Int globalSampleCoordinate,

@@ -7,6 +7,9 @@ internal static class MountainMasses
 	private const uint WarpYSalt = 0x94D049BBu;
 	private const uint RidgeSalt = 0x369DEA0Fu;
 	private const uint SpurSalt = 0xDB4F0B91u;
+	// Half-width in folded noise coordinates, not altitude. GPU mirror: voxel_mountain_masses.hlsl.
+	// A C1 crest lets the erosion slope mask fade through direction reversals.
+	private const float CrestWidth = 0.08f;
 
 	private static float Noise( Vector2 point, uint seed, out Vector2 gradient )
 	{
@@ -41,10 +44,15 @@ internal static class MountainMasses
 		gb = new Vector2( 0.6f * gb.x + 0.8f * gb.y, -0.8f * gb.x + 0.6f * gb.y ) * 1.15f;
 		ga = ga + 1.8f * (ga.x * gx + ga.y * gy);
 		gb = gb + 1.8f * (gb.x * gx + gb.y * gy);
-		var ra = MathF.Max( 0f, 1f - MathF.Abs( 4f * a - 2f ) );
-		var rb = MathF.Max( 0f, 1f - MathF.Abs( 4f * b - 2f ) );
+		var da = 4f * a - 2f;
+		var db = 4f * b - 2f;
+		var aa = MathF.Abs( da );
+		var ab = MathF.Abs( db );
+		var ra = MathF.Max( 0f, 1f - (aa < CrestWidth ? da * da / (2f * CrestWidth) + CrestWidth * 0.5f : aa) );
+		var rb = MathF.Max( 0f, 1f - (ab < CrestWidth ? db * db / (2f * CrestWidth) + CrestWidth * 0.5f : ab) );
 		var ridges = 0.72f * ra * ra + 0.28f * rb * rb;
-		var ridgeGradient = ga * (-5.76f * ra * MathF.Sign( 4f * a - 2f )) + gb * (-2.24f * rb * MathF.Sign( 4f * b - 2f ));
+		var ridgeGradient = ga * (-5.76f * ra * Math.Clamp( da / CrestWidth, -1f, 1f )) +
+			gb * (-2.24f * rb * Math.Clamp( db / CrestWidth, -1f, 1f ));
 		var st = Math.Clamp( (a - 0.28f) / 0.40f, 0f, 1f );
 		var shelf = st * st * (3f - 2f * st);
 		var shelfGradient = ga * (6f * st * (1f - st) / 0.40f);
@@ -98,6 +106,17 @@ internal static class MountainMasses
 		var b = 4d * value.Maximum - 2d;
 		var nearest = a <= 0d && b >= 0d ? 0d : Math.Min( Math.Abs( a ), Math.Abs( b ) );
 		var farthest = Math.Max( Math.Abs( a ), Math.Abs( b ) );
+		// The rounded absolute value is monotone in distance from the crest.
+		// Cast the float owner so interval evaluation uses the exact same width.
+		var width = (double)CrestWidth;
+		if ( nearest < width )
+		{
+			nearest = nearest * nearest / (2d * width) + width * 0.5d;
+		}
+		if ( farthest < width )
+		{
+			farthest = farthest * farthest / (2d * width) + width * 0.5d;
+		}
 		return new Interval( Math.Max( 0d, 1d - farthest ), Math.Max( 0d, 1d - nearest ) );
 	}
 
