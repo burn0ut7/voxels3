@@ -24484,3 +24484,205 @@ editor operations and experiment/validation documentation only; generated
 shader binaries and unrelated shoreline changes are excluded from the commit.
 
 Evidence packaging: the complete pre-restart engine log is preserved losslessly as pre-restart-log.txt.gz (decompressed SHA2567b85a1e299861d8a888a1a1c455cb52ac9305b46c0dec9591d2c3978ba6bec51). Compression avoids modifying engine-emitted trailing tabs; decompression was byte-verified. Final staged whitespace check passes. Numeric result table and restored-state fields were checked against raw JSON; the plan's local ledger link resolves.
+
+
+### LOD-ARRIVAL-REPORT-001/v1 — pre-run definition, 2026-09-12
+
+User reports25-45seconds from stopping at a distant noclip destination toLOD0.
+Add bounded automatic production diagnostics, not a terrain/scheduling fix.
+Reuse HILLS-PLACEMENT-PRIORITY-001/v1 unchanged for overhead comparison with
+original eight-step control2155c6807aa141c7bfa7af9d38b24aa5: saved world3950b968-
+a6ff-411c-a8f5-923a82f348a1 revision1585/pages328, seed1337/generator44, engine
+26.09.08b, RTX5090,2769x1436, one player, original settings, Play resetXY0,
+settle all then30s warmup,2500/50000/1,clearance393.7008,10s stationary,240s cap.
+Current19e98cb runtime matches that control; preserve unrelated source/doc edits.
+Criteria: prior frame/tail/allocation/memory and<=16.67ms preparation/<=10s drain
+budgets unchanged; diagnostic sampling is<=1Hz with no per-frame region scans,
+bounded histories, successful reports and explicit incomplete/interrupted labels.
+Native-only validation; no desktop automation. During the normal route and its
+landing, verify reports include timestamps, world/config identity, near readiness,
+per-LOD target/committed/staged anchors, request states, missing handoff counts,
+water state and saved report path. Run voxel_lod_report while settled and during
+ordinary streaming; it must not schedule terrain. The canonical route remains a
+regression check, not a reproduction claim for arbitrary distant noclip flight.
+Manual user arrivals are recorded automatically with their actual coordinates;
+no guessed stop time will be assigned to the current pre-instrumentation flight.
+
+
+Implementation smoke: native hotload compiled successfully after fixing screen
+float-to-int report fields and explicitly using GameTask for static background
+report writes. Intermediate compile failures did not run as validation builds.
+The existing live player was at(-1563282.38,170628.781,2108.02856); no stop time
+is inferred for that pre-instrumentation flight. Read-only manual snapshot shows
+27/27nearby presented, all queues0, aim-hit terrain at(-1563633.25,171041.578,
+1947.5459), currentlyLOD0and inside desired fine coverage. Snapshot-only export
+worked through the real command to performance/lod-arrivals/3ff97f844c12401abb3ed40fc62baf6e.json.
+This initial smoke precedes the final per-LOD milestone fields; retain it as
+smoke, not an observed25s arrival or final-schema acceptance.
+
+#### LOD-ARRIVAL-REPORT-001/v1 — corrected source and smoke qualification
+
+Pre-run source/world correction before any overhead benchmark: coordination from
+the erosion task confirms current last-world selection is the preserved copy
+erosion-crest-control-20260912, world3950b968-a6ff-411c-a8f5-923a82f348a1,
+revision1586/pages331/epoch1/checkpoint1. No terrain settings or route parameters
+change. The earlier1585control is not comparable. Capture a fresh19e98cb runtime
+baseline on this newer world, then restore the diagnostic source and repeat the
+same fixed scenario. No terrain rollback/load/reset is authorized or performed;
+preserve both the original slot and the selected copy. Erosion task is deferring
+runtime edits and live-editor work until this comparison ends.
+Startup diagnostic smoke produced movement-resumed and waiting reports through
+the ordinary player initialization; near27/27was ready while coarse work remained.
+These startup records are not performance results or a new-destination reproduction.
+
+The intermediate startup smoke classified a post-spawn fall as a movement arrival.
+The candidate now labels all episodes before the first complete settle
+`before-first-settle`; those preserved smoke files precede that label correction.
+The collision-only view ray now selects the actual streaming player's controller.
+
+Resolution preflight stopped before launching a timed run: requesting 2769x1436
+through the editor's logical-size API produced an actual 4154x2154 viewport in
+the current DPI environment. A fractional logical height was rejected by the
+integer tool schema without changing state. Requesting 1846x957 produces the
+required actual 2769x1436, verified through the runtime profiler before warmup.
+Scenario dimensions and measured workload remain unchanged. No desktop control
+or operating-system display setting changes were used.
+
+#### LOD-ARRIVAL-REPORT-001/v1 — overhead comparison
+
+Fresh baseline `ded63751fc3944d19201dda86c584901`, task
+`lod-arrival-baseline-standard`, ran at 15:59:41 UTC on 2026-09-12. Runtime text
+matches 19e98cb; the four restored files differed only in line endings before
+the candidate swap. World revision 1586/pages 331 and all scenario parameters
+above were retained. Results: 447.72864 FPS, p95 3.6881 ms, p99 5.2168 ms,
+maximum 21.7321 ms, average GPU 1.7518785 ms; managed allocation 2,954,927,344
+bytes, average process/GPU memory 4,410,611,342/1,937,510,990 bytes; maximum
+placement preparation 12.0747 ms, post-loop drain 6,219.14 ms. Exceptions,
+unsafe commits, transition mismatch/invalid-table counters and final queues are
+zero. Both explicit latency budgets pass. First external 27/27 prepared and
+presented observation was at 123.101 s relative to the tool trigger; this is
+not an engine-owned stop-to-ready timestamp. Full source identity, JSON and
+observations are in [LodArrivalReporting](ValidationEvidence/LodArrivalReporting/).
+
+The candidate differs in exactly five runtime files listed by
+`candidate-source.json`; terrain/shaders, scene and prefab hashes are unchanged.
+Native compilation succeeds with no errors (two existing Description warnings).
+At startup, world identity remained revision 1586/pages 331, selected preserved
+copy checkpoint 2, and actual viewport 2769x1436. Final-label startup reports
+`c51c8597332c4f0292bb762e158a184e` and `612e66ecd3b740b2b3d7897ba6f3d09f`
+are preserved separately from timing evidence.
+
+During the canonical candidate flight, the real `voxel_lod_report` command
+saved manual snapshot `3a615353d9a644b6af77f5c49d064db7`: target near
+(49956.332,2087.39893,424.950195), 27 GPU-missing near regions, LOD0 request
+queued for 1.2138973 s, LOD2 target region presented, committed fine anchor
+(90,18,2) versus requested (98,4,0), 39 missing seams in the current handoff,
+zero missing water. This demonstrates request and handoff reporting through the
+production path. It is a moving snapshot, not the user's stationary reproduction.
+
+Candidate run `e09f27b92d8f4608ba48851564cfe985` completed unchanged route
+parameters, task `lod-arrival-candidate-standard`, starting 16:03:51 UTC.
+
+| Metric | Baseline | Reporting candidate |
+| --- | ---: | ---: |
+| Average FPS | 447.72864 | 478.87183 |
+| Frame p95 / p99 (ms) | 3.6881 / 5.2168 | 3.3879 / 5.0308 |
+| Maximum frame (ms) | 21.7321 | 26.3155 |
+| Average GPU (ms) | 1.7518785 | 1.6740525 |
+| Managed allocation (bytes) | 2954927344 | 2976904952 |
+| Average process memory (bytes) | 4410611342 | 4463025940 |
+| Average GPU memory (bytes) | 1937510990 | 1938611673 |
+| Maximum placement preparation (ms) | 12.0747 | 12.1029 |
+| Post-loop drain (ms) | 6219.14 | 6420.425 |
+
+Candidate exceptions, collision failures, unsafe commits, seam mismatch/invalid
+table counters and final queues are zero. Final terrain topology/position digests
+match baseline: 4AA4CB29A7EA18C5 / 4B81B95C02D3135C, with identical used geometry
+(3,949,099 vertices, 7,283,327 triangles). Candidate retained 10 arenas versus 9;
+average GPU memory changed +0.057%, process memory +1.188%, managed allocation
++0.744%. Moving throughput varied (58,448 versus 61,498 submitted regions),
+so the FPS increase is not attributed to instrumentation. Preparation and drain
+budgets pass. p95/p99 improved while the isolated maximum frame increased
+4.5834 ms; this does not establish a persistent frame-pacing regression.
+Acceptance: retain the diagnostic change; no material regression established by
+this matched pair, and no claim of a performance improvement or precise zero
+overhead. The final 200-frame profiler window contained no diagnostic sample,
+so its zero reporting scope is unavailable active-capture cost, not zero cost.
+
+Engine-owned arrival `f6c750cd3da14a99be82000313709046` is `stationary-arrival`,
+four samples, near prepared/presented first observed at 1.5872274 s after the
+last qualifying movement and full settle at 4.5895401 s. The benchmark's
+6.420425 s drain starts at route completion and includes the player's subsequent
+fall; the two timers have different origins. Performance schema 28 references
+the actual saved arrival path and status. Startup and manual reports passed
+finite numeric, >=1 s spacing and exclusive near-count sum checks. Automatic
+warning and interrupted-context paths were subsequently exercised by the user
+arrival below. The 240 s limit and write-failure/coalescence paths were not forced.
+
+Outside the timed baseline, Play teardown at 16:02:16 logged existing
+`TerrainStorage unload.save_failed` (null reference at Storage.cs:53) before the
+candidate was loaded. Preserve this failure; neither timed run had exceptions.
+The next Play loaded the same 1586/331 world, and later user edits saved as
+1588/333/checkpoint 3 with no storage failure. No storage fix is included.
+The user resumed ordinary flight/edits after the result exported at 16:06:10.
+A post-run production mesh audit at the user's new position, revision 1588,
+selected/completed 88 regions, with zero failures, stale results, invalid indices,
+nonfinite/out-of-bounds positions, identity mismatches, oversized/degenerate
+triangles or draw argument failures; 178 readbacks, 3,059,888 bytes, 157.388 ms.
+It is additional geometry evidence, not an unchanged-scenario timing result or
+pixel-level proof against all holes. Free render sizing was restored and native
+editor access released to the erosion task, preserving the user's newer edits.
+
+#### LOD-ARRIVAL-REPORT-001/v1 — user reproduction, 16:06 UTC
+
+The user repeated distant noclip flight and reported 20–30 seconds to LOD0,
+then requested log analysis. Preserve the actual observation separately from the
+fixed benchmark: position (147531,-110325.602,1803.32544), generator 44, same
+world/configuration, revisions 1587 then 1588, actual viewport 2769x1436.
+The two production reports are `user-arrival-7042604fda004d069e86287f8bbdc6d6.json`
+and `user-arrival-3263ac80ae71479e99f8371eddfd3553.json` in the evidence directory.
+The first began 16:06:33.3421443 UTC and ended after 8.2143896 s on a field
+revision change; the next began 16:06:41.5565291 UTC at the identical position.
+This is a continuous stationary position with a real edit/context boundary,
+not one unchanged-revision episode. Do not combine its counters as one run.
+
+At 16:06:35.3186566 all 27 near regions were prepared, with zero preparation
+or GPU-missing regions; all 27 were publication-blocked. The target LOD0 mesh
+was resident but outside the committed fine placement. The collision aim hit
+was inside desired LOD0 coverage, yet its presented terrain region was LOD5.
+At 16:06:39 the current placement still targeted an earlier flight position:
+fine staged anchor (240,-142,10) versus requested (288,-216,4). LOD0 pending
+was zero, but required coarse levels and 383 seams remained. The field edit
+at 16:06:41 rebuilt staging at the current destination and increased pending
+work; it cannot be separated as a causal timing contribution from these samples.
+
+On the second segment, at +5.780 s there were zero missing required LOD0–2
+regions but 1,428 LOD3, 1,216 LOD4 and 630 seams missing; water was ready.
+At +10.790 s, 76 required LOD4 regions and 248 seams remained, while all 27 near
+regions were still prepared and publication-blocked. At 16:06:54.3660368,
+near presentation changed 0/27 -> 27/27, the placement commit count changed
+120 -> 121, seams reached zero and the view-hit level changed LOD5 -> LOD0.
+That is approximately 21.02 s from the recorded stop and 19.05 s after the
+first observation of prepared near detail. Some 973 regular requests remained
+after the commit, demonstrating that the gate is required placement dependencies,
+not literally every cache request. Full backlog settled at 16:06:56.3700440.
+
+Diagnosis from source plus observation: `TryCommitPendingClipboxPlacement`
+rejects the whole pending handoff until `CapturePendingClipboxReadiness` passes
+all required levels, water and transitions. Finished nearby LOD0 is therefore
+held behind coarse-region/seam work and, initially, an old staged destination.
+This explains the observed direct LOD5 -> LOD0 jump. The evidence establishes
+publication coupling, not the isolated GPU cost of seams versus regular meshing.
+It does not justify dropping seam protection outright. The next experiment
+should shorten the dependency chain for local detail while retaining coverage
+at unfinished boundaries; chunk content must remain deterministic and independent
+of which neighbors happen to be loaded. No scheduling/seam change is included
+in this reporting slice.
+
+Preserved engine log excerpt `user-arrival-engine-log.txt.gz` includes these
+events and the baseline unload failure; decompressed SHA256
+19c390cd20c7b93038e7e5deb2dab94f009e85f86dc0d30861747ab1066e1d8a.
+The report's PerformanceTask/PerformanceRevision fields identify the last
+benchmark metadata retained by the manager; their presence on user arrivals
+does not mean those arrivals were part of that benchmark. World revision and
+UTC samples identify the actual observation context.

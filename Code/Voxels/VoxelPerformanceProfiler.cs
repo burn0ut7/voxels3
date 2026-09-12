@@ -8,6 +8,7 @@ using System.Collections.Generic;
 internal static class VoxelPerformanceProfiler
 {
 	public const int WindowFrames = 200;
+	public const string LodArrivalReporting = "Voxels3/LodArrivalReporting";
 	public const string CollisionInterest = "Voxels3/CollisionInterest";
 	public const string CollisionIntegration = "Voxels3/CollisionIntegration";
 	public const string CollisionReadiness = "Voxels3/CollisionReadiness";
@@ -27,6 +28,7 @@ internal static class VoxelPerformanceProfiler
 		string[] scriptTimingNames =
 		{
 			ManagerUpdate,
+			LodArrivalReporting,
 			CollisionInterest,
 			CollisionIntegration,
 			CollisionReadiness,

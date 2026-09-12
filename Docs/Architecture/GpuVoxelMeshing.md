@@ -1428,3 +1428,63 @@ groups retain their previous presentation until affected water is ready. There
 is no second world state, alternate mesher or global water-loading barrier.
 Validation remains in CHUNK-WATER-LIFECYCLE-001; prior independent-publication
 water results do not establish performance for this prototype.
+
+
+### Stationary LOD arrival reporting (2026-09-12)
+
+The manager observes the real streaming target, existing preparation membership,
+GPU request/residency state, committed draw eligibility and water ownership.
+It never schedules work or changes publication. A stationary episode starts
+from the last movement of at least 16 world units, confirmed after one quiet
+second. Sampling runs at 1 Hz, with detailed existing handoff-readiness scans at
+most every 5 seconds. Keep at most 256 samples and cap an episode at 240 seconds.
+Episodes before the first complete settle are labelled `before-first-settle`;
+subsequent movement arrivals are `stationary-arrival`. Movement, field
+identity or visual-configuration changes end the old episode explicitly.
+
+Measure first prepared and first presented nearby 27 LOD0 regions separately from
+full backlog drain. Include bounds/anchors, the region containing the target at
+each LOD, pending counts, request state/age, preparation and water blocking,
+missing handoff regions/seams, commit/supersession counts, camera aim and a
+collision-only view hit when available. A missing ray hit is unknown, and empty
+regions or draw eligibility are not proof of pixel-visible ground detail.
+
+Warn after 5 seconds of stationary missing near detail, then at 5 second intervals;
+keep a readable inspector status and `voxel_lod_report` command. Save immutable
+report snapshots asynchronously through the existing data filesystem worker
+pattern; only copied values reach the worker. Keep one active write and one
+coalesced pending snapshot, reporting coalescence/failure explicitly. Reports
+are derived diagnostics, with no world data mutation or network authority.
+Production figure-eight results reference the latest arrival report. Existing
+external polling missed observation deadlines and cannot replace engine-owned
+timestamps; do not add an alternate movement or terrain test path.
+
+Reports live under `performance/lod-arrivals/` in the game's data directory;
+the console prints the full saved path. A settled manual report is labelled
+`snapshot-only-no-arrival-timing`, with null arrival milestones. Prepared means
+GPU-resident or known uniform, not merely CPU preparation. The near-region
+blocking categories are exclusive and sum with presented regions to 27.
+They follow preparation, GPU residency, draw publication, then water ownership
+in that order. Water can itself block draw publication, so a zero near-water
+count does not rule water out; inspect the detailed missing-water count too.
+Request age includes queue time; count/readback and emit/publication are combined
+states, not independent GPU execution timings. First-observed milestones have
+one-second sampling resolution. A collision-only aim hit belongs to the actual
+streaming player; it is not a rendered-depth measurement.
+
+This retains the existing mesher and deterministic field. Alternatives rejected
+for this slice: per-frame full readiness scans add avoidable observation cost;
+external polling loses precise stop-time context; a second meshing path cannot
+explain production scheduling. Validation is recorded in `LOD-ARRIVAL-REPORT-001/v1`
+in the [ledger](../ValidationResults.md); the reporting change does not itself
+reduce arrival time or establish seam correctness.
+
+The first instrumented user reproduction confirmed ready nearby geometry held
+behind the pending hierarchy: 27/27 prepared near regions remained unpublished
+while required coarse regions and seams completed. The eventual commit changed
+the aimed terrain region from LOD5 directly to LOD0 about 21 seconds after the
+recorded stop. A field edit split that observation into two revision-specific
+reports. See the ledger for timestamps, old staged destination, dependency counts
+and qualifications. This identifies publication coupling as a design problem;
+it does not measure the independent cost of seams or adopt an approximate seam
+replacement. Rendering changes must retain coverage before releasing fine detail.

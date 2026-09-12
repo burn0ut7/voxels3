@@ -29,7 +29,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private const int DefaultGameplayRadius = 4;
 	private const int MaximumSupportedVisualLod = TerrainClipboxLimits.MaximumSupportedVisualLod;
 	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
-	private const int PerformanceResultSchemaVersion = 27;
+	private const int PerformanceResultSchemaVersion = 28;
 	// s&box world units are inches: ten meters of vertical exterior clearance.
 	private const float FigureEightTerrainClearance = 10f / 0.0254f;
 	private const int RenderWarmShellChunks = 1;
@@ -541,12 +541,14 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		}
 		UpdateDeformationBenchmark();
 		SweepTerrainStorage();
+		UpdateLodArrivalReporting();
 		TryCompletePlayerFigureEightTest();
 		TrySaveCompletedPerformanceTest();
 	}
 
 	protected override void OnDestroy()
 	{
+		FinishLodArrivalOnDestroy();
 		_clipboxPreparation?.Dispose();
 		_clipboxPreparation = null;
 		_exteriorPreparation?.Dispose();
@@ -814,6 +816,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		var result = new PerformanceTestResult
 		{
 			SchemaVersion = PerformanceResultSchemaVersion,
+			LodArrivalReportPath = LodArrivalReportPath,
+			LodArrivalStatus = LodArrivalStatus,
 			Collision = _collision?.Capture(),
 			CollisionHoldSteps = _collisionHoldSteps,
 			RunId = runId,
@@ -1256,34 +1260,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	public static void LogChunkReadinessCommand()
 	{
 		if ( !TryGetActiveManager( "chunk.readiness", out var manager ) ) return;
-		var center = manager._streamingCenterCoordinate;
-		var terrainPrepared = 0;
-		var presented = 0;
-		for ( var z = center.z - 1; z <= center.z + 1; z++ )
-		for ( var y = center.y - 1; y <= center.y + 1; y++ )
-		for ( var x = center.x - 1; x <= center.x + 1; x++ )
-		{
-			var coordinate = new Vector3Int( x, y, z );
-			var descriptor = manager.CreateRegularDescriptor( 0, coordinate, captureRegion: false );
-			var empty = manager._renderPreparedChunks.Contains( coordinate ) && !manager._gpuMesher.Contains( descriptor.Key );
-			var prepared = manager._renderPreparedChunks.Contains( coordinate ) &&
-				(empty || manager._gpuMesher.IsResident( descriptor ));
-			if ( prepared ) terrainPrepared++;
-			if ( !prepared || !manager._levels[0].Active.Contains( coordinate ) ||
-				!empty && !manager._gpuMesher.IsRegionPresented( descriptor ) ) continue;
-			var size = descriptor.CellsPerAxis * descriptor.CellSize;
-			var waterZ = (int)MathF.Ceiling( descriptor.TerrainSettings.SeaLevel / size ) - 1;
-			if ( z == waterZ && (!manager._waterCoverage.TryGetValue( descriptor.Key, out var water ) ||
-				water.Descriptor != descriptor) ) continue;
-			presented++;
-		}
-		Log.Info( "[VoxelWorld] chunk.readiness " + JsonSerializer.Serialize( new
-		{
-			Center = center, Requested = 27, TerrainPrepared = terrainPrepared, Presented = presented,
-			VisualPending = manager._gpuMesher.AllPendingCount,
-			TransitionPending = manager._gpuMesher.TransitionPendingCount,
-			PlacementPending = manager.HasClipboxPlacementWork
-		}, PerformanceJsonOptions ) );
+		Log.Info( "[VoxelWorld] chunk.readiness " + JsonSerializer.Serialize(
+			manager.CaptureNearChunkReadiness(), PerformanceJsonOptions ) );
 	}
 
 	[ConCmd( "voxel_lod_info" )]
@@ -2981,6 +2959,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	private void PrepareLodPlacement()
 	{
+		_lodPlacementStartTime = Stopwatch.GetTimestamp();
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.PreparePlacement );
 		var preparationStart = Stopwatch.GetTimestamp();
 		if ( _clipboxPlacementPending )
@@ -3493,12 +3472,13 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		// A ready result still checks every dependency against the current field identity.
 		Array.Clear( _pendingMissingByLevel );
 		var missingTransitions = 0;
+		var missingWater = 0;
 		foreach ( var coordinate in _levels[0].Entering )
 		{
 			if ( !IsClipboxRegionReady( 0, coordinate ) )
 			{
 				_pendingMissingByLevel[0]++;
-				if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
+				if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 			}
 		}
 		for ( var level = 1; level < SupportedVisualLevelCount; level++ )
@@ -3508,7 +3488,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				if ( !IsClipboxRegionReady( level, coordinate ) )
 				{
 					_pendingMissingByLevel[level]++;
-					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
+					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 				}
 			}
 		}
@@ -3520,7 +3500,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			if ( !state.PlacementChanged || !state.NextActive.Contains( descriptor.Key.Coordinate ) ||
 				state.Active.Contains( descriptor.Key.Coordinate ) || _waterCells.ContainsKey( descriptor ) ) continue;
 			_pendingMissingByLevel[state.Level]++;
-			if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
+			missingWater++;
+			if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 		}
 		foreach ( var pair in _transitionPairs )
 		{
@@ -3529,11 +3510,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key, captureRegion: false ) ) )
 				{
 					missingTransitions++;
-					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
+					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 				}
 			}
 		}
-		return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions );
+		return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 	}
 
 	private bool IsClipboxRegionReady( int level, Vector3Int coordinate )
@@ -4130,7 +4111,8 @@ internal readonly record struct VoxelVisualConfiguration(
 
 internal readonly record struct PendingClipboxReadiness(
 	IReadOnlyList<int> MissingLevels,
-	int MissingTransitions )
+	int MissingTransitions,
+	int MissingWater = 0 )
 {
 	public bool IsReady => MissingTransitions == 0 &&
 		(MissingLevels is null || MissingLevels.All( value => value == 0 ));

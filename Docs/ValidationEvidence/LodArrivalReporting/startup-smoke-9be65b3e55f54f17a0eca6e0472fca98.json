@@ -1,0 +1,4787 @@
+{
+  "schemaVersion": 1,
+  "id": "9be65b3e55f54f17a0eca6e0472fca98",
+  "kind": "stationary-arrival",
+  "outcome": "settled",
+  "startedAtUtc": "2026-09-12T15:52:14.0349469+00:00",
+  "elapsedSeconds": 37.0056078,
+  "world": "3950b968-a6ff-411c-a8f5-923a82f348a1",
+  "epoch": 1,
+  "revision": 1586,
+  "settings": {
+    "worldSeed": 1337,
+    "landAmount": 0.75,
+    "mountainAmount": 0.3,
+    "plainsAmount": 0.6,
+    "continentalScale": 77724.09,
+    "mountainRegionScale": 18681.756,
+    "localLandformScale": 5232.39,
+    "reliefHeight": 3072,
+    "ruggedness": 0.45,
+    "seaLevel": 0,
+    "isValid": true
+  },
+  "configuration": {
+    "minimumVisualLod": 0,
+    "maximumVisualLod": 5,
+    "lod0VisualHalfExtent": 4,
+    "lodCacheHalfExtent": 8
+  },
+  "arrivalPosition": "0,0,272.205719",
+  "commitsAtStart": 1,
+  "supersededAtStart": 2,
+  "firstPreparedSeconds": 1.9515217,
+  "firstPresentedSeconds": 1.9515217,
+  "firstTargetPresentedSecondsByLod": [
+    1.9515217,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "samples": [
+    {
+      "elapsedSeconds": 1.9515217,
+      "capturedAtUtc": "2026-09-12T15:52:15.9879903+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 5462,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 11.4921251
+          },
+          "pending": 416
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 11.48773
+          },
+          "pending": 2490
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 11.4793184
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 11.4685671
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        204,
+        2109,
+        1212,
+        768,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 2.3126028,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 2.9522192,
+      "capturedAtUtc": "2026-09-12T15:52:16.9872760+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 5324,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 12.4928098
+          },
+          "pending": 316
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 12.4884164
+          },
+          "pending": 2452
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 12.4800054
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 12.4692552
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 3.3118865,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 3.9535228,
+      "capturedAtUtc": "2026-09-12T15:52:17.9885813+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 5194,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 13.4941126
+          },
+          "pending": 223
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 13.4897197
+          },
+          "pending": 2415
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 13.4813087
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 13.4705592
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 4.313192,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 4.9542572,
+      "capturedAtUtc": "2026-09-12T15:52:18.9893076+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 5043,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 14.4948462
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 14.4904521
+          },
+          "pending": 2275
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 14.4820396
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 14.471288
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 5.313917,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 5.9551521,
+      "capturedAtUtc": "2026-09-12T15:52:19.9916054+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4907,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 15.4957445
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 15.4913514
+          },
+          "pending": 2139
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 15.4829399
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 15.4721892
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        0,
+        1758,
+        1212,
+        768,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 6.3162377,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 6.9553067,
+      "capturedAtUtc": "2026-09-12T15:52:20.9903686+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4763,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 16.4959023
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 16.4915093
+          },
+          "pending": 1995
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 16.4830975
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 16.4723476
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 7.3149796,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 7.9571273,
+      "capturedAtUtc": "2026-09-12T15:52:21.9921861+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4623,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 17.497719
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 17.4933249
+          },
+          "pending": 1855
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 17.4849138
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 17.4741637
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 8.3169632,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 8.9572566,
+      "capturedAtUtc": "2026-09-12T15:52:22.9923369+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4493,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 18.4978517
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 18.4934674
+          },
+          "pending": 1725
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 18.4850571
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 18.4743071
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 9.3169501,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 9.9578838,
+      "capturedAtUtc": "2026-09-12T15:52:23.9929411+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4360,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 19.4984722
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 19.4940798
+          },
+          "pending": 1592
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 19.4856695
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 19.4749195
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 10.3175534,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 10.9594672,
+      "capturedAtUtc": "2026-09-12T15:52:24.9959472+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4221,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 20.5000601
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 20.4956686
+          },
+          "pending": 1453
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 20.4872587
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 20.4765094
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        0,
+        1072,
+        1212,
+        768,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 11.3205682,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 11.9636247,
+      "capturedAtUtc": "2026-09-12T15:52:25.9987003+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 4092,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 21.5042225
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 21.4998313
+          },
+          "pending": 1324
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 21.4914207
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 21.4806734
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 12.3233341,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 12.9649416,
+      "capturedAtUtc": "2026-09-12T15:52:26.9999948+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3956,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 22.5055326
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 22.5011366
+          },
+          "pending": 1188
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 22.4927248
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 22.4819742
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 13.3246064,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 13.9650142,
+      "capturedAtUtc": "2026-09-12T15:52:28.0000642+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3836,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 23.5056024
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 23.5012077
+          },
+          "pending": 1068
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 23.4927949
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 23.4820433
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 14.3246875,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 14.9671376,
+      "capturedAtUtc": "2026-09-12T15:52:29.0021963+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3690,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 24.5077283
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 24.5033354
+          },
+          "pending": 922
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 24.4949239
+          },
+          "pending": 1532
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 24.4841747
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 15.3268468,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 15.9704773,
+      "capturedAtUtc": "2026-09-12T15:52:30.0069435+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3550,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 25.5110689
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 25.5066749
+          },
+          "pending": 802
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 25.498263
+          },
+          "pending": 1512
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 25.4875131
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        0,
+        421,
+        1192,
+        768,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 16.3315553,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 16.9714248,
+      "capturedAtUtc": "2026-09-12T15:52:31.0066429+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3420,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 26.5120213
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 26.50763
+          },
+          "pending": 684
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 26.49922
+          },
+          "pending": 1500
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 26.4884711
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 17.3314156,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 17.9734177,
+      "capturedAtUtc": "2026-09-12T15:52:32.0084732+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3286,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 27.514009
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 27.5096157
+          },
+          "pending": 576
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 27.5012048
+          },
+          "pending": 1474
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 27.4904544
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 18.3330802,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 18.9750012,
+      "capturedAtUtc": "2026-09-12T15:52:33.0100563+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3152,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 28.5155926
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 28.5111984
+          },
+          "pending": 472
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 28.5027867
+          },
+          "pending": 1444
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 28.4920367
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 19.3346634,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 19.9799706,
+      "capturedAtUtc": "2026-09-12T15:52:34.0150280+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 3036,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 29.5205606
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 29.516167
+          },
+          "pending": 387
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 29.5077563
+          },
+          "pending": 1413
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 29.4970068
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 20.339777,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 20.9804067,
+      "capturedAtUtc": "2026-09-12T15:52:35.0167966+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2904,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 30.5209937
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 30.5166007
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 30.5081896
+          },
+          "pending": 1287
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 30.4974401
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        0,
+        0,
+        967,
+        768,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 21.3414085,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 21.9827409,
+      "capturedAtUtc": "2026-09-12T15:52:36.0177967+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2762,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 31.5233315
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 31.5189372
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 31.5105249
+          },
+          "pending": 1145
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 31.499775
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 22.3424076,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 22.9839521,
+      "capturedAtUtc": "2026-09-12T15:52:37.0190058+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2628,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 32.5245434
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 32.5201475
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 32.5117361
+          },
+          "pending": 1011
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 32.5009855
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 23.3436135,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 23.9848096,
+      "capturedAtUtc": "2026-09-12T15:52:38.0198632+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2501,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 33.5253996
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 33.5210043
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 33.5125932
+          },
+          "pending": 884
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 33.5018425
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 24.3444707,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 24.9853931,
+      "capturedAtUtc": "2026-09-12T15:52:39.0204563+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2358,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 34.5259859
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 34.5215932
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 34.5131835
+          },
+          "pending": 741
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 34.5024344
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 25.3450646,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 25.9860864,
+      "capturedAtUtc": "2026-09-12T15:52:40.0225548+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2217,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 35.5266809
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 35.5222882
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 35.5138766
+          },
+          "pending": 600
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 35.5031278
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        0,
+        0,
+        280,
+        768,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 26.3471675,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 26.9864188,
+      "capturedAtUtc": "2026-09-12T15:52:41.0214802+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 2079,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 36.527013
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 36.5226192
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 36.5142078
+          },
+          "pending": 462
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 36.5034579
+          },
+          "pending": 1024
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 27.346088,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 27.9890894,
+      "capturedAtUtc": "2026-09-12T15:52:42.0241438+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 1943,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 37.5296795
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 37.5252849
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 37.5168719
+          },
+          "pending": 364
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 37.5061224
+          },
+          "pending": 986
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 28.3487556,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 28.991014,
+      "capturedAtUtc": "2026-09-12T15:52:43.0260699+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 1815,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 38.5316047
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 38.527211
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 38.5187994
+          },
+          "pending": 320
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 38.5080486
+          },
+          "pending": 902
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 29.3506804,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 29.99321,
+      "capturedAtUtc": "2026-09-12T15:52:44.0282707+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 1681,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 39.5338036
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 39.5294095
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 39.520998
+          },
+          "pending": 320
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 39.5102479
+          },
+          "pending": 768
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 30.3528822,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 30.9932545,
+      "capturedAtUtc": "2026-09-12T15:52:45.0299255+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 1544,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 40.5338467
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 40.5294506
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 40.5210384
+          },
+          "pending": 320
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 40.5102881
+          },
+          "pending": 631
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        375,
+        0
+      ],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 31.3545389,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 31.9948526,
+      "capturedAtUtc": "2026-09-12T15:52:46.0299099+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 1394,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 41.5354439
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 41.5310511
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 41.5226402
+          },
+          "pending": 320
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 41.5118909
+          },
+          "pending": 481
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 32.3545175,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 32.9973731,
+      "capturedAtUtc": "2026-09-12T15:52:47.0324423+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 1251,
+        "transitionPending": 0,
+        "placementPending": true,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,2",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-2",
+          "outerMaximum": "4,4,6",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 42.5379641
+          },
+          "pending": 212
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 42.5335706
+          },
+          "pending": 381
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 42.5251656
+          },
+          "pending": 320
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 42.5144193
+          },
+          "pending": 338
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 33.3570937,
+      "commits": 1,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 34.0005439,
+      "capturedAtUtc": "2026-09-12T15:52:48.0356034+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 889,
+        "transitionPending": 0,
+        "placementPending": false,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-4",
+          "outerMaximum": "4,4,4",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 313
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 43.5283327
+          },
+          "pending": 320
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 43.5175824
+          },
+          "pending": 256
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 0,
+      "commits": 2,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 35.0022725,
+      "capturedAtUtc": "2026-09-12T15:52:49.0373373+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 473,
+        "transitionPending": 0,
+        "placementPending": false,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-4",
+          "outerMaximum": "4,4,4",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 217
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "queued",
+            "requestAgeSeconds": 44.5193139
+          },
+          "pending": 256
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 0,
+      "commits": 2,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 36.0049737,
+      "capturedAtUtc": "2026-09-12T15:52:50.0400337+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 169,
+        "transitionPending": 0,
+        "placementPending": false,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-4",
+          "outerMaximum": "4,4,4",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 169
+        }
+      ],
+      "detailedReadiness": true,
+      "missingLevels": [],
+      "missingTransitions": 0,
+      "missingWater": 0,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 0,
+      "commits": 2,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    },
+    {
+      "elapsedSeconds": 37.0052808,
+      "capturedAtUtc": "2026-09-12T15:52:51.0403474+00:00",
+      "position": "0,0,272.205719",
+      "near": {
+        "center": "0,0,0",
+        "requested": 27,
+        "terrainPrepared": 27,
+        "presented": 27,
+        "visualPending": 0,
+        "transitionPending": 0,
+        "placementPending": false,
+        "preparationMissing": 0,
+        "meshMissing": 0,
+        "publicationBlocked": 0,
+        "waterBlocked": 0
+      },
+      "levels": [
+        {
+          "level": 0,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-4,-4,-4",
+          "outerMaximum": "4,4,4",
+          "requestedAnchor": "0,0,0",
+          "active": true,
+          "presented": true,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 1,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 2,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 3,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 4,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        },
+        {
+          "level": 5,
+          "targetRegion": "0,0,0",
+          "committedAnchor": "0,0,0",
+          "stagedAnchor": "0,0,0",
+          "outerMinimum": "-8,-8,-8",
+          "outerMaximum": "8,8,8",
+          "requestedAnchor": "0,0,0",
+          "active": false,
+          "presented": false,
+          "work": {
+            "stage": "resident",
+            "requestAgeSeconds": 0
+          },
+          "pending": 0
+        }
+      ],
+      "detailedReadiness": false,
+      "missingLevels": [],
+      "missingTransitions": -1,
+      "missingWater": -1,
+      "preparingPlacement": false,
+      "waterReady": true,
+      "placementAgeSeconds": 0,
+      "commits": 2,
+      "superseded": 2,
+      "eyePosition": "0,0,336.205719",
+      "eyeForward": "1,0,0",
+      "collisionOnlyViewHit": "774.61438,0,336.205719",
+      "collisionOnlyViewHitPresentedLod": 0,
+      "viewHitInsideDesiredLod0": true
+    }
+  ],
+  "performanceTask": null,
+  "performanceRevision": null,
+  "screenWidth": 4154,
+  "screenHeight": 2154,
+  "coalescedWrites": 0
+}

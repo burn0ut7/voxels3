@@ -1545,6 +1545,31 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	// Published empty-solid records can still contain another medium's surface.
 	public bool IsResident( GpuMeshRegionKey key ) => _resident.ContainsKey( key );
 
+	/// <summary>Read current-revision work without scheduling or GPU readbacks. Age includes queue time.</summary>
+	public GpuRegionWorkStatus InspectRegionWork( GpuSdfDescriptor descriptor )
+	{
+		if ( IsResident( descriptor ) ) return new( "resident", 0 );
+		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var edit ) && edit.Descriptor == descriptor )
+			return new( "edit-publication", Stopwatch.GetElapsedTime( edit.ScheduledTimestamp ).TotalSeconds );
+		if ( _pending.TryGetValue( descriptor.Key, out var pending ) && pending.Descriptor == descriptor )
+			return new( "queued", Stopwatch.GetElapsedTime( pending.ScheduledTimestamp ).TotalSeconds );
+		if ( !_cancelledInFlight.Contains( descriptor.Key ) && _scratchLanes is not null )
+		{
+			foreach ( var lane in _scratchLanes )
+			{
+				foreach ( var value in lane.CountInFlight )
+				{
+					if ( value.Descriptor == descriptor ) return new( "count-or-readback", Stopwatch.GetElapsedTime( value.ScheduledTimestamp ).TotalSeconds );
+				}
+				foreach ( var value in lane.EmitInFlight )
+				{
+					if ( value.Descriptor == descriptor ) return new( "emit-or-publication", Stopwatch.GetElapsedTime( value.ScheduledTimestamp ).TotalSeconds );
+				}
+			}
+		}
+		return new( "not-requested", 0 );
+	}
+
 	public bool IsDrawable( GpuMeshRegionKey key ) =>
 		_renderActive.Contains( key ) && _resident.TryGetValue( key, out var resident ) &&
 		resident.Handle is not null && resident.ContentPrepared;
@@ -4629,3 +4654,5 @@ internal readonly record struct GpuVisibilityMeasurement(
 	public float CulledPercent => AverageResident > 0 ? AverageCulled * 100 / AverageResident : 0;
 }
 internal enum GpuMeshResidency { Gameplay, Visual, Warm }
+
+internal readonly record struct GpuRegionWorkStatus( string Stage, double RequestAgeSeconds );
