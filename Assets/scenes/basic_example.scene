@@ -22,7 +22,7 @@
           "__guid": "233da939-6378-40dd-af17-b2da0860f546",
           "__enabled": true,
           "Flags": 0,
-          "BackgroundColor": "0.33333,0.46275,0.52157,1",
+          "BackgroundColor": "0.33787,0.54367,0.63721,1",
           "ClearFlags": "All",
           "EnablePostProcessing": true,
           "FieldOfView": 90,
@@ -136,7 +136,8 @@
         "2d44d92e-ffcf-456c-a2d3-c21edac8b005": "d58e083f-d7cd-4588-b6cd-954ce7ad9a3e",
         "2a9a48ca-5484-494b-8c77-ad782d9b7a53": "071a47d4-6532-43d5-bfe5-d8dfb531c2cc",
         "63e1fef5-8621-42c1-aeae-2b5cc7d341e3": "8bf301a5-36eb-411f-a1ee-4b4b921ae65c",
-        "2928c8ba-41e5-424b-b630-a73f41dac135": "60fa9dda-27b2-42e5-9294-4943bf9d0d89"
+        "2928c8ba-41e5-424b-b630-a73f41dac135": "60fa9dda-27b2-42e5-9294-4943bf9d0d89",
+        "d2e02e81-7dba-4336-b41a-c2eec5ad6784": "a319af4a-e786-87db-b6ad-e2b80fea8ebf"
       }
     },
     {
@@ -170,15 +171,15 @@
           "FigureEightSpeed": 2500,
           "FramePerformance": "Collecting first 10-second window",
           "GameplayRadius": 8,
-          "GeneratorStatus": "Regional landforms and retained caves v13; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.6, MountainAmount = 0.35, PlainsAmount = 0.6, ContinentalScale = 131072, MountainRegionScale = 32768, LocalLandformScale = 8192, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }",
+          "GeneratorStatus": "Regional landforms and retained caves v43; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.6, MountainAmount = 0.35, PlainsAmount = 0.6, ContinentalScale = 131072, MountainRegionScale = 32768, LocalLandformScale = 8192, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }",
           "LandAmount": 0.75,
           "LastPerformanceRunId": "No saved run",
           "LocalLandformScale": 5232.39,
           "Lod0VisualHalfExtent": 4,
           "LodCacheHalfExtent": 8,
-          "MaximumVisualLod": 6,
+          "MaximumVisualLod": 5,
           "MinimumVisualLod": 0,
-          "MountainAmount": 0.2,
+          "MountainAmount": 0.3,
           "MountainRegionScale": 18681.756,
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
@@ -203,7 +204,7 @@
           "TerrainSaveSlot": "No world",
           "TerrainSaveStatus": "Loading world...",
           "VerboseLogging": false,
-          "VisualChunkRadius": 512,
+          "VisualChunkRadius": 256,
           "WaterStatus": "Waiting for terrain",
           "WorldSeed": 1337
         }
@@ -246,7 +247,16 @@
           "ZIndex": 100
         },
         {
-          "__type": "Sandbox.AdminMenu", "__guid": "62655b3d-9f4a-424a-90ed-3d9ef0b7b461", "__enabled": true, "Flags": 0
+          "__type": "Sandbox.AdminMenu",
+          "__guid": "62655b3d-9f4a-424a-90ed-3d9ef0b7b461",
+          "__enabled": true,
+          "Flags": 0,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null
         },
         {
           "__type": "Sandbox.VoxelDebugOverlay",

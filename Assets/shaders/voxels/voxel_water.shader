@@ -1,6 +1,6 @@
 HEADER
 {
-	Description = "Static sea-level voxel water";
+	Description = "Generated water cell surfaces";
 }
 FEATURES
 {
@@ -13,12 +13,7 @@ MODES
 COMMON
 {
 	#include "common/shared.hlsl"
-	#include "shaders/voxels/voxel_terrain_noise.hlsl"
-	#include "shaders/voxels/voxel_regional_landforms.hlsl"
-	float4 WaterTerrain < Attribute( "WaterTerrain" ); >;
-	float4 WaterScales < Attribute( "WaterScales" ); >;
-	float WaterRuggedness < Attribute( "WaterRuggedness" ); >;
-	float WaterSeaLevel < Attribute( "WaterSeaLevel" ); >;
+	float4 WaterCoverage < Attribute( "WaterCoverage" ); >;
 	float WaterCheckerSize < Attribute( "WaterCheckerSize" ); >;
 	float3 WaterDark < Attribute( "WaterDark" ); >;
 	float3 WaterLight < Attribute( "WaterLight" ); >;
@@ -49,10 +44,12 @@ PS
 	RenderState( DepthWriteEnable, true );
 	float4 MainPs( PixelInput input ) : SV_Target0
 	{
-		Material material = Material::Init( input );
 		float3 worldPosition = input.vPositionWithOffsetWs + g_vHighPrecisionLightingOffsetWs.xyz;
-		float height = SampleVoxelLandformHeight( worldPosition.xy, WaterTerrain, WaterScales, WaterRuggedness );
-		if ( height >= WaterSeaLevel ) discard;
+		// Half-open tiles make old/new LOD coverage disjoint, including dry results.
+		if ( any( worldPosition.xy < WaterCoverage.xy ) || any( worldPosition.xy >= WaterCoverage.zw ) )
+		{
+			discard;
+		}
 		float2 coordinates = worldPosition.xy / WaterCheckerSize;
 		float checker = frac( (floor( coordinates.x ) + floor( coordinates.y )) * 0.5 ) * 2.0;
 		float2 footprint = fwidth( coordinates );

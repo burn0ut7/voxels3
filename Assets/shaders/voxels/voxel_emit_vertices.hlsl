@@ -1,3 +1,5 @@
+#include "shaders/voxels/voxel_vertex_identity.hlsl"
+
 struct TerrainRequest
 {
 	float4 OriginAndCellSize;
@@ -28,7 +30,7 @@ struct AllocationDescriptor
 struct TerrainVertexWords
 {
 	uint4 First;
-	uint2 Second;
+	uint3 Second;
 };
 
 StructuredBuffer<TerrainRequest> Requests < Attribute( "Requests" ); >;
@@ -152,9 +154,7 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 		Gradient( block, int3( secondPoint ) ),
 		interpolation ) );
 	float2 encodedNormal = EncodeTerrainNormal( outputNormal );
-	uint recordId = allocation.Reserved & 0x001fffffu;
-	uint generationToken = (allocation.Reserved >> 30u) & 3u;
-	uint encodedRecordIdentity = 0x3f800000u | (generationToken << 21u) | recordId;
+	uint encodedRecordIdentity = EncodeVoxelVertexIdentity( allocation.Reserved, request.Reserved0 );
 
 	TerrainVertexWords output;
 	output.First = uint4(
@@ -162,6 +162,7 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 		asuint( outputPosition.y ),
 		asuint( outputPosition.z ),
 		encodedRecordIdentity );
-	output.Second = uint2( asuint( encodedNormal.x ), asuint( encodedNormal.y ) );
+	output.Second = uint3( asuint( encodedNormal.x ), asuint( encodedNormal.y ),
+		EdgeFlags[totalEdgeSlots + index] );
 	OutputVertices[allocation.VertexOffset + localVertex] = output;
 }

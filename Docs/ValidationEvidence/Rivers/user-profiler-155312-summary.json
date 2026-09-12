@@ -1,0 +1,6291 @@
+{
+  "source": "C:\\Program Files (x86)\\Steam\\steamapps\\profiler_captures\\sbox_2026-09-09_15_53_12.json",
+  "sha256": "c0f83e704a02cf0cc630559fde38b3bbb69d3126523b07ef8d1fe095e6583e69",
+  "wallMilliseconds": 10794.1032,
+  "sampleIntervalMilliseconds": 0.2,
+  "cpuMilliseconds": 12017.750325,
+  "threads": [
+    {
+      "thread": "0 - Thread (35220)",
+      "samples": 16995,
+      "cpuMs": 3371.005231,
+      "self": [
+        {
+          "name": "0x00007FFB64F13D22",
+          "cpuMs": 73.03003,
+          "percent": 2.1664169882743205
+        },
+        {
+          "name": "0x00007FFB64F117E3",
+          "cpuMs": 48.401867,
+          "percent": 1.4358288902934069
+        },
+        {
+          "name": "0x00007FFB64175E4D",
+          "cpuMs": 44.490664,
+          "percent": 1.3198040629204826
+        },
+        {
+          "name": "0x00007FFB64C4427E",
+          "cpuMs": 36.527122,
+          "percent": 1.0835676451669083
+        },
+        {
+          "name": "0x00007FFB64F0F90C",
+          "cpuMs": 34.611524,
+          "percent": 1.026741924981605
+        },
+        {
+          "name": "NtTraceEvent",
+          "cpuMs": 27.903626,
+          "percent": 0.8277538623611824
+        },
+        {
+          "name": "0x00007FFB64C45C0C",
+          "cpuMs": 21.575345,
+          "percent": 0.6400270400529675
+        },
+        {
+          "name": "0x00007FFB64C74D39",
+          "cpuMs": 18.411556,
+          "percent": 0.5461740560556253
+        },
+        {
+          "name": "0x00007FFB64C44223",
+          "cpuMs": 18.409153,
+          "percent": 0.5461027716809259
+        },
+        {
+          "name": "0x00007FFB64F1238B",
+          "cpuMs": 14.20477,
+          "percent": 0.4213808352882974
+        },
+        {
+          "name": "0x00007FFB64FEC3D7",
+          "cpuMs": 13.982068,
+          "percent": 0.41477443794568825
+        },
+        {
+          "name": "0x00007FFB64C70744",
+          "cpuMs": 13.388265,
+          "percent": 0.39715942523258574
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 3371.005231,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 3371.005231,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABDCC8A1D",
+          "cpuMs": 3343.101605,
+          "percent": 99.17224613763882
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 3343.101605,
+          "percent": 99.17224613763882
+        },
+        {
+          "name": "0x00007FFABDCC7286",
+          "cpuMs": 3313.745581,
+          "percent": 98.30140726352376
+        },
+        {
+          "name": "0x00007FFABDD145D3",
+          "cpuMs": 3312.743184,
+          "percent": 98.27167141527346
+        },
+        {
+          "name": "0x00007FFABCE2C17F",
+          "cpuMs": 3274.925987,
+          "percent": 97.14983402824627
+        },
+        {
+          "name": "0x00007FFB62ECE86E",
+          "cpuMs": 2899.526408,
+          "percent": 86.0137024213357
+        },
+        {
+          "name": "0x00007FFB62F26883",
+          "cpuMs": 2899.526408,
+          "percent": 86.0137024213357
+        },
+        {
+          "name": "0x00007FFB62ECF0C3",
+          "cpuMs": 2899.526408,
+          "percent": 86.0137024213357
+        },
+        {
+          "name": "0x00007FFB62ECEFDA",
+          "cpuMs": 2899.526408,
+          "percent": 86.0137024213357
+        },
+        {
+          "name": "0x00007FFABCE2B725",
+          "cpuMs": 2899.526408,
+          "percent": 86.0137024213357
+        },
+        {
+          "name": "0x00007FFB62ED2805",
+          "cpuMs": 2871.164181,
+          "percent": 85.17234427869091
+        },
+        {
+          "name": "0x00007FFB652F31A1",
+          "cpuMs": 2870.964582,
+          "percent": 85.1664232258796
+        },
+        {
+          "name": "0x00007FFB652DE30E",
+          "cpuMs": 2762.105262,
+          "percent": 81.93713959858285
+        },
+        {
+          "name": "0x00007FFB6416D998",
+          "cpuMs": 2722.560863,
+          "percent": 80.76406521007858
+        }
+      ]
+    },
+    {
+      "thread": "1 - .NET TP Worker (35652)",
+      "samples": 10277,
+      "cpuMs": 2022.551836,
+      "self": [
+        {
+          "name": "RiverNetwork+Segment.get_Bounds()",
+          "cpuMs": 375.399745,
+          "percent": 18.560698337523352
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 196.147097,
+          "percent": 9.69800098611663
+        },
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 98.210962,
+          "percent": 4.855794558730904
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 86.870492,
+          "percent": 4.295093478138179
+        },
+        {
+          "name": "System.Collections.Generic.Dictionary`2[RiverNetwork+Segment,System.Int32].FindValue(!0)",
+          "cpuMs": 68.694529,
+          "percent": 3.3964285996178543
+        },
+        {
+          "name": "System.Collections.Generic.GenericEqualityComparer`1[Vector3].Equals(!0,!0)",
+          "cpuMs": 66.26962,
+          "percent": 3.2765350593466818
+        },
+        {
+          "name": "System.Collections.Generic.Dictionary`2[RiverNetwork+Segment,System.Int32].TryAdd(!0,!1)",
+          "cpuMs": 55.172059,
+          "percent": 2.727844004686365
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 52.297068,
+          "percent": 2.5856972893919936
+        },
+        {
+          "name": "RiverNetwork+Segment.GetHashCode()",
+          "cpuMs": 50.548073,
+          "percent": 2.499222620665629
+        },
+        {
+          "name": "System.Collections.Generic.GenericEqualityComparer`1[Vector3].GetHashCode(!0)",
+          "cpuMs": 46.481679,
+          "percent": 2.298169973825086
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 45.104888,
+          "percent": 2.230097997844343
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Radius()",
+          "cpuMs": 44.263191,
+          "percent": 2.1884824018918247
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 2016.312953,
+          "percent": 99.69153408634813
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 2016.312953,
+          "percent": 99.69153408634813
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 2016.109254,
+          "percent": 99.68146270046945
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 2015.519455,
+          "percent": 99.65230156899672
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 2002.127537,
+          "percent": 98.99017179008904
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 2000.899554,
+          "percent": 98.92945725223925
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 2000.826355,
+          "percent": 98.92583811137486
+        },
+        {
+          "name": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext()",
+          "cpuMs": 2000.767556,
+          "percent": 98.92293094237412
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 2000.767556,
+          "percent": 98.92293094237412
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 2000.767556,
+          "percent": 98.92293094237412
+        }
+      ]
+    },
+    {
+      "thread": "3 - .NET TP Worker (26840)",
+      "samples": 4393,
+      "cpuMs": 882.433087,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 198.865005,
+          "percent": 22.53598691273914
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 55.934671,
+          "percent": 6.33868695814213
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 51.867191,
+          "percent": 5.877747759474028
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 32.796115,
+          "percent": 3.716555451416341
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 32.138332,
+          "percent": 3.6420134822075183
+        },
+        {
+          "name": "0xFFFFF806AB0C6219",
+          "cpuMs": 30.217899,
+          "percent": 3.4243841765647667
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 25.522544,
+          "percent": 2.892292274167639
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 25.376639,
+          "percent": 2.8757578760189895
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 22.051647,
+          "percent": 2.4989596746614287
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 18.624053,
+          "percent": 2.110534302755581
+        },
+        {
+          "name": "RegionalLandforms+Interval..ctor(float64,float64)",
+          "cpuMs": 18.620052,
+          "percent": 2.110080897272611
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+          "cpuMs": 15.722463,
+          "percent": 1.7817173031726994
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 878.8588,
+          "percent": 99.59495093139
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 878.8588,
+          "percent": 99.59495093139
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 878.8588,
+          "percent": 99.59495093139
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 878.8588,
+          "percent": 99.59495093139
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 878.659001,
+          "percent": 99.57230910132454
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 878.659001,
+          "percent": 99.57230910132454
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 878.659001,
+          "percent": 99.57230910132454
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 878.659001,
+          "percent": 99.57230910132454
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 878.458702,
+          "percent": 99.54961060973908
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 878.458702,
+          "percent": 99.54961060973908
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 829.695789,
+          "percent": 94.0236490701759
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 829.221408,
+          "percent": 93.96989077314595
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 829.128809,
+          "percent": 93.95939717296662
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 829.106809,
+          "percent": 93.95690406608699
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 829.09841,
+          "percent": 93.95595226587419
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 829.08221,
+          "percent": 93.95411643262646
+        }
+      ]
+    },
+    {
+      "thread": "5 - .NET TP Worker (34676)",
+      "samples": 4664,
+      "cpuMs": 880.325164,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 205.596803,
+          "percent": 23.354643421280183
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 58.700959,
+          "percent": 6.6680996296045905
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 52.933585,
+          "percent": 6.012958298213545
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 35.779817,
+          "percent": 4.0643864861734205
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 35.004717,
+          "percent": 3.9763394744899054
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 25.562034,
+          "percent": 2.9037036592083605
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 25.127749,
+          "percent": 2.854371319550284
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 20.599446,
+          "percent": 2.33998150256216
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+          "cpuMs": 18.190247,
+          "percent": 2.0663100117855997
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 18.143258,
+          "percent": 2.0609723249942222
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 17.34976,
+          "percent": 1.9708354037236178
+        },
+        {
+          "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+          "cpuMs": 16.759457,
+          "percent": 1.9037802945276252
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 877.941972,
+          "percent": 99.72928275852398
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 877.941972,
+          "percent": 99.72928275852398
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 877.741672,
+          "percent": 99.70652980220841
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 876.942576,
+          "percent": 99.61575697954262
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 864.440174,
+          "percent": 98.19555425090631
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 864.040895,
+          "percent": 98.15019839646433
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 863.978297,
+          "percent": 98.14308761483956
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 863.969498,
+          "percent": 98.142088097802
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 863.969498,
+          "percent": 98.142088097802
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 863.771298,
+          "percent": 98.1195736897054
+        }
+      ]
+    },
+    {
+      "thread": "2 - .NET TP Worker (36740)",
+      "samples": 4508,
+      "cpuMs": 848.926387,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 175.963677,
+          "percent": 20.72778979362789
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 58.739958,
+          "percent": 6.919322911799183
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 49.622789,
+          "percent": 5.845358297244211
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 36.060218,
+          "percent": 4.24774380349188
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 35.791512,
+          "percent": 4.216091353513317
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 27.487531,
+          "percent": 3.2379169055090284
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 25.236342,
+          "percent": 2.9727361979148847
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 23.261141,
+          "percent": 2.740065729633163
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 19.149355,
+          "percent": 2.255714428629252
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+          "cpuMs": 16.994363,
+          "percent": 2.001865327811986
+        },
+        {
+          "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+          "cpuMs": 13.951056,
+          "percent": 1.6433764120940206
+        },
+        {
+          "name": "TerrainCaves.CaveRegionNoise(value class Vector3,unsigned int32)",
+          "cpuMs": 11.53007,
+          "percent": 1.3581943236263194
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 843.455692,
+          "percent": 99.35557486682293
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 843.455692,
+          "percent": 99.35557486682293
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 843.237793,
+          "percent": 99.32990727027548
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 843.054793,
+          "percent": 99.3083506308775
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 843.054793,
+          "percent": 99.3083506308775
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 843.037193,
+          "percent": 99.30627742402828
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 843.037193,
+          "percent": 99.30627742402828
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 843.037193,
+          "percent": 99.30627742402828
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 843.037193,
+          "percent": 99.30627742402828
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 843.037193,
+          "percent": 99.30627742402828
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 829.817732,
+          "percent": 97.74907986220954
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 829.007155,
+          "percent": 97.65359726060677
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 828.894059,
+          "percent": 97.64027502186713
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 828.879459,
+          "percent": 97.63855520254903
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 828.871659,
+          "percent": 97.63763639496813
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 828.818261,
+          "percent": 97.63134633250598
+        }
+      ]
+    },
+    {
+      "thread": "4 - .NET TP Worker (19920)",
+      "samples": 4365,
+      "cpuMs": 840.461475,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 197.986005,
+          "percent": 23.556820971478793
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 48.711059,
+          "percent": 5.795751554227992
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 45.346096,
+          "percent": 5.395380674646628
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 38.082711,
+          "percent": 4.531166761688868
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 34.506907,
+          "percent": 4.105709544866408
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 26.290037,
+          "percent": 3.128047838242675
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 23.795938,
+          "percent": 2.831294319587938
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 21.938849,
+          "percent": 2.610333686026477
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 20.745846,
+          "percent": 2.468387501045185
+        },
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 20.049899,
+          "percent": 2.3855821588966943
+        },
+        {
+          "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+          "cpuMs": 16.753755,
+          "percent": 1.9933995189963942
+        },
+        {
+          "name": "TerrainCaves.CaveRegionNoise(value class Vector3,unsigned int32)",
+          "cpuMs": 14.844461,
+          "percent": 1.7662274169080743
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 838.226378,
+          "percent": 99.7340631228814
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 838.072478,
+          "percent": 99.71575175411817
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 838.072478,
+          "percent": 99.71575175411817
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 807.890067,
+          "percent": 96.1245804871663
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 806.635686,
+          "percent": 95.9753314094498
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 806.527387,
+          "percent": 95.96244575041348
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 806.517887,
+          "percent": 95.96131541900834
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 806.503988,
+          "percent": 95.9596616846715
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 806.503988,
+          "percent": 95.9596616846715
+        }
+      ]
+    },
+    {
+      "thread": "6 - MainThrd (35984)",
+      "samples": 3674,
+      "cpuMs": 635.353409,
+      "self": [
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 11.034499,
+          "percent": 1.7367497905405902
+        },
+        {
+          "name": "VoxelCollisionWorld+<>c.<RebuildPendingOrder>b__65_0(class Region,class Region)",
+          "cpuMs": 10.407972,
+          "percent": 1.6381390030442098
+        },
+        {
+          "name": "0x00007FFB32C00523",
+          "cpuMs": 10.177977,
+          "percent": 1.6019394648435734
+        },
+        {
+          "name": "0x00007FFABD271BF3",
+          "cpuMs": 8.989465,
+          "percent": 1.4148763306627665
+        },
+        {
+          "name": "0xFFFFF806884F0617",
+          "cpuMs": 6.420882,
+          "percent": 1.0106000706136133
+        },
+        {
+          "name": "GpuVoxelMesher.Contains(value class GpuSdfDescriptor)",
+          "cpuMs": 5.801284,
+          "percent": 0.9130798572609846
+        },
+        {
+          "name": "GpuSdfDescriptor.op_Equality(value class GpuSdfDescriptor,value class GpuSdfDescriptor)",
+          "cpuMs": 5.76308,
+          "percent": 0.9070668258584885
+        },
+        {
+          "name": "0xFFFFF806AB4B537F",
+          "cpuMs": 5.750285,
+          "percent": 0.9050529860303307
+        },
+        {
+          "name": "0xFFFFF806884F0604",
+          "cpuMs": 5.166689,
+          "percent": 0.8131992253149302
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[Vector3Int].Contains(!0)",
+          "cpuMs": 4.79829,
+          "percent": 0.7552159053576433
+        },
+        {
+          "name": "0xFFFFF806AB4B5399",
+          "cpuMs": 4.455288,
+          "percent": 0.7012298882620774
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 4.40349,
+          "percent": 0.6930772602496573
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 629.987827,
+          "percent": 99.15549646480295
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 629.987827,
+          "percent": 99.15549646480295
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 629.825228,
+          "percent": 99.12990456623173
+        },
+        {
+          "name": "corehost_main",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "Assembly::ExecuteMainMethod",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "coreclr_execute_assembly",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "wmain",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "fx_muxer_t::handle_exec_host_command",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "MethodDescCallSite::CallTargetWorker",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "execute_app",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "Sandbox.Program.Main()",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&)",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "RunMain",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "CorHost2::ExecuteAssembly",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "fx_muxer_t::execute",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        },
+        {
+          "name": "Sandbox.Launcher.Main()",
+          "cpuMs": 629.622129,
+          "percent": 99.09793826257726
+        }
+      ]
+    },
+    {
+      "thread": "8 - .NET TP Worker (29052)",
+      "samples": 3082,
+      "cpuMs": 577.474118,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 116.524015,
+          "percent": 20.178222948513167
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 43.701985,
+          "percent": 7.567782457741249
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 31.152927,
+          "percent": 5.394688009203557
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 22.902356,
+          "percent": 3.9659536741350543
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 22.686649,
+          "percent": 3.9286001385779854
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 17.361357,
+          "percent": 3.006430324553524
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 15.810766,
+          "percent": 2.737917684477073
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 15.352268,
+          "percent": 2.6585205330362527
+        },
+        {
+          "name": "TerrainCaves.CaveRegionNoise(value class Vector3,unsigned int32)",
+          "cpuMs": 13.620568,
+          "percent": 2.358645621586109
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 13.589165,
+          "percent": 2.3532076289521258
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+          "cpuMs": 13.018969,
+          "percent": 2.2544679656101922
+        },
+        {
+          "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+          "cpuMs": 11.40267,
+          "percent": 1.9745768069210679
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 575.199926,
+          "percent": 99.60618286965374
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 573.401432,
+          "percent": 99.2947413792145
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 567.562178,
+          "percent": 98.28356982745329
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 567.079697,
+          "percent": 98.20001958944937
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 566.992101,
+          "percent": 98.18485077109551
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 566.981801,
+          "percent": 98.18306714137447
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 566.981801,
+          "percent": 98.18306714137447
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 566.955901,
+          "percent": 98.17858209188174
+        },
+        {
+          "name": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext()",
+          "cpuMs": 566.921003,
+          "percent": 98.17253887731813
+        }
+      ]
+    },
+    {
+      "thread": "7 - .NET TP Worker (24484)",
+      "samples": 3036,
+      "cpuMs": 558.576725,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 138.380853,
+          "percent": 24.77383084660393
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 39.952003,
+          "percent": 7.152464686028584
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 29.97443,
+          "percent": 5.3662153574336635
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 27.372932,
+          "percent": 4.9004784436730695
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 26.253829,
+          "percent": 4.700129422685845
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 16.69276,
+          "percent": 2.988445320560036
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 14.723065,
+          "percent": 2.6358178457937003
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 14.394273,
+          "percent": 2.576955386030451
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+          "cpuMs": 14.208964,
+          "percent": 2.5437801763043386
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 13.526569,
+          "percent": 2.421613431887983
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 12.350278,
+          "percent": 2.2110262471104574
+        },
+        {
+          "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+          "cpuMs": 11.281568,
+          "percent": 2.019698905284677
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 556.459533,
+          "percent": 99.62096666308464
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 549.268019,
+          "percent": 98.33349554620271
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 548.520749,
+          "percent": 98.19971446178678
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 548.455751,
+          "percent": 98.18807810153565
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 548.443752,
+          "percent": 98.18592996333673
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 548.443752,
+          "percent": 98.18592996333673
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 548.443752,
+          "percent": 98.18592996333673
+        }
+      ]
+    },
+    {
+      "thread": "9 - .NET TP Worker (33268)",
+      "samples": 2412,
+      "cpuMs": 460.473956,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 91.319864,
+          "percent": 19.831710960000525
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 31.31363,
+          "percent": 6.800304249997583
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 26.560829,
+          "percent": 5.7681501101009065
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 21.667748,
+          "percent": 4.705531706553237
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 17.69996,
+          "percent": 3.8438569151129145
+        },
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 17.0709,
+          "percent": 3.707245497289319
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 13.315573,
+          "percent": 2.8917103402912105
+        },
+        {
+          "name": "COMSingle::Sqrt",
+          "cpuMs": 12.433867,
+          "percent": 2.7002324101039927
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+          "cpuMs": 11.621668,
+          "percent": 2.5238491446843088
+        },
+        {
+          "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+          "cpuMs": 10.792974,
+          "percent": 2.3438837005583
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 7.205987,
+          "percent": 1.5649065286115769
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 7.143082,
+          "percent": 1.5512456039967655
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 458.638363,
+          "percent": 99.60136876883435
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 430.017228,
+          "percent": 93.38578705632594
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 429.719541,
+          "percent": 93.32113910042722
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 429.661542,
+          "percent": 93.3085435998035
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 429.629443,
+          "percent": 93.30157273867623
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 429.629443,
+          "percent": 93.30157273867623
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+          "cpuMs": 429.629443,
+          "percent": 93.30157273867623
+        }
+      ]
+    },
+    {
+      "thread": "28 - Thread (34296)",
+      "samples": 21,
+      "cpuMs": 110.37269,
+      "self": [
+        {
+          "name": "0xFFFFF806AB1635C0",
+          "cpuMs": 110.0046,
+          "percent": 99.66650264662391
+        },
+        {
+          "name": "0xFFFFF806AB0742FE",
+          "cpuMs": 0.1943,
+          "percent": 0.17603992436897206
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.038097,
+          "percent": 0.034516690677739215
+        },
+        {
+          "name": "0xFFFFF806AB2E079D",
+          "cpuMs": 0.0168,
+          "percent": 0.015221156610389763
+        },
+        {
+          "name": "0xFFFFF806AB64915C",
+          "cpuMs": 0.015699,
+          "percent": 0.014223627239673147
+        },
+        {
+          "name": "0xFFFFF806AB082CEC",
+          "cpuMs": 0.0156,
+          "percent": 0.014133931138219065
+        },
+        {
+          "name": "RtlActivateActivationContextUnsafeFast",
+          "cpuMs": 0.014799,
+          "percent": 0.013408208135545125
+        },
+        {
+          "name": "0xFFFFF806AB648C15",
+          "cpuMs": 0.010199,
+          "percent": 0.009240510492224118
+        },
+        {
+          "name": "0xFFFFF806AB216CAD",
+          "cpuMs": 0.0086,
+          "percent": 0.007791782550556664
+        },
+        {
+          "name": "0xFFFFF806AB07A914",
+          "cpuMs": 0.0079,
+          "percent": 0.007157567691790424
+        },
+        {
+          "name": "0xFFFFF80640A962C6",
+          "cpuMs": 0.007499,
+          "percent": 0.006794253179840049
+        },
+        {
+          "name": "0x00007FFB46A9BF4A",
+          "cpuMs": 0.006499,
+          "percent": 0.005888231953031135
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 110.37269,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 110.37269,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 110.37269,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 110.37269,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB46A9B4B9",
+          "cpuMs": 110.37269,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 110.313295,
+          "percent": 99.94618686923369
+        },
+        {
+          "name": "0x00007FFB46A9B91E",
+          "cpuMs": 110.297795,
+          "percent": 99.93214354021815
+        },
+        {
+          "name": "0xFFFFF8063CCF1447",
+          "cpuMs": 110.073299,
+          "percent": 99.72874539888446
+        },
+        {
+          "name": "0x00007FFB713445B8",
+          "cpuMs": 110.047899,
+          "percent": 99.7057324597235
+        },
+        {
+          "name": "0x00007FFB081899B8",
+          "cpuMs": 110.047899,
+          "percent": 99.7057324597235
+        },
+        {
+          "name": "NtUserGetMessage",
+          "cpuMs": 110.047899,
+          "percent": 99.7057324597235
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 110.035099,
+          "percent": 99.69413538802036
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 110.035099,
+          "percent": 99.69413538802036
+        },
+        {
+          "name": "0xFFFFF80688291D82",
+          "cpuMs": 110.032299,
+          "percent": 99.69159852858529
+        },
+        {
+          "name": "0xFFFFF80688292016",
+          "cpuMs": 110.032299,
+          "percent": 99.69159852858529
+        },
+        {
+          "name": "0xFFFFF80688292FB6",
+          "cpuMs": 110.026099,
+          "percent": 99.68598119697907
+        }
+      ]
+    },
+    {
+      "thread": "36 - Thread (14592)",
+      "samples": 3,
+      "cpuMs": 100.228698,
+      "self": [
+        {
+          "name": "0xFFFFF806AB0C6219",
+          "cpuMs": 100.178699,
+          "percent": 99.95011508580107
+        },
+        {
+          "name": "0xFFFFF806AB1F9919",
+          "cpuMs": 0.0452,
+          "percent": 0.04509686437311597
+        },
+        {
+          "name": "0x00007FFB6FC52AA7",
+          "cpuMs": 0.004799,
+          "percent": 0.0047880498258093705
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFAA0AE133E",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAA0793EE7",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAA08FEA67",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB6FC528C1",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAA07944E4",
+          "cpuMs": 100.228698,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB6FC529F3",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 100.223899,
+          "percent": 99.9952119501742
+        },
+        {
+          "name": "0xFFFFF806AB4B4A16",
+          "cpuMs": 100.178699,
+          "percent": 99.95011508580107
+        },
+        {
+          "name": "0xFFFFF806AB219957",
+          "cpuMs": 100.178699,
+          "percent": 99.95011508580107
+        }
+      ]
+    },
+    {
+      "thread": "12 - Thread (1564)",
+      "samples": 310,
+      "cpuMs": 80.963639,
+      "self": [
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 45.6171,
+          "percent": 56.3426997148683
+        },
+        {
+          "name": "0xFFFFF806AB14D46E",
+          "cpuMs": 1.702893,
+          "percent": 2.1032812025655123
+        },
+        {
+          "name": "0xFFFFF806AB14F00A",
+          "cpuMs": 1.181496,
+          "percent": 1.4592921150690867
+        },
+        {
+          "name": "RtlAnsiCharToUnicodeChar",
+          "cpuMs": 0.791996,
+          "percent": 0.978211960062714
+        },
+        {
+          "name": "0xFFFFF806AB117070",
+          "cpuMs": 0.435797,
+          "percent": 0.5382626144064497
+        },
+        {
+          "name": "0xFFFFF806AB0298A2",
+          "cpuMs": 0.410398,
+          "percent": 0.5068917418595772
+        },
+        {
+          "name": "RtlLeaveCriticalSection",
+          "cpuMs": 0.382999,
+          "percent": 0.4730506246143408
+        },
+        {
+          "name": "RtlEnterCriticalSection",
+          "cpuMs": 0.376098,
+          "percent": 0.46452704528263605
+        },
+        {
+          "name": "0x00007FFADBDE63E7",
+          "cpuMs": 0.3536,
+          "percent": 0.43673926267074037
+        },
+        {
+          "name": "0xFFFFF806AB080299",
+          "cpuMs": 0.3472,
+          "percent": 0.4288344796359759
+        },
+        {
+          "name": "0xFFFFF80687649CD5",
+          "cpuMs": 0.3402,
+          "percent": 0.42018862319170214
+        },
+        {
+          "name": "0x00007FFB595FAD4A",
+          "cpuMs": 0.3221,
+          "percent": 0.3978329086715087
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 80.963639,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 80.963639,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 80.673239,
+          "percent": 99.64132046979756
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 61.164435,
+          "percent": 75.54556064358718
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 46.101499,
+          "percent": 56.94099174568969
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 45.907699,
+          "percent": 56.70162503441823
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 45.907699,
+          "percent": 56.70162503441823
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 45.905099,
+          "percent": 56.698413716310355
+        },
+        {
+          "name": "0x00007FFB6FC529F3",
+          "cpuMs": 45.622099,
+          "percent": 56.34887409149186
+        },
+        {
+          "name": "0x00007FFB6FC528C1",
+          "cpuMs": 45.622099,
+          "percent": 56.34887409149186
+        },
+        {
+          "name": "0x00007FFABDB967E0",
+          "cpuMs": 45.622099,
+          "percent": 56.34887409149186
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 45.622099,
+          "percent": 56.34887409149186
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 45.619499,
+          "percent": 56.345662773383985
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 45.619499,
+          "percent": 56.345662773383985
+        },
+        {
+          "name": "0xFFFFF806AB219706",
+          "cpuMs": 45.6171,
+          "percent": 56.3426997148683
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 45.6171,
+          "percent": 56.3426997148683
+        }
+      ]
+    },
+    {
+      "thread": "20 - GlobPool/3 (30004)",
+      "samples": 231,
+      "cpuMs": 70.493577,
+      "self": [
+        {
+          "name": "0xFFFFF806AB4B4797",
+          "cpuMs": 49.7659,
+          "percent": 70.59636085710333
+        },
+        {
+          "name": "0x00007FFB46A58550",
+          "cpuMs": 0.402999,
+          "percent": 0.5716818711015331
+        },
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.4018,
+          "percent": 0.5699810069220916
+        },
+        {
+          "name": "0x00007FFAA4CBEFFD",
+          "cpuMs": 0.397899,
+          "percent": 0.5644471694208396
+        },
+        {
+          "name": "0x00007FFABD26EC60",
+          "cpuMs": 0.360699,
+          "percent": 0.5116764042204867
+        },
+        {
+          "name": "0x00007FFABDC44F5C",
+          "cpuMs": 0.342499,
+          "percent": 0.48585844920310967
+        },
+        {
+          "name": "0x00007FFAFC2480C9",
+          "cpuMs": 0.285999,
+          "percent": 0.40570930313268116
+        },
+        {
+          "name": "0x00007FFABDC4F003",
+          "cpuMs": 0.2683,
+          "percent": 0.3806020511627605
+        },
+        {
+          "name": "0xFFFFF806AB4C2159",
+          "cpuMs": 0.251399,
+          "percent": 0.3566268172205249
+        },
+        {
+          "name": "0x00007FFABDC84430",
+          "cpuMs": 0.227899,
+          "percent": 0.32329044673105467
+        },
+        {
+          "name": "0x00007FFABDD021CA",
+          "cpuMs": 0.2128,
+          "percent": 0.3018714740493308
+        },
+        {
+          "name": "0x00007FFAA116CB67",
+          "cpuMs": 0.2098,
+          "percent": 0.29761576717833454
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 70.487378,
+          "percent": 99.99120629103557
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 70.487378,
+          "percent": 99.99120629103557
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 70.487378,
+          "percent": 99.99120629103557
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 70.487378,
+          "percent": 99.99120629103557
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 70.487378,
+          "percent": 99.99120629103557
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 51.323194,
+          "percent": 72.80548978242372
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 50.090697,
+          "percent": 71.05710779862966
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 50.090697,
+          "percent": 71.05710779862966
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 50.090697,
+          "percent": 71.05710779862966
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 50.090697,
+          "percent": 71.05710779862966
+        },
+        {
+          "name": "0x00007FFB46A19A2F",
+          "cpuMs": 50.0456,
+          "percent": 70.99313459437589
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 50.0456,
+          "percent": 70.99313459437589
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 50.0456,
+          "percent": 70.99313459437589
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 49.7686,
+          "percent": 70.60019099328723
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 49.7686,
+          "percent": 70.60019099328723
+        },
+        {
+          "name": "0xFFFFF806AB4B4797",
+          "cpuMs": 49.7659,
+          "percent": 70.59636085710333
+        }
+      ]
+    },
+    {
+      "thread": "35 - Thread (29528)",
+      "samples": 3,
+      "cpuMs": 56.471799,
+      "self": [
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 56.4609,
+          "percent": 99.98070010130189
+        },
+        {
+          "name": "0xFFFFF806AB113645",
+          "cpuMs": 0.008199,
+          "percent": 0.01451875120889986
+        },
+        {
+          "name": "0xFFFFF806AB4B495C",
+          "cpuMs": 0.0027,
+          "percent": 0.004781147489209614
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CCD8A",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABDCD87A2",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 56.471799,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 56.4636,
+          "percent": 99.9854812487911
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 56.4636,
+          "percent": 99.9854812487911
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 56.4636,
+          "percent": 99.9854812487911
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 56.4636,
+          "percent": 99.9854812487911
+        },
+        {
+          "name": "0xFFFFF806AB219706",
+          "cpuMs": 56.4609,
+          "percent": 99.98070010130189
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 56.4609,
+          "percent": 99.98070010130189
+        }
+      ]
+    },
+    {
+      "thread": "31 - Thread (35196)",
+      "samples": 13,
+      "cpuMs": 51.171693,
+      "self": [
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 51.021,
+          "percent": 99.70551492208789
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.046998,
+          "percent": 0.09184374650258298
+        },
+        {
+          "name": "0xFFFFF806AB219782",
+          "cpuMs": 0.043899,
+          "percent": 0.08578766389456764
+        },
+        {
+          "name": "0xFFFFF806AB10E013",
+          "cpuMs": 0.016,
+          "percent": 0.03126728677904012
+        },
+        {
+          "name": "0xFFFFF806AB161DC9",
+          "cpuMs": 0.0113,
+          "percent": 0.022082521287697086
+        },
+        {
+          "name": "0xFFFFF806AB4B4934",
+          "cpuMs": 0.0068,
+          "percent": 0.013288596881092051
+        },
+        {
+          "name": "0x00007FFB6FC4C124",
+          "cpuMs": 0.0064,
+          "percent": 0.01250691471161605
+        },
+        {
+          "name": "0xFFFFF806AB648A8A",
+          "cpuMs": 0.005799,
+          "percent": 0.011332437251978354
+        },
+        {
+          "name": "0xFFFFF806AB113887",
+          "cpuMs": 0.005499,
+          "percent": 0.010746175624871353
+        },
+        {
+          "name": "0xFFFFF806AB09CAC9",
+          "cpuMs": 0.005399,
+          "percent": 0.01055075508250235
+        },
+        {
+          "name": "0xFFFFF806AB4B48F3",
+          "cpuMs": 0.002599,
+          "percent": 0.00507897989617033
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 51.171693,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB59579299",
+          "cpuMs": 51.171693,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 51.171693,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB595792E6",
+          "cpuMs": 51.171693,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB59D2D18A",
+          "cpuMs": 51.171693,
+          "percent": 100.0
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 51.165293,
+          "percent": 99.98749308528838
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 51.165293,
+          "percent": 99.98749308528838
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 51.118295,
+          "percent": 99.8956493387858
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 51.118295,
+          "percent": 99.8956493387858
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 51.112496,
+          "percent": 99.88431690153382
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 51.106997,
+          "percent": 99.87357072590895
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 51.106997,
+          "percent": 99.87357072590895
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 51.074298,
+          "percent": 99.80967016275972
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 51.074298,
+          "percent": 99.80967016275972
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 51.021,
+          "percent": 99.70551492208789
+        },
+        {
+          "name": "0xFFFFF806AB219782",
+          "cpuMs": 0.043899,
+          "percent": 0.08578766389456764
+        }
+      ]
+    },
+    {
+      "thread": "17 - GlobPool/5 (9600)",
+      "samples": 250,
+      "cpuMs": 42.992284,
+      "self": [
+        {
+          "name": "0xFFFFF806AB4B4790",
+          "cpuMs": 22.902,
+          "percent": 53.270023988490586
+        },
+        {
+          "name": "NtTraceEvent",
+          "cpuMs": 0.405299,
+          "percent": 0.9427249782774975
+        },
+        {
+          "name": "0x00007FFABDD333DC",
+          "cpuMs": 0.404897,
+          "percent": 0.9417899267691849
+        },
+        {
+          "name": "0x00007FFAFC2480C9",
+          "cpuMs": 0.330398,
+          "percent": 0.7685053438891499
+        },
+        {
+          "name": "0x00007FFABDCFBBF7",
+          "cpuMs": 0.2934,
+          "percent": 0.682448041141522
+        },
+        {
+          "name": "memcpy_repmovs",
+          "cpuMs": 0.2803,
+          "percent": 0.6519774571641739
+        },
+        {
+          "name": "0x00007FFABDC11412",
+          "cpuMs": 0.269898,
+          "percent": 0.6277824178868934
+        },
+        {
+          "name": "JIT_ReversePInvokeEnter",
+          "cpuMs": 0.265898,
+          "percent": 0.6184784227793062
+        },
+        {
+          "name": "0x00007FFAA10DA11B",
+          "cpuMs": 0.248499,
+          "percent": 0.5780083700600787
+        },
+        {
+          "name": "0x00007FFAA1106586",
+          "cpuMs": 0.2449,
+          "percent": 0.5696371004620271
+        },
+        {
+          "name": "0x00007FFABE37353B",
+          "cpuMs": 0.213899,
+          "percent": 0.4975288123794493
+        },
+        {
+          "name": "0x00007FFABDC4A515",
+          "cpuMs": 0.2114,
+          "percent": 0.4917161414359842
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 42.667986,
+          "percent": 99.24568324864993
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 42.667986,
+          "percent": 99.24568324864993
+        },
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 42.262687,
+          "percent": 98.30295827037243
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 42.262687,
+          "percent": 98.30295827037243
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 42.262687,
+          "percent": 98.30295827037243
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 24.818891,
+          "percent": 57.72871010993508
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 23.142097,
+          "percent": 53.82848931682718
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 23.100797,
+          "percent": 53.73242556734134
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 23.080898,
+          "percent": 53.68614051767987
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 23.080898,
+          "percent": 53.68614051767987
+        },
+        {
+          "name": "0x00007FFB46A19A2F",
+          "cpuMs": 23.041598,
+          "percent": 53.594728765747824
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 23.041598,
+          "percent": 53.594728765747824
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 23.041598,
+          "percent": 53.594728765747824
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 22.976999,
+          "percent": 53.44447157075907
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 22.976999,
+          "percent": 53.44447157075907
+        },
+        {
+          "name": "0xFFFFF806AB4B4790",
+          "cpuMs": 22.902,
+          "percent": 53.270023988490586
+        }
+      ]
+    },
+    {
+      "thread": "29 - Thread (23996)",
+      "samples": 17,
+      "cpuMs": 42.156291,
+      "self": [
+        {
+          "name": "0xFFFFF806AB2198C8",
+          "cpuMs": 10.5505,
+          "percent": 25.027106867632163
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 10.512299,
+          "percent": 24.93648931306599
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 10.5114,
+          "percent": 24.934356772515873
+        },
+        {
+          "name": "0xFFFFF806AB1DE9E2",
+          "cpuMs": 10.509199,
+          "percent": 24.92913572496214
+        },
+        {
+          "name": "0xFFFFF806AB0A1C87",
+          "cpuMs": 0.009399,
+          "percent": 0.02229560470583145
+        },
+        {
+          "name": "0xFFFFF806AB1136AB",
+          "cpuMs": 0.0081,
+          "percent": 0.01921421407779921
+        },
+        {
+          "name": "0xFFFFF806AB1B5D8E",
+          "cpuMs": 0.0078,
+          "percent": 0.0185025765193622
+        },
+        {
+          "name": "0xFFFFF806AB6480B7",
+          "cpuMs": 0.007399,
+          "percent": 0.017551354316251398
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.007299,
+          "percent": 0.017314141796772396
+        },
+        {
+          "name": "0x00007FFB6FCEDDC0",
+          "cpuMs": 0.0053,
+          "percent": 0.012572263532387135
+        },
+        {
+          "name": "RtlEnterCriticalSection",
+          "cpuMs": 0.0048,
+          "percent": 0.011386200934992123
+        },
+        {
+          "name": "0xFFFFF806AB09D9BF",
+          "cpuMs": 0.004799,
+          "percent": 0.011383828809797332
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 42.156291,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 42.156291,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 42.156291,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABDDFECC8",
+          "cpuMs": 42.156291,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CCD8A",
+          "cpuMs": 42.140093,
+          "percent": 99.96157631609479
+        },
+        {
+          "name": "0x00007FFABDE08526",
+          "cpuMs": 42.140093,
+          "percent": 99.96157631609479
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 42.132193,
+          "percent": 99.94283652705595
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 42.132193,
+          "percent": 99.94283652705595
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 42.122094,
+          "percent": 99.91888043471377
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 42.117594,
+          "percent": 99.90820587133722
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 42.117594,
+          "percent": 99.90820587133722
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 42.110095,
+          "percent": 99.89041730450148
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 42.110095,
+          "percent": 99.89041730450148
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 42.083398,
+          "percent": 99.82708867817617
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 42.083398,
+          "percent": 99.82708867817617
+        },
+        {
+          "name": "0xFFFFF806AB219706",
+          "cpuMs": 21.062799,
+          "percent": 49.963596180698154
+        }
+      ]
+    },
+    {
+      "thread": "32 - Thread (34452)",
+      "samples": 10,
+      "cpuMs": 41.041496,
+      "self": [
+        {
+          "name": "0xFFFFF806AB1DED05",
+          "cpuMs": 40.990599,
+          "percent": 99.87598648938138
+        },
+        {
+          "name": "0xFFFFF806AB09D831",
+          "cpuMs": 0.0108,
+          "percent": 0.026314830239131635
+        },
+        {
+          "name": "0xFFFFF806AB09C249",
+          "cpuMs": 0.0071,
+          "percent": 0.017299564323873574
+        },
+        {
+          "name": "0x00007FFB595B9CAD",
+          "cpuMs": 0.0063,
+          "percent": 0.015350317639493453
+        },
+        {
+          "name": "0xFFFFF806AB0CB92D",
+          "cpuMs": 0.0063,
+          "percent": 0.015350317639493453
+        },
+        {
+          "name": "0xFFFFF806AB6480BF",
+          "cpuMs": 0.004999,
+          "percent": 0.012180355219020281
+        },
+        {
+          "name": "0x00007FFB595B00C3",
+          "cpuMs": 0.003999,
+          "percent": 0.00974379686354513
+        },
+        {
+          "name": "ExpInterlockedPopEntrySListResume",
+          "cpuMs": 0.003999,
+          "percent": 0.00974379686354513
+        },
+        {
+          "name": "0xFFFFF806AB0D2020",
+          "cpuMs": 0.0038,
+          "percent": 0.009258921750805576
+        },
+        {
+          "name": "0x00007FFB595B62B0",
+          "cpuMs": 0.0036,
+          "percent": 0.008771610079710545
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 41.034396,
+          "percent": 99.98270043567612
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 41.034396,
+          "percent": 99.98270043567612
+        },
+        {
+          "name": "0x00007FFB59D2D18A",
+          "cpuMs": 41.034396,
+          "percent": 99.98270043567612
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 41.023598,
+          "percent": 99.9563904785537
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 41.023598,
+          "percent": 99.9563904785537
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 41.018599,
+          "percent": 99.94421012333468
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 41.018599,
+          "percent": 99.94421012333468
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 41.018599,
+          "percent": 99.94421012333468
+        },
+        {
+          "name": "0x00007FFB595B00E2",
+          "cpuMs": 41.005698,
+          "percent": 99.9127760839907
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 41.005698,
+          "percent": 99.9127760839907
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 41.005698,
+          "percent": 99.9127760839907
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 40.990599,
+          "percent": 99.87598648938138
+        },
+        {
+          "name": "0xFFFFF806AB4B45AC",
+          "cpuMs": 40.990599,
+          "percent": 99.87598648938138
+        },
+        {
+          "name": "0xFFFFF806AB1DED05",
+          "cpuMs": 40.990599,
+          "percent": 99.87598648938138
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 40.990599,
+          "percent": 99.87598648938138
+        },
+        {
+          "name": "0xFFFFF806AB2E0EC7",
+          "cpuMs": 0.0179,
+          "percent": 0.043614394563005206
+        }
+      ]
+    },
+    {
+      "thread": "11 - VKRenderThread (27448)",
+      "samples": 352,
+      "cpuMs": 36.051729,
+      "self": [
+        {
+          "name": "0xFFFFF806AB14F00A",
+          "cpuMs": 0.583998,
+          "percent": 1.6198890211340489
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.557799,
+          "percent": 1.5472184426993778
+        },
+        {
+          "name": "0x00007FFAA1170C48",
+          "cpuMs": 0.533198,
+          "percent": 1.4789803839921243
+        },
+        {
+          "name": "0x00007FFABDCFCC83",
+          "cpuMs": 0.513497,
+          "percent": 1.4243339064265128
+        },
+        {
+          "name": "0xFFFFF8063CDC1929",
+          "cpuMs": 0.505298,
+          "percent": 1.4015915852468546
+        },
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.480397,
+          "percent": 1.332521388918684
+        },
+        {
+          "name": "0x00007FFABDC448C4",
+          "cpuMs": 0.467099,
+          "percent": 1.2956355019755086
+        },
+        {
+          "name": "0x00007FFABDC38EAB",
+          "cpuMs": 0.458598,
+          "percent": 1.272055495590794
+        },
+        {
+          "name": "0x00007FFAA1170C44",
+          "cpuMs": 0.448598,
+          "percent": 1.2443175748935646
+        },
+        {
+          "name": "0xFFFFF806AB082BBF",
+          "cpuMs": 0.434399,
+          "percent": 1.204932501295569
+        },
+        {
+          "name": "0x00007FFABDD334B9",
+          "cpuMs": 0.430397,
+          "percent": 1.1938317854325378
+        },
+        {
+          "name": "0x00007FFABDC796FB",
+          "cpuMs": 0.427999,
+          "percent": 1.1871802320493423
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFAA1112EA9",
+          "cpuMs": 35.74553,
+          "percent": 99.1506676420429
+        },
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 35.74553,
+          "percent": 99.1506676420429
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 35.74553,
+          "percent": 99.1506676420429
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 35.74553,
+          "percent": 99.1506676420429
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 35.74553,
+          "percent": 99.1506676420429
+        },
+        {
+          "name": "0x00007FFAA117D33B",
+          "cpuMs": 35.519431,
+          "percent": 98.52351602887063
+        },
+        {
+          "name": "0x00007FFAA117CED3",
+          "cpuMs": 35.175932,
+          "percent": 97.57072122671288
+        },
+        {
+          "name": "0x00007FFAA113D937",
+          "cpuMs": 18.031093,
+          "percent": 50.01450277183655
+        },
+        {
+          "name": "0x00007FFAA113D659",
+          "cpuMs": 12.434851,
+          "percent": 34.49169109198618
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 9.619246,
+          "percent": 26.68178827151397
+        },
+        {
+          "name": "0x00007FFABDBC7E47",
+          "cpuMs": 8.064055,
+          "percent": 22.368011808809502
+        },
+        {
+          "name": "0x00007FFAA1141DB6",
+          "cpuMs": 5.762965,
+          "percent": 15.985266615090778
+        },
+        {
+          "name": "0x00007FFAA10CC11E",
+          "cpuMs": 4.942276,
+          "percent": 13.708845975181939
+        },
+        {
+          "name": "0x00007FFABD9370C9",
+          "cpuMs": 3.918178,
+          "percent": 10.868211064162832
+        },
+        {
+          "name": "0x00007FFABD8C8F17",
+          "cpuMs": 3.906178,
+          "percent": 10.834925559326155
+        },
+        {
+          "name": "0x00007FFAA113FC82",
+          "cpuMs": 3.777869,
+          "percent": 10.479023072652078
+        }
+      ]
+    },
+    {
+      "thread": "21 - Networking (managed) (35764)",
+      "samples": 105,
+      "cpuMs": 29.134552,
+      "self": [
+        {
+          "name": "NtDelayExecution",
+          "cpuMs": 8.549596,
+          "percent": 29.345211829582965
+        },
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 4.007099,
+          "percent": 13.753769064305502
+        },
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 4.002399,
+          "percent": 13.73763701600766
+        },
+        {
+          "name": "0xFFFFF806AB0C61E8",
+          "cpuMs": 2.008899,
+          "percent": 6.895245892231327
+        },
+        {
+          "name": "0xFFFFF806AB219856",
+          "cpuMs": 2.005099,
+          "percent": 6.882202959564987
+        },
+        {
+          "name": "0xFFFFF806AB4B4790",
+          "cpuMs": 2.000799,
+          "percent": 6.867443851547812
+        },
+        {
+          "name": "0xFFFFF806AB219940",
+          "cpuMs": 1.5271,
+          "percent": 5.241542756518102
+        },
+        {
+          "name": "0xFFFFF806AB4B4570",
+          "cpuMs": 1.511499,
+          "percent": 5.187994653221371
+        },
+        {
+          "name": "0xFFFFF806AB4B457C",
+          "cpuMs": 1.5105,
+          "percent": 5.184565734870404
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 1.5001,
+          "percent": 5.148869287573051
+        },
+        {
+          "name": "RtlDelayExecution",
+          "cpuMs": 0.044597,
+          "percent": 0.15307254424231406
+        },
+        {
+          "name": "System.Threading.Thread.Sleep(int32)",
+          "cpuMs": 0.027997,
+          "percent": 0.0960955225946155
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "Sandbox.Networking.RunThread()",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAAB3FDA24",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAAB3F64EB",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 29.134552,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.Thread.Sleep(int32)",
+          "cpuMs": 29.116956,
+          "percent": 99.93960435705344
+        },
+        {
+          "name": "ThreadNative_Sleep",
+          "cpuMs": 29.07236,
+          "percent": 99.78653524516183
+        },
+        {
+          "name": "Thread::UserSleep",
+          "cpuMs": 29.07236,
+          "percent": 99.78653524516183
+        },
+        {
+          "name": "0x00007FFB6FC728D1",
+          "cpuMs": 28.953472,
+          "percent": 99.37846993494185
+        },
+        {
+          "name": "RtlDelayExecution",
+          "cpuMs": 28.953472,
+          "percent": 99.37846993494185
+        }
+      ]
+    },
+    {
+      "thread": "24 - .NET TP Worker (34208)",
+      "samples": 53,
+      "cpuMs": 26.138374,
+      "self": [
+        {
+          "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+          "cpuMs": 5.961696,
+          "percent": 22.808212936275226
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 4.002798,
+          "percent": 15.313875300736
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+          "cpuMs": 2.2007,
+          "percent": 8.41942195792286
+        },
+        {
+          "name": "RegionalLandforms+Interval.get_Maximum()",
+          "cpuMs": 1.996899,
+          "percent": 7.63972158329359
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 1.729699,
+          "percent": 6.617469778341989
+        },
+        {
+          "name": "System.Math.Max(float64,float64)",
+          "cpuMs": 1.200698,
+          "percent": 4.593621623135395
+        },
+        {
+          "name": "ProceduralTerrainSettings.get_IsValid()",
+          "cpuMs": 1.199598,
+          "percent": 4.589413251183872
+        },
+        {
+          "name": "System.Math.Clamp(float32,float32,float32)",
+          "cpuMs": 1.002399,
+          "percent": 3.8349707598491016
+        },
+        {
+          "name": "TerrainCaves.SampleWorld(value class Vector3,value class ProceduralTerrainSettings,float32)",
+          "cpuMs": 1.001199,
+          "percent": 3.830379808629259
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Addition(value class Interval,value class Interval)",
+          "cpuMs": 0.9988,
+          "percent": 3.8212017319822573
+        },
+        {
+          "name": "TerrainFieldSnapshot.get_Pages()",
+          "cpuMs": 0.9968,
+          "percent": 3.813550146615853
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 0.8572,
+          "percent": 3.27946948804084
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 25.803174,
+          "percent": 98.71759429259066
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 25.672678,
+          "percent": 98.21834365060352
+        },
+        {
+          "name": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext()",
+          "cpuMs": 25.53688,
+          "percent": 97.69880865581004
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 25.53688,
+          "percent": 97.69880865581004
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 25.53688,
+          "percent": 97.69880865581004
+        },
+        {
+          "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+          "cpuMs": 25.53688,
+          "percent": 97.69880865581004
+        },
+        {
+          "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+          "cpuMs": 25.53688,
+          "percent": 97.69880865581004
+        }
+      ]
+    },
+    {
+      "thread": "13 - GlobPool/6 (29304)",
+      "samples": 275,
+      "cpuMs": 26.028262,
+      "self": [
+        {
+          "name": "0x00007FFAFC22E832",
+          "cpuMs": 0.407899,
+          "percent": 1.5671388277865037
+        },
+        {
+          "name": "0x00007FFB46A58550",
+          "cpuMs": 0.4034,
+          "percent": 1.5498537704899389
+        },
+        {
+          "name": "0x00007FFAA130C59B",
+          "cpuMs": 0.307298,
+          "percent": 1.1806320375905237
+        },
+        {
+          "name": "0x00007FFABDC44950",
+          "cpuMs": 0.3043,
+          "percent": 1.1691137886963026
+        },
+        {
+          "name": "0x00007FFABDD334A4",
+          "cpuMs": 0.291998,
+          "percent": 1.1218497800583074
+        },
+        {
+          "name": "0x00007FFAFC2480C9",
+          "cpuMs": 0.2426,
+          "percent": 0.9320637697591948
+        },
+        {
+          "name": "0x00007FFAA4D0FAE4",
+          "cpuMs": 0.228399,
+          "percent": 0.8775038456274952
+        },
+        {
+          "name": "0x00007FFABDD334B9",
+          "cpuMs": 0.227699,
+          "percent": 0.8748144612959559
+        },
+        {
+          "name": "0xFFFFF806AB0BCBC6",
+          "cpuMs": 0.212199,
+          "percent": 0.8152638082404426
+        },
+        {
+          "name": "0x00007FFAA1172758",
+          "cpuMs": 0.2073,
+          "percent": 0.796441959897284
+        },
+        {
+          "name": "0x00007FFAA4D10766",
+          "cpuMs": 0.207,
+          "percent": 0.7952893666123385
+        },
+        {
+          "name": "0x00007FFB46A4F8D6",
+          "cpuMs": 0.2049,
+          "percent": 0.7872212136177206
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 26.018662,
+          "percent": 99.96311701488175
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 26.018662,
+          "percent": 99.96311701488175
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 26.018662,
+          "percent": 99.96311701488175
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 26.018662,
+          "percent": 99.96311701488175
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 26.018662,
+          "percent": 99.96311701488175
+        },
+        {
+          "name": "0x00007FFB46A1B518",
+          "cpuMs": 25.669065,
+          "percent": 98.61997316609154
+        },
+        {
+          "name": "0x00007FFB46A19BF6",
+          "cpuMs": 25.669065,
+          "percent": 98.61997316609154
+        },
+        {
+          "name": "0x00007FFAA4D2EE15",
+          "cpuMs": 9.056768,
+          "percent": 34.79589993369515
+        },
+        {
+          "name": "0x00007FFAA4CD33AC",
+          "cpuMs": 8.676664,
+          "percent": 33.33554887375884
+        },
+        {
+          "name": "0x00007FFAA4D2ED31",
+          "cpuMs": 7.349747,
+          "percent": 28.237563460825776
+        },
+        {
+          "name": "0x00007FFAA4D0941F",
+          "cpuMs": 7.145868,
+          "percent": 27.454264906354485
+        },
+        {
+          "name": "0x00007FFAA4D09AFB",
+          "cpuMs": 6.526253,
+          "percent": 25.0737179455163
+        },
+        {
+          "name": "0x00007FFAA4D12233",
+          "cpuMs": 5.485286,
+          "percent": 21.074346032017043
+        },
+        {
+          "name": "0x00007FFAA4D995DB",
+          "cpuMs": 5.146774,
+          "percent": 19.773790505105566
+        },
+        {
+          "name": "0x00007FFAA4E48E57",
+          "cpuMs": 5.146774,
+          "percent": 19.773790505105566
+        },
+        {
+          "name": "Managed.SandboxEngine.Exports.Sandbox_Graphics_OnLayer(int32,value class ManagedRenderSetup_t)",
+          "cpuMs": 5.146774,
+          "percent": 19.773790505105566
+        }
+      ]
+    },
+    {
+      "thread": "26 - Thread (28760)",
+      "samples": 33,
+      "cpuMs": 24.29709,
+      "self": [
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 16.551799,
+          "percent": 68.12255706341789
+        },
+        {
+          "name": "0xFFFFF806AB163873",
+          "cpuMs": 7.5298,
+          "percent": 30.990542488833025
+        },
+        {
+          "name": "0xFFFFF806AB09DDC7",
+          "cpuMs": 0.0201,
+          "percent": 0.08272595607128261
+        },
+        {
+          "name": "0xFFFFF806AB09C965",
+          "cpuMs": 0.0171,
+          "percent": 0.07037879844870312
+        },
+        {
+          "name": "0xFFFFF806AB4A7257",
+          "cpuMs": 0.0142,
+          "percent": 0.05844321274687627
+        },
+        {
+          "name": "0xFFFFF806AB1619D3",
+          "cpuMs": 0.0126,
+          "percent": 0.051858062014833874
+        },
+        {
+          "name": "0xFFFFF806AB1EB6FA",
+          "cpuMs": 0.0108,
+          "percent": 0.044449767441286175
+        },
+        {
+          "name": "0x00007FFB5F961F0B",
+          "cpuMs": 0.010699,
+          "percent": 0.044034079801326
+        },
+        {
+          "name": "0x00007FFAB96A3C15",
+          "cpuMs": 0.0099,
+          "percent": 0.04074562015451233
+        },
+        {
+          "name": "0xFFFFF806AB07DC87",
+          "cpuMs": 0.0099,
+          "percent": 0.04074562015451233
+        },
+        {
+          "name": "0x00007FFB46A41219",
+          "cpuMs": 0.0086,
+          "percent": 0.03539518518472788
+        },
+        {
+          "name": "0xFFFFF806AB10E05F",
+          "cpuMs": 0.0077,
+          "percent": 0.031691037897954036
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 24.25719,
+          "percent": 99.8357828036197
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 24.25719,
+          "percent": 99.8357828036197
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 24.211495,
+          "percent": 99.64771501443177
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 24.170897,
+          "percent": 99.48062504604461
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 24.166898,
+          "percent": 99.46416628493371
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 24.166898,
+          "percent": 99.46416628493371
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 24.166898,
+          "percent": 99.46416628493371
+        },
+        {
+          "name": "0x00007FFB5F96FF76",
+          "cpuMs": 24.123395,
+          "percent": 99.28512015224868
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 24.123395,
+          "percent": 99.28512015224868
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 24.084398,
+          "percent": 99.12461945031278
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 24.084398,
+          "percent": 99.12461945031278
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 16.551799,
+          "percent": 68.12255706341789
+        },
+        {
+          "name": "0xFFFFF806AB0C64D0",
+          "cpuMs": 7.5298,
+          "percent": 30.990542488833025
+        },
+        {
+          "name": "0xFFFFF806AB219957",
+          "cpuMs": 7.5298,
+          "percent": 30.990542488833025
+        },
+        {
+          "name": "0xFFFFF806AB1636EB",
+          "cpuMs": 7.5298,
+          "percent": 30.990542488833025
+        },
+        {
+          "name": "0xFFFFF806AB219706",
+          "cpuMs": 7.5298,
+          "percent": 30.990542488833025
+        }
+      ]
+    },
+    {
+      "thread": "14 - GlobPool/2 (8836)",
+      "samples": 270,
+      "cpuMs": 23.92177,
+      "self": [
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.619799,
+          "percent": 2.5909412221587282
+        },
+        {
+          "name": "0x00007FFABDD334B9",
+          "cpuMs": 0.464098,
+          "percent": 1.9400654717439387
+        },
+        {
+          "name": "0x00007FFABDC38EAB",
+          "cpuMs": 0.400299,
+          "percent": 1.6733669791156758
+        },
+        {
+          "name": "GpuVoxelMesher.ProcessGpuRenderTick()",
+          "cpuMs": 0.323598,
+          "percent": 1.3527343503428049
+        },
+        {
+          "name": "0x00007FFAA116C945",
+          "cpuMs": 0.3165,
+          "percent": 1.3230626329071804
+        },
+        {
+          "name": "0x00007FFABDC5AE18",
+          "cpuMs": 0.2507,
+          "percent": 1.0479993746282152
+        },
+        {
+          "name": "0x00007FFABE37353B",
+          "cpuMs": 0.238598,
+          "percent": 0.9974094726268165
+        },
+        {
+          "name": "0x00007FFAA1100052",
+          "cpuMs": 0.225499,
+          "percent": 0.9426518188244432
+        },
+        {
+          "name": "0x00007FFAA130CD84",
+          "cpuMs": 0.212498,
+          "percent": 0.888303833704613
+        },
+        {
+          "name": "0x00007FFABDCB3DD1",
+          "cpuMs": 0.2106,
+          "percent": 0.8803696381998489
+        },
+        {
+          "name": "0x00007FFAA10E6D0E",
+          "cpuMs": 0.210199,
+          "percent": 0.8786933408355653
+        },
+        {
+          "name": "0x00007FFABD828979",
+          "cpuMs": 0.208599,
+          "percent": 0.8720048725491466
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 23.92177,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 23.92177,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 23.88397,
+          "percent": 99.84198493673335
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 23.88397,
+          "percent": 99.84198493673335
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 23.88397,
+          "percent": 99.84198493673335
+        },
+        {
+          "name": "0x00007FFB46A1B518",
+          "cpuMs": 23.507071,
+          "percent": 98.26643680630656
+        },
+        {
+          "name": "0x00007FFB46A19BF6",
+          "cpuMs": 23.507071,
+          "percent": 98.26643680630656
+        },
+        {
+          "name": "0x00007FFAA4CD33AC",
+          "cpuMs": 9.432857,
+          "percent": 39.43210305926359
+        },
+        {
+          "name": "0x00007FFAA4D2EE15",
+          "cpuMs": 8.632568,
+          "percent": 36.086660811470054
+        },
+        {
+          "name": "0x00007FFAA4D0941F",
+          "cpuMs": 7.287869,
+          "percent": 30.4654254262958
+        },
+        {
+          "name": "0x00007FFAA4D2ED31",
+          "cpuMs": 5.33656,
+          "percent": 22.308382699106296
+        },
+        {
+          "name": "0x00007FFAFC22F057",
+          "cpuMs": 5.300875,
+          "percent": 22.159208954855764
+        },
+        {
+          "name": "0x00007FFAA4D06D35",
+          "cpuMs": 5.090979,
+          "percent": 21.28178224270194
+        },
+        {
+          "name": "0x00007FFAA4D12233",
+          "cpuMs": 5.064884,
+          "percent": 21.172697505243132
+        },
+        {
+          "name": "0x00007FFAA4E4948A",
+          "cpuMs": 4.921779,
+          "percent": 20.574476721413173
+        },
+        {
+          "name": "0x00007FFAA4D99CB5",
+          "cpuMs": 4.921779,
+          "percent": 20.574476721413173
+        }
+      ]
+    },
+    {
+      "thread": "15 - GlobPool/4 (34152)",
+      "samples": 269,
+      "cpuMs": 23.072656,
+      "self": [
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.431698,
+          "percent": 1.871037300603797
+        },
+        {
+          "name": "0xFFFFF806AB974901",
+          "cpuMs": 0.400099,
+          "percent": 1.7340829768363035
+        },
+        {
+          "name": "0x00007FFABDCFCDDC",
+          "cpuMs": 0.391099,
+          "percent": 1.6950757641426284
+        },
+        {
+          "name": "0x00007FFABE373514",
+          "cpuMs": 0.327399,
+          "percent": 1.4189913809662833
+        },
+        {
+          "name": "0x00007FFABE37353B",
+          "cpuMs": 0.286798,
+          "percent": 1.2430211762356271
+        },
+        {
+          "name": "0x00007FFABDCFCE05",
+          "cpuMs": 0.283399,
+          "percent": 1.2282894522416492
+        },
+        {
+          "name": "0x00007FFB46A5856C",
+          "cpuMs": 0.2654,
+          "percent": 1.1502793609890427
+        },
+        {
+          "name": "0x00007FFB46A58093",
+          "cpuMs": 0.247699,
+          "percent": 1.073560841890071
+        },
+        {
+          "name": "0x00007FFABE373558",
+          "cpuMs": 0.233198,
+          "percent": 1.010711553971073
+        },
+        {
+          "name": "0x00007FFB46A1B54B",
+          "cpuMs": 0.2318,
+          "percent": 1.004652433599322
+        },
+        {
+          "name": "0x00007FFAA130CD84",
+          "cpuMs": 0.226499,
+          "percent": 0.9816771853227474
+        },
+        {
+          "name": "0x000002B59B700003",
+          "cpuMs": 0.212299,
+          "percent": 0.9201324719616155
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 22.852058,
+          "percent": 99.04389854380007
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 22.852058,
+          "percent": 99.04389854380007
+        },
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 22.701559,
+          "percent": 98.3916155990017
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 22.701559,
+          "percent": 98.3916155990017
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 22.701559,
+          "percent": 98.3916155990017
+        },
+        {
+          "name": "0x00007FFB46A19BF6",
+          "cpuMs": 22.434962,
+          "percent": 97.23614827872439
+        },
+        {
+          "name": "0x00007FFB46A1B518",
+          "cpuMs": 22.140162,
+          "percent": 95.95844535626934
+        },
+        {
+          "name": "0x00007FFAA4D0941F",
+          "cpuMs": 7.901165,
+          "percent": 34.24471374253575
+        },
+        {
+          "name": "0x00007FFAA4CD33AC",
+          "cpuMs": 7.647558,
+          "percent": 33.145546832579655
+        },
+        {
+          "name": "0x00007FFAA4D2EE15",
+          "cpuMs": 6.058775,
+          "percent": 26.259547232013514
+        },
+        {
+          "name": "0x00007FFAA4D12233",
+          "cpuMs": 5.985986,
+          "percent": 25.9440698981513
+        },
+        {
+          "name": "0x00007FFAA4D2ED31",
+          "cpuMs": 5.668343,
+          "percent": 24.56736233574496
+        },
+        {
+          "name": "0x00007FFAA4D09AFB",
+          "cpuMs": 4.267758,
+          "percent": 18.497038225681518
+        },
+        {
+          "name": "0x00007FFAA4D06D35",
+          "cpuMs": 3.835688,
+          "percent": 16.62438862695305
+        },
+        {
+          "name": "0x00007FFAA4E4948A",
+          "cpuMs": 3.835688,
+          "percent": 16.62438862695305
+        },
+        {
+          "name": "0x00007FFAA4D99CB5",
+          "cpuMs": 3.835688,
+          "percent": 16.62438862695305
+        }
+      ]
+    },
+    {
+      "thread": "18 - GlobPool/1 (34440)",
+      "samples": 239,
+      "cpuMs": 21.180885,
+      "self": [
+        {
+          "name": "0x00007FFAA4D0FF23",
+          "cpuMs": 0.3932,
+          "percent": 1.8563907976460852
+        },
+        {
+          "name": "0x00007FFAFC24809A",
+          "cpuMs": 0.2931,
+          "percent": 1.3837948697611078
+        },
+        {
+          "name": "0x00007FFABDC4ECFE",
+          "cpuMs": 0.274999,
+          "percent": 1.2983357399844246
+        },
+        {
+          "name": "0x00007FFAFC2480C9",
+          "cpuMs": 0.234698,
+          "percent": 1.1080651257017826
+        },
+        {
+          "name": "0xFFFFF806413E4EA5",
+          "cpuMs": 0.2181,
+          "percent": 1.0297020167004354
+        },
+        {
+          "name": "Sandbox.Graphics+Scope.Dispose()",
+          "cpuMs": 0.218,
+          "percent": 1.0292298928963544
+        },
+        {
+          "name": "0x00007FFAA118B1A0",
+          "cpuMs": 0.213299,
+          "percent": 1.0070353528665115
+        },
+        {
+          "name": "0x00007FFAA10F9615",
+          "cpuMs": 0.2121,
+          "percent": 1.0013745884555816
+        },
+        {
+          "name": "0x00007FFABDC59B4B",
+          "cpuMs": 0.2114,
+          "percent": 0.9980697218270153
+        },
+        {
+          "name": "0x00007FFABDD003F2",
+          "cpuMs": 0.2087,
+          "percent": 0.9853223791168311
+        },
+        {
+          "name": "0x00007FFABDC38EAB",
+          "cpuMs": 0.2078,
+          "percent": 0.9810732648801029
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.206499,
+          "percent": 0.9749309341890106
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 21.116886,
+          "percent": 99.69784548662626
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 21.116886,
+          "percent": 99.69784548662626
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 21.116886,
+          "percent": 99.69784548662626
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 21.116886,
+          "percent": 99.69784548662626
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 21.116886,
+          "percent": 99.69784548662626
+        },
+        {
+          "name": "0x00007FFB46A19BF6",
+          "cpuMs": 20.585987,
+          "percent": 97.19134493199883
+        },
+        {
+          "name": "0x00007FFB46A1B518",
+          "cpuMs": 20.482389,
+          "percent": 96.7022341134471
+        },
+        {
+          "name": "0x00007FFAA4D2ED31",
+          "cpuMs": 6.58635,
+          "percent": 31.095726170082127
+        },
+        {
+          "name": "0x00007FFAA4D2EE15",
+          "cpuMs": 6.266383,
+          "percent": 29.585085797878605
+        },
+        {
+          "name": "0x00007FFAA4D09AFB",
+          "cpuMs": 6.103958,
+          "percent": 28.81823870910021
+        },
+        {
+          "name": "0x00007FFAA4CD33AC",
+          "cpuMs": 6.072271,
+          "percent": 28.668636839301097
+        },
+        {
+          "name": "0x00007FFAA4D0941F",
+          "cpuMs": 5.740271,
+          "percent": 27.10118580975252
+        },
+        {
+          "name": "0x00007FFAA4D12233",
+          "cpuMs": 4.636091,
+          "percent": 21.888089189852078
+        },
+        {
+          "name": "0x00007FFAA4E48E57",
+          "cpuMs": 4.53228,
+          "percent": 21.397972747597656
+        },
+        {
+          "name": "0x00007FFAA4D995DB",
+          "cpuMs": 4.53228,
+          "percent": 21.397972747597656
+        },
+        {
+          "name": "Managed.SandboxEngine.Exports.Sandbox_Graphics_OnLayer(int32,value class ManagedRenderSetup_t)",
+          "cpuMs": 4.53228,
+          "percent": 21.397972747597656
+        }
+      ]
+    },
+    {
+      "thread": "30 - Thread (34144)",
+      "samples": 13,
+      "cpuMs": 21.127693,
+      "self": [
+        {
+          "name": "0xFFFFF806AB163873",
+          "cpuMs": 10.521799,
+          "percent": 49.80098395030636
+        },
+        {
+          "name": "0xFFFFF806AB4B485F",
+          "cpuMs": 10.5176,
+          "percent": 49.7811095608025
+        },
+        {
+          "name": "0xFFFFF806AB2481C9",
+          "cpuMs": 0.024599,
+          "percent": 0.11643012798415804
+        },
+        {
+          "name": "0xFFFFF806AB1B350A",
+          "cpuMs": 0.0093,
+          "percent": 0.04401805724837066
+        },
+        {
+          "name": "0x00007FFB5980556C",
+          "cpuMs": 0.009099,
+          "percent": 0.04306669923687361
+        },
+        {
+          "name": "0xFFFFF806AB07ABC8",
+          "cpuMs": 0.007999,
+          "percent": 0.03786026235803407
+        },
+        {
+          "name": "0xFFFFF806AB09D97E",
+          "cpuMs": 0.0071,
+          "percent": 0.033605183490691574
+        },
+        {
+          "name": "0x00007FFB59804F4B",
+          "cpuMs": 0.006599,
+          "percent": 0.03123388814860193
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.006399,
+          "percent": 0.030287263261540198
+        },
+        {
+          "name": "0x00007FFB59805345",
+          "cpuMs": 0.0063,
+          "percent": 0.02981868394244464
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 0.0045,
+          "percent": 0.02129905995888903
+        },
+        {
+          "name": "0x00007FFB59804DC0",
+          "cpuMs": 0.003499,
+          "percent": 0.016561202399145047
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 21.119694,
+          "percent": 99.96213973764196
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 21.119694,
+          "percent": 99.96213973764196
+        },
+        {
+          "name": "0x00007FFB59D2D18A",
+          "cpuMs": 21.119694,
+          "percent": 99.96213973764196
+        },
+        {
+          "name": "0x00007FFB5980539F",
+          "cpuMs": 21.069598,
+          "percent": 99.72502913593074
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 21.069598,
+          "percent": 99.72502913593074
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 21.066698,
+          "percent": 99.71130307506834
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 21.066698,
+          "percent": 99.71130307506834
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 21.066698,
+          "percent": 99.71130307506834
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 21.066698,
+          "percent": 99.71130307506834
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 21.066698,
+          "percent": 99.71130307506834
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 21.065098,
+          "percent": 99.70373007597185
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 21.042299,
+          "percent": 99.59581957197125
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 21.042299,
+          "percent": 99.59581957197125
+        },
+        {
+          "name": "0xFFFFF806AB1636EB",
+          "cpuMs": 10.521799,
+          "percent": 49.80098395030636
+        },
+        {
+          "name": "0xFFFFF806AB4B4A16",
+          "cpuMs": 10.521799,
+          "percent": 49.80098395030636
+        },
+        {
+          "name": "0xFFFFF806AB0C64D0",
+          "cpuMs": 10.521799,
+          "percent": 49.80098395030636
+        }
+      ]
+    },
+    {
+      "thread": "10 - .NET Timer (36120)",
+      "samples": 439,
+      "cpuMs": 20.808696,
+      "self": [
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 3.704799,
+          "percent": 17.80409017460777
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 3.123795,
+          "percent": 15.011969034484428
+        },
+        {
+          "name": "0xFFFFF806AB0C61DC",
+          "cpuMs": 1.9925,
+          "percent": 9.575323701206457
+        },
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 1.951099,
+          "percent": 9.376363612597348
+        },
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 1.5762,
+          "percent": 7.574717800673334
+        },
+        {
+          "name": "0xFFFFF806AB2196FB",
+          "cpuMs": 1.4942,
+          "percent": 7.180651781351412
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 1.462899,
+          "percent": 7.030229092683174
+        },
+        {
+          "name": "0xFFFFF806AB219856",
+          "cpuMs": 1.004298,
+          "percent": 4.826337988694727
+        },
+        {
+          "name": "0xFFFFF806AB219694",
+          "cpuMs": 0.9823,
+          "percent": 4.720622570486877
+        },
+        {
+          "name": "System.Threading.WaitHandle.WaitOneNoCheck(int32,bool,class System.Object,value class WaitHandleWaitSourceMap)",
+          "cpuMs": 0.168988,
+          "percent": 0.8121027862582066
+        },
+        {
+          "name": "Thread::DoAppropriateWaitWorker",
+          "cpuMs": 0.118594,
+          "percent": 0.5699251889690733
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.EnqueueAtHighPriority(class System.Object)",
+          "cpuMs": 0.082096,
+          "percent": 0.3945273649055184
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 20.682906,
+          "percent": 99.39549311499384
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 20.672106,
+          "percent": 99.34359173683926
+        },
+        {
+          "name": "0x00007FFAAB40D140",
+          "cpuMs": 19.098888,
+          "percent": 91.78320448335639
+        },
+        {
+          "name": "System.Threading.WaitHandle.WaitOneNoCheck(int32,bool,class System.Object,value class WaitHandleWaitSourceMap)",
+          "cpuMs": 19.093889,
+          "percent": 91.75918087322724
+        },
+        {
+          "name": "WaitHandle_WaitOneCore",
+          "cpuMs": 18.858303,
+          "percent": 90.62702919971535
+        },
+        {
+          "name": "Thread::DoAppropriateWait",
+          "cpuMs": 18.845704,
+          "percent": 90.56648239755148
+        },
+        {
+          "name": "Thread::DoAppropriateWaitWorker",
+          "cpuMs": 18.801307,
+          "percent": 90.35312448218764
+        },
+        {
+          "name": "Thread::DoAppropriateAptStateWait",
+          "cpuMs": 18.511723,
+          "percent": 88.96147552926911
+        },
+        {
+          "name": "0x00007FFB6FC529F3",
+          "cpuMs": 18.229539,
+          "percent": 87.6053886317528
+        }
+      ]
+    },
+    {
+      "thread": "19 - GlobPool/0 (23200)",
+      "samples": 236,
+      "cpuMs": 19.714879,
+      "self": [
+        {
+          "name": "0x00007FFABDC4F1B8",
+          "cpuMs": 0.656899,
+          "percent": 3.331996103044812
+        },
+        {
+          "name": "0x00007FFAA4D0CEDF",
+          "cpuMs": 0.404199,
+          "percent": 2.0502230827792554
+        },
+        {
+          "name": "0x00007FFABDD334C2",
+          "cpuMs": 0.354399,
+          "percent": 1.7976219889556513
+        },
+        {
+          "name": "0x00007FFABDCFA3F7",
+          "cpuMs": 0.3179,
+          "percent": 1.6124877053518818
+        },
+        {
+          "name": "0x00007FFAA116E414",
+          "cpuMs": 0.2824,
+          "percent": 1.432420660557947
+        },
+        {
+          "name": "0x00007FFABDC448DD",
+          "cpuMs": 0.244598,
+          "percent": 1.240677155563572
+        },
+        {
+          "name": "0x00007FFAA10BEB63",
+          "cpuMs": 0.2121,
+          "percent": 1.075837188754747
+        },
+        {
+          "name": "0x00007FFAFC2464B4",
+          "cpuMs": 0.207,
+          "percent": 1.049968402037872
+        },
+        {
+          "name": "0x00007FFB46A58550",
+          "cpuMs": 0.205799,
+          "percent": 1.043876556381604
+        },
+        {
+          "name": "0x00007FFABDD332F3",
+          "cpuMs": 0.205499,
+          "percent": 1.0423548630453172
+        },
+        {
+          "name": "0x00007FFAFC249D85",
+          "cpuMs": 0.204799,
+          "percent": 1.038804245260648
+        },
+        {
+          "name": "0x00007FFABDC3054E",
+          "cpuMs": 0.2042,
+          "percent": 1.0357659308991956
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFB46A77A4C",
+          "cpuMs": 19.714879,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 19.714879,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB46A77C82",
+          "cpuMs": 19.714879,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB46A7C19A",
+          "cpuMs": 19.714879,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 19.714879,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB46A19BF6",
+          "cpuMs": 19.259887,
+          "percent": 97.69213901845403
+        },
+        {
+          "name": "0x00007FFB46A1B518",
+          "cpuMs": 19.067788,
+          "percent": 96.71775312442952
+        },
+        {
+          "name": "0x00007FFAA4D0941F",
+          "cpuMs": 6.258476,
+          "percent": 31.74493741503562
+        },
+        {
+          "name": "0x00007FFAA4CD33AC",
+          "cpuMs": 5.757868,
+          "percent": 29.205697889396127
+        },
+        {
+          "name": "0x00007FFAA4D2ED31",
+          "cpuMs": 5.477262,
+          "percent": 27.782376954989175
+        },
+        {
+          "name": "0x00007FFAA4D09AFB",
+          "cpuMs": 4.528269,
+          "percent": 22.968789207379867
+        },
+        {
+          "name": "0x00007FFAA4D2EE15",
+          "cpuMs": 4.191386,
+          "percent": 21.26001382001888
+        },
+        {
+          "name": "0x00007FFAA4D12233",
+          "cpuMs": 4.062388,
+          "percent": 20.60569583003781
+        },
+        {
+          "name": "0x00007FFAA4CC5F8A",
+          "cpuMs": 3.298978,
+          "percent": 16.733442797188864
+        },
+        {
+          "name": "0x00007FFAA4CC5EEA",
+          "cpuMs": 3.263979,
+          "percent": 16.555916980266527
+        },
+        {
+          "name": "0x00007FFAA4D995DB",
+          "cpuMs": 3.108282,
+          "percent": 15.766173355667057
+        }
+      ]
+    },
+    {
+      "thread": "33 - Thread (25944)",
+      "samples": 9,
+      "cpuMs": 17.323095,
+      "self": [
+        {
+          "name": "0xFFFFF806AB1DE9E0",
+          "cpuMs": 17.284499,
+          "percent": 99.77719916677707
+        },
+        {
+          "name": "0xFFFFF806AB2E026B",
+          "cpuMs": 0.011999,
+          "percent": 0.06926591351025899
+        },
+        {
+          "name": "NtReleaseSemaphore",
+          "cpuMs": 0.006199,
+          "percent": 0.035784598537386074
+        },
+        {
+          "name": "0xFFFFF806AB21998D",
+          "cpuMs": 0.0051,
+          "percent": 0.029440466614077912
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.004899,
+          "percent": 0.028280165871052487
+        },
+        {
+          "name": "0xFFFFF806AB79AC47",
+          "cpuMs": 0.0046,
+          "percent": 0.026554146357795762
+        },
+        {
+          "name": "0xFFFFF806AB4B496F",
+          "cpuMs": 0.0032,
+          "percent": 0.018472449640205748
+        },
+        {
+          "name": "0xFFFFF806AB6484C8",
+          "cpuMs": 0.002599,
+          "percent": 0.015003092692154607
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 17.323095,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 17.323095,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 17.323095,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABDB96D84",
+          "cpuMs": 17.312296,
+          "percent": 99.93766125510481
+        },
+        {
+          "name": "0x00007FFB6FC529F3",
+          "cpuMs": 17.312296,
+          "percent": 99.93766125510481
+        },
+        {
+          "name": "0x00007FFB6FC528C1",
+          "cpuMs": 17.312296,
+          "percent": 99.93766125510481
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 17.312296,
+          "percent": 99.93766125510481
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 17.311997,
+          "percent": 99.93593523559156
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 17.307397,
+          "percent": 99.90938108923376
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 17.304798,
+          "percent": 99.8943779965416
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 17.304798,
+          "percent": 99.8943779965416
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 17.304798,
+          "percent": 99.8943779965416
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 17.292799,
+          "percent": 99.82511208303136
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 17.292799,
+          "percent": 99.82511208303136
+        },
+        {
+          "name": "0xFFFFF806AB1DE9E0",
+          "cpuMs": 17.284499,
+          "percent": 99.77719916677707
+        },
+        {
+          "name": "0xFFFFF806AB4B45AC",
+          "cpuMs": 17.284499,
+          "percent": 99.77719916677707
+        }
+      ]
+    },
+    {
+      "thread": "23 - Thread (29852)",
+      "samples": 52,
+      "cpuMs": 16.165274,
+      "self": [
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 15.1167,
+          "percent": 93.5134164753409
+        },
+        {
+          "name": "0xFFFFF8068070F438",
+          "cpuMs": 0.114498,
+          "percent": 0.7082960672364724
+        },
+        {
+          "name": "0xFFFFF80680E6B393",
+          "cpuMs": 0.086998,
+          "percent": 0.5381783197736085
+        },
+        {
+          "name": "0xFFFFF80680713863",
+          "cpuMs": 0.085099,
+          "percent": 0.5264309160488093
+        },
+        {
+          "name": "0xFFFFF806AB1F9AD1",
+          "cpuMs": 0.056899,
+          "percent": 0.35198289865052707
+        },
+        {
+          "name": "0xFFFFF806AB1F1C32",
+          "cpuMs": 0.0559,
+          "percent": 0.3458029848426943
+        },
+        {
+          "name": "0xFFFFF806812FC661",
+          "cpuMs": 0.050199,
+          "percent": 0.31053602926866564
+        },
+        {
+          "name": "0xFFFFF806812FC5A7",
+          "cpuMs": 0.0488,
+          "percent": 0.3018816754977367
+        },
+        {
+          "name": "0xFFFFF80680710941",
+          "cpuMs": 0.0483,
+          "percent": 0.2987886255438664
+        },
+        {
+          "name": "0xFFFFF806807347F5",
+          "cpuMs": 0.043399,
+          "percent": 0.2684705498960302
+        },
+        {
+          "name": "0xFFFFF80680E6B4CB",
+          "cpuMs": 0.042199,
+          "percent": 0.2610472300067416
+        },
+        {
+          "name": "0xFFFFF80680E6B3B7",
+          "cpuMs": 0.0408,
+          "percent": 0.25239287623581264
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 16.152675,
+          "percent": 99.92206132726238
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 16.152675,
+          "percent": 99.92206132726238
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 16.152675,
+          "percent": 99.92206132726238
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 16.112079,
+          "percent": 99.67093041540774
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 15.209392,
+          "percent": 94.08681844798919
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 15.191394,
+          "percent": 93.97548102184967
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 15.191394,
+          "percent": 93.97548102184967
+        },
+        {
+          "name": "0x00007FFABDCC5D0D",
+          "cpuMs": 15.171593,
+          "percent": 93.8529900575765
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 15.168596,
+          "percent": 93.83445031615301
+        },
+        {
+          "name": "0x00007FFABD7CCD8A",
+          "cpuMs": 15.165394,
+          "percent": 93.81464242424842
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 15.155194,
+          "percent": 93.75154420518948
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 15.155194,
+          "percent": 93.75154420518948
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 15.123498,
+          "percent": 93.55546958251372
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 15.123498,
+          "percent": 93.55546958251372
+        },
+        {
+          "name": "0xFFFFF806AB219706",
+          "cpuMs": 15.1167,
+          "percent": 93.5134164753409
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 15.1167,
+          "percent": 93.5134164753409
+        }
+      ]
+    },
+    {
+      "thread": "16 - SDLRawInput (24748)",
+      "samples": 248,
+      "cpuMs": 13.250191,
+      "self": [
+        {
+          "name": "0xFFFFF806AB001ADB",
+          "cpuMs": 2.557394,
+          "percent": 19.30080856947647
+        },
+        {
+          "name": "NtUserMsgWaitForMultipleObjectsEx",
+          "cpuMs": 2.010798,
+          "percent": 15.17561520433932
+        },
+        {
+          "name": "0xFFFFF806AB2F0176",
+          "cpuMs": 0.598498,
+          "percent": 4.516900926182875
+        },
+        {
+          "name": "0xFFFFF806AB08F290",
+          "cpuMs": 0.453698,
+          "percent": 3.424086490526816
+        },
+        {
+          "name": "0xFFFFF806AB04EDBD",
+          "cpuMs": 0.448298,
+          "percent": 3.3833323610203054
+        },
+        {
+          "name": "0xFFFFF8068836B5CB",
+          "cpuMs": 0.405086,
+          "percent": 3.0572087602359845
+        },
+        {
+          "name": "0xFFFFF806AB02702C",
+          "cpuMs": 0.4041,
+          "percent": 3.0497673580705364
+        },
+        {
+          "name": "0xFFFFF806AB04E8B4",
+          "cpuMs": 0.397999,
+          "percent": 3.0037227387891994
+        },
+        {
+          "name": "0xFFFFF806AB04D9F5",
+          "cpuMs": 0.395799,
+          "percent": 2.9871192045458064
+        },
+        {
+          "name": "0xFFFFF806AB04DCFC",
+          "cpuMs": 0.395398,
+          "percent": 2.9840928330768968
+        },
+        {
+          "name": "0xFFFFF806AB2F0202",
+          "cpuMs": 0.376198,
+          "percent": 2.8391892614981926
+        },
+        {
+          "name": "0xFFFFF806AB04E992",
+          "cpuMs": 0.372299,
+          "percent": 2.8097632705822884
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 12.720995,
+          "percent": 96.00612549660605
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 12.720995,
+          "percent": 96.00612549660605
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 9.616312,
+          "percent": 72.57489344870577
+        },
+        {
+          "name": "LdrpCallInitRoutine",
+          "cpuMs": 8.799774,
+          "percent": 66.41243133778222
+        },
+        {
+          "name": "LdrpCallInitRoutineInternal",
+          "cpuMs": 8.799774,
+          "percent": 66.41243133778222
+        },
+        {
+          "name": "RtlExitUserThread",
+          "cpuMs": 8.491976,
+          "percent": 64.08946105003317
+        },
+        {
+          "name": "LdrShutdownThread",
+          "cpuMs": 8.491976,
+          "percent": 64.08946105003317
+        },
+        {
+          "name": "LdrpCallTlsInitializers",
+          "cpuMs": 8.125376,
+          "percent": 61.32270848020229
+        },
+        {
+          "name": "ImageTlsCallbackCaller",
+          "cpuMs": 8.125376,
+          "percent": 61.32270848020229
+        },
+        {
+          "name": "0x00007FFB6FCE86EA",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        },
+        {
+          "name": "0xFFFFF806AB6DA8FB",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        },
+        {
+          "name": "0x00007FFB615B35A8",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        },
+        {
+          "name": "0x00007FFB615AAEDA",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        },
+        {
+          "name": "0x00007FFB615B0F81",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        },
+        {
+          "name": "0x00007FFB615AF985",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        },
+        {
+          "name": "0x00007FFB615AEC02",
+          "cpuMs": 7.848278,
+          "percent": 59.231432965758756
+        }
+      ]
+    },
+    {
+      "thread": "22 - SDLAudioP15 (28168)",
+      "samples": 63,
+      "cpuMs": 10.737074,
+      "self": [
+        {
+          "name": "0xFFFFF806AB2197A3",
+          "cpuMs": 10.006,
+          "percent": 93.19112450934026
+        },
+        {
+          "name": "EtwEventActivityIdControl",
+          "cpuMs": 0.041298,
+          "percent": 0.38462992804184826
+        },
+        {
+          "name": "memset",
+          "cpuMs": 0.0392,
+          "percent": 0.3650901539842233
+        },
+        {
+          "name": "RtlLeaveCriticalSection",
+          "cpuMs": 0.032798,
+          "percent": 0.30546497118302435
+        },
+        {
+          "name": "0x00007FFB46BE048E",
+          "cpuMs": 0.032099,
+          "percent": 0.2989548176719281
+        },
+        {
+          "name": "Sandbox.Audio.MultiChannelBuffer.HardLimit()",
+          "cpuMs": 0.0293,
+          "percent": 0.27288626305453423
+        },
+        {
+          "name": "System.Buffer.MemmoveInternal(unsigned int8&,unsigned int8&,unsigned int)",
+          "cpuMs": 0.0246,
+          "percent": 0.22911269867377276
+        },
+        {
+          "name": "System.Threading.Lock.EnterAndGetCurrentThreadId()",
+          "cpuMs": 0.0231,
+          "percent": 0.21514241216927443
+        },
+        {
+          "name": "0x00007FFB46D434C3",
+          "cpuMs": 0.0222,
+          "percent": 0.2067602402665754
+        },
+        {
+          "name": "0xFFFFF806AB1EB79A",
+          "cpuMs": 0.0217,
+          "percent": 0.2021034780984093
+        },
+        {
+          "name": "0xFFFFF806AB09CA70",
+          "cpuMs": 0.0202,
+          "percent": 0.18813319159391095
+        },
+        {
+          "name": "RtlQueryPerformanceCounter",
+          "cpuMs": 0.0197,
+          "percent": 0.18347642942574485
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 10.720274,
+          "percent": 99.84353279114961
+        },
+        {
+          "name": "0x00007FFB46D43BF2",
+          "cpuMs": 10.720274,
+          "percent": 99.84353279114961
+        },
+        {
+          "name": "0x00007FFB46C9AC08",
+          "cpuMs": 10.720274,
+          "percent": 99.84353279114961
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 10.720274,
+          "percent": 99.84353279114961
+        },
+        {
+          "name": "0x00007FFB46DABA3B",
+          "cpuMs": 10.720274,
+          "percent": 99.84353279114961
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 10.129096,
+          "percent": 94.3375821010454
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 10.112997,
+          "percent": 94.18764367275479
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 10.109097,
+          "percent": 94.1513209278431
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 10.109097,
+          "percent": 94.1513209278431
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 10.109097,
+          "percent": 94.1513209278431
+        },
+        {
+          "name": "0x00007FFB46BD84E6",
+          "cpuMs": 10.069796,
+          "percent": 93.7852901079009
+        },
+        {
+          "name": "0x00007FFB46D2D179",
+          "cpuMs": 10.029998,
+          "percent": 93.41463046636356
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 10.029998,
+          "percent": 93.41463046636356
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 10.029998,
+          "percent": 93.41463046636356
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 10.009999,
+          "percent": 93.22836929316125
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 10.009999,
+          "percent": 93.22836929316125
+        }
+      ]
+    },
+    {
+      "thread": "25 - .NET Finalizer Thread (11064)",
+      "samples": 44,
+      "cpuMs": 8.227974,
+      "self": [
+        {
+          "name": "0xFFFFF806AB033C9A",
+          "cpuMs": 0.607199,
+          "percent": 7.379690310154116
+        },
+        {
+          "name": "0xFFFFF806AB033CA6",
+          "cpuMs": 0.601799,
+          "percent": 7.31406054515972
+        },
+        {
+          "name": "0xFFFFF806AB033CB5",
+          "cpuMs": 0.529697,
+          "percent": 6.437757338562324
+        },
+        {
+          "name": "0xFFFFF806AB035356",
+          "cpuMs": 0.403698,
+          "percent": 4.906408309019936
+        },
+        {
+          "name": "0xFFFFF806AB0332C8",
+          "cpuMs": 0.401399,
+          "percent": 4.878467044256581
+        },
+        {
+          "name": "0xFFFFF806AB035222",
+          "cpuMs": 0.400499,
+          "percent": 4.867528750090848
+        },
+        {
+          "name": "0xFFFFF806AB033C4A",
+          "cpuMs": 0.3934,
+          "percent": 4.781249916443587
+        },
+        {
+          "name": "0xFFFFF806AB035092",
+          "cpuMs": 0.250098,
+          "percent": 3.039606104734896
+        },
+        {
+          "name": "0xFFFFF806AB216B2D",
+          "cpuMs": 0.202699,
+          "percent": 2.4635347656664934
+        },
+        {
+          "name": "0xFFFFF806AB2FA2F8",
+          "cpuMs": 0.2024,
+          "percent": 2.4599008212714333
+        },
+        {
+          "name": "0xFFFFF806AB8D7DD9",
+          "cpuMs": 0.2024,
+          "percent": 2.4599008212714333
+        },
+        {
+          "name": "0xFFFFF806AB034FAB",
+          "cpuMs": 0.2019,
+          "percent": 2.45382399117936
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "FinalizerThread::FinalizerThreadWorker",
+          "cpuMs": 8.227974,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 8.227974,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 8.227974,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 8.227974,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 8.227974,
+          "percent": 100.0
+        },
+        {
+          "name": "FinalizerThread::FinalizerThreadStart",
+          "cpuMs": 8.227974,
+          "percent": 100.0
+        },
+        {
+          "name": "FinalizerThread::FinalizeAllObjects",
+          "cpuMs": 8.123277,
+          "percent": 98.72754823970033
+        },
+        {
+          "name": "System.GC.RunFinalizers()",
+          "cpuMs": 8.123277,
+          "percent": 98.72754823970033
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 8.123277,
+          "percent": 98.72754823970033
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 8.123277,
+          "percent": 98.72754823970033
+        },
+        {
+          "name": "EtwEventWriteTransfer",
+          "cpuMs": 7.937176,
+          "percent": 96.46573992577031
+        },
+        {
+          "name": "McGenEventWrite_EventWriteTransfer",
+          "cpuMs": 7.937176,
+          "percent": 96.46573992577031
+        },
+        {
+          "name": "NtTraceEvent",
+          "cpuMs": 7.937176,
+          "percent": 96.46573992577031
+        },
+        {
+          "name": "FinalizerThread::GetNextFinalizableObject",
+          "cpuMs": 7.896378,
+          "percent": 95.96989489757746
+        },
+        {
+          "name": "ETW::GCLog::SendFinalizeObjectEvent",
+          "cpuMs": 7.896378,
+          "percent": 95.96989489757746
+        },
+        {
+          "name": "McTemplateCoU0pph_EventWriteTransfer",
+          "cpuMs": 7.896378,
+          "percent": 95.96989489757746
+        }
+      ]
+    },
+    {
+      "thread": "27 - .NET Tiered Compilation Worker (8908)",
+      "samples": 33,
+      "cpuMs": 5.431584,
+      "self": [
+        {
+          "name": "Compiler::lvaAlignFrame",
+          "cpuMs": 0.418299,
+          "percent": 7.701234115131055
+        },
+        {
+          "name": "MethodDesc::FindOrCreateAssociatedMethodDesc",
+          "cpuMs": 0.398199,
+          "percent": 7.331176319835982
+        },
+        {
+          "name": "DefaultPolicy::NoteBool",
+          "cpuMs": 0.305199,
+          "percent": 5.618968610261758
+        },
+        {
+          "name": "RtlpUnwindPrologue",
+          "cpuMs": 0.2259,
+          "percent": 4.15900775906255
+        },
+        {
+          "name": "Compiler::fgMarkUseDef<0>",
+          "cpuMs": 0.2074,
+          "percent": 3.818407300706387
+        },
+        {
+          "name": "Compiler::lvaComputeRefCounts",
+          "cpuMs": 0.205799,
+          "percent": 3.7889315529318885
+        },
+        {
+          "name": "Compiler::fgMorphTree",
+          "cpuMs": 0.2039,
+          "percent": 3.753969376152518
+        },
+        {
+          "name": "DomTreeVisitor<`Compiler::optVnCopyProp'::`2'::CopyPropDomTreeVisitor>::WalkTree",
+          "cpuMs": 0.2031,
+          "percent": 3.7392407076830625
+        },
+        {
+          "name": "CodeGen::genCallInstruction",
+          "cpuMs": 0.202699,
+          "percent": 3.731857962612748
+        },
+        {
+          "name": "NtTraceEvent",
+          "cpuMs": 0.200499,
+          "percent": 3.691354124321745
+        },
+        {
+          "name": "CSE_HeuristicCommon::CanConsiderTree",
+          "cpuMs": 0.200199,
+          "percent": 3.685830873645699
+        },
+        {
+          "name": "emitter::emitOutputAM",
+          "cpuMs": 0.200099,
+          "percent": 3.683989790087017
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "TieredCompilationManager::BackgroundWorkerBootstrapper0",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "TieredCompilationManager::BackgroundWorkerStart",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "TieredCompilationManager::BackgroundWorkerBootstrapper1",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "MethodDesc::PrepareILBasedCode",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "MethodDesc::JitCompileCodeLockedEventWrapper",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "MethodDesc::JitCompileCode",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "TieredCompilationManager::DoBackgroundWork",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "TieredCompilationManager::CompileCodeVersion",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 5.431584,
+          "percent": 100.0
+        },
+        {
+          "name": "UnsafeJitFunction",
+          "cpuMs": 5.175484,
+          "percent": 95.28498500621549
+        },
+        {
+          "name": "UnsafeJitFunctionWorker",
+          "cpuMs": 5.175484,
+          "percent": 95.28498500621549
+        },
+        {
+          "name": "MethodDesc::JitCompileCodeLocked",
+          "cpuMs": 5.175484,
+          "percent": 95.28498500621549
+        },
+        {
+          "name": "MonoMod.Core.Platforms.Runtimes.Core60Runtime+JitHookDelegateHolder.CompileMethodHook(int,int,value class CORINFO_METHOD_INFO*,unsigned int32,unsigned int8**,unsigned int32*)",
+          "cpuMs": 4.977785,
+          "percent": 91.64518122153684
+        }
+      ]
+    },
+    {
+      "thread": "34 - .NET TP Worker (20996)",
+      "samples": 5,
+      "cpuMs": 1.575798,
+      "self": [
+        {
+          "name": "SdfWorldAabb.get_Maximum()",
+          "cpuMs": 0.9609,
+          "percent": 60.978627971351656
+        },
+        {
+          "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+          "cpuMs": 0.538499,
+          "percent": 34.17309832859288
+        },
+        {
+          "name": "ThreadNative_SpinWait",
+          "cpuMs": 0.049399,
+          "percent": 3.13485611734499
+        },
+        {
+          "name": "VoxelCollisionWorld+<Work>d__67.MoveNext()",
+          "cpuMs": 0.027,
+          "percent": 1.7134175827104743
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 1.575798,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.TimerQueue.FireNextTimers()",
+          "cpuMs": 1.526399,
+          "percent": 96.865143882655
+        },
+        {
+          "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+          "cpuMs": 1.526399,
+          "percent": 96.865143882655
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&)",
+          "cpuMs": 1.526399,
+          "percent": 96.865143882655
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 1.526399,
+          "percent": 96.865143882655
+        },
+        {
+          "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext()",
+          "cpuMs": 1.526399,
+          "percent": 96.865143882655
+        },
+        {
+          "name": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext()",
+          "cpuMs": 1.526399,
+          "percent": 96.865143882655
+        }
+      ]
+    },
+    {
+      "thread": "38 - Thread (27384)",
+      "samples": 2,
+      "cpuMs": 0.050398,
+      "self": [
+        {
+          "name": "0x00007FFA58B5153A",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0xFFFFF806AB2E0306",
+          "cpuMs": 0.019999,
+          "percent": 39.68213024326362
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "EtwpNotificationThread",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0x00007FFAAB51E5B5",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "EtwpEventApiCallback",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "TppExecuteWaitCallback",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0x00007FFA58B5153A",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "EtwpUpdateEnableInfoAndCallback",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0x00007FFAAB51E0DF",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0x00007FFAAB51ED33",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "EtwDeliverDataBlock",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "TppWorkerThread",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0x00007FFAAB51DF56",
+          "cpuMs": 0.030399,
+          "percent": 60.31786975673638
+        },
+        {
+          "name": "0xFFFFF806AB0CBA8F",
+          "cpuMs": 0.019999,
+          "percent": 39.68213024326362
+        },
+        {
+          "name": "0xFFFFF806AB09B40F",
+          "cpuMs": 0.019999,
+          "percent": 39.68213024326362
+        },
+        {
+          "name": "0xFFFFF806AB0C87C2",
+          "cpuMs": 0.019999,
+          "percent": 39.68213024326362
+        }
+      ]
+    },
+    {
+      "thread": "37 - Thread (11000)",
+      "samples": 2,
+      "cpuMs": 0.021498,
+      "self": [
+        {
+          "name": "0xFFFFF806AB09DD71",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0x00007FFAE29E3A67",
+          "cpuMs": 0.007799,
+          "percent": 36.2777932830961
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "0x00007FFAE2EEAF93",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAE2A09893",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAE2A0349B",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAE2A0884F",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAE29E3A67",
+          "cpuMs": 0.021498,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB09DD71",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB0CBA8F",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB09B40F",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB09D7B1",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 0.013699,
+          "percent": 63.7222067169039
+        }
+      ]
+    },
+    {
+      "thread": "41 - .NET TP Worker (31664)",
+      "samples": 1,
+      "cpuMs": 0.008499,
+      "self": [
+        {
+          "name": "0x00007FFAAB5B690C",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "System.IO.StreamReader.ReadBuffer()",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAAB5B690C",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "System.IO.StreamReader.ReadLine()",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.Tasks.Task.ExecuteWithThreadLocal(class System.Threading.Tasks.Task&,class System.Threading.Thread)",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "Sandbox.Diagnostics.EtwLogger.ListenForResponses()",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB5084D1A4",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(class System.Threading.Thread,class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 0.008499,
+          "percent": 100.0
+        }
+      ]
+    },
+    {
+      "thread": "40 - Thread (35776)",
+      "samples": 1,
+      "cpuMs": 0.0055,
+      "self": [
+        {
+          "name": "0xFFFFF806AB219B2D",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB6FC529F3",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB6FC528C1",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFABDB967E0",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB219706",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB219B2D",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB4B43A6",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB4B4A16",
+          "cpuMs": 0.0055,
+          "percent": 100.0
+        }
+      ]
+    },
+    {
+      "thread": "39 - .NET TP Gate (35004)",
+      "samples": 1,
+      "cpuMs": 0.003299,
+      "self": [
+        {
+          "name": "0xFFFFF806AB4B48F3",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        }
+      ],
+      "inclusive": [
+        {
+          "name": "NtQuerySystemInformation",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB8DDB52",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+CpuUtilizationReader.get_CurrentUtilization()",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0x00007FFB6FCEE5B3",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB16507B",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB8E2151",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        },
+        {
+          "name": "0xFFFFF806AB4B48F3",
+          "cpuMs": 0.003299,
+          "percent": 100.0
+        }
+      ]
+    }
+  ],
+  "self": [
+    {
+      "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+      "cpuMs": 1228.80888,
+      "percent": 10.224949318873456
+    },
+    {
+      "name": "RiverNetwork+Segment.get_Start()",
+      "cpuMs": 384.163193,
+      "percent": 3.196631504324417
+    },
+    {
+      "name": "RiverNetwork+Segment.get_Bounds()",
+      "cpuMs": 375.399745,
+      "percent": 3.1237106350851067
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+      "cpuMs": 365.636117,
+      "percent": 3.04246724313604
+    },
+    {
+      "name": "Vector3.get_x()",
+      "cpuMs": 262.244861,
+      "percent": 2.1821460249050397
+    },
+    {
+      "name": "Vector3.get_y()",
+      "cpuMs": 253.899299,
+      "percent": 2.112702395487651
+    },
+    {
+      "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+      "cpuMs": 239.771881,
+      "percent": 1.9951477981799393
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+      "cpuMs": 166.046519,
+      "percent": 1.381677223353365
+    },
+    {
+      "name": "COMSingle::Sqrt",
+      "cpuMs": 152.962726,
+      "percent": 1.2728066556832882
+    },
+    {
+      "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+      "cpuMs": 145.493745,
+      "percent": 1.210657078615918
+    },
+    {
+      "name": "0xFFFFF806AB2197E4",
+      "cpuMs": 144.255396,
+      "percent": 1.2003527457207346
+    },
+    {
+      "name": "0xFFFFF806AB0C6219",
+      "cpuMs": 130.597697,
+      "percent": 1.0867066919198956
+    },
+    {
+      "name": "RiverNetwork+Segment.get_End()",
+      "cpuMs": 126.092696,
+      "percent": 1.049220466310528
+    },
+    {
+      "name": "System.Math.Clamp(float32,float32,float32)",
+      "cpuMs": 125.765105,
+      "percent": 1.046494573434234
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+      "cpuMs": 115.878906,
+      "percent": 0.9642312651390518
+    },
+    {
+      "name": "0xFFFFF806AB1635C0",
+      "cpuMs": 110.0046,
+      "percent": 0.9153510184943869
+    },
+    {
+      "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+      "cpuMs": 98.463245,
+      "percent": 0.8193151158679942
+    },
+    {
+      "name": "TerrainCaves.CaveRegionNoise(value class Vector3,unsigned int32)",
+      "cpuMs": 92.584874,
+      "percent": 0.7704010442570082
+    },
+    {
+      "name": "System.Collections.Generic.GenericEqualityComparer`1[Vector3].Equals(!0,!0)",
+      "cpuMs": 91.998147,
+      "percent": 0.7655188742656792
+    },
+    {
+      "name": "System.Collections.Generic.Dictionary`2[RiverNetwork+Segment,System.Int32].FindValue(!0)",
+      "cpuMs": 85.940086,
+      "percent": 0.7151095976858713
+    },
+    {
+      "name": "RegionalLandforms+Interval..ctor(float64,float64)",
+      "cpuMs": 84.342811,
+      "percent": 0.7018186325983603
+    },
+    {
+      "name": "0xFFFFF806AB4B483A",
+      "cpuMs": 82.026497,
+      "percent": 0.6825445260696078
+    },
+    {
+      "name": "System.Math.Max(float64,float64)",
+      "cpuMs": 81.055708,
+      "percent": 0.6744665666034296
+    },
+    {
+      "name": "NtTraceEvent",
+      "cpuMs": 77.878082,
+      "percent": 0.6480254614542427
+    },
+    {
+      "name": "TerrainNoise.SimplexContribution3D(int64,int64,int64,float32,float32,float32,unsigned int32)",
+      "cpuMs": 74.22342,
+      "percent": 0.6176149278588046
+    },
+    {
+      "name": "0x00007FFB64F13D22",
+      "cpuMs": 73.03003,
+      "percent": 0.6076846999232363
+    },
+    {
+      "name": "System.Collections.Generic.Dictionary`2[RiverNetwork+Segment,System.Int32].TryAdd(!0,!1)",
+      "cpuMs": 72.265511,
+      "percent": 0.6013231182683936
+    },
+    {
+      "name": "RiverNetwork+Segment.GetHashCode()",
+      "cpuMs": 65.808035,
+      "percent": 0.5475902995180589
+    },
+    {
+      "name": "RegionalLandforms.Smooth(value class Interval)",
+      "cpuMs": 65.120344,
+      "percent": 0.5418680055661749
+    },
+    {
+      "name": "RiverNetwork+Segment.get_StartRadius()",
+      "cpuMs": 63.527756,
+      "percent": 0.5286160411224885
+    }
+  ],
+  "inclusive": [
+    {
+      "name": "RtlUserThreadStart",
+      "cpuMs": 11984.230136,
+      "percent": 99.72107767183122
+    },
+    {
+      "name": "BaseThreadInitThunk",
+      "cpuMs": 11984.230136,
+      "percent": 99.72107767183122
+    },
+    {
+      "name": "CallDescrWorkerInternal",
+      "cpuMs": 7787.810077,
+      "percent": 64.80256176398805
+    },
+    {
+      "name": "ManagedThreadBase_DispatchOuter",
+      "cpuMs": 7161.767033,
+      "percent": 59.593241990571975
+    },
+    {
+      "name": "ManagedThreadBase_DispatchMiddle",
+      "cpuMs": 7161.767033,
+      "percent": 59.593241990571975
+    },
+    {
+      "name": "DispatchCallSimple",
+      "cpuMs": 7155.852954,
+      "percent": 59.54403079180296
+    },
+    {
+      "name": "KickOffThread",
+      "cpuMs": 7147.527577,
+      "percent": 59.474755122273685
+    },
+    {
+      "name": "KickOffThread_Worker",
+      "cpuMs": 7147.527577,
+      "percent": 59.474755122273685
+    },
+    {
+      "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+      "cpuMs": 6972.771212,
+      "percent": 58.02060305325905
+    },
+    {
+      "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+      "cpuMs": 6935.674024,
+      "percent": 57.71191642725362
+    },
+    {
+      "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+      "cpuMs": 6929.996704,
+      "percent": 57.66467530602488
+    },
+    {
+      "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+      "cpuMs": 6929.835688,
+      "percent": 57.663335487875514
+    },
+    {
+      "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+      "cpuMs": 6929.007208,
+      "percent": 57.656441685145424
+    },
+    {
+      "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+      "cpuMs": 6928.699612,
+      "percent": 57.653882171162515
+    },
+    {
+      "name": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext()",
+      "cpuMs": 6928.482421,
+      "percent": 57.65207491943797
+    },
+    {
+      "name": "Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue()",
+      "cpuMs": 6922.747113,
+      "percent": 57.604351278615866
+    },
+    {
+      "name": "System.Threading.TimerQueue.FireNextTimers()",
+      "cpuMs": 6530.683901,
+      "percent": 54.341983519282344
+    },
+    {
+      "name": "System.Threading.Thread.StartCallback()",
+      "cpuMs": 6523.56349,
+      "percent": 54.28273440187317
+    },
+    {
+      "name": "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+      "cpuMs": 6523.56349,
+      "percent": 54.28273440187317
+    },
+    {
+      "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,System.__Canon].MoveNext()",
+      "cpuMs": 5112.247164,
+      "percent": 42.539136075786296
+    },
+    {
+      "name": "VoxelCollisionWorld+<Work>d__67.MoveNext()",
+      "cpuMs": 5111.761564,
+      "percent": 42.53509538608259
+    },
+    {
+      "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+      "cpuMs": 5110.420169,
+      "percent": 42.52393360485296
+    },
+    {
+      "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[System.Threading.Tasks.VoidTaskResult].AwaitOnCompleted(!!0&,!!1&,class System.Threading.Tasks.Task`1<!0>&)",
+      "cpuMs": 5081.790337,
+      "percent": 42.285704059174655
+    },
+    {
+      "name": "0x00007FFABD7CECC8",
+      "cpuMs": 3555.884204,
+      "percent": 29.588601092858866
+    },
+    {
+      "name": "0x00007FFABDCC8A1D",
+      "cpuMs": 3343.101605,
+      "percent": 27.818031782916076
+    },
+    {
+      "name": "0x00007FFABDCC7286",
+      "cpuMs": 3313.745581,
+      "percent": 27.573759575505242
+    },
+    {
+      "name": "0x00007FFABDD145D3",
+      "cpuMs": 3312.743184,
+      "percent": 27.565418605083227
+    },
+    {
+      "name": "0x00007FFABCE2C17F",
+      "cpuMs": 3274.925987,
+      "percent": 27.25074076624237
+    },
+    {
+      "name": "0x00007FFB62ECE86E",
+      "cpuMs": 2899.526408,
+      "percent": 24.127031512447402
+    },
+    {
+      "name": "0x00007FFB62F26883",
+      "cpuMs": 2899.526408,
+      "percent": 24.127031512447402
+    },
+    {
+      "name": "0x00007FFB62ECF0C3",
+      "cpuMs": 2899.526408,
+      "percent": 24.127031512447402
+    },
+    {
+      "name": "0x00007FFB62ECEFDA",
+      "cpuMs": 2899.526408,
+      "percent": 24.127031512447402
+    },
+    {
+      "name": "0x00007FFABCE2B725",
+      "cpuMs": 2899.526408,
+      "percent": 24.127031512447402
+    },
+    {
+      "name": "ProceduralTerrainSdf+LatticeSampler.Sample(int32,int32,int32)",
+      "cpuMs": 2891.755564,
+      "percent": 24.062370125833013
+    },
+    {
+      "name": "0x00007FFB62ED2805",
+      "cpuMs": 2871.164181,
+      "percent": 23.89102871464423
+    },
+    {
+      "name": "0x00007FFB652F31A1",
+      "cpuMs": 2870.964582,
+      "percent": 23.88936784639017
+    },
+    {
+      "name": "0x00007FFB652DE30E",
+      "cpuMs": 2762.105262,
+      "percent": 22.983546731322196
+    },
+    {
+      "name": "0x00007FFB6416D998",
+      "cpuMs": 2722.560863,
+      "percent": 22.654496801588362
+    },
+    {
+      "name": "0x00007FFB652DF654",
+      "cpuMs": 2722.560863,
+      "percent": 22.654496801588362
+    },
+    {
+      "name": "0x00007FFB64CE0717",
+      "cpuMs": 2722.560863,
+      "percent": 22.654496801588362
+    },
+    {
+      "name": "0x00007FFB6416DA64",
+      "cpuMs": 2722.560863,
+      "percent": 22.654496801588362
+    },
+    {
+      "name": "0x00007FFB64CE0630",
+      "cpuMs": 2722.158664,
+      "percent": 22.651150093684443
+    },
+    {
+      "name": "RiverWorld+Region.SampleWorld(value class Vector3,float32)",
+      "cpuMs": 2471.002435,
+      "percent": 20.561272852038552
+    },
+    {
+      "name": "RiverNetwork+Patch.SampleWorld(value class Vector3,float32,float32)",
+      "cpuMs": 2466.999943,
+      "percent": 20.527968016343358
+    },
+    {
+      "name": "RiverNetwork.SampleSegments(value class Vector3,float32,float32,value class System.ReadOnlySpan`1<value class Segment>)",
+      "cpuMs": 2463.003455,
+      "percent": 20.494713140081814
+    },
+    {
+      "name": "TerrainFieldSnapshot.GetDensityRange(value class SdfWorldAabb,float32)",
+      "cpuMs": 2051.259913,
+      "percent": 17.068584864280744
+    },
+    {
+      "name": "ProceduralTerrainSdf.GetConservativeDensityRange(value class SdfWorldAabb,float32,value class ProceduralTerrainSettings)",
+      "cpuMs": 2048.379824,
+      "percent": 17.04461957192475
+    },
+    {
+      "name": "ProceduralTerrainSdf.BoundDensityAabb(value class SdfWorldAabb,float32,value class ProceduralTerrainSettings)",
+      "cpuMs": 2007.901217,
+      "percent": 16.707796074137526
+    },
+    {
+      "name": "Sandbox.TaskSource+WorkerThreadFunc`1+<>c[System.__Canon].<.cctor>b__21_0(class System.Object)",
+      "cpuMs": 1810.343953,
+      "percent": 15.063917156225328
+    },
+    {
+      "name": "VoxelManager+<>c__DisplayClass190_0.<PrepareSurfaceWater>b__0()",
+      "cpuMs": 1580.847462,
+      "percent": 13.15427113435226
+    },
+    {
+      "name": "RegionalLandforms.BoundHeight(value class SdfWorldAabb,value class ProceduralTerrainSettings)",
+      "cpuMs": 1451.433538,
+      "percent": 12.077414647071228
+    },
+    {
+      "name": "RegionalLandforms.BoundNaturalHeight(value class SdfWorldAabb,value class ProceduralTerrainSettings)",
+      "cpuMs": 1443.643456,
+      "percent": 12.012593180579328
+    },
+    {
+      "name": "0xFFFFF806AB4BFB58",
+      "cpuMs": 928.848384,
+      "percent": 7.72897055506102
+    },
+    {
+      "name": "RiverWorld.Capture(value class SdfWorldAabb,value class System.Threading.CancellationToken)",
+      "cpuMs": 927.507933,
+      "percent": 7.717816628878916
+    },
+    {
+      "name": "RiverWorld.GetPatch(value class NodeId)",
+      "cpuMs": 927.373736,
+      "percent": 7.71669997229702
+    },
+    {
+      "name": "System.Lazy`1[System.__Canon].CreateValue()",
+      "cpuMs": 926.872139,
+      "percent": 7.712526171157579
+    },
+    {
+      "name": "System.Lazy`1[System.__Canon].ViaFactory(value class System.Threading.LazyThreadSafetyMode)",
+      "cpuMs": 926.872139,
+      "percent": 7.712526171157579
+    },
+    {
+      "name": "RiverWorld+<>c__DisplayClass18_0.<GetPatch>b__0()",
+      "cpuMs": 926.663839,
+      "percent": 7.710792901665645
+    },
+    {
+      "name": "RiverNetwork.Build(value class NodeId,value class ProceduralTerrainSettings,value class System.Threading.CancellationToken)",
+      "cpuMs": 926.663839,
+      "percent": 7.710792901665645
+    },
+    {
+      "name": "RiverNetwork+Builder.Build(value class NodeId)",
+      "cpuMs": 926.049842,
+      "percent": 7.705683817324604
+    }
+  ]
+}

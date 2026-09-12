@@ -1,0 +1,27 @@
+{
+  "patch": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-G-v2-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-G-v2-recipe.json",
+    "grid": { "pointsPerAxis": 129, "spacing": 32, "rows": 16641, "adjacentEdges": 33024 },
+    "repeatHeightExactCount": 16641,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.9868512, 1.0],
+    "heightRange": [893.01154, 2211.341],
+    "slope": { "p50": 0.3581466, "p95": 0.9473934, "p99": 1.2160559, "max": 3.3714132 },
+    "adjacentAbsoluteHeightDifference": { "p50": 6.54746, "p95": 23.4236, "p99": 32.9789, "max": 91.4609 }
+  },
+  "wide": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-G-v2-wide-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-G-v2-wide-recipe.json",
+    "grid": { "pointsPerAxis": 65, "spacing": 4096, "rows": 4225, "adjacentEdges": 8320 },
+    "repeatHeightExactCount": 4225,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.0, 1.0],
+    "heightRange": [-2034.3096, 2640.7305],
+    "slope": { "p50": 0.10585851, "p95": 0.8092461, "p99": 1.2542993, "max": 2.6546817 },
+    "adjacentAbsoluteHeightDifference": { "p50": 163.76345, "p95": 948.43472, "p99": 1434.88854, "max": 2193.94754 }
+  },
+  "recipeMountainAmount": 0.3
+}

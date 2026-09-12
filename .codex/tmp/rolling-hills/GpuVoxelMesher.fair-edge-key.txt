@@ -1,0 +1,4575 @@
+using System;
+using System.Diagnostics;
+using Sandbox.Rendering;
+
+internal sealed partial class GpuVoxelMesher : IDisposable
+{
+	internal const float MinimumTriangleAreaSquaredRelative = 0.0000000001f;
+	// Persistent geometry is disposable revisioned cache state; the SDF remains canonical.
+	public long CancelledRegularCountResults { get; private set; }
+	public long CancelledTransitionCountResults { get; private set; }
+	public long SkippedRegularGeometryRegions { get; private set; }
+	public long SkippedTransitionGeometryRegions { get; private set; }
+	public long EmptyBatchSubmissionsAvoided { get; private set; }
+	public long RegularCountBatches { get; private set; }
+	public long RegularCountRegions { get; private set; }
+	public long RegularEmitArenaPasses { get; private set; }
+	public long RegularEmitBatchSlots { get; private set; }
+	public long RegularEnabledEmitRegions { get; private set; }
+	public long RegularMultiArenaBatches { get; private set; }
+	public long TransitionDeferredRenderTicks { get; private set; }
+	public const int MaximumRegionsPerBatch = 8;
+	public const int MaximumDispatchesPerUpdate = MaximumRegionsPerBatch;
+	public const int ScratchLaneCount = 3;
+	public const int RegionsPerSlab = 512;
+	public const int TerrainVertexBytes = 28;
+	private const int VertexArenaBytes = 32 * 1024 * 1024;
+	private const int IndexArenaBytes = 16 * 1024 * 1024;
+	private const int VertexArenaCapacity = VertexArenaBytes / TerrainVertexBytes;
+	private const int IndexArenaCapacity = IndexArenaBytes / sizeof( uint );
+	private const int IndirectArgumentStride = sizeof( uint ) * 5;
+	private const int DepthTrianglesPerBlock = 64;
+	private const int DepthIndicesPerBlock = DepthTrianglesPerBlock * 3;
+	private const int DepthBlockCapacity = (IndexArenaCapacity + DepthIndicesPerBlock - 1) / DepthIndicesPerBlock + RegionsPerSlab;
+	private const uint TerrainRecordSlotMask = 0x001fffffu;
+	private const uint TerrainRecordGenerationTokenMask = 3u;
+	private const int TerrainRecordGenerationTokenShift = 21;
+	// Sign carries the authoritative-correction flag; exponent owns the signature.
+	private const uint TerrainRecordIdentitySignatureMask = 0x7f800000u;
+	private const uint TerrainRecordIdentitySignature = 0x3f800000u;
+	private const int MaximumScheduleLatencySamples = 524288;
+	private const int MaximumThroughputBatchSamples = 65536;
+	private const int DefaultMeshAuditRegionsPerLevel = 8;
+	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
+	private const int VisibilityFrameCounterCount = 5 + SupportedVisualLevelCount * 2;
+	private const int VisibilityAggregateCounterCount = 11 + SupportedVisualLevelCount * 3;
+	private const double OuterMaximumServiceDelayMilliseconds = 250.0;
+	private const double RenderCameraRefreshIntervalMilliseconds = 250.0;
+	private const double GpuSchedulerStallThresholdMilliseconds = 500.0;
+	private const double SlowDrawCommandCommitThresholdMilliseconds = 500.0;
+
+	private readonly Scene _scene;
+	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
+	private readonly GpuVoxelMaterials _voxelMaterials = new();
+	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_terrain.shader" );
+	private readonly Dictionary<GpuMeshRegionKey, ResidentMesh> _resident = new();
+	private readonly Dictionary<GpuMeshRegionKey, PendingMesh> _pending = new();
+	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();
+	private readonly Queue<PendingMesh> _nearVisualDispatchQueue = new();
+	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
+	private readonly Queue<PendingMesh> _outerVisualDispatchQueue = new();
+	private readonly PriorityQueue<GpuMeshRegionKey, (float Distance, int Level, int Z, int Y, int X)> _activeOuterDispatchQueue = new(
+		Comparer<(float Distance, int Level, int Z, int Y, int X)>.Create( ( left, right ) =>
+		{
+			var comparison = left.Distance.CompareTo( right.Distance );
+			if ( comparison != 0 ) return comparison;
+			comparison = left.Level.CompareTo( right.Level );
+			if ( comparison != 0 ) return comparison;
+			comparison = left.Z.CompareTo( right.Z );
+			if ( comparison != 0 ) return comparison;
+			comparison = left.Y.CompareTo( right.Y );
+			return comparison != 0 ? comparison : left.X.CompareTo( right.X );
+		} ) );
+	private Vector3 _streamingPosition;
+	private readonly Queue<PendingMesh> _placementNearDispatchQueue = new();
+	private readonly Queue<PendingMesh> _placementOuterDispatchQueue = new();
+	private readonly HashSet<GpuMeshRegionKey> _placementRequired = new();
+	private readonly HashSet<GpuMeshRegionKey> _placementQueued = new();
+	private readonly List<GeometryArena> _arenas = new();
+	private ScratchLane[] _scratchLanes;
+	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
+	private readonly HashSet<GpuMeshRegionKey> _renderActive = new();
+	private readonly HashSet<CameraComponent> _currentRenderCameras = new();
+	private readonly HashSet<CameraComponent> _leavingRenderCameras = new();
+	private readonly Dictionary<CameraComponent, RenderCameraState> _renderCameraStates = new();
+	private readonly List<RenderCameraState> _retiredRenderCameraStates = new();
+	private readonly object _renderCameraLock = new();
+	private readonly Dictionary<GpuTransitionKey, ResidentTransition> _transitionResident = new();
+	private readonly Dictionary<GpuTransitionKey, GpuTransitionDescriptor> _transitionDesiredDescriptors = new();
+	private readonly Dictionary<GpuTransitionKey, PendingTransition> _transitionPending = new();
+	private readonly Queue<PendingTransition> _transitionDispatchQueue = new();
+	private readonly HashSet<uint> _transitionCancelledGenerations = new();
+	private readonly HashSet<GpuTransitionKey> _transitionRenderActive = new();
+	private TransitionScratchLane[] _transitionScratchLanes;
+	private readonly object _visibilityLock = new();
+	private readonly object _visibilityDescriptorLock = new();
+	private readonly object _meshAuditLock = new();
+	private readonly ReadbackSceneObject _readbackObject;
+	private readonly TerrainDepthObject _depthObject;
+	private CameraComponent _camera;
+	private RenderCameraState _visibilityReadbackState;
+	private int _cellsPerAxis;
+	private int _visibilityCapacity;
+	private int _pendingGameplayCount;
+	private int _pendingWarmCount;
+	private readonly int[] _pendingLevelCounts = new int[SupportedVisualLevelCount];
+	private int _warmResidentCount;
+	private readonly int[] _residentLevelCounts = new int[SupportedVisualLevelCount];
+	private uint _nextGeneration;
+	private Vector4[] _visibilityBoundsData = Array.Empty<Vector4>();
+	private GpuBuffer.IndirectDrawIndexedArguments[] _sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
+	private bool _visibilityMeasurementActive;
+	private bool _visibilitySettledCaptureActive;
+	private bool _visibilityReadbackPending;
+	private bool _visibilityReadbackInFlight;
+	private long _visibilityReadbackRequestedRenderSequence;
+	private GpuVisibilityMeasurement? _completedVisibilityMeasurement;
+	private long _dispatchCount;
+	private long _poolAllocationCount;
+	private long _poolReuseCount;
+	private long _scalarReadbackCount;
+	private long _countReadbackCount;
+	private long _countReadbackBytes;
+	private double _countReadbackMilliseconds;
+	private double _countSubmissionMilliseconds;
+	private double _emitSubmissionMilliseconds;
+	private long _visibilityScalarReadbackCount;
+	private long _renderSequence;
+	private long _updateEpoch;
+	private long _claimedRenderEpoch;
+	private int _renderTickInProgress;
+	private long _gpuSchedulerObservedClaimedEpoch;
+	private long _gpuSchedulerWaitStartTimestamp;
+	private long _gpuSchedulerStallStartTimestamp;
+	private int _gpuSchedulerStallActive;
+	private long _gpuSchedulerStallCount;
+	private long _suppressedRenderCallbackCount;
+	private long _busyRenderCallbackCount;
+	private long _reportedSuppressedRenderCallbackCount;
+	private long _lastRenderDiagnosticTimestamp;
+	private int _renderDiagnosticReportCount;
+	private long _drawCommandResetCount;
+	private long _visibilityDescriptorUploadCount;
+	private int _drawCommandDiagnosticReportCount;
+	private int _slowDrawCommandCommitReportCount;
+	private int _cameraBindingDiagnosticCount;
+	private long _lastRenderCameraRefreshTimestamp;
+	private long _drawCommitStopwatchTicks;
+	private int _drawCommitRebuildCount;
+	private int _renderViewKind;
+	private long _renderHandoffCount;
+	private int _maximumDispatchesRequested = MaximumDispatchesPerUpdate;
+	private int _processedRenderDispatches;
+	private ulong _topologyDigest;
+	private ulong _positionDigest;
+	private readonly ulong[] _levelTopologyDigests = new ulong[SupportedVisualLevelCount];
+	private readonly ulong[] _levelPositionDigests = new ulong[SupportedVisualLevelCount];
+	private float[] _scheduleLatencyMilliseconds = Array.Empty<float>();
+	private int _scheduleLatencySampleCount;
+	private int _scheduleLatencyTruncatedCount;
+	private int _scheduleLatencyCancelledCount;
+	private int _scheduleLatencySupersededCount;
+	private bool _scheduleLatencyMeasurementActive;
+	private readonly long[] _levelScheduledCounts = new long[SupportedVisualLevelCount];
+	private readonly long[] _levelPublishedCounts = new long[SupportedVisualLevelCount];
+	private readonly long[] _levelCancelledCounts = new long[SupportedVisualLevelCount];
+	private readonly long[] _levelSupersededCounts = new long[SupportedVisualLevelCount];
+	private readonly float[][] _levelLatencyMilliseconds = new float[SupportedVisualLevelCount][];
+	private readonly int[] _levelLatencySampleCounts = new int[SupportedVisualLevelCount];
+	private readonly int[] _levelLatencyTruncatedCounts = new int[SupportedVisualLevelCount];
+	private GpuLevelScheduleMeasurement[] _completedLevelScheduleMeasurements =
+		Array.Empty<GpuLevelScheduleMeasurement>();
+	private ThroughputRecorder _throughput;
+	private float _currentPlayerRouteDistance;
+	private long _transitionScheduledCount;
+	private long _transitionPublishedCount;
+	private long _transitionCancelledCount;
+	private long _transitionStaleCount;
+	private readonly long[] _transitionScheduledByCoarseLevel = new long[SupportedVisualLevelCount];
+	private readonly long[] _transitionPublishedByCoarseLevel = new long[SupportedVisualLevelCount];
+	private readonly long[] _transitionCancelledByCoarseLevel = new long[SupportedVisualLevelCount];
+	private readonly long[] _transitionStaleByCoarseLevel = new long[SupportedVisualLevelCount];
+	private ulong _transitionTopologyDigest;
+	private ulong _transitionPositionDigest;
+	private uint _transitionFineFaceMismatchCount;
+	private uint _transitionCoarseFaceMismatchCount;
+	private uint _transitionLateralEdgeDigest;
+	private uint _transitionInvalidTableCount;
+	private float[] _transitionLatencyMilliseconds = Array.Empty<float>();
+	private int _transitionLatencySampleCount;
+	private int _transitionLatencyTruncatedCount;
+	private readonly float[][] _transitionLatencyByCoarseLevel = new float[SupportedVisualLevelCount][];
+	private readonly int[] _transitionLatencySampleCountByCoarseLevel = new int[SupportedVisualLevelCount];
+	private readonly int[] _transitionLatencyTruncatedByCoarseLevel = new int[SupportedVisualLevelCount];
+	private bool _transitionMeasurementActive;
+	private long _outerLastServiceTimestamp;
+	private long _transitionLastServiceTimestamp;
+	private int _nextGpuService;
+	private long _outerEligibleSinceTimestamp;
+	private long _outerScheduledCount;
+	private long _outerPublishedCount;
+	private long _outerCancelledCount;
+	private long _outerSupersededCount;
+	private long _outerOpportunisticServiceCount;
+	private long _outerForcedServiceCount;
+	private float _outerMaximumServiceGapMilliseconds;
+	private float[] _outerLatencyMilliseconds = Array.Empty<float>();
+	private int _outerLatencySampleCount;
+	private int _outerLatencyTruncatedCount;
+	private MetricSamples _outerQueueDepth;
+	private bool _outerMeasurementActive;
+	private MeshAuditRequest _requestedMeshAudit;
+	private bool _meshAuditInFlight;
+	private long _nextMeshAuditId;
+	private long _geometryReadbackCount;
+	private long _residentPublicationRevision;
+	private bool _disposed;
+
+	public int ResidentCount => _resident.Count;
+	public int PendingCount => PendingGameplayCount + PendingNearVisualCount + PendingWarmCount;
+	public int AllPendingCount => PendingCount + PendingOuterVisualCount;
+	public int PendingGameplayCount => _pendingGameplayCount + CountInFlight( GpuMeshResidency.Gameplay );
+	public int PendingWarmCount => _pendingWarmCount + CountInFlight( GpuMeshResidency.Warm );
+	public int PendingNearVisualCount => PendingLevelCount( 1 );
+	public int PendingOuterVisualCount
+	{
+		get
+		{
+			var count = CountOuterInFlight();
+			for ( var level = 2; level < SupportedVisualLevelCount; level++ )
+			{
+				count += _pendingLevelCounts[level];
+			}
+			return count;
+		}
+	}
+	public int WarmResidentCount => _warmResidentCount;
+	public int GameplayResidentCount => _resident.Count( pair =>
+		pair.Value.Residency == GpuMeshResidency.Gameplay );
+	public bool PrioritizePlayerDetail { get; set; }
+	public string OuterWorkStatus =>
+		$"playerDetail={PrioritizePlayerDetail} " +
+		$"visibleQueued={_pending.Count( pair => pair.Key.Level >= 2 && _renderActive.Contains( pair.Key ) )} " +
+		$"handoffQueued={_placementQueued.Count( key => key.Level >= 2 && !_renderActive.Contains( key ) )} " +
+		$"visibleInFlight={_scratchLanes.Sum( lane => lane.CountInFlight.Count( value => value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key ) ) + lane.EmitInFlight.Count( value => value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key ) ) )}";
+	public int ResidentLevelCount( int level ) => _residentLevelCounts[level];
+	public int PendingLevelCount( int level ) =>
+		_pendingLevelCounts[level] + CountInFlight( level );
+	public int ActiveLevelCount( int level ) => _renderActive.Count( key => key.Level == level );
+	public int TransitionDesiredCount => _transitionRenderActive.Count;
+	public int TransitionReadyCount => _transitionResident.Count;
+	public int TransitionDrawableCount => _transitionResident.Count( value => value.Value.Handle is not null );
+	public int TransitionPendingCount => _transitionPending.Count + CountTransitionInFlight();
+	public int TransitionDesiredCountForPair( int coarseLevel ) =>
+		_transitionRenderActive.Count( key => key.CoarseLevel == coarseLevel );
+	public int TransitionReadyCountForPair( int coarseLevel ) =>
+		_transitionResident.Count( pair => pair.Key.CoarseLevel == coarseLevel );
+	public int TransitionDrawableCountForPair( int coarseLevel ) =>
+		_transitionResident.Count( pair => pair.Key.CoarseLevel == coarseLevel && pair.Value.Handle is not null );
+	public int TransitionPendingCountForCoarseLevel( int coarseLevel ) =>
+		TransitionPendingCountForPair( coarseLevel );
+	public long TransitionScheduledCount => _transitionScheduledCount;
+	public long TransitionPublishedCount => _transitionPublishedCount;
+	public long TransitionCancelledCount => _transitionCancelledCount;
+	public long TransitionStaleCount => _transitionStaleCount;
+	public long TransitionUniqueVertexCount => _transitionResident.Values.Sum( value => (long)(value.Handle?.Vertices.Count ?? 0) );
+	public long TransitionIndexCount => _transitionResident.Values.Sum( value => (long)(value.Handle?.Indices.Count ?? 0) );
+	public long TransitionActiveCellCount => _transitionResident.Values.Sum( value => (long)value.Counts.ActiveCells );
+	public string TransitionTopologyDigest => _transitionTopologyDigest.ToString( "X16" );
+	public string TransitionPositionDigest => _transitionPositionDigest.ToString( "X16" );
+	public uint TransitionFineFaceMismatchCount => _transitionFineFaceMismatchCount;
+	public uint TransitionCoarseFaceMismatchCount => _transitionCoarseFaceMismatchCount;
+	public uint TransitionLateralEdgeDigest => _transitionLateralEdgeDigest;
+	public uint TransitionLateralMismatchCount => CountTransitionLateralMismatches();
+	public uint TransitionInvalidTableCount => _transitionInvalidTableCount;
+	public int PoolCount => _arenas.Sum( arena => arena.FreeSlotCount );
+	public int AllocatedResourceCount => _arenas.Count * RegionsPerSlab;
+	public long DispatchCount => _dispatchCount;
+	public long PoolAllocationCount => _poolAllocationCount;
+	public long PoolReuseCount => _poolReuseCount;
+	public long ScalarReadbackCount => _scalarReadbackCount;
+	public long CountReadbackCount => _countReadbackCount;
+	// Lifetime totals observe existing readbacks, including subsequently cancelled work.
+	public long TransitionCountReadbacks { get; private set; }
+	public long TransitionUniformRegionsSkipped { get; private set; }
+	public double TransitionClassificationMilliseconds { get; private set; }
+	public double TransitionCountReadbackMilliseconds { get; private set; }
+	public double TransitionCountCallbackWaitMilliseconds { get; private set; }
+	public double TransitionMaximumCountReadbackMilliseconds { get; private set; }
+	public double TransitionMaximumCountCallbackWaitMilliseconds { get; private set; }
+	public long CountReadbackBytes => _countReadbackBytes;
+	public double CountReadbackMilliseconds => _countReadbackMilliseconds;
+	public double CountSubmissionMilliseconds => _countSubmissionMilliseconds;
+	public double EmitSubmissionMilliseconds => _emitSubmissionMilliseconds;
+	public long VisibilityScalarReadbackCount => _visibilityScalarReadbackCount;
+	public long GeometryReadbackCount => _geometryReadbackCount;
+	public long ResidentPublicationRevision => _residentPublicationRevision;
+	public const long OrdinaryRenderSdfEvaluationCount = 0;
+	public int TerrainIndirectApiSubmissionCount
+	{
+		get
+		{
+			var count = 0;
+			foreach ( var arena in _arenas )
+			{
+				if ( arena.ActiveResidentCount > 0 ) count++;
+			}
+			return count;
+		}
+	}
+	public int IndirectArgumentRecordCount => TerrainIndirectApiSubmissionCount * RegionsPerSlab;
+	public int TerrainBufferGroupCount => _arenas.Count;
+	public long LogicalCapacityBytes => UsedVertexBytes + UsedIndexBytes;
+	public long ReservedActiveCellCapacity => 0;
+	public long ReservedActiveCellCapacityBytes => 0;
+	public long UniqueVertexCount => _arenas.Sum( arena => (long)arena.VertexUsed ) - TransitionAllocatedVertexCount;
+	public long IndexCount => _arenas.Sum( arena => (long)arena.IndexUsed ) - TransitionAllocatedIndexCount;
+	public long TriangleCount => IndexCount / 3;
+	public long UsedVertexBytes => UniqueVertexCount * TerrainVertexBytes;
+	public long UsedIndexBytes => IndexCount * sizeof( uint );
+	public long CommittedVertexBytes => (long)_arenas.Count * VertexArenaBytes;
+	public long CommittedIndexBytes => (long)_arenas.Count * IndexArenaBytes;
+	public long TransientScratchBytes => _scratchLanes?.Sum( lane => lane.Scratch.CapacityBytes ) ?? 0;
+	public long TransitionTransientScratchBytes => _transitionScratchLanes?.Sum( lane => lane.Scratch.CapacityBytes ) ?? 0;
+	public long DedicatedOuterTransientScratchBytes => 0;
+	private long TransitionAllocatedVertexCount => TransitionUniqueVertexCount +
+		(_transitionScratchLanes?.Sum( lane => lane.EmitInFlight.Sum(
+			value => (long)(value.Handle?.Vertices.Count ?? 0) ) ) ?? 0);
+	private long TransitionAllocatedIndexCount => TransitionIndexCount +
+		(_transitionScratchLanes?.Sum( lane => lane.EmitInFlight.Sum(
+			value => (long)(value.Handle?.Indices.Count ?? 0) ) ) ?? 0);
+	public int ArenaCount => _arenas.Count;
+	public int FreeRangeCount => _arenas.Sum( arena => arena.VertexFreeRangeCount + arena.IndexFreeRangeCount );
+	public int LargestFreeVertexRange => _arenas.Count == 0 ? 0 : _arenas.Max( arena => arena.VertexLargestFree );
+	public int LargestFreeIndexRange => _arenas.Count == 0 ? 0 : _arenas.Max( arena => arena.IndexLargestFree );
+	public string ArenaUsage => string.Join( ";", _arenas.Select( arena =>
+		$"{arena.Index}:slots={arena.AllocatedSlotCount},vertices={arena.VertexUsed},indices={arena.IndexUsed}," +
+		$"largestVertexFree={arena.VertexLargestFree},largestIndexFree={arena.IndexLargestFree}" ) );
+
+	public int TrimEmptyTrailingArenas()
+	{
+		var trimmed = 0;
+		while ( _arenas.Count > 0 && _arenas[^1].IsEmpty )
+		{
+			_arenas[^1].Dispose();
+			_arenas.RemoveAt( _arenas.Count - 1 );
+			trimmed++;
+		}
+		if ( trimmed > 0 ) MarkDrawCommandsDirty();
+		return trimmed;
+	}
+	public float FragmentationPercent
+	{
+		get
+		{
+			var free = _arenas.Sum( arena =>
+				(long)arena.VertexFree * TerrainVertexBytes + (long)arena.IndexFree * sizeof( uint ) );
+			var largest = _arenas.Sum( arena =>
+				(long)arena.VertexLargestFree * TerrainVertexBytes + (long)arena.IndexLargestFree * sizeof( uint ) );
+			return free > 0 ? (float)(free - largest) * 100f / free : 0f;
+		}
+	}
+	public string TopologyDigest => _topologyDigest.ToString( "X16" );
+	public string PositionDigest => _positionDigest.ToString( "X16" );
+	public string LevelTopologyDigest( int level ) => _levelTopologyDigests[level].ToString( "X16" );
+	public string LevelPositionDigest( int level ) => _levelPositionDigests[level].ToString( "X16" );
+	public long RenderSequence => System.Threading.Interlocked.Read( ref _renderSequence );
+	public long LogicalVisibilityBytes => _visibilityCapacity == 0 ? 0 :
+		(long)_visibilityCapacity * (sizeof( float ) * 8 + IndirectArgumentStride * 2) +
+			sizeof( uint ) * (VisibilityFrameCounterCount + VisibilityAggregateCounterCount);
+
+	public GpuVoxelMesher( Scene scene, int cellsPerAxis )
+	{
+		_scene = scene;
+		_cellsPerAxis = cellsPerAxis;
+		_scratchLanes = CreateScratchLanes( cellsPerAxis );
+		_transitionScratchLanes = CreateTransitionScratchLanes();
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
+		_readbackObject = new ReadbackSceneObject( scene.SceneWorld, this );
+		_depthObject = new TerrainDepthObject( scene.SceneWorld, this );
+		Sandbox.Diagnostics.GpuProfilerStats.Enabled = true;
+		RefreshRenderCameras();
+	}
+
+	public void BeginThroughputMeasurement( float chunkWorldSize )
+	{
+		CancelledRegularCountResults = 0;
+		CancelledTransitionCountResults = 0;
+		SkippedRegularGeometryRegions = 0;
+		SkippedTransitionGeometryRegions = 0;
+		EmptyBatchSubmissionsAvoided = 0;
+		RegularCountBatches = 0;
+		RegularCountRegions = 0;
+		RegularEmitArenaPasses = 0;
+		RegularEmitBatchSlots = 0;
+		RegularEnabledEmitRegions = 0;
+		RegularMultiArenaBatches = 0;
+		TransitionDeferredRenderTicks = 0;
+		_throughput = new ThroughputRecorder( chunkWorldSize );
+		_currentPlayerRouteDistance = 0f;
+	}
+
+	public void SetPlayerRouteDistance( float worldDistance )
+	{
+		_currentPlayerRouteDistance = worldDistance;
+	}
+
+	public void SampleThroughputQueueDepth()
+	{
+		_throughput?.SampleQueueDepth( PendingGameplayCount, PendingWarmCount );
+		if ( _outerMeasurementActive ) _outerQueueDepth?.Record( PendingOuterVisualCount );
+	}
+
+	public void EndMovingThroughputWindow( float durationSeconds )
+	{
+		_throughput?.EndMovingWindow( durationSeconds );
+	}
+
+	public void MarkThroughputSettled()
+	{
+		_throughput?.MarkSettled();
+	}
+
+	public GpuMeshThroughputMeasurement CompleteThroughputMeasurement()
+	{
+		var result = _throughput?.Complete() ?? default;
+		_throughput = null;
+		return result;
+	}
+
+	private static ScratchLane[] CreateScratchLanes( int cellsPerAxis )
+	{
+		var lanes = new ScratchLane[ScratchLaneCount];
+		for ( var index = 0; index < lanes.Length; index++ )
+		{
+			lanes[index] = new ScratchLane( cellsPerAxis );
+		}
+		return lanes;
+	}
+
+	private static TransitionScratchLane[] CreateTransitionScratchLanes()
+	{
+		var lanes = new TransitionScratchLane[ScratchLaneCount];
+		for ( var index = 0; index < lanes.Length; index++ )
+		{
+			lanes[index] = new TransitionScratchLane();
+		}
+		return lanes;
+	}
+
+	public void Schedule( VoxelChunk chunk, int sourceRevision, float playerRouteDistance,
+		GpuMeshResidency residency = GpuMeshResidency.Gameplay )
+	{
+		var descriptor = GpuSdfDescriptor.FromChunk( chunk, sourceRevision );
+		if ( _editedField is not null && !descriptor.MatchesField( _editedField ) )
+		{
+			Schedule( descriptor.WithField( _editedField ), playerRouteDistance, residency );
+			return;
+		}
+		if ( chunk.DensityClassification != ChunkDensityClassification.PotentiallySurfaceContaining )
+		{
+			PublishKnownEmpty( descriptor, residency );
+			return;
+		}
+		Schedule( descriptor, playerRouteDistance, residency );
+	}
+
+	public void Schedule( GpuSdfDescriptor descriptor, float playerRouteDistance, GpuMeshResidency residency )
+	{
+		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
+		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var staged ) && staged.Descriptor == descriptor ) return;
+		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
+		{
+			SetResidency( resident, residency );
+			return;
+		}
+		if ( _editPublicationOpen && (_editEpochChanged || _renderActive.Contains( descriptor.Key ) &&
+			TerrainFieldChange.Intersects( descriptor.SamplingBounds, _editDependencyBounds )) )
+			_editRegularDependencies.Add( descriptor.Key );
+		if ( descriptor.Key.Level >= 2 )
+		{
+			if ( _outerMeasurementActive ) _outerScheduledCount++;
+		}
+		else
+		{
+			_throughput?.RecordScheduled();
+		}
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			_levelScheduledCounts[descriptor.Key.Level]++;
+		}
+		QueuePending( new PendingMesh(
+			descriptor,
+			residency,
+			Stopwatch.GetTimestamp(),
+			playerRouteDistance ) );
+	}
+
+	public void PublishKnownEmpty( GpuSdfDescriptor descriptor, GpuMeshResidency residency )
+	{
+		if ( _editRegularDependencies.Contains( descriptor.Key ) )
+		{
+			Schedule( descriptor, _currentPlayerRouteDistance, residency );
+			return;
+		}
+		// A stale empty classification may have become surface-containing after an edit.
+		if ( _editedField is not null && !descriptor.MatchesField( _editedField ) )
+		{
+			Schedule( descriptor.WithField( _editedField ), _currentPlayerRouteDistance, residency );
+			return;
+		}
+		if ( _resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor )
+		{
+			SetResidency( resident, residency );
+			return;
+		}
+
+		RemovePending( descriptor.Key );
+		if ( _scratchLanes.Any( lane =>
+			lane.CountInFlight.Any( value => value.Descriptor.Key == descriptor.Key ) ||
+			lane.EmitInFlight.Any( value => value.Descriptor.Key == descriptor.Key ) ) )
+		{
+			_cancelledInFlight.Add( descriptor.Key );
+		}
+
+		PublishResident(
+			descriptor,
+			residency,
+			null,
+			new GpuTerrainCountResult { Generation = ++_nextGeneration } );
+		MarkDrawCommandsDirty();
+	}
+
+	public void ScheduleTransition( GpuTransitionDescriptor descriptor, float playerRouteDistance )
+	{
+		if ( _editedField is not null ) descriptor = descriptor.WithField( _editedField );
+		if ( _transitionDesiredDescriptors.TryGetValue( descriptor.Key, out var desired ) &&
+			desired == descriptor ) return;
+		if ( _editPublicationOpen && (_editEpochChanged || _transitionRenderActive.Contains( descriptor.Key ) &&
+			TerrainFieldChange.Intersects( descriptor.SamplingBounds, _editDependencyBounds )) )
+			_editTransitionDependencies.Add( descriptor.Key );
+		_transitionDesiredDescriptors[descriptor.Key] = descriptor with { Field = null };
+		RemovePendingTransition( descriptor.Key );
+		_transitionScheduledCount++;
+		_transitionScheduledByCoarseLevel[descriptor.Key.CoarseLevel]++;
+		if ( descriptor.EditRevision == 0 )
+		{
+			var boundsStarted = Stopwatch.GetTimestamp();
+			var range = ProceduralTerrainSdf.GetConservativeDensityRange(
+				descriptor.SamplingBounds, descriptor.FineCellSize, descriptor.TerrainSettings );
+			TransitionClassificationMilliseconds += Stopwatch.GetElapsedTime( boundsStarted ).TotalMilliseconds;
+			if ( range.MinimumDensity > 0f || range.MaximumDensity < 0f )
+			{
+				var generation = ++_nextGeneration;
+				var completed = new CandidateTransition( descriptor, generation, boundsStarted,
+					playerRouteDistance, null, new GpuTransitionCountResult { Generation = generation } );
+				TransitionUniformRegionsSkipped++;
+				if ( _editTransitionDependencies.Contains( descriptor.Key ) )
+				{
+					if ( _editTransitionCandidates.Remove( descriptor.Key, out var previous ) ) Release( previous.Handle );
+					_editTransitionCandidates[descriptor.Key] = completed;
+				}
+				else
+				{
+					PublishCompletedTransition( completed );
+					MarkDrawCommandsDirty();
+				}
+				return;
+			}
+		}
+		var pending = new PendingTransition(
+			descriptor,
+			Stopwatch.GetTimestamp(),
+			playerRouteDistance );
+		_transitionPending[descriptor.Key] = pending;
+		if ( _editTransitionDependencies.Contains( descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
+		else _transitionDispatchQueue.Enqueue( pending );
+	}
+
+	public void SetTransitionActive( GpuTransitionKey key, bool active )
+	{
+		var changed = active ? _transitionRenderActive.Add( key ) : _transitionRenderActive.Remove( key );
+		if ( !changed || !_transitionResident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
+		SetTransitionVisibilityActive( resident, active );
+		MarkDrawCommandsDirty();
+	}
+
+	public void RemoveTransition( GpuTransitionKey key )
+	{
+		_editTransitionDependencies.Remove( key );
+		if ( _editTransitionCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
+		_transitionRenderActive.Remove( key );
+		_transitionDesiredDescriptors.Remove( key );
+		RemovePendingTransition( key );
+		foreach ( var lane in _transitionScratchLanes ?? Array.Empty<TransitionScratchLane>() )
+		{
+			foreach ( var value in lane.CountInFlight )
+			{
+				if ( value.Descriptor.Key == key ) _transitionCancelledGenerations.Add( value.Generation );
+			}
+			foreach ( var value in lane.EmitInFlight )
+			{
+				if ( value.Descriptor.Key == key ) _transitionCancelledGenerations.Add( value.Generation );
+			}
+		}
+		if ( !_transitionResident.Remove( key, out var resident ) ) return;
+		ReleaseTransitionResident( resident );
+		MarkDrawCommandsDirty();
+	}
+
+	public GpuTransitionIdentitySnapshot CaptureTransitionIdentity(
+		IEnumerable<GpuTransitionKey> keys )
+	{
+		var count = 0;
+		ulong digest = 0;
+		foreach ( var key in keys
+			.OrderBy( value => value.CoarseLevel )
+			.ThenBy( value => value.CoarseCoordinate.x )
+			.ThenBy( value => value.CoarseCoordinate.y )
+			.ThenBy( value => value.CoarseCoordinate.z )
+			.ThenBy( value => value.Face ) )
+		{
+			if ( !_transitionResident.TryGetValue( key, out var resident ) ) continue;
+			var handle = resident.Handle;
+			uint allocation = handle is null ? 0 :
+				(uint)handle.Arena.Index * 0x9E3779B1u ^
+				(uint)handle.Slot * 0x85EBCA77u ^
+				(uint)handle.Vertices.Offset * 0xC2B2AE3Du ^
+				(uint)handle.Vertices.Count * 0x27D4EB2Du ^
+				(uint)handle.Indices.Offset * 0x165667B1u ^
+				(uint)handle.Indices.Count * 0xD3A2646Cu;
+			digest ^= TransitionCoordinateDigest(
+				key, (handle?.Generation ?? resident.Counts.Generation) ^ allocation );
+			count++;
+		}
+		return new GpuTransitionIdentitySnapshot( count, digest );
+	}
+
+	public void BeginTransitionMeasurement()
+	{
+		_transitionScheduledCount = 0;
+		_transitionPublishedCount = 0;
+		_transitionCancelledCount = 0;
+		_transitionStaleCount = 0;
+		_transitionLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
+		_transitionLatencySampleCount = 0;
+		_transitionLatencyTruncatedCount = 0;
+		Array.Clear( _transitionScheduledByCoarseLevel );
+		Array.Clear( _transitionPublishedByCoarseLevel );
+		Array.Clear( _transitionCancelledByCoarseLevel );
+		Array.Clear( _transitionStaleByCoarseLevel );
+		Array.Clear( _transitionLatencySampleCountByCoarseLevel );
+		Array.Clear( _transitionLatencyTruncatedByCoarseLevel );
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			_transitionLatencyByCoarseLevel[coarseLevel] =
+				new float[MaximumScheduleLatencySamples];
+		}
+		_transitionMeasurementActive = true;
+	}
+
+	public GpuTransitionMeasurement CompleteTransitionMeasurement()
+	{
+		_transitionMeasurementActive = false;
+		Array.Sort( _transitionLatencyMilliseconds, 0, _transitionLatencySampleCount );
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			Array.Sort(
+				_transitionLatencyByCoarseLevel[coarseLevel],
+				0,
+				_transitionLatencySampleCountByCoarseLevel[coarseLevel] );
+		}
+		var faces = CreateTransitionFaceMeasurements();
+		var result = new GpuTransitionMeasurement(
+			TransitionDesiredCount,
+			TransitionReadyCount,
+			TransitionDrawableCount,
+			TransitionPendingCount,
+			_transitionScheduledCount,
+			_transitionPublishedCount,
+			_transitionCancelledCount,
+			_transitionStaleCount,
+			TransitionUniqueVertexCount,
+			TransitionIndexCount,
+			TransitionActiveCellCount,
+			TransitionTopologyDigest,
+			TransitionPositionDigest,
+			_transitionFineFaceMismatchCount,
+			_transitionCoarseFaceMismatchCount,
+			_transitionLateralEdgeDigest,
+			TransitionLateralMismatchCount,
+			_transitionInvalidTableCount,
+			faces,
+			CreateTransitionPairMeasurements( faces ),
+			new GpuMetricDistribution(
+				_transitionLatencySampleCount,
+				_transitionLatencyTruncatedCount,
+				_transitionLatencySampleCount > 0 ? _transitionLatencyMilliseconds.Take( _transitionLatencySampleCount ).Average() : 0,
+				GetTransitionLatencyPercentile( 0.50 ),
+				GetTransitionLatencyPercentile( 0.95 ),
+				GetTransitionLatencyPercentile( 0.99 ),
+				_transitionLatencySampleCount > 0 ? _transitionLatencyMilliseconds[_transitionLatencySampleCount - 1] : 0 ) );
+		_transitionLatencyMilliseconds = Array.Empty<float>();
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			_transitionLatencyByCoarseLevel[coarseLevel] = Array.Empty<float>();
+		}
+		return result;
+	}
+
+	private GpuTransitionPairMeasurement[] CreateTransitionPairMeasurements(
+		GpuTransitionFaceMeasurement[] faces )
+	{
+		var result = new GpuTransitionPairMeasurement[SupportedVisualLevelCount - 1];
+		for ( var coarseLevel = 1; coarseLevel < SupportedVisualLevelCount; coarseLevel++ )
+		{
+			var pairFaces = faces.Where( face => face.Key.CoarseLevel == coarseLevel ).ToArray();
+			var residents = _transitionResident
+				.Where( pair => pair.Key.CoarseLevel == coarseLevel )
+				.Select( pair => pair.Value )
+				.ToArray();
+			ulong topologyDigest = 0;
+			ulong positionDigest = 0;
+			uint lateralEdgeDigest = 0;
+			foreach ( var resident in residents )
+			{
+				topologyDigest ^= TransitionCoordinateDigest(
+					resident.Descriptor.Key,
+					resident.Counts.TopologyDigest );
+				positionDigest ^= TransitionCoordinateDigest(
+					resident.Descriptor.Key,
+					resident.Counts.PositionDigest );
+				lateralEdgeDigest ^= TransitionCombinedLateralDigest( resident.Counts );
+			}
+			var sampleCount = _transitionLatencySampleCountByCoarseLevel[coarseLevel];
+			var samples = _transitionLatencyByCoarseLevel[coarseLevel];
+			result[coarseLevel - 1] = new GpuTransitionPairMeasurement(
+				coarseLevel - 1,
+				coarseLevel,
+				_transitionRenderActive.Count( key => key.CoarseLevel == coarseLevel ),
+				residents.Length,
+				residents.Count( resident => resident.Handle is not null ),
+				TransitionPendingCountForPair( coarseLevel ),
+				_transitionScheduledByCoarseLevel[coarseLevel],
+				_transitionPublishedByCoarseLevel[coarseLevel],
+				_transitionCancelledByCoarseLevel[coarseLevel],
+				_transitionStaleByCoarseLevel[coarseLevel],
+				residents.Sum( resident => (long)resident.Counts.ActiveCells ),
+				residents.Sum( resident => (long)(resident.Handle?.Vertices.Count ?? 0) ),
+				residents.Sum( resident => (long)(resident.Handle?.Indices.Count ?? 0) ),
+				topologyDigest.ToString( "X16" ),
+				positionDigest.ToString( "X16" ),
+				(uint)residents.Sum( resident => (long)resident.Counts.FineFaceMismatchCount ),
+				(uint)residents.Sum( resident => (long)resident.Counts.CoarseFaceMismatchCount ),
+				lateralEdgeDigest,
+				CountTransitionLateralMismatches( coarseLevel ),
+				(uint)residents.Sum( resident => (long)resident.Counts.InvalidTableCount ),
+				pairFaces,
+				new GpuMetricDistribution(
+					sampleCount,
+					_transitionLatencyTruncatedByCoarseLevel[coarseLevel],
+					sampleCount > 0 ? samples.Take( sampleCount ).Average() : 0,
+					GetTransitionLatencyPercentile( samples, sampleCount, 0.50 ),
+					GetTransitionLatencyPercentile( samples, sampleCount, 0.95 ),
+					GetTransitionLatencyPercentile( samples, sampleCount, 0.99 ),
+					sampleCount > 0 ? samples[sampleCount - 1] : 0 ) );
+		}
+		return result;
+	}
+
+	private GpuTransitionFaceMeasurement[] CreateTransitionFaceMeasurements() =>
+		_transitionResident
+			.OrderBy( pair => pair.Key.CoarseLevel )
+			.ThenBy( pair => pair.Key.CoarseCoordinate.x )
+			.ThenBy( pair => pair.Key.CoarseCoordinate.y )
+			.ThenBy( pair => pair.Key.CoarseCoordinate.z )
+			.ThenBy( pair => pair.Key.Face )
+			.Select( pair =>
+			{
+				var resident = pair.Value;
+				var handle = resident.Handle;
+				return new GpuTransitionFaceMeasurement(
+					pair.Key,
+					handle?.Generation ?? resident.Counts.Generation,
+					handle?.Arena.Index ?? -1,
+					handle?.Slot ?? -1,
+					handle?.Vertices.Offset ?? 0,
+					handle?.Vertices.Count ?? 0,
+					handle?.Indices.Offset ?? 0,
+					handle?.Indices.Count ?? 0,
+					resident.Counts.ActiveCells,
+					resident.ScheduleToPublicationMilliseconds,
+					resident.Counts.TopologyDigest,
+					resident.Counts.PositionDigest,
+					resident.Counts.FineFaceMismatchCount,
+					resident.Counts.CoarseFaceMismatchCount,
+					resident.Counts.MinimumUDigest,
+					resident.Counts.MaximumUDigest,
+					resident.Counts.MinimumVDigest,
+					resident.Counts.MaximumVDigest,
+					resident.Counts.InvalidTableCount );
+			})
+			.ToArray();
+
+	private float GetTransitionLatencyPercentile( double percentile )
+	{
+		return GetTransitionLatencyPercentile(
+			_transitionLatencyMilliseconds,
+			_transitionLatencySampleCount,
+			percentile );
+	}
+
+	private static float GetTransitionLatencyPercentile(
+		float[] samples,
+		int sampleCount,
+		double percentile )
+	{
+		if ( sampleCount == 0 ) return 0;
+		var index = Math.Clamp(
+			(int)Math.Ceiling( sampleCount * percentile ) - 1,
+			0,
+			sampleCount - 1 );
+		return samples[index];
+	}
+
+	private int TransitionPendingCountForPair( int coarseLevel ) =>
+		_transitionPending.Count( pair => pair.Key.CoarseLevel == coarseLevel ) +
+		(_transitionScratchLanes?.Sum( lane =>
+			lane.CountInFlight.Count( value => value.Descriptor.Key.CoarseLevel == coarseLevel ) +
+			lane.EmitInFlight.Count( value => value.Descriptor.Key.CoarseLevel == coarseLevel ) ) ?? 0);
+
+	public void BeginScheduleLatencyMeasurement()
+	{
+		System.Threading.Interlocked.Exchange( ref _densityAuditLevels, 0 );
+		System.Threading.Interlocked.Exchange( ref _transitionDensityAuditFaces, 0 );
+		_scheduleLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
+		_scheduleLatencySampleCount = 0;
+		_scheduleLatencyTruncatedCount = 0;
+		_scheduleLatencyCancelledCount = 0;
+		_scheduleLatencySupersededCount = 0;
+		Array.Clear( _levelScheduledCounts );
+		Array.Clear( _levelPublishedCounts );
+		Array.Clear( _levelCancelledCounts );
+		Array.Clear( _levelSupersededCounts );
+		Array.Clear( _levelLatencySampleCounts );
+		Array.Clear( _levelLatencyTruncatedCounts );
+		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+		{
+			_levelLatencyMilliseconds[level] = new float[MaximumScheduleLatencySamples];
+		}
+		_completedLevelScheduleMeasurements = Array.Empty<GpuLevelScheduleMeasurement>();
+		_scheduleLatencyMeasurementActive = true;
+	}
+
+	public GpuMeshScheduleLatencyMeasurement CompleteScheduleLatencyMeasurement()
+	{
+		_scheduleLatencyMeasurementActive = false;
+		Array.Sort( _scheduleLatencyMilliseconds, 0, _scheduleLatencySampleCount );
+		_completedLevelScheduleMeasurements = new GpuLevelScheduleMeasurement[SupportedVisualLevelCount];
+		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+		{
+			var samples = _levelLatencyMilliseconds[level];
+			var sampleCount = _levelLatencySampleCounts[level];
+			Array.Sort( samples, 0, sampleCount );
+			_completedLevelScheduleMeasurements[level] = new GpuLevelScheduleMeasurement(
+				level,
+				_levelScheduledCounts[level],
+				_levelPublishedCounts[level],
+				_levelCancelledCounts[level],
+				_levelSupersededCounts[level],
+				new GpuMeshScheduleLatencyMeasurement(
+					sampleCount,
+					_levelLatencyTruncatedCounts[level],
+					GetLatencyPercentile( samples, sampleCount, 0.50 ),
+					GetLatencyPercentile( samples, sampleCount, 0.95 ),
+					GetLatencyPercentile( samples, sampleCount, 0.99 ),
+					GetLatencyPercentile( samples, sampleCount, 1.0 ),
+					(int)Math.Min( int.MaxValue, _levelCancelledCounts[level] ),
+					(int)Math.Min( int.MaxValue, _levelSupersededCounts[level] ) ) );
+			_levelLatencyMilliseconds[level] = Array.Empty<float>();
+		}
+		var result = new GpuMeshScheduleLatencyMeasurement(
+			_scheduleLatencySampleCount,
+			_scheduleLatencyTruncatedCount,
+			GetScheduleLatencyPercentile( 0.50 ),
+			GetScheduleLatencyPercentile( 0.95 ),
+			GetScheduleLatencyPercentile( 0.99 ),
+			_scheduleLatencySampleCount > 0 ? _scheduleLatencyMilliseconds[_scheduleLatencySampleCount - 1] : 0,
+			_scheduleLatencyCancelledCount,
+			_scheduleLatencySupersededCount );
+		_scheduleLatencyMilliseconds = Array.Empty<float>();
+		return result;
+	}
+
+	public void BeginOuterLevelMeasurement()
+	{
+		_outerScheduledCount = 0;
+		_outerPublishedCount = 0;
+		_outerCancelledCount = 0;
+		_outerSupersededCount = 0;
+		_outerOpportunisticServiceCount = 0;
+		_outerForcedServiceCount = 0;
+		_outerMaximumServiceGapMilliseconds = 0f;
+		_outerLatencyMilliseconds = new float[MaximumScheduleLatencySamples];
+		_outerLatencySampleCount = 0;
+		_outerLatencyTruncatedCount = 0;
+		_outerQueueDepth = new MetricSamples( MaximumScheduleLatencySamples );
+		_outerMeasurementActive = true;
+	}
+
+	public GpuOuterLevelMeasurement CompleteOuterLevelMeasurement()
+	{
+		_outerMeasurementActive = false;
+		Array.Sort( _outerLatencyMilliseconds, 0, _outerLatencySampleCount );
+		var result = new GpuOuterLevelMeasurement(
+			_outerScheduledCount,
+			_outerPublishedCount,
+			_outerCancelledCount,
+			_outerSupersededCount,
+			_outerOpportunisticServiceCount,
+			_outerForcedServiceCount,
+			_outerMaximumServiceGapMilliseconds,
+			_outerQueueDepth?.CompleteQueue() ?? default,
+			new GpuMeshScheduleLatencyMeasurement(
+				_outerLatencySampleCount,
+				_outerLatencyTruncatedCount,
+				GetOuterLatencyPercentile( 0.50 ),
+				GetOuterLatencyPercentile( 0.95 ),
+				GetOuterLatencyPercentile( 0.99 ),
+				GetOuterLatencyPercentile( 1.0 ),
+				(int)Math.Min( int.MaxValue, _outerCancelledCount ),
+				(int)Math.Min( int.MaxValue, _outerSupersededCount ) ) );
+		_outerLatencyMilliseconds = Array.Empty<float>();
+		_outerQueueDepth = null;
+		return result;
+	}
+
+	public GpuLevelScheduleMeasurement LevelScheduleMeasurement( int level ) =>
+		level >= 0 && level < _completedLevelScheduleMeasurements.Length
+			? _completedLevelScheduleMeasurements[level]
+			: default;
+
+	private static float GetLatencyPercentile(
+		float[] samples,
+		int sampleCount,
+		double percentile )
+	{
+		if ( sampleCount == 0 ) return 0;
+		var index = Math.Clamp(
+			(int)Math.Ceiling( sampleCount * percentile ) - 1,
+			0,
+			sampleCount - 1 );
+		return samples[index];
+	}
+
+	private float GetOuterLatencyPercentile( double percentile )
+	{
+		if ( _outerLatencySampleCount == 0 ) return 0f;
+		var index = Math.Clamp(
+			(int)Math.Ceiling( _outerLatencySampleCount * percentile ) - 1,
+			0,
+			_outerLatencySampleCount - 1 );
+		return _outerLatencyMilliseconds[index];
+	}
+
+	private float GetScheduleLatencyPercentile( double percentile )
+	{
+		if ( _scheduleLatencySampleCount == 0 ) return 0;
+		var index = Math.Clamp( (int)Math.Ceiling( _scheduleLatencySampleCount * percentile ) - 1, 0, _scheduleLatencySampleCount - 1 );
+		return _scheduleLatencyMilliseconds[index];
+	}
+
+	public void SetResidency( GpuMeshRegionKey key, GpuMeshResidency residency )
+	{
+		if ( _resident.TryGetValue( key, out var resident ) )
+		{
+			SetResidency( resident, residency );
+			return;
+		}
+		if ( _pending.TryGetValue( key, out var pending ) && pending.Residency != residency )
+		{
+			QueuePending( pending with { Residency = residency } );
+			return;
+		}
+		foreach ( var lane in _scratchLanes )
+		{
+			for ( var index = 0; index < lane.CountInFlight.Count; index++ )
+			{
+				if ( lane.CountInFlight[index].Descriptor.Key == key )
+				{
+					lane.CountInFlight[index] = lane.CountInFlight[index] with { Residency = residency };
+					return;
+				}
+			}
+			for ( var index = 0; index < lane.EmitInFlight.Count; index++ )
+			{
+				if ( lane.EmitInFlight[index].Descriptor.Key == key )
+				{
+					lane.EmitInFlight[index] = lane.EmitInFlight[index] with { Residency = residency };
+					return;
+				}
+			}
+		}
+	}
+
+	public void SetPlacementRequired( GpuMeshRegionKey key )
+	{
+		if ( _placementRequired.Add( key ) && _pending.TryGetValue( key, out var pending ) )
+			QueuePending( pending );
+	}
+
+	public void SetStreamingPosition( Vector3 position )
+	{
+		_streamingPosition = position;
+		_activeOuterDispatchQueue.Clear();
+		foreach ( var pending in _pending.Values )
+		{
+			if ( pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key ) )
+				QueueActiveOuter( pending );
+		}
+	}
+
+	private void QueueActiveOuter( PendingMesh pending )
+	{
+		var descriptor = pending.Descriptor;
+		var coordinate = descriptor.Key.Coordinate;
+		var size = descriptor.CellsPerAxis * descriptor.CellSize;
+		var center = new Vector3( coordinate.x + 0.5f, coordinate.y + 0.5f, coordinate.z + 0.5f ) * size;
+		_activeOuterDispatchQueue.Enqueue( descriptor.Key,
+			((center - _streamingPosition).LengthSquared, descriptor.Key.Level, coordinate.z, coordinate.y, coordinate.x) );
+	}
+
+	public void ClearPlacementPriority()
+	{
+		_placementRequired.Clear();
+		_placementQueued.Clear();
+	}
+
+	public void SetRenderActive( GpuMeshRegionKey key, bool active )
+	{
+		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
+		if ( changed && key.Level >= 2 && _pending.TryGetValue( key, out var pending ) )
+			QueuePending( pending );
+		if ( !changed || !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
+		SetVisibilityActive( resident, active );
+		MarkDrawCommandsDirty();
+	}
+
+	private int _densityAuditLevels;
+	private long _transitionDensityAuditFaces;
+
+	/// <summary>Observe forthcoming unedited regular blocks and transition faces; never schedules terrain.</summary>
+	public void RequestDensityAudit()
+	{
+		if ( _disposed || _scheduleLatencyMeasurementActive )
+		{
+			Log.Warning( "[VoxelWorld] density.audit.rejected reason=disposed-or-measuring" );
+			return;
+		}
+		System.Threading.Interlocked.Exchange( ref _densityAuditLevels, (1 << SupportedVisualLevelCount) - 1 );
+		System.Threading.Interlocked.Exchange( ref _transitionDensityAuditFaces, (1L << (6 * (SupportedVisualLevelCount - 1))) - 1 );
+		Log.Info( "[VoxelWorld] density.audit.armed awaiting normal unedited regular blocks and transition faces at each LOD" );
+	}
+
+	private void InspectDensityBlock( ScratchLane lane, int block, GpuSdfDescriptor descriptor )
+	{
+		var bit = 1 << descriptor.Key.Level;
+		if ( (System.Threading.Interlocked.CompareExchange( ref _densityAuditLevels, 0, 0 ) & bit) == 0 ||
+			descriptor.EditRevision != 0 || _scheduleLatencyMeasurementActive ) return;
+		System.Threading.Interlocked.And( ref _densityAuditLevels, ~bit );
+		var started = Stopwatch.GetTimestamp();
+		var samples = lane.Scratch.ReadDensitySamples( block );
+		var size = descriptor.CellsPerAxis + 3;
+		var origin = descriptor.ChunkCoordinate * descriptor.CellsPerAxis - Vector3Int.One;
+		var lattice = new ProceduralTerrainSdf.LatticeSampler( size );
+		lattice.Begin( origin, descriptor.CellSize, descriptor.TerrainSettings );
+		var bound = ProceduralTerrainSdf.GetConservativeDensityRange(
+			descriptor.SamplingBounds, descriptor.CellSize, descriptor.TerrainSettings );
+		var indices = new[] { 0, 1, size / 2, size - 2, size - 1 };
+		var maximumError = 0f;
+		var maximumErrorSample = Vector3Int.Zero;
+		var maximumErrorCpu = 0f;
+		var maximumErrorGpu = 0f;
+		var maximumLatticeError = 0f;
+		var nonFinite = 0;
+		var mismatches = 0;
+		var signMismatches = 0;
+		var boundsFailures = 0;
+		var nearZero = 0;
+		var nearZeroSignMismatches = 0;
+		foreach ( var z in indices )
+		foreach ( var y in indices )
+		foreach ( var x in indices )
+		{
+			var cpu = ProceduralTerrainSdf.SampleGlobal( origin + new Vector3Int( x, y, z ),
+				descriptor.CellSize, descriptor.TerrainSettings );
+			var cached = lattice.Sample( x, y, z );
+			var gpu = samples[x + size * (y + size * z)];
+			if ( !float.IsFinite( cpu ) || !float.IsFinite( cached ) || !float.IsFinite( gpu ) )
+			{
+				nonFinite++;
+				continue;
+			}
+			var error = MathF.Abs( gpu - cpu );
+			if ( error > maximumError )
+			{
+				maximumError = error;
+				maximumErrorSample = origin + new Vector3Int( x, y, z );
+				maximumErrorCpu = cpu;
+				maximumErrorGpu = gpu;
+			}
+			maximumLatticeError = MathF.Max( maximumLatticeError, MathF.Abs( cached - cpu ) );
+			if ( error > 0.1f ) mismatches++;
+			if ( MathF.Abs( cpu ) <= 0.1f || MathF.Abs( gpu ) <= 0.1f )
+			{
+				nearZero++;
+				if ( (cpu < 0f) != (gpu < 0f) ) nearZeroSignMismatches++;
+			}
+			else if ( (cpu < 0f) != (gpu < 0f) ) signMismatches++;
+			if ( cpu < bound.MinimumDensity || cpu > bound.MaximumDensity ||
+				gpu < bound.MinimumDensity || gpu > bound.MaximumDensity ) boundsFailures++;
+		}
+		// Inspect the closest stored sample on each side of zero without another
+		// readback or extra terrain work. A one-sided block has no probe for its
+		// missing sign; report that absence rather than manufacturing a crossing.
+		var closestSolid = -1;
+		var closestAir = -1;
+		var readbackNonFinite = 0;
+		for ( var i = 0; i < samples.Length; i++ )
+		{
+			var value = samples[i];
+			if ( !float.IsFinite( value ) )
+			{
+				readbackNonFinite++;
+				continue;
+			}
+			if ( value < 0f )
+			{
+				if ( closestSolid < 0 || value > samples[closestSolid] ) closestSolid = i;
+			}
+			else if ( closestAir < 0 || value < samples[closestAir] ) closestAir = i;
+		}
+		for ( var side = 0; side < 2; side++ )
+		{
+			var index = side == 0 ? closestSolid : closestAir;
+			if ( index < 0 ) continue;
+			var x = index % size;
+			var y = index / size % size;
+			var z = index / (size * size);
+			var sampleCoordinate = origin + new Vector3Int( x, y, z );
+			var cpu = ProceduralTerrainSdf.SampleGlobal( sampleCoordinate,
+				descriptor.CellSize, descriptor.TerrainSettings );
+			var cached = lattice.Sample( x, y, z );
+			var gpu = samples[index];
+			Log.Info( $"[VoxelWorld] density.audit.closest level={descriptor.Key.Level} " +
+				$"chunk={descriptor.ChunkCoordinate} sample={sampleCoordinate} cellSize={descriptor.CellSize} " +
+				$"side={side} cpu={cpu:R} cached={cached:R} gpu={gpu:R} " +
+				$"error={MathF.Abs( cpu - gpu ):R} latticeError={MathF.Abs( cpu - cached ):R} " +
+				$"finite={float.IsFinite( cpu ) && float.IsFinite( cached )} " +
+				$"signMismatch={(cpu < 0f) != (gpu < 0f)} " +
+				$"nearZero={MathF.Abs( cpu ) <= 0.1f || MathF.Abs( gpu ) <= 0.1f} " +
+				$"inBounds={cpu >= bound.MinimumDensity && cpu <= bound.MaximumDensity && gpu >= bound.MinimumDensity && gpu <= bound.MaximumDensity}" );
+		}
+		Log.Info( $"[VoxelWorld] density.audit.block level={descriptor.Key.Level} chunk={descriptor.ChunkCoordinate} " +
+			$"generator={descriptor.GeneratorVersion} settings=\"{descriptor.TerrainSettings}\" " +
+			$"cellSize={descriptor.CellSize} samples=125 readbackBytes={samples.Length * sizeof( float )} " +
+			$"maximumErrorSample={maximumErrorSample} maximumErrorCpu={maximumErrorCpu:R} maximumErrorGpu={maximumErrorGpu:R} " +
+			$"maximumError={maximumError:R} maximumLatticeError={maximumLatticeError:R} nonFinite={nonFinite} " +
+			$"densityMismatches={mismatches} signMismatches={signMismatches} nearZero={nearZero} boundsFailures={boundsFailures} " +
+			$"nearZeroSignMismatches={nearZeroSignMismatches} readbackNonFinite={readbackNonFinite} solidProbe={closestSolid >= 0} airProbe={closestAir >= 0} " +
+			$"pendingLevels={System.Threading.Interlocked.CompareExchange( ref _densityAuditLevels, 0, 0 )} elapsedMs={Stopwatch.GetElapsedTime( started ).TotalMilliseconds}" );
+	}
+
+	private void InspectTransitionDensityBlock( TransitionScratchLane lane, int block, InFlightTransition source )
+	{
+		var descriptor = source.Descriptor;
+		var bit = 1L << ((descriptor.Key.CoarseLevel - 1) * 6 + (int)descriptor.Key.Face);
+		if ( (System.Threading.Interlocked.Read( ref _transitionDensityAuditFaces ) & bit) == 0 ||
+			descriptor.EditRevision != 0 || _scheduleLatencyMeasurementActive ) return;
+		System.Threading.Interlocked.And( ref _transitionDensityAuditFaces, ~bit );
+		var started = Stopwatch.GetTimestamp();
+		var samples = lane.Scratch.ReadDensitySamples( block );
+		var request = CreateTransitionRequest( source, block );
+		var bound = ProceduralTerrainSdf.GetConservativeDensityRange(
+			descriptor.SamplingBounds, descriptor.FineCellSize, descriptor.TerrainSettings );
+		var closestSolid = -1;
+		var closestAir = -1;
+		var nonFinite = 0;
+		for ( var i = 0; i < samples.Length; i++ )
+		{
+			var value = samples[i];
+			if ( !float.IsFinite( value ) ) { nonFinite++; continue; }
+			if ( value < 0f )
+			{
+				if ( closestSolid < 0 || value > samples[closestSolid] ) closestSolid = i;
+			}
+			else if ( closestAir < 0 || value < samples[closestAir] ) closestAir = i;
+		}
+		var compared = 0;
+		var maximumError = 0f;
+		var maximumErrorPosition = Vector3.Zero;
+		var maximumErrorCpu = 0f;
+		var maximumErrorGpu = 0f;
+		var signMismatches = 0;
+		var boundsFailures = 0;
+		var nearZero = 0;
+		// Fixed sparse coverage spans all five stored planes; then inspect the
+		// closest available negative and nonnegative samples explicitly.
+		for ( var probe = 0; probe < 127; probe++ )
+		{
+			var index = probe < 125 ? probe * (samples.Length - 1) / 124 :
+				probe == 125 ? closestSolid : closestAir;
+			if ( index < 0 ) continue;
+			var position = GpuTransitionScratch.DensitySamplePosition( request, index );
+			var cpu = ProceduralTerrainSdf.SampleWorld( position, descriptor.TerrainSettings );
+			var gpu = samples[index];
+			compared++;
+			if ( !float.IsFinite( cpu ) ) nonFinite++;
+			var error = MathF.Abs( cpu - gpu );
+			if ( error > maximumError )
+			{
+				maximumError = error;
+				maximumErrorPosition = position;
+				maximumErrorCpu = cpu;
+				maximumErrorGpu = gpu;
+			}
+			var signMismatch = (cpu < 0f) != (gpu < 0f);
+			if ( signMismatch ) signMismatches++;
+			var isNearZero = MathF.Abs( cpu ) <= 0.1f || MathF.Abs( gpu ) <= 0.1f;
+			if ( isNearZero ) nearZero++;
+			if ( cpu < bound.MinimumDensity || cpu > bound.MaximumDensity ||
+				gpu < bound.MinimumDensity || gpu > bound.MaximumDensity ) boundsFailures++;
+			if ( probe >= 125 ) Log.Info( $"[VoxelWorld] density.audit.transition.closest key={descriptor.Key} " +
+				$"index={index} position={position} cpu={cpu:R} gpu={gpu:R} error={error:R} " +
+				$"signMismatch={signMismatch} nearZero={isNearZero}" );
+		}
+		Log.Info( $"[VoxelWorld] density.audit.transition key={descriptor.Key} generator={descriptor.GeneratorVersion} " +
+			$"samples={compared} readbackBytes={samples.Length * sizeof( float )} maximumError={maximumError:R} " +
+			$"maximumErrorPosition={maximumErrorPosition} maximumErrorCpu={maximumErrorCpu:R} maximumErrorGpu={maximumErrorGpu:R} " +
+			$"nonFinite={nonFinite} signMismatches={signMismatches} nearZero={nearZero} boundsFailures={boundsFailures} " +
+			$"solidProbe={closestSolid >= 0} airProbe={closestAir >= 0} " +
+			$"pendingFaces={System.Threading.Interlocked.Read( ref _transitionDensityAuditFaces )} elapsedMs={Stopwatch.GetElapsedTime( started ).TotalMilliseconds}" );
+	}
+
+	public void RequestMeshAudit( Vector3 target, int regionsPerLevel = DefaultMeshAuditRegionsPerLevel,
+		string selection = "nearest" )
+	{
+		if ( _disposed )
+		{
+			Log.Warning( "[VoxelWorld] mesh.audit.rejected reason=\"mesher disposed\"" );
+			return;
+		}
+
+		regionsPerLevel = Math.Clamp( regionsPerLevel, 1, 32 );
+		var farthest = string.Equals( selection, "farthest", StringComparison.OrdinalIgnoreCase );
+		var coverage = string.Equals( selection, "coverage", StringComparison.OrdinalIgnoreCase );
+		if ( !farthest && !coverage &&
+			!string.Equals( selection, "nearest", StringComparison.OrdinalIgnoreCase ) )
+		{
+			Log.Warning( $"[VoxelWorld] mesh.audit.rejected reason=\"unknown selection\" selection=\"{selection}\"" );
+			return;
+		}
+		selection = farthest ? "farthest" : coverage ? "coverage" : "nearest";
+		lock ( _meshAuditLock )
+		{
+			if ( _requestedMeshAudit is not null || _meshAuditInFlight )
+			{
+				Log.Warning( "[VoxelWorld] mesh.audit.rejected reason=\"audit already pending\"" );
+				return;
+			}
+		}
+
+		var targets = new List<MeshAuditTarget>();
+		foreach ( var level in Enumerable.Range( 0, SupportedVisualLevelCount ) )
+		{
+			var candidates = _resident.Values
+				.Where( resident => resident.Descriptor.Key.Level == level && resident.Handle is not null &&
+					_renderActive.Contains( resident.Descriptor.Key ) )
+				.Select( resident => CreateRegularMeshAuditTarget( resident, target ) );
+			targets.AddRange( SelectMeshAuditTargets( candidates, regionsPerLevel, selection ) );
+		}
+		foreach ( var coarseLevel in Enumerable.Range( 1, SupportedVisualLevelCount - 1 ) )
+		{
+			var transitionCandidates = _transitionResident.Values
+				.Where( resident => resident.Descriptor.Key.CoarseLevel == coarseLevel &&
+					resident.Handle is not null && _transitionRenderActive.Contains( resident.Descriptor.Key ) )
+				.Select( resident => CreateTransitionMeshAuditTarget( resident, target ) );
+			targets.AddRange( SelectMeshAuditTargets( transitionCandidates, regionsPerLevel, selection ) );
+		}
+
+		if ( targets.Count == 0 )
+		{
+			Log.Warning( "[VoxelWorld] mesh.audit.rejected reason=\"no active non-empty resident meshes\"" );
+			return;
+		}
+
+		var request = new MeshAuditRequest(
+			System.Threading.Interlocked.Increment( ref _nextMeshAuditId ),
+			target,
+			targets );
+		lock ( _meshAuditLock )
+		{
+			if ( _requestedMeshAudit is not null || _meshAuditInFlight )
+			{
+				Log.Warning( "[VoxelWorld] mesh.audit.rejected reason=\"audit raced with another request\"" );
+				return;
+			}
+			_requestedMeshAudit = request;
+		}
+
+		Log.Info(
+			$"[VoxelWorld] mesh.audit.queued id={request.Id} target={target} " +
+			$"regionsPerLevel={regionsPerLevel} selection={selection} selected={targets.Count} " +
+			$"regular={targets.Count( candidate => !candidate.IsTransition )} " +
+			$"transition={targets.Count( candidate => candidate.IsTransition )}" );
+		LogMeshVisibilityAudit( request.Id );
+	}
+
+	private static IReadOnlyList<MeshAuditTarget> SelectMeshAuditTargets(
+		IEnumerable<MeshAuditTarget> candidates,
+		int count,
+		string selection )
+	{
+		var ordered = candidates.OrderBy( candidate => candidate.DistanceSquared ).ToArray();
+		if ( selection == "nearest" ) return ordered.Take( count ).ToArray();
+		if ( selection == "farthest" ) return ordered.TakeLast( count ).Reverse().ToArray();
+		if ( ordered.Length <= count ) return ordered;
+		if ( count == 1 ) return new[] { ordered[ordered.Length / 2] };
+
+		var selected = new MeshAuditTarget[count];
+		for ( var index = 0; index < count; index++ )
+		{
+			var orderedIndex = (int)((long)index * (ordered.Length - 1) / (count - 1));
+			selected[index] = ordered[orderedIndex];
+		}
+		return selected;
+	}
+
+	private void LogMeshVisibilityAudit( long auditId )
+	{
+		var expectedRegular = 0;
+		var drawableRegular = 0;
+		var expectedTransitions = 0;
+		var drawableTransitions = 0;
+		var mismatches = 0;
+		var reportedMismatches = 0;
+		lock ( _visibilityDescriptorLock )
+		{
+			foreach ( var pair in _resident )
+			{
+				var resident = pair.Value;
+				if ( resident.Handle is null ) continue;
+				var expected = _renderActive.Contains( pair.Key );
+				var drawable = _sourceArgumentData[resident.Handle.GlobalSlot].IndexCount > 0;
+				if ( expected ) expectedRegular++;
+				if ( drawable ) drawableRegular++;
+				if ( expected == drawable ) continue;
+				mismatches++;
+				if ( reportedMismatches++ >= 32 ) continue;
+				Log.Warning(
+					$"[VoxelWorld] mesh.audit.visibility_mismatch id={auditId} kind=regular " +
+					$"mesh=\"{pair.Key.Level}:C[{pair.Key.Coordinate.x},{pair.Key.Coordinate.y}," +
+					$"{pair.Key.Coordinate.z}]\" residency={resident.Residency} " +
+					$"expectedActive={expected} drawable={drawable}" );
+			}
+
+			foreach ( var pair in _transitionResident )
+			{
+				var resident = pair.Value;
+				if ( resident.Handle is null ) continue;
+				var expected = _transitionRenderActive.Contains( pair.Key );
+				var drawable = _sourceArgumentData[resident.Handle.GlobalSlot].IndexCount > 0;
+				if ( expected ) expectedTransitions++;
+				if ( drawable ) drawableTransitions++;
+				if ( expected == drawable ) continue;
+				mismatches++;
+				if ( reportedMismatches++ >= 32 ) continue;
+				Log.Warning(
+					$"[VoxelWorld] mesh.audit.visibility_mismatch id={auditId} kind=transition " +
+					$"mesh=\"{pair.Key.CoarseLevel}:{pair.Key.Face}:C[{pair.Key.CoarseCoordinate.x}," +
+					$"{pair.Key.CoarseCoordinate.y},{pair.Key.CoarseCoordinate.z}]\" " +
+					$"expectedActive={expected} drawable={drawable}" );
+			}
+		}
+		Log.Info(
+			$"[VoxelWorld] mesh.audit.visibility id={auditId} " +
+			$"regularExpectedActive={expectedRegular} regularDrawable={drawableRegular} " +
+			$"transitionExpectedActive={expectedTransitions} transitionDrawable={drawableTransitions} " +
+			$"mismatches={mismatches} reported={Math.Min( mismatches, 32 )}" );
+	}
+
+	private DrawArgumentAuditResult AuditDrawArguments( long auditId )
+	{
+		var cameraCount = 0;
+		var failures = 0;
+		var readbacks = 0;
+		long readbackBytes = 0;
+		var reportedFailures = 0;
+		lock ( _renderCameraLock )
+		{
+			lock ( _visibilityDescriptorLock )
+			{
+				var expected = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
+				_sourceArgumentData.CopyTo( expected, 0 );
+				foreach ( var state in _renderCameraStates.Values )
+				{
+					var cameraIndex = cameraCount++;
+					var visibility = state.Visibility;
+					if ( visibility is null || state.VisibilityCapacity != _visibilityCapacity )
+					{
+						failures++;
+						Log.Warning(
+							$"[VoxelWorld] mesh.audit.draw_state id={auditId} status=fail camera={cameraIndex} " +
+							$"main={state.Camera.IsMainCamera} reason=\"visibility capacity mismatch\" " +
+							$"expectedCapacity={_visibilityCapacity} actualCapacity={state.VisibilityCapacity}" );
+						continue;
+					}
+
+					var source = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
+					var visible = new GpuBuffer.IndirectDrawIndexedArguments[_visibilityCapacity];
+					visibility.SourceArguments.GetData<GpuBuffer.IndirectDrawIndexedArguments>(
+						source.AsSpan(), 0, _visibilityCapacity );
+					visibility.VisibleArguments.GetData<GpuBuffer.IndirectDrawIndexedArguments>(
+						visible.AsSpan(), 0, _visibilityCapacity );
+					_geometryReadbackCount += 2;
+					readbacks += 2;
+					readbackBytes += (long)_visibilityCapacity * IndirectArgumentStride * 2;
+
+					var sourceMismatches = 0;
+					var visibleMismatches = 0;
+					var sourceDraws = 0;
+					var visibleDraws = 0;
+					for ( var slot = 0; slot < _visibilityCapacity; slot++ )
+					{
+						var expectedArgument = expected[slot];
+						var sourceArgument = source[slot];
+						var visibleArgument = visible[slot];
+						if ( sourceArgument.IndexCount > 0 && sourceArgument.InstanceCount > 0 ) sourceDraws++;
+						if ( visibleArgument.IndexCount > 0 && visibleArgument.InstanceCount > 0 ) visibleDraws++;
+
+						if ( !DrawArgumentsEqual( sourceArgument, expectedArgument ) )
+						{
+							sourceMismatches++;
+							if ( reportedFailures++ < 32 )
+							{
+								Log.Warning(
+									$"[VoxelWorld] mesh.audit.draw_argument_mismatch id={auditId} camera={cameraIndex} " +
+									$"buffer=source slot={slot} expected=\"{FormatDrawArguments( expectedArgument )}\" " +
+									$"actual=\"{FormatDrawArguments( sourceArgument )}\"" );
+							}
+						}
+						var visibleLayoutMatches = visibleArgument.InstanceCount == 0 ||
+							(visibleArgument.InstanceCount == 1 && expectedArgument.IndexCount > 0 &&
+								visibleArgument.IndexCount == expectedArgument.IndexCount &&
+								visibleArgument.FirstIndex == expectedArgument.FirstIndex &&
+								visibleArgument.BaseVertex == expectedArgument.BaseVertex &&
+								visibleArgument.FirstInstance == expectedArgument.FirstInstance);
+						if ( visibleLayoutMatches ) continue;
+
+						visibleMismatches++;
+						if ( reportedFailures++ < 32 )
+						{
+							Log.Warning(
+								$"[VoxelWorld] mesh.audit.draw_argument_mismatch id={auditId} camera={cameraIndex} " +
+								$"buffer=visible slot={slot} expectedLayout=\"{FormatDrawArguments( expectedArgument )}\" " +
+								$"actual=\"{FormatDrawArguments( visibleArgument )}\"" );
+						}
+					}
+					var cameraFailures = sourceMismatches + visibleMismatches;
+					failures += cameraFailures;
+					Log.Info(
+						$"[VoxelWorld] mesh.audit.draw_state id={auditId} " +
+						$"status={(cameraFailures == 0 ? "pass" : "fail")} camera={cameraIndex} " +
+						$"main={state.Camera.IsMainCamera} capacity={_visibilityCapacity} " +
+						$"sourceDraws={sourceDraws} visibleDraws={visibleDraws} " +
+						$"sourceMismatches={sourceMismatches} visibleMismatches={visibleMismatches}" );
+				}
+			}
+		}
+		if ( cameraCount == 0 )
+		{
+			failures++;
+			Log.Warning(
+				$"[VoxelWorld] mesh.audit.draw_state id={auditId} status=fail " +
+				"reason=\"no render camera states\"" );
+		}
+
+		Log.Info(
+			$"[VoxelWorld] mesh.audit.draw_state_complete id={auditId} " +
+			$"status={(failures == 0 ? "pass" : "fail")} cameras={cameraCount} failures={failures} " +
+			$"reported={Math.Min( failures, 32 )} readbacks={readbacks} bytes={readbackBytes}" );
+		return new DrawArgumentAuditResult( cameraCount, failures, readbacks, readbackBytes );
+	}
+
+	private static bool DrawArgumentsEqual(
+		GpuBuffer.IndirectDrawIndexedArguments left,
+		GpuBuffer.IndirectDrawIndexedArguments right )
+	{
+		return left.IndexCount == right.IndexCount &&
+			left.InstanceCount == right.InstanceCount &&
+			left.FirstIndex == right.FirstIndex &&
+			left.BaseVertex == right.BaseVertex &&
+			left.FirstInstance == right.FirstInstance;
+	}
+
+	private static string FormatDrawArguments( GpuBuffer.IndirectDrawIndexedArguments arguments )
+	{
+		return $"indexCount={arguments.IndexCount},instanceCount={arguments.InstanceCount}," +
+			$"firstIndex={arguments.FirstIndex},baseVertex={arguments.BaseVertex}," +
+			$"firstInstance={arguments.FirstInstance}";
+	}
+
+	public bool Contains( GpuSdfDescriptor descriptor )
+	{
+		if ( _editRegularCandidates.TryGetValue( descriptor.Key, out var candidate ) && candidate.Descriptor == descriptor ) return true;
+		if ( _resident.TryGetValue( descriptor.Key, out var resident ) &&
+			resident.Descriptor == descriptor ) return true;
+		if ( _pending.TryGetValue( descriptor.Key, out var pending ) &&
+			pending.Descriptor == descriptor ) return true;
+		if ( _cancelledInFlight.Contains( descriptor.Key ) ) return false;
+		if ( _scratchLanes is null ) return false;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var value in lane.CountInFlight )
+			{
+				if ( value.Descriptor == descriptor ) return true;
+			}
+			foreach ( var value in lane.EmitInFlight )
+			{
+				if ( value.Descriptor == descriptor ) return true;
+			}
+		}
+		return false;
+	}
+
+	public bool IsResident( GpuSdfDescriptor descriptor ) =>
+		_resident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == descriptor;
+
+	// Published empty-solid records can still contain another medium's surface.
+	public bool IsResident( GpuMeshRegionKey key ) => _resident.ContainsKey( key );
+
+	public bool IsDrawable( GpuMeshRegionKey key ) =>
+		_renderActive.Contains( key ) && _resident.TryGetValue( key, out var resident ) && resident.Handle is not null;
+
+	public bool IsTransitionResident( GpuTransitionDescriptor descriptor ) =>
+		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
+		resident.Descriptor == descriptor;
+
+	public bool Contains( GpuMeshRegionKey key )
+	{
+		if ( _resident.ContainsKey( key ) || _pending.ContainsKey( key ) ) return true;
+		if ( _scratchLanes is null ) return false;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var value in lane.CountInFlight )
+			{
+				if ( value.Descriptor.Key == key ) return true;
+			}
+			foreach ( var value in lane.EmitInFlight )
+			{
+				if ( value.Descriptor.Key == key ) return true;
+			}
+		}
+		return false;
+	}
+
+	public void Remove( GpuMeshRegionKey key )
+	{
+		_editRegularDependencies.Remove( key );
+		if ( _editRegularCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
+		_renderActive.Remove( key );
+		_placementRequired.Remove( key );
+		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( key ) )
+		{
+			_levelCancelledCounts[key.Level]++;
+		}
+		if ( _outerMeasurementActive && key.Level >= 2 && _pending.ContainsKey( key ) )
+		{
+			_outerCancelledCount++;
+		}
+		RemovePending( key );
+		if ( _scratchLanes.Any( lane =>
+			lane.CountInFlight.Any( value => value.Descriptor.Key == key ) ||
+			lane.EmitInFlight.Any( value => value.Descriptor.Key == key ) ) )
+		{
+			_cancelledInFlight.Add( key );
+		}
+		if ( !_resident.Remove( key, out var resident ) ) return;
+		_residentPublicationRevision++;
+		ReleaseResident( resident );
+		MarkDrawCommandsDirty();
+	}
+
+	public void Reset( int cellsPerAxis )
+	{
+		Clear();
+		DisposeScratchLanes();
+		_scratchLanes = CreateScratchLanes( cellsPerAxis );
+		// Clear removes in-flight ownership. Both lane types must discard their
+		// pending readback state, even when only the world recipe changed.
+		DisposeTransitionScratchLanes();
+		_transitionScratchLanes = CreateTransitionScratchLanes();
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
+		if ( cellsPerAxis == _cellsPerAxis ) return;
+		DisposeArenas();
+		DisposeVisibilityBuffers();
+		_cellsPerAxis = cellsPerAxis;
+	}
+
+	public int ProcessPending( int maximumDispatches, long updateEpoch )
+	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.ProcessPendingMeshes );
+		RefreshRenderCamerasIfNeeded();
+		FinalizeEmits();
+		FinalizeTransitionEmits();
+		TryPublishEditedField();
+		_maximumDispatchesRequested = Math.Clamp( maximumDispatches, 0, MaximumDispatchesPerUpdate );
+		System.Threading.Interlocked.Exchange( ref _updateEpoch, updateEpoch );
+		var processed = System.Threading.Interlocked.Exchange( ref _processedRenderDispatches, 0 );
+		ReportGpuSchedulerHealth();
+		CommitDrawCommands();
+		TryIssueMeshAuditReadbacks();
+		ReportSuppressedRenderCallbacks();
+		return processed;
+	}
+
+	public DrawCommandCommitResult DrainDrawCommandCommitResult()
+	{
+		var ticks = System.Threading.Interlocked.Exchange( ref _drawCommitStopwatchTicks, 0 );
+		var rebuilds = System.Threading.Interlocked.Exchange( ref _drawCommitRebuildCount, 0 );
+		return new DrawCommandCommitResult(
+			rebuilds > 0,
+			(float)(ticks * 1000.0 / Stopwatch.Frequency) );
+	}
+
+	private bool TryBeginGpuRenderTick()
+	{
+		var updateEpoch = System.Threading.Interlocked.Read( ref _updateEpoch );
+		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
+		{
+			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
+			return false;
+		}
+
+		if ( System.Threading.Interlocked.CompareExchange( ref _renderTickInProgress, 1, 0 ) != 0 )
+		{
+			System.Threading.Interlocked.Increment( ref _busyRenderCallbackCount );
+			return false;
+		}
+
+		updateEpoch = System.Threading.Interlocked.Read( ref _updateEpoch );
+		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
+		{
+			System.Threading.Interlocked.Exchange( ref _renderTickInProgress, 0 );
+			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
+			return false;
+		}
+
+		System.Threading.Interlocked.Exchange( ref _claimedRenderEpoch, updateEpoch );
+		return true;
+	}
+
+	private void ObserveRenderView()
+	{
+		var mainCameraPosition = _camera.IsValid() ? _camera.WorldPosition : Vector3.Zero;
+		var renderCameraPosition = Graphics.CameraPosition;
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				if ( !state.Camera.IsValid() ||
+					!renderCameraPosition.AlmostEqual( state.Camera.WorldPosition, 0.25f ) ) continue;
+				_visibilityReadbackState = state;
+				break;
+			}
+		}
+		var viewKind = _camera.IsValid() && renderCameraPosition.AlmostEqual( mainCameraPosition, 0.25f ) ? 1 : 2;
+		var previousKind = System.Threading.Interlocked.Exchange( ref _renderViewKind, viewKind );
+		if ( previousKind == 0 || previousKind == viewKind ) return;
+
+		var handoff = System.Threading.Interlocked.Increment( ref _renderHandoffCount );
+		if ( handoff > 8 ) return;
+		if ( System.Threading.Interlocked.Increment( ref _renderDiagnosticReportCount ) > 10 ) return;
+		Log.Info(
+			$"[VoxelWorld] gpu.render.view_handoff total={handoff} " +
+			$"from={(previousKind == 1 ? "main" : "other")} to={(viewKind == 1 ? "main" : "other")} " +
+			$"renderCamera={renderCameraPosition} mainCamera={mainCameraPosition} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+	}
+
+	private void CommitDrawCommands()
+	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.CommitDrawCommands );
+		var rebuilds = 0;
+		var milliseconds = 0f;
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				var result = CommitDrawCommandsLocked( state );
+				if ( !result.Rebuilt ) continue;
+				rebuilds++;
+				milliseconds += result.Milliseconds;
+			}
+		}
+		if ( milliseconds < SlowDrawCommandCommitThresholdMilliseconds ||
+			_slowDrawCommandCommitReportCount++ >= 8 ) return;
+		Log.Warning(
+			$"[VoxelWorld] gpu.render.command_commit_slow elapsedMs={milliseconds:0.###} " +
+			$"rebuilds={rebuilds} arenas={_arenas.Count} visibilityCapacity={_visibilityCapacity} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+	}
+
+	private void EndGpuRenderTick()
+	{
+		System.Threading.Interlocked.Exchange( ref _renderTickInProgress, 0 );
+	}
+
+	private void ReportGpuSchedulerHealth()
+	{
+		var now = Stopwatch.GetTimestamp();
+		var claimedEpoch = System.Threading.Interlocked.Read( ref _claimedRenderEpoch );
+		var regularPending = AllPendingCount;
+		var transitionPending = TransitionPendingCount;
+		var hasPending = regularPending + transitionPending > 0;
+		// Measure an observed wait for render progress, not time spent constructing the world
+		// or running a slow update after the previous render tick already claimed its work.
+		if ( !hasPending || claimedEpoch != _gpuSchedulerObservedClaimedEpoch ||
+			_gpuSchedulerWaitStartTimestamp == 0 )
+		{
+			_gpuSchedulerObservedClaimedEpoch = claimedEpoch;
+			_gpuSchedulerWaitStartTimestamp = hasPending ? now : 0;
+		}
+		var ageMilliseconds = hasPending
+			? Stopwatch.GetElapsedTime( _gpuSchedulerWaitStartTimestamp, now ).TotalMilliseconds : 0;
+		var stalled = hasPending && ageMilliseconds >= GpuSchedulerStallThresholdMilliseconds;
+		if ( !stalled )
+		{
+			if ( System.Threading.Interlocked.Exchange( ref _gpuSchedulerStallActive, 0 ) == 0 ) return;
+			var stallStart = System.Threading.Interlocked.Read( ref _gpuSchedulerStallStartTimestamp );
+			Log.Info(
+				$"[VoxelWorld] gpu.scheduler.recovered stallMs={Stopwatch.GetElapsedTime( stallStart, now ).TotalMilliseconds:0.###} " +
+				$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+				$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+				$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )} " +
+				$"regularPending={regularPending} transitionPending={transitionPending} residents={ResidentCount}" );
+			return;
+		}
+
+		if ( System.Threading.Interlocked.CompareExchange( ref _gpuSchedulerStallActive, 1, 0 ) != 0 ) return;
+		System.Threading.Interlocked.Exchange( ref _gpuSchedulerStallStartTimestamp, now );
+		var stallCount = System.Threading.Interlocked.Increment( ref _gpuSchedulerStallCount );
+		int cameraCount;
+		lock ( _renderCameraLock ) cameraCount = _renderCameraStates.Count;
+		Log.Error(
+			$"[VoxelWorld] gpu.scheduler.stalled count={stallCount} ageMs={ageMilliseconds:0.###} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )} " +
+			$"regularPending={regularPending} transitionPending={transitionPending} residents={ResidentCount} " +
+			$"cameras={cameraCount}" );
+	}
+
+	private void ReportSuppressedRenderCallbacks()
+	{
+		var suppressed = System.Threading.Interlocked.Read( ref _suppressedRenderCallbackCount );
+		if ( suppressed == _reportedSuppressedRenderCallbackCount ||
+			System.Threading.Interlocked.CompareExchange( ref _renderDiagnosticReportCount, 0, 0 ) >= 10 ) return;
+
+		var now = Stopwatch.GetTimestamp();
+		if ( _lastRenderDiagnosticTimestamp != 0 &&
+			Stopwatch.GetElapsedTime( _lastRenderDiagnosticTimestamp, now ).TotalSeconds < 1.0 ) return;
+
+		var newlySuppressed = suppressed - _reportedSuppressedRenderCallbackCount;
+		_reportedSuppressedRenderCallbackCount = suppressed;
+		_lastRenderDiagnosticTimestamp = now;
+		if ( System.Threading.Interlocked.Increment( ref _renderDiagnosticReportCount ) > 10 ) return;
+		Log.Info(
+			$"[VoxelWorld] gpu.render.extra_views suppressedTotal={suppressed} suppressedSinceLast={newlySuppressed} " +
+			$"busyTotal={System.Threading.Interlocked.Read( ref _busyRenderCallbackCount )} " +
+			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+	}
+
+	private bool TryIssueMeshAuditReadbacks()
+	{
+		MeshAuditRequest request;
+		lock ( _meshAuditLock )
+		{
+			request = _requestedMeshAudit;
+			if ( request is null ) return false;
+			_requestedMeshAudit = null;
+			_meshAuditInFlight = true;
+		}
+
+		var started = Stopwatch.GetTimestamp();
+		var completed = new List<MeshAuditRegionResult>( request.Targets.Count );
+		var stale = 0;
+		long readbackBytes = 0;
+		var drawAudit = default( DrawArgumentAuditResult );
+		try
+		{
+			drawAudit = AuditDrawArguments( request.Id );
+			foreach ( var target in request.Targets )
+			{
+				if ( !IsMeshAuditTargetCurrent( target ) )
+				{
+					stale++;
+					continue;
+				}
+
+				var vertices = new TerrainVertex[target.Handle.Vertices.Count];
+				var indices = new uint[target.Handle.Indices.Count];
+				target.Handle.Arena.Vertices.GetData<TerrainVertex>(
+					vertices.AsSpan(), target.Handle.Vertices.Offset, target.Handle.Vertices.Count );
+				target.Handle.Arena.Indices.GetData<uint>(
+					indices.AsSpan(), target.Handle.Indices.Offset, target.Handle.Indices.Count );
+				_geometryReadbackCount += 2;
+				readbackBytes += (long)vertices.Length * TerrainVertexBytes + (long)indices.Length * sizeof( uint );
+				completed.Add( AuditMeshGeometry( target, vertices, indices ) );
+			}
+		}
+		finally
+		{
+			lock ( _meshAuditLock ) _meshAuditInFlight = false;
+		}
+
+		foreach ( var result in completed )
+		{
+			var failed = result.InvalidIndices > 0 || result.IndexRemainder > 0 ||
+				result.NonFinitePositions > 0 || result.OutOfBoundsPositions > 0 ||
+				result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 ||
+				result.RecordIdentityMismatches > 0 ||
+				result.OversizedTriangles > 0 || (result.IsTransition && result.DegenerateTriangles > 0);
+			Log.Info(
+				$"[VoxelWorld] mesh.audit.region id={request.Id} status={(failed ? "fail" : "pass")} " +
+				$"mesh=\"{result.Label}\" vertices={result.VertexCount} indices={result.IndexCount} " +
+				$"triangles={result.TriangleCount} invalidIndices={result.InvalidIndices} " +
+				$"indexRemainder={result.IndexRemainder} nonFinitePositions={result.NonFinitePositions} " +
+				$"outOfBoundsPositions={result.OutOfBoundsPositions} nonFiniteNormals={result.NonFiniteNormals} " +
+				$"abnormalNormals={result.AbnormalNormals} " +
+				$"recordIdentityMismatches={result.RecordIdentityMismatches} " +
+				$"degenerateTriangles={result.DegenerateTriangles} " +
+				$"oversizedTriangles={result.OversizedTriangles} maxEdge={result.MaximumEdgeLength:0.###} " +
+				$"maxEdgeCells={result.MaximumEdgeCellRatio:0.###} observedMin={result.MinimumPosition} " +
+				$"observedMax={result.MaximumPosition} expectedMin={result.ExpectedMinimum} " +
+				$"expectedMax={result.ExpectedMaximum}" );
+			if ( !string.IsNullOrEmpty( result.DegenerateExamples ) )
+			{
+				Log.Info(
+					$"[VoxelWorld] mesh.audit.degenerate id={request.Id} mesh=\"{result.Label}\" " +
+					$"examples=\"{result.DegenerateExamples}\"" );
+			}
+		}
+
+		var failures = completed.Count( result => result.InvalidIndices > 0 || result.IndexRemainder > 0 ||
+			result.NonFinitePositions > 0 || result.OutOfBoundsPositions > 0 ||
+			result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 ||
+			result.RecordIdentityMismatches > 0 || result.OversizedTriangles > 0 ||
+			(result.IsTransition && result.DegenerateTriangles > 0) );
+		var mutationFailures = completed.Count( result => result.InvalidIndices > 0 || result.IndexRemainder > 0 ||
+			result.NonFinitePositions > 0 || result.OutOfBoundsPositions > 0 ||
+			result.NonFiniteNormals > 0 || result.AbnormalNormals > 0 ||
+			result.RecordIdentityMismatches > 0 || result.OversizedTriangles > 0 ) +
+			drawAudit.Failures;
+		var elapsed = Stopwatch.GetElapsedTime( started ).TotalMilliseconds;
+		Log.Info(
+			$"[VoxelWorld] mesh.audit.complete id={request.Id} target={request.Target} selected={request.Targets.Count} " +
+			$"completed={completed.Count} stale={stale} failures={failures} mutationFailures={mutationFailures} " +
+			$"invalidIndices={completed.Sum( result => result.InvalidIndices )} " +
+			$"outOfBoundsPositions={completed.Sum( result => result.OutOfBoundsPositions )} " +
+			$"nonFinitePositions={completed.Sum( result => result.NonFinitePositions )} " +
+			$"recordIdentityMismatches={completed.Sum( result => result.RecordIdentityMismatches )} " +
+			$"oversizedTriangles={completed.Sum( result => result.OversizedTriangles )} " +
+			$"degenerateTriangles={completed.Sum( result => result.DegenerateTriangles )} " +
+			$"maximumEdgeCells={(completed.Count > 0 ? completed.Max( result => result.MaximumEdgeCellRatio ) : 0):0.###} " +
+			$"drawArgumentFailures={drawAudit.Failures} cameras={drawAudit.Cameras} " +
+			$"readbacks={completed.Count * 2 + drawAudit.Readbacks} " +
+			$"bytes={readbackBytes + drawAudit.ReadbackBytes} elapsedMs={elapsed:0.###}" );
+		return true;
+	}
+
+	private bool IsMeshAuditTargetCurrent( MeshAuditTarget target )
+	{
+		if ( target.RegularKey is { } regularKey )
+		{
+			return _resident.TryGetValue( regularKey, out var resident ) &&
+				ReferenceEquals( resident.Handle, target.Handle ) && resident.Handle.Generation == target.Generation;
+		}
+		if ( target.TransitionKey is { } transitionKey )
+		{
+			return _transitionResident.TryGetValue( transitionKey, out var resident ) &&
+				ReferenceEquals( resident.Handle, target.Handle ) && resident.Handle.Generation == target.Generation;
+		}
+		return false;
+	}
+
+	private static MeshAuditTarget CreateRegularMeshAuditTarget( ResidentMesh resident, Vector3 target )
+	{
+		var descriptor = resident.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CellSize;
+		var minimum = new Vector3(
+			descriptor.ChunkCoordinate.x * size,
+			descriptor.ChunkCoordinate.y * size,
+			descriptor.ChunkCoordinate.z * size );
+		var maximum = minimum + new Vector3( size );
+		return new MeshAuditTarget(
+			$"{descriptor.Key.Level}:C[{descriptor.ChunkCoordinate.x},{descriptor.ChunkCoordinate.y},{descriptor.ChunkCoordinate.z}]",
+			descriptor.Key,
+			null,
+			resident.Handle,
+			resident.Handle.Generation,
+			descriptor.CellSize,
+			minimum,
+			maximum,
+			DistanceSquaredToBounds( target, minimum, maximum ) );
+	}
+
+	private static MeshAuditTarget CreateTransitionMeshAuditTarget( ResidentTransition resident, Vector3 target )
+	{
+		var descriptor = resident.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CoarseCellSize;
+		var minimum = new Vector3(
+			descriptor.Key.CoarseCoordinate.x * size,
+			descriptor.Key.CoarseCoordinate.y * size,
+			descriptor.Key.CoarseCoordinate.z * size );
+		var maximum = minimum + new Vector3( size );
+		switch ( descriptor.Key.Face )
+		{
+			case GpuTransitionFace.NegativeX: maximum.x = minimum.x; break;
+			case GpuTransitionFace.PositiveX: minimum.x = maximum.x; break;
+			case GpuTransitionFace.NegativeY: maximum.y = minimum.y; break;
+			case GpuTransitionFace.PositiveY: minimum.y = maximum.y; break;
+			case GpuTransitionFace.NegativeZ: maximum.z = minimum.z; break;
+			case GpuTransitionFace.PositiveZ: minimum.z = maximum.z; break;
+		}
+		return new MeshAuditTarget(
+			$"Transition:{descriptor.Key.CoarseLevel}:{descriptor.Key.Face}:C[{descriptor.Key.CoarseCoordinate.x}," +
+				$"{descriptor.Key.CoarseCoordinate.y},{descriptor.Key.CoarseCoordinate.z}]",
+			null,
+			descriptor.Key,
+			resident.Handle,
+			resident.Handle.Generation,
+			descriptor.CoarseCellSize,
+			minimum,
+			maximum,
+			DistanceSquaredToBounds( target, minimum, maximum ) );
+	}
+
+	private static float DistanceSquaredToBounds( Vector3 point, Vector3 minimum, Vector3 maximum )
+	{
+		var x = MathF.Max( minimum.x - point.x, MathF.Max( 0f, point.x - maximum.x ) );
+		var y = MathF.Max( minimum.y - point.y, MathF.Max( 0f, point.y - maximum.y ) );
+		var z = MathF.Max( minimum.z - point.z, MathF.Max( 0f, point.z - maximum.z ) );
+		return x * x + y * y + z * z;
+	}
+
+	private static MeshAuditRegionResult AuditMeshGeometry(
+		MeshAuditTarget target,
+		TerrainVertex[] vertices,
+		uint[] indices )
+	{
+		var minimum = new Vector3( float.MaxValue );
+		var maximum = new Vector3( float.MinValue );
+		var nonFinitePositions = 0;
+		var outOfBoundsPositions = 0;
+		var nonFiniteNormals = 0;
+		var abnormalNormals = 0;
+		var recordIdentityMismatches = 0;
+		var tolerance = MathF.Max( target.CellSize * 0.01f, 0.001f );
+		foreach ( var vertex in vertices )
+		{
+			var position = vertex.Position;
+			if ( !float.IsFinite( position.x ) || !float.IsFinite( position.y ) || !float.IsFinite( position.z ) )
+			{
+				nonFinitePositions++;
+				continue;
+			}
+			minimum.x = MathF.Min( minimum.x, position.x );
+			minimum.y = MathF.Min( minimum.y, position.y );
+			minimum.z = MathF.Min( minimum.z, position.z );
+			maximum.x = MathF.Max( maximum.x, position.x );
+			maximum.y = MathF.Max( maximum.y, position.y );
+			maximum.z = MathF.Max( maximum.z, position.z );
+			if ( position.x < target.ExpectedMinimum.x - tolerance || position.x > target.ExpectedMaximum.x + tolerance ||
+				position.y < target.ExpectedMinimum.y - tolerance || position.y > target.ExpectedMaximum.y + tolerance ||
+				position.z < target.ExpectedMinimum.z - tolerance || position.z > target.ExpectedMaximum.z + tolerance )
+			{
+				outOfBoundsPositions++;
+			}
+
+			var packedNormal = vertex.Normal;
+			if ( !float.IsFinite( packedNormal.x ) || !float.IsFinite( packedNormal.y ) ||
+				!float.IsFinite( packedNormal.z ) )
+			{
+				nonFiniteNormals++;
+			}
+			else
+			{
+				var encodedRecordIdentity = BitConverter.SingleToUInt32Bits( packedNormal.x );
+				var recordId = (int)(encodedRecordIdentity & TerrainRecordSlotMask);
+				var generationToken =
+					(encodedRecordIdentity >> TerrainRecordGenerationTokenShift) &
+					TerrainRecordGenerationTokenMask;
+				if ( (encodedRecordIdentity & TerrainRecordIdentitySignatureMask) !=
+						TerrainRecordIdentitySignature ||
+					recordId != target.Handle.GlobalSlot ||
+					generationToken != (target.Generation & TerrainRecordGenerationTokenMask) )
+					recordIdentityMismatches++;
+				var normal = DecodeTerrainNormal( packedNormal.y, packedNormal.z );
+				var lengthSquared = normal.LengthSquared;
+				if ( lengthSquared < 0.8f * 0.8f || lengthSquared > 1.2f * 1.2f ) abnormalNormals++;
+			}
+		}
+
+		if ( vertices.Length == 0 )
+		{
+			minimum = Vector3.Zero;
+			maximum = Vector3.Zero;
+		}
+
+		var invalidIndices = 0;
+		var degenerateTriangles = 0;
+		var degenerateExamples = new List<string>( 4 );
+		var oversizedTriangles = 0;
+		var maximumEdgeSquared = 0f;
+		var maximumAllowedEdgeSquared = target.CellSize * target.CellSize * 3.0625f;
+		var minimumAreaSquared = MathF.Pow( target.CellSize, 4f ) * MinimumTriangleAreaSquaredRelative;
+		var triangleCount = indices.Length / 3;
+		for ( var triangle = 0; triangle < triangleCount; triangle++ )
+		{
+			var first = indices[triangle * 3];
+			var second = indices[triangle * 3 + 1];
+			var third = indices[triangle * 3 + 2];
+			if ( first >= vertices.Length || second >= vertices.Length || third >= vertices.Length )
+			{
+				invalidIndices++;
+				continue;
+			}
+
+			var a = vertices[first].Position;
+			var b = vertices[second].Position;
+			var c = vertices[third].Position;
+			if ( !float.IsFinite( a.x ) || !float.IsFinite( a.y ) || !float.IsFinite( a.z ) ||
+				!float.IsFinite( b.x ) || !float.IsFinite( b.y ) || !float.IsFinite( b.z ) ||
+				!float.IsFinite( c.x ) || !float.IsFinite( c.y ) || !float.IsFinite( c.z ) ) continue;
+
+			var ab = b - a;
+			var ac = c - a;
+			var bc = c - b;
+			var edgeSquared = MathF.Max( ab.LengthSquared, MathF.Max( ac.LengthSquared, bc.LengthSquared ) );
+			maximumEdgeSquared = MathF.Max( maximumEdgeSquared, edgeSquared );
+			if ( edgeSquared > maximumAllowedEdgeSquared ) oversizedTriangles++;
+			var cross = new Vector3(
+				ab.y * ac.z - ab.z * ac.y,
+				ab.z * ac.x - ab.x * ac.z,
+				ab.x * ac.y - ab.y * ac.x );
+			var areaSquared = cross.LengthSquared;
+			if ( areaSquared <= minimumAreaSquared )
+			{
+				degenerateTriangles++;
+				if ( degenerateExamples.Count < 4 )
+				{
+					degenerateExamples.Add(
+						$"t{triangle}:i[{first},{second},{third}] a[{a}] b[{b}] c[{c}] " +
+						$"area2={areaSquared:0.########} edge2={edgeSquared:0.########}" );
+				}
+			}
+		}
+
+		var maximumEdge = MathF.Sqrt( maximumEdgeSquared );
+		return new MeshAuditRegionResult(
+			target.Label,
+			target.IsTransition,
+			vertices.Length,
+			indices.Length,
+			triangleCount,
+			indices.Length % 3,
+			invalidIndices,
+			nonFinitePositions,
+			outOfBoundsPositions,
+			nonFiniteNormals,
+			abnormalNormals,
+			recordIdentityMismatches,
+			degenerateTriangles,
+			oversizedTriangles,
+			maximumEdge,
+			target.CellSize > 0f ? maximumEdge / target.CellSize : 0f,
+			minimum,
+			maximum,
+			target.ExpectedMinimum,
+			target.ExpectedMaximum,
+			string.Join( " | ", degenerateExamples ) );
+	}
+
+	private static Vector3 DecodeTerrainNormal( float x, float y )
+	{
+		var normal = new Vector3( x, y, 1f - MathF.Abs( x ) - MathF.Abs( y ) );
+		if ( normal.z < 0f )
+		{
+			var signX = normal.x >= 0f ? 1f : -1f;
+			var signY = normal.y >= 0f ? 1f : -1f;
+			var decodedX = (1f - MathF.Abs( normal.y )) * signX;
+			var decodedY = (1f - MathF.Abs( normal.x )) * signY;
+			normal.x = decodedX;
+			normal.y = decodedY;
+		}
+		var lengthSquared = normal.LengthSquared;
+		return lengthSquared > 1e-12f ? normal / MathF.Sqrt( lengthSquared ) : Vector3.Up;
+	}
+
+	private void ProcessGpuRenderTick()
+	{
+		if ( _disposed || _scratchLanes is null ) return;
+		// Removed requests can leave queue entries after the final outer batch drains.
+		while ( _activeOuterDispatchQueue.TryPeek( out var queued, out _ ) &&
+			(!_pending.ContainsKey( queued ) || !_renderActive.Contains( queued )) )
+			_activeOuterDispatchQueue.Dequeue();
+		var outerServiceGap = ObserveOuterServiceGap();
+		// The service deadline applies before shortcuts that can keep returning for seams.
+		if ( outerServiceGap >= OuterMaximumServiceDelayMilliseconds &&
+			(TryEmitReadyOuter() || TrySubmitOuterCount()) )
+		{
+			RecordOuterService( outerServiceGap, true );
+			return;
+		}
+		// Once required terrain is complete, its seams outrank hidden cache fill.
+		if ( !_editPublicationPending && _activeOuterDispatchQueue.Count == 0 &&
+			_placementRequired.Count > 0 && _placementQueued.Count == 0 &&
+			!_scratchLanes.Any( lane =>
+				lane.CountInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ||
+					(value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ||
+				lane.EmitInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ||
+					(value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ) &&
+			ProcessTransitionGpuRenderTick() )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+			return;
+		}
+		// A placement needs near regions, outer regions and seams together.
+		// Each gets a preferred turn; unavailable work falls through to normal service.
+		var preferredService = PrioritizePlayerDetail && _placementQueued.Any( key => key.Level < 2 ) ? 0 : _nextGpuService;
+		_nextGpuService = (_nextGpuService + 1) % 3;
+		if ( preferredService == 2 && (TryEmitReadyOuter() || TrySubmitOuterCount()) )
+		{
+			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
+			return;
+		}
+		if ( preferredService == 1 && ProcessTransitionGpuRenderTick() )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+			return;
+		}
+		foreach ( var lane in _scratchLanes )
+		{
+			if ( lane.CountInFlight.Count > 0 && lane.Scratch.TryContinueCount() ) return;
+		}
+		if ( TryEmitReadyOuter() )
+		{
+			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
+			return;
+		}
+		var regularGpuWorkSubmitted = false;
+		foreach ( var lane in _scratchLanes )
+		{
+			if ( lane.CountInFlight.Count > 0 &&
+				lane.CountInFlight[0].Descriptor.Key.Level < 2 &&
+				lane.Scratch.TryTakeCounts(
+				out var counts,
+				out var count,
+				out var readbackMilliseconds,
+				out var callbackWaitMilliseconds ) )
+			{
+				AllocateAndEmit( lane, counts, count, readbackMilliseconds, callbackWaitMilliseconds );
+				regularGpuWorkSubmitted = true;
+				break;
+			}
+		}
+
+		var targetLane = _scratchLanes.FirstOrDefault( lane => lane.IsIdle );
+		if ( targetLane is not null )
+		{
+			GpuTerrainRequest[] requests = null;
+			TerrainFieldSnapshot[] fields = null;
+			var processed = 0;
+			var inspected = 0;
+			List<PendingMesh> deferred = null;
+			while ( inspected++ < _maximumDispatchesRequested && TryDequeuePending( out var pending ) )
+			{
+				TerrainFieldSnapshot reader = null;
+				if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+				{
+					(deferred ??= new()).Add( pending );
+					continue;
+				}
+				var generation = ++_nextGeneration;
+				var inFlight = new InFlightMesh(
+					pending.Descriptor,
+					pending.Residency,
+					generation,
+					pending.ScheduledTimestamp,
+					pending.ScheduledRouteDistance );
+				targetLane.CountInFlight.Add( inFlight );
+				requests ??= new GpuTerrainRequest[MaximumDispatchesPerUpdate];
+				requests[processed] = CreateRequest( inFlight, processed );
+				if ( inFlight.Descriptor.EditRevision != 0 )
+				{
+					fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
+					fields[processed] = reader;
+				}
+				processed++;
+			}
+			if ( deferred is not null ) foreach ( var pending in deferred ) QueuePending( pending );
+			if ( processed == 0 && _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
+			if ( processed > 0 )
+			{
+				if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out var submissionMilliseconds, fields ) )
+					throw new InvalidOperationException( "Voxel terrain scratch rejected an idle count batch." );
+				if ( _scheduleLatencyMeasurementActive )
+				{
+					RegularCountBatches++;
+					RegularCountRegions += processed;
+				}
+				_countSubmissionMilliseconds += submissionMilliseconds;
+				_throughput?.RecordBatchSubmitted( processed, (float)submissionMilliseconds );
+				System.Threading.Interlocked.Add( ref _processedRenderDispatches, processed );
+				regularGpuWorkSubmitted = true;
+			}
+		}
+
+		if ( _scheduleLatencyMeasurementActive && regularGpuWorkSubmitted && _transitionPending.Count > 0 )
+		{
+			TransitionDeferredRenderTicks++;
+		}
+		// With no near work submitted, share ticks between outer counts and seams.
+		// Each still consumes its own tick; a long seam queue must not reduce
+		// outer progress to only the forced-service deadline.
+		if ( !regularGpuWorkSubmitted && _outerLastServiceTimestamp <= _transitionLastServiceTimestamp &&
+			TrySubmitOuterCount() )
+		{
+			RecordOuterService( outerServiceGap, false );
+			return;
+		}
+		var transitionGpuWorkSubmitted = !regularGpuWorkSubmitted && ProcessTransitionGpuRenderTick();
+		if ( transitionGpuWorkSubmitted )
+		{
+			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+		}
+		if ( !regularGpuWorkSubmitted && !transitionGpuWorkSubmitted && TrySubmitOuterCount() )
+		{
+			RecordOuterService( outerServiceGap, false );
+		}
+	}
+
+	private bool ProcessTransitionGpuRenderTick()
+	{
+		if ( _transitionScratchLanes is null ) return false;
+		foreach ( var lane in _transitionScratchLanes )
+		{
+			if ( lane.CountInFlight.Count > 0 && lane.Scratch.TryTakeCounts(
+				out var counts,
+				out var count,
+				out var readbackMilliseconds,
+				out var callbackWaitMilliseconds ) )
+			{
+				AllocateAndEmitTransitions( lane, counts, count, readbackMilliseconds, callbackWaitMilliseconds );
+				return true;
+			}
+		}
+		foreach ( var lane in _transitionScratchLanes )
+		{
+			if ( lane.CountInFlight.Count > 0 && lane.Scratch.TryContinueCount() ) return true;
+		}
+
+		var targetLane = _transitionScratchLanes.FirstOrDefault( lane => lane.IsIdle );
+		if ( targetLane is null ) return false;
+		GpuTransitionRequest[] requests = null;
+		TerrainFieldSnapshot[] fields = null;
+		var processed = 0;
+		var inspected = 0;
+		List<PendingTransition> deferred = null;
+		while ( inspected++ < GpuTransitionScratch.MaximumBatchSize && TryDequeuePendingTransition( out var pending ) )
+		{
+			TerrainFieldSnapshot reader = null;
+			if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+			{
+				(deferred ??= new()).Add( pending );
+				continue;
+			}
+			var generation = ++_nextGeneration;
+
+			var inFlight = new InFlightTransition(
+				pending.Descriptor,
+				generation,
+				pending.ScheduledTimestamp,
+				pending.ScheduledRouteDistance );
+			targetLane.CountInFlight.Add( inFlight );
+			requests ??= new GpuTransitionRequest[GpuTransitionScratch.MaximumBatchSize];
+			requests[processed] = CreateTransitionRequest( inFlight, processed );
+			if ( inFlight.Descriptor.EditRevision != 0 )
+			{
+				fields ??= new TerrainFieldSnapshot[GpuTransitionScratch.MaximumBatchSize];
+				fields[processed] = reader;
+			}
+			processed++;
+		}
+		if ( deferred is not null ) foreach ( var pending in deferred )
+		{
+			_transitionPending[pending.Descriptor.Key] = pending;
+			if ( _editTransitionDependencies.Contains( pending.Descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
+			else _transitionDispatchQueue.Enqueue( pending );
+		}
+		if ( processed == 0 )
+		{
+			if ( _scheduleLatencyMeasurementActive ) EmptyBatchSubmissionsAvoided++;
+			return false;
+		}
+		if ( !targetLane.Scratch.TrySubmitCount( requests, processed, out _, fields ) )
+			throw new InvalidOperationException( "Voxel transition scratch rejected an idle count batch." );
+		return true;
+	}
+
+	private double ObserveOuterServiceGap()
+	{
+		if ( PendingOuterVisualCount == 0 )
+		{
+			_outerEligibleSinceTimestamp = 0;
+			return 0;
+		}
+
+		var now = Stopwatch.GetTimestamp();
+		if ( _outerEligibleSinceTimestamp == 0 ) _outerEligibleSinceTimestamp = now;
+		var serviceGapStart = Math.Max( _outerLastServiceTimestamp, _outerEligibleSinceTimestamp );
+		return Stopwatch.GetElapsedTime( serviceGapStart, now ).TotalMilliseconds;
+	}
+
+	private void RecordOuterService( double serviceGap, bool forced )
+	{
+		if ( _outerMeasurementActive )
+		{
+			_outerMaximumServiceGapMilliseconds = Math.Max(
+				_outerMaximumServiceGapMilliseconds,
+				(float)serviceGap );
+			if ( forced ) _outerForcedServiceCount++;
+			else _outerOpportunisticServiceCount++;
+		}
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
+		_outerEligibleSinceTimestamp = 0;
+	}
+
+	private bool TryEmitReadyOuter()
+	{
+		foreach ( var lane in _scratchLanes )
+		{
+			if ( lane.CountInFlight.Count == 0 ||
+				lane.CountInFlight[0].Descriptor.Key.Level < 2 ) continue;
+			if ( !lane.Scratch.TryTakeCounts(
+				out var counts,
+				out var count,
+				out var readbackMilliseconds,
+				out var callbackWaitMilliseconds ) ) continue;
+			AllocateAndEmit( lane, counts, count, readbackMilliseconds, callbackWaitMilliseconds );
+			return true;
+		}
+		return false;
+	}
+
+	private bool TrySubmitOuterCount()
+	{
+		if ( PendingOuterVisualCount == 0 ) return false;
+		// Catch-up can use a second existing lane; retain one lane for near meshes.
+		var outerLaneLimit = PrioritizePlayerDetail ? ScratchLaneCount - 1 : 1;
+		var outerLanes = 0;
+		foreach ( var activeLane in _scratchLanes )
+		{
+			if ( (activeLane.CountInFlight.Count > 0 && activeLane.CountInFlight[0].Descriptor.Key.Level >= 2) ||
+				(activeLane.EmitInFlight.Count > 0 && activeLane.EmitInFlight[0].Descriptor.Key.Level >= 2) ) outerLanes++;
+		}
+		if ( outerLanes >= outerLaneLimit ) return false;
+		var lane = _scratchLanes.FirstOrDefault( value => value.IsIdle );
+		if ( lane is null ) return false;
+		GpuTerrainRequest[] requests = null;
+			TerrainFieldSnapshot[] fields = null;
+		var processed = 0;
+		var inspected = 0;
+		List<PendingMesh> deferred = null;
+		while ( inspected++ < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( processed % 4 == 0, out var pending ) )
+		{
+			TerrainFieldSnapshot reader = null;
+			if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+			{
+				(deferred ??= new()).Add( pending );
+				continue;
+			}
+			var generation = ++_nextGeneration;
+			var inFlight = new InFlightMesh(
+				pending.Descriptor,
+				pending.Residency,
+				generation,
+				pending.ScheduledTimestamp,
+				pending.ScheduledRouteDistance );
+			lane.CountInFlight.Add( inFlight );
+			requests ??= new GpuTerrainRequest[MaximumDispatchesPerUpdate];
+			requests[processed] = CreateRequest( inFlight, processed );
+			if ( inFlight.Descriptor.EditRevision != 0 )
+			{
+				fields ??= new TerrainFieldSnapshot[MaximumDispatchesPerUpdate];
+				fields[processed] = reader;
+			}
+			processed++;
+		}
+		if ( deferred is not null ) foreach ( var pending in deferred ) QueuePending( pending );
+		if ( processed == 0 ) return false;
+		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _, fields ) )
+			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle outer count batch." );
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			RegularCountBatches++;
+			RegularCountRegions += processed;
+		}
+		return true;
+	}
+
+	private static GpuTerrainRequest CreateRequest( InFlightMesh inFlight, int requestIndex )
+	{
+		var descriptor = inFlight.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CellSize;
+		var origin = new Vector3(
+			descriptor.ChunkCoordinate.x * size,
+			descriptor.ChunkCoordinate.y * size,
+			descriptor.ChunkCoordinate.z * size );
+		return new GpuTerrainRequest
+		{
+			OriginAndCellSize = new Vector4( origin, descriptor.CellSize ),
+			Terrain = new Vector4(
+				descriptor.TerrainSettings.WorldSeed,
+				descriptor.TerrainSettings.LandAmount,
+				descriptor.TerrainSettings.MountainAmount,
+				descriptor.TerrainSettings.PlainsAmount ),
+			TerrainScales = new Vector4( descriptor.TerrainSettings.ContinentalScale, descriptor.TerrainSettings.MountainRegionScale,
+				descriptor.TerrainSettings.LocalLandformScale, descriptor.TerrainSettings.ReliefHeight ),
+			TerrainShape = new Vector4( descriptor.TerrainSettings.Ruggedness, descriptor.TerrainSettings.SeaLevel, 0f, 0f ),
+			CellsPerAxis = descriptor.CellsPerAxis,
+			Generation = inFlight.Generation,
+			RequestIndex = (uint)requestIndex,
+			Reserved0 = descriptor.EditRevision != 0 ? 1u : 0u
+		};
+	}
+
+	private static GpuTransitionRequest CreateTransitionRequest( InFlightTransition inFlight, int requestIndex )
+	{
+		var descriptor = inFlight.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CoarseCellSize;
+		var regionOrigin = new Vector3(
+			descriptor.Key.CoarseCoordinate.x * size,
+			descriptor.Key.CoarseCoordinate.y * size,
+			descriptor.Key.CoarseCoordinate.z * size );
+		Vector3 origin;
+		Vector3 basisU;
+		Vector3 basisV;
+		Vector3 normal;
+		switch ( descriptor.Key.Face )
+		{
+			case GpuTransitionFace.NegativeX:
+				origin = regionOrigin + new Vector3( 0, 0, size );
+				basisU = new Vector3( 0, 1, 0 );
+				basisV = new Vector3( 0, 0, -1 );
+				normal = new Vector3( -1, 0, 0 );
+				break;
+			case GpuTransitionFace.PositiveX:
+				origin = regionOrigin + new Vector3( size, 0, 0 );
+				basisU = new Vector3( 0, 1, 0 );
+				basisV = new Vector3( 0, 0, 1 );
+				normal = new Vector3( 1, 0, 0 );
+				break;
+			case GpuTransitionFace.NegativeY:
+				origin = regionOrigin + new Vector3( size, 0, 0 );
+				basisU = new Vector3( 0, 0, 1 );
+				basisV = new Vector3( -1, 0, 0 );
+				normal = new Vector3( 0, -1, 0 );
+				break;
+			case GpuTransitionFace.PositiveY:
+				origin = regionOrigin + new Vector3( 0, size, 0 );
+				basisU = new Vector3( 0, 0, 1 );
+				basisV = new Vector3( 1, 0, 0 );
+				normal = new Vector3( 0, 1, 0 );
+				break;
+			case GpuTransitionFace.NegativeZ:
+				origin = regionOrigin + new Vector3( 0, size, 0 );
+				basisU = new Vector3( 1, 0, 0 );
+				basisV = new Vector3( 0, -1, 0 );
+				normal = new Vector3( 0, 0, -1 );
+				break;
+			default:
+				origin = regionOrigin + new Vector3( 0, 0, size );
+				basisU = new Vector3( 1, 0, 0 );
+				basisV = new Vector3( 0, 1, 0 );
+				normal = new Vector3( 0, 0, 1 );
+				break;
+		}
+		return new GpuTransitionRequest
+		{
+			OriginAndFineCellSize = new Vector4( origin, descriptor.FineCellSize ),
+			Terrain = new Vector4(
+				descriptor.TerrainSettings.WorldSeed,
+				descriptor.TerrainSettings.LandAmount,
+				descriptor.TerrainSettings.MountainAmount,
+				descriptor.TerrainSettings.PlainsAmount ),
+			TerrainScales = new Vector4( descriptor.TerrainSettings.ContinentalScale, descriptor.TerrainSettings.MountainRegionScale,
+				descriptor.TerrainSettings.LocalLandformScale, descriptor.TerrainSettings.ReliefHeight ),
+			TerrainShape = new Vector4( descriptor.TerrainSettings.Ruggedness, descriptor.TerrainSettings.SeaLevel, 0f, 0f ),
+			BasisUAndCoarseCellSize = new Vector4( basisU, descriptor.CoarseCellSize ),
+			BasisVAndCellsPerAxis = new Vector4( basisV, descriptor.CellsPerAxis ),
+			NormalAndFace = new Vector4( normal, (int)descriptor.Key.Face ),
+			Generation = inFlight.Generation,
+			RequestIndex = (uint)requestIndex,
+			Reserved0 = descriptor.EditRevision != 0 ? 1u : 0u
+		};
+	}
+
+	private void AllocateAndEmit( ScratchLane lane, GpuTerrainCountResult[] counts, int count,
+		double readbackMilliseconds, double callbackWaitMilliseconds )
+	{
+		if ( count != lane.CountInFlight.Count ) throw new InvalidOperationException( "Voxel terrain count batch length changed." );
+		var outer = lane.CountInFlight[0].Descriptor.Key.Level >= 2;
+		if ( lane.CountInFlight.Any( value =>
+			(value.Descriptor.Key.Level >= 2) != outer ) )
+			throw new InvalidOperationException( "A terrain scratch batch mixed foreground and outer requests." );
+		_countReadbackCount++;
+		_scalarReadbackCount++;
+		_countReadbackBytes += count * 32;
+		_countReadbackMilliseconds += readbackMilliseconds;
+		var allocationStart = Stopwatch.GetTimestamp();
+		var arenas = new HashSet<GeometryArena>();
+		for ( var index = 0; index < count; index++ )
+		{
+			var source = lane.CountInFlight[index];
+			var result = counts[index];
+			if ( result.Generation != source.Generation || result.RequestIndex != (uint)index )
+				throw new InvalidOperationException( "Stale voxel terrain count metadata." );
+			var cancelled = _cancelledInFlight.Contains( source.Descriptor.Key ) ||
+				(_editedField is not null && !source.Descriptor.MatchesField( _editedField ));
+			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledRegularCountResults++;
+			if ( !cancelled ) InspectDensityBlock( lane, index, source.Descriptor );
+			GeometryHandle handle = null;
+			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedRegularGeometryRegions++;
+			if ( !cancelled && result.IndexCount > 0 )
+			{
+				handle = Acquire(
+					checked( (int)result.VertexCount ),
+					checked( (int)result.IndexCount ),
+					source.Generation,
+					!outer );
+				arenas.Add( handle.Arena );
+				if ( _scheduleLatencyMeasurementActive ) RegularEnabledEmitRegions++;
+			}
+			lane.EmitInFlight.Add( new CandidateMesh(
+				source.Descriptor,
+				source.Residency,
+				source.Generation,
+				source.ScheduledTimestamp,
+				source.ScheduledRouteDistance,
+				handle,
+				result ) );
+		}
+		lane.CountInFlight.Clear();
+		var allocationMilliseconds = (float)Stopwatch.GetElapsedTime( allocationStart ).TotalMilliseconds;
+		var emitMilliseconds = 0f;
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			RegularEmitArenaPasses += arenas.Count;
+			RegularEmitBatchSlots += (long)arenas.Count * count;
+			if ( arenas.Count > 1 ) RegularMultiArenaBatches++;
+		}
+		foreach ( var arena in arenas )
+		{
+			var allocations = new GpuTerrainAllocationDescriptor[count];
+			for ( var index = 0; index < count; index++ )
+			{
+				var candidate = lane.EmitInFlight[index];
+				if ( candidate.Handle?.Arena != arena ) continue;
+				allocations[index] = new GpuTerrainAllocationDescriptor
+				{
+					VertexOffset = (uint)candidate.Handle.Vertices.Offset,
+					VertexCapacity = (uint)candidate.Handle.Vertices.Count,
+					IndexOffset = (uint)candidate.Handle.Indices.Offset,
+					IndexCapacity = (uint)candidate.Handle.Indices.Count,
+					Generation = candidate.Generation,
+					RequestIndex = (uint)index,
+					Enabled = 1,
+					Reserved = PackTerrainRecordIdentity( candidate.Handle )
+				};
+			}
+			var arenaEmitMilliseconds = lane.Scratch.SubmitEmitPass( allocations, count, arena.Vertices, arena.Indices );
+			_emitSubmissionMilliseconds += arenaEmitMilliseconds;
+			emitMilliseconds += (float)arenaEmitMilliseconds;
+		}
+		lane.Scratch.CompleteEmit();
+		lane.SubmittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
+		lane.EmitSubmittedTimestamp = Stopwatch.GetTimestamp();
+		if ( !outer )
+		{
+			_throughput?.RecordBatchCompleted(
+				(float)readbackMilliseconds,
+				(float)callbackWaitMilliseconds,
+				allocationMilliseconds,
+				emitMilliseconds );
+		}
+	}
+
+	private void FinalizeEmits()
+	{
+		if ( _scratchLanes is null ) return;
+		var renderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
+		var changed = false;
+		foreach ( var lane in _scratchLanes )
+		{
+			if ( lane.EmitInFlight.Count == 0 || renderSequence <= lane.SubmittedRenderSequence ) continue;
+			var outerBatch = lane.EmitInFlight[0].Descriptor.Key.Level >= 2;
+			if ( !outerBatch )
+			{
+				_throughput?.RecordEmitPublished(
+					(float)Stopwatch.GetElapsedTime( lane.EmitSubmittedTimestamp ).TotalMilliseconds );
+			}
+			foreach ( var completed in lane.EmitInFlight )
+			{
+				var key = completed.Descriptor.Key;
+				var outer = key.Level >= 2;
+				if ( _cancelledInFlight.Remove( key ) ||
+					(_editedField is not null && !completed.Descriptor.MatchesField( _editedField )) )
+				{
+					if ( _scheduleLatencyMeasurementActive ) _levelCancelledCounts[key.Level]++;
+					if ( outer )
+					{
+						if ( _outerMeasurementActive ) _outerCancelledCount++;
+					}
+					else if ( _scheduleLatencyMeasurementActive ) _scheduleLatencyCancelledCount++;
+					Release( completed.Handle );
+					continue;
+				}
+				var residency = completed.Residency;
+				if ( _pending.TryGetValue( key, out var replacement ) )
+				{
+					if ( replacement.Descriptor != completed.Descriptor )
+					{
+						if ( _scheduleLatencyMeasurementActive ) _levelSupersededCounts[key.Level]++;
+						if ( outer )
+						{
+							if ( _outerMeasurementActive ) _outerSupersededCount++;
+						}
+						else if ( _scheduleLatencyMeasurementActive ) _scheduleLatencySupersededCount++;
+						Release( completed.Handle );
+						continue;
+					}
+					residency = replacement.Residency;
+					RemovePending( key );
+				}
+				if ( _editRegularDependencies.Contains( key ) )
+				{
+					if ( _editRegularCandidates.Remove( key, out var previousCandidate ) ) Release( previousCandidate.Handle );
+					_editRegularCandidates[key] = completed with { Residency = residency };
+					continue;
+				}
+				PublishCompletedRegular( completed, residency );
+				changed = true;
+			}
+			lane.EmitInFlight.Clear();
+		}
+		if ( changed )
+		{
+			MarkDrawCommandsDirty();
+		}
+	}
+
+	private void PublishCompletedRegular( CandidateMesh completed, GpuMeshResidency residency )
+	{
+		var key = completed.Descriptor.Key;
+		var outer = key.Level >= 2;
+		PublishResident( completed.Descriptor, residency, completed.Handle, completed.Counts );
+		if ( _scheduleLatencyMeasurementActive )
+		{
+			_levelPublishedCounts[key.Level]++;
+			RecordLevelScheduleLatency( key.Level, completed.ScheduledTimestamp );
+		}
+		if ( outer )
+		{
+			RecordOuterLatency( completed.ScheduledTimestamp );
+			if ( _outerMeasurementActive ) _outerPublishedCount++;
+		}
+		else
+		{
+			RecordScheduleLatency( completed.ScheduledTimestamp );
+			_throughput?.RecordPublished(
+				MathF.Max( 0f, _currentPlayerRouteDistance - completed.ScheduledRouteDistance ) );
+		}
+		_dispatchCount++;
+	}
+
+	private void PublishResident(
+		GpuSdfDescriptor descriptor,
+		GpuMeshResidency residency,
+		GeometryHandle handle,
+		GpuTerrainCountResult counts )
+	{
+		var key = descriptor.Key;
+		if ( _resident.Remove( key, out var previous ) ) ReleaseResident( previous );
+		var resident = new ResidentMesh( descriptor, residency, handle, counts );
+		_resident.Add( key, resident );
+		if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
+		_residentLevelCounts[key.Level]++;
+		if ( handle is not null )
+		{
+			handle.Arena.ActiveResidentCount++;
+			SetVisibilityActive( resident, _renderActive.Contains( key ) );
+		}
+		_topologyDigest ^= CoordinateDigest( key, counts.TopologyDigest );
+		_positionDigest ^= CoordinateDigest( key, counts.PositionDigest );
+		_levelTopologyDigests[key.Level] ^= CoordinateDigest( key, counts.TopologyDigest );
+		_levelPositionDigests[key.Level] ^= CoordinateDigest( key, counts.PositionDigest );
+		_residentPublicationRevision++;
+	}
+
+	private void AllocateAndEmitTransitions( TransitionScratchLane lane, GpuTransitionCountResult[] counts,
+		int count, double readbackMilliseconds, double callbackWaitMilliseconds )
+	{
+		if ( count != lane.CountInFlight.Count )
+			throw new InvalidOperationException( "Voxel transition count batch length changed." );
+		TransitionCountReadbacks++;
+		TransitionCountReadbackMilliseconds += readbackMilliseconds;
+		TransitionCountCallbackWaitMilliseconds += callbackWaitMilliseconds;
+		TransitionMaximumCountReadbackMilliseconds = Math.Max( TransitionMaximumCountReadbackMilliseconds, readbackMilliseconds );
+		TransitionMaximumCountCallbackWaitMilliseconds = Math.Max( TransitionMaximumCountCallbackWaitMilliseconds, callbackWaitMilliseconds );
+		var arenas = new HashSet<GeometryArena>();
+		for ( var index = 0; index < count; index++ )
+		{
+			var source = lane.CountInFlight[index];
+			var result = counts[index];
+			if ( result.Generation != source.Generation || result.RequestIndex != (uint)index )
+				throw new InvalidOperationException( "Stale voxel transition count metadata." );
+			var cancelled = _transitionCancelledGenerations.Contains( source.Generation ) ||
+				!_transitionDesiredDescriptors.TryGetValue( source.Descriptor.Key, out var desired ) ||
+				desired != source.Descriptor;
+			if ( cancelled && _scheduleLatencyMeasurementActive ) CancelledTransitionCountResults++;
+			if ( !cancelled ) InspectTransitionDensityBlock( lane, index, source );
+			GeometryHandle handle = null;
+			if ( cancelled && result.IndexCount > 0 && _scheduleLatencyMeasurementActive ) SkippedTransitionGeometryRegions++;
+			if ( !cancelled && result.IndexCount > 0 && result.InvalidTableCount == 0 )
+			{
+				handle = Acquire( checked( (int)result.VertexCount ), checked( (int)result.IndexCount ),
+					source.Generation, recordRegularTelemetry: false );
+				arenas.Add( handle.Arena );
+			}
+			lane.EmitInFlight.Add( new CandidateTransition(
+				source.Descriptor,
+				source.Generation,
+				source.ScheduledTimestamp,
+				source.ScheduledRouteDistance,
+				handle,
+				result ) );
+		}
+		lane.CountInFlight.Clear();
+		foreach ( var arena in arenas )
+		{
+			var allocations = new GpuTerrainAllocationDescriptor[count];
+			for ( var index = 0; index < count; index++ )
+			{
+				var candidate = lane.EmitInFlight[index];
+				if ( candidate.Handle?.Arena != arena ) continue;
+				allocations[index] = new GpuTerrainAllocationDescriptor
+				{
+					VertexOffset = (uint)candidate.Handle.Vertices.Offset,
+					VertexCapacity = (uint)candidate.Handle.Vertices.Count,
+					IndexOffset = (uint)candidate.Handle.Indices.Offset,
+					IndexCapacity = (uint)candidate.Handle.Indices.Count,
+					Generation = candidate.Generation,
+					RequestIndex = (uint)index,
+					Enabled = 1,
+					Reserved = PackTerrainRecordIdentity( candidate.Handle )
+				};
+			}
+			lane.Scratch.SubmitEmitPass( allocations, count, arena.Vertices, arena.Indices );
+		}
+		lane.Scratch.CompleteEmit();
+		lane.SubmittedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
+		lane.EmitSubmittedTimestamp = Stopwatch.GetTimestamp();
+	}
+
+	private void FinalizeTransitionEmits()
+	{
+		if ( _transitionScratchLanes is null ) return;
+		var renderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
+		var changed = false;
+		foreach ( var lane in _transitionScratchLanes )
+		{
+			if ( lane.EmitInFlight.Count == 0 || renderSequence <= lane.SubmittedRenderSequence ) continue;
+			foreach ( var completed in lane.EmitInFlight )
+			{
+				var key = completed.Descriptor.Key;
+				if ( _transitionCancelledGenerations.Remove( completed.Generation ) )
+				{
+					_transitionCancelledCount++;
+					_transitionCancelledByCoarseLevel[key.CoarseLevel]++;
+					Release( completed.Handle );
+					continue;
+				}
+				if ( !_transitionDesiredDescriptors.TryGetValue( key, out var desired ) ||
+					desired != completed.Descriptor )
+				{
+					_transitionStaleCount++;
+					_transitionStaleByCoarseLevel[key.CoarseLevel]++;
+					Release( completed.Handle );
+					continue;
+				}
+				if ( _transitionPending.TryGetValue( key, out var replacement ) )
+				{
+					if ( replacement.Descriptor != completed.Descriptor )
+					{
+						_transitionStaleCount++;
+						_transitionStaleByCoarseLevel[key.CoarseLevel]++;
+						Release( completed.Handle );
+						continue;
+					}
+					RemovePendingTransition( key );
+				}
+				if ( _editTransitionDependencies.Contains( key ) )
+				{
+					if ( _editTransitionCandidates.Remove( key, out var previousCandidate ) ) Release( previousCandidate.Handle );
+					_editTransitionCandidates[key] = completed;
+					continue;
+				}
+				var geometryChanged = completed.Handle is not null ||
+					(_transitionResident.TryGetValue( key, out var previousResident ) && previousResident.Handle is not null);
+				PublishCompletedTransition( completed );
+				changed |= geometryChanged;
+			}
+			lane.EmitInFlight.Clear();
+		}
+		if ( changed )
+		{
+			MarkDrawCommandsDirty();
+		}
+	}
+
+	private void PublishCompletedTransition( CandidateTransition completed )
+	{
+		var key = completed.Descriptor.Key;
+		if ( _transitionResident.Remove( key, out var previous ) ) ReleaseTransitionResident( previous );
+		var latencyMilliseconds = (float)Stopwatch.GetElapsedTime(
+			completed.ScheduledTimestamp ).TotalMilliseconds;
+		var resident = new ResidentTransition(
+			completed.Descriptor, completed.Handle, completed.Counts, latencyMilliseconds );
+		_transitionResident.Add( key, resident );
+		if ( completed.Handle is not null )
+		{
+			completed.Handle.Arena.ActiveResidentCount++;
+			SetTransitionVisibilityActive( resident, _transitionRenderActive.Contains( key ) );
+		}
+		_transitionTopologyDigest ^= TransitionCoordinateDigest( key, completed.Counts.TopologyDigest );
+		_transitionPositionDigest ^= TransitionCoordinateDigest( key, completed.Counts.PositionDigest );
+		_transitionFineFaceMismatchCount += completed.Counts.FineFaceMismatchCount;
+		_transitionCoarseFaceMismatchCount += completed.Counts.CoarseFaceMismatchCount;
+		_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( completed.Counts );
+		_transitionInvalidTableCount += completed.Counts.InvalidTableCount;
+		_transitionPublishedCount++;
+		_transitionPublishedByCoarseLevel[key.CoarseLevel]++;
+		_residentPublicationRevision++;
+		RecordTransitionLatency( key.CoarseLevel, latencyMilliseconds );
+	}
+
+	private static ulong TransitionCoordinateDigest( GpuTransitionKey key, uint digest )
+	{
+		var coordinate = key.CoarseCoordinate;
+		ulong value = digest ^ (uint)coordinate.x * 0x9E3779B1u ^
+			(uint)coordinate.y * 0x85EBCA77u ^ (uint)coordinate.z * 0xC2B2AE3Du ^
+			(uint)key.Face * 0x27D4EB2Du ^ (uint)key.CoarseLevel * 0x165667B1u;
+		value ^= value >> 30;
+		value *= 0xBF58476D1CE4E5B9ul;
+		value ^= value >> 27;
+		value *= 0x94D049BB133111EBul;
+		return value ^ (value >> 31);
+	}
+
+	private void RecordTransitionLatency( int coarseLevel, float milliseconds )
+	{
+		if ( !_transitionMeasurementActive ) return;
+		if ( _transitionLatencySampleCount < _transitionLatencyMilliseconds.Length )
+			_transitionLatencyMilliseconds[_transitionLatencySampleCount++] = milliseconds;
+		else
+			_transitionLatencyTruncatedCount++;
+		var pairSamples = _transitionLatencyByCoarseLevel[coarseLevel];
+		var pairSampleCount = _transitionLatencySampleCountByCoarseLevel[coarseLevel];
+		if ( pairSampleCount < pairSamples.Length )
+		{
+			pairSamples[pairSampleCount] = milliseconds;
+			_transitionLatencySampleCountByCoarseLevel[coarseLevel]++;
+		}
+		else
+		{
+			_transitionLatencyTruncatedByCoarseLevel[coarseLevel]++;
+		}
+	}
+
+	private static ulong CoordinateDigest( GpuMeshRegionKey key, uint digest )
+	{
+		var coordinate = key.Coordinate;
+		ulong value = digest ^ (uint)coordinate.x * 0x9E3779B1u ^
+			(uint)coordinate.y * 0x85EBCA77u ^ (uint)coordinate.z * 0xC2B2AE3Du ^
+			(uint)key.Level * 0x27D4EB2Du;
+		value ^= value >> 30;
+		value *= 0xBF58476D1CE4E5B9ul;
+		value ^= value >> 27;
+		value *= 0x94D049BB133111EBul;
+		return value ^ (value >> 31);
+	}
+
+	private void RecordScheduleLatency( long scheduledTimestamp )
+	{
+		if ( !_scheduleLatencyMeasurementActive ) return;
+		var milliseconds = (float)Stopwatch.GetElapsedTime( scheduledTimestamp ).TotalMilliseconds;
+		if ( _scheduleLatencySampleCount < _scheduleLatencyMilliseconds.Length )
+			_scheduleLatencyMilliseconds[_scheduleLatencySampleCount++] = milliseconds;
+		else
+			_scheduleLatencyTruncatedCount++;
+	}
+
+	private void RecordLevelScheduleLatency( int level, long scheduledTimestamp )
+	{
+		var milliseconds = (float)Stopwatch.GetElapsedTime( scheduledTimestamp ).TotalMilliseconds;
+		var samples = _levelLatencyMilliseconds[level];
+		var sampleCount = _levelLatencySampleCounts[level];
+		if ( sampleCount < samples.Length )
+		{
+			samples[sampleCount] = milliseconds;
+			_levelLatencySampleCounts[level]++;
+		}
+		else
+		{
+			_levelLatencyTruncatedCounts[level]++;
+		}
+	}
+
+	private void RecordOuterLatency( long scheduledTimestamp )
+	{
+		if ( !_outerMeasurementActive ) return;
+		var milliseconds = (float)Stopwatch.GetElapsedTime( scheduledTimestamp ).TotalMilliseconds;
+		if ( _outerLatencySampleCount < _outerLatencyMilliseconds.Length )
+			_outerLatencyMilliseconds[_outerLatencySampleCount++] = milliseconds;
+		else
+			_outerLatencyTruncatedCount++;
+	}
+
+	private GeometryHandle Acquire( int vertexCount, int indexCount, uint generation,
+		bool recordRegularTelemetry = true )
+	{
+		foreach ( var arena in _arenas )
+		{
+			if ( arena.TryAcquire( vertexCount, indexCount, generation, out var reused ) )
+			{
+				if ( recordRegularTelemetry ) _poolReuseCount++;
+				return reused;
+			}
+		}
+		if ( vertexCount > VertexArenaCapacity || indexCount > IndexArenaCapacity )
+			throw new InvalidOperationException( $"Terrain region geometry ({vertexCount} vertices, {indexCount} indices) exceeds an arena." );
+		var created = new GeometryArena( _arenas.Count );
+		_arenas.Add( created );
+		if ( recordRegularTelemetry ) _poolAllocationCount++;
+		EnsureVisibilityCapacity( _arenas.Count * RegionsPerSlab );
+		if ( !created.TryAcquire( vertexCount, indexCount, generation, out var allocation ) )
+			throw new InvalidOperationException( "A new terrain geometry arena rejected a valid allocation." );
+		MarkDrawCommandsDirty();
+		return allocation;
+	}
+
+	private static uint PackTerrainRecordIdentity( GeometryHandle handle )
+	{
+		var slot = (uint)handle.GlobalSlot;
+		if ( slot > TerrainRecordSlotMask )
+			throw new InvalidOperationException( "Terrain record slot exceeds the packed vertex identity." );
+		return slot | ((handle.Generation & TerrainRecordGenerationTokenMask) << 30);
+	}
+
+	private void ReleaseResident( ResidentMesh resident )
+	{
+		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
+		_residentLevelCounts[resident.Descriptor.Key.Level]--;
+		_topologyDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
+		_positionDigest ^= CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
+		_levelTopologyDigests[resident.Descriptor.Key.Level] ^=
+			CoordinateDigest( resident.Descriptor.Key, resident.Counts.TopologyDigest );
+		_levelPositionDigests[resident.Descriptor.Key.Level] ^=
+			CoordinateDigest( resident.Descriptor.Key, resident.Counts.PositionDigest );
+		if ( resident.Handle is null ) return;
+		SetVisibilityActive( resident, false );
+		resident.Handle.Arena.ActiveResidentCount--;
+		Release( resident.Handle );
+	}
+
+	private void ReleaseTransitionResident( ResidentTransition resident )
+	{
+		_transitionTopologyDigest ^= TransitionCoordinateDigest(
+			resident.Descriptor.Key, resident.Counts.TopologyDigest );
+		_transitionPositionDigest ^= TransitionCoordinateDigest(
+			resident.Descriptor.Key, resident.Counts.PositionDigest );
+		_transitionFineFaceMismatchCount -= resident.Counts.FineFaceMismatchCount;
+		_transitionCoarseFaceMismatchCount -= resident.Counts.CoarseFaceMismatchCount;
+		_transitionLateralEdgeDigest ^= TransitionCombinedLateralDigest( resident.Counts );
+		_transitionInvalidTableCount -= resident.Counts.InvalidTableCount;
+		if ( resident.Handle is null ) return;
+		SetTransitionVisibilityActive( resident, false );
+		resident.Handle.Arena.ActiveResidentCount--;
+		Release( resident.Handle );
+	}
+
+	private uint CountTransitionLateralMismatches( int? coarseLevel = null )
+	{
+		uint mismatches = 0;
+		foreach ( var pair in _transitionResident )
+		{
+			if ( coarseLevel.HasValue && pair.Key.CoarseLevel != coarseLevel.Value ) continue;
+			GetTransitionFaceAxes( pair.Key.Face, out var u, out var v );
+			var uNeighborKey = pair.Key with { CoarseCoordinate = pair.Key.CoarseCoordinate + u };
+			if ( _transitionResident.TryGetValue( uNeighborKey, out var uNeighbor ) &&
+				pair.Value.Counts.MaximumUDigest != uNeighbor.Counts.MinimumUDigest )
+			{
+				mismatches++;
+			}
+			var vNeighborKey = pair.Key with { CoarseCoordinate = pair.Key.CoarseCoordinate + v };
+			if ( _transitionResident.TryGetValue( vNeighborKey, out var vNeighbor ) &&
+				pair.Value.Counts.MaximumVDigest != vNeighbor.Counts.MinimumVDigest )
+			{
+				mismatches++;
+			}
+		}
+		return mismatches;
+	}
+
+	private static uint TransitionCombinedLateralDigest( GpuTransitionCountResult counts ) =>
+		counts.MinimumUDigest ^ counts.MaximumUDigest ^ counts.MinimumVDigest ^ counts.MaximumVDigest;
+
+	private static void GetTransitionFaceAxes( GpuTransitionFace face,
+		out Vector3Int u, out Vector3Int v )
+	{
+		switch ( face )
+		{
+			case GpuTransitionFace.NegativeX:
+				u = new Vector3Int( 0, 1, 0 ); v = new Vector3Int( 0, 0, -1 ); return;
+			case GpuTransitionFace.PositiveX:
+				u = new Vector3Int( 0, 1, 0 ); v = new Vector3Int( 0, 0, 1 ); return;
+			case GpuTransitionFace.NegativeY:
+				u = new Vector3Int( 0, 0, 1 ); v = new Vector3Int( -1, 0, 0 ); return;
+			case GpuTransitionFace.PositiveY:
+				u = new Vector3Int( 0, 0, 1 ); v = new Vector3Int( 1, 0, 0 ); return;
+			case GpuTransitionFace.NegativeZ:
+				u = new Vector3Int( 1, 0, 0 ); v = new Vector3Int( 0, -1, 0 ); return;
+			default:
+				u = new Vector3Int( 1, 0, 0 ); v = new Vector3Int( 0, 1, 0 ); return;
+		}
+	}
+
+	private static void Release( GeometryHandle handle ) => handle?.Arena.Release( handle );
+
+	private void QueuePending( PendingMesh pending )
+	{
+		if ( _pending.ContainsKey( pending.Descriptor.Key ) )
+		{
+			if ( pending.Descriptor.Key.Level >= 2 )
+			{
+				if ( _outerMeasurementActive ) _outerSupersededCount++;
+			}
+			else if ( _scheduleLatencyMeasurementActive )
+			{
+				_scheduleLatencySupersededCount++;
+			}
+		}
+		RemovePending( pending.Descriptor.Key );
+		_pending[pending.Descriptor.Key] = pending;
+		if ( _placementRequired.Contains( pending.Descriptor.Key ) ) _placementQueued.Add( pending.Descriptor.Key );
+		_pendingLevelCounts[pending.Descriptor.Key.Level]++;
+		if ( _editRegularDependencies.Contains( pending.Descriptor.Key ) )
+		{
+			if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount++;
+			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
+			var queue = pending.Residency == GpuMeshResidency.Visual && pending.Descriptor.Key.Level >= 2
+				? _editOuterDispatchQueue : _editNearDispatchQueue;
+			queue.Enqueue( pending );
+			return;
+		}
+		if ( _placementRequired.Contains( pending.Descriptor.Key ) &&
+			!(pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key )) )
+		{
+			if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount++;
+			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
+			var queue = pending.Descriptor.Key.Level >= 2 ? _placementOuterDispatchQueue : _placementNearDispatchQueue;
+			queue.Enqueue( pending );
+			return;
+		}
+		if ( pending.Residency == GpuMeshResidency.Gameplay )
+		{
+			_pendingGameplayCount++;
+			_gameplayDispatchQueue.Enqueue( pending );
+		}
+		else if ( pending.Residency == GpuMeshResidency.Visual &&
+			pending.Descriptor.Key.Level < 2 )
+		{
+			_nearVisualDispatchQueue.Enqueue( pending );
+		}
+		else if ( pending.Residency == GpuMeshResidency.Visual )
+		{
+			if ( _renderActive.Contains( pending.Descriptor.Key ) ) QueueActiveOuter( pending );
+			else _outerVisualDispatchQueue.Enqueue( pending );
+		}
+		else
+		{
+			_pendingWarmCount++;
+			_warmDispatchQueue.Enqueue( pending );
+		}
+	}
+
+	private bool TryDequeuePending( out PendingMesh pending )
+	{
+		if ( TryDequeuePendingFrom( _editNearDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePlacement( _placementNearDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePendingFrom( _gameplayDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePendingFrom( _nearVisualDispatchQueue, out pending ) ) return true;
+		if ( TryDequeuePendingFrom( _warmDispatchQueue, out pending ) ) return true;
+		pending = default;
+		return false;
+	}
+
+	private bool TryDequeuePlacement( Queue<PendingMesh> queue, out PendingMesh pending )
+	{
+		while ( TryDequeuePendingFrom( queue, out pending ) )
+		{
+			if ( _placementRequired.Contains( pending.Descriptor.Key ) ) return true;
+			// A canceled placement demotes unfinished work without losing its request.
+			QueuePending( pending );
+		}
+		pending = default;
+		return false;
+	}
+
+	private bool TryDequeuePendingFrom( Queue<PendingMesh> queue, out PendingMesh pending )
+	{
+		while ( queue.TryDequeue( out var queued ) )
+		{
+			if ( !_pending.TryGetValue( queued.Descriptor.Key, out var current ) || current != queued )
+			{
+				continue;
+			}
+			_pending.Remove( queued.Descriptor.Key );
+			_placementQueued.Remove( queued.Descriptor.Key );
+			_pendingLevelCounts[queued.Descriptor.Key.Level]--;
+			if ( queued.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
+			else if ( queued.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
+			pending = queued;
+			return true;
+		}
+		pending = default;
+		return false;
+	}
+
+	private void RemovePending( GpuMeshRegionKey key )
+	{
+		if ( !_pending.Remove( key, out var pending ) ) return;
+		_placementQueued.Remove( key );
+		_pendingLevelCounts[key.Level]--;
+		if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount--;
+		else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
+	}
+
+	private bool TryDequeueActiveOuter( out PendingMesh pending )
+	{
+		while ( _activeOuterDispatchQueue.TryDequeue( out var queued, out _ ) )
+		{
+			if ( !_renderActive.Contains( queued ) || !_pending.TryGetValue( queued, out pending ) ) continue;
+			RemovePending( queued );
+			return true;
+		}
+		pending = default;
+		return false;
+	}
+
+	private bool TryDequeuePendingOuter( bool preferVisible, out PendingMesh pending )
+	{
+		if ( TryDequeuePendingFrom( _editOuterDispatchQueue, out pending ) ) return true;
+		// Reserve two slots per eight-region batch for immediately visible terrain.
+		// Parent work keeps the other six, and either class can use an empty slot.
+		if ( PrioritizePlayerDetail && !preferVisible && TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ) return true;
+		return TryDequeueActiveOuter( out pending ) ||
+			TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ||
+			TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
+	}
+
+	private bool TryDequeuePendingTransition( out PendingTransition pending )
+	{
+		while ( _editTransitionDispatchQueue.TryDequeue( out var queued ) || _transitionDispatchQueue.TryDequeue( out queued ) )
+		{
+			if ( _transitionPending.TryGetValue( queued.Descriptor.Key, out var current ) && current == queued )
+			{
+				_transitionPending.Remove( queued.Descriptor.Key );
+				pending = queued;
+				return true;
+			}
+		}
+		pending = default;
+		return false;
+	}
+
+	private void RemovePendingTransition( GpuTransitionKey key ) => _transitionPending.Remove( key );
+
+	private int CountInFlight( GpuMeshResidency residency )
+	{
+		if ( _scratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var pending in lane.CountInFlight )
+			{
+				if ( pending.Residency == residency ) count++;
+			}
+			foreach ( var pending in lane.EmitInFlight )
+			{
+				if ( pending.Residency == residency ) count++;
+			}
+		}
+		return count;
+	}
+
+	private int CountInFlight( int level )
+	{
+		if ( _scratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var pending in lane.CountInFlight )
+			{
+				if ( pending.Descriptor.Key.Level == level ) count++;
+			}
+			foreach ( var pending in lane.EmitInFlight )
+			{
+				if ( pending.Descriptor.Key.Level == level ) count++;
+			}
+		}
+		return count;
+	}
+
+	private int CountOuterInFlight()
+	{
+		if ( _scratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _scratchLanes )
+		{
+			foreach ( var pending in lane.CountInFlight )
+			{
+				if ( pending.Descriptor.Key.Level >= 2 ) count++;
+			}
+			foreach ( var pending in lane.EmitInFlight )
+			{
+				if ( pending.Descriptor.Key.Level >= 2 ) count++;
+			}
+		}
+		return count;
+	}
+
+	private int CountTransitionInFlight()
+	{
+		if ( _transitionScratchLanes is null ) return 0;
+		var count = 0;
+		foreach ( var lane in _transitionScratchLanes )
+		{
+			count += lane.CountInFlight.Count + lane.EmitInFlight.Count;
+		}
+		return count;
+	}
+
+	private void SetResidency( ResidentMesh resident, GpuMeshResidency residency )
+	{
+		if ( resident.Residency == residency ) return;
+		if ( resident.Residency == GpuMeshResidency.Warm ) _warmResidentCount--;
+		if ( residency == GpuMeshResidency.Warm ) _warmResidentCount++;
+		resident.Residency = residency;
+		if ( resident.Handle is not null )
+			SetVisibilityActive( resident, _renderActive.Contains( resident.Descriptor.Key ) );
+	}
+
+	private void MarkDrawCommandsDirty()
+	{
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values ) state.CommandsDirty = true;
+		}
+	}
+
+	private void MarkVisibilityDescriptorsDirty()
+	{
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values ) state.DescriptorsDirty = true;
+		}
+	}
+
+	private void EnsureVisibilityBuffers( RenderCameraState state )
+	{
+		if ( _visibilityCapacity == 0 || state.VisibilityCapacity == _visibilityCapacity ) return;
+		if ( state.Visibility is not null ) state.RetiredVisibility.Add( state.Visibility );
+		var bounds = new GpuBuffer<Vector4>( _visibilityCapacity * 2,
+			GpuBuffer.UsageFlags.Structured, "Voxel View Visibility Bounds" );
+		var source = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
+			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
+			"Voxel View Source Indexed Arguments" );
+		var visible = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( _visibilityCapacity,
+			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments,
+			"Voxel View Visible Indexed Arguments" );
+		var frame = new GpuBuffer<uint>( VisibilityFrameCounterCount, GpuBuffer.UsageFlags.Structured,
+			"Voxel View Visibility Frame Counters" );
+		state.Visibility = new VisibilityBuffers( bounds, source, visible, frame );
+		state.VisibilityCapacity = _visibilityCapacity;
+		state.DescriptorsDirty = true;
+		state.CommandsDirty = true;
+	}
+
+	private DrawCommandCommitResult CommitDrawCommandsLocked( RenderCameraState state )
+	{
+		var start = Stopwatch.GetTimestamp();
+		EnsureVisibilityBuffers( state );
+		if ( state.AggregateResetPending )
+		{
+			Span<uint> counters = stackalloc uint[VisibilityAggregateCounterCount];
+			counters[3] = uint.MaxValue;
+			state.AggregateCounters.SetData( counters );
+			state.AggregateResetPending = false;
+		}
+		UploadVisibilityDescriptors( state );
+		if ( !state.CommandsDirty )
+			return new DrawCommandCommitResult( false, 0f );
+		var commands = state.Commands;
+		var visibility = state.Visibility;
+		state.DepthArenas = _arenas.ToArray();
+		commands.Reset();
+		_drawCommandResetCount++;
+		if ( _drawCommandDiagnosticReportCount < 32 )
+		{
+			_drawCommandDiagnosticReportCount++;
+			Log.Info(
+				$"[VoxelWorld] gpu.render.command_list_reset total={_drawCommandResetCount} " +
+				$"descriptorUploads={_visibilityDescriptorUploadCount} arenas={_arenas.Count} " +
+				$"visibilityCapacity={_visibilityCapacity} measurement={_visibilityMeasurementActive} " +
+				$"settledCapture={_visibilitySettledCaptureActive} " +
+				$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+				$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+		}
+		if ( _visibilityCapacity > 0 && _fieldPresentationReady )
+		{
+			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
+			commands.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
+			commands.Attributes.Set( "VisibleIndirectArguments", visibility.VisibleArguments );
+			commands.Attributes.Set( "VisibilityFrameCounters", visibility.FrameCounters );
+			commands.Attributes.Set( "VisibilityAggregateCounters", state.AggregateCounters );
+			commands.Attributes.Set( "VisibilitySlotCount", _visibilityCapacity );
+			commands.Attributes.Set( "VisibilityPass", 0 );
+			commands.Attributes.Set( "MeasureVisibility", _visibilityMeasurementActive ? 1 : 0 );
+			commands.Attributes.Set( "CaptureSettledDiagnostics", _visibilitySettledCaptureActive ? 1 : 0 );
+			commands.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
+			commands.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
+			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.UnorderedAccess );
+			commands.ResourceBarrierTransition( visibility.FrameCounters, ResourceState.UnorderedAccess );
+			commands.Clear( visibility.FrameCounters, 0 );
+			commands.DispatchCompute( _visibilityShader, _visibilityCapacity, 1, 1 );
+			commands.UavBarrier( visibility.VisibleArguments );
+			commands.UavBarrier( visibility.FrameCounters );
+			if ( _visibilityMeasurementActive || _visibilitySettledCaptureActive )
+			{
+				commands.ResourceBarrierTransition( visibility.FrameCounters, ResourceState.GenericRead );
+				commands.ResourceBarrierTransition( state.AggregateCounters, ResourceState.UnorderedAccess );
+				commands.Attributes.Set( "VisibilityPass", 1 );
+				commands.DispatchCompute( _visibilityShader, 1, 1, 1 );
+				commands.UavBarrier( state.AggregateCounters );
+			}
+			commands.ResourceBarrierTransition( visibility.VisibleArguments, ResourceState.IndirectArgument );
+			foreach ( var arena in _arenas )
+			{
+				if ( arena.ActiveResidentCount == 0 ) continue;
+				if ( !state.DrawAttributes.TryGetValue( arena.Index, out var drawAttributes ) )
+				{
+					drawAttributes = new RenderAttributes();
+					state.DrawAttributes.Add( arena.Index, drawAttributes );
+				}
+				_voxelMaterials.Bind( drawAttributes );
+				commands.ResourceBarrierTransition( arena.Vertices, ResourceState.VertexOrIndexBuffer );
+				commands.ResourceBarrierTransition( arena.Indices, ResourceState.VertexOrIndexBuffer );
+				commands.DrawIndexedInstancedIndirect(
+					arena.Vertices,
+					arena.Indices,
+					_material,
+					visibility.VisibleArguments,
+					(uint)(arena.Index * RegionsPerSlab),
+					drawAttributes,
+					Graphics.PrimitiveType.Triangles,
+					RegionsPerSlab,
+					IndirectArgumentStride );
+			}
+		}
+		state.CommandsDirty = false;
+		var elapsedTicks = Stopwatch.GetTimestamp() - start;
+		System.Threading.Interlocked.Add( ref _drawCommitStopwatchTicks, elapsedTicks );
+		System.Threading.Interlocked.Increment( ref _drawCommitRebuildCount );
+		return new DrawCommandCommitResult(
+			true,
+			(float)(elapsedTicks * 1000.0 / Stopwatch.Frequency) );
+	}
+
+	public void BeginVisibilityMeasurement()
+	{
+		lock ( _visibilityLock )
+		{
+			_completedVisibilityMeasurement = null;
+			_visibilityReadbackPending = false;
+			_visibilityReadbackInFlight = false;
+		}
+		_visibilityMeasurementActive = true;
+		_visibilitySettledCaptureActive = false;
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				state.AggregateResetPending = true;
+				state.CommandsDirty = true;
+			}
+		}
+	}
+
+	public void StopVisibilityMeasurement()
+	{
+		_visibilityMeasurementActive = false;
+		MarkDrawCommandsDirty();
+	}
+
+	public void CaptureSettledVisibilityMeasurement()
+	{
+		_visibilitySettledCaptureActive = true;
+		MarkDrawCommandsDirty();
+		lock ( _visibilityLock )
+		{
+			_visibilityReadbackPending = true;
+			_visibilityReadbackRequestedRenderSequence = System.Threading.Interlocked.Read( ref _renderSequence );
+		}
+	}
+
+	public bool TryTakeVisibilityMeasurement( out GpuVisibilityMeasurement measurement )
+	{
+		lock ( _visibilityLock )
+		{
+			if ( _completedVisibilityMeasurement is not { } completed )
+			{
+				measurement = default;
+				return false;
+			}
+			measurement = completed;
+			_completedVisibilityMeasurement = null;
+			_visibilitySettledCaptureActive = false;
+			MarkDrawCommandsDirty();
+			return true;
+		}
+	}
+
+	private void ProcessVisibilityReadback()
+	{
+		GpuBuffer<uint> counters;
+		long logicalBytes;
+		lock ( _visibilityLock )
+		{
+			if ( !_visibilityReadbackPending || _visibilityReadbackInFlight ||
+				System.Threading.Interlocked.Read( ref _renderSequence ) <= _visibilityReadbackRequestedRenderSequence + 1 ||
+				_visibilityReadbackState is null ) return;
+			_visibilityReadbackPending = false;
+			_visibilityReadbackInFlight = true;
+			counters = _visibilityReadbackState.AggregateCounters;
+			logicalBytes = LogicalVisibilityBytes;
+			_visibilityScalarReadbackCount++;
+			_scalarReadbackCount++;
+		}
+		counters.GetDataAsync<uint>( data =>
+		{
+			var valid = data.Length >= VisibilityAggregateCounterCount;
+			var frames = valid ? data[0] : 0;
+			var minimum = valid && frames > 0 && data[3] != uint.MaxValue ? data[3] : 0;
+			var levelResidentTotals = new uint[SupportedVisualLevelCount];
+			var levelVisibleTotals = new uint[SupportedVisualLevelCount];
+			var settledLevelSurfaceMeshes = new uint[SupportedVisualLevelCount];
+			if ( valid )
+			{
+				for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+				{
+					var index = 10 + level * 3;
+					levelResidentTotals[level] = data[index];
+					levelVisibleTotals[level] = data[index + 1];
+					settledLevelSurfaceMeshes[level] = data[index + 2];
+				}
+			}
+			lock ( _visibilityLock )
+			{
+				_completedVisibilityMeasurement = new GpuVisibilityMeasurement(
+					frames,
+					valid ? data[1] : 0,
+					valid ? data[2] : 0,
+					minimum,
+					valid ? data[4] : 0,
+					valid ? data[5] : 0,
+					valid ? data[6] : 0,
+					valid ? data[7] : 0,
+					valid ? data[8] : 0,
+					valid ? data[9] : 0,
+					levelResidentTotals,
+					levelVisibleTotals,
+					settledLevelSurfaceMeshes,
+					logicalBytes,
+					1 );
+				_visibilityReadbackInFlight = false;
+			}
+		} );
+	}
+
+	private void EnsureVisibilityCapacity( int requiredCapacity )
+	{
+		lock ( _visibilityDescriptorLock )
+		{
+			if ( requiredCapacity <= _visibilityCapacity ) return;
+			EnsureVisibilityCapacityLocked( requiredCapacity );
+		}
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	private void EnsureVisibilityCapacityLocked( int requiredCapacity )
+	{
+		if ( requiredCapacity <= _visibilityCapacity ) return;
+		var newCapacity = Math.Max( RegionsPerSlab, _visibilityCapacity );
+		while ( newCapacity < requiredCapacity ) newCapacity = checked( newCapacity * 2 );
+		var oldBounds = _visibilityBoundsData;
+		var oldArguments = _sourceArgumentData;
+		_visibilityCapacity = newCapacity;
+		_visibilityBoundsData = new Vector4[newCapacity * 2];
+		_sourceArgumentData = new GpuBuffer.IndirectDrawIndexedArguments[newCapacity];
+		oldBounds.CopyTo( _visibilityBoundsData, 0 );
+		oldArguments.CopyTo( _sourceArgumentData, 0 );
+	}
+
+	private void SetVisibilityActive( ResidentMesh resident, bool active )
+	{
+		if ( resident.Handle is null ) return;
+		lock ( _visibilityDescriptorLock ) SetVisibilityActiveLocked( resident, active );
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	private void SetVisibilityActiveLocked( ResidentMesh resident, bool active )
+	{
+		if ( resident.Handle is null ) return;
+		var descriptor = resident.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CellSize;
+		var origin = new Vector3(
+			descriptor.ChunkCoordinate.x * size,
+			descriptor.ChunkCoordinate.y * size,
+			descriptor.ChunkCoordinate.z * size );
+		var padding = new Vector3( descriptor.CellSize );
+		var slot = resident.Handle.GlobalSlot;
+		var index = slot * 2;
+		var activeResidency = 1f + descriptor.Key.Level * 2f +
+			(resident.Residency == GpuMeshResidency.Warm ? 1f : 0f);
+		_visibilityBoundsData[index] = new Vector4( origin - padding, active ? activeResidency : 0 );
+		_visibilityBoundsData[index + 1] = new Vector4(
+			origin + new Vector3( size ) + padding,
+			active ? resident.Counts.ActiveCells : 0 );
+		_sourceArgumentData[slot] = active
+			? new GpuBuffer.IndirectDrawIndexedArguments
+			{
+				IndexCount = (uint)resident.Handle.Indices.Count,
+				InstanceCount = 1,
+				FirstIndex = (uint)resident.Handle.Indices.Offset,
+				BaseVertex = resident.Handle.Vertices.Offset
+			}
+			: default;
+	}
+
+	private void SetTransitionVisibilityActive( ResidentTransition resident, bool active )
+	{
+		if ( resident.Handle is null ) return;
+		lock ( _visibilityDescriptorLock ) SetTransitionVisibilityActiveLocked( resident, active );
+		MarkVisibilityDescriptorsDirty();
+	}
+
+	private void SetTransitionVisibilityActiveLocked( ResidentTransition resident, bool active )
+	{
+		if ( resident.Handle is null ) return;
+		var descriptor = resident.Descriptor;
+		var size = descriptor.CellsPerAxis * descriptor.CoarseCellSize;
+		var minimum = new Vector3(
+			descriptor.Key.CoarseCoordinate.x * size,
+			descriptor.Key.CoarseCoordinate.y * size,
+			descriptor.Key.CoarseCoordinate.z * size );
+		var maximum = minimum + new Vector3( size );
+		var padding = descriptor.FineCellSize;
+		switch ( descriptor.Key.Face )
+		{
+			case GpuTransitionFace.NegativeX:
+				maximum.x = minimum.x;
+				break;
+			case GpuTransitionFace.PositiveX:
+				minimum.x = maximum.x;
+				break;
+			case GpuTransitionFace.NegativeY:
+				maximum.y = minimum.y;
+				break;
+			case GpuTransitionFace.PositiveY:
+				minimum.y = maximum.y;
+				break;
+			case GpuTransitionFace.NegativeZ:
+				maximum.z = minimum.z;
+				break;
+			case GpuTransitionFace.PositiveZ:
+				minimum.z = maximum.z;
+				break;
+		}
+		var slot = resident.Handle.GlobalSlot;
+		var index = slot * 2;
+		_visibilityBoundsData[index] = new Vector4(
+			minimum - new Vector3( padding ),
+			active ? 100f + descriptor.Key.CoarseLevel : 0f );
+		_visibilityBoundsData[index + 1] = new Vector4(
+			maximum + new Vector3( padding ), active ? resident.Counts.ActiveCells : 0 );
+		_sourceArgumentData[slot] = active
+			? new GpuBuffer.IndirectDrawIndexedArguments
+			{
+				IndexCount = (uint)resident.Handle.Indices.Count,
+				InstanceCount = 1,
+				FirstIndex = (uint)resident.Handle.Indices.Offset,
+				BaseVertex = resident.Handle.Vertices.Offset
+			}
+			: default;
+	}
+
+	private void UploadVisibilityDescriptors( RenderCameraState state )
+	{
+		lock ( _visibilityDescriptorLock )
+		{
+			if ( !state.DescriptorsDirty || state.Visibility is null ) return;
+			state.Visibility.Bounds.SetData( _visibilityBoundsData );
+			state.Visibility.SourceArguments.SetData( _sourceArgumentData );
+			// The visibility compute pass exclusively owns VisibleArguments once the camera list is attached.
+			_visibilityDescriptorUploadCount++;
+			state.DescriptorsDirty = false;
+		}
+	}
+
+	public void Clear()
+	{
+		System.Threading.Interlocked.Exchange( ref _densityAuditLevels, 0 );
+		System.Threading.Interlocked.Exchange( ref _transitionDensityAuditFaces, 0 );
+		ClearEditPublication();
+		_editedField = null;
+		_editRegularRefresh.Clear();
+		_editTransitionRefresh.Clear();
+		if ( _scheduleLatencyMeasurementActive )
+			_scheduleLatencyCancelledCount += PendingCount;
+		if ( _outerMeasurementActive ) _outerCancelledCount += PendingOuterVisualCount;
+		_pending.Clear();
+		_editNearDispatchQueue.Clear();
+		_editOuterDispatchQueue.Clear();
+		_editTransitionDispatchQueue.Clear();
+		_gameplayDispatchQueue.Clear();
+		_nearVisualDispatchQueue.Clear();
+		_warmDispatchQueue.Clear();
+		_outerVisualDispatchQueue.Clear();
+		_activeOuterDispatchQueue.Clear();
+		_placementNearDispatchQueue.Clear();
+		_placementOuterDispatchQueue.Clear();
+		ClearPlacementPriority();
+		_pendingGameplayCount = 0;
+		_pendingWarmCount = 0;
+		Array.Clear( _pendingLevelCounts );
+		_cancelledInFlight.Clear();
+		foreach ( var lane in _scratchLanes ?? Array.Empty<ScratchLane>() )
+		{
+			foreach ( var candidate in lane.EmitInFlight ) Release( candidate.Handle );
+			lane.EmitInFlight.Clear();
+			lane.CountInFlight.Clear();
+		}
+		foreach ( var resident in _resident.Values ) ReleaseResident( resident );
+		_resident.Clear();
+		_renderActive.Clear();
+		_transitionPending.Clear();
+		_transitionDispatchQueue.Clear();
+		_transitionDesiredDescriptors.Clear();
+		_transitionCancelledGenerations.Clear();
+		foreach ( var lane in _transitionScratchLanes ?? Array.Empty<TransitionScratchLane>() )
+		{
+			foreach ( var candidate in lane.EmitInFlight ) Release( candidate.Handle );
+			lane.EmitInFlight.Clear();
+			lane.CountInFlight.Clear();
+		}
+		foreach ( var resident in _transitionResident.Values ) ReleaseTransitionResident( resident );
+		_transitionResident.Clear();
+		_transitionRenderActive.Clear();
+		_warmResidentCount = 0;
+		Array.Clear( _residentLevelCounts );
+		_topologyDigest = 0;
+		_positionDigest = 0;
+		Array.Clear( _levelTopologyDigests );
+		Array.Clear( _levelPositionDigests );
+		_transitionTopologyDigest = 0;
+		_transitionPositionDigest = 0;
+		_transitionFineFaceMismatchCount = 0;
+		_transitionCoarseFaceMismatchCount = 0;
+		_transitionLateralEdgeDigest = 0;
+		_transitionInvalidTableCount = 0;
+		_outerEligibleSinceTimestamp = 0;
+		_outerLastServiceTimestamp = Stopwatch.GetTimestamp();
+		MarkDrawCommandsDirty();
+	}
+
+	public void Dispose()
+	{
+		if ( _disposed ) return;
+		_disposed = true;
+		_depthObject?.Delete();
+		Clear();
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				if ( state.Camera.IsValid() ) state.Camera.RemoveCommandList( state.Commands );
+				state.Dispose();
+			}
+			foreach ( var state in _retiredRenderCameraStates ) state.Dispose();
+			_renderCameraStates.Clear();
+			_retiredRenderCameraStates.Clear();
+		}
+		_currentRenderCameras.Clear();
+		_leavingRenderCameras.Clear();
+		_camera = null;
+		DisposeArenas();
+		DisposeVisibilityBuffers();
+		DisposeScratchLanes();
+		DisposeTransitionScratchLanes();
+		_voxelMaterials.Dispose();
+		_readbackObject?.Delete();
+	}
+
+	private void DisposeScratchLanes()
+	{
+		if ( _scratchLanes is null ) return;
+		foreach ( var lane in _scratchLanes ) lane.Scratch.Dispose();
+	}
+
+	private void DisposeTransitionScratchLanes()
+	{
+		if ( _transitionScratchLanes is null ) return;
+		foreach ( var lane in _transitionScratchLanes ) lane.Scratch.Dispose();
+	}
+
+	private void RefreshRenderCameras()
+	{
+		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
+			VoxelPerformanceProfiler.RefreshRenderCameras );
+		_lastRenderCameraRefreshTimestamp = Stopwatch.GetTimestamp();
+		lock ( _renderCameraLock )
+		{
+			_currentRenderCameras.Clear();
+			CameraComponent selected = null;
+			foreach ( var candidate in _scene.GetAllComponents<CameraComponent>() )
+			{
+				selected ??= candidate;
+				if ( candidate.IsMainCamera ) selected = candidate;
+			}
+			if ( selected.IsValid() ) _currentRenderCameras.Add( selected );
+			_camera = selected;
+
+			_leavingRenderCameras.Clear();
+			_leavingRenderCameras.UnionWith( _renderCameraStates.Keys );
+			_leavingRenderCameras.ExceptWith( _currentRenderCameras );
+			var leavingCount = _leavingRenderCameras.Count;
+			foreach ( var camera in _leavingRenderCameras )
+			{
+				var state = _renderCameraStates[camera];
+				if ( camera.IsValid() ) camera.RemoveCommandList( state.Commands );
+				_renderCameraStates.Remove( camera );
+				_retiredRenderCameraStates.Add( state );
+			}
+
+			_currentRenderCameras.ExceptWith( _renderCameraStates.Keys );
+			var enteringCount = _currentRenderCameras.Count;
+			foreach ( var camera in _currentRenderCameras )
+			{
+				var state = new RenderCameraState( camera );
+				camera.AddCommandList( state.Commands, Sandbox.Rendering.Stage.AfterOpaque, 0 );
+				_renderCameraStates.Add( camera, state );
+			}
+			_visibilityReadbackState = _camera.IsValid() && _renderCameraStates.TryGetValue( _camera, out var mainState )
+				? mainState
+				: null;
+			if ( (enteringCount > 0 || leavingCount > 0) && _cameraBindingDiagnosticCount < 16 )
+			{
+				_cameraBindingDiagnosticCount++;
+				Log.Info(
+					$"[VoxelWorld] gpu.render.camera_bindings attached={_renderCameraStates.Count} " +
+					$"entered={enteringCount} left={leavingCount} mainCameraValid={_camera.IsValid()}" );
+			}
+		}
+	}
+
+	private void RefreshRenderCamerasIfNeeded()
+	{
+		if ( !_camera.IsValid() )
+		{
+			RefreshRenderCameras();
+			return;
+		}
+
+		var now = Stopwatch.GetTimestamp();
+		if ( _lastRenderCameraRefreshTimestamp != 0 &&
+			Stopwatch.GetElapsedTime( _lastRenderCameraRefreshTimestamp, now ).TotalMilliseconds <
+				RenderCameraRefreshIntervalMilliseconds ) return;
+		RefreshRenderCameras();
+	}
+
+	private void DisposeArenas()
+	{
+		foreach ( var arena in _arenas ) arena.Dispose();
+		_arenas.Clear();
+	}
+
+	private void DisposeVisibilityBuffers()
+	{
+		lock ( _renderCameraLock )
+		{
+			foreach ( var state in _renderCameraStates.Values ) state.DisposeVisibility();
+			foreach ( var state in _retiredRenderCameraStates ) state.DisposeVisibility();
+		}
+		_visibilityCapacity = 0;
+		_visibilityBoundsData = Array.Empty<Vector4>();
+		_sourceArgumentData = Array.Empty<GpuBuffer.IndirectDrawIndexedArguments>();
+	}
+
+	private sealed class ThroughputRecorder
+	{
+		private readonly float _chunkWorldSize;
+		private readonly MetricSamples _countSubmission = new( MaximumThroughputBatchSamples );
+		private readonly MetricSamples _readback = new( MaximumThroughputBatchSamples );
+		private readonly MetricSamples _callbackWait = new( MaximumThroughputBatchSamples );
+		private readonly MetricSamples _allocation = new( MaximumThroughputBatchSamples );
+		private readonly MetricSamples _emitSubmission = new( MaximumThroughputBatchSamples );
+		private readonly MetricSamples _emitPublication = new( MaximumThroughputBatchSamples );
+		private readonly MetricSamples _routeLag = new( MaximumScheduleLatencySamples );
+		private readonly MetricSamples _gameplayQueue = new( MaximumScheduleLatencySamples );
+		private readonly MetricSamples _warmQueue = new( MaximumScheduleLatencySamples );
+		private readonly MetricSamples _totalQueue = new( MaximumScheduleLatencySamples );
+		private readonly int[] _occupancy = new int[MaximumRegionsPerBatch + 1];
+		private bool _moving = true;
+		private float _movingSeconds;
+		private long _drainStartedTimestamp;
+		private float _postLoopDrainMilliseconds;
+		private long _scheduled;
+		private long _countSubmitted;
+		private long _published;
+		private long _batchesSubmitted;
+		private long _batchesCompleted;
+		private int _minimumOccupancy = int.MaxValue;
+		private int _maximumOccupancy;
+
+		public ThroughputRecorder( float chunkWorldSize )
+		{
+			_chunkWorldSize = chunkWorldSize;
+		}
+
+		public void RecordScheduled()
+		{
+			if ( _moving ) _scheduled++;
+		}
+
+		public void RecordBatchSubmitted( int occupancy, float submissionMilliseconds )
+		{
+			if ( !_moving ) return;
+			_countSubmitted += occupancy;
+			_batchesSubmitted++;
+			_minimumOccupancy = Math.Min( _minimumOccupancy, occupancy );
+			_maximumOccupancy = Math.Max( _maximumOccupancy, occupancy );
+			_occupancy[Math.Clamp( occupancy, 0, MaximumRegionsPerBatch )]++;
+			_countSubmission.Record( submissionMilliseconds );
+		}
+
+		public void RecordBatchCompleted( float readbackMilliseconds, float callbackWaitMilliseconds,
+			float allocationMilliseconds, float emitSubmissionMilliseconds )
+		{
+			if ( !_moving ) return;
+			_batchesCompleted++;
+			_readback.Record( readbackMilliseconds );
+			_callbackWait.Record( callbackWaitMilliseconds );
+			_allocation.Record( allocationMilliseconds );
+			_emitSubmission.Record( emitSubmissionMilliseconds );
+		}
+
+		public void RecordEmitPublished( float milliseconds )
+		{
+			if ( _moving ) _emitPublication.Record( milliseconds );
+		}
+
+		public void RecordPublished( float routeLagWorldUnits )
+		{
+			if ( _moving ) _published++;
+			_routeLag.Record( routeLagWorldUnits );
+		}
+
+		public void SampleQueueDepth( int gameplay, int warm )
+		{
+			if ( !_moving ) return;
+			_gameplayQueue.Record( gameplay );
+			_warmQueue.Record( warm );
+			_totalQueue.Record( gameplay + warm );
+		}
+
+		public void EndMovingWindow( float durationSeconds )
+		{
+			if ( !_moving ) return;
+			_moving = false;
+			_movingSeconds = durationSeconds;
+			_drainStartedTimestamp = Stopwatch.GetTimestamp();
+		}
+
+		public GpuMeshThroughputMeasurement Complete()
+		{
+			var seconds = MathF.Max( _movingSeconds, float.Epsilon );
+			var occupancyHistogram = new int[_occupancy.Length];
+			Array.Copy( _occupancy, occupancyHistogram, _occupancy.Length );
+			var occupancyTotal = 0L;
+			for ( var value = 1; value < _occupancy.Length; value++ )
+			{
+				occupancyTotal += (long)value * _occupancy[value];
+			}
+			var lagWorld = _routeLag.Complete();
+			return new GpuMeshThroughputMeasurement(
+				ScratchLaneCount,
+				_scheduled,
+				_countSubmitted,
+				_published,
+				_scheduled / seconds,
+				_countSubmitted / seconds,
+				_published / seconds,
+				_batchesSubmitted,
+				_batchesCompleted,
+				_batchesSubmitted / seconds,
+				_batchesCompleted / seconds,
+				_batchesSubmitted > 0 ? (float)occupancyTotal / _batchesSubmitted : 0f,
+				_minimumOccupancy == int.MaxValue ? 0 : _minimumOccupancy,
+				_maximumOccupancy,
+				occupancyHistogram,
+				_countSubmission.Complete(),
+				_readback.Complete(),
+				_callbackWait.Complete(),
+				_allocation.Complete(),
+				_emitSubmission.Complete(),
+				_emitPublication.Complete(),
+				_gameplayQueue.CompleteQueue(),
+				_warmQueue.CompleteQueue(),
+				_totalQueue.CompleteQueue(),
+				lagWorld,
+				lagWorld.Scale( _chunkWorldSize > 0f ? 1f / _chunkWorldSize : 0f ),
+				_postLoopDrainMilliseconds );
+		}
+
+		public void MarkSettled()
+		{
+			if ( _drainStartedTimestamp == 0 || _postLoopDrainMilliseconds > 0f ) return;
+			_postLoopDrainMilliseconds = (float)Stopwatch.GetElapsedTime( _drainStartedTimestamp ).TotalMilliseconds;
+		}
+	}
+
+	private sealed class MetricSamples
+	{
+		private readonly float[] _values;
+		private int _count;
+		private int _truncated;
+		private double _total;
+
+		public MetricSamples( int capacity )
+		{
+			_values = new float[capacity];
+		}
+
+		public void Record( float value )
+		{
+			if ( !float.IsFinite( value ) || value < 0f ) return;
+			_total += value;
+			if ( _count < _values.Length ) _values[_count++] = value;
+			else _truncated++;
+		}
+
+		public GpuMetricDistribution Complete()
+		{
+			if ( _count == 0 ) return new GpuMetricDistribution( 0, _truncated, 0, 0, 0, 0, 0 );
+			Array.Sort( _values, 0, _count );
+			var tails = PerformanceSampleTails.FromSorted( _values.AsSpan( 0, _count ) );
+			return new GpuMetricDistribution(
+				_count,
+				_truncated,
+				(float)(_total / (_count + _truncated)),
+				tails.P50,
+				tails.P95,
+				tails.P99,
+				tails.Maximum );
+		}
+
+		public GpuQueueDepthMeasurement CompleteQueue()
+		{
+			var distribution = Complete();
+			return new GpuQueueDepthMeasurement(
+				distribution.Samples,
+				distribution.TruncatedSamples,
+				distribution.Average,
+				distribution.P50,
+				distribution.P95,
+				distribution.P99,
+				(int)distribution.Maximum );
+		}
+	}
+
+	private sealed class MeshAuditRequest
+	{
+		public long Id { get; }
+		public Vector3 Target { get; }
+		public IReadOnlyList<MeshAuditTarget> Targets { get; }
+		public MeshAuditRequest( long id, Vector3 target, IReadOnlyList<MeshAuditTarget> targets )
+		{
+			Id = id;
+			Target = target;
+			Targets = targets;
+		}
+	}
+
+	private sealed class MeshAuditTarget
+	{
+		public string Label { get; }
+		public GpuMeshRegionKey? RegularKey { get; }
+		public GpuTransitionKey? TransitionKey { get; }
+		public GeometryHandle Handle { get; }
+		public uint Generation { get; }
+		public float CellSize { get; }
+		public Vector3 ExpectedMinimum { get; }
+		public Vector3 ExpectedMaximum { get; }
+		public float DistanceSquared { get; }
+		public bool IsTransition => TransitionKey.HasValue;
+		public MeshAuditTarget(
+			string label,
+			GpuMeshRegionKey? regularKey,
+			GpuTransitionKey? transitionKey,
+			GeometryHandle handle,
+			uint generation,
+			float cellSize,
+			Vector3 expectedMinimum,
+			Vector3 expectedMaximum,
+			float distanceSquared )
+		{
+			Label = label;
+			RegularKey = regularKey;
+			TransitionKey = transitionKey;
+			Handle = handle;
+			Generation = generation;
+			CellSize = cellSize;
+			ExpectedMinimum = expectedMinimum;
+			ExpectedMaximum = expectedMaximum;
+			DistanceSquared = distanceSquared;
+		}
+	}
+
+	private readonly record struct MeshAuditRegionResult(
+		string Label,
+		bool IsTransition,
+		int VertexCount,
+		int IndexCount,
+		int TriangleCount,
+		int IndexRemainder,
+		int InvalidIndices,
+		int NonFinitePositions,
+		int OutOfBoundsPositions,
+		int NonFiniteNormals,
+		int AbnormalNormals,
+		int RecordIdentityMismatches,
+		int DegenerateTriangles,
+		int OversizedTriangles,
+		float MaximumEdgeLength,
+		float MaximumEdgeCellRatio,
+		Vector3 MinimumPosition,
+		Vector3 MaximumPosition,
+		Vector3 ExpectedMinimum,
+		Vector3 ExpectedMaximum,
+		string DegenerateExamples );
+
+	private readonly record struct DrawArgumentAuditResult(
+		int Cameras,
+		int Failures,
+		int Readbacks,
+		long ReadbackBytes );
+
+	private sealed class ResidentMesh
+	{
+		public GpuSdfDescriptor Descriptor { get; set; }
+		public GpuMeshResidency Residency { get; set; }
+		public GeometryHandle Handle { get; }
+		public GpuTerrainCountResult Counts { get; }
+		public ResidentMesh( GpuSdfDescriptor descriptor, GpuMeshResidency residency, GeometryHandle handle, GpuTerrainCountResult counts )
+		{
+			Descriptor = descriptor with { Field = null }; Residency = residency; Handle = handle; Counts = counts;
+		}
+	}
+
+	private sealed class ResidentTransition
+	{
+		public GpuTransitionDescriptor Descriptor { get; set; }
+		public GeometryHandle Handle { get; }
+		public GpuTransitionCountResult Counts { get; }
+		public float ScheduleToPublicationMilliseconds { get; }
+		public ResidentTransition( GpuTransitionDescriptor descriptor, GeometryHandle handle,
+			GpuTransitionCountResult counts, float scheduleToPublicationMilliseconds )
+		{
+			Descriptor = descriptor with { Field = null };
+			Handle = handle;
+			Counts = counts;
+			ScheduleToPublicationMilliseconds = scheduleToPublicationMilliseconds;
+		}
+	}
+
+	private sealed class ScratchLane
+	{
+		public GpuTerrainScratch Scratch { get; }
+		public List<InFlightMesh> CountInFlight { get; } = new( MaximumRegionsPerBatch );
+		public List<CandidateMesh> EmitInFlight { get; } = new( MaximumRegionsPerBatch );
+		public long SubmittedRenderSequence { get; set; }
+		public long EmitSubmittedTimestamp { get; set; }
+		public bool IsIdle => CountInFlight.Count == 0 && EmitInFlight.Count == 0 && Scratch.IsIdle;
+
+		public ScratchLane( int cellsPerAxis )
+		{
+			Scratch = new GpuTerrainScratch( cellsPerAxis );
+		}
+	}
+
+	private sealed class TransitionScratchLane
+	{
+		public GpuTransitionScratch Scratch { get; } = new();
+		public List<InFlightTransition> CountInFlight { get; } = new( MaximumRegionsPerBatch );
+		public List<CandidateTransition> EmitInFlight { get; } = new( MaximumRegionsPerBatch );
+		public long SubmittedRenderSequence { get; set; }
+		public long EmitSubmittedTimestamp { get; set; }
+		public bool IsIdle => CountInFlight.Count == 0 && EmitInFlight.Count == 0 && Scratch.IsIdle;
+	}
+
+	private readonly record struct PendingMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency,
+		long ScheduledTimestamp, float ScheduledRouteDistance );
+	private readonly record struct InFlightMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency,
+		uint Generation, long ScheduledTimestamp, float ScheduledRouteDistance );
+	private readonly record struct CandidateMesh( GpuSdfDescriptor Descriptor, GpuMeshResidency Residency,
+		uint Generation, long ScheduledTimestamp, float ScheduledRouteDistance,
+		GeometryHandle Handle, GpuTerrainCountResult Counts );
+	private readonly record struct PendingTransition( GpuTransitionDescriptor Descriptor,
+		long ScheduledTimestamp, float ScheduledRouteDistance );
+	private readonly record struct InFlightTransition( GpuTransitionDescriptor Descriptor,
+		uint Generation, long ScheduledTimestamp, float ScheduledRouteDistance );
+	private readonly record struct CandidateTransition( GpuTransitionDescriptor Descriptor,
+		uint Generation, long ScheduledTimestamp, float ScheduledRouteDistance,
+		GeometryHandle Handle, GpuTransitionCountResult Counts );
+
+	private sealed class GeometryHandle
+	{
+		public GeometryArena Arena { get; }
+		public int Slot { get; }
+		public uint Generation { get; }
+		public GpuTerrainRange Vertices { get; }
+		public GpuTerrainRange Indices { get; }
+		public int GlobalSlot => Arena.Index * RegionsPerSlab + Slot;
+		public GeometryHandle( GeometryArena arena, int slot, uint generation, GpuTerrainRange vertices, GpuTerrainRange indices )
+		{
+			Arena = arena; Slot = slot; Generation = generation; Vertices = vertices; Indices = indices;
+		}
+	}
+
+	private sealed class GeometryArena : IDisposable
+	{
+		private readonly bool[] _occupied = new bool[RegionsPerSlab];
+		private readonly Stack<int> _freeSlots = new( RegionsPerSlab );
+		private readonly GpuTerrainRangeAllocator _vertices = new( VertexArenaCapacity );
+		private readonly GpuTerrainRangeAllocator _indices = new( IndexArenaCapacity );
+		public int Index { get; }
+		public int ActiveResidentCount { get; set; }
+		public int FreeSlotCount => _freeSlots.Count;
+		public int AllocatedSlotCount => RegionsPerSlab - _freeSlots.Count;
+		public int VertexUsed => _vertices.UsedCount;
+		public int IndexUsed => _indices.UsedCount;
+		public int VertexFree => _vertices.FreeCount;
+		public int IndexFree => _indices.FreeCount;
+		public int VertexLargestFree => _vertices.LargestFreeRange;
+		public int IndexLargestFree => _indices.LargestFreeRange;
+		public bool IsEmpty => _freeSlots.Count == RegionsPerSlab &&
+			_vertices.UsedCount == 0 && _indices.UsedCount == 0 && ActiveResidentCount == 0;
+		public int VertexFreeRangeCount => _vertices.FreeRangeCount;
+		public int IndexFreeRangeCount => _indices.FreeRangeCount;
+		public GpuBuffer<TerrainVertex> Vertices { get; }
+		public GpuBuffer<uint> Indices { get; }
+		public GpuBuffer<Vector4> DepthBlocks { get; } = new( DepthBlockCapacity, GpuBuffer.UsageFlags.Structured, "Voxel Depth Blocks" );
+		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> DepthArguments { get; } = new( 1,
+			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Depth Arguments" );
+
+		public GeometryArena( int index )
+		{
+			Index = index;
+			Vertices = new GpuBuffer<TerrainVertex>( VertexArenaCapacity,
+				GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.Vertex, $"Voxel Terrain Arena Vertices {index}" );
+			Indices = new GpuBuffer<uint>( IndexArenaCapacity,
+				GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.Index, $"Voxel Terrain Arena Indices {index}" );
+			for ( var slot = RegionsPerSlab - 1; slot >= 0; slot-- ) _freeSlots.Push( slot );
+		}
+
+		public bool TryAcquire( int vertexCount, int indexCount, uint generation, out GeometryHandle handle )
+		{
+			if ( _freeSlots.Count == 0 || !_vertices.TryAllocate( vertexCount, out var vertices ) )
+			{
+				handle = null;
+				return false;
+			}
+			if ( !_indices.TryAllocate( indexCount, out var indices ) )
+			{
+				_vertices.Release( vertices );
+				handle = null;
+				return false;
+			}
+			var slot = _freeSlots.Pop();
+			_occupied[slot] = true;
+			handle = new GeometryHandle( this, slot, generation, vertices, indices );
+			return true;
+		}
+
+		public void Release( GeometryHandle handle )
+		{
+			if ( handle.Arena != this || handle.Slot < 0 || handle.Slot >= RegionsPerSlab || !_occupied[handle.Slot] )
+				throw new InvalidOperationException( "Invalid terrain geometry handle release." );
+			_occupied[handle.Slot] = false;
+			_vertices.Release( handle.Vertices );
+			_indices.Release( handle.Indices );
+			_freeSlots.Push( handle.Slot );
+		}
+
+		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); DepthBlocks.Dispose(); DepthArguments.Dispose(); }
+	}
+
+	private sealed class RenderCameraState : IDisposable, IHotloadManaged
+	{
+		public GeometryArena[] DepthArenas { get; set; } = Array.Empty<GeometryArena>();
+		public Dictionary<int, RenderAttributes> DrawAttributes { get; } = new();
+		public CameraComponent Camera { get; }
+		public Sandbox.Rendering.CommandList Commands { get; } =
+			new( "Voxel Terrain Indexed Indirect Draws" );
+		public List<VisibilityBuffers> RetiredVisibility { get; } = new();
+		public GpuBuffer<uint> AggregateCounters { get; } = new(
+			VisibilityAggregateCounterCount,
+			GpuBuffer.UsageFlags.Structured,
+			"Voxel View Visibility Aggregate Counters" );
+		public VisibilityBuffers Visibility { get; set; }
+		public int VisibilityCapacity { get; set; }
+		public bool CommandsDirty { get; set; } = true;
+		public bool DescriptorsDirty { get; set; } = true;
+		public bool AggregateResetPending { get; set; } = true;
+
+		public RenderCameraState( CameraComponent camera )
+		{
+			Camera = camera;
+		}
+
+		void IHotloadManaged.Destroyed( Dictionary<string, object> state )
+		{
+			// Cached draw delegates close over the old TerrainVertex type across code reloads.
+			Commands.Reset();
+		}
+
+		void IHotloadManaged.Created( IReadOnlyDictionary<string, object> state )
+		{
+			Commands.Reset();
+			CommandsDirty = true;
+			DescriptorsDirty = true;
+		}
+
+		public void DisposeVisibility()
+		{
+			// Drop recorded draws before releasing buffers captured by those commands.
+			Commands.Reset();
+			DrawAttributes.Clear();
+			DepthArenas = Array.Empty<GeometryArena>();
+			Visibility?.Dispose();
+			Visibility = null;
+			foreach ( var retired in RetiredVisibility ) retired.Dispose();
+			RetiredVisibility.Clear();
+			VisibilityCapacity = 0;
+			CommandsDirty = true;
+			DescriptorsDirty = true;
+		}
+
+		public void Dispose()
+		{
+			DisposeVisibility();
+			AggregateCounters.Dispose();
+		}
+	}
+
+	private sealed class VisibilityBuffers : IDisposable
+	{
+		public GpuBuffer<Vector4> Bounds { get; }
+		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> SourceArguments { get; }
+		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> VisibleArguments { get; }
+		public GpuBuffer<uint> FrameCounters { get; }
+		public VisibilityBuffers( GpuBuffer<Vector4> bounds,
+			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source,
+			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> visible, GpuBuffer<uint> frame )
+		{
+			Bounds = bounds; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
+		}
+		public void Dispose()
+		{
+			Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
+		}
+	}
+
+	private sealed class TerrainDepthObject : SceneCustomObject
+	{
+		private readonly GpuVoxelMesher _owner;
+		private readonly ComputeShader _visibility = new( "shaders/voxels/voxel_depth_visibility_cs.shader" );
+		private readonly Model _block;
+
+		public TerrainDepthObject( SceneWorld world, GpuVoxelMesher owner ) : base( world )
+		{
+			_owner = owner;
+			Flags.IsOpaque = true;
+			Flags.IsTranslucent = false;
+			Flags.CastShadows = true;
+			// Each instance expands a contiguous block of canonical terrain triangle indices.
+			var mesh = new Mesh( Material.FromShader( "shaders/voxels/voxel_terrain_depth.shader" ) );
+			mesh.CreateVertexBuffer<TerrainVertex>( DepthIndicesPerBlock, new TerrainVertex[DepthIndicesPerBlock].AsSpan() );
+			var indices = new int[DepthIndicesPerBlock];
+			for ( var index = 0; index < indices.Length; index++ ) indices[index] = index;
+			mesh.CreateIndexBuffer( indices.Length, indices.AsSpan() );
+			_block = Model.Builder.AddMesh( mesh ).Create();
+			_visibility.Attributes.Set( "DepthIndicesPerBlock", DepthIndicesPerBlock );
+		}
+
+		public override void RenderSceneObject()
+		{
+			if ( Graphics.LayerType != SceneLayerType.DepthPrepass && Graphics.LayerType != SceneLayerType.Shadow ) return;
+			lock ( _owner._renderCameraLock )
+			{
+				var state = _owner._visibilityReadbackState;
+				var visibility = state?.Visibility;
+				if ( visibility is null || !_owner._fieldPresentationReady ) return;
+				_visibility.Attributes.Set( "VisibilityBounds", visibility.Bounds );
+				_visibility.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
+				Graphics.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
+				Graphics.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
+				foreach ( var arena in state.DepthArenas )
+				{
+					// A newly allocated arena waits for the next camera descriptor publication.
+					if ( (arena.Index + 1) * RegionsPerSlab > visibility.SourceArguments.ElementCount ) break;
+					if ( arena.ActiveResidentCount == 0 ) continue;
+					_visibility.Attributes.Set( "DepthSlotOffset", arena.Index * RegionsPerSlab );
+					_visibility.Attributes.Set( "DepthBlocks", arena.DepthBlocks );
+					_visibility.Attributes.Set( "DepthArguments", arena.DepthArguments );
+					Graphics.ResourceBarrierTransition( arena.DepthBlocks, ResourceState.UnorderedAccess );
+					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.UnorderedAccess );
+					_visibility.Dispatch( RegionsPerSlab, 1, 1 );
+					Graphics.UavBarrier( arena.DepthBlocks );
+					Graphics.UavBarrier( arena.DepthArguments );
+					Graphics.ResourceBarrierTransition( arena.DepthBlocks, ResourceState.GenericRead );
+					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.IndirectArgument );
+					Graphics.ResourceBarrierTransition( arena.Vertices, ResourceState.GenericRead );
+					Graphics.ResourceBarrierTransition( arena.Indices, ResourceState.GenericRead );
+					Attributes.Set( "DepthBlocks", arena.DepthBlocks );
+					Attributes.Set( "DepthVertices", arena.Vertices );
+					Attributes.Set( "DepthIndices", arena.Indices );
+					Graphics.DrawModelInstancedIndirect( _block, arena.DepthArguments, 0, Attributes );
+				}
+			}
+		}
+	}
+
+	private sealed class ReadbackSceneObject : SceneCustomObject
+	{
+		private readonly GpuVoxelMesher _owner;
+		public ReadbackSceneObject( SceneWorld world, GpuVoxelMesher owner ) : base( world )
+		{
+			_owner = owner;
+			Flags.NeedsLightProbe = true;
+			// Keep SceneCustomObject's native infinite bounds. A large finite box still participates in
+			// per-view culling and can stop this scheduler rendezvous during an editor-camera handoff.
+		}
+
+		public override void RenderSceneObject()
+		{
+			_owner.ObserveRenderView();
+			if ( Graphics.LayerType == SceneLayerType.Opaque )
+			{
+				lock ( _owner._renderCameraLock )
+				{
+					var state = _owner._visibilityReadbackState;
+					if ( state is not null )
+						foreach ( var attributes in state.DrawAttributes.Values ) Graphics.SetupLighting( this, attributes );
+				}
+			}
+			if ( _owner.TryBeginGpuRenderTick() )
+			{
+				try
+				{
+					System.Threading.Interlocked.Increment( ref _owner._renderSequence );
+					_owner.ProcessGpuRenderTick();
+					_owner.ProcessVisibilityReadback();
+				}
+				finally
+				{
+					_owner.EndGpuRenderTick();
+				}
+			}
+		}
+	}
+
+}
+
+internal readonly record struct DrawCommandCommitResult( bool Rebuilt, float Milliseconds );
+internal readonly record struct GpuMeshScheduleLatencyMeasurement(
+	int Samples, int TruncatedSamples, float P50Milliseconds, float P95Milliseconds,
+	float P99Milliseconds, float MaximumMilliseconds, int Cancelled, int Superseded );
+internal readonly record struct GpuLevelScheduleMeasurement(
+	int Level,
+	long Scheduled,
+	long Published,
+	long Cancelled,
+	long Superseded,
+	GpuMeshScheduleLatencyMeasurement ScheduleToRenderable );
+internal readonly record struct GpuOuterLevelMeasurement(
+	long Scheduled,
+	long Published,
+	long Cancelled,
+	long Superseded,
+	long OpportunisticServices,
+	long ForcedServices,
+	float MaximumServiceGapMilliseconds,
+	GpuQueueDepthMeasurement Queue,
+	GpuMeshScheduleLatencyMeasurement ScheduleToRenderable );
+internal readonly record struct GpuTransitionMeasurement(
+	int Desired,
+	int Ready,
+	int Drawable,
+	int Pending,
+	long Scheduled,
+	long Published,
+	long Cancelled,
+	long Stale,
+	long Vertices,
+	long Indices,
+	long ActiveCells,
+	string TopologyDigest,
+	string PositionDigest,
+	uint FineFaceMismatchCount,
+	uint CoarseFaceMismatchCount,
+	uint LateralEdgeDigest,
+	uint LateralMismatchCount,
+	uint InvalidTableCount,
+	GpuTransitionFaceMeasurement[] Faces,
+	GpuTransitionPairMeasurement[] Pairs,
+	GpuMetricDistribution ScheduleToPublication );
+internal readonly record struct GpuTransitionPairMeasurement(
+	int FineLevel,
+	int CoarseLevel,
+	int Desired,
+	int Ready,
+	int Drawable,
+	int Pending,
+	long Scheduled,
+	long Published,
+	long Cancelled,
+	long Stale,
+	long ActiveCells,
+	long Vertices,
+	long Indices,
+	string TopologyDigest,
+	string PositionDigest,
+	uint FineFaceMismatchCount,
+	uint CoarseFaceMismatchCount,
+	uint LateralEdgeDigest,
+	uint LateralMismatchCount,
+	uint InvalidTableCount,
+	GpuTransitionFaceMeasurement[] Faces,
+	GpuMetricDistribution ScheduleToPublication );
+internal readonly record struct GpuTransitionIdentitySnapshot( int Count, ulong Digest );
+internal readonly record struct GpuTransitionFaceMeasurement(
+	GpuTransitionKey Key,
+	uint Generation,
+	int Arena,
+	int Slot,
+	int VertexOffset,
+	int VertexCount,
+	int IndexOffset,
+	int IndexCount,
+	uint ActiveCells,
+	float ScheduleToPublicationMilliseconds,
+	uint TopologyDigest,
+	uint PositionDigest,
+	uint FineFaceMismatchCount,
+	uint CoarseFaceMismatchCount,
+	uint MinimumUDigest,
+	uint MaximumUDigest,
+	uint MinimumVDigest,
+	uint MaximumVDigest,
+	uint InvalidTableCount );
+internal readonly record struct GpuMetricDistribution(
+	int Samples, int TruncatedSamples, float Average, float P50, float P95, float P99, float Maximum )
+{
+	public GpuMetricDistribution Scale( float scale ) => new(
+		Samples, TruncatedSamples, Average * scale, P50 * scale, P95 * scale, P99 * scale, Maximum * scale );
+}
+internal readonly record struct GpuQueueDepthMeasurement(
+	int Samples, int TruncatedSamples, float Average, float P50, float P95, float P99, int Maximum );
+internal readonly record struct GpuMeshThroughputMeasurement(
+	int ScratchLanes,
+	long RegionsScheduled,
+	long RegionsCountSubmitted,
+	long RegionsPublished,
+	float RegionsScheduledPerSecond,
+	float RegionsCountSubmittedPerSecond,
+	float RegionsPublishedPerSecond,
+	long BatchesSubmitted,
+	long BatchesCompleted,
+	float BatchesSubmittedPerSecond,
+	float BatchesCompletedPerSecond,
+	float AverageBatchOccupancy,
+	int MinimumBatchOccupancy,
+	int MaximumBatchOccupancy,
+	int[] BatchOccupancyHistogram,
+	GpuMetricDistribution CountSubmissionMilliseconds,
+	GpuMetricDistribution CountReadbackMilliseconds,
+	GpuMetricDistribution CountCallbackWaitMilliseconds,
+	GpuMetricDistribution CpuAllocationMilliseconds,
+	GpuMetricDistribution EmitSubmissionMilliseconds,
+	GpuMetricDistribution EmitToPublicationMilliseconds,
+	GpuQueueDepthMeasurement GameplayQueue,
+	GpuQueueDepthMeasurement WarmQueue,
+	GpuQueueDepthMeasurement TotalQueue,
+	GpuMetricDistribution PlayerRouteLagWorldUnits,
+	GpuMetricDistribution PlayerRouteLagChunks,
+	float PostLoopDrainMilliseconds );
+internal readonly record struct GpuVisibilityMeasurement(
+	uint FrameCount, uint ResidentTotal, uint VisibleTotal, uint MinimumVisible, uint MaximumVisible,
+	uint WarmTotal, uint SettledSurfaceMeshes, uint SettledWarmSurfaceMeshes, uint SettledActiveCells,
+	uint SettledMaximumActiveCells, IReadOnlyList<uint> LevelResidentTotals,
+	IReadOnlyList<uint> LevelVisibleTotals, IReadOnlyList<uint> SettledLevelSurfaceMeshes,
+	long LogicalBufferBytes, long ScalarReadbacks )
+{
+	public float AverageResident => FrameCount > 0 ? (float)ResidentTotal / FrameCount : 0;
+	public float AverageVisible => FrameCount > 0 ? (float)VisibleTotal / FrameCount : 0;
+	public float AverageWarm => FrameCount > 0 ? (float)WarmTotal / FrameCount : 0;
+	public float AverageLevelResident( int level ) => FrameCount > 0
+		? (float)LevelResidentTotals[level] / FrameCount
+		: 0;
+	public float AverageLevelVisible( int level ) => FrameCount > 0
+		? (float)LevelVisibleTotals[level] / FrameCount
+		: 0;
+	public float AverageCulled => MathF.Max( 0, AverageResident - AverageVisible );
+	public float CulledPercent => AverageResident > 0 ? AverageCulled * 100 / AverageResident : 0;
+}
+internal enum GpuMeshResidency { Gameplay, Visual, Warm }

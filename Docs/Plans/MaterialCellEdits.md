@@ -4,6 +4,11 @@ Status: intended contract from the user's 2026-09-10 clarification, not an
 implemented or validated feature. This changes the edit model; it does not
 replace detailed procedural SDF generation with binary block generation.
 
+Immediate tool subset implemented 2026-09-10, validation in progress: build stores
+Dirt2 with corrections, and logical<=10%-solid cells are skipped by the dig ray
+while retaining residual shape. See the current [material tool contract](../Architecture/VoxelMaterials.md).
+This does not establish the general placement/water/fill model described below.
+
 ## Current gap
 
 The inspected working tree stores float density corrections in TerrainFieldPage.

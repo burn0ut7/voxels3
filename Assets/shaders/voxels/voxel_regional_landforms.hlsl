@@ -1,3 +1,7 @@
+#include "shaders/voxels/voxel_erosion.hlsl"
+#include "shaders/voxels/voxel_mountain_masses.hlsl"
+#include "shaders/voxels/voxel_rivers.hlsl"
+
 float LandformSmooth( float value )
 {
 	float t = clamp( value, 0.0, 1.0 );
@@ -30,29 +34,77 @@ float LandformNoise( float2 position, float scale, uint seed )
 	return clamp( (a * (1.0 - u) + b * u) * (1.0 - v) + (c * (1.0 - u) + d * u) * v, 0.0, 1.0 );
 }
 
-float SampleVoxelLandformHeight( float2 position, float4 terrain, float4 scales, float ruggedness )
+float4 SampleVoxelBaseLandform( float2 position, float4 terrain, float4 scales, float ruggedness, out float2 gradient, out float peakFraction )
 {
 	uint seed = (uint)(int)terrain.x;
 	float n = LandformNoise( position, scales.x, seed ^ 0xB5297A4Du );
 	float m = LandformNoise( position, scales.y, seed ^ 0x68E31DA4u );
-	float p = LandformNoise( position, scales.z * 2.0, seed ^ 0x1B56C4E9u );
-	float q = LandformNoise( position, scales.z, seed ^ 0x7F4A7C15u );
-	float d = LandformNoise( position, scales.z * 0.5, seed ^ 0x94D049BBu );
-	float f = LandformNoise( position, scales.z * 0.125, seed ^ 0xD1B54A35u );
 	float land = LandformEligibility( n, terrain.y );
 	float mountainPreference = LandformEligibility( m, terrain.z * (2.0 - terrain.z) );
 	float mountains = mountainPreference * mountainPreference * mountainPreference * LandformSmooth( (land - 0.5) * 2.0 );
-	float hillPreference = 1.0 - LandformEligibility( p, terrain.w );
+	float p = LandformNoise( position, scales.z * 2.0, seed ^ 0x1B56C4E9u );
+	float q = LandformNoise( position, scales.z, seed ^ 0x7F4A7C15u );
+	float hillShape = LandformNoise( position, scales.z * 0.75, seed ^ 0x94D049BBu );
+	float hillPatch = LandformNoise( position, scales.z * 5.0, seed ^ 0xD1B54A35u );
+	float hillPreference = (1.0 - LandformEligibility( p, terrain.w )) * LandformSmooth( (hillPatch - 0.25) * 2.5 );
 	float plains = (1.0 - mountains) * (1.0 - hillPreference * hillPreference);
 	float hills = 1.0 - mountains - plains;
-	float ridge = 1.0 - abs( 2.0 * q - 1.0 );
-	float cliff = LandformSmooth( (ridge - 0.55) / 0.12 ) * LandformSmooth( 2.0 * mountains );
-	float mountainHeight = 0.10 + 0.55 * ridge * ridge * ridge + 0.28 * cliff +
-		0.08 * ruggedness * (f - 0.5) * ridge;
-	float mounds = LandformSmooth( (f - 0.45) * 4.0 );
+	float mountainHeight = 0.10 + 0.28 * q * q;
+	gradient = float2( 0.0, 0.0 );
+	float exposure = 0.0;
+	peakFraction = 0.0;
+	[branch]
+	if ( mountains > 0.5 )
+	{
+		float shapeBlend = LandformSmooth( (mountains - 0.5) / 0.5 );
+		float2 massGradient;
+		float erosionStrength;
+		float mass = SampleVoxelMountainMass( position, scales.z * 1.30, seed, massGradient, peakFraction, erosionStrength );
+		float broadMountainHeight = 0.10 + 0.83 * mass;
+		exposure = LandformSmooth( (mass - 0.10) / 0.40 ) * LandformSmooth( (1.0 - mass) / 0.1 ) * erosionStrength;
+		gradient = massGradient * (0.83 * mountains * land * scales.w);
+		mountainHeight = (1.0 - shapeBlend) * mountainHeight + shapeBlend * broadMountainHeight;
+	}
 	float landHeight = plains * (0.035 + 0.015 * q) +
-		hills * (0.08 + 0.24 * (0.65 * q + 0.35 * d) +
-			0.08 * ruggedness * mounds) + mountains * mountainHeight;
+		hills * (0.035 + 0.015 * q + 0.28 * (0.7 * hillShape + 0.3 * q)) + mountains * mountainHeight;
+	float uplandWeight = LandformSmooth( (mountainPreference - 0.1) / 0.9 ) * LandformSmooth( (land - 0.65) / 0.35 );
+	[branch]
+	if ( uplandWeight > 0.0 )
+	{
+		float elevation = LandformNoise( position, scales.y * 1.35, seed ^ 0xA24BAED5u );
+		landHeight += uplandWeight * (0.12 + 0.56 * LandformSmooth( (elevation - 0.15) / 0.7 )) * (0.7 + 0.3 * p);
+	}
 	float oceanHeight = -0.06 - 0.64 * (1.0 - n) * (1.0 - n);
-	return ((1.0 - land) * oceanHeight + land * landHeight) * scales.w;
+	return float4( ((1.0 - land) * oceanHeight + land * landHeight) * scales.w, land, mountains, exposure );
+}
+
+// GPU mirror of RegionalLandforms.SampleWorld; recipe constants owned by TerrainErosion.
+// Height, mountain weight and normalized local peak fraction.
+float3 SampleVoxelNaturalLandform( float2 position, float4 terrain, float4 scales, float ruggedness, float seaLevel )
+{
+	float2 gradient;
+	float peakFraction;
+	float4 sample = SampleVoxelBaseLandform( position, terrain, scales, ruggedness, gradient, peakFraction );
+	float amplitude = 0.035 * LandformSmooth( (sample.z - 0.5) / 0.5 ) * sample.w *
+		LandformSmooth( (sample.y - 0.65) / 0.35 ) * LandformSmooth( (sample.x - seaLevel - 64.0) / 256.0 ) * scales.w;
+	[branch]
+	if ( amplitude <= 0.0 )
+	{
+		return float3( sample.x, sample.z, peakFraction );
+	}
+	return float3( sample.x + VoxelErosionOffset( position, gradient, scales.z * 0.20, amplitude, (uint)(int)terrain.x ),
+		sample.z, peakFraction );
+}
+
+float3 SampleVoxelLandform( float2 position, float4 terrain, float4 scales, float ruggedness, float seaLevel )
+{
+	float3 natural = SampleVoxelNaturalLandform( position, terrain, scales, ruggedness, seaLevel );
+	natural.x = SampleVoxelRiver( position, natural.x, seaLevel ).x;
+	return natural;
+}
+
+// Density and water consume height only; unused semantic outputs are eliminated.
+float SampleVoxelLandformHeight( float2 position, float4 terrain, float4 scales, float ruggedness, float seaLevel )
+{
+	return SampleVoxelLandform( position, terrain, scales, ruggedness, seaLevel ).x;
 }

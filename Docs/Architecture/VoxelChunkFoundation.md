@@ -73,14 +73,16 @@ axis. Every consumer must query shared positions identically.
 Negative density is solid, positive density is air, and zero is the surface.
 `VoxelChunk` delegates 16-bit material IDs to the immutable catalog and procedural
 strata module described in [Voxel materials](VoxelMaterials.md). Materials have no
-separate mutable payload; density remains the solid/air authority.
+separate mutable world: the dirt tool now stores explicit material overrides beside
+the immutable density corrections. Density retains geometric detail; logical cell
+emptiness for digging is defined separately in the material tool contract.
 
 Gameplay interest has no fixed world-Z floor or ceiling. Its supported radius
 and defaults are owned by `VoxelManager`; scene-authored settings belong to the
 scene, and fixed test settings belong to the ledger. Logical loaded counts do
 not mean that the same number of objects or meshes have been allocated.
 
-## Procedural Generator Version 10 (qualification in progress)
+## Procedural Generator Version 18 (qualification in progress)
 
 The landform slice is implemented but not accepted yet. Its fixed workloads and
 remaining gates are tracked in [the ledger](../ValidationResults.md#landform-001v1--regional-exterior-qualification-defined-before-runtime).
@@ -93,6 +95,18 @@ world-area percentages. The source owns exact defaults, ranges, hierarchy and
 coefficients; the [plan](../Plans/RegionalLandformsFirstSlice.md) records the recipe
 and alternatives. Ocean basins are unfilled depressions relative to fixed Z=0.
 There is no climate, vegetation, water, POI or selectable legacy generator.
+
+The [mountains-only erosion prototype](../Plans/SelectiveErosionPrototype.md) adds
+a bounded, seeded directional offset only where the mountain weight exceeds0.5.
+Broad-mass guidance and two layers of smooth lattice wave blends supply
+local detail, fading out at mountain bases and crests. A smoother dominant-mountain
+profile replaces the narrow cliff step. Seeded mountain groups with shared broad foundations and subsidiary peaks
+produce peaks and saddles. The generator24 transition profile removes the old
+folded ridge even outside the erosion mask; locations with a nonzero mountain
+contribution can therefore change height. Pure hill/plain terms are unchanged.
+CPU queries/collision, GPU extraction, soil depth and water coverage consume the
+same field. Generator25 has a separate save identity; prior versions remain intact.
+Qualification, including performance, remains pending in EROSION-001/v2 (.3 mountain amount).
 
 [TerrainCaves](../../Code/Voxels/Generation/TerrainCaves.cs) owns retained version-9
 carving and its bounds: retained noodle/cheese composition and controls, 512-unit overburden,
@@ -115,17 +129,17 @@ is a topology proof followed by an analytic interval, not a corner-sign emptines
 assumption. Its performance qualification remains pending.
 
 [ProceduralTerrainSdf](../../Code/Voxels/ProceduralTerrainSdf.cs) composes the
-negative-solid exterior `z-height` with caves, owns generator version13 and exposes
+negative-solid exterior `z-height` with caves, owns generator version25 and exposes
 full-field sampling/classification. It retains build-local XY reuse in
 LatticeSampler. No shared mutable generation cache or extra scheduler exists.
 The full classifier propagates height and cave intervals over a closed AABB;
 uncertainty remains potentially surface-containing. Coarse clipbox preparation
 uses this complete authoritative bound, including corrections. Its first cheap
-rejection uses global exterior support [-.7001,1.0401]*ReliefHeight and retained
+rejection uses global exterior support [-.7526,1.0926]*ReliefHeight and retained
 cave depth. The superseded broad-only public classifier has been removed.
 No corner-only emptiness proof or underground heightfield assumption is allowed.
 
-The [GPU mirror](../../Assets/shaders/voxels/voxel_sdf_v13.hlsl) includes separate
+The [GPU mirror](../../Assets/shaders/voxels/voxel_sdf_v22.hlsl) includes separate
 noise, landform and cave modules, with matching hashes, salts and recipes.
 Negative coordinates use floor. Published bounds include numerical padding;
 shared recipes do not establish bitwise CPU/GPU equivalence without measurement.
@@ -349,3 +363,145 @@ extend this component and query their existing state owners. A provider registry
 new biome classifier and per-frame text rebuilding are unnecessary for this slice.
 Budget: <=10 refreshes/second while visible, zero hidden data refreshes; compare
 the canonical figure-eight with the overlay visible before runtime acceptance.
+
+
+### Selective cliff prototype (generator24)
+
+`TerrainCliffs` adds bounded local excavations to the existing negative-solid
+surface/cave field. Its inputs are world position, immutable recipe, cached
+mountain weight and incoming density. The result is max(incoming,min(cut,mask));
+mask=(mountainWeight-.75)*ReliefHeight limits exposed cuts to mountain-dominant
+terrain. An incoming-density upper-bound check skips work without changing the
+max/min result. There is no new persistent state, edit path or render-only shape.
+CPU scalar/lattice and GPU density entry points apply the same operation.
+
+Seeded rotated elliptical cuts occupy51/256 candidate cells. Spacing is
+1.3*LocalLandformScale, radii .099...153 and .063 of spacing, center jitter +/- .18
+cells, centers at SeaLevel+(.28...58)*ReliefHeight, half-height .078...13*ReliefHeight.
+A64-unit recess is largest at mid-height and tapers toward the roof and floor.
+At the smallest supported spacing2662.4, maximum horizontal support is less than
+.22cells; omitted cells are at least1.32cells away. Nine neighbors cover every
+surface-affecting cut. Bounds project the AABB onto each ellipse, bound vertical
+extent, include the full recess and a1-unit rounding allowance. Cell-crossing
+boxes use the global cut upper bound. The old lower density bound stays valid
+because excavation only increases density.
+
+Height remains the exterior reference for surface water and procedural strata;
+cuts stay above sea level and their faces expose existing stone below the soil.
+No surface-angle material override was added. The build-local cache stores height
+and mountain weight as one Vector2 per XY column. Mountain group heights now
+range .65..1, spacing1.6, foundation/summit weights.25/.75, with wider central peaks.
+The folded contour-ridge transition was removed in favor of gentle q-squared
+relief. Erosion, snow thresholds and authored MountainAmount.3 are preserved.
+
+Generator24 keeps these worlds separate from previous recipes. Performance and
+visual qualification are recorded under CLIFF-001/v1 and EROSION-001/v2 in the
+validation ledger. This remains a prototype; regular oval cuts, coarse-LOD ledge
+loss and enclosed cut cavities are known design risks, not accepted appearance.
+
+
+K retains generator24 and its shapes. Before evaluating a cut, the sampler bounds
+its best possible horizontal contribution from the query's distance to the cell's
+jitter box, maximum major radius and fixed minor radius. It includes the full
+128-unit recess plus1-unit rounding allowance and skips only a contribution that
+cannot exceed the accumulated density. Height bounds additionally return the
+mountain-weight upper interval; density classification caps cuts with that same
+mask. Both changes prune work rather than changing the terrain recipe.
+
+
+### Mountain diversity (generator25)
+
+The current MountainMasses uses four deterministic summit families selected from
+existing group hash bits: pointed main peak with low shoulders, broad massif,
+offset twin peaks, or elongated ridge with unequal subsidiary summits. Continuous
+seeded group width, aspect, height and rotation remain. Foundation share is .20
+for pointed/twin, .50 for massif, and .35 for ridge; peak union takes the remainder.
+Every peak support stays inside its group ellipse, retaining the existing nine-cell
+lookup and conservative interval composition. No additional noise queries or
+mutable state were introduced. CPU analytic guidance and GPU mirror use the same
+weights and layouts; previous generator worlds remain separately identified.
+
+A smoothly supported erosion multiplier is the maximum across groups of
+(1-r^2)^2*(.15+.85*hashByte/255), clamped by compact group support. Existing erosion
+exposure is multiplied by this value. The multiplier remains[0,1], so the previous
+maximum offset bound is conservative. PeakFraction now includes individual and
+group height factors for varying snow presence; see VoxelMaterials. Cliffs retain
+the generator24 geometry and bounded evaluation optimization. MountainAmount.3
+and the remaining authored recipe are unchanged. Same-run visual selection and
+performance qualification are owned by MOUNTAIN-DIVERSITY-001/v1 in the ledger.
+
+### Regional uplands (generator27)
+
+RegionalLandforms adds continuous supporting relief across mountain regions,
+including the gaps between MountainMasses groups. The eligibility uses the
+existing mountainPreference before its peak-region cubic weighting, faded by
+Smooth((preference-.1)/.9) and coastal Smooth((land-.65)/.35). A separate
+four-hash value field (salt0xA24BAED5, scale1.35*MountainRegionScale) modulates
+support height, with the existing p field providing broader shoulder variation.
+Uplift fraction is mask*(.12+.56*Smooth((elevation-.15)/.7))*(.7+.3*p), added to
+landHeight before the continental blend. It is in[0,.68]; the global maximum
+height fraction is1.72 plus bounded erosion. BoundHeight propagates the same
+field and composition using conservative intervals.
+
+Inputs remain immutable settings, seed and XY; there is no new stored state.
+Scalar/lattice/GPU, material strata and cave depth receive the same new surface.
+Existing erosion uses its local summit gradient; the broad support is not a new
+hydraulic simulation. Mountain eligibility and authored amount.3 stay unchanged.
+The existing cliff positions are not elevated with the terrain, so some become
+buried. This slice changes range foundations, not summit primitives or overhang
+construction. Runtime qualification belongs to UPLAND-001/v1 in the ledger.
+
+N2's zero-weight calculation skips were tested and rejected after a worse
+benchmark. The retained implementation is N's original regional uplift formula
+and evaluation order, verified by exact CPU/GPU source hashes. The shader header
+now refers to the descriptor as version owner. See the ledger for failed runs;
+this remains an uncommitted prototype with unresolved performance acceptance.
+
+### Continuous mountain flow candidate (generator29)
+
+MountainMasses now contains a continuous domain-warped ridge/shoulder field,
+replacing the three-cone groups. Two slow cubic value fields bend coordinates and
+control character/height; two rotated detail fields form connected ridges and
+spurs. A continuous blend introduces broad shoulders. The canonical output is
+mass[0,1], analytic XY gradient, local mass snow score, and erosion strength
+.25+.75*warpY. Interval bounds propagate the same transforms; existing regional
+uplands and MountainAmount.3 are retained. River integration owns its separate
+surface adjustment and derivative cache; the generator revision invalidates
+older terrain-derived identities.
+
+This is an UNACCEPTED candidate. Hot compilation passed but the first combined
+Play view was mostly empty and density audit reported large CPU/GPU disagreement.
+Cold-start validation, cause resolution, visual flow criteria and performance
+acceptance remain pending. FLOW-001/v1 in the ledger owns evidence; do not treat
+the source design or older gallery as proof of this candidate's appearance.
+
+
+### Rolling hills candidate (generator44)
+
+RegionalLandforms replaces fine hill mounds with overlapping smooth rises.
+Hill shape samples0.75*LocalLandformScale;70%of that field blends with30%of
+the existing local shape. Extra hill height is0.28times this blend, on the
+plains base0.035+0.015*q. With the authored5232.39local scale, hill-shape
+sampling spans3924.2925units. Maximum extra relief is860.16units at3072relief;
+actual crest elevations vary with the noise and landform weights.
+
+The existing plains preference multiplied by smooth((patch-0.25)*2.5), then
+squared, determines hill weight outside mountains. The independent patch field
+spans5*LocalLandformScale, leaving broad quiet areas between groups. Ruggedness
+no longer introduces tiny hill mounds. Cubic interpolation retains continuous
+first derivatives. The rejected generator43 used1.5local-scale hills and0.42
+extra relief; user feedback identified a single overly dominant hill. Version44
+halves that shape scale and lowers the amplitude by one third while overlapping
+independent shapes for unequal crests and intervening shallow valleys.
+
+CPU scalar sampling, conservative interval classification and GPU mirror share
+the same recipe. No extra noise sample, buffer, mutable owner or alternate
+runtime path is added. Hill profile maximum0.33remains inside the existing
+global height envelope. Pure plains/mountain/ocean and uplift formulas remain;
+mixed terrain, derived rivers and surface-relative caves can change.
+
+Generator44 uses existing versioned selectors, saves and network compatibility
+checks. Versions42and43remain preserved, without migration or reinterpretation.
+HILLS-001/v1 owns qualification. Current status: applied, managed compilation
+and local survey checks pass; inspected views show lower rolling crests.
+Full performance, density and clean-start qualification remain pending.

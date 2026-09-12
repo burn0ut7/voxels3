@@ -1,0 +1,166 @@
+{
+  "source": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\logs\\sbox-dev.log",
+  "blockCount": 7,
+  "blockLevels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "transitionCount": 26,
+  "transitionLevelFacePairs": [
+    {
+      "level": 0,
+      "face": "NegativeX"
+    },
+    {
+      "level": 0,
+      "face": "NegativeY"
+    },
+    {
+      "level": 0,
+      "face": "PositiveX"
+    },
+    {
+      "level": 0,
+      "face": "PositiveY"
+    },
+    {
+      "level": 1,
+      "face": "NegativeX"
+    },
+    {
+      "level": 1,
+      "face": "NegativeY"
+    },
+    {
+      "level": 1,
+      "face": "PositiveX"
+    },
+    {
+      "level": 1,
+      "face": "PositiveY"
+    },
+    {
+      "level": 2,
+      "face": "NegativeX"
+    },
+    {
+      "level": 2,
+      "face": "NegativeY"
+    },
+    {
+      "level": 2,
+      "face": "PositiveX"
+    },
+    {
+      "level": 2,
+      "face": "PositiveY"
+    },
+    {
+      "level": 2,
+      "face": "PositiveZ"
+    },
+    {
+      "level": 3,
+      "face": "NegativeX"
+    },
+    {
+      "level": 3,
+      "face": "NegativeY"
+    },
+    {
+      "level": 3,
+      "face": "PositiveX"
+    },
+    {
+      "level": 3,
+      "face": "PositiveY"
+    },
+    {
+      "level": 3,
+      "face": "PositiveZ"
+    },
+    {
+      "level": 4,
+      "face": "NegativeX"
+    },
+    {
+      "level": 4,
+      "face": "NegativeY"
+    },
+    {
+      "level": 4,
+      "face": "PositiveX"
+    },
+    {
+      "level": 4,
+      "face": "PositiveY"
+    },
+    {
+      "level": 5,
+      "face": "NegativeX"
+    },
+    {
+      "level": 5,
+      "face": "NegativeY"
+    },
+    {
+      "level": 5,
+      "face": "PositiveX"
+    },
+    {
+      "level": 5,
+      "face": "PositiveY"
+    }
+  ],
+  "maximumError": {
+    "max": 0.01171875
+  },
+  "sums": {
+    "maximumError": 0.05722045893,
+    "nonFinite": 0,
+    "signMismatches": 0,
+    "boundsFailures": 0,
+    "densityMismatches": 0
+  },
+  "nonzeroDifferenceCount": 33,
+  "recordsWithNonzeroDifference": [
+    "2026/09/09 16:32:15.8739\t[Generic] [VoxelWorld] density.audit.block level=0 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=16 samples=125 readbackBytes=171500 maximumErrorSample=-1,16,-1 maximumErrorCpu=-376.1338 maximumErrorGpu=-376.13394 maximumError=0.00015258789 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=126 elapsedMs=2.7114",
+    "2026/09/09 16:32:15.8739\t[Generic] [VoxelWorld] density.audit.block level=1 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=32 samples=125 readbackBytes=171500 maximumErrorSample=0,0,-1 maximumErrorCpu=-329.71698 maximumErrorGpu=-329.71692 maximumError=6.1035156E-05 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=124 elapsedMs=1.6185",
+    "2026/09/09 16:32:16.1356\t[Generic] [VoxelWorld] density.audit.block level=2 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=64 samples=125 readbackBytes=171500 maximumErrorSample=32,32,32 maximumErrorCpu=1390.6211 maximumErrorGpu=1390.6208 maximumError=0.00024414062 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=120 elapsedMs=28.2752",
+    "2026/09/09 16:32:16.6008\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 0, CoarseLevel = 1, CoarseCoordinate = 2,0,0, Face = NegativeX } generator=37 samples=127 readbackBytes=61556 maximumError=6.1035156E-05 maximumErrorPosition=2048,-32,1056 maximumErrorCpu=402.0329 maximumErrorGpu=402.03296 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719476734 elapsedMs=2.2571",
+    "2026/09/09 16:32:16.6135\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 0, CoarseLevel = 1, CoarseCoordinate = 0,2,0, Face = NegativeY } generator=37 samples=127 readbackBytes=61556 maximumError=0.00012207031 maximumErrorPosition=800,2048,160 maximumErrorCpu=-545.5138 maximumErrorGpu=-545.5137 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719476730 elapsedMs=1.6163",
+    "2026/09/09 16:32:16.6437\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 0, CoarseLevel = 1, CoarseCoordinate = 0,-3,0, Face = PositiveY } generator=37 samples=127 readbackBytes=61556 maximumError=6.1035156E-05 maximumErrorPosition=384,-2048,1040 maximumErrorCpu=995.39014 maximumErrorGpu=995.3902 nonFinite=0 signMismatches=0 nearZero=2 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719476722 elapsedMs=1.1453",
+    "2026/09/09 16:32:16.6544\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 0, CoarseLevel = 1, CoarseCoordinate = -3,0,0, Face = PositiveX } generator=37 samples=127 readbackBytes=61556 maximumError=9.1552734E-05 maximumErrorPosition=-2048,576,736 maximumErrorCpu=496.28107 maximumErrorGpu=496.28098 nonFinite=0 signMismatches=0 nearZero=2 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719476720 elapsedMs=1.2358",
+    "2026/09/09 16:32:16.8692\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 1, CoarseLevel = 2, CoarseCoordinate = 4,0,0, Face = NegativeX } generator=37 samples=127 readbackBytes=61556 maximumError=0.00012207031 maximumErrorPosition=8192,1216,1728 maximumErrorCpu=1668.517 maximumErrorGpu=1668.5171 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719476656 elapsedMs=1.3031",
+    "2026/09/09 16:32:16.8813\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 1, CoarseLevel = 2, CoarseCoordinate = 0,4,0, Face = NegativeY } generator=37 samples=127 readbackBytes=61556 maximumError=0.0008544922 maximumErrorPosition=800,8160,640 maximumErrorCpu=16.085571 maximumErrorGpu=16.084717 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719476400 elapsedMs=1.2297",
+    "2026/09/09 16:32:16.9090\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 1, CoarseLevel = 2, CoarseCoordinate = 0,-5,0, Face = PositiveY } generator=37 samples=127 readbackBytes=61556 maximumError=0.0013427734 maximumErrorPosition=1408,-8192,1600 maximumErrorCpu=405.23242 maximumErrorGpu=405.23108 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719475888 elapsedMs=1.2226",
+    "2026/09/09 16:32:16.9337\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 1, CoarseLevel = 2, CoarseCoordinate = -5,0,0, Face = PositiveX } generator=37 samples=127 readbackBytes=61556 maximumError=0.0013427734 maximumErrorPosition=-8160,448,1312 maximumErrorCpu=102.237915 maximumErrorGpu=102.23926 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719475760 elapsedMs=1.2265",
+    "2026/09/09 16:32:17.8246\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 2, CoarseLevel = 3, CoarseCoordinate = 4,0,0, Face = NegativeX } generator=37 samples=127 readbackBytes=61556 maximumError=0.00061035156 maximumErrorPosition=16512,512,0 maximumErrorCpu=-242.67865 maximumErrorGpu=-242.67926 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719471664 elapsedMs=1.6387",
+    "2026/09/09 16:32:17.8350\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 2, CoarseLevel = 3, CoarseCoordinate = 0,4,0, Face = NegativeY } generator=37 samples=127 readbackBytes=61556 maximumError=0.0007324219 maximumErrorPosition=2944,16512,2304 maximumErrorCpu=1515.9446 maximumErrorGpu=1515.9453 nonFinite=0 signMismatches=0 nearZero=2 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719455280 elapsedMs=1.0558",
+    "2026/09/09 16:32:17.8482\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 2, CoarseLevel = 3, CoarseCoordinate = 0,0,-5, Face = PositiveZ } generator=37 samples=126 readbackBytes=61556 maximumError=3.0517578E-05 maximumErrorPosition=-128,-128,-16384 maximumErrorCpu=-320.81888 maximumErrorGpu=-320.8189 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=False pendingFaces=68719324208 elapsedMs=1.1635",
+    "2026/09/09 16:32:17.8792\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 2, CoarseLevel = 3, CoarseCoordinate = 0,-5,0, Face = PositiveY } generator=37 samples=127 readbackBytes=61556 maximumError=0.00048828125 maximumErrorPosition=4096,-16256,4096 maximumErrorCpu=2496.5571 maximumErrorGpu=2496.5566 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719291440 elapsedMs=1.8294",
+    "2026/09/09 16:32:17.9034\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 2, CoarseLevel = 3, CoarseCoordinate = -5,0,0, Face = PositiveX } generator=37 samples=127 readbackBytes=61556 maximumError=0.00036621094 maximumErrorPosition=-16384,1536,1344 maximumErrorCpu=-137.98865 maximumErrorGpu=-137.98901 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719283248 elapsedMs=3.8829",
+    "2026/09/09 16:32:22.3349\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 3, CoarseLevel = 4, CoarseCoordinate = 4,0,0, Face = NegativeX } generator=37 samples=127 readbackBytes=61556 maximumError=0.0009765625 maximumErrorPosition=32896,7040,7168 maximumErrorCpu=5930.4307 maximumErrorGpu=5930.4316 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68719021104 elapsedMs=5.4595",
+    "2026/09/09 16:32:22.3484\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 3, CoarseLevel = 4, CoarseCoordinate = 0,4,0, Face = NegativeY } generator=37 samples=127 readbackBytes=61556 maximumError=0.0009765625 maximumErrorPosition=7424,32768,8448 maximumErrorCpu=8383.988 maximumErrorGpu=8383.987 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68717972528 elapsedMs=2.2495",
+    "2026/09/09 16:32:22.3685\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 3, CoarseLevel = 4, CoarseCoordinate = 0,0,-5, Face = PositiveZ } generator=37 samples=126 readbackBytes=61556 maximumError=0.00390625 maximumErrorPosition=6272,3968,-32896 maximumErrorCpu=-422.85938 maximumErrorGpu=-422.86328 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=False pendingFaces=68709583920 elapsedMs=5.3547",
+    "2026/09/09 16:32:22.4123\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 3, CoarseLevel = 4, CoarseCoordinate = 0,-5,0, Face = PositiveY } generator=37 samples=127 readbackBytes=61556 maximumError=0.0009765625 maximumErrorPosition=7936,-32640,1792 maximumErrorCpu=-183.3086 maximumErrorGpu=-183.30957 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68707486768 elapsedMs=4.3895",
+    "2026/09/09 16:32:22.4452\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 3, CoarseLevel = 4, CoarseCoordinate = -5,0,0, Face = PositiveX } generator=37 samples=127 readbackBytes=61556 maximumError=0.0009765625 maximumErrorPosition=-32640,5504,3968 maximumErrorCpu=1154.5762 maximumErrorGpu=1154.5771 nonFinite=0 signMismatches=0 nearZero=2 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68706962480 elapsedMs=6.9686",
+    "2026/09/09 16:32:26.7706\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 4, CoarseLevel = 5, CoarseCoordinate = 4,0,0, Face = NegativeX } generator=37 samples=127 readbackBytes=61556 maximumError=0.001953125 maximumErrorPosition=65280,2048,16128 maximumErrorCpu=15553.426 maximumErrorGpu=15553.428 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68690185264 elapsedMs=8.2033",
+    "2026/09/09 16:32:26.7843\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 4, CoarseLevel = 5, CoarseCoordinate = 0,4,0, Face = NegativeY } generator=37 samples=126 readbackBytes=61556 maximumError=0.001953125 maximumErrorPosition=14848,65792,15616 maximumErrorCpu=17285.637 maximumErrorGpu=17285.635 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=False airProbe=True pendingFaces=68623076400 elapsedMs=3.7441",
+    "2026/09/09 16:32:26.8541\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 4, CoarseLevel = 5, CoarseCoordinate = 0,-5,0, Face = PositiveY } generator=37 samples=127 readbackBytes=61556 maximumError=0.001953125 maximumErrorPosition=1536,-65280,14080 maximumErrorCpu=11434.326 maximumErrorGpu=11434.328 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68488858672 elapsedMs=7.9509",
+    "2026/09/09 16:32:26.9014\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 4, CoarseLevel = 5, CoarseCoordinate = -5,0,0, Face = PositiveX } generator=37 samples=127 readbackBytes=61556 maximumError=0.0009765625 maximumErrorPosition=-65280,5120,9984 maximumErrorCpu=9630.609 maximumErrorGpu=9630.608 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=68455304240 elapsedMs=8.2606",
+    "2026/09/09 16:32:29.8025\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 5, CoarseLevel = 6, CoarseCoordinate = 0,4,0, Face = NegativeY } generator=37 samples=127 readbackBytes=61556 maximumError=0.01171875 maximumErrorPosition=15872,130560,18944 maximumErrorCpu=16392.426 maximumErrorGpu=16392.438 nonFinite=0 signMismatches=0 nearZero=2 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=64160336944 elapsedMs=8.0388",
+    "2026/09/09 16:32:29.8025\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 5, CoarseLevel = 6, CoarseCoordinate = 4,0,0, Face = NegativeX } generator=37 samples=127 readbackBytes=61556 maximumError=0.001953125 maximumErrorPosition=131072,5120,25600 maximumErrorCpu=25206.549 maximumErrorGpu=25206.547 nonFinite=0 signMismatches=0 nearZero=2 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=63086595120 elapsedMs=2.4463",
+    "2026/09/09 16:32:29.8886\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 5, CoarseLevel = 6, CoarseCoordinate = 0,-5,0, Face = PositiveY } generator=37 samples=127 readbackBytes=61556 maximumError=0.009765625 maximumErrorPosition=25600,-130560,25088 maximumErrorCpu=24463.441 maximumErrorGpu=24463.451 nonFinite=0 signMismatches=0 nearZero=1 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=54496660528 elapsedMs=7.4935",
+    "2026/09/09 16:32:29.9346\t[Generic] [VoxelWorld] density.audit.transition key=GpuTransitionKey { FineLevel = 5, CoarseLevel = 6, CoarseCoordinate = -5,0,0, Face = PositiveX } generator=37 samples=127 readbackBytes=61556 maximumError=0.0087890625 maximumErrorPosition=-130560,22016,15872 maximumErrorCpu=13767.302 maximumErrorGpu=13767.293 nonFinite=0 signMismatches=0 nearZero=0 boundsFailures=0 solidProbe=True airProbe=True pendingFaces=52349176880 elapsedMs=7.8124",
+    "2026/09/09 16:32:35.8667\t[Generic] [VoxelWorld] density.audit.block level=3 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=128 samples=125 readbackBytes=171500 maximumErrorSample=16,16,16 maximumErrorCpu=1390.6211 maximumErrorGpu=1390.6208 maximumError=0.00024414062 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=112 elapsedMs=8.4947",
+    "2026/09/09 16:32:44.2303\t[Generic] [VoxelWorld] density.audit.block level=4 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=256 samples=125 readbackBytes=171500 maximumErrorSample=0,-1,32 maximumErrorCpu=7962.994 maximumErrorGpu=7962.9946 maximumError=0.00048828125 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=96 elapsedMs=5.7596",
+    "2026/09/09 16:32:51.9041\t[Generic] [VoxelWorld] density.audit.block level=5 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=512 samples=125 readbackBytes=171500 maximumErrorSample=-1,-1,33 maximumErrorCpu=16836.916 maximumErrorGpu=16836.914 maximumError=0.001953125 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=64 elapsedMs=11.0115",
+    "2026/09/09 16:33:01.3208\t[Generic] [VoxelWorld] density.audit.block level=6 chunk=0,0,0 generator=37 settings=\"ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\" cellSize=1024 samples=125 readbackBytes=171500 maximumErrorSample=0,-1,16 maximumErrorCpu=16332.245 maximumErrorGpu=16332.246 maximumError=0.0009765625 maximumLatticeError=0 nonFinite=0 densityMismatches=0 signMismatches=0 nearZero=0 boundsFailures=0 nearZeroSignMismatches=0 readbackNonFinite=0 solidProbe=True airProbe=True pendingLevels=0 elapsedMs=11.323"
+  ]
+}

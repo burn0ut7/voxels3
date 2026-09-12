@@ -4,6 +4,13 @@ using System;
 internal sealed class GpuVoxelMaterials : IDisposable
 {
 	private readonly GpuBuffer<Vector4> _palette;
+	public static void BindGeneration( RenderAttributes attributes )
+	{
+		attributes.Set( "VoxelGeneratedLayers", new Vector2( ProceduralVoxelMaterials.LayerSize, ProceduralVoxelMaterials.SoilDepth ) );
+		attributes.Set( "VoxelGeneratedMountain", new Vector4( ProceduralVoxelMaterials.SnowPeakFraction,
+			ProceduralVoxelMaterials.SnowMountainWeight, ProceduralVoxelMaterials.MountainStoneWeight,
+			ProceduralVoxelMaterials.MountainGrassMaxSlopeSquared ) );
+	}
 
 	public GpuVoxelMaterials()
 	{
@@ -18,17 +25,15 @@ internal sealed class GpuVoxelMaterials : IDisposable
 		_palette.SetData( colors.AsSpan() );
 	}
 
-	public void Bind( Sandbox.Rendering.CommandList.AttributeAccess attributes, ProceduralTerrainSettings settings )
+	public void Dispose()
 	{
-		attributes.Set( "VoxelMaterialPalette", _palette );
-		attributes.Set( "VoxelMaterialIds", new Vector4( VoxelMaterials.Grass, VoxelMaterials.Dirt, VoxelMaterials.Stone, VoxelMaterials.Air ) );
-		attributes.Set( "VoxelMaterialRules", new Vector4( ProceduralVoxelMaterials.LayerSize,
-			ProceduralVoxelMaterials.SoilDepth, 0f, TerrainField.SampleSpacing ) );
-		attributes.Set( "VoxelMaterialTerrain", new Vector4( settings.WorldSeed, settings.LandAmount, settings.MountainAmount, settings.PlainsAmount ) );
-		attributes.Set( "VoxelMaterialScales", new Vector4( settings.ContinentalScale, settings.MountainRegionScale, settings.LocalLandformScale, settings.ReliefHeight ) );
-		attributes.Set( "VoxelMaterialRuggedness", settings.Ruggedness );
-		attributes.Set( "VoxelSeaLevel", settings.SeaLevel );
+		_palette.Dispose();
 	}
 
-	public void Dispose() => _palette.Dispose();
+	public void Bind( RenderAttributes attributes )
+	{
+		attributes.Set( "VoxelMaterialPalette", _palette );
+		attributes.Set( "VoxelMaterialIds", new Vector4( VoxelMaterials.Grass, VoxelMaterials.Dirt, VoxelMaterials.Stone, VoxelMaterials.Snow ) );
+		attributes.Set( "VoxelCheckerSize", TerrainField.SampleSpacing );
+	}
 }

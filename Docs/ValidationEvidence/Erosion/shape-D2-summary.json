@@ -1,0 +1,32 @@
+{
+  "source": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\data\\local\\voxels3#local\\terrain-surveys\\0575146850dd46818f94a17862a2f66f\\samples.csv",
+  "recipe": "Docs/ValidationEvidence/Erosion/shape-D2-recipe.json",
+  "grid": { "pointsPerAxis": 129, "spacing": 32, "rows": 16641, "adjacentEdges": 33024 },
+  "repeatHeightExactCount": 16641,
+  "nonFiniteCount": 0,
+  "heightOutsideBoundsCount": 0,
+  "mountainWeightRange": { "min": 0.9868512, "max": 1.0 },
+  "heightRange": { "min": 261.67706, "max": 2926.662 },
+  "slope": { "p50": 1.0650606, "p95": 2.687985, "p99": 3.3560324, "max": 4.250179 },
+  "adjacentAbsoluteHeightDifference": { "p50": 18.8878, "p95": 69.5723, "p99": 94.3103, "max": 135.7254 },
+  "fiveLargestAdjacentDifferences": [
+    { "difference": 135.7254, "axis": "x", "gridA": [79, 6], "gridB": [80, 6], "worldA": [-54816, -57152], "worldB": [-54784, -57152] },
+    { "difference": 135.0026, "axis": "x", "gridA": [80, 6], "gridB": [81, 6], "worldA": [-54784, -57152], "worldB": [-54752, -57152] },
+    { "difference": 131.6836, "axis": "x", "gridA": [78, 6], "gridB": [79, 6], "worldA": [-54848, -57152], "worldB": [-54816, -57152] },
+    { "difference": 130.9629, "axis": "x", "gridA": [80, 0], "gridB": [81, 0], "worldA": [-54784, -57344], "worldB": [-54752, -57344] },
+    { "difference": 130.5977, "axis": "x", "gridA": [80, 5], "gridB": [81, 5], "worldA": [-54784, -57184], "worldB": [-54752, -57184] }
+  ],
+  "comparison": {
+    "before": {
+      "heightRange": [169.02884, 3044.3755],
+      "slope": [1.6479543, 4.027363, 5.6918497, 18.050499],
+      "adjacent": [31.3384, 96.4274, 154.03394, 413.5303]
+    },
+    "D1": {
+      "heightRange": [261.20966, 2876.6082],
+      "slope": [0.808819, 3.340733, 4.839703, 6.0211773],
+      "adjacent": [12.6312, 72.2796, 131.55048, 191.6717]
+    },
+    "metricOrder": "height min,max; slope p50,p95,p99,max; adjacent p50,p95,p99,max"
+  }
+}

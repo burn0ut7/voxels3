@@ -1,0 +1,250 @@
+{
+  "baseline": {
+    "runId": "047fde9989c24a22802746b0afac545d",
+    "source": {
+      "task": "HILLS-PLACEMENT-PRIORITY-001/v1-direct-before",
+      "revision": "before-direct-detail"
+    },
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94463,
+      "startCenter": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "world": {
+      "scene": "basic_example",
+      "generatorVersion": 44,
+      "streamingCenter": {
+        "x": -1,
+        "y": -1,
+        "z": 0
+      },
+      "targetPosition": {
+        "x": -5.3383313e-18,
+        "y": -2.3588273e-18,
+        "z": 272.20572
+      }
+    },
+    "viewport": [
+      2769,
+      1436
+    ],
+    "frame": [
+      441.79535,
+      4.7239,
+      27.0631
+    ],
+    "alloc": 3077438016,
+    "process": [
+      3579969536,
+      3579969536,
+      3577176064
+    ],
+    "gpu": [
+      2177625864,
+      2381524744
+    ],
+    "regular": [
+      79864,
+      10093,
+      23611
+    ],
+    "transitionCountReadbacks": 6843,
+    "cancelled": [
+      1614,
+      4
+    ],
+    "regionsScheduled": 97753,
+    "drain": 6137.113,
+    "prep": 3.2157,
+    "errors": [
+      0,
+      0
+    ],
+    "unsafe": 0,
+    "mismatch": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "queues": [
+      0,
+      0,
+      0,
+      false,
+      0,
+      0,
+      false
+    ]
+  },
+  "candidate": {
+    "runId": "7a64221aa5d34a4b98b69064e6675abd",
+    "source": {
+      "task": "HILLS-PLACEMENT-PRIORITY-001/v1-direct-after",
+      "revision": "direct-fine-chain"
+    },
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94487,
+      "startCenter": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "world": {
+      "scene": "basic_example",
+      "generatorVersion": 44,
+      "streamingCenter": {
+        "x": -1,
+        "y": -1,
+        "z": 0
+      },
+      "targetPosition": {
+        "x": -5.3383313e-18,
+        "y": -2.3588273e-18,
+        "z": 272.20572
+      }
+    },
+    "viewport": [
+      2769,
+      1436
+    ],
+    "frame": [
+      425.60074,
+      5.7502,
+      146.6131
+    ],
+    "alloc": 5052089168,
+    "process": [
+      3890970624,
+      3891298304,
+      3880202240
+    ],
+    "gpu": [
+      2177424744,
+      2483248488
+    ],
+    "regular": [
+      84564,
+      10678,
+      27518
+    ],
+    "transitionCountReadbacks": 6043,
+    "cancelled": [
+      1075,
+      2
+    ],
+    "regionsScheduled": 83066,
+    "drain": 7502.126,
+    "prep": 11.6073,
+    "errors": [
+      0,
+      0
+    ],
+    "unsafe": 0,
+    "mismatch": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "queues": [
+      0,
+      0,
+      0,
+      false,
+      0,
+      0,
+      false
+    ]
+  },
+  "candidateMinusBaseline": {
+    "frame": {
+      "delta": [
+        -16.19461000000001,
+        1.0263,
+        119.55000000000001
+      ],
+      "percent": [
+        -3.6656361367316364,
+        21.72569275386862,
+        441.7454024114016
+      ]
+    },
+    "alloc": {
+      "delta": 1974651152,
+      "percent": 64.16542402262961
+    },
+    "process": {
+      "delta": [
+        311001088,
+        311328768,
+        303026176
+      ],
+      "percent": [
+        8.68725515322374,
+        8.696408303738147,
+        8.47110040374015
+      ]
+    },
+    "gpu": {
+      "delta": [
+        -201120,
+        101723744
+      ],
+      "percent": [
+        -0.009235746292550464,
+        4.271370442666289
+      ]
+    },
+    "regular": {
+      "delta": [
+        4700,
+        585,
+        3907
+      ],
+      "percent": [
+        5.885004507663027,
+        5.796096304369365,
+        16.547371987632882
+      ]
+    },
+    "transitionCountReadbacks": {
+      "delta": -800,
+      "percent": -11.690778898144089
+    },
+    "cancelled": {
+      "delta": [
+        -539,
+        -2
+      ],
+      "percent": [
+        -33.39529120198265,
+        -50.0
+      ]
+    },
+    "regionsScheduled": {
+      "delta": -14687,
+      "percent": -15.024602825488731
+    },
+    "drain": {
+      "delta": 1365.013,
+      "percent": 22.241940143516988
+    },
+    "prep": {
+      "delta": 8.3916,
+      "percent": 260.9571788413098
+    }
+  }
+}

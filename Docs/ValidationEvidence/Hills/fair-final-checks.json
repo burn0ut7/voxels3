@@ -1,0 +1,28 @@
+{
+  "resultExportFailure": {
+    "content": [
+      {
+        "type": "text",
+        "text": "1 entries, oldest first (2000 buffered):\r\n01:35:35 [Generic] Error: [VoxelWorld] performance.result.failed reason=\"The process cannot access the file 'C:\\\\Program Files (x86)\\\\Steam\\\\steamapps\\\\common\\\\sbox\\\\data\\\\local\\\\voxels3#local\\\\performance\\\\results-v1.jsonl' because it is being used by another process.\"\r\n    at VoxelManager.TrySaveCompletedPerformanceTest() in C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\Code\\Voxels\\VoxelManager.cs:line 1494\r\n    at VoxelManager.OnUpdate() in C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\Code\\Voxels\\VoxelManager.cs:line 460\r\n    at Sandbox.Component.InternalUpdate()\r\nCursor: 28392"
+      }
+    ]
+  },
+  "meshAudit": {
+    "content": [
+      {
+        "type": "text",
+        "text": "1 entries, oldest first (2000 buffered):\r\n01:36:20 [Generic] Info: [VoxelWorld] mesh.audit.complete id=1 target=-0,-0,272.2057 selected=88 completed=88 stale=0 failures=0 mutationFailures=0 invalidIndices=0 outOfBoundsPositions=0 nonFinitePositions=0 recordIdentityMismatches=0 oversizedTriangles=0 degenerateTriangles=0 maximumEdgeCells=1.728 drawArgumentFailures=0 cameras=1 readbacks=178 bytes=3713664 elapsedMs=161.953\r\nCursor: 28392"
+      }
+    ]
+  },
+  "world": {
+    "content": [
+      {
+        "type": "text",
+        "text": "1 entries, oldest first (2000 buffered):\r\n01:36:20 [Generic] Info: [TerrainEdit] toolStatus=Idle eye=-0,-0,336.2057 world=3950b968-a6ff-411c-a8f5-923a82f348a1 revision=1580 pages=320 epoch=1 savedRevision=1580 checkpoint=77 saving=False saveSlot=3950b968a6ff411ca8f5923a82f348a1 saveStatus=Saved bytes=62914560 queued=0 preparing=False residentBytes=59179008 retainedSampleBytes=120717312 sampleBudget=536870912 reservedSampleBytes=0 readCapacityDeferred=False editCapacityDeferred=False storageReads=0 loadedPages=330 evictedPages=41 reusedSamplePages=411 readIntegrationMaxMs=0.0282 sweepMaxMs=0.3172 storageFailure= committed=0 rejected=0 samples=0 staleReadCompletions=0 readCapacityDeferrals=0 publicationMs= publicationPending=False commitMs=0 visualDependencies=0 collisionDependencies=0 visualPending=False collisionPending=False failure=\r\nCursor: 28392"
+      }
+    ]
+  },
+  "source": "fair-edge-local-source.json",
+  "screenshot": "Inspected 960x540 main-camera image at stationary landing; terrain surface present, checker materials. Does not establish edge/upward-flight behavior."
+}

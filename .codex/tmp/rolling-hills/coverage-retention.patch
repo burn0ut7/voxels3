@@ -1,0 +1,22 @@
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -2802,13 +2802,13 @@
+ 
+ 		if ( _clipboxPlacementPending )
+ 		{
+-			var nearLevel = visualConfiguration.MinimumVisualLod;
+-			var stagedNear = _levels[nearLevel];
+-			// Finish nearby steps, but do not make fast flight wait for a destination
+-			// whose most detailed coverage no longer contains the requested viewer.
++			var coverageLevel = _stagedVisualConfiguration.MaximumVisualLod;
++			var stagedCoverage = _levels[coverageLevel];
++			// Let useful coverage finish even when the viewer outruns its fine detail.
++			// Cancel only when the staged hierarchy no longer covers the destination.
+ 			if ( MatchesCommittedPlacementTarget() || configurationChanged ||
+-				!IsInsideHalfOpenBox( _targetLevelAnchors[nearLevel],
+-					stagedNear.StagedOuterMinimum, stagedNear.StagedOuterMaximum ) )
++				!IsInsideHalfOpenBox( _targetLevelAnchors[coverageLevel],
++					stagedCoverage.StagedOuterMinimum, stagedCoverage.StagedOuterMaximum ) )
+ 			{
+ 				CancelPendingClipboxPlacement();
+ 			}

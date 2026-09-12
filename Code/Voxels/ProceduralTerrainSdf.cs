@@ -4,13 +4,13 @@ using static TerrainCaves;
 public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 
 /// <summary>
-/// Canonical deterministic version-13 volumetric terrain field. The GPU mirror
+/// Canonical deterministic volumetric terrain field. The GPU mirror
 /// uses the same integer hash, simplex recipes, and constructive composition.
 /// </summary>
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 13;
+	public const int CurrentVersion = 44;
 	public const int DefaultWorldSeed = 1337;
 	public static float SampleGlobal(
 		Vector3Int globalSampleCoordinate,
@@ -26,33 +26,36 @@ internal static class ProceduralTerrainSdf
 
 	public static float SampleWorld( Vector3 worldPosition, ProceduralTerrainSettings settings )
 	{
-		return TerrainCaves.SampleWorld( worldPosition, settings, SampleSurfaceHeight( worldPosition, settings ) );
+		var landform = RegionalLandforms.SampleWorld( worldPosition, settings );
+		return TerrainCliffs.Sample( worldPosition, settings, landform.Mountains,
+			TerrainCaves.SampleWorld( worldPosition, settings, landform.Height ) );
 	}
-
-	private static float SampleSurfaceHeight( Vector3 position, ProceduralTerrainSettings settings ) =>
-		RegionalLandforms.SampleWorld( position, settings ).Height;
 
 	// Build-local derived workspace. The generator owns its XY-only dependency;
 	// consumers can only obtain full volumetric density values.
 	internal sealed class LatticeSampler
 	{
 		private readonly int _stride;
-		private readonly float[] _heights;
+		private readonly Vector2[] _landforms;
 		private readonly bool[] _sampled;
 		private Vector3Int _origin;
 		private float _cellSize;
 		private ProceduralTerrainSettings _settings;
+		private RiverWorld.Region _rivers;
 
 		public LatticeSampler( int samplesPerAxis )
 		{
 			_stride = samplesPerAxis;
-			_heights = new float[samplesPerAxis * samplesPerAxis];
-			_sampled = new bool[_heights.Length];
+			_landforms = new Vector2[samplesPerAxis * samplesPerAxis];
+			_sampled = new bool[_landforms.Length];
 		}
 
 		public void Begin( Vector3Int origin, float cellSize, ProceduralTerrainSettings settings )
 		{
 			_origin = origin; _cellSize = cellSize; _settings = settings;
+			var minimum = new Vector3( origin.x * cellSize, origin.y * cellSize, origin.z * cellSize );
+			_rivers = RiverWorld.For( settings ).Capture( new SdfWorldAabb( minimum,
+				minimum + new Vector3( (_stride - 1) * cellSize ) ) );
 			Array.Clear( _sampled );
 		}
 
@@ -63,10 +66,13 @@ internal static class ProceduralTerrainSdf
 			var column = x + _stride * y;
 			if ( !_sampled[column] )
 			{
-				_heights[column] = SampleSurfaceHeight( position, _settings );
+				var sample = RegionalLandforms.SampleNatural( position, _settings );
+				_landforms[column] = new Vector2( _rivers.SampleWorld( position, sample.Height ).Height, sample.Mountains );
 				_sampled[column] = true;
 			}
-			return TerrainCaves.SampleWorld( position, _settings, _heights[column] );
+			var landform = _landforms[column];
+			return TerrainCliffs.Sample( position, _settings, landform.y,
+				TerrainCaves.SampleWorld( position, _settings, landform.x ) );
 		}
 	}
 
@@ -134,9 +140,16 @@ internal static class ProceduralTerrainSdf
 			MathF.BitDecrement( minimum.z - surfaceRange.Maximum ),
 			MathF.BitIncrement( maximum.z - surfaceRange.Minimum ) );
 		var cave = BoundCaveDensity( worldAabb, surface, unchecked((uint)settings.WorldSeed) );
+		var maximumDensity = MathF.Max( surface.Maximum, cave.Maximum );
+		var cliffMaskMaximum = (surfaceRange.MountainMaximum - 0.75f) * settings.ReliefHeight;
+		if ( cliffMaskMaximum > maximumDensity )
+		{
+			maximumDensity = MathF.Max( maximumDensity,
+				MathF.Min( cliffMaskMaximum, TerrainCliffs.BoundMaximum( worldAabb, settings ) ) );
+		}
 		var density = new DensityInterval(
 			MathF.BitDecrement( MathF.Max( surface.Minimum, cave.Minimum ) ),
-			MathF.BitIncrement( MathF.Max( surface.Maximum, cave.Maximum ) ) );
+			MathF.BitIncrement( maximumDensity ) );
 
 		if ( density.Maximum <= 0f )
 		{
@@ -159,8 +172,8 @@ internal static class ProceduralTerrainSdf
 	{
 		var minimum = worldAabb.Minimum;
 		var maximum = worldAabb.Maximum;
-		var minimumSurfaceHeight = -0.7001f * settings.ReliefHeight;
-		var maximumSurfaceHeight = 1.0401f * settings.ReliefHeight;
+		var minimumSurfaceHeight = (RegionalLandforms.MinimumHeightFraction - 0.0001f) * settings.ReliefHeight - 16f - RiverNetwork.MaximumDepth;
+		var maximumSurfaceHeight = (RegionalLandforms.MaximumHeightFraction + 0.0001f) * settings.ReliefHeight + RiverNetwork.BankHeight;
 		var minimumPotentialSurfaceHeight = minimumSurfaceHeight - CaveMaximumDepth;
 		if ( float.IsFinite( minimumSurfaceHeight ) &&
 			float.IsFinite( maximumSurfaceHeight ) &&

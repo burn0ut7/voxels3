@@ -189,7 +189,7 @@ internal sealed class TerrainField
 			source.Pages.TryGetValue( key, out var previous );
 			replacement.Pages.TryGetValue( key, out var restored );
 			if ( ReferenceEquals( previous, restored ) ||
-				(restored is null && previous.Minimum == 0f && previous.Maximum == 0f) ) continue;
+				(restored is null && previous.Minimum == 0f && previous.Maximum == 0f && !previous.HasMaterials) ) continue;
 			var previousReader = previous is null ? null : TerrainFieldStore.PinForRead( previous );
 			var restoredReader = restored is null ? null : TerrainFieldStore.PinForRead( restored );
 			var pageChanged = false;
@@ -197,7 +197,8 @@ internal sealed class TerrainField
 			var pageHigh = new Vector3Int( int.MinValue, int.MinValue, int.MinValue );
 			for ( var index = 0; index < SamplesPerPage; index++ )
 			{
-				if ( (previousReader?.Sample( index ) ?? 0f) == (restoredReader?.Sample( index ) ?? 0f) ) continue;
+				if ( (previousReader?.Sample( index ) ?? 0f) == (restoredReader?.Sample( index ) ?? 0f) &&
+					(previousReader?.Material( index ) ?? 0) == (restoredReader?.Material( index ) ?? 0) ) continue;
 				pageChanged = true; samples++;
 				var point = key * SamplesPerPageAxis + new Vector3Int( index & PageMask,
 					(index >> PageShift) & PageMask, index >> (2 * PageShift) );
@@ -248,6 +249,7 @@ internal sealed class TerrainField
 			(int)MathF.Floor( (center.y + radius) / SampleSpacing ),
 			(int)MathF.Floor( (center.z + radius) / SampleSpacing ) );
 		var edits = new Dictionary<Vector3Int, float[]>();
+		var materials = new Dictionary<Vector3Int, ushort[]>();
 		var changedMinimum = maximum;
 		var changedMaximum = minimum;
 		var changedSamples = 0;
@@ -278,8 +280,12 @@ internal sealed class TerrainField
 							throw new InvalidOperationException( "Terrain world page budget exhausted." );
 						values = previousPage?.CopyValues( reservation ) ?? TerrainFieldPage.AllocateValues( reservation );
 						edits.Add( pageKey, values );
+						materials.Add( pageKey, previousPage?.CopyMaterials() ?? new ushort[SamplesPerPage] );
 					}
 					values[index] = next;
+					// Building authors dirt, even when it restores the exact procedural density.
+					// Digging retains the surface material on the smooth remainder.
+					if ( strength < 0f ) materials[pageKey][index] = VoxelMaterials.Dirt;
 					changedSamples++;
 					changedMinimum = new Vector3Int( Math.Min( changedMinimum.x, x ), Math.Min( changedMinimum.y, y ), Math.Min( changedMinimum.z, z ) );
 					changedMaximum = new Vector3Int( Math.Max( changedMaximum.x, x ), Math.Max( changedMaximum.y, y ), Math.Max( changedMaximum.z, z ) );
@@ -295,7 +301,7 @@ internal sealed class TerrainField
 		{
 			cancellation.ThrowIfCancellationRequested();
 			reader.Pages.TryGetValue( pair.Key, out var previous );
-			pages[pair.Key] = new TerrainFieldPage( revision, pair.Value, previous, true );
+			pages[pair.Key] = new TerrainFieldPage( revision, pair.Value, previous, true, materials: materials[pair.Key] );
 			changedKeys[keyIndex++] = pair.Key;
 		}
 		Array.Sort( changedKeys, ( a, b ) =>
@@ -318,6 +324,9 @@ internal sealed class TerrainFieldPage
 {
 	private float[] _values;
 	private WeakReference<float[]> _releasedValues;
+	private ushort[] _materials;
+	private WeakReference<ushort[]> _releasedMaterials;
+	public bool HasMaterials { get; }
 	private static long _reusedSamplePages;
 	public static long ReusedSamplePages => Interlocked.Read( ref _reusedSamplePages );
 	private readonly object _residencyGate = new();
@@ -364,7 +373,8 @@ internal sealed class TerrainFieldPage
 			return true;
 		}
 	}
-	public const long SampleBytes = (long)TerrainField.SamplesPerPage * sizeof( float );
+	// Reserve the complete density/material payload even for legacy density-only pages.
+	public const long SampleBytes = (long)TerrainField.SamplesPerPage * (sizeof( float ) + sizeof( ushort ));
 	public bool IsResident { get { lock ( _residencyGate ) return _values is not null; } }
 
 	// All dense correction arrays enter here, including codec and mutation staging.
@@ -414,11 +424,13 @@ internal sealed class TerrainFieldPage
 
 	// Resident pages take exclusive ownership of the array. Metadata-only
 	// validation derives ranges without retaining its caller-owned scratch.
-	public TerrainFieldPage( int revision, float[] values, TerrainFieldPage previous = null, bool trackChanges = false, bool retainSamples = true )
+	public TerrainFieldPage( int revision, float[] values, TerrainFieldPage previous = null, bool trackChanges = false, bool retainSamples = true, ushort[] materials = null )
 	{
 		if ( values.Length != TerrainField.SamplesPerPage ) throw new ArgumentException( "Invalid terrain page size." );
+		if ( materials is not null && materials.Length != values.Length ) throw new ArgumentException( "Invalid material page size." );
 		Revision = revision;
 		_values = retainSamples ? values : null;
+		_materials = retainSamples ? materials : null;
 		_blockRevisions = new int[RevisionBlocksAxis * RevisionBlocksAxis * RevisionBlocksAxis];
 		_blockMinimums = new float[_blockRevisions.Length];
 		_blockMaximums = new float[_blockRevisions.Length];
@@ -430,11 +442,14 @@ internal sealed class TerrainFieldPage
 		for ( var index = 0; index < values.Length; index++ )
 		{
 			var value = values[index];
+			var material = materials?[index] ?? 0;
+			if ( material != 0 && material != VoxelMaterials.Dirt ) throw new ArgumentException( "Unsupported placed material." );
+			HasMaterials |= material != 0;
 			var x = (index & TerrainField.PageMask) >> RevisionBlockShift;
 			var y = ((index >> TerrainField.PageShift) & TerrainField.PageMask) >> RevisionBlockShift;
 			var z = (index >> (2 * TerrainField.PageShift)) >> RevisionBlockShift;
 			var block = x + RevisionBlocksAxis * (y + RevisionBlocksAxis * z);
-			if ( trackChanges && value != (previous?.Sample( index ) ?? 0f) ) _blockRevisions[block] = revision;
+			if ( trackChanges && (value != (previous?.Sample( index ) ?? 0f) || material != (previous?.Material( index ) ?? 0)) ) _blockRevisions[block] = revision;
 			_blockMinimums[block] = MathF.Min( _blockMinimums[block], value );
 			_blockMaximums[block] = MathF.Max( _blockMaximums[block], value );
 			if ( !float.IsFinite( value ) || MathF.Abs( value ) > TerrainField.MaximumCorrection ) throw new ArgumentException( "Invalid terrain correction." );
@@ -448,6 +463,8 @@ internal sealed class TerrainFieldPage
 	private TerrainFieldPage( TerrainFieldPage source, float[] values )
 	{
 		_values = values;
+		_materials = source._materials;
+		HasMaterials = source.HasMaterials;
 		_isReader = true;
 		Revision = source.Revision;
 		Minimum = source.Minimum;
@@ -466,9 +483,13 @@ internal sealed class TerrainFieldPage
 			_lastRequiredAt = System.Diagnostics.Stopwatch.GetTimestamp();
 			// A saved immutable version may still be alive in readers or awaiting GC.
 			// Reuse those exact samples without keeping an evicted array alive.
-			if ( _values is null && _releasedValues is not null && _releasedValues.TryGetTarget( out var released ) )
+			ushort[] releasedMaterials = null;
+			if ( _values is null && _releasedValues is not null && _releasedValues.TryGetTarget( out var released ) &&
+				(!HasMaterials || (_releasedMaterials is not null && _releasedMaterials.TryGetTarget( out releasedMaterials ))) )
 			{
 				_values = released;
+				_materials = releasedMaterials;
+				_releasedMaterials = null;
 				_releasedValues = null;
 				Interlocked.Increment( ref _reusedSamplePages );
 			}
@@ -487,6 +508,8 @@ internal sealed class TerrainFieldPage
 			if ( _storedPage is null ) return false;
 			if ( _values is null ) return false;
 			_releasedValues = new WeakReference<float[]>( _values );
+			_releasedMaterials = _materials is null ? null : new WeakReference<ushort[]>( _materials );
+			_materials = null;
 			_values = null;
 			return true;
 		}
@@ -494,12 +517,14 @@ internal sealed class TerrainFieldPage
 
 	public bool InstallResidentSamples( TerrainFieldPage loaded )
 	{
-		if ( _isReader || loaded.Revision != Revision || loaded.Minimum != Minimum || loaded.Maximum != Maximum || !loaded.TryPin( out var reader ) )
+		if ( _isReader || loaded.Revision != Revision || loaded.Minimum != Minimum || loaded.Maximum != Maximum || loaded.HasMaterials != HasMaterials || !loaded.TryPin( out var reader ) )
 			throw new InvalidOperationException( "Loaded terrain samples do not match the requested page version." );
 		lock ( _residencyGate )
 		{
 			if ( _values is not null ) return false;
 			_values = reader._values;
+			_materials = reader._materials;
+			_releasedMaterials = null;
 			_releasedValues = null;
 			_lastRequiredAt = System.Diagnostics.Stopwatch.GetTimestamp();
 			return true;
@@ -514,6 +539,8 @@ internal sealed class TerrainFieldPage
 			if ( _isReader || _values is null || _storedPage is null ||
 				System.Diagnostics.Stopwatch.GetElapsedTime( _lastRequiredAt, now ).TotalSeconds < 5 ) return false;
 			_releasedValues = new WeakReference<float[]>( _values );
+			_releasedMaterials = _materials is null ? null : new WeakReference<ushort[]>( _materials );
+			_materials = null;
 			_values = null;
 			return true;
 		}
@@ -551,6 +578,18 @@ internal sealed class TerrainFieldPage
 	}
 
 	public float Sample( int index ) => (_values ?? throw new InvalidOperationException( "Terrain page is nonresident; acquire it before sampling." ))[index];
+	public ushort Material( int index )
+	{
+		if ( _values is null ) throw new InvalidOperationException( "Terrain page is nonresident; acquire it before sampling." );
+		return _materials?[index] ?? 0;
+	}
+	public ushort[] CopyMaterials()
+	{
+		if ( _values is null ) throw new InvalidOperationException( "Terrain page is nonresident; acquire it before copying." );
+		var result = new ushort[TerrainField.SamplesPerPage];
+		if ( _materials is not null ) Array.Copy( _materials, result, result.Length );
+		return result;
+	}
 	public float[] CopyValues( SampleReservation reservation = null )
 	{
 		var values = _values ?? throw new InvalidOperationException( "Terrain page is nonresident; acquire it before copying." );
@@ -560,7 +599,7 @@ internal sealed class TerrainFieldPage
 	}
 }
 
-internal sealed class TerrainFieldSnapshot
+internal sealed partial class TerrainFieldSnapshot
 {
 	// The dictionary is owned at construction and never mutated afterward.
 	private readonly Dictionary<Vector3Int, TerrainFieldPage> _pages;
@@ -589,7 +628,7 @@ internal sealed class TerrainFieldSnapshot
 	internal bool IsRegional => _regionMinimum.HasValue;
 	// Local cache/job lifetime, deliberately absent from stored/network history.
 	public int Epoch { get; }
-	public long PageBytes => (long)PageCount * TerrainField.SamplesPerPage * sizeof( float );
+	public long PageBytes => (long)PageCount * TerrainFieldPage.SampleBytes;
 	public long ResidentPageBytes => Pages.Values.Count( page => page.IsResident ) * TerrainFieldPage.SampleBytes;
 
 	internal TerrainFieldSnapshot( ProceduralTerrainSettings settings, int revision, Dictionary<Vector3Int, TerrainFieldPage> pages,

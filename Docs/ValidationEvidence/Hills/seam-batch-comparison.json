@@ -1,0 +1,233 @@
+{
+  "baseline": {
+    "runId": "e46b31c5196e4985beaee5c3c1126007",
+    "outcome": "completed",
+    "source": {
+      "task": "HILLS-SEAM-BATCH-001-v1",
+      "revision": "generator44-two-face-seams"
+    },
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94456,
+      "startCenter": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "world": {
+      "scene": "basic_example",
+      "cellsPerAxis": 32,
+      "baseCellSize": 16,
+      "gameplayRadius": 8,
+      "visualChunkRadius": 256,
+      "minimumVisualLod": 0,
+      "maximumVisualLod": 5,
+      "lod0VisualHalfExtent": 4,
+      "lodCacheHalfExtent": 8,
+      "visualConfigurationRevision": 2,
+      "worldSeed": 1337,
+      "generatorVersion": 44
+    },
+    "frame": {
+      "averageFps": 451.5733,
+      "p95Milliseconds": 3.766,
+      "p99Milliseconds": 5.1777,
+      "maximumMilliseconds": 42.9063
+    },
+    "allocationTotal": 5419821840,
+    "allocationMaxPerFrame": 46262576,
+    "gcMax": 21.326,
+    "memoryPeakProcess": 5547835392,
+    "memoryPeakGpu": 2031661924,
+    "prepMax": 11.3952,
+    "drain": 10218.889,
+    "hierarchy": {
+      "placementCommits": 7,
+      "placementSuperseded": 951,
+      "placementUnsafeCommits": 0,
+      "maximumPlacementLevelLag": 100
+    },
+    "outerP95": 5494.306,
+    "transitionP95": [
+      654.8892,
+      368.9269,
+      1659.2345,
+      3384.7783,
+      4515.709
+    ],
+    "pending": {
+      "pending": 0,
+      "allPending": 0,
+      "gameplayPending": 0,
+      "warmPending": 0
+    },
+    "exceptions": 0
+  },
+  "candidate": {
+    "runId": "bacd1ffc43894ac8b54fb7139290fbe0",
+    "outcome": "completed",
+    "source": {
+      "task": "HILLS-SEAM-BATCH-001-v1",
+      "revision": "generator44-four-face-seams"
+    },
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94304,
+      "startCenter": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "world": {
+      "scene": "basic_example",
+      "cellsPerAxis": 32,
+      "baseCellSize": 16,
+      "gameplayRadius": 8,
+      "visualChunkRadius": 256,
+      "minimumVisualLod": 0,
+      "maximumVisualLod": 5,
+      "lod0VisualHalfExtent": 4,
+      "lodCacheHalfExtent": 8,
+      "visualConfigurationRevision": 2,
+      "worldSeed": 1337,
+      "generatorVersion": 44
+    },
+    "frame": {
+      "averageFps": 429.6616,
+      "p95Milliseconds": 4.0781,
+      "p99Milliseconds": 7.5367,
+      "maximumMilliseconds": 44.065
+    },
+    "allocationTotal": 4655300152,
+    "allocationMaxPerFrame": 46250744,
+    "gcMax": 17.917,
+    "memoryPeakProcess": 5277786112,
+    "memoryPeakGpu": 2033677156,
+    "prepMax": 12.7271,
+    "drain": 10108.371,
+    "hierarchy": {
+      "placementCommits": 16,
+      "placementSuperseded": 947,
+      "placementUnsafeCommits": 0,
+      "maximumPlacementLevelLag": 94
+    },
+    "outerP95": 8068.497,
+    "transitionP95": [
+      958.4108,
+      750.9401,
+      1961.431,
+      3345.8083,
+      3381.6113
+    ],
+    "pending": {
+      "pending": 0,
+      "allPending": 0,
+      "gameplayPending": 0,
+      "warmPending": 0
+    },
+    "exceptions": 0
+  },
+  "percentDifferences": {
+    "averageFps": {
+      "baseline": 451.5733,
+      "candidate": 429.6616,
+      "percent": -4.852301940792335
+    },
+    "p95Milliseconds": {
+      "baseline": 3.766,
+      "candidate": 4.0781,
+      "percent": 8.287307488050983
+    },
+    "p99Milliseconds": {
+      "baseline": 5.1777,
+      "candidate": 7.5367,
+      "percent": 45.5607702261622
+    },
+    "maximumMilliseconds": {
+      "baseline": 42.9063,
+      "candidate": 44.065,
+      "percent": 2.7005358187492186
+    },
+    "allocationTotal": {
+      "baseline": 5419821840,
+      "candidate": 4655300152,
+      "percent": -14.106029876435938
+    },
+    "allocationMaxPerFrame": {
+      "baseline": 46262576,
+      "candidate": 46250744,
+      "percent": -0.02557574831111869
+    },
+    "gcMax": {
+      "baseline": 21.326,
+      "candidate": 17.917,
+      "percent": -15.98518240645221
+    },
+    "memoryPeakProcess": {
+      "baseline": 5547835392,
+      "candidate": 5277786112,
+      "percent": -4.867651271510544
+    },
+    "memoryPeakGpu": {
+      "baseline": 2031661924,
+      "candidate": 2033677156,
+      "percent": 0.0991913062008047
+    },
+    "prepMax": {
+      "baseline": 11.3952,
+      "candidate": 12.7271,
+      "percent": 11.688254703734897
+    },
+    "drain": {
+      "baseline": 10218.889,
+      "candidate": 10108.371,
+      "percent": -1.081507001397119
+    },
+    "outerP95": {
+      "baseline": 5494.306,
+      "candidate": 8068.497,
+      "percent": 46.85197730159188
+    },
+    "transitionP95": [
+      {
+        "baseline": 654.8892,
+        "candidate": 958.4108,
+        "percent": 46.34701564783784
+      },
+      {
+        "baseline": 368.9269,
+        "candidate": 750.9401,
+        "percent": 103.54712546035545
+      },
+      {
+        "baseline": 1659.2345,
+        "candidate": 1961.431,
+        "percent": 18.213007263289185
+      },
+      {
+        "baseline": 3384.7783,
+        "candidate": 3345.8083,
+        "percent": -1.151330945367967
+      },
+      {
+        "baseline": 4515.709,
+        "candidate": 3381.6113,
+        "percent": -25.114499184956333
+      }
+    ]
+  },
+  "differingInputs": {
+    "test.durationSeconds": {
+      "baseline": 121.94456,
+      "candidate": 121.94304
+    }
+  }
+}

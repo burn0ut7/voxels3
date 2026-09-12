@@ -1,0 +1,92 @@
+using System;
+using System.Collections.Generic;
+
+/// <summary>Extracts the exposed free surface from generated chunk cell data.</summary>
+internal static class SurfaceWaterGeometry
+{
+	[System.Runtime.InteropServices.StructLayout( System.Runtime.InteropServices.LayoutKind.Sequential )]
+	internal struct WaterVertex
+	{
+		[VertexLayout.Position] public Vector3 Position;
+		public WaterVertex( Vector3 position ) { Position = position; }
+	}
+	internal sealed record Chunk( GpuSdfDescriptor Descriptor, GeneratedWaterCells Cells, WaterVertex[] Vertices, double Milliseconds );
+
+	public static WaterVertex[] Build( GeneratedWaterCells cells )
+	{
+		var vertices = new List<WaterVertex>();
+		var size = GeneratedWaterCells.CellsPerAxis;
+		var stride = GeneratedWaterCells.SamplesPerAxis;
+		var origin = cells.Bounds.Minimum;
+		origin.z = cells.SeaLevel;
+		for ( var y = 0; y < size; y++ )
+		{
+			for ( var x = 0; x < size; x++ )
+			{
+				if ( cells.RefinedCells.TryGetValue( x + size * y, out var refined ) )
+				{
+					foreach ( var cell in refined )
+					{
+						var corner = cell.Origin;
+						var rightCorner = corner + new Vector3( cell.Size, 0f, 0f );
+						var diagonalCorner = corner + new Vector3( cell.Size, cell.Size, 0f );
+						var upCorner = corner + new Vector3( 0f, cell.Size, 0f );
+						var wet = cell.Clearance;
+						ClipTriangle( corner, rightCorner, diagonalCorner, wet.x, wet.y, wet.z, vertices );
+						ClipTriangle( corner, diagonalCorner, upCorner, wet.x, wet.z, wet.w, vertices );
+					}
+					continue;
+				}
+				var index = x + stride * y;
+				var a = cells.SurfaceClearance[index];
+				var b = cells.SurfaceClearance[index + 1];
+				var c = cells.SurfaceClearance[index + stride + 1];
+				var d = cells.SurfaceClearance[index + stride];
+				if ( a <= 0f && b <= 0f && c <= 0f && d <= 0f ) continue;
+				var first = origin + new Vector3( x * cells.CellSize, y * cells.CellSize, 0f );
+				if ( a > 0f && b > 0f && c > 0f && d > 0f )
+				{
+					// Merge only complete adjacent wet cells in this owner chunk.
+					var end = x + 1;
+					while ( end < size && cells.SurfaceClearance[end + 1 + stride * y] > 0f &&
+						cells.SurfaceClearance[end + 1 + stride * (y + 1)] > 0f ) end++;
+					var second = origin + new Vector3( end * cells.CellSize, y * cells.CellSize, 0f );
+					var third = second + new Vector3( 0f, cells.CellSize, 0f );
+					var fourth = first + new Vector3( 0f, cells.CellSize, 0f );
+					vertices.Add( new WaterVertex( first ) ); vertices.Add( new WaterVertex( second ) ); vertices.Add( new WaterVertex( third ) );
+					vertices.Add( new WaterVertex( first ) ); vertices.Add( new WaterVertex( third ) ); vertices.Add( new WaterVertex( fourth ) );
+					x = end - 1;
+					continue;
+				}
+				var right = first + new Vector3( cells.CellSize, 0f, 0f );
+				var diagonal = first + new Vector3( cells.CellSize, cells.CellSize, 0f );
+				var up = first + new Vector3( 0f, cells.CellSize, 0f );
+				ClipTriangle( first, right, diagonal, a, b, c, vertices );
+				ClipTriangle( first, diagonal, up, a, c, d, vertices );
+			}
+		}
+		return vertices.ToArray();
+	}
+
+	private static void ClipTriangle( Vector3 a, Vector3 b, Vector3 c, float da, float db, float dc, List<WaterVertex> vertices )
+	{
+		Span<Vector3> points = stackalloc Vector3[3] { a, b, c };
+		Span<float> density = stackalloc float[3] { da, db, dc };
+		Span<Vector3> clipped = stackalloc Vector3[4];
+		var count = 0;
+		for ( var index = 0; index < 3; index++ )
+		{
+			var next = (index + 1) % 3;
+			if ( density[index] > 0f ) clipped[count++] = points[index];
+			if ( (density[index] > 0f) != (density[next] > 0f) )
+				clipped[count++] = points[index] + (points[next] - points[index]) *
+					(density[index] / (density[index] - density[next]));
+		}
+		for ( var index = 1; index + 1 < count; index++ )
+		{
+			vertices.Add( new WaterVertex( clipped[0] ) );
+			vertices.Add( new WaterVertex( clipped[index] ) );
+			vertices.Add( new WaterVertex( clipped[index + 1] ) );
+		}
+	}
+}

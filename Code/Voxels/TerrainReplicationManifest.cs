@@ -7,7 +7,7 @@ using System.Text;
 /// <summary>Regional host page identities; density payloads use TerrainFieldCodec unchanged.</summary>
 internal sealed class TerrainReplicationManifest
 {
-	public const int ProtocolVersion = 2;
+	public const int ProtocolVersion = 3;
 	public const int MaximumBytes = 65536;
 	public Guid WorldId;
 	public int Revision;

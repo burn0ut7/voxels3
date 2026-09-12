@@ -1,0 +1,112 @@
+--- a/Code/Voxels/Generation/RegionalLandforms.cs
++++ b/Code/Voxels/Generation/RegionalLandforms.cs
+@@ -43,12 +43,14 @@
+ 	private const uint MountainSalt = 0x68E31DA4u;
+ 	private const uint PlainsSalt = 0x1B56C4E9u;
+ 	private const uint ShapeSalt = 0x7F4A7C15u;
+-	private const uint DetailSalt = 0x94D049BBu;
+-	private const uint FineReliefSalt = 0xD1B54A35u;
++	private const uint HillShapeSalt = 0x94D049BBu;
++	private const uint HillPatchSalt = 0xD1B54A35u;
+ 	private const uint UplandSalt = 0xA24BAED5u;
+ 
+-	// Mountain-only shape scale; leaves the hill/plain wavelengths unchanged.
++	// Independent widths keep hill slopes broader than the former detail mounds.
+ 	internal const float MountainWidthScale = 1.30f;
++	private const float HillWidthScale = 1.5f;
++	private const float HillPatchScale = 5f;
+ 	internal const float MinimumHeightFraction = -0.70f - TerrainErosion.MaximumOffsetFraction;
+ 	internal const float MaximumHeightFraction = 1.72f + TerrainErosion.MaximumOffsetFraction;
+ 
+@@ -85,9 +87,9 @@
+ 		var mountains = mountainPreference * mountainPreference * mountainPreference * Smooth( (land - 0.5f) * 2f );
+ 		var p = Noise( position, settings.LocalLandformScale * 2f, seed ^ PlainsSalt );
+ 		var q = Noise( position, settings.LocalLandformScale, seed ^ ShapeSalt );
+-		var d = Noise( position, settings.LocalLandformScale * 0.5f, seed ^ DetailSalt );
+-		var f = Noise( position, settings.LocalLandformScale * 0.125f, seed ^ FineReliefSalt );
+-		var hillPreference = 1f - Eligibility( p, settings.PlainsAmount );
++		var hillShape = Noise( position, settings.LocalLandformScale * HillWidthScale, seed ^ HillShapeSalt );
++		var hillPatch = Noise( position, settings.LocalLandformScale * HillPatchScale, seed ^ HillPatchSalt );
++		var hillPreference = (1f - Eligibility( p, settings.PlainsAmount )) * Smooth( (hillPatch - 0.25f) * 2.5f );
+ 		var plains = (1f - mountains) * (1f - hillPreference * hillPreference);
+ 		var hills = 1f - mountains - plains;
+ 		// Gentle transition terrain; folded value-noise contours produced straight ridges.
+@@ -104,10 +106,8 @@
+ 			gradient = massGradient * (0.83f * mountains * land * settings.ReliefHeight);
+ 			mountainHeight = (1f - shapeBlend) * mountainHeight + shapeBlend * broadMountainHeight;
+ 		}
+-		var mounds = Smooth( (f - 0.45f) * 4f );
+ 		var landHeight = plains * (0.035f + 0.015f * q) +
+-			hills * (0.08f + 0.24f * (0.65f * q + 0.35f * d) +
+-				0.08f * settings.Ruggedness * mounds) + mountains * mountainHeight;
++			hills * (0.035f + 0.015f * q + 0.42f * hillShape) + mountains * mountainHeight;
+ 		// Regional support spans the gaps between individual mountain groups.
+ 		// Its maximum .68 fraction is included in the global surface bound.
+ 		var uplandWeight = Smooth( (mountainPreference - 0.1f) / 0.9f ) * Smooth( (land - 0.65f) / 0.35f );
+@@ -148,12 +148,13 @@
+ 		var m = Field( settings.MountainRegionScale, MountainSalt );
+ 		var p = Field( settings.LocalLandformScale * 2f, PlainsSalt );
+ 		var q = Field( settings.LocalLandformScale, ShapeSalt );
+-		var d = Field( settings.LocalLandformScale * 0.5f, DetailSalt );
+-		var f = Field( settings.LocalLandformScale * 0.125f, FineReliefSalt );
++		var hillShape = Field( settings.LocalLandformScale * HillWidthScale, HillShapeSalt );
++		var hillPatch = Field( settings.LocalLandformScale * HillPatchScale, HillPatchSalt );
+ 		var land = Eligibility( n, settings.LandAmount );
+ 		var mountainPreference = Eligibility( m, settings.MountainAmount * (2f - settings.MountainAmount) );
+ 		var mountains = mountainPreference * Square( mountainPreference ) * Smooth( (land - 0.5d) * 2d );
+-		var preference = 1d - Square( 1d - Eligibility( p, settings.PlainsAmount ) );
++		var hillPreference = (1d - Eligibility( p, settings.PlainsAmount )) * Smooth( (hillPatch - 0.25d) * 2.5d );
++		var preference = 1d - Square( hillPreference );
+ 		var plains = (1d - mountains) * preference;
+ 		var hills = (1d - mountains) * (1d - preference);
+ 		var mountainHeight = 0.10d + 0.28d * Square( q );
+@@ -167,10 +168,8 @@
+ 			mountainHeight = (1d - shapeBlend) * mountainHeight + shapeBlend * broadMountainHeight;
+ 			erosionExposure = Smooth( (mass - 0.10d) * 2.5d ) * Smooth( (1d - mass) * 10d );
+ 		}
+-		var mounds = Smooth( (f - 0.45d) * 4d );
+ 		var landHeight = plains * (0.035d + 0.015d * q) +
+-			hills * (0.08d + 0.24d * (0.65d * q + 0.35d * d) +
+-				0.08d * settings.Ruggedness * mounds) + mountains * mountainHeight;
++			hills * (0.035d + 0.015d * q + 0.42d * hillShape) + mountains * mountainHeight;
+ 		var uplandWeight = Smooth( (mountainPreference - 0.1d) * (1d / 0.9d) ) * Smooth( (land - 0.65d) * (1d / 0.35d) );
+ 		if ( uplandWeight.Maximum > 0d )
+ 		{
+--- a/Assets/shaders/voxels/voxel_regional_landforms.hlsl
++++ b/Assets/shaders/voxels/voxel_regional_landforms.hlsl
+@@ -44,9 +44,9 @@
+ 	float mountains = mountainPreference * mountainPreference * mountainPreference * LandformSmooth( (land - 0.5) * 2.0 );
+ 	float p = LandformNoise( position, scales.z * 2.0, seed ^ 0x1B56C4E9u );
+ 	float q = LandformNoise( position, scales.z, seed ^ 0x7F4A7C15u );
+-	float d = LandformNoise( position, scales.z * 0.5, seed ^ 0x94D049BBu );
+-	float f = LandformNoise( position, scales.z * 0.125, seed ^ 0xD1B54A35u );
+-	float hillPreference = 1.0 - LandformEligibility( p, terrain.w );
++	float hillShape = LandformNoise( position, scales.z * 1.5, seed ^ 0x94D049BBu );
++	float hillPatch = LandformNoise( position, scales.z * 5.0, seed ^ 0xD1B54A35u );
++	float hillPreference = (1.0 - LandformEligibility( p, terrain.w )) * LandformSmooth( (hillPatch - 0.25) * 2.5 );
+ 	float plains = (1.0 - mountains) * (1.0 - hillPreference * hillPreference);
+ 	float hills = 1.0 - mountains - plains;
+ 	float mountainHeight = 0.10 + 0.28 * q * q;
+@@ -65,10 +65,8 @@
+ 		gradient = massGradient * (0.83 * mountains * land * scales.w);
+ 		mountainHeight = (1.0 - shapeBlend) * mountainHeight + shapeBlend * broadMountainHeight;
+ 	}
+-	float mounds = LandformSmooth( (f - 0.45) * 4.0 );
+ 	float landHeight = plains * (0.035 + 0.015 * q) +
+-		hills * (0.08 + 0.24 * (0.65 * q + 0.35 * d) +
+-			0.08 * ruggedness * mounds) + mountains * mountainHeight;
++		hills * (0.035 + 0.015 * q + 0.42 * hillShape) + mountains * mountainHeight;
+ 	float uplandWeight = LandformSmooth( (mountainPreference - 0.1) / 0.9 ) * LandformSmooth( (land - 0.65) / 0.35 );
+ 	[branch]
+ 	if ( uplandWeight > 0.0 )
+--- a/Code/Voxels/ProceduralTerrainSdf.cs
++++ b/Code/Voxels/ProceduralTerrainSdf.cs
+@@ -10,7 +10,7 @@
+ internal static class ProceduralTerrainSdf
+ {
+ 	// Saved worlds identify this backend revision; it is not a variation control.
+-	public const int CurrentVersion = 42;
++	public const int CurrentVersion = 43;
+ 	public const int DefaultWorldSeed = 1337;
+ 	public static float SampleGlobal(
+ 		Vector3Int globalSampleCoordinate,

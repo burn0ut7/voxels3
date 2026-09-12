@@ -19,10 +19,15 @@ public sealed partial class VoxelManager
 		var bounds = new SdfWorldAabb( new Vector3( x, y, minimumZ ), new Vector3( x, y, maximumZ ) );
 		if ( !CurrentField.TryCaptureRegion( bounds, out var reader ) )
 			throw new InvalidOperationException( "Column pages are loading; retry after normal storage integration." );
-		var height = RegionalLandforms.SampleWorld( new Vector3( x, y, 0f ), reader.Settings ).Height;
+		var xy = new Vector3( x, y, 0f );
+		var natural = RegionalLandforms.SampleNatural( xy, reader.Settings );
+		var river = RiverWorld.For( reader.Settings ).GetPatch( RiverNetwork.PatchAt( xy ) )
+			.SampleWorld( xy, natural.Height, reader.Settings.SeaLevel );
+		var height = river.Height;
 		return new
 		{
 			reader.WorldId, reader.Revision, reader.Settings, Height = height,
+			NaturalHeight = natural.Height, river.WaterHeight, river.Direction,
 			Samples = Enumerable.Range( 0, count ).Select( index =>
 			{
 				var z = minimumZ + index * spacing;
@@ -30,7 +35,7 @@ public sealed partial class VoxelManager
 				var density = reader.SampleWorld( position );
 				return new { Z = z, SurfaceDensity = z - height,
 					BaseDensity = ProceduralTerrainSdf.SampleWorld( position, reader.Settings ), Density = density,
-					Medium = SurfaceWater.Resolve( z, height, density, reader.Settings.SeaLevel ).ToString() };
+					Medium = SurfaceWater.Resolve( z, height, density, river.WaterHeight ).ToString() };
 			} ).ToArray()
 		};
 	}
@@ -55,13 +60,15 @@ public sealed partial class VoxelManager
 			return await Task.RunInThreadAsync( () =>
 			{
 				var text = new System.Text.StringBuilder();
-				text.AppendLine( "x,y,height,land,mountains,plains,hills,slope,boundMin,boundMax,repeatHeight" );
+				var riverPatches = new System.Collections.Generic.HashSet<RiverNetwork.NodeId>();
+				text.AppendLine( "x,y,height,land,mountains,plains,hills,slope,boundMin,boundMax,repeatHeight,naturalHeight,waterHeight,flowX,flowY" );
 				for ( var y = 0; y < pointsPerAxis; y++ )
 				{
 					cancellation.ThrowIfCancellationRequested();
 					for ( var x = 0; x < pointsPerAxis; x++ )
 					{
 						var position = new Vector3( minimumX + x * spacing, minimumY + y * spacing, 0f );
+						riverPatches.Add( RiverNetwork.PatchAt( position ) );
 						var sample = RegionalLandforms.SampleWorld( position, settings );
 						var dx = (RegionalLandforms.SampleWorld( position + new Vector3( 16f, 0f, 0f ), settings ).Height -
 							RegionalLandforms.SampleWorld( position - new Vector3( 16f, 0f, 0f ), settings ).Height) / 32f;
@@ -70,14 +77,35 @@ public sealed partial class VoxelManager
 						var bounds = RegionalLandforms.BoundHeight( new SdfWorldAabb(
 							position - new Vector3( 256f, 256f, 0f ), position + new Vector3( 256f, 256f, 0f ) ), settings );
 						var repeated = RegionalLandforms.SampleWorld( position, settings ).Height;
-						text.AppendLine( FormattableString.Invariant( $"{position.x:R},{position.y:R},{sample.Height:R},{sample.Land:R},{sample.Mountains:R},{sample.Plains:R},{sample.Hills:R},{MathF.Sqrt( dx * dx + dy * dy ):R},{bounds.Minimum:R},{bounds.Maximum:R},{repeated:R}" ) );
+						var natural = RegionalLandforms.SampleNatural( position, settings );
+						var river = RiverWorld.For( settings ).GetPatch( RiverNetwork.PatchAt( position ) )
+							.SampleWorld( position, natural.Height, settings.SeaLevel );
+						text.AppendLine( FormattableString.Invariant( $"{position.x:R},{position.y:R},{sample.Height:R},{sample.Land:R},{sample.Mountains:R},{sample.Plains:R},{sample.Hills:R},{MathF.Sqrt( dx * dx + dy * dy ):R},{bounds.Minimum:R},{bounds.Maximum:R},{repeated:R},{natural.Height:R},{river.WaterHeight:R},{river.Direction.x:R},{river.Direction.y:R}" ) );
 					}
 				}
 				var directory = $"terrain-surveys/{Guid.NewGuid():N}";
+				var reaches = new System.Collections.Generic.HashSet<RiverNetwork.Segment>();
+				var riverText = new System.Text.StringBuilder( "startX,startY,startZ,endX,endY,endZ,startRadius,endRadius,startDepth,endDepth\n" );
+				var riversTruncated = false;
+				foreach ( var patch in riverPatches )
+				{
+					cancellation.ThrowIfCancellationRequested();
+					foreach ( var segment in RiverWorld.For( settings ).GetPatch( patch ).Segments )
+					{
+						if ( reaches.Count >= 100000 ) { riversTruncated = true; break; }
+						if ( !reaches.Add( segment ) ) continue;
+						riverText.AppendLine( FormattableString.Invariant(
+							$"{segment.Start.x:R},{segment.Start.y:R},{segment.Start.z:R},{segment.End.x:R},{segment.End.y:R},{segment.End.z:R},{segment.StartRadius:R},{segment.EndRadius:R},{segment.StartDepth:R},{segment.EndDepth:R}" ) );
+					}
+					if ( riversTruncated ) break;
+				}
 				FileSystem.Data.CreateDirectory( directory );
 				FileSystem.Data.WriteAllText( $"{directory}/samples.csv", text.ToString() );
+				FileSystem.Data.WriteAllText( $"{directory}/rivers.csv", riverText.ToString() );
 				FileSystem.Data.WriteAllText( $"{directory}/recipe.json", System.Text.Json.JsonSerializer.Serialize(
-					new { World = world, Generator = ProceduralTerrainSdf.CurrentVersion, Settings = settings, minimumX, minimumY, pointsPerAxis, spacing } ) );
+					new { World = world, Generator = ProceduralTerrainSdf.CurrentVersion, Settings = settings, minimumX, minimumY, pointsPerAxis, spacing,
+						RiverVersion = RiverNetwork.CurrentVersion, RiverSegments = reaches.Count, riversTruncated,
+						RiverCoverage = "Unique segments from sampled patches, including their source halos" } ) );
 				return FileSystem.Data.GetFullPath( directory );
 			} );
 		}

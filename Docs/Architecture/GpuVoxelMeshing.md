@@ -2,6 +2,22 @@
 
 ## Production Slice
 
+RIVERS-016 prototype (unaccepted): generation resolves material runs at refined cell
+crossings in stage6 and stores packed weights in a second edge-buffer plane.
+Regular XY density caches retain2floats per column; transition density stores no
+material columns. No new storage-buffer binding is introduced. Existing stage6
+UAV barriers publish position and material edge data together before emission.
+Material generation uses the existing recipe/rules, including river bed and slope,
+and is absent from both draw shaders. Dedicated regular emission and the existing
+transition emission write28-byte vertices: the original24-byte position/identity/
+normal plus4normalized material weights in Color32. Persistent arena byte budgets
+stay32/16MiB; vertex capacity derives from the new shared stride. All stale-source,
+publication and visibility contracts continue to apply. These generated material
+runs are compressed cell strata, not a second mutable world. CPU logical queries
+and correction persistence remain unchanged. Visual LOD/material fidelity and
+figure-eight FPS/memory gates are pending; prior material-render acceptance does
+not qualify the prototype. See SurfaceWater and VoxelMaterials for ownership.
+
 One integer-indexed clipbox hierarchy owns the enabled terrain render levels.
 The shipping default enables levels 0 through 2. Optional visual-distance tiers
 enable ordinary levels 3 through 6 through the same records and queues. The
@@ -97,8 +113,8 @@ Gameplay membership and bounded CPU preparation are defined in the
 [voxel foundation](VoxelChunkFoundation.md#canonical-ownership-and-data-flow).
 
 `VoxelManager` computes changed regular boxes and adjacent transition boundaries
-through one placement builder. Ordinary movement advances one nested boundary
-at a time, as described in the qualified boundary-step section below. Each transition identity contains its fine
+through one placement builder. The boundary-step candidate described below
+limits ordinary movement to one nested boundary per publication. Each transition identity contains its fine
 level, coarse level, coarse coordinate, and face. The same identity,
 descriptor, queue, scratch pipeline, resident cache, allocator, visibility path,
 and draw path serve every enabled pair. Transition work is ordered by coarse
@@ -108,7 +124,7 @@ than one queue or mesher per level.
 Regular and transition compute emit their final table-derived primary positions.
 The terrain vertex shader only applies the engine's high-precision world offset
 and decodes the emitted normal; it performs no LOD-dependent position change.
-Each emitted 24-byte vertex stores a finite, bit-exact signature, its stable
+Each emitted 28-byte vertex stores a finite, bit-exact signature, its stable
 arena-record slot, and a two-bit allocation-generation token in `Normal.x` for
 explicit geometry audits; `Normal.yz` contain the octahedrally encoded unit
 normal. Visibility therefore owns only conservative bounds and indirect draw
@@ -263,7 +279,7 @@ phases of the same single-face batch, preventing their costs from stacking
 in one frame without changing transition identity or publication. Count readback
 contains bounded scalar metadata only. Exact allocations use the unchanged shared-arena range allocator. Final
 vertex and index stages in the same transition compute resource write the existing
-24-byte vertex and 32-bit index formats. Packed audit counters keep that resource
+28-byte vertex and 32-bit index formats. Packed audit counters keep that resource
 at s&box's 16-storage-buffer limit; valid dummy output descriptors remain bound
 during count stages and are replaced with arena buffers only for emission.
 
@@ -301,11 +317,11 @@ The count stage returns only bounded metadata to the CPU. It never returns
 density, vertices, indices, or other geometry.
 
 After metadata readback, the existing CPU allocator reserves exact vertex and
-index ranges. The emit stage writes 24-byte position/normal vertices, 32-bit
+index ranges. The emit stage writes 28-byte position/normal/material vertices, 32-bit
 indices, and indexed-indirect arguments directly into persistent arena buffers.
 Ordinary drawing reads persistent geometry, visibility, indirect arguments and
-one shared material palette. It does not evaluate volumetric density or edits;
-the pixel shader evaluates landform heights at four XY material-node columns.
+one shared material palette. It does not evaluate procedural density, edits, rivers or landforms;
+the pixel shader reads interpolated generated material weights.
 [Voxel materials](VoxelMaterials.md) owns that derived appearance contract.
 
 The 16-unit checker projects onto the dominant surface plane and filters distant
@@ -553,7 +569,7 @@ observed during CapturePendingClipboxReadiness, without changing GPU geometry
 or dispatch ownership. See candidate 8 in the [validation ledger](../ValidationResults.md)
 for sampled attribution, the standard benchmark, and unresolved acceptance.
 
-### Sparse cave mask load failure — 2026-09-08
+### Sparse cave mask load failure â€” 2026-09-08
 
 Adding a fifth simplex query for regional cave coverage coincided with a
 reproducible play/load invalid-write device loss on26.09.01c/RTX5090; Aftermath
@@ -695,7 +711,7 @@ and world-space checker. Both regular and transition geometry use that same draw
 shader without changing persistent vertex layout or extraction. Appearance
 qualification and performance comparison are recorded under MATERIALS-001/v1.
 
-## Transition stage specialization candidate — 2026-09-09
+## Transition stage specialization candidate â€” 2026-09-09
 
 D5 narrows the reproduced startup GPU failure to outstanding transition count
 work: batch104 submitted refine/count at01:37:20.5042 and has no callback before
@@ -902,6 +918,314 @@ See [the experiment](../Research/EmptySeamExperiment.md) for historical rejectio
 acceptance, fixed-world results and incomplete moving qualification. This does
 not accept unrelated terrain errors or alter the existing benchmark route.
 
+
+## River field preparation
+
+The current river slice derives exact CPU segments from the immutable recipe;
+see [the drainage contract](../Plans/RiverDrainageBasins.md). Regular and transition
+scratch lanes reuse their existing river texture when its recipe and XY coverage
+contain the entire closed request bounds. An exact upper-edge sample is a miss,
+matching the shader's exclusive edge. Misses asynchronously capture/pack the
+required region before dispatch. Reuse skips both numerical packing and upload;
+the bounded exact-footprint shared numerical cache is documented in SurfaceWater.
+A sampled RGBA32323232F texture transports a stackless spatial hierarchy and unique endpoint/radius pairs,
+avoiding another storage binding in the16-buffer transition pipeline. Each atlas
+is capped at128MiB; generation owners release their resources on teardown.
+The CPU patch sampler and atlas packer share RiverSpatialIndex: median splits,
+up to eight segments per leaf, and preorder subtree escape indices. Wet-support
+bounds permit conservative valley-height pruning without changing the river
+profile. Regular density preparation evaluates the XY landform once per halo
+column in stage9 and stores height/mountain weight in the existing density
+buffer tail. Stage1 reuses the height/mountain pair for all Z samples through the
+shared SDF composition; the two-float cache uses9800bytes per batch member and
+adds no storage-buffer binding.
+
+The regular and transition28-byte vertex format retains packed allocation identity
+in normal.x and appends generated material weights. CPU audit retains its finite
+identity and slot/generation checks. The former terrain fragment river cutout is
+removed: canonical meshing now owns all visible terrain holes. Coarse narrow-river
+fidelity, edited-solid visibility and the unchanged figure-eight are acceptance
+gates. Do not reintroduce procedural pixel clipping to hide a mesh deficiency.
+
+## Terrain Depth and Shadows (implementation in progress)
+
+The forward arena submissions remain GPU-culled indexed indirect draws at the
+camera AfterOpaque stage. Explicit per-camera draw attributes receive scene
+lighting through the existing render rendezvous, so terrain can receive shadows.
+One additional infinite-bounds SceneCustomObject participates only in depth-prepass
+and shadow layers. Each view GPU-culls the canonical published bounds and source
+arguments independently, preserving off-camera shadow casters.
+
+One512-thread compute group per active arena scans visible triangle counts into
+512uint4 range records and one20-byte indirect argument. A three-vertex driver
+model instances one canonical triangle per instance. Its depth vertex shader
+finds the region by a prefix-range search, fetches the existing local index and
+base-offset28-byte vertex, and emits the same world position and decoded normal.
+The driver contains no terrain geometry; no mesh copy, readback, second mesher,
+per-region scene objects or CPU triangle expansion is introduced. Regular and
+transition publication share their existing active descriptor contract. The
+frustum predicate and normal decoding each retain one shared implementation.
+
+Each arena owns8212bytes of additional GPU scratch. Render views reuse it
+sequentially with UAV and resource transitions; it is released with its arena.
+Depth submission is gated by field-presentation readiness and available published
+visibility buffers. Each camera command rebuild publishes an immutable arena
+snapshot alongside its descriptor buffers; depth never enumerates the live arena
+list while streaming adds arenas. The camera-state lock serializes snapshot and
+descriptor lifetime access.
+Forward submissions explicitly restore vertex/index buffer states after depth
+reads. The scene object is deleted before arena resources on mesher disposal.
+
+The initial per-geometry scene-object prototype rendered but the user reported
+poor FPS (bounded observation:169.7FPS,engine Render average7.03ms). It is replaced
+by one compute and one indirect draw per arena per depth/shadow view. Public
+Graphics.Draw lacks a base-vertex parameter, and direct indexed indirect drawing
+is internal outside camera command lists; public DrawModelInstancedIndirect is
+the engine-supported batching entry point. GPU triangle-instance lookup costs,
+shadow correctness and the unchanged figure-eight remain acceptance gates.
+This implementation is unaccepted until TERRAIN-SHADOWS-001 validates it.
+
+### Block-instancing prototype (TERRAIN-SHADOWS-002, proposed)
+
+Facepunch's [TerrainClipmapSceneObject](https://github.com/Facepunch/sbox-public/blob/master/engine/Sandbox.Engine/Scene/Components/Terrain/TerrainClipmapSceneObject.cs)
+uses reusable instanced blocks, CPU camera-frustum culling and the full clipmap
+for shadow views. Current upstream also refreshes camera culling per view and
+uses pass-local Graphics.Attributes. It does not provide a transferable cave
+occlusion solution: its heightmap blocks do not represent our volumetric caves.
+Adopt block instancing, retaining our published SDF mesh and light-view culling;
+do not adopt shadow rendering of the entire resident world.
+
+Replace one triangle per depth instance and per-vertex512-range binary search
+with64triangles per instance. The visibility group scans visible block counts;
+each visible region emits compact uint4 records (first index, base vertex,
+valid index count, unused). A192-index driver fetches one block record directly,
+then the same canonical index/vertex. Only a region's last partial block has
+padding; those vertices form clipped degenerates and perform no terrain fetch.
+All published triangles, world positions, normal decoding, LODs, transitions,
+shadow cascades and camera/light frustum predicates remain unchanged.
+
+The mesher owns the64-triangle constant and supplies the corresponding index
+count to both shaders. Capacity is ceil(arena index capacity /192)+512 records:
+the total indexed allocation plus at most one partially filled block per region.
+Each arena owns this bounded scratch and the existing20-byte indirect argument;
+no terrain geometry is copied or read back. Reuse/disposal and immutable camera
+arena snapshots retain the existing lifetime contract. Writes stay GPU-only,
+with UAV/read barriers before drawing. Buffer growth is under0.4MiB per arena.
+
+This targets instance scheduling and repeated vertex lookup before adding an
+occlusion subsystem. Camera-only occlusion cannot remove shadow casters safely;
+a depth hierarchy would need conservative light-view/receiver handling, edit
+invalidation and camera-motion recovery. That broader work is deferred until
+the unchanged-workload measurement identifies the remaining cost.
+
+### Landform include hotload qualification
+
+HILLS-001/v1 on26.09.08b reproduced stale regular/transition shader binaries
+after an include-only landform edit, while C# collision used the new recipe.
+The player appeared inside the rendered floor. Editing both existing shader
+entry files triggered successful recompilation; managed compile status alone
+does not validate GPU recipe freshness. After field-include changes, verify
+both shader compiles, restart Play/editor per the shader contract, and check
+CPU/GPU density and actual rendered support before accepting visual results.
+No second field, collision offset or LOD workaround is introduced.
+
+### Active handoff scheduling candidate
+
+Placement preparation schedules missing active coarse readiness regions across
+all enabled levels before remaining entering cache regions. Previously cache
+Entering was queued first, so its inactive entries could delay visible handoff
+dependencies; Contains then retained that queue position. Existing queued/in-flight
+requests retain their identity/order, edit queues keep priority, and all cache
+coverage/atomic handoff requirements remain unchanged. This is an ordering
+change, not added dispatch concurrency or a relaxed seam gate. Runtime timing
+and unchanged figure-eight acceptance are tracked in HILLS-STREAMING-001/v1.
+
+Fast-flight retargeting: when the requested viewer anchor leaves the staged
+finest-enabled outer box, cancel that obsolete pending placement through the
+existing cancellation lifecycle and prepare the latest target. Visual-setting
+changes also supersede the old pending configuration. Nearby target changes
+retain the current step to avoid cancelling useful work each frame. Published
+geometry stays intact until all replacement readiness/seam checks pass.
+This addresses observed94-region target lag; timing acceptance remains pending.
+
+When no near regular work submits, outer count admission and transition work
+share render ticks according to their existing last-service timestamps. A
+successful outer submission returns before transition processing. This retains
+one outer batch in flight and the 250ms forced-service deadline under near
+load, while avoiding transition-queue starvation of outer work on otherwise
+available ticks. It does not repeat the rejected simultaneous-dispatch or
+16ms forced-deadline experiments. Compile passed on26.09.08b; runtime
+performance qualification remains pending.
+
+Cancelled placements retain entering regular regions that overlap the latest
+requested cache, when the visual configuration is unchanged. Both preparation
+and cancellation use TargetOuterAnchor; cancellation translates the existing
+staged bounds by that anchor delta. The next preparation adopts retained
+requests/residents through the existing descriptor identity checks. Entering
+seams are retained only when their fine outer box is unchanged. All other
+entering work uses the existing removal/stale-rejection lifecycle. This avoids
+reclassifying/remeshing overlapping work on every fast-flight retarget.
+
+### Bounded placement preparation candidate
+
+Measured overlap-retaining preparation still takes64.9203ms in one call.
+VoxelManager will retain its canonical placement preparation, but advance
+the coarse classification/scheduling and seam-scheduling loops through an
+engine-thread iterator with a2ms per-update budget, checked every32regions.
+Staged spatial sets are constructed first; the iterator owns no independent
+world state and creates descriptors from the current authoritative field.
+Only the manager advances/disposes it. Cancellation and recipe resets dispose
+it before changing staged sets. Atomic publication cannot run while this
+preparation is incomplete; bootstrap commits after completion. Edit changes
+continue through canonical invalidation; already registered descriptors are
+invalidated normally and later descriptors capture the current field.
+The budget limits CPU preparation bursts, not terrain quality or GPU batches.
+Alternatives: more cancellation repeats work; doing the whole plan on a worker
+would access engine-owned mesher state; relaxing handoff exposes seam holes.
+Spatial set construction and an individual batch remain non-preemptible and
+must be measured. Existing preparation totals include all slices; maximum
+reports the longest synchronous preparation slice. No new test path.
+
+The attempted extension of the edit seam16ms minimum-service policy to all
+placement seams was rejected and removed. HILLS-FAST-001/v1 did not show a
+material drain improvement (10.535s versus10.483s), while allocation increased.
+The16ms guard remains edit-only. Budgeted CPU preparation, overlapping-work
+retention and idle-near outer/seam sharing remain candidates; fresh-world
+regression acceptance and the remaining fast-flight arrival delay are open.
+
+### Empty seam admission
+
+The existing conservative unedited transition bound moves from the render
+queue to ScheduleTransition. Uniform-sign seams have no geometry, so publish
+the same empty CandidateTransition through the existing resident/publication
+path immediately instead of spending a render-service turn plus integration
+turn on each empty face. Edited seams retain GPU extraction. The canonical
+classification formula and strict sign test remain unchanged. Desired
+descriptor identity is installed first; superseded GPU results still fail the
+existing equality check. If the empty face belongs to an edit group, stage
+it in that group's candidate dictionary rather than publishing separately.
+Most admission occurs inside the manager's2ms preparation iterator. This
+removes the former duplicate render-queue classification branch entirely.
+No GPU batch size, scratch-lane count or simultaneous dispatch changes.
+
+### Seam throughput qualification, 2026-09-10
+
+HILLS-SEAM-BATCH-001 tests two faces per existing transition scratch batch,
+using the current structured topology-table implementation. Live traces show
+handoffs blocked solely by pending seams after regular terrain and water finish.
+The batch constant continues to own buffer capacities, request arrays and dispatch
+counts; no extra shader, binding, scratch lane or concurrent render action is
+introduced. Source identities, readback, arena allocation, stale rejection and
+atomic handoff are unchanged. This supersedes the single-face value only if the
+new runtime qualification succeeds. D16's eight-face GPU failure remains valid
+historical evidence; later table-buffer changes are a reason to test a modest
+increase, not proof of safety or permission to assume eight-face correctness.
+
+Four-face batching was rejected for worse moving frame pacing; current candidate
+retains two faces. Cancellation now preserves exact overlapping seam identities
+when the fine box slides. After stopping the preparation iterator, the manager
+reuses the canceled pair's NextDesired set to enumerate the latest target with
+AddTransitionFaces, and removes only obsolete entering keys. The next preparation
+rebuilds its own sets normally. Committed Desired/visibility remain untouched;
+there is no second seam constructor, cache, or publication owner. Existing source
+revision checks decide reuse, including edits during a pending placement. This
+extends regular-region overlap retention to the matching boundary faces and
+requires the same fixed figure-eight and seam audits before acceptance.
+
+### Shared regular/seam service candidate
+
+The render scheduler alternates service opportunities between regular meshes and
+transition seams. If the preferred pipeline cannot progress, the other can use
+the turn. Existing near/outer queues and edit-priority queues remain canonical;
+no second job, GPU resource or simultaneous regular/transition dispatch is added.
+This replaces the edit-only16ms seam guard, since streaming handoffs also require
+seams while regular requests continue arriving. Numerical river preparation,
+split count stages, readback, emission and main-thread publication keep their
+existing ownership. Outer forced service retains its250ms request deadline and
+can be delayed by an already selected transition turn, just as other GPU stages
+can delay it. Frame pacing, allocations, service gaps and correctness need live
+qualification; a144ms fast-run frame is currently unexplained, so this candidate
+is not accepted for commit. See HILLS-SERVICE-001 and live arrival evidence.
+
+The two-way candidate is rejected by the controlled standard comparison:
+outer p95 increased from4.368s to17.362s despite faster far seams. The current
+candidate rotates preferred service across regular continuation, transition
+work, and outer emission/count admission. An unavailable preferred pipeline
+falls through to the existing scheduler. One callback still chooses only one
+pipeline, and existing scratch-lane ownership and the outer250ms fallback remain.
+This gives outer work explicit service rather than only leftovers from near
+work. HILLS-SERVICE-STANDARD-001/v1 qualification remains required.
+
+### Progressive exterior publication, 2026-09-10
+
+The user explicitly requires individual chunks to appear at the visible edge
+before the rest of a placement finishes. Queue throughput alone does not satisfy
+this: the global handoff withheld all completed incoming chunks. The manager now
+admits coarsest-level chunks outside the committed outer box for immediate normal
+resident publication, including chunks temporarily covering the staged inner hole.
+They use the same SDF descriptors, queues, arenas and render-active set. They are
+scheduled nearest the target first, before other placement requests. No second
+mesher, density representation, GPU lane or worker is introduced.
+
+This exterior cannot overlap the committed hierarchy: it is outside its enclosing
+coarsest box. Its adjoining committed boundary uses the same LOD and lattice, so
+no new cross-LOD seam is exposed. Interior replacement and its transitions remain
+atomic. On full handoff, temporary coarse chunks in the new inner hole are hidden
+in the same update that activates fine terrain and seams. Cancellation retains
+only preview coordinates inside the latest target cache for the same configuration;
+others are deactivated before normal cache removal. Configuration changes and
+reset clear preview ownership. Preview intent is bounded by the existing coarsest
+cache box; classification/scheduling uses the existing2ms preparation iterator.
+Water/collision still follow their canonical readiness paths and are not made
+ready by a visual preview. Diagnostics distinguish preview intent and drawable
+resident previews while global handoff remains pending. This supersedes the strict
+all-or-nothing rule only for nonoverlapping exterior coverage, not arbitrary LOD
+replacement. Full interior regional replacement is not implemented by this slice.
+
+Outer requests with current render-active intent are selected after edit requests
+and before hidden outer cache work. This is one priority within the canonical
+outer dispatcher, not another scheduler or resource. Activating an already queued
+outer key requeues its current descriptor; stale duplicate queue entries continue
+to fail the existing pending-dictionary check. Reset clears this priority queue.
+
+### Placement-required request priority candidate, 2026-09-11
+
+Residency and urgency are different: LOD0 Gameplay includes hidden visual cache
+coordinates, so selecting all of it before LOD1 can delay a visible handoff.
+The manager marks exactly the pending placement's LOD0 entering coordinates and
+coarse Readiness keys as required. The mesher stores this bounded derived priority
+set, selecting edit work first, then required near requests, then ordinary near
+residency queues. Outer selection keeps visible exterior coverage ahead of required
+outer requests, followed by hidden cache requests. GPU lanes and concurrency are
+unchanged. Cancellation/commit clear priority; reset/removal clear ownership.
+A queued request promoted to required is requeued with the same descriptor/time;
+stale entries use the existing dictionary check. A demoted priority entry is
+returned to its ordinary queue, never dropped. In-flight work is not restarted.
+No visibility or collision readiness requirement is relaxed. Performance remains
+subject to HILLS-PLACEMENT-PRIORITY-001/v1 comparison before acceptance.
+
+
+Cancellation containment candidate: a moving target leaving the finest staged
+box no longer cancels a placement that still provides coarse coverage there.
+Only leaving the staged coarsest outer box, a configuration change, or returning
+to the committed target cancels it. The existing full readiness/seam checks still
+apply before committing; the newest requested target is staged immediately
+thereafter. This avoids perpetual restarts when flight outpaces fine-detail
+coverage. It does not claim the finest LOD follows instantly or relax boundaries.
+The prior finest-box rule is superseded, not retained as another mode.
+
+
+Handoff completion service candidate: the mesher tracks the subset of queued
+regular keys currently required by the placement. Once it is empty and none of
+the three existing regular lanes contains a required count/emit, transition work
+gets first service ahead of hidden cache work. Unavailable transition work falls
+through to the ordinary three-way scheduler. Required near/outer work therefore
+still makes progress; no simultaneous dispatch or additional scratch resource is
+introduced. Queue insertion/removal/dequeue/reset and placement priority clear
+maintain the pending subset. Required in-flight checks inspect at most existing
+lane batch slots. This is a priority refinement inside the canonical scheduler.
+
+
 ### Boundary-step placement candidate (2026-09-11)
 
 The manager retains the canonical staged-set builder, readiness checks and atomic
@@ -933,3 +1257,148 @@ topology. Acceptance requires the unchanged standard figure-eight criteria,
 including <=10 s full drain, frame/allocation comparison and boundary audits.
 
 The boundary-step candidate is accepted for the2026-09-11 standard/fast scenarios in the validation ledger. Required active chunks precede hidden cache fill; near, outer and seam work share preferred GPU turns. Coarsest chunks outside committed coverage publish independently as each finishes, and are hidden wherever the subsequent finer placement replaces them. Preparation classification is sliced with a2ms target checked every32regions. No GPU lane count increases.
+
+
+### Immediate outer-edge requests (2026-09-11 follow-up)
+
+The earlier fine-first boundary staging admitted exterior requests only when the
+coarsest staged box moved. Inner steps could therefore leave newly exposed
+terrain entirely unrequested. The GPU publisher already publishes each completed
+render-active region independently; the missing work was admission and ownership.
+
+The manager now owns a separate exterior preparation iterator, refreshed when
+the latest coarsest target changes. It requests coarsest regions outside committed
+coverage nearest first, using canonical descriptors, classification, queues and
+publication. Both iterators share the existing 2 ms preparation budget, checked
+every 32 inspected coordinates. Pending LOD0 preparation precedes exterior
+preparation; otherwise exterior preparation precedes further hierarchy discovery.
+
+Exterior ownership survives inner-boundary commits and transfers to the hierarchy
+when coverage adopts the region. Target/configuration changes prune obsolete
+requests. Cancellation preserves independently owned requests; reset/disposal
+closes both iterators. Exterior residents are disjoint from the unchanged committed
+cache and are included separately in its complete-cache count check. Existing
+source-revision invalidation applies. Terrain previews can publish without full
+hierarchy or water readiness; this does not add independent water previews.
+
+The canonical boundary selector prefers the finest legal step that advances its
+largest target-offset axis, with deterministic X/Y/Z ties and a first-legal-step
+fallback. This prevents small sideways fine adjustments from repeatedly delaying
+the parent movement needed to reach the player. When committed LOD0 excludes the
+player, a newly available finer step may preempt a pending coarser step through
+existing overlap-preserving cancellation. Containment, seam gaps, field identity,
+water readiness and replacement readiness remain mandatory for hierarchy commits.
+
+The manager marks player-detail priority while committed LOD0 differs from its
+current target. Required near regular work receives the foreground GPU turn;
+required parent regions precede distant previews; after required regular geometry
+finishes, its seams outrank distant previews. Edit dependencies retain precedence.
+Stale outer queue entries are discarded before queue emptiness controls priority.
+During player-detail catch-up, outer requests may occupy two of the three existing
+regular scratch lanes, retaining one lane for near work. Otherwise the one-outer-
+batch limit applies. Region batch sizes and existing callback scheduling remain
+unchanged. These rules supersede the earlier unconditional one-outer-batch limit.
+
+Validation and remaining tradeoffs are recorded in the ledger. Exact LOD0 box
+recentering is distinct from LOD0 coverage at the player: the latter can occur
+while the box is still offset and distant hierarchy work remains. This change
+has not established a one-second bound for exact recentering or eliminated the
+long full-refinement drain after the extended fast-flight scenario.
+
+
+### Continuous exterior service (2026-09-12 candidate)
+
+The player-detail rule could consume every outer batch with hidden handoff work,
+even while independently drawable exterior requests waited. The seam completion
+shortcut also ran before the existing 250 ms outer service guard. During catch-up,
+one of every four outer batches now prefers visible work; the other three prefer
+required parent work. Empty classes lend their whole batch to the other class,
+and edit dependencies retain precedence. A batch stays in the class chosen by
+its first admitted request: edits, visible regions, required parents or cache.
+The same eight-region maximum and scratch lanes apply. A visible batch admits
+only the first region level and its XY-neighboring coordinates; other requests
+return to the pending queue. This bounds its shared atlas footprint to a 3x3
+region area plus the normal sampling halo, with no Z restriction because river
+inputs are two-dimensional. This avoids forming one shared river-atlas bounding
+box across nearby parent work and distant previews or opposite visible edges.
+The per-request mixed-batch candidate was rejected after measured allocation and
+frame regressions; its failed results remain in the ledger.
+
+The existing outer service guard runs before seam shortcuts. Seam completion
+shortcuts cannot bypass queued/in-flight visible work. This bounds admission
+fairness, not GPU completion time or full refinement time. Regular completed
+render-active regions continue to publish independently through the same owner.
+
+Visible outer work has one distance-priority queue containing region keys. The
+pending dictionary owns the latest descriptor/revision; dequeue resolves that
+canonical request and drops removed or inactive keys. Activation and deactivation
+requeue pending work into its current class, preserving hidden requests when a
+preview is demoted. In-flight revision rejection and geometry lifetime remain
+unchanged. The queue rebuilds when the coarsest viewer anchor changes, matching
+exterior discovery. World-space region-center distance includes height, with
+explicit level/Z/Y/X scalar ties. Queue capacity is reused. The full-descriptor,
+fine-anchor rebuild candidate is superseded, but changing queue storage alone
+did not resolve the allocation regression; no such causal claim is established.
+
+No worker, resource lane, field representation or mixed LOD boundary is added.
+Manager ownership/pruning and atomic refinement/seam contracts remain in force.
+Read-only queue diagnostics distinguish handoff work from render-active work;
+those counts do not establish pixel visibility. Performance and acceptance belong
+in the ledger. Large hierarchy replacements outside committed coverage remain a
+separate refinement limitation; independent exterior service does not wait for
+those replacements to finish.
+
+### Direct near-detail recovery experiment (2026-09-12, rejected)
+
+An experiment staged the smallest chain of final fine/parent target boxes when
+the player left finest coverage, retaining the existing seam and readiness
+contracts. It reduced transitions and scheduled requests, but increased actual
+regular count submissions, allocations, frame tails and loading time in the
+unchanged canonical route. It was reverted. Single-boundary advancement remains
+the implementation; a visible intermediate LOD alone does not establish
+redundant work. User prioritizes total work, loading speed and frames over
+transition appearance. Exact measurements and failed source remain in the ledger.
+
+### Exact cancellation ownership (2026-09-12 candidate)
+
+The original single-boundary selection and preemption policy remains. Compact
+recovery, direct chains and extra batch restrictions were rejected after measured
+work, allocation or loading regressions. Their history remains in the ledger.
+
+Cancellation records old entering keys in reused scratch buffers, stages the
+actual replacement, then retires keys absent from its next/committed cache or
+transition sets and independent fine/exterior owners. Buffers resolve directly
+after staging or against committed sets when no next step is required, and clear
+on reset. This replaces translated-box guesses that could leave orphan work or
+discard useful overlapping requests. Existing field/version and atomic mesh, seam
+and water readiness checks remain unchanged. This correction does not remove
+the sequential hierarchy recovery limitation or guarantee instantaneous LOD0.
+
+### Boundary-local readiness (2026-09-12 candidate)
+
+A placement now waits for its newly active regular regions and entering transition
+faces, not unfinished retained regions or unchanged levels. Existing visible
+regions keep their existing jobs and visibility; the handoff does not remove
+coverage there. Newly exposed regions still require current-field completion,
+and each changed seam remains atomic with both sides of that boundary. The
+manager submits entering seams before speculative cache fill and scans only
+newly owned cache coordinates. Cancellation remains owned by actual sets. Water
+readiness likewise covers newly active sea-level cells; unrelated water requests
+continue independently. No geometry, shader, collision, or spatial layout changes.
+This removes unrelated dependencies, but does not yet make a connected boundary
+switch publish individual regions independently. Runtime acceptance is pending.
+
+The first local-readiness run increased work and allocations and is not accepted.
+The follow-on candidate defers hidden cache fill until the requested placement
+is reached. A manager-owned bounded enumerator scans missing committed cache
+cells using the existing classifier and GPU scheduler; target movement cancels
+that scan. Active entering regions are still prepared for every handoff, so an
+unbuilt hidden parent becomes required when exposed. Existing pending requests
+and residents retain their canonical ownership and are not duplicated. The
+background scan shares the placement CPU budget after visible work and counts
+as unsettled work for the performance runner. Reset/destroy dispose it.
+
+Status: the boundary-local readiness and deferred-cache experiments above were
+rejected and reverted after both increased work and allocations. Current runtime
+retains the original atomic boundary handoff with exact cancellation ownership
+and bounded water reuse. See the validation ledger for preserved measurements.

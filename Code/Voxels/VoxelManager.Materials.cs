@@ -21,7 +21,13 @@ public sealed partial class VoxelManager
 			Log.Info( $"[VoxelWorld] material.inspect pending chunk={coordinate} sample={sample}" );
 			return;
 		}
+		if ( !manager.CurrentField.TrySampleCell( new Vector3( x, y, z ), out var cell ) )
+		{
+			Log.Info( "[VoxelWorld] material.inspect cell data pending" );
+			return;
+		}
 		Log.Info( $"[VoxelWorld] material.inspect chunk={coordinate} sample={sample} density={density} " +
-			$"materialId={materialId} material=\"{VoxelMaterials.Get( materialId ).Name}\"" );
+			$"materialId={materialId} material=\"{VoxelMaterials.Get( materialId ).Name}\" " +
+			$"solidFraction={cell.SolidFraction} logicalEmpty={cell.IsEmpty}" );
 	}
 }

@@ -13,7 +13,7 @@ internal static class TerrainFieldCodec
 	private const int Magic = 0x33465856;
 	private const int HeaderBytes = 88;
 	public const int IdentityBytes = HeaderBytes + 36;
-	public const int MaximumPagePayloadBytes = 17 + TerrainField.SamplesPerPage * sizeof( float );
+	public const int MaximumPagePayloadBytes = 17 + TerrainField.SamplesPerPage * (sizeof( float ) + sizeof( ushort ));
 	public const int MaximumPageBlockBytes = MaximumPagePayloadBytes + 36;
 
 	public static byte[] EncodePage( Vector3Int coordinate, TerrainFieldPage page )
@@ -25,7 +25,8 @@ internal static class TerrainFieldCodec
 		using var writer = new BinaryWriter( stream, Encoding.UTF8, true );
 		writer.Write( coordinate.x ); writer.Write( coordinate.y ); writer.Write( coordinate.z );
 		writer.Write( page.Revision );
-		writer.Write( (byte)(sparse ? 1 : 0) );
+		// Modes 0/1 remain readable legacy pages; 2/3 append authoritative materials.
+		writer.Write( (byte)((sparse ? 1 : 0) + (page.HasMaterials ? 2 : 0)) );
 		if ( sparse ) writer.Write( nonzero );
 		for ( var i = 0; i < TerrainField.SamplesPerPage; i++ )
 		{
@@ -37,6 +38,8 @@ internal static class TerrainFieldCodec
 			}
 			writer.Write( value );
 		}
+		if ( page.HasMaterials )
+			for ( var i = 0; i < TerrainField.SamplesPerPage; i++ ) writer.Write( page.Material( i ) );
 		return stream.ToArray();
 	}
 
@@ -55,7 +58,7 @@ internal static class TerrainFieldCodec
 			var origin = new Vector3( pair.Key.x, pair.Key.y, pair.Key.z ) * size;
 			if ( !TerrainFieldChange.Intersects( bounds, new SdfWorldAabb( origin, origin + Vector3.One * size ) ) ) continue;
 			var page = pair.Value;
-			if ( page.Minimum == 0f && page.Maximum == 0f ) continue;
+			if ( page.Minimum == 0f && page.Maximum == 0f && !page.HasMaterials ) continue;
 			var payload = EncodePage( pair.Key, TerrainFieldStore.PinForRead( page ) );
 			// Page coordinates and exact codec sample values remain; revision is local bookkeeping.
 			Array.Clear( payload, 12, sizeof( int ) );
@@ -95,27 +98,35 @@ internal static class TerrainFieldCodec
 		var revision = reader.ReadInt32();
 		if ( revision < 1 || revision > maximumRevision ) throw new InvalidDataException( "Terrain page revision is invalid." );
 		var mode = reader.ReadByte();
-		if ( mode > 1 ) throw new InvalidDataException( "Terrain page encoding is unsupported." );
-		var count = mode == 0 ? TerrainField.SamplesPerPage : reader.ReadInt32();
+		if ( mode > 3 ) throw new InvalidDataException( "Terrain page encoding is unsupported." );
+		var hasMaterials = mode >= 2;
+		var sparse = (mode & 1) != 0;
+		var count = sparse ? reader.ReadInt32() : TerrainField.SamplesPerPage;
 		if ( count < 0 || count > TerrainField.SamplesPerPage ||
-			stream.Length - stream.Position != (long)count * (mode == 0 ? 4 : 6) )
+			stream.Length - stream.Position != (long)count * (sparse ? 6 : 4) + (hasMaterials ? TerrainField.SamplesPerPage * sizeof( ushort ) : 0) )
 			throw new InvalidDataException( "Terrain sample count is invalid." );
 		if ( metadataScratch is not null && (reservation is not null || metadataScratch.Length != TerrainField.SamplesPerPage) )
 			throw new ArgumentException( "Invalid terrain metadata scratch buffer." );
 		var values = metadataScratch ?? TerrainFieldPage.AllocateValues( reservation );
 		// Sparse payloads omit zero samples. A reused validation buffer must not
 		// carry those samples over from the previously validated page.
-		if ( metadataScratch is not null && mode == 1 ) Array.Clear( values );
+		if ( metadataScratch is not null && sparse ) Array.Clear( values );
 		var previousIndex = -1;
 		for ( var i = 0; i < count; i++ )
 		{
-			var index = mode == 0 ? i : reader.ReadUInt16();
+			var index = sparse ? reader.ReadUInt16() : i;
 			if ( index <= previousIndex || index >= values.Length ) throw new InvalidDataException( "Terrain sample indices are invalid." );
 			previousIndex = index;
 			values[index] = reader.ReadSingle();
 		}
 		// The canonical page constructor validates finite, bounded corrections.
-		return (coordinate, new TerrainFieldPage( revision, values, retainSamples: metadataScratch is null ));
+		ushort[] materials = null;
+		if ( hasMaterials )
+		{
+			materials = new ushort[TerrainField.SamplesPerPage];
+			for ( var i = 0; i < materials.Length; i++ ) materials[i] = reader.ReadUInt16();
+		}
+		return (coordinate, new TerrainFieldPage( revision, values, retainSamples: metadataScratch is null, materials: materials ));
 	}
 
 	public static void WriteIdentity( Stream stream, TerrainFieldIdentity identity )

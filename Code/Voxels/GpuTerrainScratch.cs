@@ -39,6 +39,11 @@ internal sealed class GpuTerrainScratch : IDisposable
 	private long _readbackReadyTimestamp;
 	private ScratchState _state;
 	private bool _disposed;
+	private readonly GpuRiverAtlas _riverAtlas = new();
+	private readonly System.Threading.CancellationTokenSource _riverCancellation = new();
+	private System.Threading.Tasks.Task<GpuRiverAtlas.Data> _riverPreparation;
+	private GpuTerrainRequest[] _preparedRequests;
+	private TerrainFieldSnapshot[] _preparedFields;
 
 	private float[] _correctionUpload;
 	public long CorrectionUploadBytes => (_correctionUpload?.LongLength ?? 0) * sizeof( float );
@@ -56,9 +61,11 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_edgeGroupCount = (_edgeSlotCount + 255) / 256;
 		_cellGroupCount = (_cellCount + 255) / 256;
 		_requests = new GpuBuffer<GpuTerrainRequest>( MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Requests" );
-		_densitySamples = new GpuBuffer<float>( checked( _haloSampleCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Density" );
+		_densitySamples = new GpuBuffer<float>( checked( (_haloSampleCount * 2 + _haloSize * _haloSize * 2) * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Density" );
+		_shader.Attributes.Set( "PlacedMaterialOffset", (_haloSampleCount + _haloSize * _haloSize * 2) * MaximumBatchSize );
 		_cells = new GpuBuffer<GpuCellData>( checked( _cellCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Cells" );
-		_edgeFlags = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Flags" );
+		// Second plane stores generated material weights at the resolved cell edge.
+		_edgeFlags = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize * 2 ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Flags" );
 		_edgeVertexIds = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge IDs" );
 		_edgeGroupSums = new GpuBuffer<uint>( checked( _edgeGroupCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Groups" );
 		_cellGroupSums = new GpuBuffer<uint>( checked( _cellGroupCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Cell Groups" );
@@ -85,6 +92,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 			offset += VoxelCollisionTables.RegularCellVertexIndices.Length;
 			shader.Attributes.Set( "RegularVertexDataOffset", offset );
 		}
+		GpuVoxelMaterials.BindGeneration( _shader.Attributes );
 		BindCommonAttributes();
 		_emitVertices.Attributes.Set( "Requests", _requests );
 		_emitVertices.Attributes.Set( "DensitySamples", _densitySamples );
@@ -110,9 +118,9 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_emitIndices.Attributes.Set( "CellGroupCount", _cellGroupCount );
 		CapacityBytes =
 			(long)MaximumBatchSize * 96 +
-			(long)_haloSampleCount * MaximumBatchSize * sizeof( float ) +
+			(long)(_haloSampleCount * 2 + _haloSize * _haloSize * 2) * MaximumBatchSize * sizeof( float ) +
 			(long)_cellCount * MaximumBatchSize * 12 +
-			(long)_edgeSlotCount * MaximumBatchSize * sizeof( uint ) * 2 +
+			(long)_edgeSlotCount * MaximumBatchSize * sizeof( uint ) * 3 +
 			(long)(_edgeGroupCount + _cellGroupCount) * MaximumBatchSize * sizeof( uint ) +
 			(long)MaximumBatchSize * (sizeof( uint ) * 8 + 64 + sizeof( uint ) * 5) +
 			(long)topology.Length * sizeof( int );
@@ -127,10 +135,48 @@ internal sealed class GpuTerrainScratch : IDisposable
 				submissionMilliseconds = 0;
 				return false;
 			}
-			_state = ScratchState.CountSubmitted;
+			_state = ScratchState.PreparingRivers;
 			_batchSize = count;
 		}
 		var start = System.Diagnostics.Stopwatch.GetTimestamp();
+		_preparedRequests = requests;
+		_preparedFields = fields;
+		var first = requests[0];
+		var settings = new ProceduralTerrainSettings( (int)first.Terrain.x, first.Terrain.y, first.Terrain.z,
+			first.Terrain.w, first.TerrainScales.x, first.TerrainScales.y, first.TerrainScales.z,
+			first.TerrainScales.w, first.TerrainShape.x, first.TerrainShape.y );
+		var minimum = new Vector3( float.PositiveInfinity );
+		var maximum = new Vector3( float.NegativeInfinity );
+		for ( var index = 0; index < count; index++ )
+		{
+			var origin = requests[index].OriginAndCellSize;
+			var low = new Vector3( origin.x, origin.y, origin.z ) - Vector3.One * origin.w;
+			var high = low + Vector3.One * ((_chunkSize + 2) * origin.w);
+			minimum = new Vector3( MathF.Min( minimum.x, low.x ), MathF.Min( minimum.y, low.y ), MathF.Min( minimum.z, low.z ) );
+			maximum = new Vector3( MathF.Max( maximum.x, high.x ), MathF.Max( maximum.y, high.y ), MathF.Max( maximum.z, high.z ) );
+		}
+		var bounds = new SdfWorldAabb( minimum, maximum );
+		var cancellation = _riverCancellation.Token;
+		_riverPreparation = _riverAtlas.Prepare( settings, bounds, cancellation );
+		submissionMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
+		return true;
+	}
+
+	public bool TryContinueCount()
+	{
+		lock ( _stateLock )
+		{
+			if ( _disposed || _state != ScratchState.PreparingRivers || !_riverPreparation.IsCompleted ) return false;
+			_state = ScratchState.CountSubmitted;
+		}
+		_riverAtlas.Update( _riverPreparation.GetAwaiter().GetResult() );
+		_riverAtlas.Bind( _shader.Attributes );
+		_riverPreparation = null;
+		var requests = _preparedRequests;
+		var fields = _preparedFields;
+		var count = _batchSize;
+		_preparedRequests = null;
+		_preparedFields = null;
 		_requests.SetData( new Span<GpuTerrainRequest>( requests, 0, count ) );
 		if ( fields is not null )
 		{
@@ -145,6 +191,16 @@ internal sealed class GpuTerrainScratch : IDisposable
 					(int)(origin.y / TerrainField.SampleSpacing) - step, (int)(origin.z / TerrainField.SampleSpacing) - step );
 				field.CopyLatticeCorrections( sampleOrigin, step, _haloSize, _correctionUpload );
 				_densitySamples.SetData<float>( _correctionUpload.AsSpan(), block * _haloSampleCount );
+				Array.Clear( _correctionUpload );
+				if ( field.Pages.Values.Any( page => page.HasMaterials ) )
+				{
+					for ( var z = 0; z < _haloSize; z++ )
+					for ( var y = 0; y < _haloSize; y++ )
+					for ( var x = 0; x < _haloSize; x++ )
+						_correctionUpload[x + _haloSize * (y + _haloSize * z)] =
+							field.SamplePlacedMaterial( sampleOrigin + new Vector3Int( x * step, y * step, z * step ) ) == VoxelMaterials.Dirt ? 1f : 0f;
+				}
+				_densitySamples.SetData<float>( _correctionUpload.AsSpan(), (_haloSampleCount + _haloSize * _haloSize * 2) * MaximumBatchSize + block * _haloSampleCount );
 			}
 		}
 		SetBatchSize( count );
@@ -153,6 +209,11 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_shader.Attributes.Set( "PersistentStage", 0 );
 		_shader.Dispatch( Math.Max( _cellCount, _edgeSlotCount ) * count, 1, 1 );
 		Barrier( _cells, _edgeFlags, _edgeVertexIds, _activeCellCounts, _digests );
+		// The exterior is XY-only. Evaluate it once per column, retaining the
+		// existing density buffer binding and the canonical cave/cliff composition.
+		_shader.Attributes.Set( "PersistentStage", 9 );
+		_shader.Dispatch( _haloSize * _haloSize * count, 1, 1 );
+		Barrier( _densitySamples );
 		_shader.Attributes.Set( "PersistentStage", 1 );
 		_shader.Dispatch( _haloSampleCount * count, 1, 1 );
 		Barrier( _densitySamples );
@@ -179,7 +240,6 @@ internal sealed class GpuTerrainScratch : IDisposable
 		Barrier( _countResults );
 		_readbackTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
 		_countResults.GetDataAsync<GpuTerrainCountResult>( OnCountsRead, 0, count );
-		submissionMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds;
 		return true;
 	}
 
@@ -300,12 +360,15 @@ internal sealed class GpuTerrainScratch : IDisposable
 	public void Dispose()
 	{
 		lock ( _stateLock ) { if ( _disposed ) return; _disposed = true; }
+		_riverCancellation.Cancel();
+		_riverCancellation.Dispose();
+		_riverAtlas.Dispose();
 		_requests.Dispose(); _densitySamples.Dispose(); _cells.Dispose(); _edgeFlags.Dispose(); _edgeVertexIds.Dispose();
 		_edgeGroupSums.Dispose(); _cellGroupSums.Dispose(); _blockCounts.Dispose(); _activeCellCounts.Dispose();
 		_digests.Dispose(); _countResults.Dispose(); _allocations.Dispose(); _topology.Dispose();
 	}
 
-	private enum ScratchState { Idle, CountSubmitted, CountReady, EmitReady }
+	private enum ScratchState { Idle, PreparingRivers, CountSubmitted, CountReady, EmitReady }
 	#pragma warning disable CS0649 // GPU-written structured-buffer layouts.
 	private struct GpuCellData { public uint Case; public uint IndexCount; public uint IndexOffset; }
 	private struct GpuDigest { public uint Topology; public uint Position; }

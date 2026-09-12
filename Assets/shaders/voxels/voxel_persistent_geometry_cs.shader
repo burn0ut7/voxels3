@@ -1,3 +1,13 @@
+// Hill generator44: overlapping low rises and regional gaps; rebuild the field include.
+// Generation fills material runs beside density; meshes carry the resulting weights.
+// Regular terrain: cache canonical exterior once per XY column.
+// River atlas: prune dry banks in sea-level footprint queries.
+// River atlas: unique endpoints with packed bin references.
+// River sampling: evaluate valley shoulder once per column.
+// River revision 8: elevation-scaled valley shoulders.
+// River revision 7: fixed-level terrain valleys and basin networks.
+// River rendering revision 5: ocean banks and canonical channel visibility.
+// River geometry revision 2: curved courses and interpolated widths.
 // Version13 field with exact cave-envelope early exits.
 MODES
 {
@@ -14,7 +24,7 @@ COMMON
 {
 	#include "system.fxc"
 	// Regional landforms: cubic mountain and squared hill eligibility soften tails near plains.
-	#include "shaders/voxels/voxel_sdf_v13.hlsl"
+	#include "shaders/voxels/voxel_sdf_v30.hlsl"
 	#include "shaders/voxels/voxel_edge_intersection.hlsl"
 }
 

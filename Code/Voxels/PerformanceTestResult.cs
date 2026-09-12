@@ -206,11 +206,22 @@ internal sealed class PerformanceSubmissionMetrics
 
 internal sealed class PerformanceProfilerMetrics
 {
+	public float ScreenWidth { get; init; }
+	public float ScreenHeight { get; init; }
+	public IReadOnlyList<PerformanceGpuTiming> Gpu { get; init; } =
+		System.Array.Empty<PerformanceGpuTiming>();
 	public int WindowFrames { get; init; }
 	public IReadOnlyList<PerformanceProfilerTiming> Engine { get; init; } =
 		System.Array.Empty<PerformanceProfilerTiming>();
 	public IReadOnlyList<PerformanceProfilerTiming> Scripts { get; init; } =
 		System.Array.Empty<PerformanceProfilerTiming>();
+}
+
+internal sealed class PerformanceGpuTiming
+{
+	public string Path { get; init; }
+	public float SmoothedMilliseconds { get; init; }
+	public float MaximumMilliseconds { get; init; }
 }
 
 internal sealed class PerformanceProfilerTiming

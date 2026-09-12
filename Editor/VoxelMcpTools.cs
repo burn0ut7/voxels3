@@ -261,6 +261,9 @@ public static class VoxelMcpTools
 		state.View = Editor.SceneViewportWidget.ViewMode.Perspective;
 		state.CameraPosition = Vector3.Parse( position );
 		state.CameraRotation = Rotation.From( Angles.Parse( angles ) );
+		// External placement must discard the editor's previous navigation target.
+		viewport.GizmoInstance.SetValue<Vector3?>( "CameraTarget", null );
+		viewport.GizmoInstance.SetValue<Vector3>( "CameraVelocity", Vector3.Zero );
 
 		var camera = viewport.Renderer.Camera;
 		camera.WorldPosition = state.CameraPosition;

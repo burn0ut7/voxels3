@@ -1,0 +1,54 @@
+{
+  "patch": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-E-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-E-recipe.json",
+    "grid": { "pointsPerAxis": 129, "spacing": 32, "rows": 16641, "adjacentEdges": 33024 },
+    "repeatHeightExactCount": 16641,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.9868512, 1.0],
+    "heightRange": [325.1469, 1963.7336],
+    "slope": { "p50": 0.1028493, "p95": 1.4903055, "p99": 1.8384752, "max": 2.4493785 },
+    "adjacentAbsoluteHeightDifference": { "p50": 1.23802, "p95": 35.20786, "p99": 49.9829, "max": 77.8695 },
+    "fiveLargestAdjacentDifferences": [
+      { "difference": 77.8695, "axis": "y", "gridA": [119, 0], "gridB": [119, 1], "worldA": [-53536, -57344], "worldB": [-53536, -57312] },
+      { "difference": 77.083, "axis": "y", "gridA": [118, 0], "gridB": [118, 1], "worldA": [-53568, -57344], "worldB": [-53568, -57312] },
+      { "difference": 75.25, "axis": "y", "gridA": [117, 0], "gridB": [117, 1], "worldA": [-53600, -57344], "worldB": [-53600, -57312] },
+      { "difference": 74.993, "axis": "y", "gridA": [120, 0], "gridB": [120, 1], "worldA": [-53504, -57344], "worldB": [-53504, -57312] },
+      { "difference": 74.6799, "axis": "y", "gridA": [119, 1], "gridB": [119, 2], "worldA": [-53536, -57312], "worldB": [-53536, -57280] }
+    ]
+  },
+  "wide": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-E-wide-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-E-wide-recipe.json",
+    "grid": { "pointsPerAxis": 65, "spacing": 4096, "rows": 4225, "adjacentEdges": 8320 },
+    "repeatHeightExactCount": 4225,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.0, 1.0],
+    "heightRange": [-2034.3096, 2703.0017],
+    "slope": { "p50": 0.057966255, "p95": 0.5454309, "p99": 0.9679553, "max": 2.3979778 },
+    "adjacentAbsoluteHeightDifference": { "p50": 96.59941, "p95": 634.51809, "p99": 1104.89993, "max": 2609.5152602 },
+    "fiveLargestAdjacentDifferences": [
+      { "difference": 2609.5152602, "axis": "y", "gridA": [26, 41], "gridB": [26, 42], "worldA": [-24576, 36864], "worldB": [-24576, 40960] },
+      { "difference": 2416.56805, "axis": "x", "gridA": [22, 4], "gridB": [23, 4], "worldA": [-40960, -114688], "worldB": [-36864, -114688] },
+      { "difference": 2360.970594, "axis": "x", "gridA": [10, 0], "gridB": [11, 0], "worldA": [-90112, -131072], "worldB": [-86016, -131072] },
+      { "difference": 2354.97796, "axis": "y", "gridA": [0, 37], "gridB": [0, 38], "worldA": [-131072, 20480], "worldB": [-131072, 24576] },
+      { "difference": 2260.3657302, "axis": "y", "gridA": [27, 41], "gridB": [27, 42], "worldA": [-20480, 36864], "worldB": [-20480, 40960] }
+    ]
+  },
+  "wideCompareBefore": {
+    "beforeSurvey": "Docs/ValidationEvidence/Erosion/before-survey.csv",
+    "wideRows": 4225,
+    "beforeRows": 4225,
+    "worldXYOverlaps": 4225,
+    "widePointsWithMountainWeightAtMost0.5": 4056,
+    "beforePointsWithMountainWeightAtMost0.5": 4056,
+    "bothPointsWithMountainWeightAtMost0.5": 4056,
+    "exactHeightMatchesAmongOverlaps": 4056,
+    "heightDiscrepanciesAmongOverlaps": 169,
+    "exactHeightMatchesWithinBothMountainMask": 4056,
+    "heightDiscrepanciesWithinBothMountainMask": 0,
+    "maximumAbsoluteHeightDiscrepancy": 2300.39634
+  }
+}

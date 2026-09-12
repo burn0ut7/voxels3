@@ -1,0 +1,130 @@
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -2972,6 +2972,11 @@
+ 	private IEnumerable<int> PrepareLodPlacementMeshes()
+ 	{
+ 		var inspected = 0;
++		foreach ( var coordinate in _levels[0].Entering )
++		{
++			if ( ++inspected % 32 == 0 ) yield return 0;
++			_gpuMesher.SetPlacementRequired( new GpuMeshRegionKey( 0, coordinate ) );
++		}
+ 		var exterior = _levels[_stagedVisualConfiguration.MaximumVisualLod];
+ 		if ( exterior.Level > 0 && exterior.HasPlacement && exterior.VisualEnabled &&
+ 			_stagedVisualConfiguration == _appliedVisualConfiguration && exterior.PlacementChanged )
+@@ -3035,6 +3040,7 @@
+ 			{
+ 				if ( ++inspected % 32 == 0 ) yield return 0;
+ 				var descriptor = CreateRegularDescriptor( level, coordinate );
++				_gpuMesher.SetPlacementRequired( descriptor.Key );
+ 				if ( !_gpuMesher.Contains( descriptor ) )
+ 				{
+ 					_gpuMesher.Schedule(
+@@ -3201,6 +3207,7 @@
+ 		_appliedVisualConfiguration = _stagedVisualConfiguration;
+ 		_appliedVisualConfigurationRevision = _stagedVisualConfigurationRevision;
+ 		_clipboxPlacementPending = false;
++		_gpuMesher.ClearPlacementPriority();
+ 		_clipboxPlacementCommits++;
+ 
+ 		if ( VerboseLogging )
+@@ -3223,6 +3230,7 @@
+ 	private void CancelPendingClipboxPlacement()
+ 	{
+ 		if ( !_clipboxPlacementPending ) return;
++		_gpuMesher.ClearPlacementPriority();
+ 		_clipboxPreparation?.Dispose();
+ 		_clipboxPreparation = null;
+ 		var retainTargetOverlap = _targetVisualConfiguration == _stagedVisualConfiguration;
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -59,6 +59,9 @@
+ 	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
+ 	private readonly Queue<PendingMesh> _outerVisualDispatchQueue = new();
+ 	private readonly Queue<PendingMesh> _activeOuterDispatchQueue = new();
++	private readonly Queue<PendingMesh> _placementNearDispatchQueue = new();
++	private readonly Queue<PendingMesh> _placementOuterDispatchQueue = new();
++	private readonly HashSet<GpuMeshRegionKey> _placementRequired = new();
+ 	private readonly List<GeometryArena> _arenas = new();
+ 	private ScratchLane[] _scratchLanes;
+ 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
+@@ -980,6 +983,14 @@
+ 		}
+ 	}
+ 
++	public void SetPlacementRequired( GpuMeshRegionKey key )
++	{
++		if ( _placementRequired.Add( key ) && _pending.TryGetValue( key, out var pending ) )
++			QueuePending( pending );
++	}
++
++	public void ClearPlacementPriority() => _placementRequired.Clear();
++
+ 	public void SetRenderActive( GpuMeshRegionKey key, bool active )
+ 	{
+ 		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
+@@ -1513,6 +1524,7 @@
+ 		_editRegularDependencies.Remove( key );
+ 		if ( _editRegularCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
+ 		_renderActive.Remove( key );
++		_placementRequired.Remove( key );
+ 		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( key ) )
+ 		{
+ 			_levelCancelledCounts[key.Level]++;
+@@ -3006,6 +3018,15 @@
+ 			queue.Enqueue( pending );
+ 			return;
+ 		}
++		if ( _placementRequired.Contains( pending.Descriptor.Key ) &&
++			!(pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key )) )
++		{
++			if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount++;
++			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
++			var queue = pending.Descriptor.Key.Level >= 2 ? _placementOuterDispatchQueue : _placementNearDispatchQueue;
++			queue.Enqueue( pending );
++			return;
++		}
+ 		if ( pending.Residency == GpuMeshResidency.Gameplay )
+ 		{
+ 			_pendingGameplayCount++;
+@@ -3031,9 +3052,22 @@
+ 	private bool TryDequeuePending( out PendingMesh pending )
+ 	{
+ 		if ( TryDequeuePendingFrom( _editNearDispatchQueue, out pending ) ) return true;
++		if ( TryDequeuePlacement( _placementNearDispatchQueue, out pending ) ) return true;
+ 		if ( TryDequeuePendingFrom( _gameplayDispatchQueue, out pending ) ) return true;
+ 		if ( TryDequeuePendingFrom( _nearVisualDispatchQueue, out pending ) ) return true;
+ 		if ( TryDequeuePendingFrom( _warmDispatchQueue, out pending ) ) return true;
++		pending = default;
++		return false;
++	}
++
++	private bool TryDequeuePlacement( Queue<PendingMesh> queue, out PendingMesh pending )
++	{
++		while ( TryDequeuePendingFrom( queue, out pending ) )
++		{
++			if ( _placementRequired.Contains( pending.Descriptor.Key ) ) return true;
++			// A canceled placement demotes unfinished work without losing its request.
++			QueuePending( pending );
++		}
+ 		pending = default;
+ 		return false;
+ 	}
+@@ -3069,6 +3103,7 @@
+ 	{
+ 		return TryDequeuePendingFrom( _editOuterDispatchQueue, out pending ) ||
+ 			TryDequeuePendingFrom( _activeOuterDispatchQueue, out pending ) ||
++			TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ||
+ 			TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
+ 	}
+ 
+@@ -3551,6 +3586,9 @@
+ 		_warmDispatchQueue.Clear();
+ 		_outerVisualDispatchQueue.Clear();
+ 		_activeOuterDispatchQueue.Clear();
++		_placementNearDispatchQueue.Clear();
++		_placementOuterDispatchQueue.Clear();
++		_placementRequired.Clear();
+ 		_pendingGameplayCount = 0;
+ 		_pendingWarmCount = 0;
+ 		Array.Clear( _pendingLevelCounts );

@@ -1,5 +1,3 @@
-// Version13 landforms; sea-level water covers natural soil.
-// Uses the shared material catalog and water recipe1.
 HEADER
 {
 	Description = "Persistent GPU Voxel Terrain";
@@ -19,38 +17,27 @@ COMMON
 {
 	// Persistent geometry supplies final world-space positions and normals.
 	#include "common/shared.hlsl"
-	#include "shaders/voxels/voxel_materials.hlsl"
+	float4 VoxelMaterialIds < Attribute( "VoxelMaterialIds" ); >;
+	float VoxelCheckerSize < Attribute( "VoxelCheckerSize" ); >;
+	StructuredBuffer<float4> VoxelMaterialPalette < Attribute( "VoxelMaterialPalette" ); >;
 }
 
 struct VertexInput
 {
 	float3 Position : POSITION < Semantic( None ); >;
 	float3 Normal : NORMAL < Semantic( None ); >;
+	float4 Materials : COLOR0 < Semantic( None ); >;
 };
 
 struct PixelInput
 {
 	#include "common/pixelinput.hlsl"
-	float vMaterialDepth : TEXCOORD8;
+	float4 vMaterialWeights : TEXCOORD8;
 };
 
 VS
 {
-	float3 DecodeTerrainNormal( float2 encoded )
-	{
-		float3 normal = float3(
-			encoded.x,
-			encoded.y,
-			1.0 - abs( encoded.x ) - abs( encoded.y ) );
-		if ( normal.z < 0.0 )
-		{
-			float2 signValue = float2(
-				normal.x >= 0.0 ? 1.0 : -1.0,
-				normal.y >= 0.0 ? 1.0 : -1.0 );
-			normal.xy = (1.0 - abs( normal.yx )) * signValue;
-		}
-		return normalize( normal );
-	}
+	#include "shaders/voxels/voxel_terrain_normal.hlsl"
 
 	PixelInput MainVs( const VertexInput input )
 	{
@@ -59,8 +46,7 @@ VS
 		output.vPositionWs = input.Position - g_vHighPrecisionLightingOffsetWs.xyz;
 		output.vPositionPs = Position3WsToPs( input.Position );
 		output.vNormalWs = normal;
-		// Preserve surface depth when coarse triangles cut below a curved hillside.
-		output.vMaterialDepth = VoxelMaterialSurfaceHeight( input.Position.xy ) - input.Position.z;
+		output.vMaterialWeights = input.Materials;
 		return output;
 	}
 }
@@ -85,11 +71,19 @@ PS
 		{
 			coordinates = worldPosition.xz;
 		}
-		coordinates /= VoxelMaterialRules.w;
+		coordinates /= VoxelCheckerSize;
 		float checker = frac( (floor( coordinates.x ) + floor( coordinates.y )) * 0.5 ) * 2.0;
 		float2 footprint = fwidth( coordinates );
 		checker = lerp( checker, 0.5, saturate( max( footprint.x, footprint.y ) ) );
-		material.Albedo = SampleVoxelMaterialColor( worldPosition, checker, input.vMaterialDepth );
+		float4 weights = max( input.vMaterialWeights, 0.0 );
+		weights /= max( dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ), 0.000001 );
+		float3 albedo = float3( 0.0, 0.0, 0.0 );
+		for ( uint index = 0u; index < 4u; index++ )
+		{
+			uint id = (uint)VoxelMaterialIds[index];
+			albedo += weights[index] * lerp( VoxelMaterialPalette[id * 2u].rgb, VoxelMaterialPalette[id * 2u + 1u].rgb, checker );
+		}
+		material.Albedo = albedo;
 		material.Roughness = 0.9;
 		material.Metalness = 0.0;
 		return ShadingModelStandard::Shade( input, material );

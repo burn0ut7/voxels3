@@ -1,0 +1,40 @@
+{
+  "wide": {
+    "survey": "Docs/ValidationEvidence/Erosion/cliff-K-wide-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/cliff-K-wide-recipe.json",
+    "rows": 4225,
+    "finiteRows": 4225,
+    "repeatHeightExactCount": 4225,
+    "heightOutsideBoundsCount": 0,
+    "heightRange": [-2034.3096, 2714.0564],
+    "exactHeightDifferencesFromI": 0
+  },
+  "patch": {
+    "survey": "Docs/ValidationEvidence/Erosion/cliff-K-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/cliff-K-recipe.json",
+    "rows": 16641,
+    "finiteRows": 16641,
+    "repeatHeightExactCount": 16641,
+    "heightOutsideBoundsCount": 0,
+    "heightRange": [263.27264, 554.29565],
+    "exactHeightDifferencesFromI": 0
+  },
+  "densityAudit": {
+    "regularRecords": 7,
+    "transitionRecords": 26,
+    "regularMaximumError": 0.0009765625,
+    "regularMaximumLatticeError": 0,
+    "transitionMaximumError": 0.009765625,
+    "regularFailureCounts": { "nonFinite": 0, "densityMismatches": 0, "signMismatches": 0, "boundsFailures": 0, "readbackNonFinite": 0 },
+    "transitionFailureCounts": { "nonFinite": 0, "signMismatches": 0, "boundsFailures": 0 },
+    "pendingLevels": [126, 122, 120, 112, 96, 64, 0],
+    "pendingFacesMin": 52349176880,
+    "pendingFacesMax": 68719476734
+  },
+  "overhangColumn": {
+    "height": 1600.5621,
+    "baseDensityExactDifferencesFromJ": 0,
+    "solidIntervals": [[300, 572], [1404, 1596]],
+    "airIntervals": [[588, 1388], [1612, 1884]]
+  }
+}

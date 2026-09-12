@@ -1,0 +1,119 @@
+{
+  "beforeRunId": "ad4f4e18564c46a3a3dd28100676c48f",
+  "afterRunId": "ad7553a4259546d9a6718ffdd248f8fe",
+  "metrics": {
+    "frame.averageFps": {
+      "before": 84.45891,
+      "after": 735.358,
+      "percentChange": 770.6695362277347
+    },
+    "frame.p95Milliseconds": {
+      "before": 24.728,
+      "after": 2.4761,
+      "percentChange": -89.98665480427046
+    },
+    "frame.p99Milliseconds": {
+      "before": 31.5723,
+      "after": 3.5126,
+      "percentChange": -88.87442473307297
+    },
+    "frame.maximumMilliseconds": {
+      "before": 75.808,
+      "after": 160.7543,
+      "percentChange": 112.05453250316589
+    },
+    "frame.averageGpuMilliseconds": {
+      "before": 11.298095,
+      "after": 0.70891625,
+      "percentChange": -93.7253470607213
+    },
+    "runtime.managedBytesAllocated": {
+      "before": 1007802176,
+      "after": 6217666576,
+      "percentChange": 516.9530810776896
+    },
+    "runtime.gcPauseMilliseconds": {
+      "before": 98.968,
+      "after": 781.48,
+      "percentChange": 689.628970980519
+    },
+    "memory.averageProcessBytes": {
+      "before": 4801580921,
+      "after": 6659760295,
+      "percentChange": 38.69932433863901
+    },
+    "memory.peakProcessBytes": {
+      "before": 4949127168,
+      "after": 7259004928,
+      "percentChange": 46.67242690661047
+    },
+    "memory.averageGpuBytes": {
+      "before": 1692361747,
+      "after": 2027699790,
+      "percentChange": 19.814796901102483
+    },
+    "memory.peakGpuBytes": {
+      "before": 1701362607,
+      "after": 2104982447,
+      "percentChange": 23.723328486200824
+    },
+    "stationary.frame.averageFps": {
+      "before": 95.287476,
+      "after": 974.8229,
+      "percentChange": 923.0336041223298
+    },
+    "stationary.frame.p95Milliseconds": {
+      "before": 13.184,
+      "after": 1.3422,
+      "percentChange": -89.81947815533981
+    },
+    "stationary.frame.p99Milliseconds": {
+      "before": 15.5155,
+      "after": 1.7511,
+      "percentChange": -88.71386677838291
+    },
+    "stationary.frame.maximumMilliseconds": {
+      "before": 29.2329,
+      "after": 10.1398,
+      "percentChange": -65.31373897218545
+    },
+    "stationary.frame.averageGpuMilliseconds": {
+      "before": 9.194875,
+      "after": 0.6385489,
+      "percentChange": -93.05538248208921
+    },
+    "stationary.runtime.managedBytesAllocated": {
+      "before": 45246568,
+      "after": 246891944,
+      "percentChange": 445.6589414693287
+    },
+    "stationary.runtime.gcPauseMilliseconds": {
+      "before": 5.487,
+      "after": 42.061,
+      "percentChange": 666.5573172954256
+    },
+    "stationary.memory.averageProcessBytes": {
+      "before": 4873317171,
+      "after": 5928009728,
+      "percentChange": 21.642189908677302
+    },
+    "stationary.memory.peakProcessBytes": {
+      "before": 4874289152,
+      "after": 5995991040,
+      "percentChange": 23.012625082772264
+    },
+    "stationary.memory.averageGpuBytes": {
+      "before": 1650588591,
+      "after": 2104621999,
+      "percentChange": 27.507363765608382
+    },
+    "stationary.memory.peakGpuBytes": {
+      "before": 1650588591,
+      "after": 2104621999,
+      "percentChange": 27.507363765608382
+    }
+  },
+  "sourceFilesChecked": 88,
+  "sourceMismatches": [],
+  "acceptance": "FAIL: memory, allocation, maximum frame stall and visible terrain bridges remain"
+}

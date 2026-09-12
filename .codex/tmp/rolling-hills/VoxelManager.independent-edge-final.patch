@@ -1,0 +1,261 @@
+--- before/VoxelManager
++++ after/VoxelManager
+@@ -76,6 +76,7 @@
+ 	private readonly HashSet<Vector3Int> _partialOuterChunks = new();
+ 	private int _partialOuterLevel = -1;
+ 	private IEnumerator<int> _clipboxPreparation;
++	private IEnumerator<int> _exteriorPreparation;
+ 	private bool _clipboxWarmInterestDirty;
+ 	private const double ClipboxPreparationBudgetMilliseconds = 2.0;
+ 	private bool _clipboxPlacementTargetAvailable;
+@@ -546,6 +547,8 @@
+ 	{
+ 		_clipboxPreparation?.Dispose();
+ 		_clipboxPreparation = null;
++		_exteriorPreparation?.Dispose();
++		_exteriorPreparation = null;
+ 		_clipboxWarmInterestDirty = false;
+ 		ResetSurfaceWater();
+ 		_terrainEditCancellation.Cancel();
+@@ -2441,6 +2444,8 @@
+ 		_renderPreparedRevision++;
+ 		_clipboxPreparation?.Dispose();
+ 		_clipboxPreparation = null;
++		_exteriorPreparation?.Dispose();
++		_exteriorPreparation = null;
+ 		_clipboxWarmInterestDirty = false;
+ 		_partialOuterChunks.Clear();
+ 		_partialOuterLevel = -1;
+@@ -2779,6 +2784,8 @@
+ 
+ 		var configurationChanged = !_clipboxPlacementTargetAvailable ||
+ 			visualConfiguration != _targetVisualConfiguration;
++		var exteriorTargetChanged = configurationChanged ||
++			_candidateLevelAnchors[visualConfiguration.MaximumVisualLod] != _targetLevelAnchors[visualConfiguration.MaximumVisualLod];
+ 		var targetChanged = configurationChanged || !_clipboxPlacementTargetAvailable;
+ 		for ( var level = 0; level <= visualConfiguration.MaximumVisualLod; level++ )
+ 		{
+@@ -2820,6 +2827,7 @@
+ 			}
+ 		}
+ 		PrepareNextClipboxPlacementStep();
++		if ( exteriorTargetChanged ) RefreshExteriorPreparation();
+ 	}
+ 
+ 	private bool MatchesCommittedPlacementTarget()
+@@ -3005,13 +3013,84 @@
+ 		_clipboxPreparation = PrepareLodPlacementMeshes().GetEnumerator();
+ 	}
+ 
++	private void RefreshExteriorPreparation()
++	{
++		_exteriorPreparation?.Dispose();
++		_exteriorPreparation = null;
++		var configuration = _targetVisualConfiguration;
++		var level = configuration.MaximumVisualLod;
++		var state = _levels[level];
++		var enabled = level > 0 && state.HasPlacement && state.VisualEnabled &&
++			configuration == _appliedVisualConfiguration;
++		var anchor = TargetOuterAnchor( level, configuration );
++		var minimum = anchor - new Vector3Int( configuration.LodCacheHalfExtent );
++		var maximum = anchor + new Vector3Int( configuration.LodCacheHalfExtent );
++		if ( _partialOuterLevel >= 0 )
++		{
++			var previous = _levels[_partialOuterLevel];
++			_partialOuterChunks.RemoveWhere( coordinate =>
++			{
++				if ( enabled && _partialOuterLevel == level && IsInsideHalfOpenBox( coordinate, minimum, maximum ) &&
++					!IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) return false;
++				var key = new GpuMeshRegionKey( _partialOuterLevel, coordinate );
++				_gpuMesher.SetRenderActive( key, previous.Active.Contains( coordinate ) );
++				if ( !previous.DesiredCache.Contains( coordinate ) &&
++					!(_clipboxPlacementPending && previous.PlacementChanged && previous.NextDesiredCache.Contains( coordinate )) )
++					_gpuMesher.Remove( key );
++				return true;
++			} );
++		}
++		_partialOuterLevel = enabled ? level : -1;
++		if ( enabled ) _exteriorPreparation = PrepareExteriorMeshes( state, anchor, minimum, maximum ).GetEnumerator();
++	}
++
++	private IEnumerable<int> PrepareExteriorMeshes( TerrainClipboxLevelState state,
++		Vector3Int anchor, Vector3Int minimum, Vector3Int maximum )
++	{
++		var incoming = new List<Vector3Int>();
++		var inspected = 0;
++		for ( var z = minimum.z; z < maximum.z; z++ )
++			for ( var y = minimum.y; y < maximum.y; y++ )
++				for ( var x = minimum.x; x < maximum.x; x++ )
++				{
++					if ( ++inspected % 32 == 0 ) yield return 0;
++					var coordinate = new Vector3Int( x, y, z );
++					if ( !IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) incoming.Add( coordinate );
++				}
++		SortNearestFirst( incoming, anchor );
++		foreach ( var coordinate in incoming )
++		{
++			if ( ++inspected % 32 == 0 ) yield return 0;
++			// A hierarchy commit may adopt this region between preparation slices.
++			if ( IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) continue;
++			var descriptor = CreateRegularDescriptor( state.Level, coordinate );
++			_partialOuterChunks.Add( coordinate );
++			_gpuMesher.SetRenderActive( descriptor.Key, true );
++			if ( _gpuMesher.Contains( descriptor ) ) continue;
++			if ( ClassifyClipboxRegion( state.Level, coordinate ) != ChunkDensityClassification.PotentiallySurfaceContaining )
++				_gpuMesher.PublishKnownEmpty( descriptor, GpuMeshResidency.Visual );
++			else
++				_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, GpuMeshResidency.Visual );
++		}
++	}
++
+ 	private void AdvanceClipboxPreparation()
+ 	{
+-		if ( _clipboxPreparation is null ) return;
++		if ( _clipboxPreparation is null && _exteriorPreparation is null ) return;
+ 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.PreparePlacement );
+ 		var start = Stopwatch.GetTimestamp();
+ 		do
+ 		{
++			if ( _exteriorPreparation is not null )
++			{
++				if ( !_exteriorPreparation.MoveNext() )
++				{
++					_exteriorPreparation.Dispose();
++					_exteriorPreparation = null;
++				}
++				continue;
++			}
++			if ( _clipboxPreparation is null ) break;
+ 			if ( !_clipboxPreparation.MoveNext() )
+ 			{
+ 				_clipboxPreparation.Dispose();
+@@ -3037,41 +3116,16 @@
+ 			if ( ++inspected % 32 == 0 ) yield return 0;
+ 			_gpuMesher.SetPlacementRequired( new GpuMeshRegionKey( 0, coordinate ) );
+ 		}
+-		var exterior = _levels[_stagedVisualConfiguration.MaximumVisualLod];
+-		if ( exterior.Level > 0 && exterior.HasPlacement && exterior.VisualEnabled &&
+-			_stagedVisualConfiguration == _appliedVisualConfiguration && exterior.PlacementChanged )
+-		{
+-			_partialOuterLevel = exterior.Level;
+-			var incoming = new List<Vector3Int>();
+-			foreach ( var coordinate in exterior.NextDesiredCache )
+-			{
+-				if ( ++inspected % 32 == 0 ) yield return 0;
+-				if ( !IsInsideHalfOpenBox( coordinate, exterior.OuterMinimum, exterior.OuterMaximum ) )
+-					incoming.Add( coordinate );
+-			}
+-			SortNearestFirst( incoming, exterior.StagedOuterAnchor );
+-			foreach ( var coordinate in incoming )
+-			{
+-				if ( ++inspected % 32 == 0 ) yield return 0;
+-				var descriptor = CreateRegularDescriptor( exterior.Level, coordinate );
+-				// Outside committed coverage, this same-LOD chunk can appear independently.
+-				_partialOuterChunks.Add( coordinate );
+-				_gpuMesher.SetRenderActive( descriptor.Key, true );
+-				if ( _gpuMesher.Contains( descriptor ) ) continue;
+-				if ( ClassifyClipboxRegion( exterior.Level, coordinate ) != ChunkDensityClassification.PotentiallySurfaceContaining )
+-					_gpuMesher.PublishKnownEmpty( descriptor, GpuMeshResidency.Visual );
+-				else
+-					_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, GpuMeshResidency.Visual );
+-			}
+-		}
+ 		for ( var level = 1; level < SupportedVisualLevelCount; level++ )
+ 		{
+ 			var state = _levels[level];
+ 			var stagedCache = state.PlacementChanged ? state.NextDesiredCache : state.DesiredCache;
+ 			var stagedActive = state.PlacementChanged ? state.NextActive : state.Active;
+ 			state.Readiness.Clear();
++			// Independent exterior residents are disjoint from the unchanged committed cache.
++			var exteriorCount = level == _partialOuterLevel ? _partialOuterChunks.Count : 0;
+ 			if ( !state.PlacementChanged && _gpuMesher.PendingLevelCount( level ) == 0 &&
+-				_gpuMesher.ResidentLevelCount( level ) == stagedCache.Count )
++				_gpuMesher.ResidentLevelCount( level ) == stagedCache.Count + exteriorCount )
+ 			{
+ 				// Unchanged complete caches have no new publication dependency.
+ 				// Bootstrap and unfinished caches still take the conservative scan.
+@@ -3214,13 +3268,18 @@
+ 		{
+ 			var exterior = _levels[_partialOuterLevel];
+ 			var nextActive = exterior.PlacementChanged ? exterior.NextActive : exterior.Active;
+-			foreach ( var coordinate in _partialOuterChunks )
+-			{
+-				if ( !nextActive.Contains( coordinate ) )
+-					_gpuMesher.SetRenderActive( new GpuMeshRegionKey( _partialOuterLevel, coordinate ), false );
+-			}
+-			_partialOuterChunks.Clear();
+-			_partialOuterLevel = -1;
++			var nextCache = exterior.PlacementChanged ? exterior.NextDesiredCache : exterior.DesiredCache;
++			var minimum = exterior.PlacementChanged ? exterior.StagedOuterMinimum : exterior.OuterMinimum;
++			var maximum = exterior.PlacementChanged ? exterior.StagedOuterMaximum : exterior.OuterMaximum;
++			_partialOuterChunks.RemoveWhere( coordinate =>
++			{
++				if ( _stagedVisualConfiguration == _appliedVisualConfiguration &&
++					!IsInsideHalfOpenBox( coordinate, minimum, maximum ) ) return false;
++				var key = new GpuMeshRegionKey( _partialOuterLevel, coordinate );
++				_gpuMesher.SetRenderActive( key, nextActive.Contains( coordinate ) );
++				if ( !nextCache.Contains( coordinate ) ) _gpuMesher.Remove( key );
++				return true;
++			} );
+ 		}
+ 		foreach ( var state in _levels )
+ 		{
+@@ -3244,6 +3303,7 @@
+ 			foreach ( var coordinate in state.Leaving )
+ 			{
+ 				if ( state.Level == 0 && _renderDesiredChunks.Contains( coordinate ) ) continue;
++				if ( state.Level == _partialOuterLevel && _partialOuterChunks.Contains( coordinate ) ) continue;
+ 				_gpuMesher.Remove( new GpuMeshRegionKey( state.Level, coordinate ) );
+ 				if ( state.Level == 0 && _renderPreparedChunks.Remove( coordinate ) )
+ 				{
+@@ -3264,11 +3324,13 @@
+ 		{
+ 			if ( pair.PlacementChanged ) pair.CommitPlacement();
+ 		}
++		var exteriorConfigurationChanged = _appliedVisualConfiguration != _stagedVisualConfiguration;
+ 		_appliedVisualConfiguration = _stagedVisualConfiguration;
+ 		_appliedVisualConfigurationRevision = _stagedVisualConfigurationRevision;
+ 		_clipboxPlacementPending = false;
+ 		_gpuMesher.ClearPlacementPriority();
+ 		_clipboxPlacementCommits++;
++		if ( bootstrap || exteriorConfigurationChanged ) RefreshExteriorPreparation();
+ 
+ 		if ( VerboseLogging )
+ 		{
+@@ -3294,19 +3356,6 @@
+ 		_clipboxPreparation?.Dispose();
+ 		_clipboxPreparation = null;
+ 		var retainTargetOverlap = _targetVisualConfiguration == _stagedVisualConfiguration;
+-		if ( _partialOuterLevel >= 0 )
+-		{
+-			var exterior = _levels[_partialOuterLevel];
+-			var offset = TargetOuterAnchor( _partialOuterLevel, _targetVisualConfiguration ) - exterior.StagedOuterAnchor;
+-			_partialOuterChunks.RemoveWhere( coordinate =>
+-			{
+-				if ( retainTargetOverlap && IsInsideHalfOpenBox( coordinate,
+-					exterior.StagedOuterMinimum + offset, exterior.StagedOuterMaximum + offset ) ) return false;
+-				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( _partialOuterLevel, coordinate ), false );
+-				return true;
+-			} );
+-			if ( _partialOuterChunks.Count == 0 ) _partialOuterLevel = -1;
+-		}
+ 
+ 		foreach ( var state in _levels )
+ 		{
+@@ -3314,6 +3363,7 @@
+ 			foreach ( var coordinate in state.Entering )
+ 			{
+ 				if ( state.Level == 0 && _renderDesiredChunks.Contains( coordinate ) ) continue;
++				if ( state.Level == _partialOuterLevel && _partialOuterChunks.Contains( coordinate ) ) continue;
+ 				// The next preparation adopts these same requests/residents. Keep work
+ 				// inside the new cache instead of discarding and classifying it again.
+ 				if ( retainTargetOverlap && IsInsideHalfOpenBox( coordinate,
+@@ -3451,7 +3501,7 @@
+ 			_levels[0].NextActive.Contains( coordinate ));
+ 
+ 	private bool HasClipboxPlacementWork =>
+-		_clipboxPlacementPending ||
++		_clipboxPlacementPending || _exteriorPreparation is not null ||
+ 		(_clipboxPlacementTargetAvailable && _levels[0].HasPlacement &&
+ 			!MatchesCommittedPlacementTarget());
+ 

@@ -1,5 +1,11 @@
 # Terrain deformation implementation
 
+2026-09-10 tool slice: build operations persist Dirt2 with the density transaction,
+and digging skips cells with<=10% remaining solid volume without deleting their
+residual SDF geometry. [Voxel materials](VoxelMaterials.md#dirt-tool-slice-2026-09-10-qualification-in-progress)
+owns the new material/occupancy contract; MATERIAL-TOOL-001 records qualification.
+This supersedes density-only material behavior in the historical sections below.
+
 Status: implementation in progress on `codex/terrain-deformation`. The local edit path has measured continuous and large-edit results; spatial, actor, multiplayer and lifecycle acceptance remain incomplete. No full feature acceptance is claimed yet. The
 [research](../Research/TerrainDeformationSecondSlice.md) supplies alternatives
 and rationale; this document owns implementation decisions and completion gates.
@@ -555,6 +561,33 @@ unchanged figure-eight showed effectively unchanged FPS and in-budget memory,
 allocation and readiness results. This accepts the narrow optimization only;
 existing contact variability and broader feature qualification above remain open.
 Exact evidence and limitations belong to the validation ledger.
+
+## Visible edit publication dependencies
+
+An ordinary edit's atomic visual group contains affected render-active regular
+regions and active transition seams. Hidden cache variants still receive the
+canonical field invalidation and stale-result checks, but their rebuild does
+not delay the currently visible edit or admission of the next dig. A later
+placement still checks every required descriptor against the current field
+before activating it, so an outdated hidden variant cannot become visible.
+Epoch replacement retains the full existing publication group. This changes
+the publication dependency set, not world authority, geometry or collision.
+
+Interactive input retains its100ms interval for accepted actions and ordinary
+aim/validation failures (or client requests). A blocked local attempt
+while the previous edit is finishing leaves the interval ready, so the next
+frame can sample current aim. It does not queue rejected/stale targets or
+increase the accepted10Hz rate. Existing edit diagnostics report field and
+publication latency separately using the canonical request timestamps.
+Runtime qualification of these changes remains required.
+
+If an edit commits while a placement is pending, cancel/reprepare that derived
+placement through its existing overlap-retaining lifecycle. Readiness lists
+only remembered what was missing when built; they must not omit a previously
+ready cache region invalidated by the new edit. The engine-thread preparation
+iterator is disposed before its staged sets change, and its replacement uses
+the current field. Published geometry remains until the refreshed gate passes.
+
 
 ### 2026-09-11 streaming collision-tail candidate
 

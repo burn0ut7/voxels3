@@ -1,0 +1,753 @@
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -2800,6 +2800,7 @@
+ 			targetChanged |= _candidateLevelAnchors[level] != _targetLevelAnchors[level];
+ 		}
+ 		if ( !targetChanged ) return;
++		_waterRequestSerial++;
+ 		if ( exteriorTargetChanged ) _gpuMesher.SetStreamingPosition( viewerPosition );
+ 
+ 		if ( _clipboxPlacementTargetAvailable && HasClipboxPlacementWork )
+@@ -3061,7 +3062,6 @@
+ 				}
+ 			}
+ 		}
+-		_waterRequestSerial++;
+ 		_clipboxPreparation = PrepareLodPlacementMeshes().GetEnumerator();
+ 		RetireSupersededPlacementWork();
+ 	}
+@@ -3267,7 +3267,6 @@
+ 	private void TryCommitPendingClipboxPlacement()
+ 	{
+ 		if ( _gpuMesher is null || !_clipboxPlacementPending || _clipboxPreparation is not null ) return;
+-		if ( !SurfaceWaterPrepared ) return;
+ 		var residentRevision = _gpuMesher.ResidentPublicationRevision;
+ 		if ( residentRevision == _lastClipboxReadinessResidentRevision &&
+ 			_renderPreparedRevision == _lastClipboxReadinessRenderPreparedRevision )
+--- a/Code/Voxels/VoxelManager.Water.cs
++++ b/Code/Voxels/VoxelManager.Water.cs
+@@ -8,23 +8,23 @@
+ 	private SurfaceWaterRenderer _waterRenderer;
+ 	private readonly Dictionary<GpuSdfDescriptor, SurfaceWaterGeometry.Chunk> _waterCells = new();
+ 	private readonly Dictionary<GpuSdfDescriptor, SdfWorldAabb> _waterCellRequests = new();
+-	private List<SurfaceWaterGeometry.Chunk> _waterChunks = new();
+-	private List<SurfaceWaterGeometry.Chunk> _nextWaterChunks = new();
+-	private readonly HashSet<GpuMeshRegionKey> _waterReplacementKeys = new();
++	private Dictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> _waterCoverage = new();
++	private Dictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> _nextWaterCoverage = new();
++	private readonly HashSet<GpuMeshRegionKey> _waterCoverageBranches = new();
++	private readonly Vector3Int[] _waterCacheMinimum = new Vector3Int[SupportedVisualLevelCount];
++	private readonly Vector3Int[] _waterCacheMaximum = new Vector3Int[SupportedVisualLevelCount];
+ 	private CancellationTokenSource _waterCellCancellation;
+-	private Task<SurfaceWaterGeometry.Chunk[]> _waterCellPreparation;
++	private Task<SurfaceWaterGeometry.Chunk> _waterCellPreparation;
+ 	private long _waterCellRevision;
+ 	private long _waterRenderedCellRevision = -1;
+ 	private int _waterRequestSerial;
+ 	private int _waterObservedSerial = -1;
+ 	private int _waterObservedFieldRevision = -1;
+ 	private int _waterObservedFieldEpoch = -1;
+-	private long _waterObservedPlacement = -1;
+-	private bool _waterObservedPending;
+ 	private long _waterCellsGenerated;
++	private long _waterReadyToPublishTimestamp;
++	private double _waterMaximumPublishDelayMilliseconds;
+ 	private double _waterCellGenerationMilliseconds;
+-	private long _waterPlacementRevision = -1;
+-	private long _waterResidentRevision = -1;
+ 
+ 	[Property, ReadOnly, Category( "World" )]
+ 	public string WaterStatus => _waterRenderer is null ? "Waiting for terrain" :
+@@ -32,7 +32,7 @@
+ 		$"{_waterRenderer.UploadedVertices:N0} uploaded vertices; " +
+ 		$"{_waterCells.Count}/{_waterCellRequests.Count} cell chunks; {_waterCellsGenerated} generated; " +
+ 		$"{_waterCells.Values.Sum( item => (long)item.Cells.RefinedCellCount ):N0} refined cells; " +
+-		$"{_waterCells.Values.Sum( item => item.Cells.Bytes ) / 1048576.0:F1} MiB cells; {_waterCellGenerationMilliseconds:F1} ms generation";
++		$"{_waterCells.Values.Sum( item => item.Cells.Bytes ) / 1048576.0:F1} MiB cells; {_waterCellGenerationMilliseconds:F1} ms generation; publishMaxMs={_waterMaximumPublishDelayMilliseconds:F3}";
+ 
+ 	private bool SurfaceWaterPrepared
+ 	{
+@@ -45,7 +45,7 @@
+ 
+ 	private void UpdateSurfaceWater()
+ 	{
+-		if ( !_levels[0].HasPlacement ) return;
++		if ( !_clipboxPlacementTargetAvailable ) return;
+ 		UpdateWaterCellGeneration();
+ 		UpdateSurfaceWaterChunks();
+ 	}
+@@ -54,39 +54,43 @@
+ 	{
+ 		var field = CurrentField;
+ 		if ( _waterObservedSerial == _waterRequestSerial && _waterObservedFieldRevision == field.Revision &&
+-			_waterObservedFieldEpoch == field.Epoch && _waterObservedPlacement == _clipboxPlacementCommits &&
+-			_waterObservedPending == _clipboxPlacementPending ) return;
++			_waterObservedFieldEpoch == field.Epoch ) return;
+ 		_waterCellRequests.Clear();
+-		foreach ( var state in _levels )
+-		{
+-			var cellSize = CellSizeForLevel( state.Level );
+-			var size = _appliedCellsPerAxis * cellSize;
++		var configuration = _targetVisualConfiguration;
++		for ( var level = configuration.MinimumVisualLod; level <= configuration.MaximumVisualLod; level++ )
++		{
++			var size = _appliedCellsPerAxis * CellSizeForLevel( level );
+ 			var z = (int)MathF.Ceiling( field.Settings.SeaLevel / size ) - 1;
+-			for ( var staged = 0; staged < 2; staged++ )
+-			{
+-				if ( staged == 0 && (!state.HasPlacement || !state.VisualEnabled) ) continue;
+-				if ( staged == 1 && (!_clipboxPlacementPending || (state.Level < _stagedVisualConfiguration.MinimumVisualLod || state.Level > _stagedVisualConfiguration.MaximumVisualLod)) ) continue;
+-				var active = staged == 1 && state.PlacementChanged ? state.NextActive : state.Active;
+-				foreach ( var coordinate in active )
+-				{
+-					if ( coordinate.z != z ) continue;
+-					var descriptor = CreateRegularDescriptor( state.Level, coordinate, captureRegion: false );
+-					var minimum = new Vector3( coordinate.x * size, coordinate.y * size, coordinate.z * size );
+-					_waterCellRequests[descriptor] = new SdfWorldAabb( minimum, minimum + Vector3.One * size );
+-				}
++			var extent = level == 0 ? configuration.Lod0VisualHalfExtent : configuration.LodCacheHalfExtent;
++			var anchor = TargetOuterAnchor( level, configuration );
++			var minimum = anchor - new Vector3Int( extent );
++			var maximum = anchor + new Vector3Int( extent );
++			_waterCacheMinimum[level] = minimum;
++			_waterCacheMaximum[level] = maximum;
++			if ( z < minimum.z || z >= maximum.z ) continue;
++			var hasHole = level > configuration.MinimumVisualLod;
++			var childExtent = level == 1 ? configuration.Lod0VisualHalfExtent : configuration.LodCacheHalfExtent;
++			var childAnchor = hasHole ? TargetOuterAnchor( level - 1, configuration ) : default;
++			var holeMinimum = (childAnchor - new Vector3Int( childExtent )) / 2;
++			var holeMaximum = (childAnchor + new Vector3Int( childExtent )) / 2;
++			for ( var y = minimum.y; y < maximum.y; y++ )
++			for ( var x = minimum.x; x < maximum.x; x++ )
++			{
++				var coordinate = new Vector3Int( x, y, z );
++				if ( hasHole && IsInsideHalfOpenBox( coordinate, holeMinimum, holeMaximum ) ) continue;
++				var descriptor = CreateRegularDescriptor( level, coordinate, captureRegion: false );
++				var origin = new Vector3( x * size, y * size, z * size );
++				_waterCellRequests[descriptor] = new SdfWorldAabb( origin, origin + Vector3.One * size );
+ 			}
+ 		}
+ 		foreach ( var key in _waterCells.Keys.Where( key => !_waterCellRequests.ContainsKey( key ) &&
+ 			(key != CreateRegularDescriptor( key.Key.Level, key.Key.Coordinate, captureRegion: false ) ||
+-				!_levels[key.Key.Level].DesiredCache.Contains( key.Key.Coordinate ) &&
+-				!(_clipboxPlacementPending && _levels[key.Key.Level].PlacementChanged &&
+-					_levels[key.Key.Level].NextDesiredCache.Contains( key.Key.Coordinate ))) ).ToArray() )
++				key.Key.Level < configuration.MinimumVisualLod || key.Key.Level > configuration.MaximumVisualLod ||
++				!IsInsideHalfOpenBox( key.Key.Coordinate, _waterCacheMinimum[key.Key.Level], _waterCacheMaximum[key.Key.Level] )) ).ToArray() )
+ 			_waterCells.Remove( key );
+ 		_waterObservedSerial = _waterRequestSerial;
+ 		_waterObservedFieldRevision = field.Revision;
+ 		_waterObservedFieldEpoch = field.Epoch;
+-		_waterObservedPlacement = _clipboxPlacementCommits;
+-		_waterObservedPending = _clipboxPlacementPending;
+ 		_waterCellRevision++;
+ 	}
+ 
+@@ -96,87 +100,155 @@
+ 		if ( _waterCellPreparation is not null )
+ 		{
+ 			if ( !_waterCellPreparation.IsCompleted ) return;
+-			foreach ( var item in _waterCellPreparation.GetAwaiter().GetResult() )
+-			{
+-				if ( _waterCellRequests.ContainsKey( item.Descriptor ) ) _waterCells[item.Descriptor] = item;
+-				_waterCellsGenerated++;
+-				_waterCellGenerationMilliseconds += item.Milliseconds;
+-			}
++			var item = _waterCellPreparation.GetAwaiter().GetResult();
++			if ( _waterCellRequests.ContainsKey( item.Descriptor ) )
++			{
++				_waterCells[item.Descriptor] = item;
++				_waterReadyToPublishTimestamp = item.CompletedTimestamp;
++			}
++			_waterCellsGenerated++;
++			_waterCellGenerationMilliseconds += item.Milliseconds;
+ 			_waterCellPreparation = null;
+ 			_waterCellRevision++;
+ 		}
+-		if ( _waterCellRequests.Keys.All( descriptor => _waterCells.ContainsKey( descriptor ) ) ) return;
+-		var work = new List<(GpuSdfDescriptor Descriptor, SdfWorldAabb Bounds, TerrainFieldSnapshot Field)>();
++		var position = ActiveStreamingTarget.WorldPosition;
++		var distance = float.PositiveInfinity;
++		var found = false;
++		var descriptor = default(GpuSdfDescriptor);
++		var bounds = default(SdfWorldAabb);
+ 		foreach ( var pair in _waterCellRequests )
+ 		{
+ 			if ( _waterCells.ContainsKey( pair.Key ) ) continue;
+-			if ( !CurrentField.TryCaptureRegion( pair.Key.SamplingBounds, out var field ) ) continue;
+-			work.Add( (pair.Key, pair.Value, field) );
+-			if ( work.Count == 8 ) break;
+-		}
+-		if ( work.Count == 0 ) return;
++			var dx = MathF.Max( 0f, MathF.Max( pair.Value.Minimum.x - position.x, position.x - pair.Value.Maximum.x ) );
++			var dy = MathF.Max( 0f, MathF.Max( pair.Value.Minimum.y - position.y, position.y - pair.Value.Maximum.y ) );
++			var candidateDistance = dx * dx + dy * dy;
++			if ( found && (candidateDistance > distance ||
++				candidateDistance == distance && pair.Key.Key.Level >= descriptor.Key.Level) ) continue;
++			found = true;
++			distance = candidateDistance;
++			descriptor = pair.Key;
++			bounds = pair.Value;
++		}
++		if ( !found || !CurrentField.TryCaptureRegion( descriptor.SamplingBounds, out var field ) ) return;
+ 		_waterCellCancellation ??= new CancellationTokenSource();
+ 		var cancellation = _waterCellCancellation.Token;
+-		_waterCellPreparation = GameTask.RunInThreadAsync( async () =>
+-		{
+-			var result = new SurfaceWaterGeometry.Chunk[work.Count];
+-			for ( var index = 0; index < work.Count; index++ )
+-			{
+-				await GameTask.WorkerThread();
+-				cancellation.ThrowIfCancellationRequested();
+-				var item = work[index];
+-				var started = System.Diagnostics.Stopwatch.GetTimestamp();
+-				var cells = GeneratedWaterCells.Generate( item.Bounds, item.Descriptor.CellSize, item.Field, cancellation );
+-				var vertices = SurfaceWaterGeometry.Build( cells );
+-				result[index] = new SurfaceWaterGeometry.Chunk( item.Descriptor, cells, vertices, System.Diagnostics.Stopwatch.GetElapsedTime( started ).TotalMilliseconds );
+-				await GameTask.Yield();
+-			}
+-			return result;
++		// Each immutable result can publish on the next update. No batch, neighbor
++		// mesh, terrain placement, or other water result participates in readiness.
++		_waterCellPreparation = GameTask.RunInThreadAsync( () =>
++		{
++			cancellation.ThrowIfCancellationRequested();
++			var started = System.Diagnostics.Stopwatch.GetTimestamp();
++			var cells = GeneratedWaterCells.Generate( bounds, descriptor.CellSize, field, cancellation );
++			var vertices = SurfaceWaterGeometry.Build( cells );
++			return new SurfaceWaterGeometry.Chunk( descriptor, cells, vertices, System.Diagnostics.Stopwatch.GetElapsedTime( started ).TotalMilliseconds );
+ 		} );
+ 	}
+ 
+ 	private void UpdateSurfaceWaterChunks()
+ 	{
+-		var residentRevision = _gpuMesher.ResidentPublicationRevision;
+-		if ( _waterPlacementRevision == _clipboxPlacementCommits && _waterResidentRevision == residentRevision &&
+-			_waterRenderedCellRevision == _waterCellRevision ) return;
+-		_nextWaterChunks.Clear();
+-		_waterReplacementKeys.Clear();
+-		foreach ( var pair in _waterCells )
+-		{
+-			var descriptor = pair.Key;
+-			var state = _levels[descriptor.Key.Level];
+-			if ( state.HasPlacement && state.VisualEnabled && state.Active.Contains( descriptor.Key.Coordinate ) &&
+-				_gpuMesher.IsResident( descriptor ) )
+-			{
+-				_nextWaterChunks.Add( pair.Value );
+-				_waterReplacementKeys.Add( descriptor.Key );
+-			}
+-		}
+-		// An edit invalidates generated data before its replacement can be published.
+-		// Keep the last draw for that resident cell until both replacements are ready.
+-		foreach ( var chunk in _waterChunks )
+-		{
+-			var descriptor = chunk.Descriptor;
+-			if ( _waterReplacementKeys.Contains( descriptor.Key ) ) continue;
+-			var state = _levels[descriptor.Key.Level];
+-			if ( !state.HasPlacement || !state.VisualEnabled || !state.Active.Contains( descriptor.Key.Coordinate ) ||
+-				!_gpuMesher.IsResident( descriptor.Key ) ) continue;
+-			var current = CreateRegularDescriptor( state.Level, descriptor.Key.Coordinate, captureRegion: false );
+-			// Only a local edit may retain presentation; recipe, epoch and layout changes may not.
+-			if ( descriptor != (current with { EditRevision = descriptor.EditRevision }) ) continue;
+-			_nextWaterChunks.Add( chunk );
+-		}
+-		var changed = _waterRenderedCellRevision < 0 || _waterChunks.Count != _nextWaterChunks.Count;
+-		for ( var index = 0; !changed && index < _waterChunks.Count; index++ ) changed = _waterChunks[index] != _nextWaterChunks[index];
+-		if ( changed )
+-		{
+-			(_waterChunks, _nextWaterChunks) = (_nextWaterChunks, _waterChunks);
+-			_waterRenderer.Update( _waterChunks );
+-		}
+-		_waterPlacementRevision = _clipboxPlacementCommits;
+-		_waterResidentRevision = residentRevision;
++		if ( _waterRenderedCellRevision == _waterCellRevision ) return;
++		_nextWaterCoverage.Clear();
++		_waterCoverageBranches.Clear();
++		// Index only ancestors of existing coverage. Missing branches never recurse.
++		foreach ( var pair in _waterCoverage )
++		{
++			var key = pair.Key;
++			while ( key.Level + 1 < SupportedVisualLevelCount )
++			{
++				key = new GpuMeshRegionKey( key.Level + 1,
++					new Vector3Int( key.Coordinate.x >> 1, key.Coordinate.y >> 1, key.Coordinate.z >> 1 ) );
++				if ( !_waterCoverageBranches.Add( key ) ) break;
++			}
++		}
++		foreach ( var request in _waterCellRequests.Keys )
++		{
++			if ( _waterCells.TryGetValue( request, out var ready ) )
++			{
++				// Empty results also own coverage: dry replacements must hide old water.
++				_nextWaterCoverage.Add( request.Key, ready );
++				continue;
++			}
++			RetainWaterCoverage( request.Key );
++		}
++		(_waterCoverage, _nextWaterCoverage) = (_nextWaterCoverage, _waterCoverage);
++		_waterRenderer.Update( _waterCoverage, _waterCells );
+ 		_waterRenderedCellRevision = _waterCellRevision;
++		if ( _waterReadyToPublishTimestamp != 0 )
++		{
++			_waterMaximumPublishDelayMilliseconds = Math.Max( _waterMaximumPublishDelayMilliseconds,
++				System.Diagnostics.Stopwatch.GetElapsedTime( _waterReadyToPublishTimestamp ).TotalMilliseconds );
++			_waterReadyToPublishTimestamp = 0;
++		}
++	}
++
++	private void RetainWaterCoverage( GpuMeshRegionKey tile )
++	{
++		var ancestor = tile;
++		while ( true )
++		{
++			if ( _waterCoverage.TryGetValue( ancestor, out var chunk ) )
++			{
++				var descriptor = chunk.Descriptor;
++				var current = CreateRegularDescriptor( descriptor.Key.Level, descriptor.Key.Coordinate, captureRegion: false );
++				// Local edits can retain their last presentation; different worlds cannot.
++				if ( descriptor == (current with { EditRevision = descriptor.EditRevision }) )
++					_nextWaterCoverage.Add( tile, chunk );
++				return;
++			}
++			if ( ancestor.Level + 1 >= SupportedVisualLevelCount ) break;
++			ancestor = new GpuMeshRegionKey( ancestor.Level + 1,
++				new Vector3Int( ancestor.Coordinate.x >> 1, ancestor.Coordinate.y >> 1, ancestor.Coordinate.z >> 1 ) );
++		}
++		if ( tile.Level == 0 || !_waterCoverageBranches.Contains( tile ) ) return;
++		// Coarsening retains independently ready child footprints until this parent
++		// is ready. Refinement clips a retained parent to each unfinished child.
++		var childLevel = tile.Level - 1;
++		var childSize = _appliedCellsPerAxis * CellSizeForLevel( childLevel );
++		var z = (int)MathF.Ceiling( CurrentField.Settings.SeaLevel / childSize ) - 1;
++		for ( var y = 0; y < 2; y++ )
++		for ( var x = 0; x < 2; x++ )
++			RetainWaterCoverage( new GpuMeshRegionKey( childLevel,
++				new Vector3Int( tile.Coordinate.x * 2 + x, tile.Coordinate.y * 2 + y, z ) ) );
++	}
++
++	[ConCmd( "voxel_water_info" )]
++	public static void LogWaterInfoCommand( int level = 0, int x = 0, int y = 0 )
++	{
++		if ( !TryGetActiveManager( "water.inspect", out var manager ) || level < 0 || level >= SupportedVisualLevelCount ) return;
++		var size = manager._appliedCellsPerAxis * manager.CellSizeForLevel( level );
++		var z = (int)MathF.Ceiling( manager.CurrentField.Settings.SeaLevel / size ) - 1;
++		var descriptor = manager.CreateRegularDescriptor( level, new Vector3Int( x, y, z ), captureRegion: false );
++		if ( !manager._waterCells.TryGetValue( descriptor, out var chunk ) )
++		{
++			Log.Info( $"[VoxelWorld] water.inspect level={level} coordinate={x},{y},{z} ready=False" );
++			return;
++		}
++		ulong digest = 14695981039346656037UL;
++		var invalidVertices = 0;
++		var degenerateTriangles = 0;
++		var reversedTriangles = 0;
++		foreach ( var vertex in chunk.Vertices )
++		{
++			var position = vertex.Position;
++			digest = unchecked((digest ^ (uint)BitConverter.SingleToInt32Bits( position.x )) * 1099511628211UL);
++			digest = unchecked((digest ^ (uint)BitConverter.SingleToInt32Bits( position.y )) * 1099511628211UL);
++			digest = unchecked((digest ^ (uint)BitConverter.SingleToInt32Bits( position.z )) * 1099511628211UL);
++			if ( !float.IsFinite( position.x ) || !float.IsFinite( position.y ) || !float.IsFinite( position.z ) ||
++				position.x < chunk.Cells.Bounds.Minimum.x || position.x > chunk.Cells.Bounds.Maximum.x ||
++				position.y < chunk.Cells.Bounds.Minimum.y || position.y > chunk.Cells.Bounds.Maximum.y || position.z != chunk.Cells.SeaLevel ) invalidVertices++;
++		}
++		for ( var index = 0; index + 2 < chunk.Vertices.Length; index += 3 )
++		{
++			var ab = chunk.Vertices[index + 1].Position - chunk.Vertices[index].Position;
++			var ac = chunk.Vertices[index + 2].Position - chunk.Vertices[index].Position;
++			var area = ab.x * ac.y - ab.y * ac.x;
++			if ( area == 0f ) degenerateTriangles++;
++			if ( area < 0f ) reversedTriangles++;
++		}
++		Log.Info( $"[VoxelWorld] water.inspect level={level} coordinate={x},{y},{z} ready=True " +
++			$"requested={manager._waterCellRequests.ContainsKey( descriptor )} vertices={chunk.Vertices.Length} digest={digest:X16} " +
++			$"invalidVertices={invalidVertices} degenerateTriangles={degenerateTriangles} reversedTriangles={reversedTriangles} " +
++			$"generationMs={chunk.Milliseconds:F3}" );
+ 	}
+ 
+ 	private void ResetSurfaceWater()
+@@ -189,18 +261,17 @@
+ 		_waterCellPreparation = null;
+ 		_waterCells.Clear();
+ 		_waterCellRequests.Clear();
+-		_waterChunks.Clear();
+-		_nextWaterChunks.Clear();
+-		_waterReplacementKeys.Clear();
++		_waterCoverage.Clear();
++		_nextWaterCoverage.Clear();
++		_waterCoverageBranches.Clear();
+ 		_waterObservedSerial = -1;
+ 		_waterObservedFieldRevision = -1;
+ 		_waterObservedFieldEpoch = -1;
+-		_waterObservedPlacement = -1;
+ 		_waterRenderedCellRevision = -1;
+ 		_waterCellRevision++;
+ 		_waterCellsGenerated = 0;
++		_waterReadyToPublishTimestamp = 0;
++		_waterMaximumPublishDelayMilliseconds = 0;
+ 		_waterCellGenerationMilliseconds = 0;
+-		_waterPlacementRevision = -1;
+-		_waterResidentRevision = -1;
+ 	}
+ }
+--- a/Code/Voxels/Generation/GeneratedWaterCells.cs
++++ b/Code/Voxels/Generation/GeneratedWaterCells.cs
+@@ -2,7 +2,7 @@
+ using System.Collections.Generic;
+ using System.Threading;
+ 
+-/// <summary>Immutable generated water field. Negative water density is independent of solid collision density.</summary>
++/// <summary>Immutable generated water surface samples; medium queries remain owned by SurfaceWater.Resolve.</summary>
+ internal sealed class GeneratedWaterCells
+ {
+ 	public const int CellsPerAxis = VoxelManager.RequiredCellsPerAxis;
+@@ -10,34 +10,22 @@
+ 	public SdfWorldAabb Bounds { get; }
+ 	public float CellSize { get; }
+ 	public float SeaLevel { get; }
+-	// An unedited vertical column is exactly a bottom/sea-level run. Keep dense
+-	// samples only where edits can make that run discontinuous.
+ 	private readonly float[] _bottom;
+-	private readonly float[] _editedDensity;
+ 	// Retain the free-surface crossing even when river depth is below the LOD spacing.
+ 	public float[] SurfaceClearance { get; }
+ 	public readonly record struct SurfaceCell( Vector3 Origin, float Size, Vector4 Bottom, Vector4 Clearance );
+ 	public Dictionary<int, SurfaceCell[]> RefinedCells { get; } = new();
+ 	public int RefinedCellCount { get; private set; }
+-	public long Bytes => (long)(_bottom.Length + (_editedDensity?.Length ?? 0) + SurfaceClearance.Length) * sizeof( float ) +
++	public long Bytes => (long)(_bottom.Length + SurfaceClearance.Length) * sizeof( float ) +
+ 		(long)RefinedCellCount * (3 + 1 + 4 + 4) * sizeof( float );
+ 
+-	private GeneratedWaterCells( SdfWorldAabb bounds, float cellSize, float seaLevel, bool edited )
++	private GeneratedWaterCells( SdfWorldAabb bounds, float cellSize, float seaLevel )
+ 	{
+ 		Bounds = bounds;
+ 		CellSize = cellSize;
+ 		SeaLevel = seaLevel;
+ 		_bottom = new float[SamplesPerAxis * SamplesPerAxis];
+-		if ( edited ) _editedDensity = new float[SamplesPerAxis * SamplesPerAxis * SamplesPerAxis];
+ 		SurfaceClearance = new float[SamplesPerAxis * SamplesPerAxis];
+-	}
+-
+-	public float DensityAt( int x, int y, int z )
+-	{
+-		var column = x + SamplesPerAxis * y;
+-		if ( _editedDensity is not null ) return _editedDensity[column + SamplesPerAxis * SamplesPerAxis * z];
+-		var height = Bounds.Minimum.z + z * CellSize;
+-		return MathF.Max( _bottom[column] - height, height - SeaLevel );
+ 	}
+ 
+ 	public static GeneratedWaterCells Generate( SdfWorldAabb bounds, float cellSize,
+@@ -46,7 +34,7 @@
+ 		var settings = field.Settings;
+ 		var rivers = RiverWorld.For( settings ).Capture( bounds, cancellation );
+ 		var edited = field.GetCorrectionRange( bounds, out _, out _ ) != 0;
+-		var result = new GeneratedWaterCells( bounds, cellSize, settings.SeaLevel, edited );
++		var result = new GeneratedWaterCells( bounds, cellSize, settings.SeaLevel );
+ 		for ( var y = 0; y < SamplesPerAxis; y++ )
+ 		{
+ 			cancellation.ThrowIfCancellationRequested();
+@@ -66,19 +54,7 @@
+ 					clearance = MathF.Min( clearance, solid );
+ 				}
+ 				result.SurfaceClearance[column] = clearance;
+-				if ( !edited ) continue;
+-				for ( var z = 0; z < SamplesPerAxis; z++ )
+-				{
+-					position.z = bounds.Minimum.z + z * cellSize;
+-					var water = MathF.Max( bottom - position.z, position.z - settings.SeaLevel );
+-					if ( edited && water <= 0f )
+-					{
+-						var solid = TerrainCliffs.Sample( position, settings, natural.Mountains,
+-							TerrainCaves.SampleWorld( position, settings, bottom ) ) + field.SampleCorrection( position );
+-						water = MathF.Max( water, -solid );
+-					}
+-					result._editedDensity[column + SamplesPerAxis * SamplesPerAxis * z] = water;
+-				}
++
+ 			}
+ 		}
+ 		if ( cellSize > TerrainField.SampleSpacing )
+@@ -108,9 +84,9 @@
+ 		var wet = cell.Clearance;
+ 		if ( wet.x > 0f && wet.y > 0f && wet.z > 0f && wet.w > 0f ) return false;
+ 		var radius = rivers.MinimumWetRadius( cell.Origin, cell.Origin + new Vector3( cell.Size, cell.Size, 0f ) );
+-		// Four or more cells across each intersecting reach's full width, without
++		// Two or more cells across each intersecting reach's full width, without
+ 		// changing the base lattice or oversampling unrelated ocean coastlines.
+-		return cell.Size > MathF.Max( TerrainField.SampleSpacing, radius * 0.5f );
++		return cell.Size > MathF.Max( TerrainField.SampleSpacing, radius );
+ 	}
+ 
+ 	private static void Refine( SurfaceCell cell, List<SurfaceCell> leaves, RiverWorld.Region rivers,
+--- a/Code/Voxels/Water/SurfaceWaterGeometry.cs
++++ b/Code/Voxels/Water/SurfaceWaterGeometry.cs
+@@ -10,7 +10,10 @@
+ 		[VertexLayout.Position] public Vector3 Position;
+ 		public WaterVertex( Vector3 position ) { Position = position; }
+ 	}
+-	internal sealed record Chunk( GpuSdfDescriptor Descriptor, GeneratedWaterCells Cells, WaterVertex[] Vertices, double Milliseconds );
++	internal sealed record Chunk( GpuSdfDescriptor Descriptor, GeneratedWaterCells Cells, WaterVertex[] Vertices, double Milliseconds )
++	{
++		public long CompletedTimestamp { get; } = System.Diagnostics.Stopwatch.GetTimestamp();
++	}
+ 
+ 	public static WaterVertex[] Build( GeneratedWaterCells cells )
+ 	{
+@@ -19,53 +22,106 @@
+ 		var stride = GeneratedWaterCells.SamplesPerAxis;
+ 		var origin = cells.Bounds.Minimum;
+ 		origin.z = cells.SeaLevel;
++		// 1 = completely wet and available; 2 = already covered by a rectangle.
++		var coverage = new byte[size * size];
+ 		for ( var y = 0; y < size; y++ )
++		for ( var x = 0; x < size; x++ )
+ 		{
+-			for ( var x = 0; x < size; x++ )
++			var index = x + stride * y;
++			if ( !cells.RefinedCells.ContainsKey( x + size * y ) &&
++				cells.SurfaceClearance[index] > 0f && cells.SurfaceClearance[index + 1] > 0f &&
++				cells.SurfaceClearance[index + stride + 1] > 0f && cells.SurfaceClearance[index + stride] > 0f )
++				coverage[x + size * y] = 1;
++		}
++		for ( var y = 0; y < size; y++ )
++		for ( var x = 0; x < size; x++ )
++		{
++			if ( coverage[x + size * y] == 2 ) continue;
++			if ( coverage[x + size * y] == 1 )
+ 			{
+-				if ( cells.RefinedCells.TryGetValue( x + size * y, out var refined ) )
++				var endX = x + 1;
++				while ( endX < size && coverage[endX + size * y] == 1 ) endX++;
++				var endY = y + 1;
++				while ( endY < size )
+ 				{
+-					foreach ( var cell in refined )
+-					{
+-						var corner = cell.Origin;
+-						var rightCorner = corner + new Vector3( cell.Size, 0f, 0f );
+-						var diagonalCorner = corner + new Vector3( cell.Size, cell.Size, 0f );
+-						var upCorner = corner + new Vector3( 0f, cell.Size, 0f );
+-						var wet = cell.Clearance;
+-						ClipTriangle( corner, rightCorner, diagonalCorner, wet.x, wet.y, wet.z, vertices );
+-						ClipTriangle( corner, diagonalCorner, upCorner, wet.x, wet.z, wet.w, vertices );
+-					}
+-					continue;
++					var complete = true;
++					for ( var column = x; column < endX; column++ )
++						if ( coverage[column + size * endY] != 1 ) { complete = false; break; }
++					if ( !complete ) break;
++					endY++;
+ 				}
+-				var index = x + stride * y;
+-				var a = cells.SurfaceClearance[index];
+-				var b = cells.SurfaceClearance[index + 1];
+-				var c = cells.SurfaceClearance[index + stride + 1];
+-				var d = cells.SurfaceClearance[index + stride];
+-				if ( a <= 0f && b <= 0f && c <= 0f && d <= 0f ) continue;
++				for ( var row = y; row < endY; row++ )
++				for ( var column = x; column < endX; column++ ) coverage[column + size * row] = 2;
+ 				var first = origin + new Vector3( x * cells.CellSize, y * cells.CellSize, 0f );
+-				if ( a > 0f && b > 0f && c > 0f && d > 0f )
+-				{
+-					// Merge only complete adjacent wet cells in this owner chunk.
+-					var end = x + 1;
+-					while ( end < size && cells.SurfaceClearance[end + 1 + stride * y] > 0f &&
+-						cells.SurfaceClearance[end + 1 + stride * (y + 1)] > 0f ) end++;
+-					var second = origin + new Vector3( end * cells.CellSize, y * cells.CellSize, 0f );
+-					var third = second + new Vector3( 0f, cells.CellSize, 0f );
+-					var fourth = first + new Vector3( 0f, cells.CellSize, 0f );
+-					vertices.Add( new WaterVertex( first ) ); vertices.Add( new WaterVertex( second ) ); vertices.Add( new WaterVertex( third ) );
+-					vertices.Add( new WaterVertex( first ) ); vertices.Add( new WaterVertex( third ) ); vertices.Add( new WaterVertex( fourth ) );
+-					x = end - 1;
+-					continue;
+-				}
+-				var right = first + new Vector3( cells.CellSize, 0f, 0f );
+-				var diagonal = first + new Vector3( cells.CellSize, cells.CellSize, 0f );
+-				var up = first + new Vector3( 0f, cells.CellSize, 0f );
+-				ClipTriangle( first, right, diagonal, a, b, c, vertices );
+-				ClipTriangle( first, diagonal, up, a, c, d, vertices );
++				var right = origin + new Vector3( endX * cells.CellSize, y * cells.CellSize, 0f );
++				var diagonal = origin + new Vector3( endX * cells.CellSize, endY * cells.CellSize, 0f );
++				var up = origin + new Vector3( x * cells.CellSize, endY * cells.CellSize, 0f );
++				AddTriangle( first, right, diagonal, vertices );
++				AddTriangle( first, diagonal, up, vertices );
++				continue;
+ 			}
++			if ( cells.RefinedCells.TryGetValue( x + size * y, out var refined ) )
++			{
++				foreach ( var cell in refined ) ClipCell( cell.Origin, cell.Size, cell.Clearance, vertices );
++				continue;
++			}
++			var sample = x + stride * y;
++			ClipCell( origin + new Vector3( x * cells.CellSize, y * cells.CellSize, 0f ), cells.CellSize,
++				new Vector4( cells.SurfaceClearance[sample], cells.SurfaceClearance[sample + 1],
++					cells.SurfaceClearance[sample + stride + 1], cells.SurfaceClearance[sample + stride] ), vertices );
+ 		}
+ 		return vertices.ToArray();
++	}
++
++	private static void ClipCell( Vector3 origin, float size, Vector4 wet, List<WaterVertex> vertices )
++	{
++		if ( wet.x <= 0f && wet.y <= 0f && wet.z <= 0f && wet.w <= 0f ) return;
++		var right = origin + new Vector3( size, 0f, 0f );
++		var diagonal = origin + new Vector3( size, size, 0f );
++		var up = origin + new Vector3( 0f, size, 0f );
++		// Opposite wet corners retain the existing diagonal's connectivity.
++		if ( (wet.x > 0f) == (wet.z > 0f) && (wet.y > 0f) == (wet.w > 0f) && (wet.x > 0f) != (wet.y > 0f) )
++		{
++			ClipTriangle( origin, right, diagonal, wet.x, wet.y, wet.z, vertices );
++			ClipTriangle( origin, diagonal, up, wet.x, wet.z, wet.w, vertices );
++			return;
++		}
++		Span<Vector3> points = stackalloc Vector3[4] { origin, right, diagonal, up };
++		Span<float> density = stackalloc float[4] { wet.x, wet.y, wet.z, wet.w };
++		Span<Vector3> clipped = stackalloc Vector3[6];
++		var count = 0;
++		for ( var index = 0; index < 4; index++ )
++		{
++			var next = (index + 1) % 4;
++			if ( density[index] > 0f ) clipped[count++] = points[index];
++			if ( (density[index] > 0f) != (density[next] > 0f) )
++				clipped[count++] = SurfaceCrossing( points[index], points[next], density[index], density[next] );
++		}
++		for ( var index = 1; index + 1 < count; index++ )
++		{
++			AddTriangle( clipped[0], clipped[index], clipped[index + 1], vertices );
++		}
++	}
++
++	private static void AddTriangle( Vector3 a, Vector3 b, Vector3 c, List<WaterVertex> vertices )
++	{
++		var ab = b - a;
++		var ac = c - a;
++		if ( ab.x * ac.y - ab.y * ac.x == 0f ) return;
++		vertices.Add( new WaterVertex( a ) );
++		vertices.Add( new WaterVertex( b ) );
++		vertices.Add( new WaterVertex( c ) );
++	}
++
++	private static Vector3 SurfaceCrossing( Vector3 a, Vector3 b, float da, float db )
++	{
++		// Shared edges use the same arithmetic direction in either owner chunk.
++		if ( a.x > b.x || a.x == b.x && a.y > b.y )
++		{
++			(a, b) = (b, a);
++			(da, db) = (db, da);
++		}
++		return a + (b - a) * (da / (da - db));
+ 	}
+ 
+ 	private static void ClipTriangle( Vector3 a, Vector3 b, Vector3 c, float da, float db, float dc, List<WaterVertex> vertices )
+@@ -79,14 +135,11 @@
+ 			var next = (index + 1) % 3;
+ 			if ( density[index] > 0f ) clipped[count++] = points[index];
+ 			if ( (density[index] > 0f) != (density[next] > 0f) )
+-				clipped[count++] = points[index] + (points[next] - points[index]) *
+-					(density[index] / (density[index] - density[next]));
++				clipped[count++] = SurfaceCrossing( points[index], points[next], density[index], density[next] );
+ 		}
+ 		for ( var index = 1; index + 1 < count; index++ )
+ 		{
+-			vertices.Add( new WaterVertex( clipped[0] ) );
+-			vertices.Add( new WaterVertex( clipped[index] ) );
+-			vertices.Add( new WaterVertex( clipped[index + 1] ) );
++			AddTriangle( clipped[0], clipped[index], clipped[index + 1], vertices );
+ 		}
+ 	}
+ }
+--- a/Code/Voxels/Water/SurfaceWaterRenderer.cs
++++ b/Code/Voxels/Water/SurfaceWaterRenderer.cs
+@@ -31,16 +31,17 @@
+ 		lock ( _sync ) _presentationReady = ready;
+ 	}
+ 
+-	public void Update( IReadOnlyList<SurfaceWaterGeometry.Chunk> chunks )
++	public void Update( IReadOnlyDictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> coverage,
++		IReadOnlyDictionary<GpuSdfDescriptor, SurfaceWaterGeometry.Chunk> retainedChunks )
+ 	{
+ 		lock ( _sync )
+ 		{
+ 			_publication++;
+ 			VertexCount = 0;
+-			ChunkCount = chunks.Count;
+-			foreach ( var chunk in chunks )
++			ChunkCount = coverage.Count;
++			foreach ( var pair in coverage )
+ 			{
+-				VertexCount += chunk.Vertices.Length;
++				var chunk = pair.Value;
+ 				if ( chunk.Vertices.Length == 0 ) continue;
+ 				if ( !_chunks.TryGetValue( chunk.Descriptor, out var draw ) )
+ 				{
+@@ -48,11 +49,21 @@
+ 					_chunks.Add( chunk.Descriptor, draw );
+ 					UploadedVertices += chunk.Vertices.Length;
+ 				}
+-				draw.Publication = _publication;
++				if ( draw.Publication != _publication )
++				{
++					draw.Coverage.Clear();
++					draw.Publication = _publication;
++					VertexCount += chunk.Vertices.Length;
++				}
++				var tile = pair.Key;
++				var size = (chunk.Cells.Bounds.Maximum.x - chunk.Cells.Bounds.Minimum.x) *
++					MathF.Pow( 2f, tile.Level - chunk.Descriptor.Key.Level );
++				draw.Coverage.Add( new Vector4( tile.Coordinate.x * size, tile.Coordinate.y * size,
++					(tile.Coordinate.x + 1) * size, (tile.Coordinate.y + 1) * size ) );
+ 			}
+ 			_retiring.Clear();
+ 			foreach ( var pair in _chunks )
+-				if ( pair.Value.Publication != _publication ) _retiring.Add( pair.Key );
++				if ( pair.Value.Publication != _publication && !retainedChunks.ContainsKey( pair.Key ) ) _retiring.Add( pair.Key );
+ 			foreach ( var key in _retiring )
+ 			{
+ 				_chunks[key].Release();
+@@ -80,6 +91,7 @@
+ 		private GpuBuffer<SurfaceWaterGeometry.WaterVertex> _vertices;
+ 		private readonly int _count;
+ 		public long Publication;
++		public readonly List<Vector4> Coverage = new();
+ 
+ 		public ChunkDraw( SurfaceWaterRenderer owner, SurfaceWaterGeometry.Chunk chunk ) : base( owner._world )
+ 		{
+@@ -105,8 +117,14 @@
+ 		{
+ 			lock ( _owner._sync )
+ 			{
+-				if ( _owner._presentationReady && _vertices is not null )
+-					Graphics.Draw( _vertices, _owner._material, 0, _count, _owner._attributes );
++				if ( _owner._presentationReady && Publication == _owner._publication && _vertices is not null )
++				{
++					foreach ( var bounds in Coverage )
++					{
++						_owner._attributes.Set( "WaterCoverage", bounds );
++						Graphics.Draw( _vertices, _owner._material, 0, _count, _owner._attributes );
++					}
++				}
+ 			}
+ 		}
+ 	}
+--- a/Assets/shaders/voxels/voxel_water.shader
++++ b/Assets/shaders/voxels/voxel_water.shader
+@@ -13,6 +13,7 @@
+ COMMON
+ {
+ 	#include "common/shared.hlsl"
++	float4 WaterCoverage < Attribute( "WaterCoverage" ); >;
+ 	float WaterCheckerSize < Attribute( "WaterCheckerSize" ); >;
+ 	float3 WaterDark < Attribute( "WaterDark" ); >;
+ 	float3 WaterLight < Attribute( "WaterLight" ); >;
+@@ -44,6 +45,11 @@
+ 	float4 MainPs( PixelInput input ) : SV_Target0
+ 	{
+ 		float3 worldPosition = input.vPositionWithOffsetWs + g_vHighPrecisionLightingOffsetWs.xyz;
++		// Half-open tiles make old/new LOD coverage disjoint, including dry results.
++		if ( any( worldPosition.xy < WaterCoverage.xy ) || any( worldPosition.xy >= WaterCoverage.zw ) )
++		{
++			discard;
++		}
+ 		float2 coordinates = worldPosition.xy / WaterCheckerSize;
+ 		float checker = frac( (floor( coordinates.x ) + floor( coordinates.y )) * 0.5 ) * 2.0;
+ 		float2 footprint = fwidth( coordinates );

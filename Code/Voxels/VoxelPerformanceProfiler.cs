@@ -53,8 +53,23 @@ internal static class VoxelPerformanceProfiler
 				global::Sandbox.Diagnostics.PerformanceStats.Timings.Get( name ) ) );
 		}
 
+		// GPU scope availability is engine-controlled; an empty list is unavailable,
+		// not a claim that meshing or rendering took zero GPU time.
+		var gpu = new List<PerformanceGpuTiming>();
+		foreach ( var path in global::Sandbox.Diagnostics.GpuProfilerStats.Entries )
+		{
+			gpu.Add( new PerformanceGpuTiming
+			{
+				Path = path,
+				SmoothedMilliseconds = global::Sandbox.Diagnostics.GpuProfilerStats.GetSmoothedDuration( path ),
+				MaximumMilliseconds = global::Sandbox.Diagnostics.GpuProfilerStats.GetMaxDuration( path )
+			} );
+		}
 		return new PerformanceProfilerMetrics
 		{
+			ScreenWidth = global::Sandbox.Screen.Width,
+			ScreenHeight = global::Sandbox.Screen.Height,
+			Gpu = gpu,
 			WindowFrames = WindowFrames,
 			Engine = engine,
 			Scripts = scripts

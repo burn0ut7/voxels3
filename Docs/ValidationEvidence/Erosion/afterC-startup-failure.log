@@ -1,0 +1,45 @@
+2026/09/09 10:37:24.7860	[engine/Engine] SteamAPI_Init succeeded.  SteamID is [U:1:84581155] (76561198044846883), AppID is 590830	
+2026/09/09 10:37:25.5399	[engine/RenderSystem] Vulkan Physical Device: NVIDIA GeForce RTX 5090	
+2026/09/09 10:37:26.0193	[engine/RenderSystem] DLSS: enabling required device extension 'VK_NVX_binary_import'.	
+2026/09/09 10:37:26.0193	[engine/RenderSystem] DLSS: enabling required device extension 'VK_NVX_image_view_handle'.	
+2026/09/09 10:37:26.0193	[engine/RenderSystem] DLSS: enabling required device extension 'VK_KHR_buffer_device_address'.	
+2026/09/09 10:37:26.0193	[engine/RenderSystem] DLSS: enabling required device extension 'VK_KHR_push_descriptor'.	
+2026/09/09 10:37:26.1311	[engine/RenderSystem] Vulkan driver version: 616.64.0.0	
+2026/09/09 10:37:28.0554	[Generic] Editor Startup version 26.09.08a	
+2026/09/09 10:37:28.2903	[engine/AssetSystem] AssetSystem pruned 1 stale assets	
+2026/09/09 10:37:28.3419	[engine/ResourceSystem] Error loading resource "textures/dev/blue_noise_256.vtex" (Invalid header version: 8736 != 12)	
+2026/09/09 10:37:28.3419	[engine/Engine] WARNING: Local content might be corrupt or missing files. Not reporting to Steam due to disabled reporting.	
+2026/09/09 10:37:28.3711	[Generic] Compiling Tools	
+2026/09/09 10:37:30.3780	[Generic] Command screenshot_highres already exists - not overwriting (Take a high resolution screenshot you specify the width and height)	
+2026/09/09 10:37:30.4320	[Generic] Compiling base projects	
+2026/09/09 10:37:30.4681	[MCP] MCP server listening on http://127.0.0.1:7269/mcp	
+2026/09/09 10:37:31.8904	[Generic] Validating cloud assets	
+2026/09/09 10:37:31.8904	[Generic] Validating cloud packages	
+2026/09/09 10:37:32.1107	[PackageManager] Install Package (Already Mounted) local.menu#local [local]	
+2026/09/09 10:37:32.6652	[PackageManager] Install Package (Already Mounted) local.toolbase#local [local]	
+2026/09/09 10:37:32.6940	[PackageManager] Install Package (Already Mounted) local.shadergraph#local [local]	
+2026/09/09 10:37:32.7219	[PackageManager] Install Package (Already Mounted) local.actiongraph#local [local]	
+2026/09/09 10:37:32.7827	[PackageManager] Install Package (Already Mounted) local.moviemaker#local [local]	
+2026/09/09 10:37:32.7827	[PackageManager] Install Package (Already Mounted) local.hammer#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.dooeditor#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.menu#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.toolbase#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.shadergraph#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.actiongraph#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.moviemaker#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.hammer#local [local]	
+2026/09/09 10:37:32.7985	[PackageManager] Install Package (Already Mounted) local.dooeditor#local [local]	
+2026/09/09 10:37:32.8527	[engine/AssetSystem] AssetSystem pruned 47 stale assets	
+2026/09/09 10:37:39.6804	[PackageManager] Install Package (Already Mounted) local.voxels3#local [gamemenu]	
+2026/09/09 10:37:41.2700	[Startup] Importing custom assets	
+2026/09/09 10:37:42.5319	[Generic] ImportCustomTypeFiles took 1.05 seconds	
+2026/09/09 10:37:42.5319	[Startup] ..refresh complete (took 0.007s)	
+2026/09/09 10:37:45.7712	[Generic] One or more errors occurred. (The requested operation cannot be performed on a file with a user-mapped section open. : 'C:\Users\Gray\Documents\s&box projects\voxels3\Assets\shaders\voxels\voxel_transition_geometry_cs.shader_c'.)	System.IO.IOException: The requested operation cannot be performed on a file with a user-mapped section open. : 'C:\Users\Gray\Documents\s&box projects\voxels3\Assets\shaders\voxels\voxel_transition_geometry_cs.shader_c'.
+   at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+   at System.IO.File.<WriteAllBytesAsync>g__Core|103_0(String path, ReadOnlyMemory`1 bytes, CancellationToken cancellationToken)
+   at Sandbox.Engine.Shaders.ShaderCompile.Compile(String absoluteFilePath, String relativeFilePath, ShaderCompileOptions compileOptions, CancellationToken token)
+   at Editor.StartupLoadProject.CompileAllShaders()
+   at Editor.StartupLoadProject.OpenProject(String path, CancellationToken ct)
+   at Editor.StartupLoadProject.Run()
+   at Sandbox.ToolsDll.LoadProject()
+2026/09/09 10:37:50.7950	[engine/ToolsStallMonitor] Stall detected.	

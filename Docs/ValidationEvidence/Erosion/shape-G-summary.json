@@ -1,0 +1,58 @@
+{
+  "patch": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-G-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-G-recipe.json",
+    "grid": { "pointsPerAxis": 129, "spacing": 32, "rows": 16641, "adjacentEdges": 33024 },
+    "repeatHeightExactCount": 16641,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.9868512, 1.0],
+    "heightRange": [893.01154, 2211.341],
+    "slope": { "p50": 0.3581466, "p95": 0.9473934, "p99": 1.2160559, "max": 3.3714132 },
+    "adjacentAbsoluteHeightDifference": { "p50": 6.54746, "p95": 23.4236, "p99": 32.9789, "max": 91.4609 }
+  },
+  "wide": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-G-wide-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-G-wide-recipe.json",
+    "grid": { "pointsPerAxis": 65, "spacing": 4096, "rows": 4225, "adjacentEdges": 8320 },
+    "repeatHeightExactCount": 4225,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.0, 1.0],
+    "heightRange": [-2034.3096, 2146.759],
+    "slope": { "p50": 0.059349798, "p95": 0.5100262, "p99": 0.9150176, "max": 1.8564899 },
+    "adjacentAbsoluteHeightDifference": { "p50": 96.4099, "p95": 619.29659, "p99": 968.0145, "max": 1702.40762 }
+  },
+  "wideCompareBefore": {
+    "beforeSurvey": "Docs/ValidationEvidence/Erosion/before-survey.csv",
+    "worldXYOverlaps": 4225,
+    "bothMountainWeightAtMost0.5": 4056,
+    "exactUnchangedHeightsWithinMask": 4056,
+    "heightDiscrepanciesWithinMask": 0,
+    "heightDiscrepanciesAllOverlaps": 169
+  },
+  "densityAudit": {
+    "source": "Docs/ValidationEvidence/Erosion/shape-G-density-audit.json",
+    "regularRecords": 7,
+    "regularLevels": [0, 1, 2, 3, 4, 5, 6],
+    "regularSamplesEach": 125,
+    "regularMaximumError": 0.0009765625,
+    "regularMaximumErrorLocation": { "level": 5, "sample": [32, -1, 32], "cpu": 16157.383, "gpu": 16157.384 },
+    "regularMaximumLatticeError": 0,
+    "regularTotals": { "nonFinite": 0, "densityMismatches": 0, "signMismatches": 0, "boundsFailures": 0, "readbackNonFinite": 0 },
+    "finalPendingLevels": 0,
+    "transitionRecords": 26,
+    "transitionMaximumError": 0.0078125,
+    "transitionMaximumErrorLocation": { "fineLevel": 5, "coarseLevel": 6, "face": "NegativeY", "position": [13824, 130560, 12800], "cpu": 12105.992, "gpu": 12105.984 },
+    "transitionTotals": { "nonFinite": 0, "signMismatches": 0, "boundsFailures": 0 },
+    "finalPendingFaces": 52349176880,
+    "missingFaces": ["0/1 NegativeZ", "0/1 PositiveZ", "1/2 NegativeZ", "1/2 PositiveZ", "2/3 NegativeZ", "3/4 NegativeZ", "4/5 NegativeZ", "4/5 PositiveZ", "5/6 NegativeZ", "5/6 PositiveZ"]
+  },
+  "compile": {
+    "source": "Docs/ValidationEvidence/Erosion/shape-G-compile.json",
+    "isBuilding": false,
+    "allCompilersSuccess": true,
+    "totalErrors": 0,
+    "totalWarnings": 0
+  }
+}

@@ -52,7 +52,20 @@ adopt/defer decisions and current source constraints for these references.
 | [Wube: Noise expressions 2.0](https://www.factorio.com/blog/post/fff-390), [Better noise](https://www.factorio.com/blog/post/fff-112) | Coordinate-local generation and reuse of intermediate work across chunks. | A 2D tile generator and its expression compiler are not a ready-made volumetric architecture or performance prediction. |
 | [Hello Games: Continuous World Generation in No Man's Sky](https://www.gdcvault.com/play/1024265/Continuous_World_Generation_in__No_Man_s_Sky_) | Official session overview describing voxel generation, polygonization, texturing, population and simulation stages. | Overview-only evidence in this review; no exact scheduler, memory budget or current implementation inferred. |
 | [Guerrilla: GPU-Based Procedural Placement in Horizon Zero Dawn](https://www.guerrilla-games.com/read/gpu-based-procedural-placement-in-horizon-zero-dawn) | Developer description of rule-driven runtime population around the player. | Talk page inspected; linked PDF unavailable during this review. No claim of s&box GPU API compatibility or infinite base-terrain generation. |
-| [Génevaux et al.: Terrain Generation Using Procedural Models Based on Hydrology](https://perso.liris.cnrs.fr/egalin/Articles/2013-river-networks.pdf) | Primary research on drainage networks preceding continuous terrain construction; motivates a future planning boundary. | Bounded input domain; infinite region agreement, runtime water and frame pacing are not solved by adopting this paper. |
+| [GÃ©nevaux et al.: Terrain Generation Using Procedural Models Based on Hydrology](https://perso.liris.cnrs.fr/egalin/Articles/2013-river-networks.pdf) | Primary research on drainage networks preceding continuous terrain construction; motivates a future planning boundary. | Bounded input domain; infinite region agreement, runtime water and frame pacing are not solved by adopting this paper. |
+
+### Selective procedural erosion
+
+[Prototype design and limits](Plans/SelectiveErosionPrototype.md) owns the
+provisional choice; the validation ledger owns measured acceptance.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [SideFX: realistic terrain workflow](https://www.sidefx.com/docs/houdini/model/terrain_workflow.html) | Separates mountain massing, disturbances, broad erosion, elevation passes and fine erosion; helps diagnose weak base shapes. | Offline artist workflow, not a stateless runtime generator or performance evidence. |
+| [Rune Skovbo Johansen: advanced erosion filter](https://blog.runevision.com/2026/03/fast-and-gorgeous-erosion-filter.html) | Coordinate-local branching gullies, partial phase normalization and stacked fading. | Heightfield appearance, not hydraulic simulation, cave erosion, connected rivers or cross-hardware bit identity. |
+| [Luke Mitchell C# reference, pinned](https://github.com/lpmitchell/AdvancedTerrainErosion/tree/57e79cc331d17e2a45c897bea9c4c022d1fc5551) | Inspectable erosion/Phacelle implementation and attribution. | Unity/Burst dependencies and performance do not transfer to s&box; adapted source retains MPL2 notices. |
+| [Grenier et al. 2024](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14992) | Closely related phasor-noise terrain enhancement and published drainage comparisons. | Does not supply globally coherent rivers or s&box timings. |
+| [Dendry author implementation](https://github.com/mgaillard/Noise) | Locally evaluated branching structures for future drainage research. | No implementation selected; a different responsibility from small-scale surface erosion. |
 
 ## CPU and Managed-Memory Measurement
 

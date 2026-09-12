@@ -1,3 +1,4 @@
+#include "shaders/voxels/voxel_generated_materials.hlsl"
 struct TerrainRequest
 {
 	float4 OriginAndCellSize;
@@ -54,6 +55,7 @@ int ChunkSize < Attribute( "ChunkSize" ); >;
 int SampleSize < Attribute( "SampleSize" ); >;
 int HaloSize < Attribute( "HaloSize" ); >;
 int HaloSampleCount < Attribute( "HaloSampleCount" ); >;
+int PlacedMaterialOffset < Attribute( "PlacedMaterialOffset" ); >;
 int CellCount < Attribute( "CellCount" ); >;
 int EdgeSlotCount < Attribute( "EdgeSlotCount" ); >;
 int EdgeGroupCount < Attribute( "EdgeGroupCount" ); >;
@@ -165,6 +167,22 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		if(index<(uint)BatchSize){ActiveCellCounts[index]=0;Digests[index]=uint2(0,0);}
 		return;
 	}
+	if ( PersistentStage == 9 )
+	{
+		uint columns = (uint)HaloSize * (uint)HaloSize;
+		if ( index >= columns * (uint)BatchSize ) return;
+		uint block = index / columns;
+		uint local = index - block * columns;
+		TerrainRequest request = Requests[block];
+		int2 origin = (int2)round( request.OriginAndCellSize.xy / request.OriginAndCellSize.w );
+		int2 xy = origin + int2( local % (uint)HaloSize, local / (uint)HaloSize ) - 1;
+		float3 landform = SampleVoxelLandform( (float2)xy * request.OriginAndCellSize.w,
+			request.Terrain, request.TerrainScales, request.TerrainShape.x, request.TerrainShape.y );
+		uint cache = (uint)HaloSampleCount * (uint)BatchSize + index * 2u;
+		DensitySamples[cache] = landform.x;
+		DensitySamples[cache + 1u] = landform.y;
+		return;
+	}
 	if(PersistentStage==1)
 	{
 		uint total=(uint)HaloSampleCount*(uint)BatchSize;if(index>=total)return;
@@ -176,8 +194,12 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		{
 			correction = DensitySamples[index];
 		}
-		DensitySamples[index] = SampleVoxelSdf( origin + int3(halo) - 1, request.OriginAndCellSize.w,
-			request.Terrain, request.TerrainScales, request.TerrainShape ) + correction;
+		uint column = block * (uint)HaloSize * (uint)HaloSize + halo.x + halo.y * (uint)HaloSize;
+		uint cache = (uint)HaloSampleCount * (uint)BatchSize + column * 2u;
+		float2 landform = float2( DensitySamples[cache], DensitySamples[cache + 1u] );
+		float3 position = (float3)(origin + int3(halo) - 1) * request.OriginAndCellSize.w;
+		DensitySamples[index] = SampleVoxelSdfFromLandform( position,
+			request.Terrain, request.TerrainScales, request.TerrainShape, landform ) + correction;
 		return;
 	}
 	if(PersistentStage==2)
@@ -213,6 +235,16 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			PersistentDensity( block, int3(b) ), request.Terrain, request.TerrainScales, request.TerrainShape, request.Reserved0 != 0 );
 		EdgeFlags[index] = asuint( coordinate ) + 1u;
 		float3 world = VoxelEdgePosition( first, second, coordinate );
+		float4 materialWeights = GenerateVoxelMaterialWeights( world, request.Terrain, request.TerrainScales, request.TerrainShape );
+		if ( request.Reserved0 != 0 )
+		{
+			uint materialBase = (uint)PlacedMaterialOffset + block * (uint)HaloSampleCount;
+			float dirt = lerp( DensitySamples[materialBase + PersistentHaloIndex( int3(a) )],
+				DensitySamples[materialBase + PersistentHaloIndex( int3(b) )], coordinate );
+			materialWeights = lerp( materialWeights, float4( 0.0, 1.0, 0.0, 0.0 ), saturate( dirt ) );
+		}
+		EdgeFlags[(uint)EdgeSlotCount * (uint)BatchSize + index] =
+			PackGeneratedVoxelWeights( materialWeights );
 		InterlockedXor( Digests[block].y, PersistentHash( asuint(world.x) ^ PersistentHash(asuint(world.y)) ^ PersistentHash(asuint(world.z)) ^ slot ) );
 		return;
 	}

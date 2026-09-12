@@ -1,0 +1,6185 @@
+{
+  "source": "C:\\Program Files (x86)\\Steam\\steamapps\\profiler_captures\\sbox_2026-09-09_21_59_42.json.gz",
+  "sourceBytes": 1542116,
+  "sourceSha256": "6499d43de9f08a59b3f87dc128c7b0c309edd0f58a9a41226421da14957d761c",
+  "meta": {
+    "interval": 0.2,
+    "startTime": 1789005582189,
+    "endTime": 1789005590595,
+    "profilingStartTime": 0,
+    "profilingEndTime": 8405.7729,
+    "processType": 0,
+    "categories": [
+      {
+        "name": "Other",
+        "color": "grey",
+        "subcategories": [
+          "Other"
+        ]
+      },
+      {
+        "name": "Kernel",
+        "color": "orange",
+        "subcategories": [
+          "Other"
+        ]
+      },
+      {
+        "name": "Native",
+        "color": "blue",
+        "subcategories": [
+          "Other"
+        ]
+      },
+      {
+        "name": ".NET",
+        "color": "green",
+        "subcategories": [
+          "Other"
+        ]
+      },
+      {
+        "name": ".NET GC",
+        "color": "yellow",
+        "subcategories": [
+          "Other"
+        ]
+      },
+      {
+        "name": ".NET JIT",
+        "color": "purple",
+        "subcategories": [
+          "Other"
+        ]
+      },
+      {
+        "name": ".NET CLR",
+        "color": "grey",
+        "subcategories": [
+          "Other"
+        ]
+      }
+    ],
+    "product": "sbox-dev",
+    "stackwalk": 1,
+    "version": 29,
+    "preprocessedProfileVersion": 51,
+    "abi": "win-x64",
+    "oscpu": "Windows 10 Pro 10.0.0.0 26100.9168.amd64fre.ge_release.240331-1435",
+    "platform": "Windows 10 Pro 10.0.0.0 26100.9168.amd64fre.ge_release.240331-1435",
+    "logicalCPUs": 16,
+    "symbolicated": true,
+    "markerSchema": [
+      {
+        "name": "CC",
+        "tableLabel": "JIT Compile: {marker.data.fullName}, ILSize: {marker.data.methodILSize}",
+        "chartLabel": "JIT Compile: {marker.data.fullName}, ILSize: {marker.data.methodILSize}",
+        "display": [
+          "timeline-overview",
+          "marker-chart",
+          "marker-table"
+        ],
+        "data": [
+          {
+            "key": "fullName",
+            "label": "Full Name",
+            "format": "string"
+          },
+          {
+            "key": "methodILSize",
+            "label": "Method IL Size",
+            "format": "integer"
+          }
+        ]
+      },
+      {
+        "name": "GCMajor",
+        "tableLabel": "GC: {marker.data.reason}, Type: {marker.data.gcType}, Count: {marker.data.count}",
+        "chartLabel": "GC: {marker.data.reason}, Type: {marker.data.gcType}, Count: {marker.data.count}",
+        "display": [
+          "timeline-memory",
+          "marker-chart",
+          "marker-table"
+        ],
+        "data": [
+          {
+            "key": "reason",
+            "label": "Reason",
+            "format": "string"
+          },
+          {
+            "key": "count",
+            "label": "Count",
+            "format": "integer"
+          },
+          {
+            "key": "depth",
+            "label": "Depth",
+            "format": "integer"
+          },
+          {
+            "key": "gcType",
+            "label": "GC Type",
+            "format": "string"
+          }
+        ]
+      },
+      {
+        "name": "dotnet.gc.heap_stats",
+        "tableLabel": "GC Heap Stats: {marker.data.totalHeapSize}, Promoted: {marker.data.totalPromoted}",
+        "chartLabel": "GC Heap Stats: {marker.data.totalHeapSize}, Promoted: {marker.data.totalPromoted}",
+        "display": [
+          "marker-chart",
+          "marker-table",
+          "timeline-memory"
+        ],
+        "data": [
+          {
+            "key": "totalHeapSize",
+            "label": "Total Heap Size",
+            "format": "bytes"
+          },
+          {
+            "key": "totalPromoted",
+            "label": "Total Promoted",
+            "format": "bytes"
+          },
+          {
+            "key": "generationSize0",
+            "label": "Generation Size 0",
+            "format": "bytes"
+          },
+          {
+            "key": "totalPromotedSize0",
+            "label": "Total Promoted Size 0",
+            "format": "bytes"
+          },
+          {
+            "key": "generationSize1",
+            "label": "Generation Size 1",
+            "format": "bytes"
+          },
+          {
+            "key": "totalPromotedSize1",
+            "label": "Total Promoted Size 1",
+            "format": "bytes"
+          },
+          {
+            "key": "generationSize2",
+            "label": "Generation Size 2",
+            "format": "bytes"
+          },
+          {
+            "key": "totalPromotedSize2",
+            "label": "Total Promoted Size 2",
+            "format": "bytes"
+          },
+          {
+            "key": "generationSize3",
+            "label": "Generation Size 3",
+            "format": "bytes"
+          },
+          {
+            "key": "totalPromotedSize3",
+            "label": "Total Promoted Size 3",
+            "format": "bytes"
+          },
+          {
+            "key": "generationSize4",
+            "label": "Generation Size 4",
+            "format": "bytes"
+          },
+          {
+            "key": "totalPromotedSize4",
+            "label": "Total Promoted Size 4",
+            "format": "bytes"
+          },
+          {
+            "key": "finalizationPromotedSize",
+            "label": "Finalization Promoted Size",
+            "format": "bytes"
+          },
+          {
+            "key": "finalizationPromotedCount",
+            "label": "Finalization Promoted Count",
+            "format": "integer"
+          },
+          {
+            "key": "pinnedObjectCount",
+            "label": "Pinned Object Count",
+            "format": "integer"
+          },
+          {
+            "key": "sinkBlockCount",
+            "label": "Sink Block Count",
+            "format": "integer"
+          },
+          {
+            "key": "gcHandleCount",
+            "label": "GCHandle Count",
+            "format": "integer"
+          }
+        ]
+      },
+      {
+        "name": "GCMinor",
+        "tableLabel": "GC Allocation: {marker.data.typeName}, Amount: {marker.data.allocationAmount}",
+        "chartLabel": "GC Allocation: {marker.data.typeName}, Amount: {marker.data.allocationAmount}",
+        "display": [
+          "timeline-overview",
+          "marker-chart",
+          "marker-table"
+        ],
+        "data": [
+          {
+            "key": "allocationAmount",
+            "label": "Allocation Amount",
+            "format": "bytes"
+          },
+          {
+            "key": "allocationKind",
+            "label": "Allocation Kind",
+            "format": "string"
+          },
+          {
+            "key": "typeName",
+            "label": "Type Name",
+            "format": "string"
+          },
+          {
+            "key": "heapIndex",
+            "label": "Heap Index",
+            "format": "integer"
+          }
+        ],
+        "graphs": [
+          {
+            "key": "allocationAmount",
+            "type": "bar",
+            "color": "red"
+          }
+        ]
+      },
+      {
+        "name": "dotnet.gc.suspend_execution_engine",
+        "tableLabel": "GC Suspend Execution Engine: {marker.data.reason}, Count: {marker.data.count}",
+        "chartLabel": "GC Suspend Execution Engine: {marker.data.reason}, Count: {marker.data.count}",
+        "display": [
+          "timeline-overview",
+          "marker-chart",
+          "marker-table"
+        ],
+        "data": [
+          {
+            "key": "reason",
+            "label": "Reason",
+            "format": "string"
+          },
+          {
+            "key": "count",
+            "label": "Count",
+            "format": "integer"
+          }
+        ]
+      },
+      {
+        "name": "dotnet.gc.restart_execution_engine",
+        "tableLabel": "GC Restart Execution Engine",
+        "chartLabel": "GC Restart Execution Engine",
+        "display": [
+          "timeline-overview",
+          "marker-chart",
+          "marker-table"
+        ],
+        "data": []
+      }
+    ],
+    "sampleUnits": {
+      "time": "ms",
+      "eventDelay": "ms",
+      "threadCPUDelta": "ns"
+    },
+    "doesNotUseFrameImplementation": true,
+    "initialVisibleThreads": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32
+    ],
+    "initialSelectedThreads": [
+      0
+    ]
+  },
+  "counts": {
+    "threads": 47,
+    "samplesResolved": 42973,
+    "samplesUnresolved": 0,
+    "markers": 1238,
+    "GCMinor": 1105,
+    "GCMajor": 2
+  },
+  "threadTotals": [
+    {
+      "threadIndex": 0,
+      "thread": "0 - MainThrd (24628)",
+      "tid": "24628",
+      "samples": 4907,
+      "cpuMs": 724.6998209999979
+    },
+    {
+      "threadIndex": 1,
+      "thread": "1 - Thread (25780)",
+      "tid": "25780",
+      "samples": 4682,
+      "cpuMs": 914.2844219999979
+    },
+    {
+      "threadIndex": 2,
+      "thread": "2 - .NET TP Worker (18340)",
+      "tid": "18340",
+      "samples": 3518,
+      "cpuMs": 692.6920219999976
+    },
+    {
+      "threadIndex": 3,
+      "thread": "3 - .NET TP Worker (33904)",
+      "tid": "33904",
+      "samples": 3296,
+      "cpuMs": 635.2739629999988
+    },
+    {
+      "threadIndex": 4,
+      "thread": "4 - .NET TP Worker (18888)",
+      "tid": "18888",
+      "samples": 3031,
+      "cpuMs": 571.4138620000002
+    },
+    {
+      "threadIndex": 5,
+      "thread": "5 - .NET TP Worker (37812)",
+      "tid": "37812",
+      "samples": 2365,
+      "cpuMs": 458.0433110000001
+    },
+    {
+      "threadIndex": 6,
+      "thread": "6 - .NET TP Worker (36416)",
+      "tid": "36416",
+      "samples": 2617,
+      "cpuMs": 500.9702079999996
+    },
+    {
+      "threadIndex": 7,
+      "thread": "7 - .NET TP Worker (28704)",
+      "tid": "28704",
+      "samples": 2087,
+      "cpuMs": 398.25060000000127
+    },
+    {
+      "threadIndex": 8,
+      "thread": "8 - .NET TP Worker (24940)",
+      "tid": "24940",
+      "samples": 1968,
+      "cpuMs": 371.9398680000008
+    },
+    {
+      "threadIndex": 9,
+      "thread": "9 - .NET BGC (19336)",
+      "tid": "19336",
+      "samples": 1736,
+      "cpuMs": 346.02481700000067
+    },
+    {
+      "threadIndex": 10,
+      "thread": "10 - Thread (9972)",
+      "tid": "9972",
+      "samples": 1316,
+      "cpuMs": 274.1300770000002
+    },
+    {
+      "threadIndex": 11,
+      "thread": "11 - .NET TP Worker (37780)",
+      "tid": "37780",
+      "samples": 1290,
+      "cpuMs": 232.90318300000067
+    },
+    {
+      "threadIndex": 12,
+      "thread": "12 - .NET TP Worker (1764)",
+      "tid": "1764",
+      "samples": 1222,
+      "cpuMs": 222.05430800000033
+    },
+    {
+      "threadIndex": 13,
+      "thread": "13 - .NET TP Worker (25396)",
+      "tid": "25396",
+      "samples": 1155,
+      "cpuMs": 198.5458180000005
+    },
+    {
+      "threadIndex": 14,
+      "thread": "14 - .NET TP Worker (34528)",
+      "tid": "34528",
+      "samples": 812,
+      "cpuMs": 134.58689300000046
+    },
+    {
+      "threadIndex": 15,
+      "thread": "15 - .NET TP Worker (37304)",
+      "tid": "37304",
+      "samples": 713,
+      "cpuMs": 132.1080450000002
+    },
+    {
+      "threadIndex": 16,
+      "thread": "16 - VKRenderThread (21116)",
+      "tid": "21116",
+      "samples": 732,
+      "cpuMs": 78.77953299999987
+    },
+    {
+      "threadIndex": 17,
+      "thread": "17 - Thread (35268)",
+      "tid": "35268",
+      "samples": 683,
+      "cpuMs": 94.64974100000005
+    },
+    {
+      "threadIndex": 18,
+      "thread": "18 - SDLRawInput (36744)",
+      "tid": "36744",
+      "samples": 503,
+      "cpuMs": 20.319843
+    },
+    {
+      "threadIndex": 19,
+      "thread": "19 - .NET Timer (27088)",
+      "tid": "27088",
+      "samples": 483,
+      "cpuMs": 29.573276
+    },
+    {
+      "threadIndex": 20,
+      "thread": "20 - GlobPool/0 (3028)",
+      "tid": "3028",
+      "samples": 404,
+      "cpuMs": 48.68330200000002
+    },
+    {
+      "threadIndex": 21,
+      "thread": "21 - GlobPool/4 (6868)",
+      "tid": "6868",
+      "samples": 402,
+      "cpuMs": 24.218994999999996
+    },
+    {
+      "threadIndex": 22,
+      "thread": "22 - GlobPool/3 (35984)",
+      "tid": "35984",
+      "samples": 392,
+      "cpuMs": 33.95909900000001
+    },
+    {
+      "threadIndex": 23,
+      "thread": "23 - GlobPool/2 (20948)",
+      "tid": "20948",
+      "samples": 394,
+      "cpuMs": 45.369917999999984
+    },
+    {
+      "threadIndex": 24,
+      "thread": "24 - GlobPool/5 (26828)",
+      "tid": "26828",
+      "samples": 384,
+      "cpuMs": 39.400505
+    },
+    {
+      "threadIndex": 25,
+      "thread": "25 - GlobPool/1 (37384)",
+      "tid": "37384",
+      "samples": 387,
+      "cpuMs": 31.854491999999965
+    },
+    {
+      "threadIndex": 26,
+      "thread": "26 - GlobPool/6 (36052)",
+      "tid": "36052",
+      "samples": 357,
+      "cpuMs": 61.167214000000016
+    },
+    {
+      "threadIndex": 27,
+      "thread": "27 - .NET Tiered Compilation Worker (36448)",
+      "tid": "36448",
+      "samples": 330,
+      "cpuMs": 61.026336
+    },
+    {
+      "threadIndex": 28,
+      "thread": "28 - .NET Finalizer Thread (36888)",
+      "tid": "36888",
+      "samples": 200,
+      "cpuMs": 39.170205
+    },
+    {
+      "threadIndex": 29,
+      "thread": "29 - .NET TP Worker (6744)",
+      "tid": "6744",
+      "samples": 179,
+      "cpuMs": 13.334916000000003
+    },
+    {
+      "threadIndex": 30,
+      "thread": "30 - Networking (managed) (27944)",
+      "tid": "27944",
+      "samples": 89,
+      "cpuMs": 28.135252000000005
+    },
+    {
+      "threadIndex": 31,
+      "thread": "31 - .NET TP Worker (37236)",
+      "tid": "37236",
+      "samples": 76,
+      "cpuMs": 5.117165999999999
+    },
+    {
+      "threadIndex": 32,
+      "thread": "32 - SDLAudioP15 (33452)",
+      "tid": "33452",
+      "samples": 66,
+      "cpuMs": 30.905371000000006
+    },
+    {
+      "threadIndex": 33,
+      "thread": "33 - Thread (32908)",
+      "tid": "32908",
+      "samples": 44,
+      "cpuMs": 8.566377999999998
+    },
+    {
+      "threadIndex": 34,
+      "thread": "34 - Thread (19160)",
+      "tid": "19160",
+      "samples": 39,
+      "cpuMs": 23.769283
+    },
+    {
+      "threadIndex": 35,
+      "thread": "35 - Thread (33260)",
+      "tid": "33260",
+      "samples": 35,
+      "cpuMs": 30.386979999999998
+    },
+    {
+      "threadIndex": 36,
+      "thread": "36 - Thread (28300)",
+      "tid": "28300",
+      "samples": 21,
+      "cpuMs": 0.31179
+    },
+    {
+      "threadIndex": 37,
+      "thread": "37 - Thread (2736)",
+      "tid": "2736",
+      "samples": 13,
+      "cpuMs": 0.09969299999999999
+    },
+    {
+      "threadIndex": 38,
+      "thread": "38 - Thread (9188)",
+      "tid": "9188",
+      "samples": 14,
+      "cpuMs": 0.097188
+    },
+    {
+      "threadIndex": 39,
+      "thread": "39 - Thread (32788)",
+      "tid": "32788",
+      "samples": 10,
+      "cpuMs": 0.075999
+    },
+    {
+      "threadIndex": 40,
+      "thread": "40 - Thread (31864)",
+      "tid": "31864",
+      "samples": 6,
+      "cpuMs": 40.791396
+    },
+    {
+      "threadIndex": 41,
+      "thread": "41 - .NET TP Gate (33300)",
+      "tid": "33300",
+      "samples": 5,
+      "cpuMs": 0.045896
+    },
+    {
+      "threadIndex": 42,
+      "thread": "42 - Thread (33868)",
+      "tid": "33868",
+      "samples": 4,
+      "cpuMs": 0.10669700000000001
+    },
+    {
+      "threadIndex": 43,
+      "thread": "43 - Thread (32660)",
+      "tid": "32660",
+      "samples": 3,
+      "cpuMs": 0.351498
+    },
+    {
+      "threadIndex": 44,
+      "thread": "44 - .NET TP Worker (7992)",
+      "tid": "7992",
+      "samples": 1,
+      "cpuMs": 0.094999
+    },
+    {
+      "threadIndex": 45,
+      "thread": "45 - Thread (26504)",
+      "tid": "26504",
+      "samples": 1,
+      "cpuMs": 100.465699
+    },
+    {
+      "threadIndex": 46,
+      "thread": "46 - Thread (23176)",
+      "tid": "23176",
+      "samples": 1,
+      "cpuMs": 0.008499
+    }
+  ],
+  "top30Leaf": [
+    {
+      "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+      "cpuMs": 1811.8756530000035
+    },
+    {
+      "name": "System.Single.CompareTo(float32)",
+      "cpuMs": 399.5244179999998
+    },
+    {
+      "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+      "cpuMs": 330.64499299999994
+    },
+    {
+      "name": "RiverNetwork+Segment.get_Start()",
+      "cpuMs": 324.50202300000007
+    },
+    {
+      "name": "WKS::gc_heap::background_mark_simple1",
+      "cpuMs": 274.2505050000008
+    },
+    {
+      "name": "RiverNetwork+Segment.get_End()",
+      "cpuMs": 259.46505899999994
+    },
+    {
+      "name": "Vector3.get_x()",
+      "cpuMs": 200.49702399999993
+    },
+    {
+      "name": "Vector3.get_y()",
+      "cpuMs": 174.60297
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+      "cpuMs": 110.00533799999997
+    },
+    {
+      "name": "0xFFFFF806AB4B458B",
+      "cpuMs": 105.286097
+    },
+    {
+      "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+      "cpuMs": 102.04405399999997
+    },
+    {
+      "name": "0x00007FFABDCF32C2",
+      "cpuMs": 92.48408100000005
+    },
+    {
+      "name": "0x00007FFABDCF332B",
+      "cpuMs": 87.341497
+    },
+    {
+      "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+      "cpuMs": 85.22748600000001
+    },
+    {
+      "name": "NtWaitForSingleObject",
+      "cpuMs": 65.741086
+    },
+    {
+      "name": "0xFFFFF806AB1DEA3A",
+      "cpuMs": 62.110299
+    },
+    {
+      "name": "System.MathF.Max(float32,float32)",
+      "cpuMs": 60.39364500000001
+    },
+    {
+      "name": "0x00007FFA64132838",
+      "cpuMs": 53.856465
+    },
+    {
+      "name": "WKS::gc_heap::background_sweep",
+      "cpuMs": 50.02696699999999
+    },
+    {
+      "name": "System.MathF.Min(float32,float32)",
+      "cpuMs": 48.350077999999996
+    },
+    {
+      "name": "0xFFFFF806AB1DECD0",
+      "cpuMs": 48.031887
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].InsertionSort(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+      "cpuMs": 45.412481
+    },
+    {
+      "name": "0x00007FFABD7CCC1C",
+      "cpuMs": 38.12460999999997
+    },
+    {
+      "name": "System.Collections.Generic.GenericEqualityComparer`1[Vector3].Equals(!0,!0)",
+      "cpuMs": 33.54600800000001
+    },
+    {
+      "name": "RiverWorld+Region.CopyUniqueSegments(value class System.Threading.CancellationToken)",
+      "cpuMs": 33.492118000000005
+    },
+    {
+      "name": "System.Collections.Generic.GenericEqualityComparer`1[Vector3].GetHashCode(!0)",
+      "cpuMs": 33.368822
+    },
+    {
+      "name": "0xFFFFF806AB2197E4",
+      "cpuMs": 32.946788999999995
+    },
+    {
+      "name": "RiverNetwork+Segment.GetHashCode()",
+      "cpuMs": 32.259423000000005
+    },
+    {
+      "name": "0xFFFFF806AB2197C6",
+      "cpuMs": 27.626299
+    },
+    {
+      "name": "0xFFFFF806AB163873",
+      "cpuMs": 27.408591
+    }
+  ],
+  "top30Inclusive": [
+    {
+      "name": "BaseThreadInitThunk",
+      "cpuMs": 7628.713509999997
+    },
+    {
+      "name": "RtlUserThreadStart",
+      "cpuMs": 7628.713509999997
+    },
+    {
+      "name": "CallDescrWorkerInternal",
+      "cpuMs": 5317.965642999998
+    },
+    {
+      "name": "ManagedThreadBase_DispatchOuter",
+      "cpuMs": 4664.179803
+    },
+    {
+      "name": "ManagedThreadBase_DispatchMiddle",
+      "cpuMs": 4664.179803
+    },
+    {
+      "name": "DispatchCallSimple",
+      "cpuMs": 4598.896879
+    },
+    {
+      "name": "KickOffThread",
+      "cpuMs": 4562.276468
+    },
+    {
+      "name": "KickOffThread_Worker",
+      "cpuMs": 4562.276468
+    },
+    {
+      "name": "0x00007FFAAB3F48BB",
+      "cpuMs": 4529.058747
+    },
+    {
+      "name": "System.Threading.ExecutionContext.RunInternal(class System.Threading.ExecutionContext,class System.Threading.ContextCallback,class System.Object)",
+      "cpuMs": 4494.714895000002
+    },
+    {
+      "name": "0x00007FFAAB416D69",
+      "cpuMs": 4400.432646
+    },
+    {
+      "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+      "cpuMs": 4400.432646
+    },
+    {
+      "name": "System.Threading.Tasks.Task+DelayPromise.CompleteTimedOut()",
+      "cpuMs": 4387.208344000002
+    },
+    {
+      "name": "System.Threading.Tasks.Task.RunContinuations(class System.Object)",
+      "cpuMs": 4386.448562000001
+    },
+    {
+      "name": "System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(class System.Runtime.CompilerServices.IAsyncStateMachineBox,bool)",
+      "cpuMs": 4386.112773
+    },
+    {
+      "name": "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tasks.VoidTaskResult,Sandbox.Tasks.WorkerThread+<WorkerTask>d__5].MoveNext()",
+      "cpuMs": 4385.767781000001
+    },
+    {
+      "name": "Sandbox.Tasks.WorkerThread+<WorkerTask>d__5.MoveNext()",
+      "cpuMs": 4385.589691000002
+    },
+    {
+      "name": "Sandbox.Tasks.ExpirableSynchronizationContext.ProcessQueue()",
+      "cpuMs": 4380.846478000001
+    },
+    {
+      "name": "System.Threading.TimerQueue.FireNextTimers()",
+      "cpuMs": 4376.108671000003
+    },
+    {
+      "name": "Sandbox.TaskSource+WorkerThreadFunc`1+<>c[System.__Canon].<.cctor>b__21_0(class System.Object)",
+      "cpuMs": 4350.425818000001
+    },
+    {
+      "name": "GpuRiverAtlas+<>c__DisplayClass15_0.<Prepare>b__0()",
+      "cpuMs": 4350.226319000001
+    },
+    {
+      "name": "GpuRiverAtlas.Pack(class Region,value class System.Threading.CancellationToken)",
+      "cpuMs": 4348.467531000001
+    },
+    {
+      "name": "RiverSpatialIndex..ctor(value class Segment[],value class System.Threading.CancellationToken)",
+      "cpuMs": 3860.346244000002
+    },
+    {
+      "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+      "cpuMs": 3857.3039500000023
+    },
+    {
+      "name": "System.Array.Sort(!!0[],int32,int32,class System.Collections.Generic.IComparer`1<!!0>)",
+      "cpuMs": 3223.1884060000043
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].Sort(value class System.Span`1<!0>,class System.Collections.Generic.IComparer`1<!0>)",
+      "cpuMs": 3222.5879090000044
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].IntroSort(value class System.Span`1<!0>,int32,class System.Comparison`1<!0>)",
+      "cpuMs": 3213.660129000004
+    },
+    {
+      "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+      "cpuMs": 3051.2182280000034
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+      "cpuMs": 2444.1047980000026
+    },
+    {
+      "name": "0x00007FFABD7CECC8",
+      "cpuMs": 1289.6154029999975
+    }
+  ],
+  "perThread": {
+    "0": {
+      "thread": "0 - MainThrd (24628)",
+      "tid": "24628",
+      "samples": 4907,
+      "cpuMs": 724.6998209999979,
+      "topLeaf": [
+        {
+          "name": "0x00007FFB06BF0523",
+          "cpuMs": 9.967073000000005
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 9.089599
+        },
+        {
+          "name": "0x00007FFAE1668359",
+          "cpuMs": 8.01608
+        },
+        {
+          "name": "0xFFFFF806884F0617",
+          "cpuMs": 7.074284000000002
+        },
+        {
+          "name": "RtlLeaveCriticalSection",
+          "cpuMs": 5.653784
+        },
+        {
+          "name": "RtlpLowFragHeapAllocFromContext",
+          "cpuMs": 5.323383000000001
+        },
+        {
+          "name": "ThreadNative_SpinWait",
+          "cpuMs": 5.302086999999998
+        },
+        {
+          "name": "0xFFFFF806884F060E",
+          "cpuMs": 5.043387999999999
+        },
+        {
+          "name": "0xFFFFF806AB4B5375",
+          "cpuMs": 4.9228869999999985
+        },
+        {
+          "name": "0xFFFFF806AB4B537F",
+          "cpuMs": 4.5671859999999995
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 718.7612639999987
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 718.7612639999987
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 718.7612639999987
+        },
+        {
+          "name": "Sandbox.AppSystem.Run()",
+          "cpuMs": 718.2652649999986
+        },
+        {
+          "name": "Sandbox.EngineLoop.RunFrame(value class CMaterialSystem2AppSystemDict,bool&)",
+          "cpuMs": 718.2652649999986
+        },
+        {
+          "name": "RunMain",
+          "cpuMs": 718.2652649999986
+        },
+        {
+          "name": "Sandbox.Program.Launch()",
+          "cpuMs": 718.2652649999986
+        },
+        {
+          "name": "CorHost2::ExecuteAssembly",
+          "cpuMs": 718.2652649999986
+        },
+        {
+          "name": "Sandbox.Launcher.Main()",
+          "cpuMs": 718.2652649999986
+        },
+        {
+          "name": "fx_muxer_t::execute",
+          "cpuMs": 718.2652649999986
+        }
+      ]
+    },
+    "1": {
+      "thread": "1 - Thread (25780)",
+      "tid": "25780",
+      "samples": 4682,
+      "cpuMs": 914.2844219999979,
+      "topLeaf": [
+        {
+          "name": "0x00007FFB64175E4D",
+          "cpuMs": 11.390773
+        },
+        {
+          "name": "0x00007FFB64E8A2BF",
+          "cpuMs": 7.798478999999999
+        },
+        {
+          "name": "0x00007FFB640C8F23",
+          "cpuMs": 6.791682999999998
+        },
+        {
+          "name": "0x00007FFB64F0F90C",
+          "cpuMs": 6.632078999999998
+        },
+        {
+          "name": "0x00007FFB640C8F20",
+          "cpuMs": 5.027789
+        },
+        {
+          "name": "0x00007FFB64F1238B",
+          "cpuMs": 4.402087999999999
+        },
+        {
+          "name": "0x00007FFB64C44223",
+          "cpuMs": 3.7964919999999993
+        },
+        {
+          "name": "0x00007FFB64EA385C",
+          "cpuMs": 3.603388
+        },
+        {
+          "name": "0x00007FFB64F12E03",
+          "cpuMs": 3.596289
+        },
+        {
+          "name": "0x00007FFB64F13D22",
+          "cpuMs": 3.4039909999999995
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 914.2844219999979
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 914.2844219999979
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 911.9911269999976
+        },
+        {
+          "name": "0x00007FFABDCC8A1D",
+          "cpuMs": 911.9911269999976
+        },
+        {
+          "name": "0x00007FFABDCC7286",
+          "cpuMs": 898.3881609999977
+        },
+        {
+          "name": "0x00007FFABDD145D3",
+          "cpuMs": 898.1900609999977
+        },
+        {
+          "name": "0x00007FFABCE2C17F",
+          "cpuMs": 875.9371149999982
+        },
+        {
+          "name": "0x00007FFB62ED2805",
+          "cpuMs": 733.5933839999991
+        },
+        {
+          "name": "0x00007FFB62ECF0C3",
+          "cpuMs": 733.5933839999991
+        },
+        {
+          "name": "0x00007FFB62F26883",
+          "cpuMs": 733.5933839999991
+        }
+      ]
+    },
+    "2": {
+      "thread": "2 - .NET TP Worker (18340)",
+      "tid": "18340",
+      "samples": 3518,
+      "cpuMs": 692.6920219999976,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 292.01961600000016
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 61.79735300000001
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 53.733270999999974
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 51.49197100000003
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 35.166609999999984
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 28.856431999999984
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 24.649644999999992
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 16.453556999999996
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 14.479668999999994
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 11.331776
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 679.975052999998
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 679.975052999998
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 679.975052999998
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 679.975052999998
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 679.5729539999982
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 679.5729539999982
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 679.5729539999982
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 679.5729539999982
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 679.5729539999982
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 673.8494939999983
+        }
+      ]
+    },
+    "3": {
+      "thread": "3 - .NET TP Worker (33904)",
+      "tid": "33904",
+      "samples": 3296,
+      "cpuMs": 635.2739629999988,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 255.52168500000113
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 56.54234799999998
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 49.00858199999998
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 45.96709100000001
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 37.737798999999995
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 26.937330999999986
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 19.819252999999993
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 18.771646999999994
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 13.014065
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 11.778769999999996
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 626.0447869999992
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 612.4035499999993
+        }
+      ]
+    },
+    "4": {
+      "thread": "4 - .NET TP Worker (18888)",
+      "tid": "18888",
+      "samples": 3031,
+      "cpuMs": 571.4138620000002,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 227.09383000000054
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 51.28917799999995
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 45.34068999999999
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 39.214592999999994
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 33.640417
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 27.892127999999992
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 26.809534999999983
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 14.599269999999999
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 13.388666999999998
+        },
+        {
+          "name": "System.MathF.Max(float32,float32)",
+          "cpuMs": 8.002774
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 564.1248820000001
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 564.1248820000001
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 564.1248820000001
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 564.1248820000001
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 563.324185
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 563.324185
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 563.324185
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 563.324185
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 563.324185
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 557.8867560000001
+        }
+      ]
+    },
+    "5": {
+      "thread": "5 - .NET TP Worker (37812)",
+      "tid": "37812",
+      "samples": 2365,
+      "cpuMs": 458.0433110000001,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 180.01597500000048
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 34.85451999999998
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 31.41802199999998
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 30.429525999999978
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 27.90003599999999
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 25.139643999999986
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 17.753952999999996
+        },
+        {
+          "name": "0xFFFFF806AB1637B4",
+          "cpuMs": 15.548599
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 12.972371999999998
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 8.223382
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 453.0337200000001
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 431.50076099999995
+        }
+      ]
+    },
+    "6": {
+      "thread": "6 - .NET TP Worker (36416)",
+      "tid": "36416",
+      "samples": 2617,
+      "cpuMs": 500.9702079999996,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 197.36099600000048
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 46.49797999999997
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 36.71441699999998
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 34.86531800000004
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 29.008820999999983
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 27.23244399999999
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 18.810556000000005
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 14.807961999999993
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 10.984576999999998
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 8.502378
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 493.24233199999946
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 490.93418599999944
+        }
+      ]
+    },
+    "7": {
+      "thread": "7 - .NET TP Worker (28704)",
+      "tid": "28704",
+      "samples": 2087,
+      "cpuMs": 398.25060000000127,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 163.95311600000014
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 34.56721599999998
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 30.20832099999998
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 28.869030999999996
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 22.658946999999994
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 16.210461000000002
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 16.040564999999994
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 10.784170000000005
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 8.596082000000001
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 8.587079
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 393.63481400000137
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 384.9017630000011
+        }
+      ]
+    },
+    "8": {
+      "thread": "8 - .NET TP Worker (24940)",
+      "tid": "24940",
+      "samples": 1968,
+      "cpuMs": 371.9398680000008,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 144.39008700000016
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 37.396803999999975
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 28.39062999999999
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 25.434435999999987
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 20.728451999999994
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 15.269362
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 13.813268000000004
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 9.586479000000002
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 8.777275000000001
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 7.305681999999999
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 368.32387600000095
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 361.53923000000094
+        }
+      ]
+    },
+    "9": {
+      "thread": "9 - .NET BGC (19336)",
+      "tid": "19336",
+      "samples": 1736,
+      "cpuMs": 346.02481700000067,
+      "topLeaf": [
+        {
+          "name": "WKS::gc_heap::background_mark_simple1",
+          "cpuMs": 274.2505050000008
+        },
+        {
+          "name": "WKS::gc_heap::background_sweep",
+          "cpuMs": 50.02696699999999
+        },
+        {
+          "name": "0xFFFFF806AB001E4F",
+          "cpuMs": 2.6005940000000005
+        },
+        {
+          "name": "0xFFFFF806AB001ADB",
+          "cpuMs": 1.7935949999999998
+        },
+        {
+          "name": "0xFFFFF806AB04EDBD",
+          "cpuMs": 1.2003970000000002
+        },
+        {
+          "name": "WKS::gc_heap::background_ephemeral_sweep",
+          "cpuMs": 0.9995980000000001
+        },
+        {
+          "name": "0xFFFFF806AB2F0202",
+          "cpuMs": 0.808698
+        },
+        {
+          "name": "0xFFFFF806AB02718D",
+          "cpuMs": 0.8041959999999999
+        },
+        {
+          "name": "??WKS::gc_heap::background_mark_simple1",
+          "cpuMs": 0.7983990000000001
+        },
+        {
+          "name": "0xFFFFF806AB2EFFA5",
+          "cpuMs": 0.7948980000000001
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 346.02481700000067
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 346.02481700000067
+        },
+        {
+          "name": "WKS::gc_heap::bgc_thread_function",
+          "cpuMs": 345.8255170000007
+        },
+        {
+          "name": "WKS::gc_heap::gc1",
+          "cpuMs": 345.8255170000007
+        },
+        {
+          "name": "<lambda_373adc9b4fbf3c9da8049b08311a6861>::operator()",
+          "cpuMs": 345.8255170000007
+        },
+        {
+          "name": "WKS::gc_heap::background_mark_phase",
+          "cpuMs": 277.58409700000084
+        },
+        {
+          "name": "HndScanHandlesForGC",
+          "cpuMs": 276.0618020000008
+        },
+        {
+          "name": "TableScanHandles",
+          "cpuMs": 276.0618020000008
+        },
+        {
+          "name": "WKS::gc_heap::background_mark_simple",
+          "cpuMs": 276.0532020000008
+        },
+        {
+          "name": "WKS::gc_heap::background_promote",
+          "cpuMs": 275.8530030000008
+        }
+      ]
+    },
+    "10": {
+      "thread": "10 - Thread (9972)",
+      "tid": "9972",
+      "samples": 1316,
+      "cpuMs": 274.1300770000002,
+      "topLeaf": [
+        {
+          "name": "0x00007FFABDCF32C2",
+          "cpuMs": 92.48408100000005
+        },
+        {
+          "name": "0x00007FFABDCF332B",
+          "cpuMs": 87.341497
+        },
+        {
+          "name": "0x00007FFABD7CCC1C",
+          "cpuMs": 38.12460999999997
+        },
+        {
+          "name": "RtlAcquireSRWLockExclusive",
+          "cpuMs": 13.775175
+        },
+        {
+          "name": "RtlQueryPerformanceCounter",
+          "cpuMs": 11.645774
+        },
+        {
+          "name": "0x00007FFABD7CCC69",
+          "cpuMs": 4.199694
+        },
+        {
+          "name": "0x00007FFABD7CCC10",
+          "cpuMs": 3.805795
+        },
+        {
+          "name": "0x00007FFABD7CCC46",
+          "cpuMs": 1.826096
+        },
+        {
+          "name": "0x00007FFABD7CCC3E",
+          "cpuMs": 1.207397
+        },
+        {
+          "name": "0xFFFFF806AB9C0760",
+          "cpuMs": 0.8007989999999999
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 274.1300770000002
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 274.1300770000002
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 274.1300770000002
+        },
+        {
+          "name": "0x00007FFABDCF32C2",
+          "cpuMs": 97.93026800000014
+        },
+        {
+          "name": "0x00007FFABDCF332B",
+          "cpuMs": 90.372391
+        },
+        {
+          "name": "0x00007FFABD7CCC1C",
+          "cpuMs": 40.043304999999975
+        },
+        {
+          "name": "0x00007FFABDCF31F6",
+          "cpuMs": 33.639318
+        },
+        {
+          "name": "0x00007FFABDCF32DE",
+          "cpuMs": 33.56753599999999
+        },
+        {
+          "name": "RtlAcquireSRWLockExclusive",
+          "cpuMs": 13.973174
+        },
+        {
+          "name": "0x00007FFABD7CCC30",
+          "cpuMs": 12.922573
+        }
+      ]
+    },
+    "11": {
+      "thread": "11 - .NET TP Worker (37780)",
+      "tid": "37780",
+      "samples": 1290,
+      "cpuMs": 232.90318300000067,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 89.10858800000004
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 20.783060000000003
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 17.013863000000004
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 15.666760000000002
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 15.162064999999997
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 9.987275999999998
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 9.623972
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 5.694584
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 5.265986000000002
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 4.811586000000001
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 231.0980910000007
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 231.0980910000007
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 231.0980910000007
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 230.8977920000007
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 230.8977920000007
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 230.8977920000007
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 230.8977920000007
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 230.8977920000007
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 230.8977920000007
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 226.71224100000063
+        }
+      ]
+    },
+    "12": {
+      "thread": "12 - .NET TP Worker (1764)",
+      "tid": "1764",
+      "samples": 1222,
+      "cpuMs": 222.05430800000033,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 89.74879100000003
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 19.357353999999997
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 16.007959999999997
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 13.421069000000003
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 12.795061
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 8.800376000000004
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 6.927284
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 6.200588999999998
+        },
+        {
+          "name": "0x00007FFA64132838",
+          "cpuMs": 4.200092
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 4.199391
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 216.73481800000027
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 208.73327300000025
+        }
+      ]
+    },
+    "13": {
+      "thread": "13 - .NET TP Worker (25396)",
+      "tid": "25396",
+      "samples": 1155,
+      "cpuMs": 198.5458180000005,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 75.58240899999998
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 16.175853
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 13.380268000000004
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 11.807580999999999
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 10.970273999999998
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 7.433383999999999
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 6.834181000000001
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 4.583288999999999
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 4.3375889999999995
+        },
+        {
+          "name": "System.MathF.Max(float32,float32)",
+          "cpuMs": 3.382188
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 195.86502800000056
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 195.86502800000056
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 195.86502800000056
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 195.66362800000056
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 195.66362800000056
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 195.66362800000056
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 195.66362800000056
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 195.66362800000056
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 195.66362800000056
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 189.9250860000005
+        }
+      ]
+    },
+    "14": {
+      "thread": "14 - .NET TP Worker (34528)",
+      "tid": "34528",
+      "samples": 812,
+      "cpuMs": 134.58689300000046,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 52.447777
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 10.771071999999998
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 9.005983
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 8.991079
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 7.269479
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 4.608789
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 4.594489000000001
+        },
+        {
+          "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+          "cpuMs": 3.586591000000001
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 2.503294
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 2.396393
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 132.2811040000004
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 128.34977300000014
+        }
+      ]
+    },
+    "15": {
+      "thread": "15 - .NET TP Worker (37304)",
+      "tid": "37304",
+      "samples": 713,
+      "cpuMs": 132.1080450000002,
+      "topLeaf": [
+        {
+          "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+          "cpuMs": 44.63278300000004
+        },
+        {
+          "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+          "cpuMs": 10.791681
+        },
+        {
+          "name": "System.Single.CompareTo(float32)",
+          "cpuMs": 9.491679999999999
+        },
+        {
+          "name": "RiverNetwork+Segment.get_Start()",
+          "cpuMs": 8.600881
+        },
+        {
+          "name": "Vector3..ctor(float32,float32,float32)",
+          "cpuMs": 8.2142
+        },
+        {
+          "name": "RiverNetwork+Segment.get_End()",
+          "cpuMs": 5.80109
+        },
+        {
+          "name": "Vector3.get_y()",
+          "cpuMs": 5.604182999999999
+        },
+        {
+          "name": "Vector3.get_x()",
+          "cpuMs": 5.451482999999999
+        },
+        {
+          "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+          "cpuMs": 3.5943879999999995
+        },
+        {
+          "name": "System.HashCode.Combine(!!0,!!1,!!2)",
+          "cpuMs": 2.602092
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 131.2795490000002
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 126.95158500000022
+        }
+      ]
+    },
+    "16": {
+      "thread": "16 - VKRenderThread (21116)",
+      "tid": "21116",
+      "samples": 732,
+      "cpuMs": 78.77953299999987,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB14D46E",
+          "cpuMs": 2.517985
+        },
+        {
+          "name": "0x00007FFABDCFCC83",
+          "cpuMs": 1.201195
+        },
+        {
+          "name": "0xFFFFF806AB14F00A",
+          "cpuMs": 1.148796
+        },
+        {
+          "name": "0x00007FFABDD334B9",
+          "cpuMs": 0.947896
+        },
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.862096
+        },
+        {
+          "name": "RtlQueryPerformanceCounter",
+          "cpuMs": 0.850197
+        },
+        {
+          "name": "0x00007FFAAA0B0C48",
+          "cpuMs": 0.8181990000000001
+        },
+        {
+          "name": "0x00007FFABDD334A4",
+          "cpuMs": 0.7937980000000001
+        },
+        {
+          "name": "0x00007FFAAA0B8E22",
+          "cpuMs": 0.788997
+        },
+        {
+          "name": "0xFFFFF806AB9C02C6",
+          "cpuMs": 0.735396
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 78.77953299999987
+        },
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 78.77953299999987
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 78.77953299999987
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 78.77953299999987
+        },
+        {
+          "name": "0x00007FFAAA052EA9",
+          "cpuMs": 78.77953299999987
+        },
+        {
+          "name": "0x00007FFAAA0BD33B",
+          "cpuMs": 76.89914499999989
+        },
+        {
+          "name": "0x00007FFAAA0BCED3",
+          "cpuMs": 75.6470509999999
+        },
+        {
+          "name": "0x00007FFAAA07D937",
+          "cpuMs": 40.338685
+        },
+        {
+          "name": "0x00007FFAAA07D659",
+          "cpuMs": 30.185284000000003
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 19.598294
+        }
+      ]
+    },
+    "17": {
+      "thread": "17 - Thread (35268)",
+      "tid": "35268",
+      "samples": 683,
+      "cpuMs": 94.64974100000005,
+      "topLeaf": [
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 14.326799000000001
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 13.645499
+        },
+        {
+          "name": "0xFFFFF806AB14D46E",
+          "cpuMs": 4.311588
+        },
+        {
+          "name": "0xFFFFF806AB14F00A",
+          "cpuMs": 2.091192
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.749293
+        },
+        {
+          "name": "0xFFFFF806AB082BBF",
+          "cpuMs": 0.7171960000000001
+        },
+        {
+          "name": "RtlLeaveCriticalSection",
+          "cpuMs": 0.7146969999999999
+        },
+        {
+          "name": "0xFFFFF806AB14D493",
+          "cpuMs": 0.6606979999999999
+        },
+        {
+          "name": "0xFFFFF806AB1133E6",
+          "cpuMs": 0.6371
+        },
+        {
+          "name": "RtlEnterCriticalSection",
+          "cpuMs": 0.599396
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 94.64974100000005
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 94.64974100000005
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 94.64974100000005
+        },
+        {
+          "name": "0x00007FFABDB96B65",
+          "cpuMs": 48.25441300000001
+        },
+        {
+          "name": "0x00007FFB41113D91",
+          "cpuMs": 45.541326
+        },
+        {
+          "name": "0x00007FFB6CC89EF0",
+          "cpuMs": 45.03963099999999
+        },
+        {
+          "name": "0x00007FFB6CC8A33C",
+          "cpuMs": 44.88253199999999
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 44.305173999999994
+        },
+        {
+          "name": "0x00007FFB6CC84357",
+          "cpuMs": 43.53944
+        },
+        {
+          "name": "0x00007FFB6CCD37FC",
+          "cpuMs": 43.53944
+        }
+      ]
+    },
+    "18": {
+      "thread": "18 - SDLRawInput (36744)",
+      "tid": "36744",
+      "samples": 503,
+      "cpuMs": 20.319843,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 1.5316969999999999
+        },
+        {
+          "name": "0xFFFFF806AB1DED05",
+          "cpuMs": 1.4275
+        },
+        {
+          "name": "0xFFFFF806AB001ADB",
+          "cpuMs": 1.252696
+        },
+        {
+          "name": "0xFFFFF806AB4B4A11",
+          "cpuMs": 1.019299
+        },
+        {
+          "name": "0xFFFFF806AB4B4833",
+          "cpuMs": 0.829199
+        },
+        {
+          "name": "0xFFFFF8068836B5CB",
+          "cpuMs": 0.7918650000000002
+        },
+        {
+          "name": "NtUserMsgWaitForMultipleObjectsEx",
+          "cpuMs": 0.7007939999999999
+        },
+        {
+          "name": "0xFFFFF806AB04E8B4",
+          "cpuMs": 0.609198
+        },
+        {
+          "name": "0xFFFFF806AB4B458B",
+          "cpuMs": 0.468299
+        },
+        {
+          "name": "0xFFFFF806AB02702C",
+          "cpuMs": 0.44079900000000005
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 20.296243
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 20.296243
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 17.513296999999994
+        },
+        {
+          "name": "0x00007FFAE194C6DF",
+          "cpuMs": 8.496797999999997
+        },
+        {
+          "name": "NtUserMsgWaitForMultipleObjectsEx",
+          "cpuMs": 8.483297999999998
+        },
+        {
+          "name": "0xFFFFF8063CCF10FD",
+          "cpuMs": 7.962892999999997
+        },
+        {
+          "name": "LdrShutdownThread",
+          "cpuMs": 7.477782000000001
+        },
+        {
+          "name": "RtlExitUserThread",
+          "cpuMs": 7.477782000000001
+        },
+        {
+          "name": "LdrpCallTlsInitializers",
+          "cpuMs": 7.189583000000002
+        },
+        {
+          "name": "LdrpCallInitRoutineInternal",
+          "cpuMs": 7.188882000000001
+        }
+      ]
+    },
+    "19": {
+      "thread": "19 - .NET Timer (27088)",
+      "tid": "27088",
+      "samples": 483,
+      "cpuMs": 29.573276,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 6.251498
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 6.040691000000001
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 3.9650980000000002
+        },
+        {
+          "name": "0xFFFFF806AB2198C8",
+          "cpuMs": 2.4512
+        },
+        {
+          "name": "0xFFFFF806AB219DA0",
+          "cpuMs": 2.0007
+        },
+        {
+          "name": "0xFFFFF806AB21982F",
+          "cpuMs": 1.9615
+        },
+        {
+          "name": "0xFFFFF806AB2196E8",
+          "cpuMs": 0.974599
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 0.882299
+        },
+        {
+          "name": "0xFFFFF806AB1203C3",
+          "cpuMs": 0.18849899999999997
+        },
+        {
+          "name": "0xFFFFF8068077B5D5",
+          "cpuMs": 0.143
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 29.470079
+        },
+        {
+          "name": "0x00007FFAAB40D140",
+          "cpuMs": 27.489360999999985
+        }
+      ]
+    },
+    "20": {
+      "thread": "20 - GlobPool/0 (3028)",
+      "tid": "3028",
+      "samples": 404,
+      "cpuMs": 48.68330200000002,
+      "topLeaf": [
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 12.1627
+        },
+        {
+          "name": "0xFFFFF806AB163873",
+          "cpuMs": 10.8179
+        },
+        {
+          "name": "0xFFFFF806AB216CD4",
+          "cpuMs": 0.331098
+        },
+        {
+          "name": "0x00007FFABDCFCE17",
+          "cpuMs": 0.26609900000000003
+        },
+        {
+          "name": "0x00007FFABE37351E",
+          "cpuMs": 0.251098
+        },
+        {
+          "name": "0x00007FFAAA019B40",
+          "cpuMs": 0.234398
+        },
+        {
+          "name": "0x00007FFAD918331C",
+          "cpuMs": 0.23160000000000003
+        },
+        {
+          "name": "0x00007FFABDBAAB17",
+          "cpuMs": 0.21989699999999998
+        },
+        {
+          "name": "0x00007FFAE1668093",
+          "cpuMs": 0.2189
+        },
+        {
+          "name": "0xFFFFF806AB10F5A3",
+          "cpuMs": 0.213399
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 48.675403000000024
+        },
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 48.675403000000024
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 48.675403000000024
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 48.675403000000024
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 48.675403000000024
+        },
+        {
+          "name": "0x00007FFAE1629BF6",
+          "cpuMs": 25.314908000000024
+        },
+        {
+          "name": "0x00007FFAE162B518",
+          "cpuMs": 25.310408000000024
+        },
+        {
+          "name": "0x00007FFAE1629A2F",
+          "cpuMs": 23.204698
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 23.199897999999997
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 23.199897999999997
+        }
+      ]
+    },
+    "21": {
+      "thread": "21 - GlobPool/4 (6868)",
+      "tid": "6868",
+      "samples": 402,
+      "cpuMs": 24.218994999999996,
+      "topLeaf": [
+        {
+          "name": "0x00007FFAE166856C",
+          "cpuMs": 0.522998
+        },
+        {
+          "name": "0x00007FFAE1668550",
+          "cpuMs": 0.367699
+        },
+        {
+          "name": "0x00007FFAD91880C9",
+          "cpuMs": 0.349198
+        },
+        {
+          "name": "0x00007FFABDD333E1",
+          "cpuMs": 0.320798
+        },
+        {
+          "name": "0x00007FFAE1668093",
+          "cpuMs": 0.3014
+        },
+        {
+          "name": "0x00007FFABDC5AC06",
+          "cpuMs": 0.24749900000000002
+        },
+        {
+          "name": "0x00007FFAAA026EBB",
+          "cpuMs": 0.240998
+        },
+        {
+          "name": "0x00007FFABDC798C9",
+          "cpuMs": 0.235699
+        },
+        {
+          "name": "0x00007FFABD828970",
+          "cpuMs": 0.20829899999999998
+        },
+        {
+          "name": "0x00007FFAAA24C906",
+          "cpuMs": 0.2071
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 24.208894999999995
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 24.208894999999995
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 24.208894999999995
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 24.208894999999995
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 24.208894999999995
+        },
+        {
+          "name": "0x00007FFAE1629BF6",
+          "cpuMs": 23.744900999999995
+        },
+        {
+          "name": "0x00007FFAE162B518",
+          "cpuMs": 23.691401999999993
+        },
+        {
+          "name": "0x00007FFAA044ED31",
+          "cpuMs": 11.258791000000002
+        },
+        {
+          "name": "0x00007FFAA0429AFB",
+          "cpuMs": 9.66281
+        },
+        {
+          "name": "Managed.SandboxEngine.Exports.Sandbox_Graphics_OnLayer(int32,value class ManagedRenderSetup_t)",
+          "cpuMs": 6.749652000000001
+        }
+      ]
+    },
+    "22": {
+      "thread": "22 - GlobPool/3 (35984)",
+      "tid": "35984",
+      "samples": 392,
+      "cpuMs": 33.95909900000001,
+      "topLeaf": [
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 11.693599
+        },
+        {
+          "name": "memcpy",
+          "cpuMs": 0.507599
+        },
+        {
+          "name": "0x00007FFAAA0B272D",
+          "cpuMs": 0.42869999999999997
+        },
+        {
+          "name": "0x00007FFABE373514",
+          "cpuMs": 0.422298
+        },
+        {
+          "name": "0x00007FFABDC78737",
+          "cpuMs": 0.404698
+        },
+        {
+          "name": "0x00007FFAAA24C906",
+          "cpuMs": 0.391398
+        },
+        {
+          "name": "0x00007FFAAA24CD84",
+          "cpuMs": 0.328698
+        },
+        {
+          "name": "0x00007FFABDBDDE49",
+          "cpuMs": 0.29
+        },
+        {
+          "name": "0xFFFFF806813AA7A6",
+          "cpuMs": 0.278199
+        },
+        {
+          "name": "0xFFFFF80681E8AA5D",
+          "cpuMs": 0.251
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 33.95909900000001
+        },
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 33.95909900000001
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 33.95909900000001
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 33.95909900000001
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 33.95909900000001
+        },
+        {
+          "name": "0x00007FFAE1629BF6",
+          "cpuMs": 21.633709
+        },
+        {
+          "name": "0x00007FFAE162B518",
+          "cpuMs": 21.386911999999995
+        },
+        {
+          "name": "0x00007FFAE1629A2F",
+          "cpuMs": 12.218392
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 12.195893
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 12.195893
+        }
+      ]
+    },
+    "23": {
+      "thread": "23 - GlobPool/2 (20948)",
+      "tid": "20948",
+      "samples": 394,
+      "cpuMs": 45.369917999999984,
+      "topLeaf": [
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 22.526397
+        },
+        {
+          "name": "memcpy",
+          "cpuMs": 0.490799
+        },
+        {
+          "name": "0x00007FFAE1668550",
+          "cpuMs": 0.399599
+        },
+        {
+          "name": "0x00007FFABDCBC003",
+          "cpuMs": 0.3085
+        },
+        {
+          "name": "0x00007FFAE1668359",
+          "cpuMs": 0.300498
+        },
+        {
+          "name": "0x00007FFABDC449AC",
+          "cpuMs": 0.239198
+        },
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.23119699999999999
+        },
+        {
+          "name": "memset_repstos",
+          "cpuMs": 0.221399
+        },
+        {
+          "name": "0x00007FFABE373558",
+          "cpuMs": 0.210699
+        },
+        {
+          "name": "0xFFFFF806AB9C02A0",
+          "cpuMs": 0.207999
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 45.369917999999984
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 45.369917999999984
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 45.369917999999984
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 45.369917999999984
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 45.369917999999984
+        },
+        {
+          "name": "0x00007FFAE1629A2F",
+          "cpuMs": 22.957292
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 22.809393999999998
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 22.809393999999998
+        },
+        {
+          "name": "0x00007FFAE1629BF6",
+          "cpuMs": 22.279429
+        },
+        {
+          "name": "0x00007FFAE162B518",
+          "cpuMs": 22.21953
+        }
+      ]
+    },
+    "24": {
+      "thread": "24 - GlobPool/5 (26828)",
+      "tid": "26828",
+      "samples": 384,
+      "cpuMs": 39.400505,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 10.746199
+        },
+        {
+          "name": "0xFFFFF806AB1DEA3A",
+          "cpuMs": 7.6579
+        },
+        {
+          "name": "0x00007FFAE1668550",
+          "cpuMs": 0.630099
+        },
+        {
+          "name": "0x00007FFAAA0AC8BF",
+          "cpuMs": 0.5231
+        },
+        {
+          "name": "memcpy",
+          "cpuMs": 0.5115
+        },
+        {
+          "name": "0x00007FFAE1668359",
+          "cpuMs": 0.44269800000000004
+        },
+        {
+          "name": "0x00007FFABDD333E1",
+          "cpuMs": 0.259999
+        },
+        {
+          "name": "ObjectNative::Monitor_Exit_FastPath",
+          "cpuMs": 0.241499
+        },
+        {
+          "name": "0x00007FFABDC44995",
+          "cpuMs": 0.2281
+        },
+        {
+          "name": "0x00007FFABDBAAB17",
+          "cpuMs": 0.2216
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 39.292105
+        },
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 39.292105
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 39.292105
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 39.292105
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 39.292105
+        },
+        {
+          "name": "0x00007FFAE1629BF6",
+          "cpuMs": 20.435616000000003
+        },
+        {
+          "name": "0x00007FFAE162B518",
+          "cpuMs": 20.407218000000004
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 19.943887000000004
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 19.133589999999998
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 18.911592
+        }
+      ]
+    },
+    "25": {
+      "thread": "25 - GlobPool/1 (37384)",
+      "tid": "37384",
+      "samples": 387,
+      "cpuMs": 31.854491999999965,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB163710",
+          "cpuMs": 7.814399
+        },
+        {
+          "name": "0x00007FFABD8289AE",
+          "cpuMs": 0.422297
+        },
+        {
+          "name": "memcpy_repmovs",
+          "cpuMs": 0.372899
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 0.2568
+        },
+        {
+          "name": "0x00007FFAAA019B7E",
+          "cpuMs": 0.2366
+        },
+        {
+          "name": "0x00007FFABDCB45A7",
+          "cpuMs": 0.22869899999999999
+        },
+        {
+          "name": "0x00007FFAA042D1A9",
+          "cpuMs": 0.2166
+        },
+        {
+          "name": "0xFFFFF806AB219694",
+          "cpuMs": 0.210399
+        },
+        {
+          "name": "0xFFFFF806AB15B7A7",
+          "cpuMs": 0.2087
+        },
+        {
+          "name": "Sandbox.Rendering.CommandList.<DrawIndexedInstancedIndirect>g__Execute|80_0(value class Entry&,class Sandbox.Rendering.CommandList)",
+          "cpuMs": 0.208698
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 31.838691999999966
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 31.838691999999966
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 31.838691999999966
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 31.838691999999966
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 31.838691999999966
+        },
+        {
+          "name": "0x00007FFAE1629BF6",
+          "cpuMs": 23.06970099999999
+        },
+        {
+          "name": "0x00007FFAE162B518",
+          "cpuMs": 22.81080499999999
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 9.296686000000005
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 8.68079
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 8.68079
+        }
+      ]
+    },
+    "26": {
+      "thread": "26 - GlobPool/6 (36052)",
+      "tid": "36052",
+      "samples": 357,
+      "cpuMs": 61.167214000000016,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB2197C6",
+          "cpuMs": 27.626299
+        },
+        {
+          "name": "0xFFFFF806AB1DEA3A",
+          "cpuMs": 13.7078
+        },
+        {
+          "name": "0x00007FFAE166856C",
+          "cpuMs": 0.553899
+        },
+        {
+          "name": "memcpy",
+          "cpuMs": 0.4021
+        },
+        {
+          "name": "0x00007FFAAA24C906",
+          "cpuMs": 0.400898
+        },
+        {
+          "name": "0xFFFFF806AB9C0760",
+          "cpuMs": 0.3809
+        },
+        {
+          "name": "memset_repstos",
+          "cpuMs": 0.2691
+        },
+        {
+          "name": "Sandbox.Rendering.CommandList.<DrawIndexedInstancedIndirect>g__Execute|80_0(value class Entry&,class Sandbox.Rendering.CommandList)",
+          "cpuMs": 0.26659900000000003
+        },
+        {
+          "name": "0x00007FFABDC732D3",
+          "cpuMs": 0.2323
+        },
+        {
+          "name": "0x00007FFAAA24C8D1",
+          "cpuMs": 0.2042
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 60.77841500000001
+        },
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 60.77841500000001
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 60.77841500000001
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 60.77841500000001
+        },
+        {
+          "name": "0x00007FFAE168C19A",
+          "cpuMs": 60.77841500000001
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 42.868981999999995
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 42.393787999999994
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 42.342887999999995
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 42.293389999999995
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 42.09188999999999
+        }
+      ]
+    },
+    "27": {
+      "thread": "27 - .NET Tiered Compilation Worker (36448)",
+      "tid": "36448",
+      "samples": 330,
+      "cpuMs": 61.026336,
+      "topLeaf": [
+        {
+          "name": "NtTraceEvent",
+          "cpuMs": 2.427796
+        },
+        {
+          "name": "LinearScan::allocateRegisters",
+          "cpuMs": 1.112595
+        },
+        {
+          "name": "Compiler::WalkSpanningTree",
+          "cpuMs": 1.092997
+        },
+        {
+          "name": "CodeGen::genCodeForBBlist",
+          "cpuMs": 0.7839969999999999
+        },
+        {
+          "name": "LinearScan::allocateRegistersMinimal",
+          "cpuMs": 0.695098
+        },
+        {
+          "name": "LocalAddressVisitor::PostOrderVisit",
+          "cpuMs": 0.6101989999999999
+        },
+        {
+          "name": "CEEInfo::reportInliningDecision",
+          "cpuMs": 0.6084
+        },
+        {
+          "name": "GenTreeVisitor<Rationalizer::RationalizeVisitor>::WalkTree",
+          "cpuMs": 0.602299
+        },
+        {
+          "name": "Compiler::gtSetEvalOrder",
+          "cpuMs": 0.598598
+        },
+        {
+          "name": "Rationalizer::RewriteNode",
+          "cpuMs": 0.598298
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "TieredCompilationManager::BackgroundWorkerBootstrapper1",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "TieredCompilationManager::BackgroundWorkerStart",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "TieredCompilationManager::BackgroundWorkerBootstrapper0",
+          "cpuMs": 61.026336
+        },
+        {
+          "name": "TieredCompilationManager::DoBackgroundWork",
+          "cpuMs": 61.006837000000004
+        },
+        {
+          "name": "MethodDesc::JitCompileCode",
+          "cpuMs": 60.75033900000001
+        },
+        {
+          "name": "MethodDesc::PrepareILBasedCode",
+          "cpuMs": 60.75033900000001
+        }
+      ]
+    },
+    "28": {
+      "thread": "28 - .NET Finalizer Thread (36888)",
+      "tid": "36888",
+      "samples": 200,
+      "cpuMs": 39.170205,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB033CB5",
+          "cpuMs": 2.4097960000000005
+        },
+        {
+          "name": "0xFFFFF806AB033CA6",
+          "cpuMs": 1.204596
+        },
+        {
+          "name": "0xFFFFF806AB035067",
+          "cpuMs": 1.201995
+        },
+        {
+          "name": "0xFFFFF806AB03545A",
+          "cpuMs": 1.0041980000000001
+        },
+        {
+          "name": "0xFFFFF806AB0350BF",
+          "cpuMs": 0.8076970000000001
+        },
+        {
+          "name": "0xFFFFF806AB034F59",
+          "cpuMs": 0.800999
+        },
+        {
+          "name": "0xFFFFF806AB034F8C",
+          "cpuMs": 0.7967979999999999
+        },
+        {
+          "name": "0xFFFFF806AB034F18",
+          "cpuMs": 0.603498
+        },
+        {
+          "name": "0xFFFFF806AB033CBD",
+          "cpuMs": 0.599798
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.599098
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 39.170205
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 39.170205
+        },
+        {
+          "name": "FinalizerThread::FinalizerThreadStart",
+          "cpuMs": 39.170205
+        },
+        {
+          "name": "FinalizerThread::FinalizerThreadWorker",
+          "cpuMs": 39.170205
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 39.170205
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 39.170205
+        },
+        {
+          "name": "FinalizerThread::FinalizeAllObjects",
+          "cpuMs": 36.620411
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 36.620411
+        },
+        {
+          "name": "System.GC.RunFinalizers()",
+          "cpuMs": 36.620411
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 36.620411
+        }
+      ]
+    },
+    "29": {
+      "thread": "29 - .NET TP Worker (6744)",
+      "tid": "6744",
+      "samples": 179,
+      "cpuMs": 13.334916000000003,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB4B4797",
+          "cpuMs": 4.034599
+        },
+        {
+          "name": "NtRemoveIoCompletion",
+          "cpuMs": 1.9664000000000001
+        },
+        {
+          "name": "ThreadNative_SpinWait",
+          "cpuMs": 1.2913719999999997
+        },
+        {
+          "name": "0xFFFFF806AB219856",
+          "cpuMs": 1.0132
+        },
+        {
+          "name": "NtTraceEvent",
+          "cpuMs": 0.458799
+        },
+        {
+          "name": "0xFFFFF806AB097056",
+          "cpuMs": 0.207699
+        },
+        {
+          "name": "JIT_ClassProfile32",
+          "cpuMs": 0.206
+        },
+        {
+          "name": "0xFFFFF806AB0556E0",
+          "cpuMs": 0.204499
+        },
+        {
+          "name": "Compiler::impImport",
+          "cpuMs": 0.204499
+        },
+        {
+          "name": "CallArgs::SortArgs",
+          "cpuMs": 0.203999
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 13.161719000000003
+        },
+        {
+          "name": "0x00007FFAAB416DB0",
+          "cpuMs": 9.115154
+        }
+      ]
+    },
+    "30": {
+      "thread": "30 - Networking (managed) (27944)",
+      "tid": "27944",
+      "samples": 89,
+      "cpuMs": 28.135252000000005,
+      "topLeaf": [
+        {
+          "name": "NtDelayExecution",
+          "cpuMs": 5.602694
+        },
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 5.532398
+        },
+        {
+          "name": "0xFFFFF806AB1DE9E0",
+          "cpuMs": 2.5098
+        },
+        {
+          "name": "0xFFFFF806AB21982F",
+          "cpuMs": 2.420099
+        },
+        {
+          "name": "0xFFFFF806AB0C61DC",
+          "cpuMs": 2.004899
+        },
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 2.0009
+        },
+        {
+          "name": "0xFFFFF806AB4B4A09",
+          "cpuMs": 1.9999
+        },
+        {
+          "name": "0xFFFFF806AB4B458B",
+          "cpuMs": 1.9978
+        },
+        {
+          "name": "0xFFFFF806AB219694",
+          "cpuMs": 1.500399
+        },
+        {
+          "name": "0xFFFFF806AB1DEA2F",
+          "cpuMs": 1.070899
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "Sandbox.Networking.RunThread()",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "0x00007FFAAB3F64EB",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "0x00007FFAAB3FDA24",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 28.109954
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 28.109954
+        }
+      ]
+    },
+    "31": {
+      "thread": "31 - .NET TP Worker (37236)",
+      "tid": "37236",
+      "samples": 76,
+      "cpuMs": 5.117165999999999,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 1.4426
+        },
+        {
+          "name": "0xFFFFF806AB1DE9E2",
+          "cpuMs": 1.2716
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 0.978799
+        },
+        {
+          "name": "ThreadNative_SpinWait",
+          "cpuMs": 0.5907890000000001
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.225696
+        },
+        {
+          "name": "NtDelayExecution",
+          "cpuMs": 0.072598
+        },
+        {
+          "name": "0xFFFFF806AB0BDB9C",
+          "cpuMs": 0.061999
+        },
+        {
+          "name": "0xFFFFF806AB648ADB",
+          "cpuMs": 0.0576
+        },
+        {
+          "name": "0xFFFFF806AB115BC6",
+          "cpuMs": 0.040799
+        },
+        {
+          "name": "0xFFFFF806AB033CA0",
+          "cpuMs": 0.033
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "System.Threading.Thread.StartCallback()",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 5.107766999999999
+        },
+        {
+          "name": "0x00007FFAAB416DB0",
+          "cpuMs": 4.708579
+        }
+      ]
+    },
+    "32": {
+      "thread": "32 - SDLAudioP15 (33452)",
+      "tid": "33452",
+      "samples": 66,
+      "cpuMs": 30.905371000000006,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB16371F",
+          "cpuMs": 10.024
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 10.023697
+        },
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 9.9945
+        },
+        {
+          "name": "0xFFFFF806AB161DC9",
+          "cpuMs": 0.040798
+        },
+        {
+          "name": "System.Threading.Lock.Exit(value class ThreadId)",
+          "cpuMs": 0.039599999999999996
+        },
+        {
+          "name": "0x00007FFAE19DBCD6",
+          "cpuMs": 0.0378
+        },
+        {
+          "name": "Sandbox.Audio.Mixer.FinishMixing()",
+          "cpuMs": 0.036798
+        },
+        {
+          "name": "Sandbox.Audio.MultiChannelBuffer.HardLimit()",
+          "cpuMs": 0.029199999999999997
+        },
+        {
+          "name": "System.Text.Unicode.Utf8Utility.TranscodeToUtf8(wchar*,int32,unsigned int8*,int32,wchar*&,unsigned int8*&)",
+          "cpuMs": 0.026998
+        },
+        {
+          "name": "0xFFFFF806AB09C965",
+          "cpuMs": 0.026399
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 30.899471000000002
+        },
+        {
+          "name": "0x00007FFAE19BBA3B",
+          "cpuMs": 30.899471000000002
+        },
+        {
+          "name": "0x00007FFAE18AAC08",
+          "cpuMs": 30.899471000000002
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 30.899471000000002
+        },
+        {
+          "name": "0x00007FFAE1953BF2",
+          "cpuMs": 30.899471000000002
+        },
+        {
+          "name": "0x00007FFAE17E84E6",
+          "cpuMs": 30.260389
+        },
+        {
+          "name": "0x00007FFAE193D179",
+          "cpuMs": 30.236289
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 30.192089999999997
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 30.192089999999997
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 20.278389999999995
+        }
+      ]
+    },
+    "33": {
+      "thread": "33 - Thread (32908)",
+      "tid": "32908",
+      "samples": 44,
+      "cpuMs": 8.566377999999998,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1DECD0",
+          "cpuMs": 7.650299
+        },
+        {
+          "name": "0xFFFFF806812FC596",
+          "cpuMs": 0.095199
+        },
+        {
+          "name": "0xFFFFF8068087BE61",
+          "cpuMs": 0.070399
+        },
+        {
+          "name": "0xFFFFF806AB974F2B",
+          "cpuMs": 0.0643
+        },
+        {
+          "name": "0xFFFFF806AB07DBE4",
+          "cpuMs": 0.0641
+        },
+        {
+          "name": "0xFFFFF806813AA7A6",
+          "cpuMs": 0.060699
+        },
+        {
+          "name": "0xFFFFF806809D8094",
+          "cpuMs": 0.054399
+        },
+        {
+          "name": "0xFFFFF806812FC5A7",
+          "cpuMs": 0.0538
+        },
+        {
+          "name": "0xFFFFF806812FC661",
+          "cpuMs": 0.0484
+        },
+        {
+          "name": "0x00007FFABD80FCA0",
+          "cpuMs": 0.0468
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 8.559377999999999
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 8.559377999999999
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 8.559377999999999
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 8.449883
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 7.764992000000002
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 7.7451940000000015
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 7.736695000000002
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 7.727596000000002
+        },
+        {
+          "name": "0x00007FFABDCC5D0D",
+          "cpuMs": 7.721894000000002
+        },
+        {
+          "name": "0x00007FFABD7CCD8A",
+          "cpuMs": 7.717394000000001
+        }
+      ]
+    },
+    "34": {
+      "thread": "34 - Thread (19160)",
+      "tid": "19160",
+      "samples": 39,
+      "cpuMs": 23.769283,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 8.3441
+        },
+        {
+          "name": "0xFFFFF806AB1C4040",
+          "cpuMs": 7.521599
+        },
+        {
+          "name": "0xFFFFF806AB4B483A",
+          "cpuMs": 7.515699
+        },
+        {
+          "name": "0xFFFFF806AB09C957",
+          "cpuMs": 0.0276
+        },
+        {
+          "name": "0xFFFFF806AB20A438",
+          "cpuMs": 0.026499
+        },
+        {
+          "name": "NtSetTimer",
+          "cpuMs": 0.023999
+        },
+        {
+          "name": "0xFFFFF806AB6489E5",
+          "cpuMs": 0.022
+        },
+        {
+          "name": "0xFFFFF806AB2E0231",
+          "cpuMs": 0.019
+        },
+        {
+          "name": "0xFFFFF806AB1B3A49",
+          "cpuMs": 0.0176
+        },
+        {
+          "name": "0xFFFFF806AB216CB4",
+          "cpuMs": 0.0165
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 23.754285
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 23.754285
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 23.688388999999997
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 23.521195000000002
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 23.508295000000004
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 23.508295000000004
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 23.508295000000004
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 23.400997999999998
+        },
+        {
+          "name": "0x00007FFB5F96FF76",
+          "cpuMs": 23.400997999999998
+        },
+        {
+          "name": "0xFFFFF806AB0CBF64",
+          "cpuMs": 23.381397999999997
+        }
+      ]
+    },
+    "35": {
+      "thread": "35 - Thread (33260)",
+      "tid": "33260",
+      "samples": 35,
+      "cpuMs": 30.386979999999998,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB163873",
+          "cpuMs": 14.389999
+        },
+        {
+          "name": "0xFFFFF806AB2197E4",
+          "cpuMs": 8.534298
+        },
+        {
+          "name": "0xFFFFF806AB4B4833",
+          "cpuMs": 7.186799
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.071498
+        },
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 0.0389
+        },
+        {
+          "name": "0x00007FFB5957A322",
+          "cpuMs": 0.020097999999999998
+        },
+        {
+          "name": "0xFFFFF8064060656E",
+          "cpuMs": 0.0153
+        },
+        {
+          "name": "0xFFFFF806AB0CB967",
+          "cpuMs": 0.0106
+        },
+        {
+          "name": "0xFFFFF806AB2E116A",
+          "cpuMs": 0.0091
+        },
+        {
+          "name": "0xFFFFF806AB277B76",
+          "cpuMs": 0.0084
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 30.381180999999998
+        },
+        {
+          "name": "0x00007FFB59D2D18A",
+          "cpuMs": 30.381180999999998
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 30.381180999999998
+        },
+        {
+          "name": "0x00007FFB59579299",
+          "cpuMs": 30.381180999999998
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 30.316983999999998
+        },
+        {
+          "name": "0x00007FFB595792E6",
+          "cpuMs": 30.316983999999998
+        },
+        {
+          "name": "0x00007FFB6FC4C11F",
+          "cpuMs": 30.316983999999998
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 30.270886
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 30.270886
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 30.255388
+        }
+      ]
+    },
+    "36": {
+      "thread": "36 - Thread (28300)",
+      "tid": "28300",
+      "samples": 21,
+      "cpuMs": 0.31179,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB4B47F3",
+          "cpuMs": 0.082099
+        },
+        {
+          "name": "0xFFFFF8063D582C74",
+          "cpuMs": 0.0389
+        },
+        {
+          "name": "0xFFFFF806AB0BE1DA",
+          "cpuMs": 0.029399
+        },
+        {
+          "name": "GetTickCount",
+          "cpuMs": 0.025099
+        },
+        {
+          "name": "0x00007FFB6F99064A",
+          "cpuMs": 0.0185
+        },
+        {
+          "name": "0x00007FFB7133A3F4",
+          "cpuMs": 0.0175
+        },
+        {
+          "name": "0xFFFFF806AB09DC89",
+          "cpuMs": 0.014
+        },
+        {
+          "name": "0xFFFFF806AB11FF8A",
+          "cpuMs": 0.012799
+        },
+        {
+          "name": "NtUserGetMessage",
+          "cpuMs": 0.0126
+        },
+        {
+          "name": "0xFFFFF806AB113E1C",
+          "cpuMs": 0.011599
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0x00007FFAE1687A4C",
+          "cpuMs": 0.288191
+        },
+        {
+          "name": "0x00007FFAE16AB4B9",
+          "cpuMs": 0.288191
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.288191
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.288191
+        },
+        {
+          "name": "0x00007FFAE1687C82",
+          "cpuMs": 0.288191
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.238091
+        },
+        {
+          "name": "0x00007FFAE16AB91E",
+          "cpuMs": 0.19989300000000002
+        },
+        {
+          "name": "NtUserGetMessage",
+          "cpuMs": 0.132294
+        },
+        {
+          "name": "0x00007FFB411299B8",
+          "cpuMs": 0.132294
+        },
+        {
+          "name": "0x00007FFB713445B8",
+          "cpuMs": 0.132294
+        }
+      ]
+    },
+    "37": {
+      "thread": "37 - Thread (2736)",
+      "tid": "2736",
+      "samples": 13,
+      "cpuMs": 0.09969299999999999,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB09B475",
+          "cpuMs": 0.010099
+        },
+        {
+          "name": "0xFFFFF806AB1B5CD3",
+          "cpuMs": 0.010099
+        },
+        {
+          "name": "0xFFFFF806AB240534",
+          "cpuMs": 0.009999
+        },
+        {
+          "name": "0xFFFFF806AB0CE996",
+          "cpuMs": 0.009399
+        },
+        {
+          "name": "0xFFFFF806AB2E06B9",
+          "cpuMs": 0.009299
+        },
+        {
+          "name": "0x00007FFABDE07314",
+          "cpuMs": 0.008199
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.0081
+        },
+        {
+          "name": "0xFFFFF806AB2E0F12",
+          "cpuMs": 0.0068
+        },
+        {
+          "name": "0xFFFFF806AB09DDE1",
+          "cpuMs": 0.006699
+        },
+        {
+          "name": "0x00007FFABDE0852E",
+          "cpuMs": 0.0066
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.08959399999999998
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.08959399999999998
+        },
+        {
+          "name": "0x00007FFABDDFECC8",
+          "cpuMs": 0.08959399999999998
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 0.08959399999999998
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.076794
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 0.076794
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 0.076794
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 0.076794
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 0.076794
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.07479499999999999
+        }
+      ]
+    },
+    "38": {
+      "thread": "38 - Thread (9188)",
+      "tid": "9188",
+      "samples": 14,
+      "cpuMs": 0.097188,
+      "topLeaf": [
+        {
+          "name": "__memset_spec_avx_ermsb",
+          "cpuMs": 0.011799
+        },
+        {
+          "name": "0xFFFFF806AB09B38E",
+          "cpuMs": 0.009399
+        },
+        {
+          "name": "0x00007FFB6FC528B0",
+          "cpuMs": 0.009299
+        },
+        {
+          "name": "0xFFFFF806AB09AF26",
+          "cpuMs": 0.009299
+        },
+        {
+          "name": "0xFFFFF806AB115B88",
+          "cpuMs": 0.008599
+        },
+        {
+          "name": "0xFFFFF806AB09CC99",
+          "cpuMs": 0.008399
+        },
+        {
+          "name": "memset$thunk$772440563353939046",
+          "cpuMs": 0.0081
+        },
+        {
+          "name": "RtlpWakeByAddress",
+          "cpuMs": 0.005799
+        },
+        {
+          "name": "0xFFFFF806AB2E0726",
+          "cpuMs": 0.005599
+        },
+        {
+          "name": "0xFFFFF806AB18E119",
+          "cpuMs": 0.005299
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.088789
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.088789
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 0.088789
+        },
+        {
+          "name": "0x00007FFABDB96D84",
+          "cpuMs": 0.067693
+        },
+        {
+          "name": "0x00007FFB6FC528C1",
+          "cpuMs": 0.058394
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.053891999999999995
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 0.048593
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 0.048593
+        },
+        {
+          "name": "0xFFFFF806AB1129BD",
+          "cpuMs": 0.048593
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 0.039994
+        }
+      ]
+    },
+    "39": {
+      "thread": "39 - Thread (32788)",
+      "tid": "32788",
+      "samples": 10,
+      "cpuMs": 0.075999,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB09B6B4",
+          "cpuMs": 0.01
+        },
+        {
+          "name": "0xFFFFF806AB216CAB",
+          "cpuMs": 0.0099
+        },
+        {
+          "name": "0xFFFFF806AB10C83A",
+          "cpuMs": 0.009
+        },
+        {
+          "name": "0xFFFFF806AB1136AB",
+          "cpuMs": 0.0081
+        },
+        {
+          "name": "0xFFFFF806AB115C7A",
+          "cpuMs": 0.0081
+        },
+        {
+          "name": "0x00007FFB6FC4C1BB",
+          "cpuMs": 0.0077
+        },
+        {
+          "name": "0x00007FFB59804DC0",
+          "cpuMs": 0.006999
+        },
+        {
+          "name": "0xFFFFF806AB11394A",
+          "cpuMs": 0.0066
+        },
+        {
+          "name": "0xFFFFF806AB4B496F",
+          "cpuMs": 0.0056
+        },
+        {
+          "name": "0xFFFFF806AB4BF9B4",
+          "cpuMs": 0.004
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.075999
+        },
+        {
+          "name": "0x00007FFB59D2D18A",
+          "cpuMs": 0.075999
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.075999
+        },
+        {
+          "name": "0x00007FFB5980539F",
+          "cpuMs": 0.069
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.057300000000000004
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 0.057300000000000004
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 0.057300000000000004
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 0.0426
+        },
+        {
+          "name": "0x00007FFB6FC4C1BB",
+          "cpuMs": 0.0347
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 0.034300000000000004
+        }
+      ]
+    },
+    "40": {
+      "thread": "40 - Thread (31864)",
+      "tid": "31864",
+      "samples": 6,
+      "cpuMs": 40.791396,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1DEA3A",
+          "cpuMs": 40.744599
+        },
+        {
+          "name": "0xFFFFF806AB09DC80",
+          "cpuMs": 0.0208
+        },
+        {
+          "name": "0x00007FFB6FCEDDC3",
+          "cpuMs": 0.008899
+        },
+        {
+          "name": "0x00007FFB595B60C5",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "0xFFFFF806AB4B43CF",
+          "cpuMs": 0.0044
+        },
+        {
+          "name": "0xFFFFF806AB4B43B3",
+          "cpuMs": 0.004199
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 40.773998
+        },
+        {
+          "name": "0xFFFFF806AB115C9D",
+          "cpuMs": 40.773998
+        },
+        {
+          "name": "0xFFFFF806AB64809F",
+          "cpuMs": 40.773998
+        },
+        {
+          "name": "0xFFFFF806AB647FCA",
+          "cpuMs": 40.773998
+        },
+        {
+          "name": "0xFFFFF806AB113E99",
+          "cpuMs": 40.773998
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 40.770596
+        },
+        {
+          "name": "0x00007FFB59D2D18A",
+          "cpuMs": 40.770596
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 40.770596
+        },
+        {
+          "name": "0x00007FFB595B00E2",
+          "cpuMs": 40.762097
+        },
+        {
+          "name": "NtWaitForSingleObject",
+          "cpuMs": 40.753198
+        }
+      ]
+    },
+    "41": {
+      "thread": "41 - .NET TP Gate (33300)",
+      "tid": "33300",
+      "samples": 5,
+      "cpuMs": 0.045896,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1DED05",
+          "cpuMs": 0.0194
+        },
+        {
+          "name": "0xFFFFF806AB07A266",
+          "cpuMs": 0.016798
+        },
+        {
+          "name": "0xFFFFF806AB115A3A",
+          "cpuMs": 0.004999
+        },
+        {
+          "name": "System.Threading.PortableThreadPool+GateThread+DelayHelper.GetNextDelay(int32)",
+          "cpuMs": 0.004699
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "0x00007FFAAB3F48BB",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "KickOffThread_Worker",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "ManagedThreadBase_DispatchMiddle",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "DispatchCallSimple",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "CallDescrWorkerInternal",
+          "cpuMs": 0.045896
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.041197000000000004
+        }
+      ]
+    },
+    "42": {
+      "thread": "42 - Thread (33868)",
+      "tid": "33868",
+      "samples": 4,
+      "cpuMs": 0.10669700000000001,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB0BD40E",
+          "cpuMs": 0.075299
+        },
+        {
+          "name": "0x00007FFABDCD528A",
+          "cpuMs": 0.019
+        },
+        {
+          "name": "0x00007FFABDCD87A6",
+          "cpuMs": 0.007499
+        },
+        {
+          "name": "0xFFFFF806AB4B4934",
+          "cpuMs": 0.004899
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.10669700000000001
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.10669700000000001
+        },
+        {
+          "name": "0x00007FFABD7CECC8",
+          "cpuMs": 0.10669700000000001
+        },
+        {
+          "name": "0x00007FFABDCD8917",
+          "cpuMs": 0.09429900000000001
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.080198
+        },
+        {
+          "name": "0xFFFFF806AB773F2E",
+          "cpuMs": 0.075299
+        },
+        {
+          "name": "0xFFFFF806AB773E5C",
+          "cpuMs": 0.075299
+        },
+        {
+          "name": "0x00007FFABDCD63CF",
+          "cpuMs": 0.075299
+        },
+        {
+          "name": "NtSetEvent",
+          "cpuMs": 0.075299
+        },
+        {
+          "name": "0xFFFFF806AB027451",
+          "cpuMs": 0.075299
+        }
+      ]
+    },
+    "43": {
+      "thread": "43 - Thread (32660)",
+      "tid": "32660",
+      "samples": 3,
+      "cpuMs": 0.351498,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1D87EF",
+          "cpuMs": 0.2041
+        },
+        {
+          "name": "0xFFFFF80680780016",
+          "cpuMs": 0.136499
+        },
+        {
+          "name": "0xFFFFF806AB15B0C7",
+          "cpuMs": 0.010899
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "TppSingleTimerExpiration",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "TppWorkerThread",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "NtSetTimer2",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "TppUpdateSubQueueTimer",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "TppTimerQueueExpiration",
+          "cpuMs": 0.351498
+        },
+        {
+          "name": "0xFFFFF806AB97417A",
+          "cpuMs": 0.2041
+        },
+        {
+          "name": "0xFFFFF806AB1C8676",
+          "cpuMs": 0.2041
+        },
+        {
+          "name": "0xFFFFF8063FE41BAC",
+          "cpuMs": 0.2041
+        }
+      ]
+    },
+    "44": {
+      "thread": "44 - .NET TP Worker (7992)",
+      "tid": "7992",
+      "samples": 1,
+      "cpuMs": 0.094999,
+      "topLeaf": [
+        {
+          "name": "System.Text.StringBuilder.AppendWithExpansion(wchar&,int32)",
+          "cpuMs": 0.094999
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "System.Threading.Tasks.Task.ExecuteWithThreadLocal(class System.Threading.Tasks.Task&,class System.Threading.Thread)",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "ManagedThreadBase_DispatchOuter",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "NLog.Logger.WriteToTargets(class NLog.LogEventInfo,class NLog.Internal.ITargetWithFilterChain)",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "0x00007FFAAB416D69",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "KickOffThread",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "System.Diagnostics.StackTrace.ToString(value class TraceFormat,class System.Text.StringBuilder)",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "Sandbox.Diagnostics.Logger.Info(class System.FormattableString)",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.094999
+        },
+        {
+          "name": "NLog.Targets.Target.WriteAsyncThreadSafe(value class NLog.Common.AsyncLogEventInfo)",
+          "cpuMs": 0.094999
+        }
+      ]
+    },
+    "45": {
+      "thread": "45 - Thread (26504)",
+      "tid": "26504",
+      "samples": 1,
+      "cpuMs": 100.465699,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB4B458B",
+          "cpuMs": 100.465699
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0x00007FFA9FC7133E",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0xFFFFF806AB4B458B",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "NtWaitForMultipleObjects",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0x00007FFB6FC529F3",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0xFFFFF806AB6484C5",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0xFFFFF806AB777B8A",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0x00007FFA9F9244E4",
+          "cpuMs": 100.465699
+        },
+        {
+          "name": "0x00007FFA9FA8EA67",
+          "cpuMs": 100.465699
+        }
+      ]
+    },
+    "46": {
+      "thread": "46 - Thread (23176)",
+      "tid": "23176",
+      "samples": 1,
+      "cpuMs": 0.008499,
+      "topLeaf": [
+        {
+          "name": "0xFFFFF806AB1244EF",
+          "cpuMs": 0.008499
+        }
+      ],
+      "topInclusive": [
+        {
+          "name": "0x00007FFB41BD0D1B",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "BaseThreadInitThunk",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "0xFFFFF806AB7DD814",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "RtlUserThreadStart",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "0xFFFFF806AB4BFB58",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "0xFFFFF806AB1244EF",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "RtlSleepConditionVariableCS",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "NtWaitForAlertByThreadId",
+          "cpuMs": 0.008499
+        },
+        {
+          "name": "0x00007FFB6FC53D48",
+          "cpuMs": 0.008499
+        }
+      ]
+    }
+  },
+  "inclusiveMatching": [
+    {
+      "name": "GpuRiverAtlas+<>c__DisplayClass15_0.<Prepare>b__0()",
+      "cpuMs": 4350.226319000001
+    },
+    {
+      "name": "GpuRiverAtlas.Pack(class Region,value class System.Threading.CancellationToken)",
+      "cpuMs": 4348.467531000001
+    },
+    {
+      "name": "RiverSpatialIndex..ctor(value class Segment[],value class System.Threading.CancellationToken)",
+      "cpuMs": 3860.346244000002
+    },
+    {
+      "name": "RiverSpatialIndex.BuildNode(value class Segment[],int32,int32,class System.Collections.Generic.List`1<value class SpatialNode>,value class System.Threading.CancellationToken)",
+      "cpuMs": 3857.3039500000023
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].Sort(value class System.Span`1<!0>,class System.Collections.Generic.IComparer`1<!0>)",
+      "cpuMs": 3222.5879090000044
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].IntroSort(value class System.Span`1<!0>,int32,class System.Comparison`1<!0>)",
+      "cpuMs": 3213.660129000004
+    },
+    {
+      "name": "RiverSpatialIndex+SegmentComparer.Compare(value class Segment,value class Segment)",
+      "cpuMs": 3051.2182280000034
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].PickPivotAndPartition(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+      "cpuMs": 2444.1047980000026
+    },
+    {
+      "name": "System.Collections.Generic.ArraySortHelper`1[RiverNetwork+Segment].InsertionSort(value class System.Span`1<!0>,class System.Comparison`1<!0>)",
+      "cpuMs": 760.1592530000005
+    },
+    {
+      "name": "RiverWorld+Region.CopyUniqueSegments(value class System.Threading.CancellationToken)",
+      "cpuMs": 465.19904599999984
+    },
+    {
+      "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Add(!0)",
+      "cpuMs": 378.6016599999999
+    },
+    {
+      "name": "RiverNetwork+Segment.get_Start()",
+      "cpuMs": 328.35381300000006
+    },
+    {
+      "name": "RiverNetwork+Segment.get_End()",
+      "cpuMs": 262.0926529999999
+    },
+    {
+      "name": "NtWaitForSingleObject",
+      "cpuMs": 247.235011
+    },
+    {
+      "name": "NtWaitForMultipleObjects",
+      "cpuMs": 181.45810799999998
+    },
+    {
+      "name": "RiverNetwork+Segment.GetHashCode()",
+      "cpuMs": 173.89357399999997
+    },
+    {
+      "name": "System.Threading.LowLevelLifoSemaphore.Wait(int32,bool)",
+      "cpuMs": 103.532615
+    },
+    {
+      "name": "System.Threading.LowLevelLifoSemaphore.WaitForSignal(int32)",
+      "cpuMs": 77.058997
+    },
+    {
+      "name": "RiverNetwork+Segment.Equals(value class Segment)",
+      "cpuMs": 73.10451
+    },
+    {
+      "name": "RiverNetwork+Segment.get_Radius()",
+      "cpuMs": 41.652499000000006
+    },
+    {
+      "name": "VoxelManager.OnUpdate()",
+      "cpuMs": 39.818904999999994
+    },
+    {
+      "name": "Thread::DoAppropriateWait",
+      "cpuMs": 30.649269999999987
+    },
+    {
+      "name": "Thread::DoAppropriateWaitWorker",
+      "cpuMs": 30.632370999999985
+    },
+    {
+      "name": "VoxelCollisionWorld+<Work>d__67.MoveNext()",
+      "cpuMs": 30.24706600000001
+    },
+    {
+      "name": "VoxelCollisionMesher.Build(value class Vector3Int,float32,class TerrainFieldSnapshot,class System.Func`1<bool>,class VoxelCollisionGeometry,value class System.Nullable`1<value class Vector3Int>,value class System.Nullable`1<value class Vector3Int>)",
+      "cpuMs": 30.06046600000001
+    },
+    {
+      "name": "System.Threading.WaitHandle.WaitOneNoCheck(int32,bool,class System.Object,value class WaitHandleWaitSourceMap)",
+      "cpuMs": 27.45146499999998
+    },
+    {
+      "name": "WaitHandle_WaitOneCore",
+      "cpuMs": 27.119376999999982
+    },
+    {
+      "name": "Thread::DoAppropriateAptStateWait",
+      "cpuMs": 26.668000999999993
+    },
+    {
+      "name": "GpuVoxelMesher+ReadbackSceneObject.RenderSceneObject()",
+      "cpuMs": 24.737819000000002
+    },
+    {
+      "name": "ThreadNative_SpinWait",
+      "cpuMs": 24.700263999999997
+    },
+    {
+      "name": "GpuVoxelMesher.ProcessGpuRenderTick()",
+      "cpuMs": 23.965525000000003
+    },
+    {
+      "name": "System.Collections.Generic.HashSet`1[RiverNetwork+Segment].Resize(int32,bool)",
+      "cpuMs": 23.133035
+    },
+    {
+      "name": "VoxelManager.UpdateSurfaceWaterChunks(class Data)",
+      "cpuMs": 16.383465000000005
+    },
+    {
+      "name": "VoxelManager.UpdateSurfaceWater()",
+      "cpuMs": 16.383465000000005
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverNetwork+Segment].AddWithResize(!0)",
+      "cpuMs": 15.940963
+    },
+    {
+      "name": "System.SZGenericArrayEnumerator`1[RiverNetwork+Segment].get_Current()",
+      "cpuMs": 15.234764999999996
+    },
+    {
+      "name": "RegionalLandforms.BoundNaturalHeight(value class SdfWorldAabb,value class ProceduralTerrainSettings)",
+      "cpuMs": 14.227687000000003
+    },
+    {
+      "name": "RegionalLandforms.BoundHeight(value class SdfWorldAabb,value class ProceduralTerrainSettings)",
+      "cpuMs": 14.227687000000003
+    },
+    {
+      "name": "GpuVoxelMesher.ProcessPending(int32,int64)",
+      "cpuMs": 12.997870000000002
+    },
+    {
+      "name": "GpuRiverAtlas.Update(class Data)",
+      "cpuMs": 12.083573999999999
+    },
+    {
+      "name": "System.Threading.Tasks.Task.InternalWaitCore(int32,value class System.Threading.CancellationToken)",
+      "cpuMs": 11.731562000000002
+    },
+    {
+      "name": "NtDxgkSubmitPresentToHwQueue",
+      "cpuMs": 11.624360999999997
+    },
+    {
+      "name": "NtUserMsgWaitForMultipleObjectsEx",
+      "cpuMs": 10.480681999999998
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Implicit(float64)",
+      "cpuMs": 8.616599
+    },
+    {
+      "name": "RiverNetwork+Segment.get_StartRadius()",
+      "cpuMs": 8.598875
+    },
+    {
+      "name": "System.Threading.Tasks.Task.SpinWait(int32)",
+      "cpuMs": 7.504978999999999
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverSpatialIndex+SpatialNode].AddWithResize(!0)",
+      "cpuMs": 6.824789
+    },
+    {
+      "name": "NtGdiDdDDISubmitWaitForSyncObjectsToHwQueue",
+      "cpuMs": 6.820952999999998
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverNetwork+Segment].ToArray()",
+      "cpuMs": 6.795782
+    },
+    {
+      "name": "RiverNetwork+Segment.get_EndRadius()",
+      "cpuMs": 6.214486
+    },
+    {
+      "name": "GpuVoxelMesher.IsResident(value class GpuMeshRegionKey)",
+      "cpuMs": 5.773085000000002
+    },
+    {
+      "name": "System.Threading.ManualResetEventSlim.Wait(int32,value class System.Threading.CancellationToken)",
+      "cpuMs": 4.226583
+    },
+    {
+      "name": "Monitor_Wait",
+      "cpuMs": 4.215184
+    },
+    {
+      "name": "GpuVoxelMesher.CommitDrawCommands()",
+      "cpuMs": 3.8204909999999996
+    },
+    {
+      "name": "SyncBlock::Wait",
+      "cpuMs": 3.8136859999999997
+    },
+    {
+      "name": "Thread::DoSyncContextWait",
+      "cpuMs": 3.609787
+    },
+    {
+      "name": "CLREventBase::Wait",
+      "cpuMs": 3.609787
+    },
+    {
+      "name": "VoxelManager.Sandbox.IScenePhysicsEvents.PrePhysicsStep()",
+      "cpuMs": 3.560887999999999
+    },
+    {
+      "name": "VoxelManager.SweepTerrainStorage()",
+      "cpuMs": 3.435392
+    },
+    {
+      "name": "GpuVoxelMesher.CommitDrawCommandsLocked(class RenderCameraState)",
+      "cpuMs": 3.2124909999999995
+    },
+    {
+      "name": "Sandbox.Tasks.ExpirableSynchronizationContext.Wait(int[],bool,int32)",
+      "cpuMs": 3.2096869999999997
+    },
+    {
+      "name": "WaitHandle_WaitMultipleIgnoringSyncContext",
+      "cpuMs": 3.2096869999999997
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverSpatialIndex+SpatialNode].ToArray()",
+      "cpuMs": 3.042294
+    },
+    {
+      "name": "GpuVoxelMesher.UploadVisibilityDescriptors(class RenderCameraState)",
+      "cpuMs": 2.9993919999999994
+    },
+    {
+      "name": "GpuVoxelMesher.TryPublishEditedField()",
+      "cpuMs": 2.906892
+    },
+    {
+      "name": "GpuVoxelMesher.PublishCompletedRegular(value class CandidateMesh,value class GpuMeshResidency)",
+      "cpuMs": 2.876492
+    },
+    {
+      "name": "GpuVoxelMesher.PublishResident(value class GpuSdfDescriptor,value class GpuMeshResidency,class GeometryHandle,value class GpuTerrainCountResult)",
+      "cpuMs": 2.876492
+    },
+    {
+      "name": "GpuVoxelMesher.FinalizeEmits()",
+      "cpuMs": 2.8121940000000003
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Multiply(value class Interval,value class Interval)",
+      "cpuMs": 2.769392
+    },
+    {
+      "name": "MsgWaitHelper",
+      "cpuMs": 2.6473889999999995
+    },
+    {
+      "name": "??Thread::DoAppropriateAptStateWait",
+      "cpuMs": 2.6473889999999995
+    },
+    {
+      "name": "VoxelCollisionWorld.Integrate()",
+      "cpuMs": 2.477591
+    },
+    {
+      "name": "FinalizerThread::WaitForFinalizerEvent",
+      "cpuMs": 2.4365939999999995
+    },
+    {
+      "name": "Sandbox.VoxelDebugOverlay.OnUpdate()",
+      "cpuMs": 2.340394
+    },
+    {
+      "name": "GpuVoxelMesher.ReleaseResident(class ResidentMesh)",
+      "cpuMs": 2.2946940000000002
+    },
+    {
+      "name": "GpuVoxelMesher.Release(class GeometryHandle)",
+      "cpuMs": 2.2946940000000002
+    },
+    {
+      "name": "GpuVoxelMesher.ReportGpuSchedulerHealth()",
+      "cpuMs": 2.281294
+    },
+    {
+      "name": "GpuVoxelMesher.get_AllPendingCount()",
+      "cpuMs": 2.281294
+    },
+    {
+      "name": "RiverSpatialIndex+SpatialNode..ctor(value class Vector4,int32,int32,int32)",
+      "cpuMs": 2.196495
+    },
+    {
+      "name": "GpuVoxelMesher+GeometryArena.Release(class GeometryHandle)",
+      "cpuMs": 2.089395
+    },
+    {
+      "name": "GpuVoxelMesher.get_PendingCount()",
+      "cpuMs": 1.876096
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverSpatialIndex+SpatialNode].Add(!0)",
+      "cpuMs": 1.797496
+    },
+    {
+      "name": "RiverWorld.Capture(value class SdfWorldAabb,value class System.Threading.CancellationToken)",
+      "cpuMs": 1.758788
+    },
+    {
+      "name": "GpuVoxelMesher.CountInFlight(value class GpuMeshResidency)",
+      "cpuMs": 1.675096
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverNetwork+Segment].Add(!0)",
+      "cpuMs": 1.5955970000000002
+    },
+    {
+      "name": "RiverNetwork+Patch.SampleWorld(value class Vector3,float32,float32)",
+      "cpuMs": 1.441798
+    },
+    {
+      "name": "RiverSpatialIndex.SampleWorld(value class Vector3,float32,float32)",
+      "cpuMs": 1.441798
+    },
+    {
+      "name": "RiverWorld+Region.SampleWorld(value class Vector3,float32)",
+      "cpuMs": 1.441798
+    },
+    {
+      "name": "RiverSpatialIndex+SpatialNode.get_Bounds()",
+      "cpuMs": 1.4119960000000003
+    },
+    {
+      "name": "Interop+Kernel32.SetEvent(class Microsoft.Win32.SafeHandles.SafeWaitHandle)",
+      "cpuMs": 1.3787490000000002
+    },
+    {
+      "name": "VoxelManager.IsTerrainStorageRequired(value class SdfWorldAabb)",
+      "cpuMs": 1.366498
+    },
+    {
+      "name": "GpuVoxelMesher.TrySubmitOuterCount()",
+      "cpuMs": 1.3398910000000002
+    },
+    {
+      "name": "GpuVoxelMesher.get_PendingGameplayCount()",
+      "cpuMs": 1.272498
+    },
+    {
+      "name": "RegionalLandforms.Noise(value class Vector3,float32,unsigned int32)",
+      "cpuMs": 0.966299
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Subtraction(value class Interval,value class Interval)",
+      "cpuMs": 0.9518989999999999
+    },
+    {
+      "name": "RiverWorld.GetPatch(value class NodeId)",
+      "cpuMs": 0.874895
+    },
+    {
+      "name": "GpuVoxelMesher.TryEmitReadyOuter()",
+      "cpuMs": 0.8317960000000002
+    },
+    {
+      "name": "GpuVoxelMesher.AllocateAndEmit(class ScratchLane,value class GpuTerrainCountResult[],int32,float64,float64)",
+      "cpuMs": 0.8238970000000001
+    },
+    {
+      "name": "VoxelManager.StorageIntersectsBox(value class SdfWorldAabb,value class Vector3Int,value class Vector3Int,float32)",
+      "cpuMs": 0.8011990000000001
+    },
+    {
+      "name": "RegionalLandforms.<BoundNaturalHeight>g__Field|15_0(float32,unsigned int32,value class <>c__DisplayClass15_0&)",
+      "cpuMs": 0.7675000000000001
+    },
+    {
+      "name": "GpuVoxelMesher.CountOuterInFlight()",
+      "cpuMs": 0.7668950000000001
+    },
+    {
+      "name": "GpuVoxelMesher.get_PendingOuterVisualCount()",
+      "cpuMs": 0.7668950000000001
+    },
+    {
+      "name": "RegionalLandforms.SampleNatural(value class Vector3,value class ProceduralTerrainSettings)",
+      "cpuMs": 0.7523979999999999
+    },
+    {
+      "name": "RegionalLandforms.SampleBase(value class Vector3,value class ProceduralTerrainSettings,value class Vector2&)",
+      "cpuMs": 0.7523979999999999
+    },
+    {
+      "name": "GpuVoxelMesher.TryDequeuePendingOuter(value class PendingMesh&)",
+      "cpuMs": 0.6844950000000001
+    },
+    {
+      "name": "GpuVoxelMesher.TryDequeuePendingFrom(class System.Collections.Generic.Queue`1<value class PendingMesh>,value class PendingMesh&)",
+      "cpuMs": 0.6844950000000001
+    },
+    {
+      "name": "VoxelManager.IntegrateCompletedWarmChunks()",
+      "cpuMs": 0.640099
+    },
+    {
+      "name": "System.Collections.Generic.List`1[GpuVoxelMesher+CandidateMesh].GetEnumerator()",
+      "cpuMs": 0.618596
+    },
+    {
+      "name": "System.Collections.Generic.Dictionary`2[GpuMeshRegionKey,GpuVoxelMesher+PendingMesh].FindValue(!0)",
+      "cpuMs": 0.607396
+    },
+    {
+      "name": "System.Collections.Generic.Dictionary`2[GpuMeshRegionKey,GpuVoxelMesher+PendingMesh].TryGetValue(!0,!1&)",
+      "cpuMs": 0.607396
+    },
+    {
+      "name": "Sandbox.PhysicsTraceBuilder.WithCollisionRules(class System.Collections.Generic.IEnumerable`1<class System.String>,bool)",
+      "cpuMs": 0.6060989999999999
+    },
+    {
+      "name": "System.Collections.Generic.Dictionary`2[GpuMeshRegionKey,GpuVoxelMesher+CandidateMesh].set_Item(!0,!1)",
+      "cpuMs": 0.605699
+    },
+    {
+      "name": "VoxelManager.UpdateTerrainAutosave()",
+      "cpuMs": 0.587699
+    },
+    {
+      "name": "VoxelManager.UpdatePlayerCollisionInterests()",
+      "cpuMs": 0.570798
+    },
+    {
+      "name": "Sandbox.Physics.CollisionRules.GetHashCode()",
+      "cpuMs": 0.565798
+    },
+    {
+      "name": "RegionalLandforms+Interval.get_Minimum()",
+      "cpuMs": 0.5543980000000001
+    },
+    {
+      "name": "GpuVoxelMesher.ProcessTransitionGpuRenderTick()",
+      "cpuMs": 0.46909599999999996
+    },
+    {
+      "name": "WaitForMultipleObjects",
+      "cpuMs": 0.46289800000000003
+    },
+    {
+      "name": "Sandbox.VoxelDebugOverlay.BuildHash()",
+      "cpuMs": 0.415999
+    },
+    {
+      "name": "VoxelManager.UpdatePerformanceOverview()",
+      "cpuMs": 0.4104
+    },
+    {
+      "name": "RegionalLandforms+Interval.get_Maximum()",
+      "cpuMs": 0.408199
+    },
+    {
+      "name": "GpuVoxelMesher.RefreshRenderCameras()",
+      "cpuMs": 0.4064
+    },
+    {
+      "name": "GpuVoxelMesher.RefreshRenderCamerasIfNeeded()",
+      "cpuMs": 0.4064
+    },
+    {
+      "name": "VoxelManager.UpdateClipboxPlacement(value class Vector3,value class VoxelVisualConfiguration)",
+      "cpuMs": 0.404298
+    },
+    {
+      "name": "GpuVoxelMesher.get_PendingWarmCount()",
+      "cpuMs": 0.402598
+    },
+    {
+      "name": "System.Collections.Generic.List`1[GpuVoxelMesher+InFlightMesh].GetEnumerator()",
+      "cpuMs": 0.402598
+    },
+    {
+      "name": "Object::Wait",
+      "cpuMs": 0.401498
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverSpatialIndex+SpatialNode].set_Item(int32,!0)",
+      "cpuMs": 0.39890000000000003
+    },
+    {
+      "name": "GpuVoxelMesher.ObserveOuterServiceGap()",
+      "cpuMs": 0.395396
+    },
+    {
+      "name": "VoxelManager.UpdatePlayerFigureEight()",
+      "cpuMs": 0.394199
+    },
+    {
+      "name": "VoxelManager.get_CurrentField()",
+      "cpuMs": 0.386899
+    },
+    {
+      "name": "RegionalLandforms.Eligibility(value class Interval,float32)",
+      "cpuMs": 0.369598
+    },
+    {
+      "name": "RegionalLandforms.Smooth(float32)",
+      "cpuMs": 0.368699
+    },
+    {
+      "name": "RegionalLandforms.Square(value class Interval)",
+      "cpuMs": 0.367899
+    },
+    {
+      "name": "System.Collections.Generic.List`1+Enumerator[GpuVoxelMesher+InFlightMesh].get_Current()",
+      "cpuMs": 0.3367
+    },
+    {
+      "name": "VoxelManager.UpdateTerrainTool()",
+      "cpuMs": 0.324799
+    },
+    {
+      "name": "VoxelManager.UpdateTerrainEdits()",
+      "cpuMs": 0.324799
+    },
+    {
+      "name": "GpuVoxelMesher.EndGpuRenderTick()",
+      "cpuMs": 0.307399
+    },
+    {
+      "name": "Thread::DoAppropriateWaitWorkerAlertableHelper",
+      "cpuMs": 0.307395
+    },
+    {
+      "name": "NtAlpcSendWaitReceivePort",
+      "cpuMs": 0.27429800000000004
+    },
+    {
+      "name": "GpuRiverAtlas.Prepare(value class ProceduralTerrainSettings,value class SdfWorldAabb,value class System.Threading.CancellationToken)",
+      "cpuMs": 0.269498
+    },
+    {
+      "name": "System.Collections.Generic.List`1+Enumerator[GpuVoxelMesher+InFlightMesh].MoveNext()",
+      "cpuMs": 0.262499
+    },
+    {
+      "name": "GpuVoxelMesher+<>c.<ProcessTransitionGpuRenderTick>b__500_0(class TransitionScratchLane)",
+      "cpuMs": 0.23599799999999999
+    },
+    {
+      "name": "RiverWorld+Region..ctor(value class ProceduralTerrainSettings,value class NodeId,int32,int32,class Patch[])",
+      "cpuMs": 0.2339
+    },
+    {
+      "name": "VoxelManager.TryValidateConfiguration(value class VoxelVisualConfiguration&,class System.String&)",
+      "cpuMs": 0.226298
+    },
+    {
+      "name": "GpuVoxelMesher.ObserveRenderView()",
+      "cpuMs": 0.20919800000000002
+    },
+    {
+      "name": "GpuVoxelMesher.SetVisibilityActiveLocked(class ResidentMesh,bool)",
+      "cpuMs": 0.206599
+    },
+    {
+      "name": "GpuVoxelMesher.SetVisibilityActive(class ResidentMesh,bool)",
+      "cpuMs": 0.206599
+    },
+    {
+      "name": "GpuVoxelMesher.TryIssueMeshAuditReadbacks()",
+      "cpuMs": 0.2043
+    },
+    {
+      "name": "VoxelManager.UpdateTerrainReplication()",
+      "cpuMs": 0.203499
+    },
+    {
+      "name": "GpuVoxelMesher+RenderCameraState.get_DescriptorsDirty()",
+      "cpuMs": 0.201799
+    },
+    {
+      "name": "VoxelManager.RecordTerrainActorInterest(value class BBox)",
+      "cpuMs": 0.201299
+    },
+    {
+      "name": "VoxelManager.WorldToLevelAnchor(value class Vector3,int32)",
+      "cpuMs": 0.201199
+    },
+    {
+      "name": "GpuVoxelMesher.PendingLevelCount(int32)",
+      "cpuMs": 0.201
+    },
+    {
+      "name": "GpuVoxelMesher.get_PendingNearVisualCount()",
+      "cpuMs": 0.201
+    },
+    {
+      "name": "GpuVoxelMesher.CountInFlight(int32)",
+      "cpuMs": 0.201
+    },
+    {
+      "name": "Sandbox.CollisionSoundSystem.ProcessQueue()",
+      "cpuMs": 0.1999
+    },
+    {
+      "name": "System.Collections.Generic.List`1[RiverSpatialIndex+SpatialNode].get_Count()",
+      "cpuMs": 0.1997
+    },
+    {
+      "name": "VoxelManager.UpdateTerrainStorage()",
+      "cpuMs": 0.197599
+    },
+    {
+      "name": "VoxelManager+<>c__DisplayClass179_0..ctor()",
+      "cpuMs": 0.197599
+    },
+    {
+      "name": "Sandbox.CollisionSource..ctor(value class Target)",
+      "cpuMs": 0.196799
+    },
+    {
+      "name": "GpuVoxelMesher+InFlightMesh.get_Residency()",
+      "cpuMs": 0.1941
+    },
+    {
+      "name": "VoxelCollisionGeometry.get_Bytes()",
+      "cpuMs": 0.1866
+    },
+    {
+      "name": "RegionalLandforms+Interval.op_Addition(value class Interval,value class Interval)",
+      "cpuMs": 0.184899
+    },
+    {
+      "name": "RegionalLandforms.Eligibility(float32,float32)",
+      "cpuMs": 0.184599
+    },
+    {
+      "name": "RegionalLandforms.Smooth(value class Interval)",
+      "cpuMs": 0.184299
+    },
+    {
+      "name": "System.Threading.Thread.SpinWait(int32)",
+      "cpuMs": 0.180198
+    },
+    {
+      "name": "GpuVoxelMesher.FinalizeTransitionEmits()",
+      "cpuMs": 0.164099
+    },
+    {
+      "name": "GpuVoxelMesher.TryBeginGpuRenderTick()",
+      "cpuMs": 0.158797
+    },
+    {
+      "name": "GpuVoxelMesher+TransitionScratchLane.get_IsIdle()",
+      "cpuMs": 0.157999
+    },
+    {
+      "name": "VoxelCollisionWorld.IsReady(value class Vector3Int,value class Vector3Int,bool)",
+      "cpuMs": 0.116799
+    },
+    {
+      "name": "VoxelManager.IsTerrainCollisionReady(value class BBox,bool)",
+      "cpuMs": 0.116799
+    },
+    {
+      "name": "GpuVoxelMesher+GeometryArena.TryAcquire(int32,int32,unsigned int32,class GeometryHandle&)",
+      "cpuMs": 0.1095
+    },
+    {
+      "name": "GpuVoxelMesher.Acquire(int32,int32,unsigned int32,bool)",
+      "cpuMs": 0.1095
+    },
+    {
+      "name": "VoxelVisualConfiguration.Equals(value class VoxelVisualConfiguration)",
+      "cpuMs": 0.1022
+    },
+    {
+      "name": "VoxelVisualConfiguration.op_Inequality(value class VoxelVisualConfiguration,value class VoxelVisualConfiguration)",
+      "cpuMs": 0.1022
+    },
+    {
+      "name": "VoxelVisualConfiguration.op_Equality(value class VoxelVisualConfiguration,value class VoxelVisualConfiguration)",
+      "cpuMs": 0.1022
+    },
+    {
+      "name": "System.Collections.Generic.HashSet`1[NativeEngine.ButtonCode].AddIfNotPresent(!0,int32&)",
+      "cpuMs": 0.1004
+    },
+    {
+      "name": "GpuVoxelMesher.ProcessVisibilityReadback()",
+      "cpuMs": 0.0969
+    },
+    {
+      "name": "GpuVoxelMesher+<>c__DisplayClass548_0..ctor()",
+      "cpuMs": 0.0969
+    },
+    {
+      "name": "System.Collections.Generic.Dictionary`2[RiverNetwork+NodeId,System.__Canon].TryGetValue(!0,!1&)",
+      "cpuMs": 0.0894
+    },
+    {
+      "name": "System.Collections.Generic.List`1+Enumerator[GpuVoxelMesher+CandidateMesh].MoveNext()",
+      "cpuMs": 0.087799
+    },
+    {
+      "name": "ThreadNative::GetOptimalMaxSpinWaitsPerSpinIteration",
+      "cpuMs": 0.078695
+    },
+    {
+      "name": "GpuVoxelMesher+PendingMesh.op_Equality(value class PendingMesh,value class PendingMesh)",
+      "cpuMs": 0.077099
+    },
+    {
+      "name": "GpuVoxelMesher+PendingMesh.op_Inequality(value class PendingMesh,value class PendingMesh)",
+      "cpuMs": 0.077099
+    },
+    {
+      "name": "GpuVoxelMesher+PendingMesh.Equals(value class PendingMesh)",
+      "cpuMs": 0.077099
+    },
+    {
+      "name": "System.Collections.Generic.List`1+Enumerator[GpuVoxelMesher+CandidateMesh].get_Current()",
+      "cpuMs": 0.0698
+    },
+    {
+      "name": "GpuVoxelMesher+<>c__DisplayClass507_0..ctor()",
+      "cpuMs": 0.0682
+    },
+    {
+      "name": "GpuRiverAtlas+Data.get_Height()",
+      "cpuMs": 0.0674
+    },
+    {
+      "name": "WaitForSingleObjectEx",
+      "cpuMs": 0.024799
+    },
+    {
+      "name": "NtGdiDdDDIWaitForSynchronizationObjectFromGpu",
+      "cpuMs": 0.024499
+    },
+    {
+      "name": "dynamicClass.InvokeStub_VoxelMcpTools.RepairEjectedRenderCamera(class System.Object,class System.Object,int*)",
+      "cpuMs": 0.019
+    },
+    {
+      "name": "VoxelMcpTools.RepairEjectedRenderCamera()",
+      "cpuMs": 0.019
+    },
+    {
+      "name": "WaitForMultipleObjectsEx",
+      "cpuMs": 0.017898
+    },
+    {
+      "name": "System.Threading.SpinWait.SpinOnce(int32)",
+      "cpuMs": 0.0089
+    },
+    {
+      "name": "NtWaitForAlertByThreadId",
+      "cpuMs": 0.008499
+    }
+  ],
+  "GCMinorByType": [
+    {
+      "typeName": "Segment[]",
+      "count": 206,
+      "bytes": 188436304
+    },
+    {
+      "typeName": "Entry[RiverNetwork+Segment][]",
+      "count": 181,
+      "bytes": 154774528
+    },
+    {
+      "typeName": "Vector4[]",
+      "count": 30,
+      "bytes": 61620944
+    },
+    {
+      "typeName": "System.Byte[]",
+      "count": 30,
+      "bytes": 61620944
+    },
+    {
+      "typeName": "SpatialNode[]",
+      "count": 151,
+      "bytes": 45262680
+    },
+    {
+      "typeName": "System.Comparison`1[RiverNetwork+Segment]",
+      "count": 157,
+      "bytes": 16699560
+    },
+    {
+      "typeName": "System.Int32[]",
+      "count": 80,
+      "bytes": 15266144
+    },
+    {
+      "typeName": "DelayPromiseWithCancellation",
+      "count": 49,
+      "bytes": 5198232
+    },
+    {
+      "typeName": "System.Threading.TimerQueueTimer",
+      "count": 41,
+      "bytes": 4368584
+    },
+    {
+      "typeName": "Slot[System.Threading.Tasks.TaskReplicator+Replica][]",
+      "count": 14,
+      "bytes": 1486616
+    },
+    {
+      "typeName": "System.String",
+      "count": 9,
+      "bytes": 1042536
+    },
+    {
+      "typeName": "<>c__DisplayClass59_0",
+      "count": 9,
+      "bytes": 955792
+    },
+    {
+      "typeName": "<>c__DisplayClass18_0",
+      "count": 8,
+      "bytes": 852800
+    },
+    {
+      "typeName": "<GetDescendants>d__22`1[Editor.EditorToolButton]",
+      "count": 8,
+      "bytes": 849104
+    },
+    {
+      "typeName": "Sandbox.ScenePushScope",
+      "count": 7,
+      "bytes": 739240
+    },
+    {
+      "typeName": "System.Collections.Concurrent.ConcurrentQueueSegment`1[System.Threading.Tasks.TaskReplicator+Replica]",
+      "count": 6,
+      "bytes": 640456
+    },
+    {
+      "typeName": "System.Threading.Tasks.Task",
+      "count": 6,
+      "bytes": 633304
+    },
+    {
+      "typeName": "<EnumerateLocked>d__13[System.Object]",
+      "count": 5,
+      "bytes": 536720
+    },
+    {
+      "typeName": "System.Collections.Generic.List`1[Sandbox.SceneTraceResult]",
+      "count": 5,
+      "bytes": 533000
+    },
+    {
+      "typeName": "Editor.Widget[]",
+      "count": 5,
+      "bytes": 529272
+    },
+    {
+      "typeName": "System.Action`2[Sandbox.Rendering.Stage,Sandbox.SceneCamera]",
+      "count": 4,
+      "bytes": 426400
+    },
+    {
+      "typeName": "Sandbox.RenderAttributes",
+      "count": 4,
+      "bytes": 426400
+    },
+    {
+      "typeName": "System.Collections.Generic.List`1[Editor.Widget]",
+      "count": 4,
+      "bytes": 419008
+    },
+    {
+      "typeName": "<GetAll>d__175`1[Sandbox.CubemapFog]",
+      "count": 3,
+      "bytes": 323496
+    },
+    {
+      "typeName": "Replica`1[System.Collections.IEnumerator]",
+      "count": 3,
+      "bytes": 320736
+    },
+    {
+      "typeName": "TwoElementAsyncLocalValueMap",
+      "count": 3,
+      "bytes": 319800
+    },
+    {
+      "typeName": "Native.QObject[]",
+      "count": 3,
+      "bytes": 319800
+    },
+    {
+      "typeName": "InternalPartitionEnumerator[Sandbox.SkinnedModelRenderer]",
+      "count": 3,
+      "bytes": 319800
+    },
+    {
+      "typeName": "Sandbox.Connection[]",
+      "count": 2,
+      "bytes": 216640
+    },
+    {
+      "typeName": "Enumerator[System.String]",
+      "count": 2,
+      "bytes": 215256
+    },
+    {
+      "typeName": "System.Func`1[System.Int32]",
+      "count": 2,
+      "bytes": 214720
+    },
+    {
+      "typeName": "System.Action",
+      "count": 2,
+      "bytes": 213200
+    },
+    {
+      "typeName": "<get_Contexts>d__64",
+      "count": 2,
+      "bytes": 213200
+    },
+    {
+      "typeName": "<TryGetAll>d__5",
+      "count": 2,
+      "bytes": 213200
+    },
+    {
+      "typeName": "<GetAll>d__175`1[Sandbox.VolumetricFogController]",
+      "count": 2,
+      "bytes": 213200
+    },
+    {
+      "typeName": "<EnumerateLocked>d__13[Sandbox.SkinnedModelRenderer]",
+      "count": 2,
+      "bytes": 212928
+    },
+    {
+      "typeName": "<EnumerateLocked>d__13[Sandbox.Component]",
+      "count": 2,
+      "bytes": 212864
+    },
+    {
+      "typeName": "OnRenderCallback",
+      "count": 2,
+      "bytes": 212096
+    },
+    {
+      "typeName": "System.Boolean",
+      "count": 2,
+      "bytes": 211360
+    },
+    {
+      "typeName": "<>c__DisplayClass2_0",
+      "count": 2,
+      "bytes": 211200
+    },
+    {
+      "typeName": "IEnumerableWhereIterator`1[Sandbox.EnvmapProbe]",
+      "count": 2,
+      "bytes": 210480
+    },
+    {
+      "typeName": "ListWhereIterator`1[Sandbox.UI.RootPanel]",
+      "count": 2,
+      "bytes": 210432
+    },
+    {
+      "typeName": "<get_Contexts>d__34",
+      "count": 2,
+      "bytes": 209504
+    },
+    {
+      "typeName": "IEnumerableWhereIterator`1[Sandbox.Engine.InputContext]",
+      "count": 1,
+      "bytes": 110448
+    },
+    {
+      "typeName": "<>c__DisplayClass39_0",
+      "count": 1,
+      "bytes": 110448
+    },
+    {
+      "typeName": "Replica`1[System.Threading.Tasks.RangeWorker]",
+      "count": 1,
+      "bytes": 109632
+    },
+    {
+      "typeName": "<>c__DisplayClass548_0",
+      "count": 1,
+      "bytes": 109344
+    },
+    {
+      "typeName": "System.Threading.ExecutionContext",
+      "count": 1,
+      "bytes": 109112
+    },
+    {
+      "typeName": "System.Linq.Grouping`2[System.Type,Sandbox.WeightedEffect][]",
+      "count": 1,
+      "bytes": 108784
+    },
+    {
+      "typeName": "RuntimeTypeCache",
+      "count": 1,
+      "bytes": 106872
+    },
+    {
+      "typeName": "System.Threading.Tasks.IndexRange[]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "Enumerator[Editor.Widget]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "Entry[NativeEngine.ButtonCode][]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "ReplicatableUserAction`1[System.Threading.Tasks.RangeWorker]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "Node[System.IntPtr,Sandbox.Rendering.RenderPipeline]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "ReplicatableUserAction`1[System.Collections.IEnumerator]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<>c__DisplayClass19_0`2[System.Object,System.Int32]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<>c__DisplayClass108_0",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "System.Collections.Generic.List`1[Sandbox.WeightedEffect]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "GlobalContextScope",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "GroupByIterator`2[Sandbox.WeightedEffect,System.Type]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "Sandbox.BasePostProcess[]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "OrderedIterator`2[Sandbox.PostProcessVolume,System.Int32]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "ContingentProperties",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<>c__DisplayClass23_0",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "System.Char[]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<ExceptIterator>d__88`1[NativeEngine.ButtonCode]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<>c__DisplayClass29_0",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<>c__DisplayClass85_0",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "ExecutingJob",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "System.Runtime.CompilerServices.StrongBox`1[System.Int32]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "<>c__DisplayClass10_0",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "Node[System.Int64,System.Object]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "System.Func`2[GpuVoxelMesher+InFlightMesh,System.Boolean]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "System.Action`1[System.Int32]",
+      "count": 1,
+      "bytes": 106600
+    },
+    {
+      "typeName": "ListWhereIterator`1[Editor.ToastManager+Entry]",
+      "count": 1,
+      "bytes": 106568
+    },
+    {
+      "typeName": "System.RuntimeTypeHandle[]",
+      "count": 1,
+      "bytes": 105464
+    },
+    {
+      "typeName": "Sandbox.CameraComponent[]",
+      "count": 1,
+      "bytes": 103104
+    },
+    {
+      "typeName": "<EnumerateLocked>d__13[Sandbox.GameObject]",
+      "count": 1,
+      "bytes": 102904
+    },
+    {
+      "typeName": "System.Threading.Tasks.TaskReplicator",
+      "count": 1,
+      "bytes": 102904
+    },
+    {
+      "typeName": "System.Collections.Concurrent.ConcurrentQueue`1[System.Threading.Tasks.TaskReplicator+Replica]",
+      "count": 1,
+      "bytes": 102904
+    },
+    {
+      "typeName": "System.SByte[]",
+      "count": 1,
+      "bytes": 102904
+    },
+    {
+      "typeName": "System.SZGenericArrayEnumerator`1[RiverNetwork+Segment]",
+      "count": 1,
+      "bytes": 102904
+    },
+    {
+      "typeName": "SharedLong",
+      "count": 1,
+      "bytes": 102456
+    }
+  ],
+  "GCMajor": [
+    {
+      "threadIndex": 8,
+      "thread": "8 - .NET TP Worker (24940)",
+      "startMs": 5037.711,
+      "endMs": 5039.6274,
+      "durationMs": 1.916400000000067,
+      "reason": "AllocSmall",
+      "gcType": "NonConcurrentGC",
+      "count": 134,
+      "depth": 0
+    },
+    {
+      "threadIndex": 28,
+      "thread": "28 - .NET Finalizer Thread (36888)",
+      "startMs": 2919.6214,
+      "endMs": 2922.2537,
+      "durationMs": 2.632300000000214,
+      "reason": "InducedLowMemory",
+      "gcType": "NonConcurrentGC",
+      "count": 133,
+      "depth": 1
+    }
+  ]
+}

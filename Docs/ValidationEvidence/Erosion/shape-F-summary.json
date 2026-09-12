@@ -1,0 +1,51 @@
+{
+  "patch": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-F-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-F-recipe.json",
+    "grid": { "pointsPerAxis": 129, "spacing": 32, "rows": 16641, "adjacentEdges": 33024 },
+    "repeatHeightExactCount": 16641,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.9868512, 1.0],
+    "heightRange": [321.12222, 1618.1277],
+    "slope": { "p50": 0.07267303, "p95": 1.3442093, "p99": 1.6340989, "max": 2.2591443 },
+    "adjacentAbsoluteHeightDifference": { "p50": 0.77289, "p95": 31.35874, "p99": 44.08456, "max": 70.7646 }
+  },
+  "wide": {
+    "survey": "Docs/ValidationEvidence/Erosion/shape-F-wide-survey.csv",
+    "recipe": "Docs/ValidationEvidence/Erosion/shape-F-wide-recipe.json",
+    "grid": { "pointsPerAxis": 65, "spacing": 4096, "rows": 4225, "adjacentEdges": 8320 },
+    "repeatHeightExactCount": 4225,
+    "nonFiniteCount": 0,
+    "heightOutsideBoundsCount": 0,
+    "mountainWeightRange": [0.0, 1.0],
+    "heightRange": [-2034.3096, 2157.0789],
+    "slope": { "p50": 0.057348218, "p95": 0.51398426, "p99": 0.8949018, "max": 2.1119456 },
+    "adjacentAbsoluteHeightDifference": { "p50": 96.134, "p95": 611.9721, "p99": 976.67757, "max": 2053.9011913 }
+  },
+  "wideCompareBefore": {
+    "beforeSurvey": "Docs/ValidationEvidence/Erosion/before-survey.csv",
+    "worldXYOverlaps": 4225,
+    "bothMountainWeightAtMost0.5": 4056,
+    "exactUnchangedHeightsWithinMask": 4056,
+    "heightDiscrepanciesWithinMask": 0,
+    "heightDiscrepanciesAllOverlaps": 169
+  },
+  "densityAudit": {
+    "source": "Docs/ValidationEvidence/Erosion/shape-F-density-audit.json",
+    "regularRecords": 5,
+    "regularLevels": [0, 1, 2, 3, 4],
+    "regularSamplesEach": 125,
+    "regularMaximumError": 0.00024414062,
+    "regularMaximumErrorLocation": { "level": 2, "sample": [32, 32, 32], "cpu": 1390.6211, "gpu": 1390.6208 },
+    "regularMaximumLatticeError": 0,
+    "regularTotals": { "nonFinite": 0, "densityMismatches": 0, "signMismatches": 0, "boundsFailures": 0, "readbackNonFinite": 0 },
+    "finalPendingLevels": 96,
+    "transitionRecords": 26,
+    "transitionMaximumError": 0.0078125,
+    "transitionMaximumErrorLocation": { "fineLevel": 5, "coarseLevel": 6, "face": "NegativeY", "position": [13824, 130560, 12800], "cpu": 12105.992, "gpu": 12105.984 },
+    "transitionTotals": { "nonFinite": 0, "signMismatches": 0, "boundsFailures": 0 },
+    "finalPendingFaces": 52349176880,
+    "missingFaces": ["0/1 NegativeZ", "0/1 PositiveZ", "1/2 NegativeZ", "1/2 PositiveZ", "2/3 NegativeZ", "3/4 NegativeZ", "4/5 NegativeZ", "4/5 PositiveZ", "5/6 NegativeZ", "5/6 PositiveZ"]
+  }
+}

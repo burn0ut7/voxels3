@@ -1,3 +1,6 @@
+#include "shaders/voxels/voxel_generated_materials.hlsl"
+#include "shaders/voxels/voxel_vertex_identity.hlsl"
+
 struct TransitionRequest
 {
 	float4 OriginAndFineCellSize;
@@ -50,7 +53,7 @@ struct TransitionAllocationDescriptor
 struct TransitionTerrainVertexWords
 {
 	uint4 First;
-	uint2 Second;
+	uint3 Second;
 };
 
 StructuredBuffer<TransitionRequest> TransitionRequests < Attribute( "TransitionRequests" ); >;
@@ -79,6 +82,7 @@ int TransitionStage < Attribute( "TransitionStage" ); >;
 int TransitionBatchSize < Attribute( "TransitionBatchSize" ); >;
 int TransitionDensitySize < Attribute( "TransitionDensitySize" ); >;
 int TransitionDensityCount < Attribute( "TransitionDensityCount" ); >;
+int TransitionPlacedMaterialOffset < Attribute( "TransitionPlacedMaterialOffset" ); >;
 int TransitionCellCount < Attribute( "TransitionCellCount" ); >;
 int TransitionEdgeSlotCount < Attribute( "TransitionEdgeSlotCount" ); >;
 int TransitionEdgeGroupCount < Attribute( "TransitionEdgeGroupCount" ); >;
@@ -388,12 +392,10 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		{
 			correction = TransitionDensitySamples[index];
 		}
-		TransitionDensitySamples[index] = SampleVoxelSdf(
-			sample,
-			request.OriginAndFineCellSize.w,
-			request.Terrain,
-			request.TerrainScales,
-			request.TerrainShape ) + correction;
+		float3 position = (float3)sample * request.OriginAndFineCellSize.w;
+		float3 column = SampleVoxelLandform( position.xy, request.Terrain, request.TerrainScales, request.TerrainShape.x, request.TerrainShape.y );
+		TransitionDensitySamples[index] = SampleVoxelSdfFromLandform( position,
+			request.Terrain, request.TerrainScales, request.TerrainShape, column.xy ) + correction;
 		return;
 	}
 	if ( TransitionStage == 2 )
@@ -545,6 +547,16 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			request.Terrain, request.TerrainScales, request.TerrainShape, request.Reserved0 != 0 );
 		TransitionEdgeFlags[index] = asuint( coordinate ) + 1u;
 		float3 world = VoxelEdgePosition( firstWorld, secondWorld, coordinate );
+		float4 materialWeights = GenerateVoxelMaterialWeights( world, request.Terrain, request.TerrainScales, request.TerrainShape );
+		if ( request.Reserved0 != 0 )
+		{
+			uint materialBase = (uint)TransitionPlacedMaterialOffset + block * (uint)TransitionDensityCount;
+			float dirt = lerp( TransitionDensitySamples[materialBase + TransitionDensityIndex( int2(first), 0 )],
+				TransitionDensitySamples[materialBase + TransitionDensityIndex( int2(second), 0 )], coordinate );
+			materialWeights = lerp( materialWeights, float4( 0.0, 1.0, 0.0, 0.0 ), saturate( dirt ) );
+		}
+		TransitionEdgeFlags[(uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] =
+			PackGeneratedVoxelWeights( materialWeights );
 		uint worldHash = TransitionHash( asuint( world.x ) ^ TransitionHash( asuint( world.y ) ) ^
 			TransitionHash( asuint( world.z ) ) );
 		InterlockedXor( TransitionDigests[block].y, TransitionHash( worldHash ^ slot ) );
@@ -714,13 +726,12 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			TransitionGradient( block, int2( second ), gradientStep, request ),
 			interpolation ) );
 		float2 encodedNormal = TransitionEncodeTerrainNormal( normal );
-		uint recordId = allocation.Reserved & 0x001fffffu;
-		uint generationToken = (allocation.Reserved >> 30u) & 3u;
-		uint encodedRecordIdentity = 0x3f800000u | (generationToken << 21u) | recordId;
+		uint encodedRecordIdentity = EncodeVoxelVertexIdentity( allocation.Reserved, request.Reserved0 );
 		TransitionTerrainVertexWords output;
 		output.First = uint4( asuint( position.x ), asuint( position.y ),
 			asuint( position.z ), encodedRecordIdentity );
-		output.Second = uint2( asuint( encodedNormal.x ), asuint( encodedNormal.y ) );
+		output.Second = uint3( asuint( encodedNormal.x ), asuint( encodedNormal.y ),
+			TransitionEdgeFlags[(uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] );
 		TransitionOutputVertices[allocation.VertexOffset + localVertex] = output;
 	}
 }

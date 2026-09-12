@@ -1,0 +1,248 @@
+--- .codex\tmp\rolling-hills\VoxelManager.before-fair-edge.txt
++++ Code\Voxels\VoxelManager.cs
+@@ -2196,6 +2196,7 @@
+ 			$"[VoxelWorld] lod.inspect.handoff pending={HasClipboxPlacementWork} " +
+ 			$"exteriorPending={_partialOuterChunks.Count} exteriorDrawable={_partialOuterChunks.Count( coordinate => _gpuMesher.IsDrawable( new GpuMeshRegionKey( _partialOuterLevel, coordinate ) ) )} " +
+ 			$"staging={_clipboxPlacementPending} " +
++			$"{_gpuMesher.OuterWorkStatus} " +
+ 			$"requestedVisualRevision={_requestedVisualConfigurationRevision} " +
+ 			$"stagedVisualRevision={_stagedVisualConfigurationRevision} " +
+ 			$"appliedVisualRevision={_appliedVisualConfigurationRevision} " +
+@@ -2792,6 +2793,7 @@
+ 			targetChanged |= _candidateLevelAnchors[level] != _targetLevelAnchors[level];
+ 		}
+ 		if ( !targetChanged ) return;
++		if ( exteriorTargetChanged ) _gpuMesher.SetStreamingPosition( viewerPosition );
+ 
+ 		if ( _clipboxPlacementTargetAvailable && HasClipboxPlacementWork )
+ 		{
+--- .codex\tmp\rolling-hills\GpuVoxelMesher.before-fair-edge.txt
++++ Code\Voxels\GpuVoxelMesher.cs
+@@ -58,7 +58,19 @@
+ 	private readonly Queue<PendingMesh> _nearVisualDispatchQueue = new();
+ 	private readonly Queue<PendingMesh> _warmDispatchQueue = new();
+ 	private readonly Queue<PendingMesh> _outerVisualDispatchQueue = new();
+-	private readonly Queue<PendingMesh> _activeOuterDispatchQueue = new();
++	private readonly PriorityQueue<GpuMeshRegionKey, (float Distance, int Level, int Z, int Y, int X)> _activeOuterDispatchQueue = new(
++		Comparer<(float Distance, int Level, int Z, int Y, int X)>.Create( ( left, right ) =>
++		{
++			var comparison = left.Distance.CompareTo( right.Distance );
++			if ( comparison != 0 ) return comparison;
++			comparison = left.Level.CompareTo( right.Level );
++			if ( comparison != 0 ) return comparison;
++			comparison = left.Z.CompareTo( right.Z );
++			if ( comparison != 0 ) return comparison;
++			comparison = left.Y.CompareTo( right.Y );
++			return comparison != 0 ? comparison : left.X.CompareTo( right.X );
++		} ) );
++	private Vector3 _streamingPosition;
+ 	private readonly Queue<PendingMesh> _placementNearDispatchQueue = new();
+ 	private readonly Queue<PendingMesh> _placementOuterDispatchQueue = new();
+ 	private readonly HashSet<GpuMeshRegionKey> _placementRequired = new();
+@@ -183,6 +195,7 @@
+ 	private long _outerLastServiceTimestamp;
+ 	private long _transitionLastServiceTimestamp;
+ 	private int _nextGpuService;
++	private int _nextOuterBatchService;
+ 	private long _outerEligibleSinceTimestamp;
+ 	private long _outerScheduledCount;
+ 	private long _outerPublishedCount;
+@@ -225,6 +238,11 @@
+ 	public int GameplayResidentCount => _resident.Count( pair =>
+ 		pair.Value.Residency == GpuMeshResidency.Gameplay );
+ 	public bool PrioritizePlayerDetail { get; set; }
++	public string OuterWorkStatus =>
++		$"playerDetail={PrioritizePlayerDetail} " +
++		$"visibleQueued={_pending.Count( pair => pair.Key.Level >= 2 && _renderActive.Contains( pair.Key ) )} " +
++		$"handoffQueued={_placementQueued.Count( key => key.Level >= 2 && !_renderActive.Contains( key ) )} " +
++		$"visibleInFlight={_scratchLanes.Sum( lane => lane.CountInFlight.Count( value => value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key ) ) + lane.EmitInFlight.Count( value => value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key ) ) )}";
+ 	public int ResidentLevelCount( int level ) => _residentLevelCounts[level];
+ 	public int PendingLevelCount( int level ) =>
+ 		_pendingLevelCounts[level] + CountInFlight( level );
+@@ -991,6 +1009,27 @@
+ 			QueuePending( pending );
+ 	}
+ 
++	public void SetStreamingPosition( Vector3 position )
++	{
++		_streamingPosition = position;
++		_activeOuterDispatchQueue.Clear();
++		foreach ( var pending in _pending.Values )
++		{
++			if ( pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key ) )
++				QueueActiveOuter( pending );
++		}
++	}
++
++	private void QueueActiveOuter( PendingMesh pending )
++	{
++		var descriptor = pending.Descriptor;
++		var coordinate = descriptor.Key.Coordinate;
++		var size = descriptor.CellsPerAxis * descriptor.CellSize;
++		var center = new Vector3( coordinate.x + 0.5f, coordinate.y + 0.5f, coordinate.z + 0.5f ) * size;
++		_activeOuterDispatchQueue.Enqueue( descriptor.Key,
++			((center - _streamingPosition).LengthSquared, descriptor.Key.Level, coordinate.z, coordinate.y, coordinate.x) );
++	}
++
+ 	public void ClearPlacementPriority()
+ 	{
+ 		_placementRequired.Clear();
+@@ -1000,7 +1039,7 @@
+ 	public void SetRenderActive( GpuMeshRegionKey key, bool active )
+ 	{
+ 		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
+-		if ( changed && active && key.Level >= 2 && _pending.TryGetValue( key, out var pending ) )
++		if ( changed && key.Level >= 2 && _pending.TryGetValue( key, out var pending ) )
+ 			QueuePending( pending );
+ 		if ( !changed || !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
+ 		SetVisibilityActive( resident, active );
+@@ -2079,17 +2118,25 @@
+ 	{
+ 		if ( _disposed || _scratchLanes is null ) return;
+ 		// Removed requests can leave queue entries after the final outer batch drains.
+-		while ( _activeOuterDispatchQueue.TryPeek( out var queued ) &&
+-			(!_pending.TryGetValue( queued.Descriptor.Key, out var current ) || current != queued) )
++		while ( _activeOuterDispatchQueue.TryPeek( out var queued, out _ ) &&
++			(!_pending.ContainsKey( queued ) || !_renderActive.Contains( queued )) )
+ 			_activeOuterDispatchQueue.Dequeue();
++		var outerServiceGap = ObserveOuterServiceGap();
++		// The service deadline applies before shortcuts that can keep returning for seams.
++		if ( outerServiceGap >= OuterMaximumServiceDelayMilliseconds &&
++			(TryEmitReadyOuter() || TrySubmitOuterCount()) )
++		{
++			RecordOuterService( outerServiceGap, true );
++			return;
++		}
+ 		// Once required terrain is complete, its seams outrank hidden cache fill.
+-		if ( !_editPublicationPending && (PrioritizePlayerDetail || _activeOuterDispatchQueue.Count == 0) &&
++		if ( !_editPublicationPending && _activeOuterDispatchQueue.Count == 0 &&
+ 			_placementRequired.Count > 0 && _placementQueued.Count == 0 &&
+ 			!_scratchLanes.Any( lane =>
+ 				lane.CountInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ||
+-					(!PrioritizePlayerDetail && value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ||
++					(value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ||
+ 				lane.EmitInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ||
+-					(!PrioritizePlayerDetail && value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ) &&
++					(value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ) &&
+ 			ProcessTransitionGpuRenderTick() )
+ 		{
+ 			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
+@@ -2099,7 +2146,6 @@
+ 		// Each gets a preferred turn; unavailable work falls through to normal service.
+ 		var preferredService = PrioritizePlayerDetail && _placementQueued.Any( key => key.Level < 2 ) ? 0 : _nextGpuService;
+ 		_nextGpuService = (_nextGpuService + 1) % 3;
+-		var outerServiceGap = ObserveOuterServiceGap();
+ 		if ( preferredService == 2 && (TryEmitReadyOuter() || TrySubmitOuterCount()) )
+ 		{
+ 			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
+@@ -2119,12 +2165,6 @@
+ 			RecordOuterService( outerServiceGap, outerServiceGap >= OuterMaximumServiceDelayMilliseconds );
+ 			return;
+ 		}
+-		if ( outerServiceGap >= OuterMaximumServiceDelayMilliseconds && TrySubmitOuterCount() )
+-		{
+-			RecordOuterService( outerServiceGap, true );
+-			return;
+-		}
+-
+ 		var regularGpuWorkSubmitted = false;
+ 		foreach ( var lane in _scratchLanes )
+ 		{
+@@ -2349,14 +2389,40 @@
+ 		var processed = 0;
+ 		var inspected = 0;
+ 		List<PendingMesh> deferred = null;
+-		while ( inspected++ < MaximumDispatchesPerUpdate && TryDequeuePendingOuter( out var pending ) )
+-		{
++		var batchService = -1;
++		while ( inspected++ < MaximumDispatchesPerUpdate )
++		{
++			PendingMesh pending;
++			var found = batchService switch
++			{
++				0 => TryDequeuePendingFrom( _editOuterDispatchQueue, out pending ),
++				1 => TryDequeueActiveOuter( out pending ),
++				2 => TryDequeuePlacement( _placementOuterDispatchQueue, out pending ),
++				3 => TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending ),
++				_ => TryDequeuePendingOuter( _nextOuterBatchService == 0, out pending )
++			};
++			if ( !found ) break;
++			if ( batchService == 1 && processed > 0 )
++			{
++				var firstKey = lane.CountInFlight[0].Descriptor.Key;
++				var key = pending.Descriptor.Key;
++				// River inputs cover XY: keep a visible batch within the first region's neighbors.
++				if ( key.Level != firstKey.Level || Math.Abs( key.Coordinate.x - firstKey.Coordinate.x ) > 1 ||
++					Math.Abs( key.Coordinate.y - firstKey.Coordinate.y ) > 1 )
++				{
++					(deferred ??= new()).Add( pending );
++					continue;
++				}
++			}
+ 			TerrainFieldSnapshot reader = null;
+ 			if ( pending.Descriptor.EditRevision != 0 && !pending.Descriptor.Field.TryCaptureRegion( pending.Descriptor.SamplingBounds, out reader ) )
+ 			{
+ 				(deferred ??= new()).Add( pending );
+ 				continue;
+ 			}
++			// One atlas covers the batch bounds. Do not span distant previews and parent work.
++			if ( batchService < 0 ) batchService = _editRegularDependencies.Contains( pending.Descriptor.Key ) ? 0 :
++				_renderActive.Contains( pending.Descriptor.Key ) ? 1 : _placementRequired.Contains( pending.Descriptor.Key ) ? 2 : 3;
+ 			var generation = ++_nextGeneration;
+ 			var inFlight = new InFlightMesh(
+ 				pending.Descriptor,
+@@ -2376,6 +2442,7 @@
+ 		}
+ 		if ( deferred is not null ) foreach ( var pending in deferred ) QueuePending( pending );
+ 		if ( processed == 0 ) return false;
++		_nextOuterBatchService = (_nextOuterBatchService + 1) % 4;
+ 		if ( !lane.Scratch.TrySubmitCount( requests, processed, out _, fields ) )
+ 			throw new InvalidOperationException( "A shared terrain scratch lane rejected an idle outer count batch." );
+ 		if ( _scheduleLatencyMeasurementActive )
+@@ -3072,7 +3139,7 @@
+ 		}
+ 		else if ( pending.Residency == GpuMeshResidency.Visual )
+ 		{
+-			if ( _renderActive.Contains( pending.Descriptor.Key ) ) _activeOuterDispatchQueue.Enqueue( pending );
++			if ( _renderActive.Contains( pending.Descriptor.Key ) ) QueueActiveOuter( pending );
+ 			else _outerVisualDispatchQueue.Enqueue( pending );
+ 		}
+ 		else
+@@ -3134,12 +3201,25 @@
+ 		else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount--;
+ 	}
+ 
+-	private bool TryDequeuePendingOuter( out PendingMesh pending )
++	private bool TryDequeueActiveOuter( out PendingMesh pending )
++	{
++		while ( _activeOuterDispatchQueue.TryDequeue( out var queued, out _ ) )
++		{
++			if ( !_renderActive.Contains( queued ) || !_pending.TryGetValue( queued, out pending ) ) continue;
++			RemovePending( queued );
++			return true;
++		}
++		pending = default;
++		return false;
++	}
++
++	private bool TryDequeuePendingOuter( bool preferVisible, out PendingMesh pending )
+ 	{
+ 		if ( TryDequeuePendingFrom( _editOuterDispatchQueue, out pending ) ) return true;
+-		// Parent regions needed to bring LOD0 to the player precede distant previews.
+-		if ( PrioritizePlayerDetail && TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ) return true;
+-		return TryDequeuePendingFrom( _activeOuterDispatchQueue, out pending ) ||
++		// Reserve one of four outer batches for immediately visible terrain.
++		// Parent work keeps the other three; an empty class lends its whole batch.
++		if ( PrioritizePlayerDetail && !preferVisible && TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ) return true;
++		return TryDequeueActiveOuter( out pending ) ||
+ 			TryDequeuePlacement( _placementOuterDispatchQueue, out pending ) ||
+ 			TryDequeuePendingFrom( _outerVisualDispatchQueue, out pending );
+ 	}
+@@ -3625,6 +3705,7 @@
+ 		_activeOuterDispatchQueue.Clear();
+ 		_placementNearDispatchQueue.Clear();
+ 		_placementOuterDispatchQueue.Clear();
++		_nextOuterBatchService = 0;
+ 		ClearPlacementPriority();
+ 		_pendingGameplayCount = 0;
+ 		_pendingWarmCount = 0;

@@ -1,12 +1,14 @@
 using System.Runtime.InteropServices;
 
-[StructLayout( LayoutKind.Sequential, Pack = 4, Size = 24 )]
+[StructLayout( LayoutKind.Sequential, Pack = 4, Size = GpuVoxelMesher.TerrainVertexBytes )]
 internal struct TerrainVertex
 {
 	[VertexLayout.Position]
 	public Vector3 Position;
 	[VertexLayout.Normal]
 	public Vector3 Normal;
+	[VertexLayout.Color]
+	public Color32 Materials;
 }
 
 [StructLayout( LayoutKind.Sequential, Pack = 4, Size = 96 )]

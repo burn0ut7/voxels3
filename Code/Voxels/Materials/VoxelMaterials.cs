@@ -11,15 +11,17 @@ internal static class VoxelMaterials
 	public const ushort Dirt = 2;
 	public const ushort Stone = 3;
 	public const ushort Water = 4;
+	public const ushort Snow = 5;
 
 	// Keep explicit IDs in ascending order. One row adds a type without changing consumers.
 	private static readonly VoxelMaterialDefinition[] Definitions =
 	[
 		new( Air, "Air", Vector3.Zero, Vector3.Zero ),
-		new( Grass, "Grass", new( 0.14f, 0.32f, 0.08f ), new( 0.26f, 0.52f, 0.14f ) ),
-		new( Dirt, "Dirt", new( 0.24f, 0.12f, 0.055f ), new( 0.40f, 0.23f, 0.11f ) ),
-		new( Stone, "Stone", new( 0.25f, 0.27f, 0.29f ), new( 0.43f, 0.45f, 0.47f ) ),
-		new( Water, "Water", new( 0.025f, 0.16f, 0.48f ), new( 0.05f, 0.36f, 0.78f ) )
+		new( Grass, "Grass", new( 0.028f, 0.075f, 0.023f ), new( 0.052f, 0.125f, 0.038f ) ),
+		new( Dirt, "Dirt", new( 0.075f, 0.038f, 0.020f ), new( 0.125f, 0.068f, 0.035f ) ),
+		new( Stone, "Stone", new( 0.070f, 0.075f, 0.080f ), new( 0.120f, 0.125f, 0.130f ) ),
+		new( Water, "Water", new( 0.012f, 0.055f, 0.090f ), new( 0.025f, 0.100f, 0.155f ) ),
+		new( Snow, "Snow", new( 0.78f, 0.80f, 0.80f ), new( 0.88f, 0.90f, 0.89f ) )
 	];
 	private static readonly VoxelMaterialDefinition Unknown =
 		new( ushort.MaxValue, "Unknown", new( 1f, 0f, 1f ), new( 0.3f, 0f, 0.3f ) );
