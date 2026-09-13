@@ -24778,3 +24778,66 @@ No player/streaming-origin teleport or alternate terrain path was used to claim
 that check. Detached camera was returned to the player and free render sizing
 restored. Implementation is live for manual review; exact-artifact visual
 acceptance and the deferred figure-eight comparison remain open.
+
+### EROSION-CREST-002/v1 — ridge fade prototype, predeclared 2026-09-13
+
+User authorizes prototype after remaining serrations/lip around long crests.
+Performance remains explicitly deferred from the prior erosion instruction.
+Keep generator45 rounded base shapes; generator46 multiplies mountain erosion
+strength by smoothstep(0,0.20,abs(4*a-2))*smoothstep(0,0.20,abs(4*b-2))
+in ridge terrain, blending to1 with existing shelf blend. Width0.20 belongs to
+MountainMasses in folded-noise coordinates, scales with landform dimensions,
+and does not depend on absolute altitude or total along-crest slope. Existing
+coast/exposure/slope protections remain. No new sampling/allocations/passes.
+Multiplier is bounded0..1, so existing erosion interval envelope remains valid.
+Old version45 saves preserved, no migration; new version46 identity is intentional.
+Scene basic_example,26.09.08b,seed1337,land.75/mountains.3/plains.6,
+scales77724.09/18681.756/5232.39,relief3072,ruggedness.45,sea0.
+Before/after production survey minimumXY-10240,-79872,129x129 at32units:
+require finite heights,0repeat mismatches,0reported-bound violations; retain
+changes and extrema rather than infer visual acceptance from aggregate counts.
+Recorded current camera-7106.59424,-76174.9375,4779.18848,
+angles38.6564941,-171.220551,0,FOV60; screenshot1920x1080. Target is the rear
+crest with upright lip/teeth in the user's view. Require visibly reduced crest
+teeth without erasing flank gullies; exact visual result is pending comparison.
+No performance/streaming claims from detached-camera observations. New geometry
+must rebuild through production paths; no alternate tests/hooks or direct
+streaming-origin movement for validation. Explicit shader rebuild, clean visible
+restart and fresh-log/Sentry checks required. Preserve unrelated local coverage
+source/doc edits and stage only this task's additions.
+
+EROSION-CREST-002/v1 result,2026-09-13: prototype applied as generator46.
+Saved generator45world aab7f6c52522483e9c5bdb8c763646ff revision39/checkpoint33
+before stopping Play. Existing source e732065 plus unrelated local-publication
+working changes retained throughout; no attribution to those changes is made.
+Before survey64d4ece912024a319f197462ece3791f and after survey
+c1ceaad0091a4ce2b1c413f54d321ea5 use the identical predeclared129x129/32unit grid.
+Both16,641samples:0nonfinite/0repeat-height mismatches/0reported-bound failures.
+6,379natural heights changed,maximum absolute change91.7224units; maximum
+reported slope4.1778865before versus2.0983539after. These are production sampled
+field measurements, not visual acceptance or a proof over all recipes/coordinates.
+Source bounds intentionally retain the previous conservative erosion envelope.
+
+Both dependent shaders explicitly rebuilt successfully with empty diagnostics;
+new visible editor engine26.09.08b compiled with0errors. Production coverage mesh
+audit88selected/88completed:0stale/failures/mutationFailures/invalidIndices/
+outOfBounds/nonfinite/identity/oversized/degenerate/drawArgument failures;
+178readbacks,2,581,940bytes,134.04ms. This is not a performance benchmark.
+
+Restart qualification is PARTIAL, not PASS: prior editor shutdown logged prefab
+destruction/editor-close errors; Sentry last_crash advanced from2026-09-10 to
+2026-09-13T06:05:49.388357Z. Fatal event timestamp06:05:49.387081 belongs to the
+old session started2026-09-12T16:10:26.937997Z; event JSON has no exception stack.
+Cause remains unresolved. The restarted session is alive and inspected fresh log
+contains no managed exception/HLSL parser/shader-load errors. Preserve shutdown
+and fresh logs, plus narrow crash metadata, under ValidationEvidence/ErosionRidgeFade.
+Do not claim crash-free restart or infer that the new shader caused the old-session
+failure without further evidence.
+
+Before image captured at recorded camera. After-coarse.png uses the same camera
+transform but player/streaming origin reset to0,0; the displayed distant geometry
+is coarser. It shows reduced small crest detail but is NOT a comparable close-up
+visual pass. No player/streaming-origin teleport was used to simulate acceptance.
+Returned to normal player camera for manual review. Prototype remains unaccepted
+visually; exact close-up and crash qualification remain open. Performance stays
+deferred by user instruction; no figure-eight run or regression acceptance claimed.

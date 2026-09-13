@@ -56,6 +56,12 @@ float SampleVoxelMountainMass( float2 position, float scale, uint seed, out floa
 	gradient = (height * ((1.0 - blend) * ridgeGradient + blend * shelfGradient + (shelf - ridges) * blendGradient) + shape * 0.55 * gy) / scale;
 	// Match the CPU tip score; exclude broad elevated shelves from snow.
 	peakFraction = height * (1.0 - blend) * ridges;
-	erosionStrength = 0.25 + 0.75 * wy;
+	// Match MountainMasses.ErosionCrestFadeWidth and the ridge-only fade.
+	const float erosionCrestFadeWidth = 0.20;
+	float crestA = clamp( aa / erosionCrestFadeWidth, 0.0, 1.0 );
+	float crestB = clamp( ab / erosionCrestFadeWidth, 0.0, 1.0 );
+	crestA = crestA * crestA * (3.0 - 2.0 * crestA);
+	crestB = crestB * crestB * (3.0 - 2.0 * crestB);
+	erosionStrength = (0.25 + 0.75 * wy) * (blend + (1.0 - blend) * crestA * crestB);
 	return mass;
 }

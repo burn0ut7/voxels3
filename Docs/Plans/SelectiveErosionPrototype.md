@@ -345,3 +345,34 @@ Reference: [Rune's preserving peaks, fade approach and straight gullies sections
 The article explains slope-shaped fading around extrema and discontinuity masking;
 it is not evidence that an arbitrary pre-folded input ridge satisfies those
 conditions or that this adaptation has passed engine/performance validation.
+
+### Ridge fade prototype (generator46, 2026-09-13)
+
+The generator45 rounding repaired the base derivative jump but user review found
+remaining crest teeth and an upright lip. This prototype tests whether erosion
+remaining active along sloping ridge axes contributes to that appearance; it is
+not a confirmed diagnosis of every visible artifact.
+
+MountainMasses owns ErosionCrestFadeWidth=0.20 in folded-noise coordinates.
+For each existing ridge field, smoothstep of abs(4*noise-2)/width suppresses
+erosion at its axis and restores it outside the band. Multiply both fades to
+protect intersections, then blend to1 using the existing shelf blend. This is
+independent of total gradient magnitude: along-crest slope no longer defeats
+protection in pure ridge terrain. Mixed ridge/shelf terrain retains a proportional
+shelf contribution. The existing erosionStrength output carries this eligibility;
+CPU and GPU mirror it without new field samples, persistent state or passes.
+
+Rounded base height, its analytic derivative, peaks/snow scores, flank amplitude,
+wavelength, octave count and coast masks remain unchanged. The new multiplier is
+in[0,1], so the current conservative erosion envelope still encloses the field;
+no tighter bounds are claimed. River generation and derived collision/geometry
+continue consuming the canonical exterior. No alternate terrain path is retained.
+Generator46 selects a new save/network identity;45worlds are preserved, not migrated.
+
+Alternatives: further global ridge rounding changes silhouettes; total-slope
+fading alone cannot distinguish transverse and longitudinal slopes; a broad
+altitude cutoff misses lower local crests. This prototype uses existing ridge
+coordinates as the smallest localized experiment. It may soften an entire
+ridge band, including a weak secondary ridge; exact appearance needs review.
+Qualification and before/after data belong to EROSION-CREST-002/v1. Performance
+remains deferred by the user; no acceptance or cost improvement is presumed.

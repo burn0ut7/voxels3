@@ -10,6 +10,9 @@ internal static class MountainMasses
 	// Half-width in folded noise coordinates, not altitude. GPU mirror: voxel_mountain_masses.hlsl.
 	// A C1 crest lets the erosion slope mask fade through direction reversals.
 	private const float CrestWidth = 0.08f;
+	// Fade erosion around either ridge axis, including crests that slope along their length.
+	// Folded-noise distance keeps this band proportional to each landform's scale.
+	private const float ErosionCrestFadeWidth = 0.20f;
 
 	private static float Noise( Vector2 point, uint seed, out Vector2 gradient )
 	{
@@ -65,7 +68,12 @@ internal static class MountainMasses
 		gradient = (height * ((1f - blend) * ridgeGradient + blend * shelfGradient + (shelf - ridges) * blendGradient) + shape * 0.55f * gy) / scale;
 		// Only pointed ridge relief qualifies; broad elevated shelves are not tips.
 		peakFraction = height * (1f - blend) * ridges;
-		erosionStrength = 0.25f + 0.75f * wy;
+		var crestA = Math.Clamp( aa / ErosionCrestFadeWidth, 0f, 1f );
+		var crestB = Math.Clamp( ab / ErosionCrestFadeWidth, 0f, 1f );
+		crestA = crestA * crestA * (3f - 2f * crestA);
+		crestB = crestB * crestB * (3f - 2f * crestB);
+		// Shelves have no folded ridge axis; retain their existing erosion strength.
+		erosionStrength = (0.25f + 0.75f * wy) * (blend + (1f - blend) * crestA * crestB);
 		return mass;
 	}
 
