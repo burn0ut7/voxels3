@@ -1,0 +1,121 @@
+diff --git a/Code/Voxels/VoxelManager.Prediction.cs b/Code/Voxels/VoxelManager.Prediction.cs
+index ae97127..0c79bc2 100644
+--- a/Code/Voxels/VoxelManager.Prediction.cs
++++ b/Code/Voxels/VoxelManager.Prediction.cs
+@@ -9,21 +9,17 @@ public sealed partial class VoxelManager
+ 	private readonly HashSet<GpuMeshRegionKey> _nextPredictionRegions = new();
+ 	private readonly HashSet<GpuTransitionKey> _nextPredictionSeams = new();
+ 	private readonly List<GpuMeshRegionKey> _predictionRegionOrder = new();
+-	private readonly List<GpuTransitionKey> _predictionSeamOrder = new();
+ 	private Vector3 _predictionPreviousPosition;
+ 	private Vector3 _predictionVelocity;
+ 	private bool _predictionHasPosition;
+ 	private float _predictionRefreshElapsed;
+ 	private int _predictionRegionCursor;
+-	private int _predictionSeamCursor;
+-	private bool _predictionServiceSeam;
+ 	private long _predictionSeamReadinessChecks;
+ 	private long _predictionSeamReadinessMisses;
+ 	private long _predictionOutsidePackageMisses;
+ 	private GpuTransitionKey? _predictionLastOutsideSeam;
+ 	private long _predictionPeakSeamBytes;
+ 	private long _predictionScheduled;
+-	private long _predictionSeamsScheduled;
+ 	private long _predictionEntered;
+ 	private long _predictionReadyOnEntry;
+ 	private double _predictionMaximumMilliseconds;
+@@ -134,50 +130,35 @@ public sealed partial class VoxelManager
+ 					order = a.Coordinate.y.CompareTo( b.Coordinate.y );
+ 					return order != 0 ? order : a.Coordinate.x.CompareTo( b.Coordinate.x );
+ 				} );
+-				_predictionSeamOrder.Clear();
+-				_predictionSeamOrder.AddRange( _predictionSeams );
+-				SortTransitionsNearestFirst( _predictionSeamOrder );
+-				// Preserve progress across forecast changes; each cursor wraps its new list.
++				// Preserve progress across forecast changes; the regular cursor wraps its new list.
+ 				_waterRequestSerial++;
+ 				RetireSupersededPlacementWork();
+ 			}
+ 			_predictionPeakSeamBytes = Math.Max( _predictionPeakSeamBytes,
+ 				_gpuMesher.TransitionGeometryBytes( _predictionSeams ) );
+ 		}
+-		var total = _predictionRegionOrder.Count + _predictionSeamOrder.Count;
+-		for ( var inspected = 0; inspected < Math.Min( 48, total ) &&
++		// Retain nearby exact seams, but generate them only for actual publication
++		// dependencies. Optional all-face cache fill must not compete with those jobs.
++		for ( var inspected = 0; inspected < Math.Min( 24, _predictionRegionOrder.Count ) &&
+ 			Stopwatch.GetElapsedTime( started ).TotalMilliseconds < 0.5; inspected++ )
+ 		{
+-			_predictionServiceSeam = !_predictionServiceSeam;
+-			if ( _predictionRegionOrder.Count > 0 && (!_predictionServiceSeam || _predictionSeamOrder.Count == 0) )
++			var key = _predictionRegionOrder[_predictionRegionCursor++ % _predictionRegionOrder.Count];
++			if ( _predictionRegionCursor >= _predictionRegionOrder.Count ) _predictionRegionCursor = 0;
++			var descriptor = CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false );
++			if ( _gpuMesher.Contains( descriptor ) ) continue;
++			var classification = key.Level == 0
++				? VoxelChunk.ClassifyDensityRange( key.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField ).Classification
++				: ClassifyClipboxRegion( key.Level, key.Coordinate );
++			var residency = key.Level == 0 ? GpuMeshResidency.Warm : GpuMeshResidency.Visual;
++			if ( classification != ChunkDensityClassification.PotentiallySurfaceContaining )
++				_gpuMesher.PublishKnownEmpty( descriptor, residency );
++			else _gpuMesher.Schedule( CreateRegularDescriptor( key.Level, key.Coordinate ), _playerFigureEightRouteDistance, residency );
++			if ( key.Level == 0 && _renderPreparedChunks.Add( key.Coordinate ) )
+ 			{
+-				var key = _predictionRegionOrder[_predictionRegionCursor++ % _predictionRegionOrder.Count];
+-				if ( _predictionRegionCursor >= _predictionRegionOrder.Count ) _predictionRegionCursor = 0;
+-				var descriptor = CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false );
+-				if ( _gpuMesher.Contains( descriptor ) ) continue;
+-				var classification = key.Level == 0
+-					? VoxelChunk.ClassifyDensityRange( key.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField ).Classification
+-					: ClassifyClipboxRegion( key.Level, key.Coordinate );
+-				var residency = key.Level == 0 ? GpuMeshResidency.Warm : GpuMeshResidency.Visual;
+-				if ( classification != ChunkDensityClassification.PotentiallySurfaceContaining )
+-					_gpuMesher.PublishKnownEmpty( descriptor, residency );
+-				else _gpuMesher.Schedule( CreateRegularDescriptor( key.Level, key.Coordinate ), _playerFigureEightRouteDistance, residency );
+-				if ( key.Level == 0 && _renderPreparedChunks.Add( key.Coordinate ) )
+-				{
+-					_renderPreparedRevision++;
+-					MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, key.Coordinate ) );
+-				}
+-				_predictionScheduled++;
+-			}
+-			else
+-			{
+-				var key = _predictionSeamOrder[_predictionSeamCursor++ % _predictionSeamOrder.Count];
+-				if ( _predictionSeamCursor >= _predictionSeamOrder.Count ) _predictionSeamCursor = 0;
+-				var descriptor = CreateTransitionDescriptor( key, captureRegion: false );
+-				if ( _gpuMesher.ContainsTransition( descriptor ) ) continue;
+-				_gpuMesher.ScheduleTransition( CreateTransitionDescriptor( key ), _playerFigureEightRouteDistance );
+-				_predictionSeamsScheduled++;
++				_renderPreparedRevision++;
++				MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, key.Coordinate ) );
+ 			}
++			_predictionScheduled++;
+ 		}
+ 		_predictionMaximumMilliseconds = Math.Max( _predictionMaximumMilliseconds,
+ 			Stopwatch.GetElapsedTime( started ).TotalMilliseconds );
+diff --git a/Code/Voxels/VoxelManager.cs b/Code/Voxels/VoxelManager.cs
+index ec56c46..28157ab 100644
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -1225,7 +1225,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 				WaterPreparation = manager._waterCellPreparation?.Status.ToString(),
+ 				WaterCellsReady = manager.SurfaceWaterPrepared,
+ 				Prediction = new { Regions = manager._predictionRegions.Count, Seams = manager._predictionSeams.Count,
+-					Scheduled = manager._predictionScheduled, SeamsScheduled = manager._predictionSeamsScheduled,
++					Scheduled = manager._predictionScheduled, SeamsScheduled = 0,
+ 					Entered = manager._predictionEntered, ReadyOnEntry = manager._predictionReadyOnEntry,
+ 					MaximumMilliseconds = manager._predictionMaximumMilliseconds,
+ 					Packages = manager.CapturePredictionPackages() },
+@@ -2486,11 +2486,9 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		_predictionRegions.Clear();
+ 		_predictionSeams.Clear();
+ 		_predictionRegionOrder.Clear();
+-		_predictionSeamOrder.Clear();
+ 		_predictionHasPosition = false;
+ 		_predictionVelocity = Vector3.Zero;
+ 		_predictionRegionCursor = 0;
+-		_predictionSeamCursor = 0;
+ 		_coverageDiffersFromLayout = false;
+ 		_coverageLocalPlan = false;
+ 		_coveragePending.Clear();

@@ -24903,3 +24903,178 @@ before/after regional and ridge subdirectories contain raw production exports.
 Decision: requested wider-coverage prototype implemented and active; numerical
 survey and selected mesh checks pass, full appearance/performance acceptance
 is not claimed.
+
+## LOCAL-COVERAGE-001 v2 to v3 - approved current-world baseline, 2026-09-14
+
+Substantive change: production source is now generator47, not v2 generator46;
+the loaded saved world is 547ae8f0-bf9e-45e0-8f36-27d0e8d95771/revision1990/
+125pages, slot held-dig-v1, checkpoint21. Reproducing generator46 would require
+replacing unrelated current terrain implementation. User explicitly approved:
+"Do whatever you think is best. The current world does not matter to me" in
+response to the proposed current-world baseline. Preserve old results; v2/v3
+are not a continuous comparison. No acceptance thresholds are relaxed.
+
+### LOCAL-COVERAGE-001/v3 - demand-driven seam-generation experiment
+
+Production entry: native run_performance_test -> VoxelManager.StartPerformanceTest,
+visible interactive basic_example. Existing Play stop remains available to abort.
+Source baseline HEAD703589454543a46457ade7327ca2fee97ad970af plus captured worktree
+manifest ValidationEvidence/FastFlight/source-before.json; baseline candidate
+files preserved as Prediction.before.txt and Manager.before.txt. Engine26.09.08b,
+Ryzen79800X3D,RTX5090. One player,seed1337,generator47,current saved world above.
+Keep authored land/mountain/plains .75/.3/.6,scales77724.09/18681.756/5232.39,
+relief3072,ruggedness.45,sea0;32cells/base16,LOD0..5,near4/cache8/gameplay8,
+visualradius256,viewport1847x959,scene/material/shadow/fog settings unchanged.
+Restart normal Play for each run; normal authored origin and physics settling,
+all actual terrain/seam/collision/water work settled,then30s warmup. Baseline also
+has all speculative packages complete; candidate retains optional existing faces
+without generating all faces. Optional cache completeness is not a required
+visible-dependency gate. Inspect all actual required faces identically.
+Fast speed10000,distance200000,1loop; standard2500/50000/1loop. Clearance393.7008,
+runner-defined moving window,10s stationary,240s route/drain cap. Snapshot moving
+coverage at30s and final readiness/audit; record exact starting coordinates.
+No edits or other source changes during runs. Capture effective values in output;
+any mismatch invalidates comparison rather than silently changing the workload.
+
+Pass: near27 post-stop visibility<=5s, experimental target<=0.1s; drain<=10s;
+maximum preparation<=16.67ms; zero exceptions,unsafe commits,mesh/active-seam/
+coverage errors; final actual queues0,collision4913ready,water ready. Require
+improved arrival/drain with no >5%FPS or >10%p99/allocation/process/GPU-memory
+regression unexplained by documented evidence. Retained seam payload<=192MiB.
+Record framep95/p99/max,allocation bytes,process/GPU average/peak,regular/seam
+work and ready-to-visible delay. Historical failures remain failures. A failed
+candidate is preserved and reverted; a promising one needs standard and repeat
+comparison before acceptance. Post-stop arrival does not prove continuously
+complete near-detail coverage throughout flight. Multiplayer/teleports remain
+outside this experiment. Research: Research/FastFlightStreamingExperiment.md.
+
+LOCAL-COVERAGE-001/v3 preflight NOT RUN: native viewport control takes integer
+logical dimensions under150%display scaling.1847x959 request produced2769x1436;
+1232x640 produced1848x960. No benchmark was started. Preserve this setup failure.
+
+### LOCAL-COVERAGE-001/v4 - realizable fixed viewport, before first run
+
+Use all v3 parameters/criteria unchanged except physical viewport1848x960,
+requested through native1232x640. This resolves the observed logical/physical
+resolution mismatch before any measured run; it is not tuned to obtain a pass.
+User's explicit current-world experiment authorization delegates these setup
+choices. No v3 performance baseline exists. All comparisons use v4 only.
+Editor process sbox-dev37280; no Wardogs process found at preflight. Other
+process contention is not comprehensively measured. Startup restored saved
+world547ae8f0-bf9e-45e0-8f36-27d0e8d95771/revision1990. Preflight actual queues0,
+collision4913ready,waterready,packages320/320. Start position
+(0.0323614106,-0.0232577175,257.143341). Baseline warmup begins after resolution
+and readiness confirmation. New source changes remain unapplied until baseline.
+
+LOCAL-COVERAGE-001/v4-fast-before attempt1 invalid:09:48:45 trigger,
+09:51:29 performance.result.failed because monitoring Get-Content -Tail reads
+held results-v1.jsonl open. These reads also remained running unexpectedly;
+parent stopped its session and three identified child PowerShell readers.
+Do not accept a complete result or performance comparison. Arrival report
+5d82ea8f45664053ac0d875e70dde15c observed near~1.5s,full31.6s; preserve only as
+partial evidence. Change monitoring to console completion notifications and
+short FileStream reads with FileShare.ReadWrite after saving. This changes no
+in-world workload. Repeat baseline unchanged before applying the candidate.
+
+Baseline repeat triggered09:55:01,unchanged source/world/settings,48.86s warmup
+from readiness confirmation. Supplemental moving snapshot was captured late at
+77.53s rather than intended30s; its playerLOD5/localWorkCompletetrue observation
+is a timestamped diagnostic, not a matched30s comparison. Preserve missing30s
+coverage. Primary runner-owned timing windows are unchanged.
+
+LOCAL-COVERAGE-001/v4 before repeat42f1fcd93fe34c8aab3ceb1419c66d1b saved09:57:27.
+Source manifest unchanged;1848x960,gen47,all fixed route values verified in result.
+Moving399.74646FPS,p95/p99/max6.5088/9.8376/64.0831ms,GPUavg1.0446368ms.
+Allocated7975259056bytes,processavg/peak5936173626/6287896576,GPUavg/peak
+1960634101/2007131356bytes. Nearprepared/presented1.4971176s;fullarrival13.5078554s,
+runnerdrain14004.036ms FAIL10s;maxprep10.6879ms PASS.0exceptions/unsafecommits,
+allregular/transitionqueues0,exactfine/coarse/lateral/tablemismatches0.
+Known baseline fails experimental0.1sarrival and10sdrain; preserve these failures.
+Raw result,arrival and final diagnostic records are in ValidationEvidence/FastFlight.
+Candidate demand-only seam generation will now replace the preserved two files;
+no other production source changes. Reuse identical v4 workload and saved world.
+
+Candidate fast triggered10:00:08 with48.86s readiness warmup,matching baseline
+warmup and unchanged production workload. Optional cache packages0complete,
+speculativeSeamsScheduled0;actualqueues0,waterready,collision4913atstart.
+Moving diagnostics captured30s and77.53s. At77.53s playerCoverageLod=-1;
+this indicates no containing active regular region, not by itself proof of a
+visible surface hole (the player is above the surface). A diagnostic1000x519
+camera capture at~91.8s showed terrain below and distant coarse shapes, without
+an obvious opening in that view. This extra capture is a measurement asymmetry;
+record it rather than attributing any isolated frame maximum to the candidate.
+
+LOCAL-COVERAGE-001/v4 candidate4ace4ecbbb7e493097573609936dfc33 saved10:02:31.
+Source manifest unchanged and fixed generator/world/route/viewport confirmed.
+Nearprepared/presented1.0430581s(-30.33%),drain11179.409ms(-20.17%,stillFAIL10s).
+Moving307.1763FPS(-23.16%),p95/p99/max7.8559/11.6718/599.1491ms;
+p99+18.64% FAIL. Allocated6664801320bytes(-16.43% total),perframe177913.06
+(+8.74%);processavg/peak5407666988/5499523072,GPUavg/peak1945756900/2008238300.
+Gen2collections1->6,GCpause1460.207->2702.802ms,worstGC21.657->596.244ms.
+Do not attribute this collection history or the entire pacing difference to one
+removed scheduler branch without repeated controls. It is an unexplained material
+regression, not an acceptable tradeoff. Maxprep13.4613ms passes16.67ms.
+0exceptions/unsafecommits/transitionidentitymismatches;actualqueues0.
+Reject candidate for performance acceptance and restore both exact before files.
+The matching end-view retained terrain and edited tunnel; moving91.8s capture
+showed terrain but does not establish continuous correct coverage. Supplemental
+capture timing asymmetries are preserved above. No standard run of this rejected
+candidate is needed. Evidence candidate-fast*.json and archived candidate source.
+
+LOCAL-COVERAGE-001/v4 experiment2 predeclared: restore baseline manager/prediction
+exactly,then change only VoxelManager.Coverage.cs to admit the current immediate
+27LOD0requests when the player crosses a base-chunk boundary,independent of the
+older staged fine box. Bound requests by existing staged outer roots; retain
+existing exact balance,seams,field identity,water and publication. Source/design
+and ownership in Research/FastFlightStreamingExperiment.md. Same v4fast route,
+source-baseline comparison,48.86s minimum warmup and unchanged criteria. Capture
+moving diagnostics30s/77.53s and detailed finalcoverage/audit. This scheduling
+prototype cannot claim continuous finecoverage from post-stop arrival alone.
+Reject and restore if correctness or unexplained material pacing regression.
+
+Experiment2 triggered10:08:50 after matched48.86s readiness warmup. At30s,
+detailed moving coverage audit reports0overlap/0unbalanced/1missingActiveSeam/
+0extra. This FAILS the zero-error criterion. Baseline did not capture a detailed
+moving30s audit,so this does not prove the defect was introduced here. Preserve
+moving-detail-fast-30s.json. CurrentplayerLOD4;pendingpatch392leaves,
+420dependencies,110missingregular/24water/80seams. Keep the bounded run for final
+measurements and then restore; no performance acceptance regardless of timing.
+Detailed moving audit is heavier than baseline's diagnostic,so isolate its
+possible frame-tail impact rather than claim exact causal speed differences.
+
+Experiment2 second detailed moving snapshot requested near77.53s arrived at
+87.97s (saved with actual timestamp in moving-detail-fast-88s.json). It reports
+0overlap/0unbalanced/2missingActiveSeams/0extra,playerCoverageLod=-1. Missing
+fixed-time moving comparisons remain explicit; these are diagnostic failures,
+not a demonstrated rendering hole in a screenshot or a measured regression
+against a detailed moving baseline. No runtime source edits during this run.
+
+LOCAL-COVERAGE-001/v4 experiment2 ded92c926721479da0c3f58351dcf9d0 saved10:11:36.
+Source unchanged during run;world/gen/route/viewport match v4. Nearprepared/
+presented1.3747459s,fullarrival34.4720127s,drain34778.83ms FAIL10s. Moving
+226.93771FPS,p95/p99/max11.9515/18.3779/1012.7968ms,GPUavg1.2031823ms.
+Allocated5320782072bytes,total lower but perframe192294.25 higher;GCpause
+2272.676ms,max992.116ms,Gen2collections3. Processavg/peak4499584126/4886532096,
+GPUavg/peak1963267334/1999669468. Maxprep14.8629ms passes16.67ms. Final
+actualqueues0,0exceptions/unsafecommits/transitionidentitymismatches;88/88mesh
+and drawaudit passed,stale0/failures0. Final detailedcoverage and readiness saved.
+Final tunnel view matched the baseline appearance. Movingmissingseam failures
+remain failures despite final repair. Localtopologyretries1930 versus8baseline,
+resumedrequests2000 versus69,localupdateCPU25534.538 versus4256.056ms across
+session scopes (not directly equal to the moving window). This supports further
+study of planning/retirement churn; it does not isolate one function's cost.
+Reject experiment2 and restore Coverage.before.txt. Full original runtime source
+manifest matches after restoration. No runtime optimization is accepted or kept.
+
+### Fast-flight experiment outcome, 2026-09-14
+
+Preserved one invalid control attempt,one complete control and two rejected
+candidates. Neither candidate qualifies for shipping; standard/repeat acceptance
+runs are therefore not run. Long-lived process/GC history and unequal diagnostic
+capture times limit causal performance claims. Both candidates passed settled
+88-mesh checks; experiment2 failed moving seam coverage. Retain those distinct
+outcomes. All active source changes from this task are reverted; isolated patches,
+source identities,raw captures and analysis remain under ValidationEvidence/FastFlight.
+Research/FastFlightStreamingExperiment.md records primary sources,transfer limits,
+prototype ownership,and next research question. Existing unrelated worktree changes
+are preserved. Only documentation/evidence is eligible for this task's commit.

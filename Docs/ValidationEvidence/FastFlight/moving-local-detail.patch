@@ -1,0 +1,109 @@
+diff --git a/Code/Voxels/VoxelManager.Coverage.cs b/Code/Voxels/VoxelManager.Coverage.cs
+index 7956e85..d4ffa96 100644
+--- a/Code/Voxels/VoxelManager.Coverage.cs
++++ b/Code/Voxels/VoxelManager.Coverage.cs
+@@ -30,6 +30,8 @@ public sealed partial class VoxelManager
+ 	private bool _coverageLocalWorkComplete;
+ 	private bool _coverageLocalPlan;
+ 	private bool _coverageDiffersFromLayout;
++	private bool _coverageNearRequestsInitialized;
++	private Vector3Int _coverageNearRequestCenter;
+ 	private readonly List<GpuMeshRegionKey> _coverageRegularBuffer = new();
+ 	private readonly List<GpuTransitionKey> _coverageSeamBuffer = new();
+ 
+@@ -87,21 +89,22 @@ public sealed partial class VoxelManager
+ 		key.Level == _partialOuterLevel && _partialOuterChunks.Contains( key.Coordinate );
+ 
+ 	private bool IsLocalCoverageRequired( GpuMeshRegionKey key ) =>
+-		_coverageDesired.Contains( key ) || IsExteriorCoverageRequired( key );
++		_coverageDesired.Contains( key ) || IsExteriorCoverageRequired( key ) || IsImmediateCoverageRequired( key );
+ 
+ 	private bool IsImmediateCoverageRequired( GpuMeshRegionKey key )
+ 	{
+-		if ( key.Level != 0 ) return false;
++		if ( key.Level != 0 || _stagedVisualConfiguration.MinimumVisualLod != 0 ||
++			!_coverageRoots.Contains( CoverageAncestor( key, _stagedVisualConfiguration.MaximumVisualLod ) ) ) return false;
+ 		var center = WorldToChunkCoordinate( ActiveStreamingTarget.WorldPosition );
+ 		return Math.Abs( key.Coordinate.x - center.x ) <= 1 &&
+ 			Math.Abs( key.Coordinate.y - center.y ) <= 1 && Math.Abs( key.Coordinate.z - center.z ) <= 1;
+ 	}
+ 
+-	private void QueueCoverageCandidate( GpuMeshRegionKey key, bool promoteExterior = false )
++	private void QueueCoverageCandidate( GpuMeshRegionKey key, bool promoteExterior = false, bool promoteImmediate = false )
+ 	{
+ 		var added = _coverageQueued.Add( key );
+-		if ( !added && !promoteExterior ) return;
+-		if ( !added ) _coverageExteriorPromotions++;
++		if ( !added && !promoteExterior && !promoteImmediate ) return;
++		if ( !added && promoteExterior ) _coverageExteriorPromotions++;
+ 		_coverageLocalWorkComplete = false;
+ 		var scale = (float)(1 << key.Level);
+ 		var position = ActiveStreamingTarget.WorldPosition / (RequiredCellsPerAxis * RequiredBaseCellSize);
+@@ -119,6 +122,7 @@ public sealed partial class VoxelManager
+ 
+ 	private void BeginLocalCoveragePlan()
+ 	{
++		_coverageNearRequestsInitialized = false;
+ 		_coveragePending.Clear();
+ 		_coverageRetireQueue.Clear();
+ 		_coverageRetireSeams.Clear();
+@@ -183,10 +187,27 @@ public sealed partial class VoxelManager
+ 
+ 	private void AdvanceLocalCoverage()
+ 	{
+-		if ( _coverageLocalWorkComplete || !_clipboxPlacementPending ) return;
++		if ( !_clipboxPlacementPending ) return;
+ 		var started = Stopwatch.GetTimestamp();
+ 		try
+ 		{
++			// The player can leave the staged fine box before the larger layout drains.
++			// Feed current detail into the same planner without restarting its live patch.
++			var center = WorldToChunkCoordinate( ActiveStreamingTarget.WorldPosition );
++			if ( !_coverageNearRequestsInitialized || center != _coverageNearRequestCenter )
++			{
++				_coverageNearRequestsInitialized = true;
++				_coverageNearRequestCenter = center;
++				for ( var z = -1; z <= 1; z++ )
++				for ( var y = -1; y <= 1; y++ )
++				for ( var x = -1; x <= 1; x++ )
++				{
++					var key = new GpuMeshRegionKey( 0, center + new Vector3Int( x, y, z ) );
++					if ( IsImmediateCoverageRequired( key ) && !_gpuMesher.IsRenderActive( key ) )
++						QueueCoverageCandidate( key, promoteImmediate: true );
++				}
++			}
++			if ( _coverageLocalWorkComplete ) return;
+ 			// A refinement patch owns topology exclusively until atomic publication.
+ 			if ( _coveragePending.Count == 1 && _coveragePending[0].Split )
+ 			{
+@@ -203,7 +224,7 @@ public sealed partial class VoxelManager
+ 			// Otherwise continuous travel retains every old visible subtree.
+ 			for ( var count = 0; count < 16 && _coverageRetireQueue.TryDequeue( out var retiring ); count++ )
+ 			{
+-				if ( !IsExteriorCoverageRequired( retiring ) && !_coverageDesired.Contains( retiring ) )
++				if ( !IsLocalCoverageRequired( retiring ) )
+ 					RetireLocalCoverageRegion( retiring );
+ 				if ( Stopwatch.GetElapsedTime( started ).TotalMilliseconds >= LocalCoverageBudgetMilliseconds ) return;
+ 			}
+@@ -333,10 +354,9 @@ public sealed partial class VoxelManager
+ 		}
+ 		if ( FindCoverageAncestor( requested, out var current ) )
+ 		{
+-			if ( _coverageDesired.Contains( current ) ) return;
+ 			// Covered background regions retain their mesh until final publication.
+-			// Only immediate player detail needs a speculative refinement patch.
+-			if ( _coverageSplitTargets.Contains( current ) && IsImmediateCoverageRequired( requested ) )
++			// Current player detail can refine a coarse leaf of the older staged layout.
++			if ( current.Level > requested.Level && IsImmediateCoverageRequired( requested ) )
+ 			{
+ 				TryAdmitLocalReplacement( current, requested, split: true );
+ 			}
+@@ -421,7 +441,7 @@ public sealed partial class VoxelManager
+ 		for ( var x = -1; x <= 1; x++ )
+ 		{
+ 			var near = new GpuMeshRegionKey( 0, center + new Vector3Int( x, y, z ) );
+-			if ( _coverageDesired.Contains( near ) ) operation.Targets.Enqueue( near );
++			if ( IsImmediateCoverageRequired( near ) ) operation.Targets.Enqueue( near );
+ 		}
+ 		// Select a desired leaf, never a temporal intermediate parent.
+ 		var focus = requested.Level > 0 && !FindCoverageAncestor( requested, out _ ) ? operation.Parent : requested;

@@ -96,9 +96,14 @@ sources establish rendering mechanisms, not an accepted occlusion implementation
 
 ### Volumetric Systems
 
+The [fast-flight experiment](Research/FastFlightStreamingExperiment.md) connects
+these references to the current generator-47 seam-admission comparison.
+
 | Reference | What it is | Route here when | Transfer limits for Voxels3 |
 | --- | --- | --- | --- |
 | [Zylann/godot_voxel](https://github.com/Zylann/godot_voxel) | Maintained Godot module for blocky and smooth voxel terrain, paging, generators, editing, LOD, and Transvoxel transitions. | Investigating mature chunk ownership, LOD, transitions, streaming, editing, or engine integration. | Primarily CPU-oriented and shaped by Godot APIs. Study responsibilities and failure modes; do not treat its CPU work division as the GPU-first Voxels3 design. |
+| [Veloren chunk generator](https://veloren.gitlab.io/veloren/src/veloren_server/chunk_generator.rs.html) | Game server implementation with pending-key deduplication, cancellation flags and discarded results for removed requests. | Investigating useful-work lifetime and cancellation during traversal. | Does not establish smooth GPU LOD-seam handling or velocity-based priority. Source also records a multi-client cancellation-notification limitation; not a performance ranking. |
+| [Voxel Plugin 1.2 scheduling priorities](https://docs.voxelplugin.com/1.2/technical-notes/performance-and-profiling) | Categories followed by viewer-distance priorities, with configurable priority refresh. | Comparing required publication work with background cache admission and reprioritization cost. | Historical Unreal thread-pool implementation; timings, engine APIs and concurrency limits do not transfer to s&box. |
 | [bw2012/UnrealSandboxTerrain](https://github.com/bw2012/UnrealSandboxTerrain) | Active Unreal smooth-terrain plugin with procedural landscapes and caves, runtime edits, LOD, materials, and multiplayer concerns. | Investigating game-oriented terrain ownership, streaming, editing, or integration at production scale. | Unreal-specific lifecycle and rendering assumptions do not directly transfer; public documentation is limited. |
 | [bw2012/UE4VoxelTerrain](https://github.com/bw2012/UE4VoxelTerrain) | Discontinued but inspectable UE4 smooth-terrain implementation using per-chunk LOD, Transvoxel concepts, and substantial CUDA work. | Studying CPU/GPU separation, GPU terrain generation, transition implementation, caves, foliage, or edits. | Legacy UE4 and CUDA constraints differ from current s&box compute and resource ownership. Treat it as a design case study, not a compatibility target. |
 | [bw2012/UE5VoxelTerrainDemo](https://github.com/bw2012/UE5VoxelTerrainDemo) | UE5 example continuing concepts from the UnrealSandbox terrain family. | Checking how older terrain ideas were adapted to a newer Unreal environment. | A demo rather than a deeply documented or complete production architecture. |
