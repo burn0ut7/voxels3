@@ -24841,3 +24841,65 @@ visual pass. No player/streaming-origin teleport was used to simulate acceptance
 Returned to normal player camera for manual review. Prototype remains unaccepted
 visually; exact close-up and crash qualification remain open. Performance stays
 deferred by user instruction; no figure-eight run or regression acceptance claimed.
+
+## EROSION-COVERAGE-001/v1 — broader hills and slopes (2026-09-14)
+
+Predeclared before runs: active basic_example recipe, seed1337, land .75, mountains .3, plains .6, scales77724.09/18681.756/5232.39, relief3072, ruggedness .45, sea0. Export production surveys before generator46 and after47: regional grid minimum(-131072,-131072),129x129,spacing2048; ridge grid minimum(-10240,-79872),129x129,spacing32. No edits, one local player; record actual recipe and engine with exports. Criteria: all samples finite, exact repeated heights, zero sampled bound escapes; newly changed natural heights among hills>0.25 and mountains<0.5, and mountains>0.5. Report counts, maximum slopes and changes without treating slopes alone as a visual pass. Rebuild both dependent geometry shaders and restart the visible editor; run production mesh audit8. Closeup crest/valley appearance and multiplayer remain unqualified without direct comparable inspection. Figure-eight/performance is deferred per the user's apply-now instruction; expanded sampling coverage may cost more. Existing gen46 streaming timings are not a comparable gen47 baseline.
+
+#### EROSION-COVERAGE-001/v1 results
+
+Source: HEAD96d94f527678aba306b2cc8275f797d7739fa947 plus this generation47
+change and preserved unrelated streaming/shadow/water work; engine26.09.08b.
+Both exported recipes exactly match the predeclared parameters. Old world
+4834d9ad-73fb-402a-92b4-5e3f8a17e55a saved revision309/checkpoint56 before
+replacement; new world547ae8f0-bf9e-45e0-8f36-27d0e8d95771 has revision0.
+Generation identity changes separate saves rather than migrating old edits.
+
+Production regional survey:16641 samples per version; finite/repeat/bound
+failures0 before and after. Natural-height change threshold0.001 world units
+exceeds roundoff:8122 changed,1963 with hills>0.25 and mountains<0.5,3919 with
+mountains>0.5. Maximum absolute change127.7068; maximum sampled final-surface
+slope2.559651 ->2.7957766. Ridge survey:16641 samples per version, all three
+failure counts0;16634 changed, maximum absolute change87.6785; maximum slope
+2.0983539 ->2.1362646. Slope increases are reported, not accepted as a crest
+quality metric. River segment totals27936 ->27872 reflect drainage consuming
+the changed natural surface; they are not river-regression qualification.
+
+First post-start regional export was rejected because Play was not ready;
+the identical retry succeeded. First mesh audit was rejected with no resident
+non-empty meshes. Retry with the same audit8 command completed72/72,
+failures0, stale0, invalid indices0, nonfinite/out-of-bounds positions0,
+identity mismatches0, oversized/degenerate triangles0, draw argument failures0.
+Audit target(0.189,0.2403,262.951),146 readbacks,2400064 bytes. This verifies
+the selected resident meshes only, not remote crest geometry or CPU/GPU
+pointwise density parity.
+
+Persistent shader's initial recompile failed with IOException (user-mapped
+compiled file open); transition compile succeeded. Restart released the file;
+persistent and transition recompiles then both succeeded with empty diagnostics.
+Second visible restart loaded generation47 with compilation success/zero errors,
+Play running, and no fresh console errors or matched shader/parser/pipeline
+errors. Initial shutdown01:07 logged the known prefab destruction assertion and
+EditorMainWindow NullReferenceException, then Source2Shutdown. Sentry advanced
+from2026-09-14T04:23:48.171704Z to2026-09-14T05:07:15.416540Z. Second shutdown
+01:08 logged the same managed shutdown errors, but the marker remained unchanged
+through second startup and checks. Overall restart qualification remains PARTIAL;
+a successful second startup does not erase the first shutdown failure.
+
+Inspected hill view at(500,-1000,1500), angles(25,33,0),FOV60,1280x720:
+rolling terrain renders, but subtle erosion and local extrema are not conclusively
+qualified from this single overview. Inspected the existing ridge viewpoint
+(-7106.59424,-76174.9375,4779.18848), angles(38.6564941,-171.220551,0),FOV60:
+visible coarse faceting with the player still near origin. This is NOT a
+comparable LOD0 crest/valley pass. Camera returned to normal player control.
+Visual closeup qualification, multiplayer and canonical figure-eight performance
+remain pending; performance was explicitly deferred by the user.
+
+Evidence: [survey comparison](ValidationEvidence/ErosionCoverage/comparison.json),
+[environment](ValidationEvidence/ErosionCoverage/environment.json),
+[hill view](ValidationEvidence/ErosionCoverage/hill-after.png),
+[coarse ridge view](ValidationEvidence/ErosionCoverage/ridge-coarse-after.png);
+before/after regional and ridge subdirectories contain raw production exports.
+Decision: requested wider-coverage prototype implemented and active; numerical
+survey and selected mesh checks pass, full appearance/performance acceptance
+is not claimed.

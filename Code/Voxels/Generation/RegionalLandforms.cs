@@ -49,6 +49,7 @@ internal static class RegionalLandforms
 
 	// Independent widths keep hill slopes broader than the former detail mounds.
 	internal const float MountainWidthScale = 1.30f;
+	private const float MinimumMountainShapeWeight = 0.5f;
 	private const float HillWidthScale = 0.75f;
 	private const float HillPatchScale = 5f;
 	internal const float MinimumHeightFraction = -0.70f - TerrainErosion.MaximumOffsetFraction;
@@ -66,7 +67,7 @@ internal static class RegionalLandforms
 	{
 		var sample = SampleBase( position, settings, out var gradient );
 		var amplitude = TerrainErosion.MountainStrength *
-			Smooth( (sample.Mountains - TerrainErosion.MinimumMountainWeight) / (1f - TerrainErosion.MinimumMountainWeight) ) * sample.ErosionExposure *
+			sample.ErosionExposure *
 			Smooth( (sample.Land - 0.65f) / 0.35f ) * Smooth( (sample.Height - settings.SeaLevel - 64f) / 256f ) * settings.ReliefHeight;
 		if ( amplitude <= 0f )
 		{
@@ -80,43 +81,68 @@ internal static class RegionalLandforms
 	private static Sample SampleBase( Vector3 position, ProceduralTerrainSettings settings, out Vector2 gradient )
 	{
 		var seed = unchecked((uint)settings.WorldSeed);
-		var n = Noise( position, settings.ContinentalScale, seed ^ ContinentalSalt );
-		var m = Noise( position, settings.MountainRegionScale, seed ^ MountainSalt );
+		var n = Noise( position, settings.ContinentalScale, seed ^ ContinentalSalt, out var dn );
+		var m = Noise( position, settings.MountainRegionScale, seed ^ MountainSalt, out var dm );
 		var land = Eligibility( n, settings.LandAmount );
-		var mountainPreference = Eligibility( m, settings.MountainAmount * (2f - settings.MountainAmount) );
+		var dl = dn * EligibilityDerivative( n, settings.LandAmount );
+		var amount = settings.MountainAmount * (2f - settings.MountainAmount);
+		var mountainPreference = Eligibility( m, amount );
+		var dmp = dm * EligibilityDerivative( m, amount );
 		var mountains = mountainPreference * mountainPreference * mountainPreference * Smooth( (land - 0.5f) * 2f );
-		var p = Noise( position, settings.LocalLandformScale * 2f, seed ^ PlainsSalt );
-		var q = Noise( position, settings.LocalLandformScale, seed ^ ShapeSalt );
-		var hillShape = Noise( position, settings.LocalLandformScale * HillWidthScale, seed ^ HillShapeSalt );
-		var hillPatch = Noise( position, settings.LocalLandformScale * HillPatchScale, seed ^ HillPatchSalt );
+		var dmountains = dmp * (3f * mountainPreference * mountainPreference * Smooth( (land - 0.5f) * 2f )) +
+			dl * (mountainPreference * mountainPreference * mountainPreference * SmoothDerivative( (land - 0.5f) * 2f ) * 2f);
+		var p = Noise( position, settings.LocalLandformScale * 2f, seed ^ PlainsSalt, out var dp );
+		var q = Noise( position, settings.LocalLandformScale, seed ^ ShapeSalt, out var dq );
+		var hillShape = Noise( position, settings.LocalLandformScale * HillWidthScale, seed ^ HillShapeSalt, out var dhs );
+		var hillPatch = Noise( position, settings.LocalLandformScale * HillPatchScale, seed ^ HillPatchSalt, out var dhp );
 		var hillPreference = (1f - Eligibility( p, settings.PlainsAmount )) * Smooth( (hillPatch - 0.25f) * 2.5f );
+		var dh = dp * (-EligibilityDerivative( p, settings.PlainsAmount ) * Smooth( (hillPatch - 0.25f) * 2.5f )) +
+			dhp * ((1f - Eligibility( p, settings.PlainsAmount )) * SmoothDerivative( (hillPatch - 0.25f) * 2.5f ) * 2.5f);
 		var plains = (1f - mountains) * (1f - hillPreference * hillPreference);
+		var dplains = -dmountains * (1f - hillPreference * hillPreference) - dh * ((1f - mountains) * 2f * hillPreference);
 		var hills = 1f - mountains - plains;
-		// Gentle transition terrain; folded value-noise contours produced straight ridges.
+		var dhills = -dmountains - dplains;
+		var hillRelief = 0.7f * hillShape + 0.3f * q;
 		var mountainHeight = 0.10f + 0.28f * q * q;
-		gradient = default;
-		var exposure = 0f;
+		var dmh = dq * (0.56f * q);
+		// Hills and transitional mountains receive a smaller amplitude. Relative
+		// shape masks fade the upper/lower relief range independently of altitude.
+		var hillExposure = Smooth( (hillRelief - 0.10f) / 0.30f ) * Smooth( (1f - hillRelief) / 0.20f );
+		var mountainExposure = 0.35f * Smooth( (q - 0.10f) / 0.30f ) * Smooth( (1f - q) / 0.20f );
 		var peakFraction = 0f;
-		if ( mountains > TerrainErosion.MinimumMountainWeight )
+		if ( mountains > MinimumMountainShapeWeight )
 		{
-			var shapeBlend = Smooth( (mountains - TerrainErosion.MinimumMountainWeight) / (1f - TerrainErosion.MinimumMountainWeight) );
+			var shapeBlend = Smooth( (mountains - MinimumMountainShapeWeight) / (1f - MinimumMountainShapeWeight) );
+			var dsb = dmountains * (SmoothDerivative( (mountains - MinimumMountainShapeWeight) / (1f - MinimumMountainShapeWeight) ) / (1f - MinimumMountainShapeWeight));
 			var mass = MountainMasses.Sample( position, settings.LocalLandformScale * MountainWidthScale, seed, out var massGradient, out peakFraction, out var erosionStrength );
 			var broadMountainHeight = 0.10f + 0.83f * mass;
-			exposure = Smooth( (mass - 0.10f) / 0.40f ) * Smooth( (1f - mass) / 0.1f ) * erosionStrength;
-			gradient = massGradient * (0.83f * mountains * land * settings.ReliefHeight);
+			var massExposure = Smooth( (mass - 0.02f) / 0.18f ) * Smooth( (1f - mass) / 0.1f ) * erosionStrength;
+			mountainExposure = (1f - shapeBlend) * mountainExposure + shapeBlend * massExposure;
+			dmh = dmh * (1f - shapeBlend) + massGradient * (0.83f * shapeBlend) + dsb * (broadMountainHeight - mountainHeight);
 			mountainHeight = (1f - shapeBlend) * mountainHeight + shapeBlend * broadMountainHeight;
 		}
-		var landHeight = plains * (0.035f + 0.015f * q) +
-			hills * (0.035f + 0.015f * q + 0.28f * (0.7f * hillShape + 0.3f * q)) + mountains * mountainHeight;
-		// Regional support spans the gaps between individual mountain groups.
-		// Its maximum .68 fraction is included in the global surface bound.
+		var exposure = TerrainErosion.HillStrengthRatio * hills * hillExposure + mountains * mountainExposure;
+		var plainHeight = 0.035f + 0.015f * q;
+		var hillHeight = plainHeight + 0.28f * hillRelief;
+		var landHeight = plains * plainHeight + hills * hillHeight + mountains * mountainHeight;
+		var dlh = dplains * plainHeight + dq * (plains * 0.015f) +
+			dhills * hillHeight + (dq * 0.099f + dhs * 0.196f) * hills +
+			dmountains * mountainHeight + dmh * mountains;
 		var uplandWeight = Smooth( (mountainPreference - 0.1f) / 0.9f ) * Smooth( (land - 0.65f) / 0.35f );
 		if ( uplandWeight > 0f )
 		{
-			var elevation = Noise( position, settings.MountainRegionScale * 1.35f, seed ^ UplandSalt );
-			landHeight += uplandWeight * (0.12f + 0.56f * Smooth( (elevation - 0.15f) / 0.7f )) * (0.7f + 0.3f * p);
+			var elevation = Noise( position, settings.MountainRegionScale * 1.35f, seed ^ UplandSalt, out var de );
+			var duw = dmp * (SmoothDerivative( (mountainPreference - 0.1f) / 0.9f ) / 0.9f * Smooth( (land - 0.65f) / 0.35f )) +
+				dl * (Smooth( (mountainPreference - 0.1f) / 0.9f ) * SmoothDerivative( (land - 0.65f) / 0.35f ) / 0.35f);
+			var support = 0.12f + 0.56f * Smooth( (elevation - 0.15f) / 0.7f );
+			dlh += duw * (support * (0.7f + 0.3f * p)) +
+				de * (uplandWeight * 0.56f * SmoothDerivative( (elevation - 0.15f) / 0.7f ) / 0.7f * (0.7f + 0.3f * p)) +
+				dp * (uplandWeight * support * 0.3f);
+			landHeight += uplandWeight * support * (0.7f + 0.3f * p);
 		}
 		var oceanHeight = -0.06f - 0.64f * (1f - n) * (1f - n);
+		// Differentiate the complete pre-erosion height, including regional blends.
+		gradient = (dn * ((1f - land) * 1.28f * (1f - n)) + dlh * land + dl * (landHeight - oceanHeight)) * settings.ReliefHeight;
 		return new Sample( ((1f - land) * oceanHeight + land * landHeight) * settings.ReliefHeight,
 			land, mountains, plains, hills, exposure, peakFraction );
 	}
@@ -140,7 +166,7 @@ internal static class RegionalLandforms
 		var seed = unchecked((uint)settings.WorldSeed);
 		Interval Field( float scale, uint salt )
 		{
-			var value = Noise( center, scale, seed ^ salt );
+			var value = Noise( center, scale, seed ^ salt, out _ );
 			var variation = radius / scale + 0.0001d;
 			return new Interval( Math.Max( 0d, value - variation ), Math.Min( 1d, value + variation ) );
 		}
@@ -158,15 +184,14 @@ internal static class RegionalLandforms
 		var plains = (1d - mountains) * preference;
 		var hills = (1d - mountains) * (1d - preference);
 		var mountainHeight = 0.10d + 0.28d * Square( q );
-		var erosionExposure = new Interval( 0d, 0d );
-		if ( mountains.Maximum > TerrainErosion.MinimumMountainWeight )
+		var erosionExposure = TerrainErosion.HillStrengthRatio * hills + mountains;
+		if ( mountains.Maximum > MinimumMountainShapeWeight )
 		{
 			var massBounds = MountainMasses.Bound( bounds, settings.LocalLandformScale * MountainWidthScale, seed );
 			var mass = new Interval( massBounds.Minimum, massBounds.Maximum );
-			var shapeBlend = Smooth( (mountains - TerrainErosion.MinimumMountainWeight) * (1d / (1d - TerrainErosion.MinimumMountainWeight)) );
+			var shapeBlend = Smooth( (mountains - MinimumMountainShapeWeight) * (1d / (1d - MinimumMountainShapeWeight)) );
 			var broadMountainHeight = 0.10d + 0.83d * mass;
 			mountainHeight = (1d - shapeBlend) * mountainHeight + shapeBlend * broadMountainHeight;
-			erosionExposure = Smooth( (mass - 0.10d) * 2.5d ) * Smooth( (1d - mass) * 10d );
 		}
 		var landHeight = plains * (0.035d + 0.015d * q) +
 			hills * (0.035d + 0.015d * q + 0.28d * (0.7d * hillShape + 0.3d * q)) + mountains * mountainHeight;
@@ -181,7 +206,6 @@ internal static class RegionalLandforms
 		// Each faded octave stays in [-1,1]. Bound its amplitude before any direction sampling.
 		var erosionWeight = TerrainErosion.MountainStrength *
 			erosionExposure *
-			Smooth( (mountains - TerrainErosion.MinimumMountainWeight) * (1d / (1d - TerrainErosion.MinimumMountainWeight)) ) *
 			Smooth( (land - 0.65d) * (1d / 0.35d) ) *
 			Smooth( (height - settings.SeaLevel - 64d) * (1d / 256d) );
 		var erosion = Math.Clamp( erosionWeight.Maximum, 0d, TerrainErosion.MountainStrength ) *
@@ -193,7 +217,7 @@ internal static class RegionalLandforms
 			(float)Math.Min( 1d, mountains.Maximum + 0.0001d ) );
 	}
 
-	private static float Noise( Vector3 position, float scale, uint seed )
+	private static float Noise( Vector3 position, float scale, uint seed, out Vector2 gradient )
 	{
 		var x = position.x / scale;
 		var y = position.y / scale;
@@ -205,9 +229,18 @@ internal static class RegionalLandforms
 		var b = (TerrainNoise.Hash( ix + 1, iy, seed ) & 65535u) / 65535f;
 		var c = (TerrainNoise.Hash( ix, iy + 1, seed ) & 65535u) / 65535f;
 		var d = (TerrainNoise.Hash( ix + 1, iy + 1, seed ) & 65535u) / 65535f;
+		gradient = new Vector2( ((b - a) * (1f - v) + (d - c) * v) * SmoothDerivative( x - ix ),
+			((c - a) * (1f - u) + (d - b) * u) * SmoothDerivative( y - iy ) ) / scale;
 		return Math.Clamp( (a * (1f - u) + b * u) * (1f - v) + (c * (1f - u) + d * u) * v, 0f, 1f );
 	}
 
+	private static float EligibilityDerivative( float value, float amount ) =>
+		amount <= 0f || amount >= 1f ? 0f : SmoothDerivative( (value - (1.2f - 1.4f * amount)) / 0.2f ) / 0.2f;
+	private static float SmoothDerivative( float value )
+	{
+		var t = Math.Clamp( value, 0f, 1f );
+		return 6f * t * (1f - t);
+	}
 	private static float Eligibility( float value, float amount ) =>
 		amount <= 0f ? 0f : amount >= 1f ? 1f : Smooth( (value - (1.2f - 1.4f * amount)) / 0.2f );
 	private static float Smooth( float value )

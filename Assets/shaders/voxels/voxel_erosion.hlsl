@@ -37,7 +37,7 @@ float VoxelErosionOffset( float2 position, float2 gradient, float wavelength, fl
 		return 0.0;
 	}
 	float mask = clamp( slopeLength * 3.0, 0.0, 1.0 );
-	mask = 1.0 - (1.0 - mask) * (1.0 - mask);
+	mask = mask * mask * (3.0 - 2.0 * mask);
 	float2 gullySlope = gradient / slopeLength * 0.7;
 	float frequency = 1.0 / (wavelength * 0.7);
 	float fadeTarget = 0.0;

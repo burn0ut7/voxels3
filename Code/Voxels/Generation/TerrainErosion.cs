@@ -8,8 +8,8 @@ using System;
 internal static class TerrainErosion
 {
 	// World-space amplitude is a fraction of ReliefHeight. GPU mirror: voxel_erosion.hlsl.
+	internal const float HillStrengthRatio = 0.25f;
 	internal const float MountainStrength = 0.035f;
-	internal const float MinimumMountainWeight = 0.5f;
 	internal const int Octaves = 2;
 	internal const float AmplitudeSum = 1.5f;
 	internal const float MaximumOffsetFraction = MountainStrength * AmplitudeSum;
@@ -23,7 +23,8 @@ internal static class TerrainErosion
 			return 0f;
 		}
 		var mask = Math.Clamp( slopeLength * 3f, 0f, 1f );
-		mask = 1f - (1f - mask) * (1f - mask);
+		// Quadratic onset suppresses direction reversals at both maxima and minima.
+		mask = mask * mask * (3f - 2f * mask);
 		var gullySlope = gradient / slopeLength * 0.7f;
 		var frequency = 1f / (wavelength * 0.7f);
 		var fadeTarget = 0f;

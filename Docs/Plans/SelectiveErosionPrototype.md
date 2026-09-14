@@ -376,3 +376,45 @@ coordinates as the smallest localized experiment. It may soften an entire
 ridge band, including a weak secondary ridge; exact appearance needs review.
 Qualification and before/after data belong to EROSION-CREST-002/v1. Performance
 remains deferred by the user; no acceptance or cost improvement is presumed.
+
+### Broader erosion prototype (generator47, 2026-09-14)
+
+RegionalLandforms now separates mountain-shape eligibility (still0.5) from
+erosion coverage. Hill exposure contributes0.25 times hill weight, transitional
+mountain exposure contributes0.35 times mountain weight, and the existing
+shape blend gradually replaces that contribution with protected mass exposure.
+Mass exposure rises over normalized mass0.02..0.20 (formerly0.10..0.50), reaching
+lower slopes. Hill and transition shapes fade over relief0.10..0.40 and0.80..1;
+these are relative shape ranges, not altitude-based identification of every
+local extremum. Coast and sea-clearance masks remain. Plains alone contribute
+no erosion. Strength therefore follows landform contribution and relief, with
+smaller hills receiving a lighter treatment rather than identical mountain cuts.
+
+The filter uses the analytic gradient of the complete pre-erosion surface:
+noise derivatives, eligibility weights, hill/plains/mountain shape blending,
+upland support and coastal interpolation. This replaces mountain-only guidance
+which was zero on hills and omitted shape-blend derivatives. It reuses existing
+noise samples with additional arithmetic; no neighboring samples, allocations,
+state or new passes. CPU and HLSL expressions mirror each other.
+
+The initial slope mask now uses cubic smoothstep, with quadratic onset as the
+gradient approaches zero from either side. This suppresses the directional
+singularity at true maxima/minima more smoothly. MountainMasses' rounded crests
+and independent ridge-axis fade remain. These protections do not establish
+that every sloping valley axis, saddle, or octave-induced artifact is eliminated;
+closeup visual qualification remains necessary.
+
+The interval erosion envelope encloses0.25*hills+mountains, conservatively
+ignoring all relative-shape fades and capping amplitude at the existing0.035
+relief fraction. Global bounds, two octaves and wavelength0.20 of local scale
+remain. River drainage/carving, CPU collision and GPU geometry consume the same
+canonical changed exterior. Generator47 uses a new save/network identity;
+generator46 edits were saved before replacement, preserved and not migrated.
+
+Alternatives: lowering the mountain-shape threshold would also change the base
+silhouette; neighboring height samples multiply hot-path work; retaining
+mountain-only guidance leaves hills without usable direction. The explicit
+analytic derivative is the chosen bounded extension. More eligible terrain
+and derivative arithmetic may increase cost; no performance claim is made.
+User-deferred performance and qualification are recorded in
+EROSION-COVERAGE-001/v1 in the validation ledger.
