@@ -25173,3 +25173,114 @@ No runtime optimization accepted,committed or kept. Existing unrelated changes
 preserved. Reopened original playable code with free viewport sizing after
 restoration; successful engine compilation0errors. Performance acceptance remains
 open. Follow-up report: ValidationEvidence/FastFlightFps/Experiment.md.
+
+## WATER-EVENTS-001/v2 and PREDICTION-IDLE-001/v1 (2026-09-14)
+
+Predeclared before runs. The v1 pristine scratch world was subsequently edited
+by other work; current saved held-dig-v1 is world547ae8f0-bf9e-45e0-8f36-27d0e8d95771,
+revision1990,125pages,epoch1. Use this preserved edited world to exercise the
+current project; new v2 baseline, never compare with v1 as a continuous series.
+HEAD b42d930 plus entry manifest in ValidationEvidence/IdleWork. One visible
+sbox-dev61188,engine26.09.08b,physical1847x959,normal authored spawn after settling,
+seed1337,generator47,recipe/LOD/radii and shadow quality unchanged from water v1.
+Standard2500/50000/1loop,393.7008clearance,10s stationary,240s cap; restart Play
+between variants,all actual queues0,waterready,4913collision and320packages/1920faces
+ready,then minimum48.86s warmup. No runtime source changes during measurement.
+Water control reverses only the archived five-file water patch; preserve newer
+manager edits. Candidate reapplies that same patch. Prediction control is the
+water-candidate variant; any prediction patch is recorded before its run.
+Require improved frame time with no unexplained >5%FPS or >10%p95/p99/max,
+allocation or peak memory regression. Drain<=10s,prep<=16.67ms,zero exceptions,
+unsafe commits,final pending queues and88-mesh audit errors. Preserve baseline
+failures: improvements cannot be labeled full acceptance if absolute gates fail.
+Record moving30s coverage and final readiness,matched images after route.
+Keep user save/selector intact; no terrain edits in timing runs. Supplemental
+water edit protocol requires a separately confirmed copy and matched control.
+No new multiplayer claim. Source manifest and raw results retained per run.
+
+WATER-EVENTS-001/v2 setup attempt INVALID: control started after37.936s
+observed readiness warmup instead of predeclared48.86s. Stopped Play before
+completion; do not use partial timing. Restart same control and warm correctly.
+
+
+Control retry started after68.093s observed complete readiness; initial position
+(0.0323614106,-0.0232577175,257.143341),physical1847x959. Match at least68.093s
+settled warmup in subsequent variants. Original held-dig-v1 revision1990 saved
+successfully before restart. Current control uses exact reverse water patch.
+Prediction draft is archived only, not applied during water measurement. Its
+ownership/invalidation and unchanged service budget are archived in
+ValidationEvidence/IdleWork/Experiment.md.
+
+Control moving detailed audit requested at52.384s, later than planned30s.
+0overlap/0unbalanced/0missing/0extra. Preserve actual timing; match52.384s
+for candidate diagnostic. This is a timing deviation, not30s coverage evidence.
+
+
+Control47e46a9a9a0f492eac5bee8fcee2d83b completed:406.08026movingFPS,
+569.79285stationaryFPS,p95/p99/max4.8511/8.0974/96.7448ms,GPU1.405677ms.
+Allocated4621380760bytes,peakprocess3368103936,peakGPU1956705327,exceptions0.
+Source manifest unchanged.88/88mesh audit0failures/stale/drawerrors. Fixed shore
+view after run at(-1100,-800,1600),90pitch,FOV60,1280x720 in both variants.
+
+
+Water candidate49bfbcb9859a479e968e45cae3241e9c:540.3636movingFPS
+(+33.07%),554.0548stationary(-2.76%),p95/p99/max3.2988/7.2948/99.8251ms.
+Allocated6070695520bytes(+31.36%,FAIL total-allocation gate),92128.195/frame
+versus93323.516control. More frames with similar per-frame allocation are
+consistent with the increase; this does not waive the gate or identify owner.
+Peakprocess3413114880,peakGPU1905046575,exceptions0;source unchanged.
+Arrival-report elapsed9.6479813s versus13.470613control; observed near0.0369671s
+versus0.2412931. Report elapsed is not exact benchmark drain metric.
+Candidate moving52.385s audit0errors. Not fully accepted; retain allocation
+regression. Prediction comparison uses this water variant as its control.
+
+
+
+WATER-EVENTS-EDIT-001/v2 + prediction invalidation supplemental, predeclared:
+use saved held-dig-v1 revision1990/125pages and same generator47, confirm a
+successful save-copy to idle-work-edit before any brush. Site(-1024,-800,0),
+r128,strength-512 then+512,wait<=30s each; compare both exact water owner
+digests atLOD0(-3,-2,-1)/(-2,-2,-1),column(-1024,-800),z-64,spacing32,count5,
+fingerprint center(-1024,-800,0),radius512. Fixed shore camera1280x720 above.
+Run candidate first,then reverse only experiment patches for control and reload
+the untouched held-dig-v1 field before saving copy again. Preserve both results.
+Require matching before/build/dig geometry digests,zero invalid/degenerate/reversed
+water geometry,zero settled pairing/coverage errors,all prediction packages ready
+after edits,unchanged restored fingerprint and original selected save. No claim
+of multiplayer or universal moving coverage. Earlier v1 edits used pristine
+revision0; v2 explicitly establishes the current edited-world comparison.
+
+Exact benchmark drain: control13595.967ms,candidate10371.583ms (-23.716%);
+both FAIL10s absolute gate. Maxprep10.2572->9.1183ms passes16.67ms. These
+values are meshing.throughput.postLoopDrainMilliseconds, distinct from the
+arrival-report elapsed durations quoted above. Water remains unaccepted.
+
+
+Prediction0517110b1a84443b87c66589a299cd70:561.61676movingFPS,597.74115
+stationary,p95/p99/max3.188/7.4025/86.5297ms,allocated5977916272bytes,
+87282.87/frame,peakprocess3539464192,peakGPU1906684975,exceptions0,
+drain10236.887ms FAIL10s. Source unchanged; matched52.385s moving audit0errors.
+Relative to water-only,small FPS gain and no material frame/allocation/memory
+regression; single-run result does not establish repeatable causal gain.
+Both prototypes remain unaccepted; water allocation gate and absolute drain
+remain unresolved. Supplemental edit checks follow before restoring new prediction
+code; preserve water prototype as it existed on entry,without acceptance claim.
+
+
+Supplemental control save to reused idle-work-edit was rejected because that
+slot already holds newer revision1992. No brush ran after rejection. Use fresh
+idle-work-control for control copy,verify save.complete at1990 before editing.
+This is a scratch destination change only; preserved field/workload unchanged.
+
+
+Supplemental candidate/control digests match before/build/dig; all water vertex
+checks0errors. Candidate publication72.4078/71.5621ms,control83.1313/64.052ms;
+control used fresh Play versus post-route candidate,so no causal timing claim.
+Candidate post-edit320packages/1920faces complete,zero pairing and pending work.
+Build and inverse-dig views match,including small bank material mark in both.
+Original regional fingerprintCCDF71ECDF55B1F6557423FDE3F3DEA190848F7DFF67E35873EA7B6C6D1CE894
+restored; held-dig-v1 revision1990/125pages reloaded before exit and Play restart.
+New prediction changes reverted; all runtime/scene/shader hashes equal entry
+manifest. Existing water prototype preserved exactly as on entry,unaccepted.
+No repeat/fast/multiplayer acceptance runs performed because allocation and
+absolute drain gates remain unresolved. Full report:ValidationEvidence/IdleWork/Experiment.md.

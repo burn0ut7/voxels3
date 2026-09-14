@@ -1,0 +1,316 @@
+--- a/Code/Voxels/VoxelManager.Water.cs
++++ b/Code/Voxels/VoxelManager.Water.cs
+@@ -10,13 +10,12 @@
+ 	private readonly Dictionary<GpuSdfDescriptor, SdfWorldAabb> _waterCellRequests = new();
+ 	private readonly HashSet<GpuSdfDescriptor> _waterUnpublished = new();
+ 	private Dictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> _waterCoverage = new();
+-	private Dictionary<GpuMeshRegionKey, SurfaceWaterGeometry.Chunk> _nextWaterCoverage = new();
++	private readonly HashSet<GpuSdfDescriptor> _waterPending = new();
++	private readonly HashSet<GpuMeshRegionKey> _waterPresentationDirty = new();
++	private bool _waterRendererDirty;
+ 	private CancellationTokenSource _waterCellCancellation;
+ 	private Task<SurfaceWaterGeometry.Chunk> _waterCellPreparation;
+ 	private long _waterCellRevision;
+-	private long _waterRenderedCellRevision = -1;
+-	private long _waterRenderedTerrainRevision = -1;
+-	private long _waterRenderedPreparedRevision = -1;
+ 	private long _lastClipboxReadinessWaterRevision = -1;
+ 	private int _waterRequestSerial;
+ 	private int _waterObservedSerial = -1;
+@@ -39,7 +38,7 @@
+ 		get
+ 		{
+ 			RefreshWaterCellRequests();
+-			return _waterCellRequests.Keys.All( descriptor => _waterCells.ContainsKey( descriptor ) );
++			return _waterPending.Count == 0;
+ 		}
+ 	}
+ 
+@@ -55,6 +54,7 @@
+ 		var field = CurrentField;
+ 		if ( _waterObservedSerial == _waterRequestSerial && _waterObservedFieldRevision == field.Revision &&
+ 			_waterObservedFieldEpoch == field.Epoch ) return;
++		foreach ( var descriptor in _waterCellRequests.Keys ) _waterPresentationDirty.Add( descriptor.Key );
+ 		_waterCellRequests.Clear();
+ 		foreach ( var key in _gpuMesher.ActiveRegionKeys ) AddCoverageWaterRequest( key );
+ 		foreach ( var key in _coverageRequired ) AddCoverageWaterRequest( key );
+@@ -72,6 +72,13 @@
+ 		{
+ 			_waterCells.Remove( key );
+ 			_waterUnpublished.Remove( key );
++			_waterRendererDirty = true;
++		}
++		_waterPending.Clear();
++		foreach ( var descriptor in _waterCellRequests.Keys )
++		{
++			if ( !_waterCells.ContainsKey( descriptor ) ) _waterPending.Add( descriptor );
++			_waterPresentationDirty.Add( descriptor.Key );
+ 		}
+ 		_waterObservedSerial = _waterRequestSerial;
+ 		_waterObservedFieldRevision = field.Revision;
+@@ -121,24 +128,27 @@
+ 			{
+ 				_waterCells[item.Descriptor] = item;
+ 				_waterUnpublished.Add( item.Descriptor );
++				_waterPending.Remove( item.Descriptor );
++				_waterPresentationDirty.Add( item.Descriptor.Key );
+ 			}
+ 			_waterCellsGenerated++;
+ 			_waterCellGenerationMilliseconds += item.Milliseconds;
+ 			_waterCellPreparation = null;
+ 			_waterCellRevision++;
+ 		}
++		if ( _waterPending.Count == 0 ) return;
+ 		var position = ActiveStreamingTarget.WorldPosition;
+ 		var priority = (Service: int.MaxValue, Distance: float.PositiveInfinity, Level: 0, Z: 0, Y: 0, X: 0);
+ 		var found = false;
+ 		var descriptor = default(GpuSdfDescriptor);
+ 		var bounds = default(SdfWorldAabb);
+-		foreach ( var pair in _waterCellRequests )
+-		{
+-			if ( _waterCells.ContainsKey( pair.Key ) ) continue;
+-			var dx = MathF.Max( 0f, MathF.Max( pair.Value.Minimum.x - position.x, position.x - pair.Value.Maximum.x ) );
+-			var dy = MathF.Max( 0f, MathF.Max( pair.Value.Minimum.y - position.y, position.y - pair.Value.Maximum.y ) );
++		foreach ( var request in _waterPending )
++		{
++			var requestBounds = _waterCellRequests[request];
++			var dx = MathF.Max( 0f, MathF.Max( requestBounds.Minimum.x - position.x, position.x - requestBounds.Maximum.x ) );
++			var dy = MathF.Max( 0f, MathF.Max( requestBounds.Minimum.y - position.y, position.y - requestBounds.Maximum.y ) );
+ 			var candidateDistance = dx * dx + dy * dy;
+-			var key = pair.Key.Key;
++			var key = request.Key;
+ 			// Match terrain/seam priority: finish admitted publication dependencies
+ 			// before background layout water can occupy every local operation slot.
+ 			var candidatePriority = (_coverageRequired.Contains( key ) ? 0 : IsExteriorCoverageRequired( key ) ? 1 :
+@@ -148,8 +158,8 @@
+ 			if ( found && candidatePriority.CompareTo( priority ) >= 0 ) continue;
+ 			found = true;
+ 			priority = candidatePriority;
+-			descriptor = pair.Key;
+-			bounds = pair.Value;
++			descriptor = request;
++			bounds = requestBounds;
+ 		}
+ 		if ( !found || !CurrentField.TryCaptureRegion( descriptor.SamplingBounds, out var field ) ) return;
+ 		_waterCellCancellation ??= new CancellationTokenSource();
+@@ -165,39 +175,51 @@
+ 		} );
+ 	}
+ 
++	private void MarkWaterPresentationDirty( GpuMeshRegionKey key )
++	{
++		var size = _appliedCellsPerAxis * CellSizeForLevel( key.Level );
++		if ( size <= 0f || key.Coordinate.z != (int)MathF.Ceiling( CurrentTerrainSettings.SeaLevel / size ) - 1 ) return;
++		_waterPresentationDirty.Add( key );
++	}
++
+ 	private void UpdateSurfaceWaterChunks()
+ 	{
+ 		if ( !_clipboxPlacementTargetAvailable || _waterRenderer is null ) return;
+ 		RefreshWaterCellRequests();
+-		var terrainRevision = _gpuMesher.ResidentPublicationRevision;
+-		if ( _waterRenderedCellRevision == _waterCellRevision &&
+-			_waterRenderedTerrainRevision == terrainRevision &&
+-			_waterRenderedPreparedRevision == _renderPreparedRevision ) return;
+-		_nextWaterCoverage.Clear();
+-		foreach ( var request in _waterCellRequests.Keys )
+-		{
+-			if ( !IsWaterRegionActive( request.Key ) ) continue;
++		foreach ( var key in _waterPresentationDirty )
++		{
++			var request = CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false );
++			if ( !_waterCellRequests.ContainsKey( request ) || !IsWaterRegionActive( key ) )
++			{
++				_waterRendererDirty |= _waterCoverage.Remove( key );
++				continue;
++			}
++			_waterCoverage.TryGetValue( key, out var previous );
+ 			if ( _waterCells.TryGetValue( request, out var ready ) && IsTerrainRegionPrepared( request ) )
+ 			{
+-				// Dry and empty-solid results participate in the same completion contract.
+-				_nextWaterCoverage.Add( request.Key, ready );
++				// Empty and dry results complete the same chunk-content dependency.
++				if ( !ReferenceEquals( previous, ready ) )
++				{
++					_waterCoverage[key] = ready;
++					_waterRendererDirty = true;
++				}
+ 				if ( _waterUnpublished.Remove( request ) )
+ 					_waterMaximumPublishDelayMilliseconds = Math.Max( _waterMaximumPublishDelayMilliseconds,
+ 						System.Diagnostics.Stopwatch.GetElapsedTime( ready.CompletedTimestamp ).TotalMilliseconds );
+ 			}
+-			else if ( _waterCoverage.TryGetValue( request.Key, out var previous ) &&
+-				previous.Descriptor == (request with { EditRevision = previous.Descriptor.EditRevision }) )
++			else if ( previous is not null &&
++				previous.Descriptor != (request with { EditRevision = previous.Descriptor.EditRevision }) )
+ 			{
+-				// The existing terrain edit group retains the corresponding old solid mesh.
+-				_nextWaterCoverage.Add( request.Key, previous );
++				_waterCoverage.Remove( key );
++				_waterRendererDirty = true;
+ 			}
++			// Retain matching old water while the existing edit group retains terrain.
+ 			_gpuMesher.RefreshChunkPresentation( request );
+ 		}
+-		(_waterCoverage, _nextWaterCoverage) = (_nextWaterCoverage, _waterCoverage);
++		_waterPresentationDirty.Clear();
++		if ( !_waterRendererDirty ) return;
+ 		_waterRenderer.Update( _waterCoverage, _waterCells );
+-		_waterRenderedCellRevision = _waterCellRevision;
+-		_waterRenderedTerrainRevision = terrainRevision;
+-		_waterRenderedPreparedRevision = _renderPreparedRevision;
++		_waterRendererDirty = false;
+ 	}
+ 
+ 	private object CaptureWaterPresentation()
+@@ -276,16 +298,15 @@
+ 		_waterCells.Clear();
+ 		_waterCellRequests.Clear();
+ 		_waterCoverage.Clear();
+-		_nextWaterCoverage.Clear();
++		_waterPending.Clear();
++		_waterPresentationDirty.Clear();
++		_waterRendererDirty = false;
+ 		_waterUnpublished.Clear();
+ 		_waterObservedSerial = -1;
+ 		_waterObservedFieldRevision = -1;
+ 		_waterObservedFieldEpoch = -1;
+-		_waterRenderedCellRevision = -1;
+ 		_waterCellRevision++;
+ 		_waterCellsGenerated = 0;
+-		_waterRenderedTerrainRevision = -1;
+-		_waterRenderedPreparedRevision = -1;
+ 		_lastClipboxReadinessWaterRevision = -1;
+ 		_waterMaximumPublishDelayMilliseconds = 0;
+ 		_waterCellGenerationMilliseconds = 0;
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -382,12 +382,15 @@
+ 
+ 	private readonly Func<GpuSdfDescriptor, bool> _chunkContentPrepared;
+ 	private readonly Action _publishChunkContent;
++	private readonly Action<GpuMeshRegionKey> _chunkPresentationChanged;
+ 
+ 	public GpuVoxelMesher( Scene scene, int cellsPerAxis,
+-		Func<GpuSdfDescriptor, bool> chunkContentPrepared, Action publishChunkContent )
++		Func<GpuSdfDescriptor, bool> chunkContentPrepared, Action publishChunkContent,
++		Action<GpuMeshRegionKey> chunkPresentationChanged )
+ 	{
+ 		_chunkContentPrepared = chunkContentPrepared;
+ 		_publishChunkContent = publishChunkContent;
++		_chunkPresentationChanged = chunkPresentationChanged;
+ 		_scene = scene;
+ 		_cellsPerAxis = cellsPerAxis;
+ 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
+@@ -1088,6 +1091,7 @@
+ 		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
+ 		if ( changed )
+ 		{
++			_chunkPresentationChanged( key );
+ 			for ( var level = key.Level + 1; level < SupportedVisualLevelCount; level++ )
+ 			{
+ 				var shift = level - key.Level;
+@@ -1684,6 +1688,7 @@
+ 		}
+ 		if ( !_resident.Remove( key, out var resident ) ) return;
+ 		_residentPublicationRevision++;
++		_chunkPresentationChanged( key );
+ 		ReleaseResident( resident );
+ 		MarkDrawCommandsDirty();
+ 	}
+@@ -2862,6 +2867,7 @@
+ 		_levelTopologyDigests[key.Level] ^= CoordinateDigest( key, counts.TopologyDigest );
+ 		_levelPositionDigests[key.Level] ^= CoordinateDigest( key, counts.PositionDigest );
+ 		_residentPublicationRevision++;
++		_chunkPresentationChanged( key );
+ 	}
+ 
+ 	private void AllocateAndEmitTransitions( TransitionScratchLane lane, GpuTransitionCountResult[] counts,
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -407,7 +407,7 @@
+ 	{
+ 		if ( Scene.IsEditor ) return;
+ 		ResolveStreamingTarget();
+-		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks );
++		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks, MarkWaterPresentationDirty );
+ 		_gpuMesher.SetFieldPresentationReady( Networking.IsHost );
+ 		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
+ 		if ( !StagedTerrainSettings.IsValid )
+@@ -2698,7 +2698,11 @@
+ 		{
+ 			if ( RetainsLod0PlacementCoordinate( coordinate ) ) continue;
+ 			_gpuMesher.Remove( new GpuMeshRegionKey( 0, coordinate ) );
+-			if ( _renderPreparedChunks.Remove( coordinate ) ) _renderPreparedRevision++;
++			if ( _renderPreparedChunks.Remove( coordinate ) )
++			{
++				_renderPreparedRevision++;
++				MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, coordinate ) );
++			}
+ 		}
+ 		foreach ( var coordinate in _renderPreparedChunks )
+ 		{
+@@ -3442,6 +3446,7 @@
+ 				if ( state.Level == 0 && _renderPreparedChunks.Remove( coordinate ) )
+ 				{
+ 					_renderPreparedRevision++;
++					MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, coordinate ) );
+ 				}
+ 			}
+ 		}
+@@ -3552,7 +3557,11 @@
+ 				key.Level == 0 && _renderDesiredChunks.Contains( key.Coordinate ) ||
+ 				key.Level == _partialOuterLevel && _partialOuterChunks.Contains( key.Coordinate ) ) continue;
+ 			_gpuMesher.Remove( key );
+-			if ( key.Level == 0 && _renderPreparedChunks.Remove( key.Coordinate ) ) _renderPreparedRevision++;
++			if ( key.Level == 0 && _renderPreparedChunks.Remove( key.Coordinate ) )
++			{
++				_renderPreparedRevision++;
++				MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, key.Coordinate ) );
++			}
+ 		}
+ 		foreach ( var key in _supersededPlacementTransitions )
+ 		{
+@@ -4085,7 +4094,11 @@
+ 			if ( _renderDesiredChunks.Contains( result.Coordinate ) ||
+ 				RetainsLod0PlacementCoordinate( result.Coordinate ) )
+ 			{
+-				if ( _renderPreparedChunks.Add( result.Coordinate ) ) _renderPreparedRevision++;
++				if ( _renderPreparedChunks.Add( result.Coordinate ) )
++				{
++					_renderPreparedRevision++;
++					MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, result.Coordinate ) );
++				}
+ 				var chunk = result.Chunk;
+ 				if ( result.FieldRevision != CurrentField.Revision || result.FieldEpoch != CurrentField.Epoch )
+ 					chunk = new VoxelChunk( result.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField );
+--- a/Code/Voxels/VoxelManager.Coverage.cs
++++ b/Code/Voxels/VoxelManager.Coverage.cs
+@@ -313,7 +313,11 @@
+ 		if ( key.Level == 0 && _renderDesiredChunks.Contains( key.Coordinate ) ) return;
+ 		_gpuMesher.Remove( key );
+ 		// Prepared-without-a-GPU-record means proven empty, never evicted geometry.
+-		if ( key.Level == 0 && _renderPreparedChunks.Remove( key.Coordinate ) ) _renderPreparedRevision++;
++		if ( key.Level == 0 && _renderPreparedChunks.Remove( key.Coordinate ) )
++		{
++			_renderPreparedRevision++;
++			MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, key.Coordinate ) );
++		}
+ 	}
+ 
+ 	private void ConsiderLocalReplacement( GpuMeshRegionKey requested )
+--- a/Code/Voxels/VoxelManager.Prediction.cs
++++ b/Code/Voxels/VoxelManager.Prediction.cs
+@@ -162,7 +162,11 @@
+ 				if ( classification != ChunkDensityClassification.PotentiallySurfaceContaining )
+ 					_gpuMesher.PublishKnownEmpty( descriptor, residency );
+ 				else _gpuMesher.Schedule( CreateRegularDescriptor( key.Level, key.Coordinate ), _playerFigureEightRouteDistance, residency );
+-				if ( key.Level == 0 && _renderPreparedChunks.Add( key.Coordinate ) ) _renderPreparedRevision++;
++				if ( key.Level == 0 && _renderPreparedChunks.Add( key.Coordinate ) )
++				{
++					_renderPreparedRevision++;
++					MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, key.Coordinate ) );
++				}
+ 				_predictionScheduled++;
+ 			}
+ 			else

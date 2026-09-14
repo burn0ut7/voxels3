@@ -1,0 +1,136 @@
+--- a/Code/Voxels/VoxelManager.Prediction.cs
++++ b/Code/Voxels/VoxelManager.Prediction.cs
+@@ -17,6 +17,9 @@
+ 	private int _predictionRegionCursor;
+ 	private int _predictionSeamCursor;
+ 	private bool _predictionServiceSeam;
++	private readonly HashSet<GpuMeshRegionKey> _predictionReadyRegions = new();
++	private readonly HashSet<GpuTransitionKey> _predictionReadySeams = new();
++	private (int Epoch, int Revision, int Content) _predictionReadyField;
+ 	private long _predictionSeamReadinessChecks;
+ 	private long _predictionSeamReadinessMisses;
+ 	private long _predictionOutsidePackageMisses;
+@@ -56,6 +59,14 @@
+ 	private void UpdateTerrainPrediction()
+ 	{
+ 		var started = Stopwatch.GetTimestamp();
++		var field = CurrentField;
++		var identity = (field.Epoch, field.Revision, _terrainContentRevision);
++		if ( _predictionReadyField != identity )
++		{
++			_predictionReadyRegions.Clear();
++			_predictionReadySeams.Clear();
++			_predictionReadyField = identity;
++		}
+ 		var position = ActiveStreamingTarget.WorldPosition;
+ 		var delta = Time.Delta;
+ 		var movement = position - _predictionPreviousPosition;
+@@ -123,6 +134,8 @@
+ 				_predictionRegions.UnionWith( _nextPredictionRegions );
+ 				_predictionSeams.Clear();
+ 				_predictionSeams.UnionWith( _nextPredictionSeams );
++				_predictionReadyRegions.IntersectWith( _predictionRegions );
++				_predictionReadySeams.IntersectWith( _predictionSeams );
+ 				_predictionRegionOrder.Clear();
+ 				_predictionRegionOrder.AddRange( _predictionRegions );
+ 				_predictionRegionOrder.Sort( (a, b) =>
+@@ -144,7 +157,11 @@
+ 			_predictionPeakSeamBytes = Math.Max( _predictionPeakSeamBytes,
+ 				_gpuMesher.TransitionGeometryBytes( _predictionSeams ) );
+ 		}
+-		var total = _predictionRegionOrder.Count + _predictionSeamOrder.Count;
++		// Completed entries remain retained; only their scheduling checks sleep.
++		// Publication/removal and field changes invalidate the corresponding proof.
++		var total = _predictionReadyRegions.Count == _predictionRegionOrder.Count &&
++			_predictionReadySeams.Count == _predictionSeamOrder.Count
++			? 0 : _predictionRegionOrder.Count + _predictionSeamOrder.Count;
+ 		for ( var inspected = 0; inspected < Math.Min( 48, total ) &&
+ 			Stopwatch.GetElapsedTime( started ).TotalMilliseconds < 0.5; inspected++ )
+ 		{
+@@ -153,7 +170,13 @@
+ 			{
+ 				var key = _predictionRegionOrder[_predictionRegionCursor++ % _predictionRegionOrder.Count];
+ 				if ( _predictionRegionCursor >= _predictionRegionOrder.Count ) _predictionRegionCursor = 0;
++				if ( _predictionReadyRegions.Contains( key ) ) continue;
+ 				var descriptor = CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false );
++				if ( _gpuMesher.IsResident( descriptor ) )
++				{
++					_predictionReadyRegions.Add( key );
++					continue;
++				}
+ 				if ( _gpuMesher.Contains( descriptor ) ) continue;
+ 				var classification = key.Level == 0
+ 					? VoxelChunk.ClassifyDensityRange( key.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField ).Classification
+@@ -173,7 +196,13 @@
+ 			{
+ 				var key = _predictionSeamOrder[_predictionSeamCursor++ % _predictionSeamOrder.Count];
+ 				if ( _predictionSeamCursor >= _predictionSeamOrder.Count ) _predictionSeamCursor = 0;
++				if ( _predictionReadySeams.Contains( key ) ) continue;
+ 				var descriptor = CreateTransitionDescriptor( key, captureRegion: false );
++				if ( _gpuMesher.IsTransitionResident( descriptor ) )
++				{
++					_predictionReadySeams.Add( key );
++					continue;
++				}
+ 				if ( _gpuMesher.ContainsTransition( descriptor ) ) continue;
+ 				_gpuMesher.ScheduleTransition( CreateTransitionDescriptor( key ), _playerFigureEightRouteDistance );
+ 				_predictionSeamsScheduled++;
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -407,7 +407,9 @@
+ 	{
+ 		if ( Scene.IsEditor ) return;
+ 		ResolveStreamingTarget();
+-		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks, MarkWaterPresentationDirty );
++		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks,
++			key => { MarkWaterPresentationDirty( key ); _predictionReadyRegions.Remove( key ); },
++			key => _predictionReadySeams.Remove( key ) );
+ 		_gpuMesher.SetFieldPresentationReady( Networking.IsHost );
+ 		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
+ 		if ( !StagedTerrainSettings.IsValid )
+@@ -2487,6 +2489,8 @@
+ 		_predictionSeams.Clear();
+ 		_predictionRegionOrder.Clear();
+ 		_predictionSeamOrder.Clear();
++		_predictionReadyRegions.Clear();
++		_predictionReadySeams.Clear();
+ 		_predictionHasPosition = false;
+ 		_predictionVelocity = Vector3.Zero;
+ 		_predictionRegionCursor = 0;
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -383,14 +383,17 @@
+ 	private readonly Func<GpuSdfDescriptor, bool> _chunkContentPrepared;
+ 	private readonly Action _publishChunkContent;
+ 	private readonly Action<GpuMeshRegionKey> _chunkPresentationChanged;
++	private readonly Action<GpuTransitionKey> _transitionResidencyChanged;
+ 
+ 	public GpuVoxelMesher( Scene scene, int cellsPerAxis,
+ 		Func<GpuSdfDescriptor, bool> chunkContentPrepared, Action publishChunkContent,
+-		Action<GpuMeshRegionKey> chunkPresentationChanged )
++		Action<GpuMeshRegionKey> chunkPresentationChanged,
++		Action<GpuTransitionKey> transitionResidencyChanged )
+ 	{
+ 		_chunkContentPrepared = chunkContentPrepared;
+ 		_publishChunkContent = publishChunkContent;
+ 		_chunkPresentationChanged = chunkPresentationChanged;
++		_transitionResidencyChanged = transitionResidencyChanged;
+ 		_scene = scene;
+ 		_cellsPerAxis = cellsPerAxis;
+ 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
+@@ -628,6 +631,7 @@
+ 			}
+ 		}
+ 		if ( !_transitionResident.Remove( key, out var resident ) ) return;
++		_transitionResidencyChanged( key );
+ 		ReleaseTransitionResident( resident );
+ 		MarkDrawCommandsDirty();
+ 	}
+@@ -3000,6 +3004,7 @@
+ 		var resident = new ResidentTransition(
+ 			completed.Descriptor, completed.Handle, completed.Counts, latencyMilliseconds );
+ 		_transitionResident.Add( key, resident );
++		_transitionResidencyChanged( key );
+ 		if ( completed.Handle is not null )
+ 		{
+ 			completed.Handle.Arena.ActiveResidentCount++;
