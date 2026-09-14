@@ -1,0 +1,29 @@
+diff --git a/Code/Voxels/VoxelManager.Prediction.cs b/Code/Voxels/VoxelManager.Prediction.cs
+index ae97127..20f85a1 100644
+--- a/Code/Voxels/VoxelManager.Prediction.cs
++++ b/Code/Voxels/VoxelManager.Prediction.cs
+@@ -16,7 +16,7 @@ public sealed partial class VoxelManager
+ 	private float _predictionRefreshElapsed;
+ 	private int _predictionRegionCursor;
+ 	private int _predictionSeamCursor;
+-	private bool _predictionServiceSeam;
++	private int _predictionServicePhase;
+ 	private long _predictionSeamReadinessChecks;
+ 	private long _predictionSeamReadinessMisses;
+ 	private long _predictionOutsidePackageMisses;
+@@ -145,11 +145,12 @@ public sealed partial class VoxelManager
+ 				_gpuMesher.TransitionGeometryBytes( _predictionSeams ) );
+ 		}
+ 		var total = _predictionRegionOrder.Count + _predictionSeamOrder.Count;
+-		for ( var inspected = 0; inspected < Math.Min( 48, total ) &&
++		for ( var inspected = 0; inspected < Math.Min( 32, total ) &&
+ 			Stopwatch.GetElapsedTime( started ).TotalMilliseconds < 0.5; inspected++ )
+ 		{
+-			_predictionServiceSeam = !_predictionServiceSeam;
+-			if ( _predictionRegionOrder.Count > 0 && (!_predictionServiceSeam || _predictionSeamOrder.Count == 0) )
++			// Keep regular forecast capacity while limiting speculative face admission.
++			_predictionServicePhase = (_predictionServicePhase + 1) & 3;
++			if ( _predictionRegionOrder.Count > 0 && (_predictionServicePhase != 0 || _predictionSeamOrder.Count == 0) )
+ 			{
+ 				var key = _predictionRegionOrder[_predictionRegionCursor++ % _predictionRegionOrder.Count];
+ 				if ( _predictionRegionCursor >= _predictionRegionOrder.Count ) _predictionRegionCursor = 0;

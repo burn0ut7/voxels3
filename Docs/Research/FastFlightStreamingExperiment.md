@@ -188,3 +188,9 @@ comparison are in [the evidence directory](../ValidationEvidence/FastFlight/).
 The append-only [validation ledger](../ValidationResults.md) retains parameters,
 setup corrections, failed captures and decisions. The restored playable source
 does not contain either experimental change.
+
+## FPS-preserving follow-up
+
+Two further small experiments retained FPS but worsened chunk arrival; both
+were restored. See the [follow-up measurements and archived patches](../ValidationEvidence/FastFlightFps/Experiment.md)
+for the fresh control, fixed workload, correctness checks and limitations.

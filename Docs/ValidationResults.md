@@ -25078,3 +25078,98 @@ source identities,raw captures and analysis remain under ValidationEvidence/Fast
 Research/FastFlightStreamingExperiment.md records primary sources,transfer limits,
 prototype ownership,and next research question. Existing unrelated worktree changes
 are preserved. Only documentation/evidence is eligible for this task's commit.
+
+### LOCAL-COVERAGE-001/v4 FPS-preserving follow-up, 2026-09-14
+
+User requests additional experiments without major FPS impacts. Reuse v4 fast
+10000/200000/1loop and standard2500/50000/1loop, saved world revision1990,
+generator47,seed1337,basic_example,LOD0..5,near4/cache8/gameplay8,radius256,
+physical1848x960,clearance393.7008,48.86s minimum settled warmup,10s stationary.
+All v4 acceptance criteria remain unchanged: near<=5s (target<=0.1s),drain<=10s,
+prep<=16.67ms,zero correctness errors; no unexplained >5%FPS or >10%p99,
+allocation or memory regression. No relaxed threshold is authorized or applied.
+Fresh visible editor26.09.08b; capture fresh control before source mutation.
+Source identity in ValidationEvidence/FastFlightFps/source-before.json, based on
+HEAD e14e0df plus existing uncommitted work. Preserve all unrelated work.
+Record detailed moving coverage at30s and final readiness/audit for both runs;
+actual tool timing must be retained. Candidate needs standard/repeat checks if
+promising; reject and restore on unexplained regression or correctness failure.
+
+Follow-up candidate: retain the exact transition descriptor used by the local
+readiness test; always retain foreground priority, but call ScheduleTransition
+with a captured field only when ContainsTransition says that exact descriptor
+is not already requested. Same mesher owns deduplication, pending queues,
+stale-field rejection and publication. No extra interest, cache, topology or
+GPU work is introduced. This avoids duplicate range/snapshot preparation on
+repeated missing-resident checks; runtime effect is unmeasured until comparison.
+Raw control and candidate results will retain the same existing profiler.
+
+Fresh-editor setup: requested viewport sizes1232x640 and1233x641 did not produce
+the expected physical size; no benchmark ran at either mismatch. Setting1848x960
+during Play produced exact1848x960. Control starts only after actual queues0,
+waterready,collision4913ready,then48.86s minimum settled warmup. Preserve this
+setup difference from the earlier editor without changing physical workload.
+
+Control825f2739397b49428b2cc668476d1d07 started17:31:49,saved17:34:14.
+504.71613FPS,p95/p99/max5.4371/8.1005/186.8066ms;nearprepared/presented
+1.492331s,fullarrival12.5030166s;maxprep9.3095ms. Allocated8295956544bytes,
+134788.4/frame,Gen2=5,GCtotal946.032ms/max12.677ms;exceptions0.
+Processavg/peak4872724748/5072822272,GPUavg/peak1928198309/1969245064.
+Detailed moving30s audit0overlap/0balance/0missing/0extra; final88/88mesh audit
+0fail/stale,finalcoverage/readiness preserved. Screenshot retains edited tunnel.
+Fresh editor control differs substantially from morning399.75FPS; use this new
+same-session control for candidate comparison,not the more favorable old FPS.
+The rolling200-frame profiler cannot isolate whole-route CPU cost.
+
+Candidate compiled with0errors,normalPlay restart,physical1848x960 verified,
+actualqueues0/collision4913/waterready then48.86s minimum warmup. Trigger17:37:18.
+Detailed moving30s audit0overlap/0balance/0missing/0extra. No source mutation
+during the route. Candidate source captured before this run.
+
+Candidate efc43a3873524a88b518544d1664af1c saved17:39:46. FPS521.97107,
+p95/p99/max5.4009/8.0038/86.8112ms;near1.8126864s versus1.492331control,
+fullarrival15.8276176s versus12.5030166. No loading improvement; reject and
+restore exact Coverage.before.txt. Moving/final audits retained. Alloc8279634664,
+130078.625/frame,GC984.243ms/max13.248ms,Gen2=5,exceptions0. Processavg/peak
+5207811290/5272932352,GPUavg/peak1928864250/1969376376. FPS+pacing remain within
+limits but single-run noise prevents a causal FPS improvement claim.
+
+Second follow-up candidate predeclared: restore Coverage exactly,then change
+only prediction service cadence. Keep all speculative seam membership,retention,
+foreground seam scheduling and regular forecast membership unchanged. Within
+existing0.5ms soft budget,inspect at most24regular and8speculative seam entries
+per frame,three regular then one seam. Former alternating48 inspections allowed
+24regular+24seams. Keep cursor progress,sorting,field identity,eviction and GPU
+limits unchanged. This reduces low-priority admission without removing seam
+prediction entirely; longer speculative completion is a risk. Same v4route,
+48.86s settled warmup,physical1848x960,30s detailed audit and acceptance gates.
+Compare against fresh control; source captured before run. Reject if no loading
+benefit or any material unexplained regression. No relaxed FPS criterion.
+
+Second candidate normalPlay restart,compile0errors,physical1848x960,actual
+queues0,collision4913/waterready,all320predictionpackagescomplete,then48.86s
+minimum warmup. Detailed30s moving audit0overlap/0balance/0missing/0extra.
+Control drain12813.015ms and first candidate15993.242ms both fail10s. Both
+first-candidate final88-mesh audits and detailedcoverage passed. Source-restored
+Coverage is byte-identical before second candidate. No standard acceptance
+runs for the first candidate because loading was worse,despite acceptableFPS.
+
+Second follow-up7a76c017b5f446cab880d02bf6c47486 saved17:45:34.
+527.60535FPS,p99=8.0586ms,max85.1954ms;near1.9571713s,drain16023.827ms.
+Allocated8173689896bytes,127042.96/frame,GC996.384ms/max12.366ms,exceptions0.
+Processavg/peak5394483670/5448572928,GPUavg/peak1878094665/1919175800.
+Maxprep10.2491ms. FPS/p99 meet relative limits but near/drain are worse;drain
+fails10s. Average process memory is10.7%above control (same-process run order
+may contribute;not isolated). Reject candidate. Final88/88mesh audit0fail/stale,
+finaldetailedcoverage0errors;moving30saudit0errors. Tunnel screenshot matches.
+Restore exact Prediction.before.txt;all runtime files match capturedbeforeSHA256.
+
+Conclusion: neither follow-up improves chunk arrival. Standard/repeat acceptance
+runs not taken for rejected candidates. CandidateFPS+3.4%/+4.5% cannot be
+claimed as causal improvements from single runs. Control and candidates have
+same30s detailed audit,physicalviewport,world/configuration and fixedfast route;
+process-age/cache/GC history still differs. Preserve all runs and patches.
+No runtime optimization accepted,committed or kept. Existing unrelated changes
+preserved. Reopened original playable code with free viewport sizing after
+restoration; successful engine compilation0errors. Performance acceptance remains
+open. Follow-up report: ValidationEvidence/FastFlightFps/Experiment.md.

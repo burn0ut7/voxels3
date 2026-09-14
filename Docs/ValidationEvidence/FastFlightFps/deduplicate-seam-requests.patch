@@ -1,0 +1,24 @@
+diff --git a/Code/Voxels/VoxelManager.Coverage.cs b/Code/Voxels/VoxelManager.Coverage.cs
+index 7956e85..67af390 100644
+--- a/Code/Voxels/VoxelManager.Coverage.cs
++++ b/Code/Voxels/VoxelManager.Coverage.cs
+@@ -655,7 +655,8 @@ public sealed partial class VoxelManager
+ 			{
+ 				var key = operation.NewSeams[index - operation.Dependencies.Count];
+ 				_predictionSeamReadinessChecks++;
+-				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key, captureRegion: false ) ) )
++				var descriptor = CreateTransitionDescriptor( key, captureRegion: false );
++				if ( !_gpuMesher.IsTransitionResident( descriptor ) )
+ 				{
+ 					_predictionSeamReadinessMisses++;
+ 					if ( !_predictionSeams.Contains( key ) )
+@@ -665,7 +666,8 @@ public sealed partial class VoxelManager
+ 					}
+ 					operation.PreparationReady = false;
+ 					_gpuMesher.SetPlacementTransitionRequired( key );
+-					_gpuMesher.ScheduleTransition( CreateTransitionDescriptor( key ), _playerFigureEightRouteDistance );
++					if ( !_gpuMesher.ContainsTransition( descriptor ) )
++						_gpuMesher.ScheduleTransition( CreateTransitionDescriptor( key ), _playerFigureEightRouteDistance );
+ 				}
+ 			}
+ 			if ( operation.Split && Stopwatch.GetElapsedTime( started ).TotalMilliseconds >= LocalCoverageBudgetMilliseconds ) return false;
