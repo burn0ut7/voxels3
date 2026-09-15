@@ -28138,3 +28138,170 @@ For direct visual qualification, temporarily relocate the existing production sc
 `r`n006 visual setup correction before next capture: original-session diagnostics at08:37:09 record camera(-2558.938,-1639.612,6735.962), quaternion(0.30832,0.11384,-0.88598,0.32712), player(-2705.81396,-1765.19128,6503.62598). The large-coordinate inference above was incorrect; both failed views are preserved as inconclusive. Next original-source view uses this recorded camera, angles(38.375264,-139.469453,0),FOV60,1920x1080 with player restored near origin. This is visual-only; performance parameters remain unchanged.
 
 006 direct visual result: recorded original view shows broken contour across the top of the frame; derivative-only candidate removes it at identical camera pose. Near paired CSM-on/off captures retain character cast shadows and cave self-shadowing. All three shader entries compile successfully; first terrain force-compile failed writing mapped shader_c, immediate retry succeeded (both preserved). Temporary editor scene properties restored, Play stopped/saved, editor then prompted for unsaved scene changes; process7836 terminated to discard those temporary editor changes, source scene unchanged. Fresh visible editor started for normal-spawn qualification.
+
+## SIMPLIFY-001/v1 — repository cleanup, before baseline, 2026-09-15
+
+Use LOCAL-COVERAGE-001/v4 standard figure-eight unchanged: basic_example,
+seed1337/generator47, held-dig-v1 world547ae8f0-bf9e-45e0-8f36-27d0e8d95771,
+revision1990/125pages, normal spawn (0.0323614106,-0.0232577175,257.143341),
+cells32/base16, LOD0..5, near4/cache8/gameplay8, visualradius256,
+physical1848x960, speed2500/distance50000/1loop, clearance393.7008,
+48.86s minimum warmup after all visual/collision/water/prediction work settles,
+10s stationary,240s route cap, one local player, no edits, recorder disabled.
+Engine26.09.08b, source3627528, existing shader/settings unchanged. Each variant
+starts through normal visible Play restart in the same editor; record process and
+actual viewport. No source edits during measured runs. Compare latest comparable
+accepted results as context and this fresh unchanged baseline for cleanup.
+Acceptance: FPS loss<=5%; p99/tails, allocations, process/GPU memory increases<=10%;
+near<=5s, full drain<=10s, preparation<=16.67ms; zero new exceptions, invalid meshes,
+coverage overlaps/imbalance/seam errors. Preserve existing adoption exceptions and
+report absolute failures separately; no new regression is implicitly approved.
+After each saved result run detailed coverage and the standard88-mesh audit.
+Major cleanup groups require a before/after pair with these same parameters.
+Scope starts with redundant streaming publication logging and data used only by
+those logs; permanent figure-eight measurements and correctness audits remain.
+
+SIMPLIFY-001/v1 baseline760062970fc349ae8d2865f38ad22bb6:475.2659FPS,
+p99=8.2383ms,max91.1714ms; allocated5,655,971,360bytes,97,590.78/frame;
+processpeak5,258,141,696/GPUpeak1,935,002,504bytes; exceptions0,
+maxplacementprep9.6399ms. Detailed final coverage all0;88/88mesh audit passes.
+Raw result: ValidationEvidence/Simplification/before.json. Editor72028, actual
+1848x960 verified before warmup. Initial transient1847x959 and probe1849x961
+were corrected before measurement; neither is a measured workload. Warmup
+observed13:59:05UTC, trigger14:00:04UTC. Read-only source searches ran during
+movement; an attempted PowerShell tail of347MB historical JSONL was cancelled
+at14:02:22UTC after running about30s. This is environmental interference; a
+repeat is required if comparison is near a gate or unexplained.
+Group1 removes HUD input tracing, GPU command/camera debug logs, local/final
+publication logs and their private-only state, and redundant console summaries
+already saved in performance/deformation JSON. Measurement schemas unchanged.
+
+Baseline near readiness0.2232486s; full drain11.582698s FAILS the10s absolute
+target, as did prior controls. Group1 also removes log-only render-view and
+suppressed-callback counters; GPU synchronization and readback selection remain.
+Second setup restart completed before measurement. Actual1848x960 and all queues0,
+collision4913/waterready/packages320 verified14:07:08UTC; warmup starts here.
+
+Group2 scope declared before editing: remove unconsumed player-chunk/range/target
+status fields and cached chunk construction, unused VoxelChunk timing, unused
+internal metrics/adjacency helpers, and unauthored template controller. Keep
+all active generation, sampling, publication, storage and networking behavior.
+Use group1 as immediate before measurement, plus original baseline for cumulative
+comparison; repeat identical SIMPLIFY-001/v1 after group2. Git-only generated-file
+untracking does not mutate local compiled assets or require another runtime group.
+
+Group1 result97d5464127ff4cc595bf61d10ba46fc4:471.89722FPS(-0.71%),
+p99=8.3458ms(+1.30%),max93.1256ms(+2.14%),alloc5,500,654,312(-2.75%),
+95,588.74/frame;GPUpeak1,935,051,656;zeroexceptions;prep8.5552ms;
+near0.2344377s;drain10.870177s (absolute10s target still fails).
+Final88/88mesh and detailedcoverage pass. Processpeak5,864,521,728 (+11.53%)
+FAILS raw relative gate. Startprocess already5,666,488,320 vs5,061,517,312;
+within-run growth198,033,408 vs196,624,384(+0.72%). This suggests retained
+editor/session memory, but does not qualify the raw gate. Repeat original3627528
+control in the same editor with unchanged scenario, settled warmup and no large
+historical-file scan during measurement. Preserve group1 patch and result. No
+new memory threshold or acceptance exception is introduced.
+
+Control repeatc888920287854876bd2573b6289073d5:488.7193FPS,p99=8.6108ms,
+max88.67ms,alloc5,670,275,032bytes;processstart6,001,172,480/peak6,268,153,856,
+GPUpeak1,934,838,664;zeroexceptions;prep9.1653ms;drain10.424031s (absolute
+10s gate fails). Warmup14:13:13UTC,trigger14:14:26UTC.88/88mesh/detailedcoverage
+pass. Unchanged control reproduces higher process memory than group1, resolving
+its raw-memory increase as editor/session-state variation rather than evidence
+of introduced allocation growth. Group1FPS is3.44% below repeatedcontrol,
+framep99/max within gates,totalallocation lower. GPUtail differs across controls;
+no shader or GPU-performance improvement is claimed. Original and repeat retained.
+Group1 reapplication matched every recorded source hash before group2 edits.
+Group2 initial compile caught one remaining obsolete status-refresh caller;
+removed its entire otherwise-unused timer branch and fields before Play. No
+failed-build runtime measurement was run. Inspector Description warning predates
+this cleanup; no compiler-API workaround added.
+
+Group2 final readiness14:21:05UTC:1848x960,allvisual/seam/placementqueues0,
+waterready,collision4913,packages320/320faces1920. Normal physics-settled spawn
+(0.0323592313,-0.0232560076,257.143341), about0.000002world-unit XY rounding
+difference from original settledspawn; authored input/route parameters unchanged.
+Warmup begins here. Source captured in Simplification/final-source.json and
+final.patch before measurement. No further runtime edits during finalrun.
+
+
+Final candidate d64e9991c59d43f19cbd18146a9f0c74, trigger14:22:22UTC,
+completed14:24:45UTC:448.84067FPS (-4.88% vs group1, -8.16% vs originalrepeat),
+p95=4.5201ms,p99=8.6361ms,max88.8026ms;allocated5,566,367,328bytes,
+101,698.53/frame;processstart6,402,686,976/peak6,839,767,040,
+end4,966,965,248;GPUpeak1,935,707,016;exceptions0;prep12.9207ms,
+near0.0342381s,drain11.645839s. Detailedcoverage and88/88mesh pass.
+FAIL pending resolution: cumulative FPS exceeds5% loss and raw processpeak
+exceeds10% vs group1. Large process reclamation occurred during this run.
+Repeat group1 and final in order with unchanged scenario and normal Play resets;
+preserve this failure. No source algorithm change is justified by timing alone.
+Correction to scenario field metadata: all four archived arrival reports show
+revision1993, not1990. Console save.complete at13:51:36UTC confirms1993 saved
+before all runs. All measured runs used the same persisted revision; the earlier
+1990 description was stale documentation, not a field mutation between runs.
+
+Group1 repeat source matches all61 recorded manifest hashes. Readiness14:27:30UTC
+verified1848x960,queues0,waterready,collision4913,prediction320; unchanged
+normal spawn. Same editor72028 and hardware Ryzen7 9800X3D / RTX5090.
+Warmup starts here; repeat follows the failed candidate without threshold changes.
+
+Group1 repeat bf682dd8cc3c409ab6c4bbea5789b5cb, trigger14:28:23UTC:
+491.85074FPS,p95=3.911ms,p99=8.075ms,max85.3793ms;
+allocated5,872,052,784bytes/97,896.914perframe;processstart5,100,388,352,
+peak5,228,847,104;GPUpeak1,934,773,128;exceptions0;prep8.6427ms,
+near0.2258456s,drain10.022403s. Detailedcoverage and88/88mesh pass.
+Original-source comparisons pass FPS/frame-tail/allocation/memory gates;
+GPU p99=3.4646988ms is within10% of repeatedoriginal3.1781197ms.
+Absolute10s drain remains narrowly failed; no new exception granted.
+Reapply final candidate exactly for the paired group2 repeat. Preserve first
+candidate failure; evaluate repeated results together with all controls.
+
+Final repeat source matches every final-source.json hash; removed template remains
+absent. Engine compile succeeds, no new errors. Readiness14:32:35UTC:
+1848x960,visual/seam/placementqueues0,waterready,collision4913,prediction320,
+normal settled spawn(0.032360062,-0.0232566856,257.143341). Same persisted field,
+engine/process/hardware and authored parameters. Warmup starts here.
+
+Final repeat9618fdcb7eb849bf91f79f8f911ac550,trigger14:33:37UTC:
+457.19363FPS (-7.05% vs pairedgroup1),p95=4.3291ms,p99=8.5817ms,
+max87.0657ms;allocated5,504,081,416bytes/98,724.375perframe;
+processstart5,188,890,624/peak5,333,311,488;GPUpeak1,935,119,416;
+exceptions0;prep10.2039ms,near0.0378637s,drain10.871142s.
+Detailedcoverage and88/88mesh pass. FPS failure repeats while process memory
+is back near baseline; therefore memory drift does not explain away this
+candidate. REJECT group2 runtime simplification as measured; retain its patches
+and failed results. Restore original status-refresh/chunk-construction behavior.
+Revised group2 contains only unconsumed accessors and unauthored
+controller removal. Compare against passing group1repeat with unchanged scenario.
+No hypothesis about cache warmup or compiler behavior is accepted as a root cause.
+
+Revised candidate readiness14:38:08UTC:actual1848x960,queues0,waterready,
+collision4913,prediction320,normal spawn matches original recorded coordinates.
+Source captured in accepted-candidate.patch and accepted-candidate-source.json.
+Warmup begins here. Runtime behavior includes restored status refresh/constructors;
+revised dead-code group removes only controller and unconsumed accessors.
+
+Revised012187377e2c4f94a31adc70bcf3ff7f,trigger14:39:10UTC:
+487.96497FPS,p95=3.8798ms,p99=7.8328ms,max86.3603ms;
+allocated5,792,395,440bytes/97,343perframe;processstart5,163,442,176,
+peak5,322,526,720;GPUpeak1,935,299,640;exceptions0;near0.122399s,
+drain12.040604s;prep20.2327ms FAIL16.67ms.88/88mesh/detailedcoverage pass.
+FPS recovered with restored status/construction, but preparation spike remains
+unexplained. WITHDRAW revisedgroup2 as well; no new latency exception accepted.
+Deliver only group1 plus Git-only generated-file housekeeping. Restore the exact
+measured group1 source and verify every recorded hash and engine compilation.
+Group1repeat is the passing delivery-source measurement; all failed candidates
+remain archived. No claim is made that dead accessors caused the preparation spike.
+Remaining unused members/controller are deferred under the performance acceptance
+rule rather than removed without an accepted comparison. No further runtime
+changes are included beyond the already measured group1 source.
+
+Delivery verification: runtime diff byte-matches group1.patch; all group1 source
+hashes match. Engine26.09.08b reports compile success/zero errors after restoration.
+Whitespace checks pass. Normal visible Play restarted for handoff; this startup
+is not an additional performance run. No shader sources or local compiled bytes
+were changed. Commit scope is group1,23 generated index removals,and review evidence.
+
+Evidence JSON compacted losslessly (parsed values compared equal). Patch artifacts
+use local Git attributes to preserve literal bytes and exclude patch-context
+indentation from source whitespace rules. Staged source/document checks pass.

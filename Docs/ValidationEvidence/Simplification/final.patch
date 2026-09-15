@@ -1,0 +1,704 @@
+diff --git a/Code/CustomTopDownController.cs b/Code/CustomTopDownController.cs
+deleted file mode 100644
+index 56ebd1f..0000000
+--- a/Code/CustomTopDownController.cs
++++ /dev/null
+@@ -1,28 +0,0 @@
+-public sealed class CustomTopDownController : Component
+-{
+-	[RequireComponent] PlayerController Controller { get; set; }
+-
+-	protected override void OnFixedUpdate()
+-	{
+-		// Lets make the player move when we press WASD
+-		var speed = Input.Down( "Run" ) ? Controller.RunSpeed : Controller.WalkSpeed;
+-		Controller.WishVelocity = Input.AnalogMove * speed;
+-
+-		// And rotate the player to face the direction of the movement
+-		if ( Controller.WishVelocity.LengthSquared > 0 )
+-		{
+-			var targetAngle = Controller.WishVelocity.EulerAngles;
+-			Controller.EyeAngles = Rotation.Slerp( Controller.EyeAngles, targetAngle, Time.Delta * 10f );
+-		}
+-	}
+-
+-	protected override void OnPreRender()
+-	{
+-		// This will update the camera's position so that it's up in the air and back a bit, looking down at an angle.
+-		Scene.Camera.WorldPosition = Controller.WorldPosition + Vector3.Up * 1024f + Vector3.Backward * 256f;
+-		Scene.Camera.WorldRotation = new Angles( 75, 0, 0 );
+-	}
+-}
+-
+-
+-
+diff --git a/Code/UI/VoxelDebugOverlay.razor b/Code/UI/VoxelDebugOverlay.razor
+index 75a8bc9..0228aef 100644
+--- a/Code/UI/VoxelDebugOverlay.razor
++++ b/Code/UI/VoxelDebugOverlay.razor
+@@ -21,12 +21,6 @@
+ @code
+ {
+ 	private bool _visible;
+-	private bool _inputLogged;
+-	private bool _lastRawDown;
+-	private bool _lastForwardDown;
+-	private bool _lastActionDown;
+-	private bool _lastInputSuppressed;
+-	private string _lastInputBinding;
+ 	private string _toggleKey = "";
+ 	private float _refreshElapsed;
+ 	private PlayerController _player;
+@@ -36,31 +30,10 @@
+ 
+ 	protected override void OnUpdate()
+ 	{
+-		var rawDown = Input.Keyboard.Down( "F9" );
+-		var forwardDown = Input.Down( "Forward" );
+-		var rawPressed = Input.Keyboard.Pressed( "F9" );
+-		var actionDown = Input.Down( "DebugOverlay" );
+-		var actionPressed = Input.Pressed( "DebugOverlay" );
+-		var suppressed = Input.Suppressed;
+-		var binding = Input.GetButtonOrigin( "DebugOverlay" );
+-		if ( !_inputLogged || rawPressed || actionPressed || rawDown != _lastRawDown ||
+-			actionDown != _lastActionDown || forwardDown != _lastForwardDown || suppressed != _lastInputSuppressed || binding != _lastInputBinding )
+-		{
+-			Log.Info( $"[DebugHUD] input binding={binding} rawF9Down={rawDown} rawF9Pressed={rawPressed} " +
+-				$"actionDown={actionDown} actionPressed={actionPressed} suppressed={suppressed} " +
+-				$"forwardDown={forwardDown} visible={_visible} proxy={IsProxy} editor={Scene.IsEditor}" );
+-			_inputLogged = true;
+-			_lastRawDown = rawDown;
+-			_lastForwardDown = forwardDown;
+-			_lastActionDown = actionDown;
+-			_lastInputSuppressed = suppressed;
+-			_lastInputBinding = binding;
+-		}
+-		if ( actionPressed )
++		if ( Input.Pressed( "DebugOverlay" ) )
+ 		{
+ 			_visible = !_visible;
+ 			_refreshElapsed = 0.1f;
+-			Log.Info( $"[DebugHUD] visibility changed visible={_visible}" );
+ 		}
+ 
+ 		if ( _visible )
+diff --git a/Code/Voxels/Generation/RiverWorld.cs b/Code/Voxels/Generation/RiverWorld.cs
+index 9e995d9..64d86f9 100644
+--- a/Code/Voxels/Generation/RiverWorld.cs
++++ b/Code/Voxels/Generation/RiverWorld.cs
+@@ -133,8 +133,6 @@ internal sealed class RiverWorld
+ 		public RiverNetwork.NodeId Minimum { get; }
+ 		public int Width { get; }
+ 		public int Height { get; }
+-		public int BinWidth => Width * RiverNetwork.NodesPerPatch;
+-		public int BinHeight => Height * RiverNetwork.NodesPerPatch;
+ 		public long PayloadBytes { get; }
+ 
+ 		internal Region( ProceduralTerrainSettings settings, RiverNetwork.NodeId minimum,
+diff --git a/Code/Voxels/GpuVoxelMesher.cs b/Code/Voxels/GpuVoxelMesher.cs
+index d84250f..a5edfba 100644
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -136,21 +136,12 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 	private long _gpuSchedulerStallStartTimestamp;
+ 	private int _gpuSchedulerStallActive;
+ 	private long _gpuSchedulerStallCount;
+-	private long _suppressedRenderCallbackCount;
+-	private long _busyRenderCallbackCount;
+-	private long _reportedSuppressedRenderCallbackCount;
+-	private long _lastRenderDiagnosticTimestamp;
+-	private int _renderDiagnosticReportCount;
+ 	private long _drawCommandResetCount;
+ 	private long _visibilityDescriptorUploadCount;
+-	private int _drawCommandDiagnosticReportCount;
+ 	private int _slowDrawCommandCommitReportCount;
+-	private int _cameraBindingDiagnosticCount;
+ 	private long _lastRenderCameraRefreshTimestamp;
+ 	private long _drawCommitStopwatchTicks;
+ 	private int _drawCommitRebuildCount;
+-	private int _renderViewKind;
+-	private long _renderHandoffCount;
+ 	private int _maximumDispatchesRequested = MaximumDispatchesPerUpdate;
+ 	private int _processedRenderDispatches;
+ 	private ulong _topologyDigest;
+@@ -249,7 +240,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 	public int ResidentLevelCount( int level ) => _residentLevelCounts[level];
+ 	public int PendingLevelCount( int level ) =>
+ 		_pendingLevelCounts[level] + CountInFlight( level );
+-	public int ActiveLevelCount( int level ) => _renderActive.Count( key => key.Level == level );
+ 	public int TransitionDesiredCount => _transitionRenderActive.Count;
+ 	public int TransitionReadyCount => _transitionResident.Count;
+ 	public long TransitionGeometryBytes( IEnumerable<GpuTransitionKey> keys )
+@@ -262,18 +252,12 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 	}
+ 	public int TransitionDrawableCount => _transitionResident.Count( value => value.Value.Handle is not null );
+ 	public int TransitionPendingCount => _transitionPending.Count + CountTransitionInFlight();
+-	public int TransitionDesiredCountForPair( int coarseLevel ) =>
+-		_transitionRenderActive.Count( key => key.CoarseLevel == coarseLevel );
+ 	public int TransitionReadyCountForPair( int coarseLevel ) =>
+ 		_transitionResident.Count( pair => pair.Key.CoarseLevel == coarseLevel );
+ 	public int TransitionDrawableCountForPair( int coarseLevel ) =>
+ 		_transitionResident.Count( pair => pair.Key.CoarseLevel == coarseLevel && pair.Value.Handle is not null );
+ 	public int TransitionPendingCountForCoarseLevel( int coarseLevel ) =>
+ 		TransitionPendingCountForPair( coarseLevel );
+-	public long TransitionScheduledCount => _transitionScheduledCount;
+-	public long TransitionPublishedCount => _transitionPublishedCount;
+-	public long TransitionCancelledCount => _transitionCancelledCount;
+-	public long TransitionStaleCount => _transitionStaleCount;
+ 	public long TransitionUniqueVertexCount => _transitionResident.Values.Sum( value => (long)(value.Handle?.Vertices.Count ?? 0) );
+ 	public long TransitionIndexCount => _transitionResident.Values.Sum( value => (long)(value.Handle?.Indices.Count ?? 0) );
+ 	public long TransitionActiveCellCount => _transitionResident.Values.Sum( value => (long)value.Counts.ActiveCells );
+@@ -281,11 +265,9 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 	public string TransitionPositionDigest => _transitionPositionDigest.ToString( "X16" );
+ 	public uint TransitionFineFaceMismatchCount => _transitionFineFaceMismatchCount;
+ 	public uint TransitionCoarseFaceMismatchCount => _transitionCoarseFaceMismatchCount;
+-	public uint TransitionLateralEdgeDigest => _transitionLateralEdgeDigest;
+ 	public uint TransitionLateralMismatchCount => CountTransitionLateralMismatches();
+ 	public uint TransitionInvalidTableCount => _transitionInvalidTableCount;
+ 	public int PoolCount => _arenas.Sum( arena => arena.FreeSlotCount );
+-	public int AllocatedResourceCount => _arenas.Count * RegionsPerSlab;
+ 	public long DispatchCount => _dispatchCount;
+ 	public long PoolAllocationCount => _poolAllocationCount;
+ 	public long PoolReuseCount => _poolReuseCount;
+@@ -303,7 +285,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 	public double CountReadbackMilliseconds => _countReadbackMilliseconds;
+ 	public double CountSubmissionMilliseconds => _countSubmissionMilliseconds;
+ 	public double EmitSubmissionMilliseconds => _emitSubmissionMilliseconds;
+-	public long VisibilityScalarReadbackCount => _visibilityScalarReadbackCount;
+ 	public long GeometryReadbackCount => _geometryReadbackCount;
+ 	public long ResidentPublicationRevision => _residentPublicationRevision;
+ 	public const long OrdinaryRenderSdfEvaluationCount = 0;
+@@ -319,7 +300,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 			return count;
+ 		}
+ 	}
+-	public int IndirectArgumentRecordCount => TerrainIndirectApiSubmissionCount * RegionsPerSlab;
+ 	public int TerrainBufferGroupCount => _arenas.Count;
+ 	public long LogicalCapacityBytes => UsedVertexBytes + UsedIndexBytes;
+ 	public long ReservedActiveCellCapacity => 0;
+@@ -1729,7 +1709,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 		_publishChunkContent();
+ 		CommitDrawCommands();
+ 		TryIssueMeshAuditReadbacks();
+-		ReportSuppressedRenderCallbacks();
+ 		return processed;
+ 	}
+ 
+@@ -1747,13 +1726,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 		var updateEpoch = System.Threading.Interlocked.Read( ref _updateEpoch );
+ 		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
+ 		{
+-			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
+ 			return false;
+ 		}
+ 
+ 		if ( System.Threading.Interlocked.CompareExchange( ref _renderTickInProgress, 1, 0 ) != 0 )
+ 		{
+-			System.Threading.Interlocked.Increment( ref _busyRenderCallbackCount );
+ 			return false;
+ 		}
+ 
+@@ -1761,7 +1738,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
+ 		{
+ 			System.Threading.Interlocked.Exchange( ref _renderTickInProgress, 0 );
+-			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
+ 			return false;
+ 		}
+ 
+@@ -1771,7 +1747,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 
+ 	private void ObserveRenderView()
+ 	{
+-		var mainCameraPosition = _camera.IsValid() ? _camera.WorldPosition : Vector3.Zero;
+ 		var renderCameraPosition = Graphics.CameraPosition;
+ 		lock ( _renderCameraLock )
+ 		{
+@@ -1783,20 +1758,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 				break;
+ 			}
+ 		}
+-		var viewKind = _camera.IsValid() && renderCameraPosition.AlmostEqual( mainCameraPosition, 0.25f ) ? 1 : 2;
+-		var previousKind = System.Threading.Interlocked.Exchange( ref _renderViewKind, viewKind );
+-		if ( previousKind == 0 || previousKind == viewKind ) return;
+ 
+-		var handoff = System.Threading.Interlocked.Increment( ref _renderHandoffCount );
+-		if ( handoff > 8 ) return;
+-		if ( System.Threading.Interlocked.Increment( ref _renderDiagnosticReportCount ) > 10 ) return;
+-		Log.Info(
+-			$"[VoxelWorld] gpu.render.view_handoff total={handoff} " +
+-			$"from={(previousKind == 1 ? "main" : "other")} to={(viewKind == 1 ? "main" : "other")} " +
+-			$"renderCamera={renderCameraPosition} mainCamera={mainCameraPosition} " +
+-			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+-			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+-			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+ 	}
+ 
+ 	private void CommitDrawCommands()
+@@ -1873,28 +1835,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 			$"cameras={cameraCount}" );
+ 	}
+ 
+-	private void ReportSuppressedRenderCallbacks()
+-	{
+-		var suppressed = System.Threading.Interlocked.Read( ref _suppressedRenderCallbackCount );
+-		if ( suppressed == _reportedSuppressedRenderCallbackCount ||
+-			System.Threading.Interlocked.CompareExchange( ref _renderDiagnosticReportCount, 0, 0 ) >= 10 ) return;
+-
+-		var now = Stopwatch.GetTimestamp();
+-		if ( _lastRenderDiagnosticTimestamp != 0 &&
+-			Stopwatch.GetElapsedTime( _lastRenderDiagnosticTimestamp, now ).TotalSeconds < 1.0 ) return;
+-
+-		var newlySuppressed = suppressed - _reportedSuppressedRenderCallbackCount;
+-		_reportedSuppressedRenderCallbackCount = suppressed;
+-		_lastRenderDiagnosticTimestamp = now;
+-		if ( System.Threading.Interlocked.Increment( ref _renderDiagnosticReportCount ) > 10 ) return;
+-		Log.Info(
+-			$"[VoxelWorld] gpu.render.extra_views suppressedTotal={suppressed} suppressedSinceLast={newlySuppressed} " +
+-			$"busyTotal={System.Threading.Interlocked.Read( ref _busyRenderCallbackCount )} " +
+-			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+-			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
+-			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+-	}
+-
+ 	private bool TryIssueMeshAuditReadbacks()
+ 	{
+ 		MeshAuditRequest request;
+@@ -3495,17 +3435,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 		state.DepthArenas = _arenas.ToArray();
+ 		commands.Reset();
+ 		_drawCommandResetCount++;
+-		if ( _drawCommandDiagnosticReportCount < 32 )
+-		{
+-			_drawCommandDiagnosticReportCount++;
+-			Log.Info(
+-				$"[VoxelWorld] gpu.render.command_list_reset total={_drawCommandResetCount} " +
+-				$"descriptorUploads={_visibilityDescriptorUploadCount} arenas={_arenas.Count} " +
+-				$"visibilityCapacity={_visibilityCapacity} measurement={_visibilityMeasurementActive} " +
+-				$"settledCapture={_visibilitySettledCaptureActive} " +
+-				$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
+-				$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
+-		}
+ 		if ( _visibilityCapacity > 0 && _fieldPresentationReady )
+ 		{
+ 			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
+@@ -3945,7 +3874,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 			_leavingRenderCameras.Clear();
+ 			_leavingRenderCameras.UnionWith( _renderCameraStates.Keys );
+ 			_leavingRenderCameras.ExceptWith( _currentRenderCameras );
+-			var leavingCount = _leavingRenderCameras.Count;
+ 			foreach ( var camera in _leavingRenderCameras )
+ 			{
+ 				var state = _renderCameraStates[camera];
+@@ -3955,7 +3883,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 			}
+ 
+ 			_currentRenderCameras.ExceptWith( _renderCameraStates.Keys );
+-			var enteringCount = _currentRenderCameras.Count;
+ 			foreach ( var camera in _currentRenderCameras )
+ 			{
+ 				var state = new RenderCameraState( camera );
+@@ -3965,13 +3892,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 			_visibilityReadbackState = _camera.IsValid() && _renderCameraStates.TryGetValue( _camera, out var mainState )
+ 				? mainState
+ 				: null;
+-			if ( (enteringCount > 0 || leavingCount > 0) && _cameraBindingDiagnosticCount < 16 )
+-			{
+-				_cameraBindingDiagnosticCount++;
+-				Log.Info(
+-					$"[VoxelWorld] gpu.render.camera_bindings attached={_renderCameraStates.Count} " +
+-					$"entered={enteringCount} left={leavingCount} mainCameraValid={_camera.IsValid()}" );
+-			}
+ 		}
+ 	}
+ 
+@@ -4748,12 +4668,6 @@ internal readonly record struct GpuVisibilityMeasurement(
+ 	public float AverageResident => FrameCount > 0 ? (float)ResidentTotal / FrameCount : 0;
+ 	public float AverageVisible => FrameCount > 0 ? (float)VisibleTotal / FrameCount : 0;
+ 	public float AverageWarm => FrameCount > 0 ? (float)WarmTotal / FrameCount : 0;
+-	public float AverageLevelResident( int level ) => FrameCount > 0
+-		? (float)LevelResidentTotals[level] / FrameCount
+-		: 0;
+-	public float AverageLevelVisible( int level ) => FrameCount > 0
+-		? (float)LevelVisibleTotals[level] / FrameCount
+-		: 0;
+ 	public float AverageCulled => MathF.Max( 0, AverageResident - AverageVisible );
+ 	public float CulledPercent => AverageResident > 0 ? AverageCulled * 100 / AverageResident : 0;
+ }
+diff --git a/Code/Voxels/VoxelChunk.cs b/Code/Voxels/VoxelChunk.cs
+index aec042f..2bf65a8 100644
+--- a/Code/Voxels/VoxelChunk.cs
++++ b/Code/Voxels/VoxelChunk.cs
+@@ -30,50 +30,26 @@ internal sealed class VoxelChunk
+ 	public float MinimumDensity { get; }
+ 	public float MaximumDensity { get; }
+ 	public ChunkDensityClassification DensityClassification { get; }
+-	public float DensityRangeEvaluationMilliseconds { get; }
+ 	public string HumanName => $"Chunk X {Coordinate.x}, Y {Coordinate.y}, Z {Coordinate.z}";
+ 	public string LogId => $"C[{Coordinate.x},{Coordinate.y},{Coordinate.z}]";
+ 
+ 	public VoxelChunk(
+-		Vector3Int coordinate,
+-		int cellsPerAxis,
+-		float cellSize,
+-		TerrainFieldSnapshot field )
+-		: this( coordinate, cellsPerAxis, cellSize, field, null )
+-	{
+-	}
+-
+-	internal VoxelChunk(
+-		Vector3Int coordinate,
+-		int cellsPerAxis,
+-		float cellSize,
+-		TerrainFieldSnapshot field,
+-		ChunkDensityRange densityRange )
+-		: this( coordinate, cellsPerAxis, cellSize, field, (ChunkDensityRange?)densityRange )
+-	{
+-	}
+-
+-	private VoxelChunk(
+ 		Vector3Int coordinate,
+ 		int cellsPerAxis,
+ 		float cellSize,
+ 		TerrainFieldSnapshot field,
+-		ChunkDensityRange? knownDensityRange )
++		ChunkDensityRange? knownDensityRange = null )
+ 	{
+ 		Coordinate = coordinate;
+ 		CellsPerAxis = cellsPerAxis;
+ 		SamplesPerAxis = cellsPerAxis + 1;
+ 		CellSize = cellSize;
+ 
+-		var boundsStart = System.Diagnostics.Stopwatch.GetTimestamp();
+ 		var densityRange = knownDensityRange ?? ClassifyDensityRange(
+ 			coordinate,
+ 			cellsPerAxis,
+ 			cellSize,
+ 			field );
+-		DensityRangeEvaluationMilliseconds = knownDensityRange.HasValue
+-			? 0f
+-			: (float)System.Diagnostics.Stopwatch.GetElapsedTime( boundsStart ).TotalMilliseconds;
+ 		_globalSampleOrigin = coordinate * cellsPerAxis;
+ 		var size = cellsPerAxis * cellSize;
+ 		var origin = new Vector3( coordinate.x, coordinate.y, coordinate.z ) * size;
+diff --git a/Code/Voxels/VoxelManager.Coverage.cs b/Code/Voxels/VoxelManager.Coverage.cs
+index d0adca8..820d0bb 100644
+--- a/Code/Voxels/VoxelManager.Coverage.cs
++++ b/Code/Voxels/VoxelManager.Coverage.cs
+@@ -219,10 +219,6 @@ public sealed partial class VoxelManager
+ 		public readonly HashSet<GpuTransitionKey> SeamKeys = new();
+ 		public readonly Queue<GpuMeshRegionKey> Targets = new();
+ 		public readonly Queue<GpuMeshRegionKey> Balance = new();
+-		public GpuMeshRegionKey Target;
+-		public int PreviousTargetLod;
+-		public GpuMeshRegionKey Focus;
+-		public int PreviousFocusLod;
+ 		public int PlanningStage;
+ 		public int SeamCursor;
+ 		public bool PlanningFailed;
+@@ -584,8 +580,6 @@ public sealed partial class VoxelManager
+ 	private void BeginRefinementPatch( LocalReplacement operation, GpuMeshRegionKey requested )
+ 	{
+ 		var center = WorldToChunkCoordinate( ActiveStreamingTarget.WorldPosition );
+-		operation.Focus = new GpuMeshRegionKey( 0, center );
+-		operation.PreviousFocusLod = FindCoverageAncestor( operation.Focus, out var previous ) ? previous.Level : -1;
+ 		for ( var z = -1; z <= 1; z++ )
+ 		for ( var y = -1; y <= 1; y++ )
+ 		for ( var x = -1; x <= 1; x++ )
+@@ -604,8 +598,6 @@ public sealed partial class VoxelManager
+ 				Math.Clamp( child.Coordinate.y, minimum.y, minimum.y + 1 ),
+ 				Math.Clamp( child.Coordinate.z, minimum.z, minimum.z + 1 ) ) );
+ 		}
+-		operation.Target = focus;
+-		operation.PreviousTargetLod = FindCoverageAncestor( focus, out var targetPrevious ) ? targetPrevious.Level : -1;
+ 		operation.Targets.Enqueue( focus );
+ 	}
+ 
+@@ -865,22 +857,6 @@ public sealed partial class VoxelManager
+ 		}
+ 		var publicationMilliseconds = Stopwatch.GetElapsedTime( publicationStarted ).TotalMilliseconds;
+ 		_coverageMaximumPublicationMilliseconds = Math.Max( _coverageMaximumPublicationMilliseconds, publicationMilliseconds );
+-		if ( operation.Split )
+-		{
+-			Log.Info( "[VoxelWorld] coverage.refinement.commit " + System.Text.Json.JsonSerializer.Serialize( new
+-			{
+-				Outgoing = operation.Outgoing.Count, Incoming = operation.Incoming.Count,
+-				operation.Focus, operation.PreviousFocusLod,
+-				operation.Target, operation.PreviousTargetLod,
+-				PublishedTargetLod = FindCoverageAncestor( operation.Target, out var targetPublished ) ? targetPublished.Level : -1,
+-				PublishedFocusLod = FindCoverageAncestor( operation.Focus, out var published ) ? published.Level : -1,
+-				RemovedLevels = operation.Outgoing.GroupBy( key => key.Level ).ToDictionary( group => group.Key, group => group.Count() ),
+-				PublishedLevels = operation.Incoming.GroupBy( key => key.Level ).ToDictionary( group => group.Key, group => group.Count() ),
+-				VirtualSplits = operation.SplitNodes.Count, Seams = operation.NewSeams.Count,
+-				AgeSeconds = Stopwatch.GetElapsedTime( operation.Started ).TotalSeconds,
+-				PublicationMilliseconds = publicationMilliseconds
+-			}, PerformanceJsonOptions ) );
+-		}
+ 		_coverageLocalCommits++;
+ 		_coverageDiffersFromLayout = true;
+ 		_waterRequestSerial++;
+diff --git a/Code/Voxels/VoxelManager.DeformationReporting.cs b/Code/Voxels/VoxelManager.DeformationReporting.cs
+index d9b1bdb..cc428e0 100644
+--- a/Code/Voxels/VoxelManager.DeformationReporting.cs
++++ b/Code/Voxels/VoxelManager.DeformationReporting.cs
+@@ -196,8 +196,6 @@ public sealed partial class VoxelManager
+ 				var bytes = Encoding.UTF8.GetBytes( JsonSerializer.Serialize( result, PerformanceJsonOptions ) );
+ 				stream.Write( bytes, 0, bytes.Length );
+ 				Log.Info( $"[DeformationReport] saved path={path} committed={result.Committed} heldSeconds={capture.HeldSeconds:F2} failure={_terrainEditFailure ?? "none"}" );
+-				Log.Info( "[DeformationReport] timings " + JsonSerializer.Serialize( result.Timings, PerformanceJsonOptions ) );
+-				Log.Info( "[DeformationReport] waits " + JsonSerializer.Serialize( new { result.HeldGateSeconds, result.Outcomes }, PerformanceJsonOptions ) );
+ 			}
+ 			catch ( Exception exception ) { Log.Warning( $"[DeformationReport] save.failed reason={exception.Message}" ); }
+ 		}
+diff --git a/Code/Voxels/VoxelManager.cs b/Code/Voxels/VoxelManager.cs
+index 769f942..a574abc 100644
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -23,7 +23,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 	private const float MainThreadIntegrationBudgetMilliseconds = 0.5f;
+ 	private const float PerformanceWindowSeconds = 10f;
+ 	private const float MemorySampleIntervalSeconds = 1f;
+-	private const float ReadableStatusRefreshIntervalSeconds = 0.25f;
+ 	private const int MaximumPerformanceFrameSamples = 524288;
+ 	private const int MaximumFigureEightLoopCount = 8;
+ 	private const int DefaultGameplayRadius = 4;
+@@ -97,7 +96,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 	private const double StoppedTargetRecoverySeconds = 0.1;
+ 	private long _clipboxRecoveryMotionTimestamp;
+ 	private Vector3 _clipboxRecoveryMotionPosition;
+-	private bool _clipboxRecoveringAtTarget;
+ 	private long _clipboxPlacementDeferredUpdates;
+ 	private long _clipboxPlacementReadinessBlocks;
+ 	private long _clipboxPlacementUnsafeCommits;
+@@ -139,8 +137,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 	private Vector3Int _streamingCenterCoordinate;
+ 	private int _streamingGameplayRadius;
+ 	private int _streamingRenderRadius = -1;
+-	private Vector3Int _playerStatusCoordinate;
+-	private VoxelChunk _playerStatusChunk;
+ 	private long _streamStartedTimestamp;
+ 	private int _appliedCellsPerAxis = RequiredCellsPerAxis;
+ 	private float _appliedCellSize = RequiredBaseCellSize;
+@@ -151,7 +147,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 	private CancellationTokenSource _warmGenerationCancellation;
+ 	private System.Threading.Tasks.Task _warmGenerationTask = System.Threading.Tasks.Task.CompletedTask;
+ 	private string _lastConfigurationError = string.Empty;
+-	private float _readableStatusRefreshElapsedSeconds;
+ 	private GameObject _resolvedStreamingTarget;
+ 	private bool _playerFigureEightEnabled;
+ 	private GameObject _playerFigureEightTarget;
+@@ -389,20 +384,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 	[Property, ReadOnly, Category( "World Status" )]
+ 	public string ProcessMemoryUsage { get; private set; } = "Not measured";
+ 
+-	public int LoadedChunkCount { get; private set; }
+-
+-	public int PendingChunkCount { get; private set; }
+-
+-	public string PlayerChunk { get; private set; } = "Not initialized";
+-
+-	public string PlayerChunkData { get; private set; } = "Not initialized";
+-
+-	public string LoadedChunkRange { get; private set; } = "Not initialized";
+-
+ 	public float LastRangeUpdateMilliseconds { get; private set; }
+ 
+-	public string StreamingTargetStatus { get; private set; } = "Manager object (no target assigned)";
+-
+ 	protected override async System.Threading.Tasks.Task OnLoad()
+ 	{
+ 		if ( Scene.IsEditor ) return;
+@@ -530,15 +513,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		{
+ 			RefreshReadableStatus();
+ 		}
+-		else
+-		{
+-			_readableStatusRefreshElapsedSeconds += RealTime.Delta;
+-			if ( _readableStatusRefreshElapsedSeconds >= ReadableStatusRefreshIntervalSeconds )
+-			{
+-				_readableStatusRefreshElapsedSeconds = 0f;
+-				RefreshPlayerChunkStatus();
+-			}
+-		}
+ 		AdvanceClipboxPreparation();
+ 		UpdateTerrainPrediction();
+ 		UpdateWaterCellGeneration();
+@@ -615,7 +589,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 			_terrainReadResults = null;
+ 			_terrainSweepSource = null;
+ 			_terrainSweepPages = default;
+-			_playerStatusChunk = null;
+ 			_completedWarmChunks.Clear();
+ 			_warmGenerationTask = null;
+ 		}
+@@ -1092,19 +1065,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 
+ 		PerformanceResultsLocation =
+ 			global::Sandbox.FileSystem.Data.GetFullPath( PerformanceResultsPath ) ?? PerformanceResultsPath;
+-		Log.Info( $"[VoxelWorld] performance.work runId={runId} " +
+-			$"prepared={result.Streaming.PreparationIntegrated} retained={result.Streaming.PreparationResultsRetainedOnMovement} " +
+-			$"dropped={result.Streaming.PreparationResultsDroppedOnMovement} " +
+-			$"cacheScans={result.Streaming.PlacementCacheCoordinatesScanned} skippedLevels={result.Streaming.PlacementLevelsSkipped} " +
+-			$"placementMs={result.Streaming.PlacementPreparationMilliseconds:0.###} maxLevelLag={result.Hierarchy.MaximumPlacementLevelLag} " +
+-			$"skippedGeometry={result.Meshing.SkippedRegularGeometryRegions}/{result.Meshing.SkippedTransitionGeometryRegions} " +
+-			$"emptyBatchesAvoided={result.Meshing.EmptyBatchSubmissionsAvoided}" );
+-		Log.Info(
+-			$"[VoxelWorld] performance.gpu_work runId={runId} " +
+-			$"regularBatches={result.Meshing.RegularCountBatches} regions={result.Meshing.RegularCountRegions} " +
+-			$"emitArenaPasses={result.Meshing.RegularEmitArenaPasses} emitBatchSlots={result.Meshing.RegularEmitBatchSlots} " +
+-			$"enabledEmitRegions={result.Meshing.RegularEnabledEmitRegions} multiArenaBatches={result.Meshing.RegularMultiArenaBatches} " +
+-			$"transitionDeferredTicks={result.Meshing.TransitionDeferredRenderTicks}" );
+ 		LastPerformanceRunId = runId;
+ 		return runId;
+ 	}
+@@ -2554,7 +2514,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		_hasStreamingCenter = false;
+ 		_streamingGameplayRadius = 0;
+ 		_streamingRenderRadius = -1;
+-		_playerStatusChunk = null;
+ 
+ 		var targetPosition = ActiveStreamingTarget.WorldPosition;
+ 		RebuildDesiredChunks( WorldToChunkCoordinate( targetPosition ), "configuration applied" );
+@@ -2698,7 +2657,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		_streamingGameplayRadius = AuthoritativeGameplayRadius;
+ 		_streamingRenderRadius = renderRadius;
+ 		_hasStreamingCenter = true;
+-		_playerStatusChunk = null;
+ 		var desiredUpdateMilliseconds = (float)Stopwatch.GetElapsedTime( desiredUpdateStart ).TotalMilliseconds;
+ 		foreach ( var coordinate in _renderEnteringBuffer )
+ 		{
+@@ -2909,10 +2867,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 						staleTarget |= _levels[level].StagedOuterAnchor != TargetOuterAnchor( level, visualConfiguration );
+ 				if ( staleTarget )
+ 				{
+-					var previousAnchor = _levels[0].StagedOuterAnchor;
+ 					if ( _clipboxPlacementPending ) CancelPendingClipboxPlacement();
+-					PrepareLodPlacement( recoverAtTarget: true );
+-					Log.Info( $"[VoxelWorld] lod.retarget.staged previousFine={previousAnchor} fine={_targetLevelAnchors[0]} localCoverage=true" );
++					PrepareLodPlacement();
+ 				}
+ 			}
+ 			return;
+@@ -2984,7 +2940,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		level > 0 && level < configuration.MaximumVisualLod ? _targetLevelAnchors[level + 1] * 2 :
+ 		_targetLevelAnchors[level];
+ 
+-	private void PrepareLodPlacement( bool recoverAtTarget = false )
++	private void PrepareLodPlacement()
+ 	{
+ 		_lodPlacementStartTime = Stopwatch.GetTimestamp();
+ 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.PreparePlacement );
+@@ -2993,7 +2949,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 			throw new InvalidOperationException( "A clipbox placement step is already pending." );
+ 
+ 		var configuration = _targetVisualConfiguration;
+-		_clipboxRecoveringAtTarget = recoverAtTarget;
+ 		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
+ 		{
+ 			var state = _levels[level];
+@@ -3499,11 +3454,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		_gpuMesher.PrioritizePlayerDetail = _targetVisualConfiguration.MinimumVisualLod == 0 &&
+ 			_targetLevelAnchors[0] != _levels[0].OuterAnchor;
+ 		_clipboxPlacementCommits++;
+-		if ( _clipboxRecoveringAtTarget )
+-		{
+-			Log.Info( $"[VoxelWorld] lod.retarget.committed fine={_levels[0].OuterAnchor} elapsedMs={Stopwatch.GetElapsedTime( _lodPlacementStartTime ).TotalMilliseconds:0.0}" );
+-			_clipboxRecoveringAtTarget = false;
+-		}
+ 		// Re-admit exterior interest after clearing local queues, including candidates
+ 		// that waited for a refinement patch when the final layout became ready.
+ 		RefreshExteriorPreparation();
+@@ -3524,14 +3474,12 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		}
+ 		var publicationMilliseconds = Stopwatch.GetElapsedTime( publicationStarted ).TotalMilliseconds;
+ 		_maximumFinalCoveragePublicationMilliseconds = Math.Max( _maximumFinalCoveragePublicationMilliseconds, publicationMilliseconds );
+-		Log.Info( $"[VoxelWorld] coverage.final.commit bootstrap={bootstrap} publicationMs={publicationMilliseconds:0.000} readinessMaxMs={_maximumFinalCoverageReadinessMilliseconds:0.000}" );
+ 		PrepareNextClipboxPlacementStep();
+ 	}
+ 
+ 	private void CancelPendingClipboxPlacement()
+ 	{
+ 		if ( !_clipboxPlacementPending ) return;
+-		_clipboxRecoveringAtTarget = false;
+ 		_coverageLocalPlan = false;
+ 		foreach ( var operation in _coveragePending )
+ 		{
+@@ -3740,16 +3688,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 		}
+ 	}
+ 
+-	private static bool IsAdjacent( Vector3Int first, Vector3Int second ) =>
+-		IsAdjacentAtMost( first, second, 1 );
+-
+-	private static bool IsAdjacentAtMost( Vector3Int first, Vector3Int second, int maximumDelta )
+-	{
+-		var delta = second - first;
+-		return Math.Abs( delta.x ) <= maximumDelta && Math.Abs( delta.y ) <= maximumDelta &&
+-			Math.Abs( delta.z ) <= maximumDelta;
+-	}
+-
+ 	private void SortTransitionsNearestFirst( List<GpuTransitionKey> keys )
+ 	{
+ 		keys.Sort( ( left, right ) =>
+@@ -4160,58 +4098,18 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
+ 
+ 	private void RefreshReadableStatus()
+ 	{
+-		_readableStatusRefreshElapsedSeconds = 0f;
+-		LoadedChunkCount = _hasStreamingCenter
++		var loadedChunkCount = _hasStreamingCenter
+ 			? GetCubeCoordinateCount( AuthoritativeGameplayRadius )
+ 			: 0;
+-		PendingChunkCount = 0;
+ 		GeneratorStatus =
+ 			$"Regional landforms and retained caves v{ProceduralTerrainSdf.CurrentVersion}; seed {_appliedTerrainSettings.WorldSeed}; " +
+ 			$"{CurrentTerrainSettings}";
+-		ChunkStatus = $"{LoadedChunkCount:N0} logical regions; {_renderPreparedChunks.Count:N0} prepared; " +
++		ChunkStatus = $"{loadedChunkCount:N0} logical regions; {_renderPreparedChunks.Count:N0} prepared; " +
+ 			$"{_pendingWarmChunks.Count:N0} preparation pending; " +
+ 			$"{_gpuMesher?.ResidentCount ?? 0:N0} GPU residents; " +
+ 			$"{_gpuMesher?.AllPendingCount ?? 0:N0} regular meshes pending";
+ 		StreamingPerformance = $"Range applied in {LastRangeUpdateMilliseconds:N3} ms; " +
+ 			$"{_completedWarmChunks.Count:N0} prepared results awaiting integration";
+-		LoadedChunkRange = _hasStreamingCenter
+-			? $"X {_streamingCenterCoordinate.x - AuthoritativeGameplayRadius} through {_streamingCenterCoordinate.x + AuthoritativeGameplayRadius}; " +
+-				$"Y {_streamingCenterCoordinate.y - AuthoritativeGameplayRadius} through {_streamingCenterCoordinate.y + AuthoritativeGameplayRadius}; " +
+-				$"Z {_streamingCenterCoordinate.z - AuthoritativeGameplayRadius} through {_streamingCenterCoordinate.z + AuthoritativeGameplayRadius}"
+-			: "Not initialized";
+-		RefreshPlayerChunkStatus();
+-	}
+-
+-	private void RefreshPlayerChunkStatus()
+-	{
+-		var targetObject = ActiveStreamingTarget;
+-		var targetCoordinate = WorldToChunkCoordinate( targetObject.WorldPosition );
+-		StreamingTargetStatus =
+-			$"{targetObject.Name} at X {targetObject.WorldPosition.x:0.##}, " +
+-			$"Y {targetObject.WorldPosition.y:0.##}, Z {targetObject.WorldPosition.z:0.##}";
+-		PlayerChunk = $"Chunk X {targetCoordinate.x}, Y {targetCoordinate.y}, Z {targetCoordinate.z}";
+-
+-		if ( IsGameplayCoordinate( targetCoordinate ) )
+-		{
+-			if ( _playerStatusChunk is null || _playerStatusCoordinate != targetCoordinate )
+-			{
+-				_playerStatusCoordinate = targetCoordinate;
+-				_playerStatusChunk = new VoxelChunk(
+-					targetCoordinate,
+-					_appliedCellsPerAxis,
+-					_appliedCellSize,
+-					CurrentField );
+-			}
+-			var playerChunk = _playerStatusChunk;
+-			PlayerChunkData =
+-				$"Loaded implicit SDF; {playerChunk.CellsPerAxis} cells per axis; " +
+-				$"{playerChunk.SampleCount:N0} logical samples; " +
+-				$"density {playerChunk.MinimumDensity:0.###} to {playerChunk.MaximumDensity:0.###}";
+-		}
+-		else
+-		{
+-			PlayerChunkData = "Outside the active load radius";
+-		}
+ 	}
+ 
+ }

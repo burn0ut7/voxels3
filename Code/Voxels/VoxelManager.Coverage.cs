@@ -219,10 +219,6 @@ public sealed partial class VoxelManager
 		public readonly HashSet<GpuTransitionKey> SeamKeys = new();
 		public readonly Queue<GpuMeshRegionKey> Targets = new();
 		public readonly Queue<GpuMeshRegionKey> Balance = new();
-		public GpuMeshRegionKey Target;
-		public int PreviousTargetLod;
-		public GpuMeshRegionKey Focus;
-		public int PreviousFocusLod;
 		public int PlanningStage;
 		public int SeamCursor;
 		public bool PlanningFailed;
@@ -584,8 +580,6 @@ public sealed partial class VoxelManager
 	private void BeginRefinementPatch( LocalReplacement operation, GpuMeshRegionKey requested )
 	{
 		var center = WorldToChunkCoordinate( ActiveStreamingTarget.WorldPosition );
-		operation.Focus = new GpuMeshRegionKey( 0, center );
-		operation.PreviousFocusLod = FindCoverageAncestor( operation.Focus, out var previous ) ? previous.Level : -1;
 		for ( var z = -1; z <= 1; z++ )
 		for ( var y = -1; y <= 1; y++ )
 		for ( var x = -1; x <= 1; x++ )
@@ -604,8 +598,6 @@ public sealed partial class VoxelManager
 				Math.Clamp( child.Coordinate.y, minimum.y, minimum.y + 1 ),
 				Math.Clamp( child.Coordinate.z, minimum.z, minimum.z + 1 ) ) );
 		}
-		operation.Target = focus;
-		operation.PreviousTargetLod = FindCoverageAncestor( focus, out var targetPrevious ) ? targetPrevious.Level : -1;
 		operation.Targets.Enqueue( focus );
 	}
 
@@ -865,22 +857,6 @@ public sealed partial class VoxelManager
 		}
 		var publicationMilliseconds = Stopwatch.GetElapsedTime( publicationStarted ).TotalMilliseconds;
 		_coverageMaximumPublicationMilliseconds = Math.Max( _coverageMaximumPublicationMilliseconds, publicationMilliseconds );
-		if ( operation.Split )
-		{
-			Log.Info( "[VoxelWorld] coverage.refinement.commit " + System.Text.Json.JsonSerializer.Serialize( new
-			{
-				Outgoing = operation.Outgoing.Count, Incoming = operation.Incoming.Count,
-				operation.Focus, operation.PreviousFocusLod,
-				operation.Target, operation.PreviousTargetLod,
-				PublishedTargetLod = FindCoverageAncestor( operation.Target, out var targetPublished ) ? targetPublished.Level : -1,
-				PublishedFocusLod = FindCoverageAncestor( operation.Focus, out var published ) ? published.Level : -1,
-				RemovedLevels = operation.Outgoing.GroupBy( key => key.Level ).ToDictionary( group => group.Key, group => group.Count() ),
-				PublishedLevels = operation.Incoming.GroupBy( key => key.Level ).ToDictionary( group => group.Key, group => group.Count() ),
-				VirtualSplits = operation.SplitNodes.Count, Seams = operation.NewSeams.Count,
-				AgeSeconds = Stopwatch.GetElapsedTime( operation.Started ).TotalSeconds,
-				PublicationMilliseconds = publicationMilliseconds
-			}, PerformanceJsonOptions ) );
-		}
 		_coverageLocalCommits++;
 		_coverageDiffersFromLayout = true;
 		_waterRequestSerial++;

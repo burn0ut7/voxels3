@@ -196,8 +196,6 @@ public sealed partial class VoxelManager
 				var bytes = Encoding.UTF8.GetBytes( JsonSerializer.Serialize( result, PerformanceJsonOptions ) );
 				stream.Write( bytes, 0, bytes.Length );
 				Log.Info( $"[DeformationReport] saved path={path} committed={result.Committed} heldSeconds={capture.HeldSeconds:F2} failure={_terrainEditFailure ?? "none"}" );
-				Log.Info( "[DeformationReport] timings " + JsonSerializer.Serialize( result.Timings, PerformanceJsonOptions ) );
-				Log.Info( "[DeformationReport] waits " + JsonSerializer.Serialize( new { result.HeldGateSeconds, result.Outcomes }, PerformanceJsonOptions ) );
 			}
 			catch ( Exception exception ) { Log.Warning( $"[DeformationReport] save.failed reason={exception.Message}" ); }
 		}

@@ -136,21 +136,12 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private long _gpuSchedulerStallStartTimestamp;
 	private int _gpuSchedulerStallActive;
 	private long _gpuSchedulerStallCount;
-	private long _suppressedRenderCallbackCount;
-	private long _busyRenderCallbackCount;
-	private long _reportedSuppressedRenderCallbackCount;
-	private long _lastRenderDiagnosticTimestamp;
-	private int _renderDiagnosticReportCount;
 	private long _drawCommandResetCount;
 	private long _visibilityDescriptorUploadCount;
-	private int _drawCommandDiagnosticReportCount;
 	private int _slowDrawCommandCommitReportCount;
-	private int _cameraBindingDiagnosticCount;
 	private long _lastRenderCameraRefreshTimestamp;
 	private long _drawCommitStopwatchTicks;
 	private int _drawCommitRebuildCount;
-	private int _renderViewKind;
-	private long _renderHandoffCount;
 	private int _maximumDispatchesRequested = MaximumDispatchesPerUpdate;
 	private int _processedRenderDispatches;
 	private ulong _topologyDigest;
@@ -1729,7 +1720,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		_publishChunkContent();
 		CommitDrawCommands();
 		TryIssueMeshAuditReadbacks();
-		ReportSuppressedRenderCallbacks();
 		return processed;
 	}
 
@@ -1747,13 +1737,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		var updateEpoch = System.Threading.Interlocked.Read( ref _updateEpoch );
 		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
 		{
-			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
 			return false;
 		}
 
 		if ( System.Threading.Interlocked.CompareExchange( ref _renderTickInProgress, 1, 0 ) != 0 )
 		{
-			System.Threading.Interlocked.Increment( ref _busyRenderCallbackCount );
 			return false;
 		}
 
@@ -1761,7 +1749,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		if ( updateEpoch <= System.Threading.Interlocked.Read( ref _claimedRenderEpoch ) )
 		{
 			System.Threading.Interlocked.Exchange( ref _renderTickInProgress, 0 );
-			System.Threading.Interlocked.Increment( ref _suppressedRenderCallbackCount );
 			return false;
 		}
 
@@ -1771,7 +1758,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private void ObserveRenderView()
 	{
-		var mainCameraPosition = _camera.IsValid() ? _camera.WorldPosition : Vector3.Zero;
 		var renderCameraPosition = Graphics.CameraPosition;
 		lock ( _renderCameraLock )
 		{
@@ -1783,20 +1769,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				break;
 			}
 		}
-		var viewKind = _camera.IsValid() && renderCameraPosition.AlmostEqual( mainCameraPosition, 0.25f ) ? 1 : 2;
-		var previousKind = System.Threading.Interlocked.Exchange( ref _renderViewKind, viewKind );
-		if ( previousKind == 0 || previousKind == viewKind ) return;
 
-		var handoff = System.Threading.Interlocked.Increment( ref _renderHandoffCount );
-		if ( handoff > 8 ) return;
-		if ( System.Threading.Interlocked.Increment( ref _renderDiagnosticReportCount ) > 10 ) return;
-		Log.Info(
-			$"[VoxelWorld] gpu.render.view_handoff total={handoff} " +
-			$"from={(previousKind == 1 ? "main" : "other")} to={(viewKind == 1 ? "main" : "other")} " +
-			$"renderCamera={renderCameraPosition} mainCamera={mainCameraPosition} " +
-			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
-			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
-			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
 	}
 
 	private void CommitDrawCommands()
@@ -1871,28 +1844,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )} " +
 			$"regularPending={regularPending} transitionPending={transitionPending} residents={ResidentCount} " +
 			$"cameras={cameraCount}" );
-	}
-
-	private void ReportSuppressedRenderCallbacks()
-	{
-		var suppressed = System.Threading.Interlocked.Read( ref _suppressedRenderCallbackCount );
-		if ( suppressed == _reportedSuppressedRenderCallbackCount ||
-			System.Threading.Interlocked.CompareExchange( ref _renderDiagnosticReportCount, 0, 0 ) >= 10 ) return;
-
-		var now = Stopwatch.GetTimestamp();
-		if ( _lastRenderDiagnosticTimestamp != 0 &&
-			Stopwatch.GetElapsedTime( _lastRenderDiagnosticTimestamp, now ).TotalSeconds < 1.0 ) return;
-
-		var newlySuppressed = suppressed - _reportedSuppressedRenderCallbackCount;
-		_reportedSuppressedRenderCallbackCount = suppressed;
-		_lastRenderDiagnosticTimestamp = now;
-		if ( System.Threading.Interlocked.Increment( ref _renderDiagnosticReportCount ) > 10 ) return;
-		Log.Info(
-			$"[VoxelWorld] gpu.render.extra_views suppressedTotal={suppressed} suppressedSinceLast={newlySuppressed} " +
-			$"busyTotal={System.Threading.Interlocked.Read( ref _busyRenderCallbackCount )} " +
-			$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
-			$"claimedEpoch={System.Threading.Interlocked.Read( ref _claimedRenderEpoch )} " +
-			$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
 	}
 
 	private bool TryIssueMeshAuditReadbacks()
@@ -3495,17 +3446,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		state.DepthArenas = _arenas.ToArray();
 		commands.Reset();
 		_drawCommandResetCount++;
-		if ( _drawCommandDiagnosticReportCount < 32 )
-		{
-			_drawCommandDiagnosticReportCount++;
-			Log.Info(
-				$"[VoxelWorld] gpu.render.command_list_reset total={_drawCommandResetCount} " +
-				$"descriptorUploads={_visibilityDescriptorUploadCount} arenas={_arenas.Count} " +
-				$"visibilityCapacity={_visibilityCapacity} measurement={_visibilityMeasurementActive} " +
-				$"settledCapture={_visibilitySettledCaptureActive} " +
-				$"updateEpoch={System.Threading.Interlocked.Read( ref _updateEpoch )} " +
-				$"renderSequence={System.Threading.Interlocked.Read( ref _renderSequence )}" );
-		}
 		if ( _visibilityCapacity > 0 && _fieldPresentationReady )
 		{
 			commands.Attributes.Set( "VisibilityBounds", visibility.Bounds );
@@ -3945,7 +3885,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			_leavingRenderCameras.Clear();
 			_leavingRenderCameras.UnionWith( _renderCameraStates.Keys );
 			_leavingRenderCameras.ExceptWith( _currentRenderCameras );
-			var leavingCount = _leavingRenderCameras.Count;
 			foreach ( var camera in _leavingRenderCameras )
 			{
 				var state = _renderCameraStates[camera];
@@ -3955,7 +3894,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			}
 
 			_currentRenderCameras.ExceptWith( _renderCameraStates.Keys );
-			var enteringCount = _currentRenderCameras.Count;
 			foreach ( var camera in _currentRenderCameras )
 			{
 				var state = new RenderCameraState( camera );
@@ -3965,13 +3903,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			_visibilityReadbackState = _camera.IsValid() && _renderCameraStates.TryGetValue( _camera, out var mainState )
 				? mainState
 				: null;
-			if ( (enteringCount > 0 || leavingCount > 0) && _cameraBindingDiagnosticCount < 16 )
-			{
-				_cameraBindingDiagnosticCount++;
-				Log.Info(
-					$"[VoxelWorld] gpu.render.camera_bindings attached={_renderCameraStates.Count} " +
-					$"entered={enteringCount} left={leavingCount} mainCameraValid={_camera.IsValid()}" );
-			}
 		}
 	}
 

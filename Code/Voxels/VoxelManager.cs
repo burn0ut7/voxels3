@@ -97,7 +97,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private const double StoppedTargetRecoverySeconds = 0.1;
 	private long _clipboxRecoveryMotionTimestamp;
 	private Vector3 _clipboxRecoveryMotionPosition;
-	private bool _clipboxRecoveringAtTarget;
 	private long _clipboxPlacementDeferredUpdates;
 	private long _clipboxPlacementReadinessBlocks;
 	private long _clipboxPlacementUnsafeCommits;
@@ -1092,19 +1091,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 		PerformanceResultsLocation =
 			global::Sandbox.FileSystem.Data.GetFullPath( PerformanceResultsPath ) ?? PerformanceResultsPath;
-		Log.Info( $"[VoxelWorld] performance.work runId={runId} " +
-			$"prepared={result.Streaming.PreparationIntegrated} retained={result.Streaming.PreparationResultsRetainedOnMovement} " +
-			$"dropped={result.Streaming.PreparationResultsDroppedOnMovement} " +
-			$"cacheScans={result.Streaming.PlacementCacheCoordinatesScanned} skippedLevels={result.Streaming.PlacementLevelsSkipped} " +
-			$"placementMs={result.Streaming.PlacementPreparationMilliseconds:0.###} maxLevelLag={result.Hierarchy.MaximumPlacementLevelLag} " +
-			$"skippedGeometry={result.Meshing.SkippedRegularGeometryRegions}/{result.Meshing.SkippedTransitionGeometryRegions} " +
-			$"emptyBatchesAvoided={result.Meshing.EmptyBatchSubmissionsAvoided}" );
-		Log.Info(
-			$"[VoxelWorld] performance.gpu_work runId={runId} " +
-			$"regularBatches={result.Meshing.RegularCountBatches} regions={result.Meshing.RegularCountRegions} " +
-			$"emitArenaPasses={result.Meshing.RegularEmitArenaPasses} emitBatchSlots={result.Meshing.RegularEmitBatchSlots} " +
-			$"enabledEmitRegions={result.Meshing.RegularEnabledEmitRegions} multiArenaBatches={result.Meshing.RegularMultiArenaBatches} " +
-			$"transitionDeferredTicks={result.Meshing.TransitionDeferredRenderTicks}" );
 		LastPerformanceRunId = runId;
 		return runId;
 	}
@@ -2909,10 +2895,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 						staleTarget |= _levels[level].StagedOuterAnchor != TargetOuterAnchor( level, visualConfiguration );
 				if ( staleTarget )
 				{
-					var previousAnchor = _levels[0].StagedOuterAnchor;
 					if ( _clipboxPlacementPending ) CancelPendingClipboxPlacement();
-					PrepareLodPlacement( recoverAtTarget: true );
-					Log.Info( $"[VoxelWorld] lod.retarget.staged previousFine={previousAnchor} fine={_targetLevelAnchors[0]} localCoverage=true" );
+					PrepareLodPlacement();
 				}
 			}
 			return;
@@ -2984,7 +2968,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		level > 0 && level < configuration.MaximumVisualLod ? _targetLevelAnchors[level + 1] * 2 :
 		_targetLevelAnchors[level];
 
-	private void PrepareLodPlacement( bool recoverAtTarget = false )
+	private void PrepareLodPlacement()
 	{
 		_lodPlacementStartTime = Stopwatch.GetTimestamp();
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.PreparePlacement );
@@ -2993,7 +2977,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			throw new InvalidOperationException( "A clipbox placement step is already pending." );
 
 		var configuration = _targetVisualConfiguration;
-		_clipboxRecoveringAtTarget = recoverAtTarget;
 		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
 		{
 			var state = _levels[level];
@@ -3499,11 +3482,6 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_gpuMesher.PrioritizePlayerDetail = _targetVisualConfiguration.MinimumVisualLod == 0 &&
 			_targetLevelAnchors[0] != _levels[0].OuterAnchor;
 		_clipboxPlacementCommits++;
-		if ( _clipboxRecoveringAtTarget )
-		{
-			Log.Info( $"[VoxelWorld] lod.retarget.committed fine={_levels[0].OuterAnchor} elapsedMs={Stopwatch.GetElapsedTime( _lodPlacementStartTime ).TotalMilliseconds:0.0}" );
-			_clipboxRecoveringAtTarget = false;
-		}
 		// Re-admit exterior interest after clearing local queues, including candidates
 		// that waited for a refinement patch when the final layout became ready.
 		RefreshExteriorPreparation();
@@ -3524,14 +3502,12 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		}
 		var publicationMilliseconds = Stopwatch.GetElapsedTime( publicationStarted ).TotalMilliseconds;
 		_maximumFinalCoveragePublicationMilliseconds = Math.Max( _maximumFinalCoveragePublicationMilliseconds, publicationMilliseconds );
-		Log.Info( $"[VoxelWorld] coverage.final.commit bootstrap={bootstrap} publicationMs={publicationMilliseconds:0.000} readinessMaxMs={_maximumFinalCoverageReadinessMilliseconds:0.000}" );
 		PrepareNextClipboxPlacementStep();
 	}
 
 	private void CancelPendingClipboxPlacement()
 	{
 		if ( !_clipboxPlacementPending ) return;
-		_clipboxRecoveringAtTarget = false;
 		_coverageLocalPlan = false;
 		foreach ( var operation in _coveragePending )
 		{

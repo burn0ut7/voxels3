@@ -245,9 +245,16 @@ mismatch counters, so configuration rejection and restoration can be inspected
 without reading geometry back from the GPU.
 Neither creates independent world state or changes the streaming origin.
 
+The HUD resolves coordinates through `TryGetChunkCoordinate` and refreshes only
+while visible; temporary raw-key/input-state tracing is removed. The attempted
+status-cache and chunk-construction cleanup was withdrawn after repeated FPS
+regressions; the original implementation remains.
+
 Verbose logging is opt-in; per-chunk load/unload spam and runtime loaded-chunk
-bounds/labels are absent. Warnings, errors, explicit read-only diagnostics, and
-performance begin/save records remain sparse unconditional evidence. Process
+bounds/labels are absent. Normal publication and render-camera/callback diagnostic
+logs and their log-only state are removed; saved performance metrics and explicit
+coverage/deformation reports retain their existing schemas. Warnings, errors,
+explicit read-only diagnostics, and performance begin/save records remain sparse unconditional evidence. Process
 working set and engine GPU memory are labeled by scope, not attributed to chunks.
 
 ## Performance Overview
