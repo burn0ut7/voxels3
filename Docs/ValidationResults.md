@@ -27955,3 +27955,114 @@ computes receiver offsets using pixel derivatives. Boundary derivative behavior
 is a candidate to inspect, not an established root cause. Neither engine fault
 versus terrain integration fault nor a safe fix is established by these runs.
 Figure-eight intentionally not run: this task changes documentation/evidence only.
+
+## RING-SHADOW-003/v1 — 2026-09-15 shadow-preserving isolation
+
+Declared before variants. Sourcef49f0d0, engine26.09.08b, current basic_example
+play session. User has moved since002; current lod.inspect target at08:05:40 is
+W[3155486,-654136.8,2719.848], gameplay radius8, visual radius256, levels0..5,
+base cell16. New baseline capture required; no cross-view pixel comparison to002.
+1920x1080 main-camera captures; leave user input available. No commanded movement.
+Baseline: CSM/contact enabled, CSM distance20000, maxcascades4, resolution4096,
+quality3, raster depthbias-1, slope-1.5. Keep sun shadows enabled throughout.
+Variants: quality0 only (single comparison filtering); restore3; depthbias-8 and
+slopescale-8 together (stronger caster bias); restore-1/-1.5. Observe contour and
+near cast shadow after each. Criterion: contour disappears with visible cast shadow
+retained identifies a shadow-preserving lead, not an accepted quality/performance
+fix. Changes in image/view or terrain streaming must be recorded as limitations.
+All variants are temporary engine settings, restored after capture. No runtime
+source change or performance claim is authorized by a visual diagnostic outcome.
+
+003 continuation: initial moving captures are not comparable (strong-bias view
+was underwater). User then parked the character; parked-baseline/filter-off/
+strong-bias images form the stationary repeat using unchanged003 settings.
+Both quality0 and strong caster bias preserve the ring. Character is airborne,
+so this angle does not resolve its ground shadow reliably.
+
+Before next diagnostic: force-rebuild unchanged voxel_terrain.shader through
+compile_source_shader, preserving original compiled artifact in the temporary
+folder for recovery. No HLSL edits. Original compiled SHA256
+881E8B6B6404EDF0DBB0ACACD141767E855648491B6EB080EA045398FD31DC00.
+Purpose: exclude stale compiled engine includes before changing any shader source.
+All settings restored to003 baseline. Capture after successful compile; report
+compiler outcome and contour presence. This is asset rebuild diagnosis only.
+
+## RING-SHADOW-004/v1 — shader control-flow diagnostic
+
+Declared before source edit. Same parked view as003, all original engine shadow
+settings. The unchanged shader rebuild succeeded (profile-upgrade warning only)
+and retained identical compiled SHA256, so no stale-include evidence.
+
+Temporarily change the installed canonical DirectionalLightShadow.hlsl
+GetVisibility implementation: retain uniform zero-cascade return; for nonzero
+cascade count sample a valid cascade for every pixel, then select ssShadow outside
+coverage. This moves sampling (and its receiver ddx/ddy normal offset) before the
+per-pixel coverage return. Original source and compiled terrain artifact backed up.
+Recompile only the existing production terrain shader, capture, and restore the
+installed source/recompile afterward. Preserve exact before/candidate hashes and
+patch in the report. No alternate shader, test hook, or duplicate render path.
+
+Pass criterion for this diagnostic: disappearance of parked black contour with
+CSM/contact enabled and unchanged distance20000/cascades4/filter3; regular sun
+lighting remains. A ground-shadow view is additionally needed for shadow retention.
+This is not shipping acceptance: extra sampling outside coverage can cost GPU time,
+other receivers are not recompiled, and cold-start/figure-eight qualification is
+pending for any retained shader change. Do not accept or commit a runtime change
+from this bounded diagnostic. Restore engine source and canonical compiled shader
+regardless of outcome and verify ring restoration before reporting causality.
+
+004 first candidate: compile succeeded, same profile warning; compiled SHA256
+7F4985076D1D4DE216634790A2FE51019F73856ECB909812C73E192BBA0281E9.
+Parked contour disappears with sun shadows enabled. Installed candidate HLSL
+SHA2560E2E15BDB3A503140E897CC40C0FEC1891FD85626CDE9A279B8927187160BE5C.
+
+Before refined candidate: move only ApplyShadowNormalOffset evaluation from
+SampleCascade to GetVisibility, after FindCascade but before its per-pixel
+cascade<0 return. Use max(cascade,0) for safe matrix/hardness indexing during the
+normal-offset calculation. Restore original conditional shadow-map sampling.
+SampleCascade has no other callers in the installed shaders. This preserves the
+original outside-coverage early return for texture fetches while moving ddx/ddy
+before divergent control flow. Same parked criteria and restoration requirement;
+if user lands, record separate ground-shadow view and compare before/after there.
+
+### RING-SHADOW-003/v1 and004/v1 outcomes
+
+003 stationary repeat: ring remained with filtering0 and with caster
+bias-8/slope-8. Moving initial captures are retained but not paired comparisons.
+No setting change is adopted. Unchanged-source rebuild succeeded and retained
+original compiled hash; it did not remove the ring.
+
+004 first candidate (sample before conditional return) removed the ring.
+Refined candidate (receiver normal offset before conditional return, preserving
+conditional texture reads) also removed it. Refined compiled SHA256:
+D2A9DCC139A70227313F4F74F5C39B1B2D4CFCDA9F08C2173193E3FF5C885D03.
+Refined installed HLSL SHA256:
+9290329B20CB7EF23B9336DEF6AC3E819E8E0557452BC746050AD39E580FF058.
+All three compiles succeeded with the same profile-upgrade warning, no compile
+errors. Changed source bytes and compiled hashes establish the variants; actual
+screenshots establish the visual result. Sun CSM/contact settings remained enabled
+at20000 distance, four cascades, quality3; no terrain geometry source was changed.
+
+The user rotated the view after the first parked comparison. The refined
+candidate was also ring-free in that second view; restoring the original source
+and recompiling brought the ring back in the same second landscape/view.
+Original HLSL restored byte-for-byte SHA256:
+5D113EE9F09140A252304C4D4E4EF145F6C571ACDF39AD385DA7D3E66CFAC1FF.
+Compiled terrain returned exactly to the original881E8B6B...31DC00 hash.
+
+Diagnosis: the original per-pixel out-of-coverage return precedes the receiver
+normal-offset ddx/ddy computation. Executing that calculation before pixels leave
+the shadow branch removes the ring. This is controlled source-level evidence for
+a directional-shadow receiver derivative/control-flow defect, not a terrain seam
+or a need to disable sunlight shadows. Disabling filtering/raising bias is rejected
+as a fix for the reproduced contour. The refined correction retains the original
+outside-coverage texture-fetch early return; no performance improvement is claimed.
+
+Character remained airborne in captured candidate views, including the requested
+ground-check capture. Close ground-contact/cast-shadow fidelity, terrain
+self-shadowing, cold editor start, and canonical figure-eight performance remain
+unverified. The patch is an investigation artifact, NOT adopted shipping code.
+The installed engine source and existing terrain compiled artifact are restored.
+Only documentation and evidence are eligible for this investigation commit.
+Exact patch, screenshots and upstream source links are in
+[the investigation report](ValidationEvidence/ShadowRing/README.md).

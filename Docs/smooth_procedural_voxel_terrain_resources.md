@@ -94,6 +94,11 @@ sources establish rendering mechanisms, not an accepted occlusion implementation
 | [Facepunch terrain visibility, pinned source](https://github.com/Facepunch/sbox-public/blob/a0b002cdbff9abfade9afd4cb205230a55120121/engine/Sandbox.Engine/Scene/Components/Terrain/TerrainClipmapSceneObject.cs) | Inspect CPU frustum culling of instanced heightfield patches and separate shadow behavior. | No volumetric cave geometry or terrain-to-terrain occlusion test in this path; public source is not installed native-engine evidence. Related layout and heightmap sources are linked in the research owner. |
 | [NVIDIA GPU Gems: Efficient Occlusion Culling](https://developer.nvidia.com/gpugems/gpugems/part-v-performance-and-practicalities/chapter-29-efficient-occlusion-culling) | Distinguish geometry rejection from early depth rejection; study ordering, bounds, and synchronization overhead. | Legacy query APIs and performance examples do not establish s&box capabilities or timings. Its tolerance for temporal popping is not adopted. |
 
+### Directional shadow boundaries
+
+| Source | Project use | Transfer limits |
+| --- | --- | --- |
+| [Facepunch directional shadow shader](https://github.com/Facepunch/sbox-public/blob/804420939f467a3fb13c534a5c63a415dd55bd58/game/core/shaders/Shadows/DirectionalLightShadow.hlsl), [receiver normal offset](https://github.com/Facepunch/sbox-public/blob/804420939f467a3fb13c534a5c63a415dd55bd58/game/core/shaders/Shadows/ShadowFiltering.hlsl) | Explain cascade coverage and derivative ordering in the [ring investigation](ValidationEvidence/ShadowRing/README.md). Moving the receiver offset before the per-pixel coverage return removes the reproduced ring without disabling sun shadows. | Only the existing terrain receiver was recompiled for the temporary experiment; other materials, near-shadow fidelity, cold-start safety and performance remain unqualified. Patch restored, not adopted. |
 ### Volumetric Systems
 
 The [fast-flight experiment](Research/FastFlightStreamingExperiment.md) connects

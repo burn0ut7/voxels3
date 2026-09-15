@@ -1023,6 +1023,19 @@ remain pending the failing streaming gate. The corrected cold comparison measure
 shadows and88-region audits pass; complete shadow/occlusion coverage is unverified.
 The first candidate timing does not qualify the corrected per-arena argument path.
 
+### Distant shadow receiver boundary investigation
+
+RING-SHADOW-003/004 isolates a ring in the installed directional-shadow receiver:
+its coverage early return precedes pixel derivatives for the receiver normal
+offset. Moving that existing calculation before the return removed the ring;
+restoring the original source brought it back. Sun shadows, distance and quality
+remained enabled and unchanged. See the [source-level evidence and patch](../ValidationEvidence/ShadowRing/README.md).
+The experiment changed only the canonical engine include and recompiled the
+existing terrain receiver; all source/compiled bytes were then restored. No
+terrain render contract or shadow implementation change is adopted here. Close
+shadow fidelity, other receivers, cold-start and figure-eight qualification are
+still required before a permanent fix. Duplicating engine shading in a terrain
+fork is not adopted.
 ### Landform include hotload qualification
 
 HILLS-001/v1 on26.09.08b reproduced stale regular/transition shader binaries

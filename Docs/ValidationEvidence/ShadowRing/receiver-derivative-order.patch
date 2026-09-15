@@ -1,0 +1,12 @@
+diff --git a/game/core/shaders/Shadows/DirectionalLightShadow.hlsl b/game/core/shaders/Shadows/DirectionalLightShadow.hlsl
+--- a/game/core/shaders/Shadows/DirectionalLightShadow.hlsl
++++ b/game/core/shaders/Shadows/DirectionalLightShadow.hlsl
+@@ -66 +66 @@ struct DirectionalLightShadow
+-		worldPosition = ApplyShadowNormalOffset( worldPosition, g_DirectionalLightInverseShadowMapSize / length( worldToShadow[0].xyz ), g_DirectionalLightCascadeHardness[cascadeIndex] );
++
+@@ -130,0 +131,5 @@ struct DirectionalLightShadow
++		// Evaluate position derivatives before neighboring pixels leave shadow coverage.
++		int offsetCascade = max( cascade, 0 );
++		float4x4 worldToShadow = g_DirectionalLightWorldToShadowViewMatrices[offsetCascade];
++		worldPosition = ApplyShadowNormalOffset( worldPosition, g_DirectionalLightInverseShadowMapSize / length( worldToShadow[0].xyz ), g_DirectionalLightCascadeHardness[offsetCascade] );
++
