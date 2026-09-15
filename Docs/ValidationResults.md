@@ -28066,3 +28066,75 @@ The installed engine source and existing terrain compiled artifact are restored.
 Only documentation and evidence are eligible for this investigation commit.
 Exact patch, screenshots and upstream source links are in
 [the investigation report](ValidationEvidence/ShadowRing/README.md).
+
+## RING-SHADOW-005/v1 — complete implementation qualification, 2026-09-15
+
+User authorizes full implementation review/performance testing. Before baseline:
+reuse LOCAL-COVERAGE-001/v4 standard workload unchanged: visible basic_example,
+engine26.09.08b, generator47/seed1337, world547ae8f0-bf9e-45e0-8f36-27d0e8d95771,
+held-dig-v1 revision1990/125pages, normal settled spawn near
+(0.0323614106,-0.0232577175,257.143341), cells32/base16, LOD0..5,
+near4/cache8/gameplay8, visualradius256; physical1848x960 (native1232x640),
+speed2500,distance50000,1loop,clearance393.7008,48.86s minimum settled warmup,
+10s stationary,240s route cap. All actual visual/collision/water/prediction work
+must settle before warmup. Diagnostic recorder disabled, no terrain edits.
+CSM/contact enabled, distance20000,cascades4,resolution4096,filter3,
+raster depthbias-1/slope-1.5; source e22289a. Fresh visible editor per variant.
+Capture current control before introducing a project-owned shader replacement.
+
+Compare relative FPS loss<=5%, p99/tails/allocations/process and GPU memory
+increase<=10%; near<=5s, full drain<=10s, prep<=16.67ms; zero new geometry,
+coverage, shadow or exception failures. Preserve pre-existing adopted allocation/
+drain exceptions and every failure; they do not authorize new regressions.
+Record moving coverage at30s and final readiness plus88-mesh audit after result
+save for each run. Timing differences are limitations, not hidden corrections.
+Candidate requires matching repeat if results are noisy or near a limit.
+
+Implementation review scope: one canonical directional-shadow include, safe
+zero-cascade/outside-cascade behavior, receiver derivatives before varying
+coverage exit, preserved shadow sampling/quality, project versus engine include
+resolution, all project-dependent shader rebuilds, near shadows/ring visual pairs,
+and clean editor restart with crash-marker/log inspection. Native engine source
+must remain original. A same-logical-path project include replacement is the
+candidate distribution mechanism; reject it if compilation does not resolve it
+or it creates a second render path. Final engine/generated outputs are not source.
+### Baseline setup observations
+
+Before measurement, the initial unmodified editor failed during shutdown with
+prefab destruction assertion (five components not deleted). An overlapping launch
+then failed MCP port registration and displayed Stall Detected; both stopped after
+Play had saved. Preserved startup/shutdown logs; Sentry marker did not advance.
+Single-process restart recovered. Project MCP tools were absent after cold start;
+a temporary toolset-description edit forced a semantic editor hotload and restored
+81 tools. Original Editor/VoxelMcpTools.cs bytes restored before measurement.
+Two Play starts occurred in this process during setup; candidate will match this.
+The foreground window uses DPI1, so native1848x960 is required for the fixed
+physical1848x960 workload; native1232x640 rendered1232x640 and was corrected before
+warmup. Readiness verified08:49:09 local: queues0,water ready,collision4913,
+prediction320/1920 complete, player at recorded spawn and grounded.
+
+005 visual pairs after performance save: ejected camera near(-250,-250,450),angles(25,45,0),FOV60; distant(-2700,-1765,6568),angles(25,45,0),FOV60; each1920x1080. Player remains at spawn. CSM-off near capture is a shadow attribution control; restore immediately. Mesh audit default8/level produced88meshes. Baseline moving coverage default false at30s checks overlap only; detailed coverage checked after save. Candidate will match. Diagnostic get_ejected_camera before eject returned an operation error after save; it is not a runtime performance exception.
+
+The origin-based distant view did not reproduce the ring (retain as inconclusive). Supplemental large-coordinate reproduction will use actual player position(3128724,-563151.1,6568), near the earlier parked reproduction, and ejected camera offset(-250,-250,150),angles(15,45,0),FOV60. Runtime player repositioning must be verified by collision diagnostics before comparing; source scene must remain unchanged.
+
+Baseline completed b9b8b468e3134b8f80208ed3f5a58e0c:351.0FPS,p99=8.9164ms,GPUavg2.1832ms,zero measured exceptions,near1.7s/full14.7s (FAIL drain target). Mesh88/88 zero failures; detailed final overlap/imbalance/missing/extra seams all0. Candidate project include resolved: terrain compiled D2A9DCC1...885D03, identical to refined engine experiment, while installed source remained5D113EE9...F1FF. Depth and water rebuilt successfully. First water compile used an incorrect path and was rejected before compilation; corrected path shaders/voxels/voxel_water.shader passed. Native player repositioning again did not affect live physics; restored and large-coordinate visual attempt is inconclusive. Shutdown repeated the pre-existing prefab component-deletion assertion after Play stopped; capture retained. No new Sentry crash marker.
+
+Candidate0c54ea158fa74c0e8e79260806be0b6f completed:504.94565FPS,p99=7.8727ms,GPUavg1.4965838ms; allocations5,590,782,976 total/90,796.31 perframe; CPUpeak5,171,179,520/GPUpeak1,954,401,400bytes; zero measured exceptions,full9.0s. Geometry88/88 passed, final coverage checks0. Close sun cast/self shadows retained, paired CSM-off attribution captured. Candidate moving diagnostic was late at40s rather than30s; it is not a position-matched coverage sample. No pass is claimed for total allocation gate. Large FPS difference and19% total allocation increase justify a second matching control/candidate pair. Same fixed workload/settings/criteria; two Play starts per fresh editor, explicit64s warmup after observed readiness. User requires engine/file tools only; no computer automation will be used.
+
+005 metric clarification: use high-frequency arrival firstPresentedObservedSeconds for near readiness: control0.2250775s,candidate0.0926246s (the1.7/2.0s text values are coarse report samples). Exact drains14.7105444s/9.0123662s; maxprep10.2672ms/12.31ms. First control used an active computer-use helper during setup; it was stopped before candidate. This is an environmental confound, not proof of a shader speedup. Both repeats use native engine/file tools only. No computer-use calls occur after user request.
+
+Control2 completed03d8294d44ac4b84be93e6cb746ca1e5:523.15FPS,p99=8.22ms,drain10.55s (absolute drain target fails),88/88 audit passed and final detailed coverage0. This native-only control does not reproduce the first control's large slowdown. Final candidate adds only rebuild-reference comments to all three dependent .shader entry sources because installed ShaderHooks ignores include-only changes. Final terrain compiled hashD13062E1354807C39ED3D5F93956A0DD4C640D2DE9D029FC58AB02743DE6033E; source logic remains the previously tested correction. Final candidate2 uses identical workload and64s observed settled warmup, with a fresh editor and two Play starts.
+
+Control2 observation limitation: no moving coverage.inspect event exists in the preserved engine log between its09:18:17 trigger and route completion. Its attempted moving capture returned no matching data; final detailed sample at09:21:14 is valid. Do not interpret absent moving values as zero or claim position-matched moving coverage. Route parameters, outcome and archived performance metrics remain measured; this missing supporting observation is retained as incomplete. Candidate2 timed moving capture at09:28:00 is exactly30s after09:27:30 trigger and has overlap0.
+
+005 candidate2e791738befbf4107aeeac10037b856cf FAILS acceptance:488.14615FPS vs control2=523.15 (~6.7% loss), p99=8.2938ms,drain10.535s (same pre-existing absolute drain failure),zero measured exceptions,88/88mesh passed. Do not adopt or commit this version as accepted. Preserve its exact source in Acceptance/rejected-full-offset.hlsl.
+
+## RING-SHADOW-006/v1 — derivative-only coverage correction
+
+Before implementation: keep only ddx/ddy evaluation before coverage selection/exit, with normalization, matrix/hardness lookup and normal-offset arithmetic inside valid coverage. Match pinned ApplyShadowNormalOffset formula exactly for directional receivers; the shared helper combines derivatives and offset, so it cannot be called after the varying exit. Preserve non-pixel-program behavior, zero-cascade return and original conditional sampling. Reuse005 fixed figure-eight parameters and budgets unchanged, native engine/file tools only; compare against original control2 and repeat a matched control if required.
+For direct visual qualification, temporarily relocate the existing production scene's player spawn to(3128724,-563151.125,6568), let normal player collision/streaming settle, then compare original/refined source from ejected camera(3128474,-563401.125,6718),angles(15,45,0),FOV60,1920x1080. This is the same playable scene/player with a temporary spawn input, no new scene/component/hook. Preserve and restore original scene bytes before normal-spawn performance. Ring must be present with original source and absent with candidate at this fixed view; otherwise record inconclusive and use a new documented view before comparing. Sun settings stay unchanged.
+
+006 first ejected view is inconclusive: original ring not visible. Use the existing PlayerController third-person camera with temporary CameraOffset(256,0,4000), ThirdPerson=true, preserving all player input/normal movement, in the same far-spawn scene. Native set_component edits occur while Play is stopped so the next runtime clone inherits them. Capture actual gameplay camera pose from collision diagnostics before paired images. This uses the production player camera rather than an ejected screenshot. All temporary editor properties are restored before performance.
+`r`n006 visual setup correction before next capture: original-session diagnostics at08:37:09 record camera(-2558.938,-1639.612,6735.962), quaternion(0.30832,0.11384,-0.88598,0.32712), player(-2705.81396,-1765.19128,6503.62598). The large-coordinate inference above was incorrect; both failed views are preserved as inconclusive. Next original-source view uses this recorded camera, angles(38.375264,-139.469453,0),FOV60,1920x1080 with player restored near origin. This is visual-only; performance parameters remain unchanged.
+
+006 direct visual result: recorded original view shows broken contour across the top of the frame; derivative-only candidate removes it at identical camera pose. Near paired CSM-on/off captures retain character cast shadows and cave self-shadowing. All three shader entries compile successfully; first terrain force-compile failed writing mapped shader_c, immediate retry succeeded (both preserved). Temporary editor scene properties restored, Play stopped/saved, editor then prompted for unsaved scene changes; process7836 terminated to discard those temporary editor changes, source scene unchanged. Fresh visible editor started for normal-spawn qualification.

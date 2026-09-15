@@ -12,6 +12,7 @@ MODES
 }
 COMMON
 {
+	// Uses project Shadows/DirectionalLightShadow.hlsl; rebuild this entry after override changes.
 	#include "common/shared.hlsl"
 }
 struct VertexInput

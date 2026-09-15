@@ -1030,12 +1030,23 @@ its coverage early return precedes pixel derivatives for the receiver normal
 offset. Moving that existing calculation before the return removed the ring;
 restoring the original source brought it back. Sun shadows, distance and quality
 remained enabled and unchanged. See the [source-level evidence and patch](../ValidationEvidence/ShadowRing/README.md).
-The experiment changed only the canonical engine include and recompiled the
-existing terrain receiver; all source/compiled bytes were then restored. No
-terrain render contract or shadow implementation change is adopted here. Close
-shadow fidelity, other receivers, cold-start and figure-eight qualification are
-still required before a permanent fix. Duplicating engine shading in a terrain
-fork is not adopted.
+The initial experiment changed the engine include and then restored its bytes.
+RING-SHADOW-005 qualifies a project-owned replacement at
+`Assets/shaders/Shadows/DirectionalLightShadow.hlsl`, pinned to the engine source
+revision and carrying its MIT notice. It selects one implementation through the
+existing include path; terrain geometry, render passes and shadow settings remain
+unchanged. The project terrain binary matches the ring-free experiment exactly,
+without modifying installed engine source. Terrain, depth and water entry shaders
+must all be rebuilt after changes to this include.
+
+Close cast/self-shadow comparisons and a cold editor start have passed. The
+canonical figure-eight qualification and its acceptance decision are recorded in
+the [integration report](../ValidationEvidence/ShadowRing/README.md#project-integration-qualification-ring-shadow-005v1).
+This override depends on the engine's directional-light buffer layout and shader
+API. Requalify it against upstream on engine updates and remove it when the
+upstream correction passes the recorded scenario. Do not grow a separate lighting
+stack around it; precompiled engine receivers are not retroactively rebuilt.
+
 ### Landform include hotload qualification
 
 HILLS-001/v1 on26.09.08b reproduced stale regular/transition shader binaries

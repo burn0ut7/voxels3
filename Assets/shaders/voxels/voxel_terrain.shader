@@ -16,6 +16,7 @@ MODES
 COMMON
 {
 	// Persistent geometry supplies final world-space positions and normals.
+	// Uses project Shadows/DirectionalLightShadow.hlsl; rebuild this entry after override changes.
 	#include "common/shared.hlsl"
 	float4 VoxelMaterialIds < Attribute( "VoxelMaterialIds" ); >;
 	float VoxelCheckerSize < Attribute( "VoxelCheckerSize" ); >;

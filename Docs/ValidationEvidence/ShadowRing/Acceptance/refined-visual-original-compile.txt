@@ -1,0 +1,12 @@
+{
+  "Path": "shaders/voxels/voxel_terrain.shader",
+  "Success": true,
+  "Output": [
+    "warning[E41012]: profile implicitly upgraded",
+    "  --> shaders/voxels/voxel_terrain.shader:61:9",
+    "   |",
+    "61 | float4 MainPs( PS_INPUT input ) : SV_Target0",
+    "   |        ^ entry point 'MainPs' uses additional capabilities that are not part of the specified profile 'spirv_1_5'. The profile setting is automatically updated to include these capabilities: 'SPV_KHR_non_semantic_info + SPV_GOOGLE_user_type + spvDerivativeControl + spvImageQuery + spvImageGatherExtended + spvSparseResidency + spvMinLod + spvFragmentFullyCoveredEXT'",
+    "---'"
+  ]
+}

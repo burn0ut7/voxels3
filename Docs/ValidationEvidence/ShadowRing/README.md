@@ -104,3 +104,92 @@ fork is not adopted.
 
 The installed files were inspected directly and the candidate was exercised in
 the playable world. Upstream source alone is not proof of installed behavior.
+
+## Project integration qualification (RING-SHADOW-005/v1)
+
+**Outcome: the full-offset version was rejected for a performance regression.**
+The final repeat measured 488.15 FPS against the native-only original control's
+523.15 FPS, exceeding the 5% loss budget. Its visual and geometry checks do not
+override that failure. The source is preserved in
+[rejected-full-offset.hlsl](Acceptance/rejected-full-offset.hlsl).
+RING-SHADOW-006 is evaluating a narrower derivative-only correction; it is not yet
+accepted. The details below describe the rejected full-offset version.
+
+The implementation candidate is
+`Assets/shaders/Shadows/DirectionalLightShadow.hlsl`, a project-mounted replacement
+of the single engine include, pinned to the upstream revision above. The source
+retains the upstream MIT notice. The installed engine file stays unchanged.
+
+The initial project integration's production terrain shader compiled to SHA256
+`D2A9DCC139A70227313F4F74F5C39B1B2D4CFCDA9F08C2173193E3FF5C885D03`:
+exactly the refined, visually verified experiment's binary. This establishes that
+the compiler resolves the project replacement. There is one selected implementation
+of the include, with no second terrain renderer or shadow pass.
+
+The final entry sources additionally contain a rebuild-reference comment. This
+is intentional: the installed editor watches `.shader` changes but does not
+recompile dependencies for an include-only edit. All three entry sources therefore
+change with this integration and were explicitly rebuilt before its final cold
+start. The final terrain artifact is
+`D13062E1354807C39ED3D5F93956A0DD4C640D2DE9D029FC58AB02743DE6033E`.
+The only difference from the initial project shader entry is the comment; the
+receiver correction itself is unchanged. Full final source/artifact identities are
+in [the hash manifest](Acceptance/final-source-and-artifact-hashes.json).
+
+### Implementation review
+
+- `GetVisibility` retains the uniform zero-cascade return, so no matrix or hardness
+  lookup occurs when sun cascades are absent. Contact-shadow composition is unchanged.
+- `FindCascade` selects coverage from the original receiver position. The normal
+  offset is evaluated after selection and before the varying coverage return.
+- A nonzero cascade count makes index zero valid. `max(cascade, 0)` gives pixels
+  outside coverage a valid matrix/hardness entry while their neighbors evaluate
+  derivatives; those pixels still return the original contact-shadow value.
+- `SampleCascade` has one caller in the pinned engine source. Its offset was moved,
+  not duplicated. Matrix projection, bias, PCF filtering and shadow texture lookup
+  are unchanged. Outside-coverage pixels still skip the texture lookup.
+- The include introduces no CPU state, geometry, allocations, threading, network
+  authority or persistence changes. Its extra work outside coverage is arithmetic;
+  performance must still be measured rather than assumed.
+- Three project entry files include it through `common/shared.hlsl` and the engine
+  light classes: `voxel_terrain.shader`, `voxel_terrain_depth.shader`, and
+  `voxel_water.shader`, all under `Assets/shaders/voxels`. All three were explicitly
+  rebuilt successfully. Terrain uses `ShadingModelStandard::Shade`; depth outputs
+  depth/normals, and water outputs its checker color directly. The latter two still
+  parse the shared lighting declarations. Precompiled engine materials are not
+  retroactively rebuilt.
+
+### Maintenance boundary
+
+This narrow override pins the engine's directional-light constant-buffer layout
+and API. Requalify it on an engine update, including a diff against upstream,
+all three dependent shader compiles, a cold editor start, close sun/contact
+shadows, the large-coordinate ring reproduction, and the canonical figure-eight.
+Remove the override when the upstream correction passes those checks. Do not
+expand it into a copied lighting stack. Engine source and generated shader binaries
+are not part of the source change.
+
+### Qualification evidence
+
+Raw results, readiness, coverage, mesh audits, paired captures and setup failures
+are retained in [Acceptance](Acceptance/). The validation ledger records exact
+parameters and acceptance status. The original experiments above remain historical
+diagnosis evidence; they do not establish performance acceptance of this integration.
+
+## Derivative-only refinement (RING-SHADOW-006/v1, pending)
+
+The revised candidate evaluates only the two position derivatives before coverage
+selection and the varying return. It normalizes their cross product and performs
+the matrix/hardness lookup and bias arithmetic only for pixels inside coverage.
+The zero-cascade branch still returns before all of that work, and non-pixel
+programs retain the original unmodified receiver position.
+
+The offset formula is the pinned `ApplyShadowNormalOffset` formula. That engine
+helper combines derivative evaluation with the offset calculation and has no
+overload accepting derivatives, so the directional include applies the formula
+locally using the earlier derivatives. This dependency must be checked together
+with the upstream helper and PCF kernel radius on engine updates. Local-light
+receivers continue to use the engine helper unchanged.
+
+Compile, directly reproduced ring removal, normal shadow fidelity, cold-start and
+canonical figure-eight acceptance are required before this refinement is adopted.

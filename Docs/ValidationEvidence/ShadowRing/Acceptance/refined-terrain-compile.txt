@@ -1,0 +1,5 @@
+IOException: The requested operation cannot be performed on a file with a user-mapped section open. : 'C:\Users\Gray\Documents\s&box projects\voxels3\Assets\shaders\voxels\voxel_terrain.shader_c'.
+at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+at System.IO.File.<WriteAllBytesAsync>g__Core|103_0(String path, ReadOnlyMemory`1 bytes, CancellationToken cancellationToken)
+at Sandbox.Engine.Shaders.ShaderCompile.Compile(String absoluteFilePath, String relativeFilePath, ShaderCompileOptions compileOptions, CancellationToken token)
+at Editor.EditorUtility.CompileShader(String localPath, ShaderCompileOptions options, CancellationToken token)
