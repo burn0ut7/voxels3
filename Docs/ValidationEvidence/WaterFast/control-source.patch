@@ -1,0 +1,454 @@
+diff --git a/Code/Voxels/Generation/GeneratedWaterCells.cs b/Code/Voxels/Generation/GeneratedWaterCells.cs
+index 8ab2680..4e59cd9 100644
+--- a/Code/Voxels/Generation/GeneratedWaterCells.cs
++++ b/Code/Voxels/Generation/GeneratedWaterCells.cs
+@@ -1,131 +1,87 @@
+ using System;
+-using System.Collections.Generic;
+ using System.Threading;
+ 
+-/// <summary>Immutable generated water surface samples; medium queries remain owned by SurfaceWater.Resolve.</summary>
++/// <summary>Immutable generated water coverage; medium queries remain owned by SurfaceWater.Resolve.</summary>
+ internal sealed class GeneratedWaterCells
+ {
+ 	public const int CellsPerAxis = VoxelManager.RequiredCellsPerAxis;
+-	public const int SamplesPerAxis = CellsPerAxis + 1;
++	private const int SamplesPerAxis = CellsPerAxis + 1;
+ 	public SdfWorldAabb Bounds { get; }
+ 	public float CellSize { get; }
+ 	public float SeaLevel { get; }
+-	private readonly float[] _bottom;
+-	// Retain the free-surface crossing even when river depth is below the LOD spacing.
+-	public float[] SurfaceClearance { get; }
+-	public readonly record struct SurfaceCell( Vector3 Origin, float Size, Vector4 Bottom, Vector4 Clearance );
+-	public Dictionary<int, SurfaceCell[]> RefinedCells { get; } = new();
+-	public int RefinedCellCount { get; private set; }
+-	public long Bytes => (long)(_bottom.Length + SurfaceClearance.Length) * sizeof( float ) +
+-		(long)RefinedCellCount * (3 + 1 + 4 + 4) * sizeof( float );
++	// A wet sample covers its entire owner cell, allowing the bank to hide the edge.
++	// Expansion stays inside that cell (16 units per axis at LOD0, scaling with LOD).
++	public bool[] SurfaceCoverage { get; } = new bool[CellsPerAxis * CellsPerAxis];
++	public int RefinementSamples { get; private set; }
++	public long Bytes => SurfaceCoverage.Length;
+ 
+ 	private GeneratedWaterCells( SdfWorldAabb bounds, float cellSize, float seaLevel )
+ 	{
+ 		Bounds = bounds;
+ 		CellSize = cellSize;
+ 		SeaLevel = seaLevel;
+-		_bottom = new float[SamplesPerAxis * SamplesPerAxis];
+-		SurfaceClearance = new float[SamplesPerAxis * SamplesPerAxis];
+ 	}
+ 
+ 	public static GeneratedWaterCells Generate( SdfWorldAabb bounds, float cellSize,
+ 		TerrainFieldSnapshot field, CancellationToken cancellation )
+ 	{
+-		var settings = field.Settings;
+-		var rivers = RiverWorld.For( settings ).Capture( bounds, cancellation );
++		var rivers = RiverWorld.For( field.Settings ).Capture( bounds, cancellation );
+ 		var edited = field.GetCorrectionRange( bounds, out _, out _ ) != 0;
+-		var result = new GeneratedWaterCells( bounds, cellSize, settings.SeaLevel );
++		var result = new GeneratedWaterCells( bounds, cellSize, field.Settings.SeaLevel );
++		var origin = bounds.Minimum;
++		origin.z = result.SeaLevel;
++		Span<bool> samples = stackalloc bool[SamplesPerAxis * SamplesPerAxis];
+ 		for ( var y = 0; y < SamplesPerAxis; y++ )
+ 		{
+ 			cancellation.ThrowIfCancellationRequested();
+ 			for ( var x = 0; x < SamplesPerAxis; x++ )
+-			{
+-				var position = bounds.Minimum + new Vector3( x * cellSize, y * cellSize, 0f );
+-				var natural = RegionalLandforms.SampleNatural( position, settings );
+-				var bottom = rivers.SampleWorld( position, natural.Height ).Height;
+-				var column = x + SamplesPerAxis * y;
+-				result._bottom[column] = bottom;
+-				var clearance = settings.SeaLevel - bottom;
+-				if ( edited )
+-				{
+-					position.z = settings.SeaLevel;
+-					var solid = TerrainCliffs.Sample( position, settings, natural.Mountains,
+-						TerrainCaves.SampleWorld( position, settings, bottom ) ) + field.SampleCorrection( position );
+-					clearance = MathF.Min( clearance, solid );
+-				}
+-				result.SurfaceClearance[column] = clearance;
+-
+-			}
++				samples[x + SamplesPerAxis * y] = IsWet( origin + new Vector3( x * cellSize, y * cellSize, 0f ), rivers, field, edited );
+ 		}
+-		if ( cellSize > TerrainField.SampleSpacing )
++		for ( var y = 0; y < CellsPerAxis; y++ )
+ 		{
+-			for ( var y = 0; y < CellsPerAxis; y++ )
++			cancellation.ThrowIfCancellationRequested();
+ 			for ( var x = 0; x < CellsPerAxis; x++ )
+ 			{
+ 				var first = x + SamplesPerAxis * y;
+-				var bottom = new Vector4( result._bottom[first], result._bottom[first + 1], result._bottom[first + SamplesPerAxis + 1], result._bottom[first + SamplesPerAxis] );
+-				var clearance = new Vector4( result.SurfaceClearance[first], result.SurfaceClearance[first + 1], result.SurfaceClearance[first + SamplesPerAxis + 1], result.SurfaceClearance[first + SamplesPerAxis] );
+-				var origin = bounds.Minimum + new Vector3( x * cellSize, y * cellSize, 0f );
+-				origin.z = settings.SeaLevel;
+-				var cell = new SurfaceCell( origin, cellSize, bottom, clearance );
+-				if ( !NeedsRefinement( cell, rivers ) ) continue;
+-				var leaves = new List<SurfaceCell>();
+-				Refine( cell, leaves, rivers, field, edited, cancellation );
+-				result.RefinedCells.Add( x + CellsPerAxis * y, leaves.ToArray() );
+-				result.RefinedCellCount += leaves.Count;
++				result.SurfaceCoverage[x + CellsPerAxis * y] =
++					samples[first] || samples[first + 1] || samples[first + SamplesPerAxis + 1] || samples[first + SamplesPerAxis] ||
++					result.ContainsHiddenWater( origin + new Vector3( x * cellSize, y * cellSize, 0f ), cellSize, rivers, field, edited, cancellation );
+ 			}
+ 		}
+ 		return result;
+ 	}
+ 
+-	private static bool NeedsRefinement( SurfaceCell cell, RiverWorld.Region rivers )
++	private static bool IsWet( Vector3 position, RiverWorld.Region rivers, TerrainFieldSnapshot field, bool edited )
+ 	{
+-		if ( cell.Size <= TerrainField.SampleSpacing ) return false;
+-		var wet = cell.Clearance;
+-		if ( wet.x > 0f && wet.y > 0f && wet.z > 0f && wet.w > 0f ) return false;
+-		var radius = rivers.MinimumWetRadius( cell.Origin, cell.Origin + new Vector3( cell.Size, cell.Size, 0f ) );
+-		// Two or more cells across each intersecting reach's full width, without
+-		// changing the base lattice or oversampling unrelated ocean coastlines.
+-		return cell.Size > MathF.Max( TerrainField.SampleSpacing, radius );
++		var settings = field.Settings;
++		var natural = RegionalLandforms.SampleNatural( position, settings );
++		var bottom = rivers.SampleWorld( position, natural.Height ).Height;
++		if ( bottom >= settings.SeaLevel ) return false;
++		if ( !edited ) return true;
++		var solid = TerrainCliffs.Sample( position, settings, natural.Mountains,
++			TerrainCaves.SampleWorld( position, settings, bottom ) ) + field.SampleCorrection( position );
++		return solid > 0f;
+ 	}
+ 
+-	private static void Refine( SurfaceCell cell, List<SurfaceCell> leaves, RiverWorld.Region rivers,
++	private bool ContainsHiddenWater( Vector3 origin, float size, RiverWorld.Region rivers,
+ 		TerrainFieldSnapshot field, bool edited, CancellationToken cancellation )
+ 	{
+ 		cancellation.ThrowIfCancellationRequested();
+-		if ( !NeedsRefinement( cell, rivers ) )
+-		{
+-			// Empty subcells have an implicit dry payload in this refinement root.
+-			if ( cell.Clearance.x > 0f || cell.Clearance.y > 0f || cell.Clearance.z > 0f || cell.Clearance.w > 0f ) leaves.Add( cell );
+-			return;
+-		}
+-		var half = cell.Size * 0.5f;
+-		Span<Vector2> samples = stackalloc Vector2[9];
+-		samples[0] = new Vector2( cell.Bottom.x, cell.Clearance.x );
+-		samples[2] = new Vector2( cell.Bottom.y, cell.Clearance.y );
+-		samples[8] = new Vector2( cell.Bottom.z, cell.Clearance.z );
+-		samples[6] = new Vector2( cell.Bottom.w, cell.Clearance.w );
++		if ( size <= TerrainField.SampleSpacing ) return false;
++		var radius = rivers.MinimumWetRadius( origin, origin + new Vector3( size, size, 0f ) );
++		if ( size <= MathF.Max( TerrainField.SampleSpacing, radius ) ) return false;
++		// All four corners are known dry. Preserve the existing narrow-channel
++		// detection lattice, but stop as soon as this owner cell has water.
++		var half = size * 0.5f;
+ 		for ( var index = 1; index < 8; index++ )
+ 		{
+ 			if ( index == 2 || index == 6 ) continue;
+-			var position = cell.Origin + new Vector3( (index % 3) * half, (index / 3) * half, 0f );
+-			var natural = RegionalLandforms.SampleNatural( position, field.Settings );
+-			var bottom = rivers.SampleWorld( position, natural.Height ).Height;
+-			var clearance = field.Settings.SeaLevel - bottom;
+-			if ( edited ) clearance = MathF.Min( clearance, TerrainCliffs.Sample( position, field.Settings,
+-				natural.Mountains, TerrainCaves.SampleWorld( position, field.Settings, bottom ) ) + field.SampleCorrection( position ) );
+-			samples[index] = new Vector2( bottom, clearance );
++			RefinementSamples++;
++			if ( IsWet( origin + new Vector3( (index % 3) * half, (index / 3) * half, 0f ), rivers, field, edited ) ) return true;
+ 		}
+ 		for ( var y = 0; y < 2; y++ )
+ 		for ( var x = 0; x < 2; x++ )
+-		{
+-			var a = samples[x + 3 * y];
+-			var b = samples[x + 3 * y + 1];
+-			var c = samples[x + 3 * (y + 1) + 1];
+-			var d = samples[x + 3 * (y + 1)];
+-			Refine( new SurfaceCell( cell.Origin + new Vector3( x * half, y * half, 0f ), half,
+-				new Vector4( a.x, b.x, c.x, d.x ), new Vector4( a.y, b.y, c.y, d.y ) ),
+-				leaves, rivers, field, edited, cancellation );
+-		}
++			if ( ContainsHiddenWater( origin + new Vector3( x * half, y * half, 0f ), half, rivers, field, edited, cancellation ) ) return true;
++		return false;
+ 	}
+ }
+diff --git a/Code/Voxels/Generation/RiverNetwork.cs b/Code/Voxels/Generation/RiverNetwork.cs
+index 7cac1a9..4ea6e84 100644
+--- a/Code/Voxels/Generation/RiverNetwork.cs
++++ b/Code/Voxels/Generation/RiverNetwork.cs
+@@ -9,14 +9,14 @@ using System.Threading;
+ /// </summary>
+ internal static class RiverNetwork
+ {
+-	public const int CurrentVersion = 13;
++	public const int CurrentVersion = 14;
+ 	public const int NodesPerPatch = 8;
+ 	public const int RiverCatchmentNodes = 8;
+ 	public const int MinimumCourseEdges = 16;
+ 	public const float NodeSpacing = 2048f;
+ 	public const float PatchSize = NodesPerPatch * NodeSpacing;
+ 	public const float HalfWidth = 192f;
+-	// Local half-width deepens the bed gently; bounds use the capped maximum.
++	// Full-width profile limits; narrow streams scale the entire depth below.
+ 	public const float MinimumDepth = 24f;
+ 	public const float BaseDepth = 48f;
+ 	public const float MaximumDepth = 216f;
+@@ -137,7 +137,10 @@ internal static class RiverNetwork
+ 			var variation = 1f + 0.65f * TerrainNoise.SimplexNoise3D(
+ 				new Vector3( position.x, position.y, 0f ), NodeSpacing * 2f,
+ 				unchecked((uint)_settings.WorldSeed) ^ 0xD1B54A35u );
+-			return Math.Clamp( (BaseDepth + radius * DepthPerRadius) * variation, MinimumDepth, MaximumDepth );
++			// Preserve broad-river pools while shrinking the base depth and its floor
++			// with narrow channels, so a tiny stream cannot inherit a deep trench.
++			var widthScale = Math.Clamp( radius / HalfWidth, 0f, 1f );
++			return Math.Clamp( (BaseDepth + radius * DepthPerRadius) * variation, MinimumDepth, MaximumDepth ) * widthScale;
+ 		}
+ 
+ 		private bool HasCourse( NodeId id )
+diff --git a/Code/Voxels/GpuVoxelMesher.cs b/Code/Voxels/GpuVoxelMesher.cs
+index 5b6ba80..9783324 100644
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -3645,14 +3645,17 @@ internal sealed partial class GpuVoxelMesher : IDisposable
+ 	{
+ 		if ( !_resident.TryGetValue( descriptor.Key, out var resident ) ||
+ 			resident.Descriptor != descriptor || resident.Handle is null ||
+-			resident.ContentPrepared == _chunkContentPrepared( descriptor ) ) return;
++			resident.ContentPrepared || !_chunkContentPrepared( descriptor ) ) return;
+ 		SetVisibilityActive( resident, _renderActive.Contains( descriptor.Key ) );
+ 	}
+ 
+ 	private void SetVisibilityActive( ResidentMesh resident, bool active )
+ 	{
+ 		if ( resident.Handle is null ) return;
+-		resident.ContentPrepared = _chunkContentPrepared( resident.Descriptor );
++		// Readiness belongs to this retained mesh, not the next water revision.
++		// An unchanged mesh may be rebased during an edit while old water still
++		// covers it. Only a new resident must wait for its content again.
++		resident.ContentPrepared = resident.ContentPrepared || _chunkContentPrepared( resident.Descriptor );
+ 		lock ( _visibilityDescriptorLock ) SetVisibilityActiveLocked( resident, active && resident.ContentPrepared );
+ 		MarkVisibilityDescriptorsDirty();
+ 	}
+diff --git a/Code/Voxels/ProceduralTerrainSdf.cs b/Code/Voxels/ProceduralTerrainSdf.cs
+index ccfedac..ba22947 100644
+--- a/Code/Voxels/ProceduralTerrainSdf.cs
++++ b/Code/Voxels/ProceduralTerrainSdf.cs
+@@ -10,7 +10,7 @@ public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
+ internal static class ProceduralTerrainSdf
+ {
+ 	// Saved worlds identify this backend revision; it is not a variation control.
+-	public const int CurrentVersion = 47;
++	public const int CurrentVersion = 48;
+ 	public const int DefaultWorldSeed = 1337;
+ 	public static float SampleGlobal(
+ 		Vector3Int globalSampleCoordinate,
+diff --git a/Code/Voxels/VoxelManager.Water.cs b/Code/Voxels/VoxelManager.Water.cs
+index e99365e..8ee45a1 100644
+--- a/Code/Voxels/VoxelManager.Water.cs
++++ b/Code/Voxels/VoxelManager.Water.cs
+@@ -30,7 +30,7 @@ public sealed partial class VoxelManager
+ 		$"{_waterRenderer.ChunkCount:N0} meshed water chunks; {_waterRenderer.VertexCount:N0} vertices; " +
+ 		$"{_waterRenderer.UploadedVertices:N0} uploaded vertices; " +
+ 		$"{_waterCells.Count}/{_waterCellRequests.Count} cell chunks; {_waterCellsGenerated} generated; " +
+-		$"{_waterCells.Values.Sum( item => (long)item.Cells.RefinedCellCount ):N0} refined cells; " +
++		$"{_waterCells.Values.Sum( item => (long)item.Cells.RefinementSamples ):N0} refinement samples; " +
+ 		$"{_waterCells.Values.Sum( item => item.Cells.Bytes ) / 1048576.0:F1} MiB cells; {_waterCellGenerationMilliseconds:F1} ms generation; publishMaxMs={_waterMaximumPublishDelayMilliseconds:F3}";
+ 
+ 	private bool SurfaceWaterPrepared
+diff --git a/Code/Voxels/Water/SurfaceWaterGeometry.cs b/Code/Voxels/Water/SurfaceWaterGeometry.cs
+index 92b20c4..632ad25 100644
+--- a/Code/Voxels/Water/SurfaceWaterGeometry.cs
++++ b/Code/Voxels/Water/SurfaceWaterGeometry.cs
+@@ -1,7 +1,6 @@
+ using System;
+-using System.Collections.Generic;
+ 
+-/// <summary>Extracts the exposed free surface from generated chunk cell data.</summary>
++/// <summary>Encloses generated water coverage in one bank-hidden convex polygon per chunk.</summary>
+ internal static class SurfaceWaterGeometry
+ {
+ 	[System.Runtime.InteropServices.StructLayout( System.Runtime.InteropServices.LayoutKind.Sequential )]
+@@ -17,129 +16,72 @@ internal static class SurfaceWaterGeometry
+ 
+ 	public static WaterVertex[] Build( GeneratedWaterCells cells )
+ 	{
+-		var vertices = new List<WaterVertex>();
+-		var size = GeneratedWaterCells.CellsPerAxis;
+-		var stride = GeneratedWaterCells.SamplesPerAxis;
+-		var origin = cells.Bounds.Minimum;
+-		origin.z = cells.SeaLevel;
+-		// 1 = completely wet and available; 2 = already covered by a rectangle.
+-		var coverage = new byte[size * size];
+-		for ( var y = 0; y < size; y++ )
+-		for ( var x = 0; x < size; x++ )
+-		{
+-			var index = x + stride * y;
+-			if ( !cells.RefinedCells.ContainsKey( x + size * y ) &&
+-				cells.SurfaceClearance[index] > 0f && cells.SurfaceClearance[index + 1] > 0f &&
+-				cells.SurfaceClearance[index + stride + 1] > 0f && cells.SurfaceClearance[index + stride] > 0f )
+-				coverage[x + size * y] = 1;
+-		}
+-		for ( var y = 0; y < size; y++ )
+-		for ( var x = 0; x < size; x++ )
++		const int size = GeneratedWaterCells.CellsPerAxis;
++		// At each column boundary only the lowest/highest covered corners can
++		// belong to the hull. These points are already sorted by X, then Y.
++		Span<Vector2> points = stackalloc Vector2[(size + 1) * 2];
++		var pointCount = 0;
++		var previousLow = size;
++		var previousHigh = -1;
++		for ( var x = 0; x <= size; x++ )
+ 		{
+-			if ( coverage[x + size * y] == 2 ) continue;
+-			if ( coverage[x + size * y] == 1 )
++			var low = size;
++			var high = -1;
++			if ( x < size )
+ 			{
+-				var endX = x + 1;
+-				while ( endX < size && coverage[endX + size * y] == 1 ) endX++;
+-				var endY = y + 1;
+-				while ( endY < size )
++				for ( var y = 0; y < size; y++ )
+ 				{
+-					var complete = true;
+-					for ( var column = x; column < endX; column++ )
+-						if ( coverage[column + size * endY] != 1 ) { complete = false; break; }
+-					if ( !complete ) break;
+-					endY++;
++					if ( !cells.SurfaceCoverage[x + size * y] ) continue;
++					low = Math.Min( low, y );
++					high = y;
+ 				}
+-				for ( var row = y; row < endY; row++ )
+-				for ( var column = x; column < endX; column++ ) coverage[column + size * row] = 2;
+-				var first = origin + new Vector3( x * cells.CellSize, y * cells.CellSize, 0f );
+-				var right = origin + new Vector3( endX * cells.CellSize, y * cells.CellSize, 0f );
+-				var diagonal = origin + new Vector3( endX * cells.CellSize, endY * cells.CellSize, 0f );
+-				var up = origin + new Vector3( x * cells.CellSize, endY * cells.CellSize, 0f );
+-				AddTriangle( first, right, diagonal, vertices );
+-				AddTriangle( first, diagonal, up, vertices );
+-				continue;
+ 			}
+-			if ( cells.RefinedCells.TryGetValue( x + size * y, out var refined ) )
++			var boundaryLow = Math.Min( previousLow, low );
++			var boundaryHigh = Math.Max( previousHigh, high );
++			if ( boundaryHigh >= 0 )
+ 			{
+-				foreach ( var cell in refined ) ClipCell( cell.Origin, cell.Size, cell.Clearance, vertices );
+-				continue;
++				points[pointCount++] = new Vector2( x, boundaryLow );
++				points[pointCount++] = new Vector2( x, boundaryHigh + 1 );
+ 			}
+-			var sample = x + stride * y;
+-			ClipCell( origin + new Vector3( x * cells.CellSize, y * cells.CellSize, 0f ), cells.CellSize,
+-				new Vector4( cells.SurfaceClearance[sample], cells.SurfaceClearance[sample + 1],
+-					cells.SurfaceClearance[sample + stride + 1], cells.SurfaceClearance[sample + stride] ), vertices );
+-		}
+-		return vertices.ToArray();
+-	}
+-
+-	private static void ClipCell( Vector3 origin, float size, Vector4 wet, List<WaterVertex> vertices )
+-	{
+-		if ( wet.x <= 0f && wet.y <= 0f && wet.z <= 0f && wet.w <= 0f ) return;
+-		var right = origin + new Vector3( size, 0f, 0f );
+-		var diagonal = origin + new Vector3( size, size, 0f );
+-		var up = origin + new Vector3( 0f, size, 0f );
+-		// Opposite wet corners retain the existing diagonal's connectivity.
+-		if ( (wet.x > 0f) == (wet.z > 0f) && (wet.y > 0f) == (wet.w > 0f) && (wet.x > 0f) != (wet.y > 0f) )
+-		{
+-			ClipTriangle( origin, right, diagonal, wet.x, wet.y, wet.z, vertices );
+-			ClipTriangle( origin, diagonal, up, wet.x, wet.z, wet.w, vertices );
+-			return;
++			previousLow = low;
++			previousHigh = high;
+ 		}
+-		Span<Vector3> points = stackalloc Vector3[4] { origin, right, diagonal, up };
+-		Span<float> density = stackalloc float[4] { wet.x, wet.y, wet.z, wet.w };
+-		Span<Vector3> clipped = stackalloc Vector3[6];
++		if ( pointCount == 0 ) return Array.Empty<WaterVertex>();
++		// Monotone chains remove collinear/inside corners using exact small-grid
++		// arithmetic. The convex enclosure stays inside this chunk's footprint.
++		Span<Vector2> hull = stackalloc Vector2[points.Length * 2];
+ 		var count = 0;
+-		for ( var index = 0; index < 4; index++ )
+-		{
+-			var next = (index + 1) % 4;
+-			if ( density[index] > 0f ) clipped[count++] = points[index];
+-			if ( (density[index] > 0f) != (density[next] > 0f) )
+-				clipped[count++] = SurfaceCrossing( points[index], points[next], density[index], density[next] );
+-		}
+-		for ( var index = 1; index + 1 < count; index++ )
++		for ( var pass = 0; pass < 2; pass++ )
+ 		{
+-			AddTriangle( clipped[0], clipped[index], clipped[index + 1], vertices );
+-		}
+-	}
+-
+-	private static void AddTriangle( Vector3 a, Vector3 b, Vector3 c, List<WaterVertex> vertices )
+-	{
+-		var ab = b - a;
+-		var ac = c - a;
+-		if ( ab.x * ac.y - ab.y * ac.x == 0f ) return;
+-		vertices.Add( new WaterVertex( a ) );
+-		vertices.Add( new WaterVertex( b ) );
+-		vertices.Add( new WaterVertex( c ) );
+-	}
+-
+-	private static Vector3 SurfaceCrossing( Vector3 a, Vector3 b, float da, float db )
+-	{
+-		// Shared edges use the same arithmetic direction in either owner chunk.
+-		if ( a.x > b.x || a.x == b.x && a.y > b.y )
+-		{
+-			(a, b) = (b, a);
+-			(da, db) = (db, da);
+-		}
+-		return a + (b - a) * (da / (da - db));
+-	}
+-
+-	private static void ClipTriangle( Vector3 a, Vector3 b, Vector3 c, float da, float db, float dc, List<WaterVertex> vertices )
+-	{
+-		Span<Vector3> points = stackalloc Vector3[3] { a, b, c };
+-		Span<float> density = stackalloc float[3] { da, db, dc };
+-		Span<Vector3> clipped = stackalloc Vector3[4];
+-		var count = 0;
+-		for ( var index = 0; index < 3; index++ )
+-		{
+-			var next = (index + 1) % 3;
+-			if ( density[index] > 0f ) clipped[count++] = points[index];
+-			if ( (density[index] > 0f) != (density[next] > 0f) )
+-				clipped[count++] = SurfaceCrossing( points[index], points[next], density[index], density[next] );
++			var minimumCount = pass == 0 ? 2 : count + 1;
++			for ( var step = pass; step < pointCount; step++ )
++			{
++				var point = points[pass == 0 ? step : pointCount - 1 - step];
++				while ( count >= minimumCount )
++				{
++					var a = hull[count - 1] - hull[count - 2];
++					var b = point - hull[count - 2];
++					if ( a.x * b.y - a.y * b.x > 0f ) break;
++					count--;
++				}
++				hull[count++] = point;
++			}
+ 		}
+-		for ( var index = 1; index + 1 < count; index++ )
++		count--; // The upper chain closes on the first point.
++		var vertices = new WaterVertex[(count - 2) * 3];
++		var origin = cells.Bounds.Minimum;
++		origin.z = cells.SeaLevel;
++		var first = origin + new Vector3( hull[0].x * cells.CellSize, hull[0].y * cells.CellSize, 0f );
++		var previous = origin + new Vector3( hull[1].x * cells.CellSize, hull[1].y * cells.CellSize, 0f );
++		for ( var index = 2; index < count; index++ )
+ 		{
+-			AddTriangle( clipped[0], clipped[index], clipped[index + 1], vertices );
++			var current = origin + new Vector3( hull[index].x * cells.CellSize, hull[index].y * cells.CellSize, 0f );
++			var output = (index - 2) * 3;
++			vertices[output] = new WaterVertex( first );
++			vertices[output + 1] = new WaterVertex( previous );
++			vertices[output + 2] = new WaterVertex( current );
++			previous = current;
+ 		}
++		return vertices;
+ 	}
+ }

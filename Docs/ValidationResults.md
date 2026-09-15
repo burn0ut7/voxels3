@@ -28305,3 +28305,102 @@ were changed. Commit scope is group1,23 generated index removals,and review evid
 Evidence JSON compacted losslessly (parsed values compared equal). Patch artifacts
 use local Git attributes to preserve literal bytes and exclude patch-context
 indentation from source whitespace rules. Staged source/document checks pass.
+
+## WATER-FAST-001/v1 — quads and uniform submerged chunks, 2026-09-15
+
+User explicitly requests prototyping/testing both further improvements. Current
+hull source is the control; candidate emits one tight axis-aligned bounding quad
+per nonempty coverage chunk and skips all terrain/river sampling when unedited
+RegionalLandforms.BoundHeight.Maximum < SeaLevel proves a wholly submerged
+exterior. Bounds already include conservative river lowering. Edited chunks keep
+the existing corrected-solid path. Same field, coverage sampling and hidden-river
+criterion everywhere not proven uniform; no dry-chunk inference from this bound.
+No cross-chunk merge, generation-version change, draw shader or field mutation.
+Quad overlap can fill dry gaps inside the occupied-cell bounding box. Visual
+acceptance must check bank coverage and exposed dry-space artifacts.
+
+Frozen save1545/checkpoint26, worldf5ce10f3-6d75-428e-b3dd-63dee14891c6,
+generator48/River14/seed1337, current authored recipe unchanged. User manual edits
+advanced the live world since1417/1460, so those local/invalid runs cannot be used
+as this new slice's timing baseline. Preserve all histories. Normal visible Play
+restart for each source, same engine26.09.08b/editor72028/Ryzen9800X3D/RTX5090.
+Canonical route: basic_example,cells32/base16,LOD0..5,near4/cache8/gameplay8,
+visual256,physical1848x960,speed2500,distance50000,one loop,clearance393.7008,
+48.86s minimum settled warmup,10s stationary,240s route cap,one local player,
+recorder disabled,no edits or manual movement during measured route/setup.
+Verify normal spawn and screen AFTER any camera switch and immediately before
+trigger; final profiler/arrival must retain1848x960. Readiness: queues0,
+waterready,collision4913,prediction320/320. Other source files held byte-identical.
+
+Criteria: fewer water vertices and reduced generation+meshing ms/generated chunk
+at identical settled startup; report route counters separately (scheduling can
+change generated chunk count). FPS loss<=5%; p95/p99/max, allocations and process/
+GPU peaks increase<=10%; near<=5s,drain<=10s,prep<=16.67ms; zero exceptions,
+water invalid/reversed/degenerate triangles and pairing/coverage failures.
+Keep prior adopted drain/allocation exceptions separately labelled; no new
+regression exception. Geometry: seven prior owners(0,-3,-2),(0,-2,-2),
+(1,-2,-1),(2,-2,-1),(3,-2,-1),(4,-2,-1),(5,-2,-1), plus ocean candidate
+owners LOD5(-7,-7),(-7,7),(7,-7),(7,7), recording unavailable/dry entries.
+Candidate nonempty chunks must have exactly6submitted vertices/four corners.
+Inspect same camera(-1800,-1700,800),angles35,47,0,FOV60,1280x720;
+additional wide view(-1800,-1700,8000),angles65,47,0,FOV60,1280x720.
+After each route: standard88-mesh audit and detailed coverage. No extra test
+implementation/hooks; use actual generated chunks and existing diagnostics.
+Control settled15:50:02UTC:1152generated,1072published,8187vertices,
+2817.9ms cumulative generation+meshing,1.1MiB payload,all queues0,
+collision4913,prediction320/320,physical1848x960. Prescribed near/wide views
+captured before warmup. Reassert resolution after returning to Game camera.
+Control warmup15:50:23..15:51:26UTC (>48.86s). Trigger-time screen1848x960
+and spawn(0.189069256,0.240382016,262.950958) verified. No source changes
+in Code/Editor during control measurement; candidate prepared outside Code.
+
+Control8b48ba7281764eba9a9dd52e2695782e:456.55234FPS,p95/p99/max
+4.1594/9.0193/91.1241ms,GPUavg1.5890191ms;allocated5314903080bytes,
+processpeak5758697472,GPUpeak1967066232;exceptions0,prepmax9.503ms.
+Near1.7s/full10.7s observed; absolute drain10s target still fails. Finalwater
+8187vertices,46149uploads,10122generated,24999.5ms cumulative. Queues/pairing0,
+88/88audit passes,detailedcoverage0. Correct1848x960 after route. Saved raw
+results/start/end/arrival/audits and source under ValidationEvidence/WaterFast.
+Candidate applied only after completed result/audits and Play stop.
+
+Candidate settled15:56:27UTC at the same spawn/screen/world:1152generated,
+1072published,3054vertices (62.69696%fewer than hull8187),2830.8ms cumulative
+vs2817.9control (+0.4578%, no observed startup speedup),same44500refinement
+samples. Eleven predeclared owners all valid; all nonempty emit6vertices, two
+empty emit0; all reportedUniformlyWet=False. No demonstrated shortcut use in
+these samples. Near/wide screenshots show extra exposed water around edited bank
+cuts versus the control, so the bounding-quad visual criterion FAILS. Preserve
+and finish the timed run to measure its cost; do not adopt based on vertex count.
+Screenshots captured15:56:53UTC, returned to Game and reasserted logical1232x640.
+Warmup starts here; no mutations/screenshots during the timing window.
+
+Candidate089546b814bd491e91d1267051a27e59 completed at16:00:16UTC:
+500.49252FPS (+9.62435%),p95/p99/max3.739/8.8665/193.0149ms,
+GPUavg1.3931739ms;allocated5488268928bytes,processpeak5645242368,
+GPUpeak1916718200;exceptions0,prepmax12.4688ms. Moving duration121.947945s
+versus121.94959s control. Stationary FPS523.27673 versus489.9416.
+Near1.2081236s/full10.2344645s versus1.728009/10.746932s control;
+both retain the existing absolute10s drain failure. Correct1848x960 in both
+final/arrival reports. Final water3054vertices,18180uploaded vertices,
+10604generated,26281.9ms cumulative. Route lifecycle cost2.478489ms/generated
+chunk versus2.469818control: no demonstrated water generation speedup.
+Both settled payloads1.1MiB,ending1.3MiB. Queues/pairing0;88/88terrain audit
+passes and detailed coverage overlap/imbalance/missing/extra0.
+
+Decision: REJECT candidate. Vertex reduction passes, but startup generation cost
+does not improve, exposed water at edited banks fails visual acceptance, and the
+observed maximum frame193.0149ms exceeds control91.1241ms by111.8154%, failing
+the10%gate. One pair does not establish the cause of the spike. The independent
+visual failure is sufficient to withdraw the candidate without retuning inputs.
+The sampled UniformlyWet=False entries do not prove the shortcut never ran.
+All other Code/Editor/shader/settings hashes, recipe, starting center and saved
+revision1545 were held identical for this pair.
+
+Restored all three owned water source files byte-for-byte to the tested hull
+control after stopping Play. Engine reports compilation success/zero errors.
+Restarted visible Play and restored free viewport sizing for user handoff; this
+startup is restoration verification, not an additional benchmark. The earlier
+hull remains the working prototype; this comparison does not qualify it against
+the original precise mesher. No rejected runtime code is accepted or committed.
+Raw results, source snapshots and both fixed views:
+[WaterFast evidence](ValidationEvidence/WaterFast/README.md).

@@ -423,3 +423,39 @@ reprioritization; replacing terrain readiness globally expands beyond the measur
 water slice. Existing broad request refresh on placement/edit remains for now.
 Only repeated completed-work scans and unrelated mesh-completion water scans are
 replaced. Runtime/visual acceptance and all baseline failures stay in the ledger.
+
+### Four-corner water and submerged-region shortcut prototype (2026-09-15)
+
+The next requested candidate replaces the convex hull with the tight axis-aligned
+bounding rectangle of the generated occupied cells. Each nonempty owner emits
+six submitted vertices representing four corners/two upward triangles; empty
+coverage emits none. The rectangle stays within the owner chunk and covers the
+old hull. This trades additional hidden dry-area coverage for cheaper extraction
+and fewer vertices. Bank rounding is still determined by terrain geometry.
+
+GeneratedWaterCells first checks the existing corrected-region revision. For an
+unedited chunk only, RegionalLandforms.BoundHeight.Maximum strictly below SeaLevel
+proves every exterior point submerged. River carving only lowers the natural
+exterior and caves/cliffs only remove solid; therefore all coverage cells are wet.
+Fill the same1024-entry coverage payload and skip river capture,1089coarse samples
+and refinement. UniformlyWet records this proof, allowing meshing to use the full
+chunk rectangle without scanning coverage. The read-only water diagnostic reports
+it; no per-frame uniform-region aggregation is added. Bounds are conservative,
+including erosion/rounding. Equality, uncertain bounds and edited chunks retain
+the normal sampler. This bound cannot prove dry regions because its lower bound
+includes potential river carving; no unsupported dry shortcut is used.
+
+No generator/save identity, field ownership, medium semantics, worker count,
+publication, shader or draw-call grouping changes. All added work is bounded per
+chunk; the existing cancellation and stale-result gates apply. One classification
+may add overhead where it cannot prove uniformity, so WATER-FAST-001/v1 measures
+the complete generation and figure-eight cost before adoption. Source is a
+prototype, with expanded water footprint subject to actual visual qualification.
+
+WATER-FAST-001/v1 outcome: rejected and removed. The bounding quad reduced
+submitted vertices from8187to3054 but exposed extra water at edited bank cuts.
+Startup generation+meshing did not improve; the matched route also exceeded the
+maximum-frame regression gate. The uniform shortcut was not demonstrated in the
+sampled owners. Both additions were withdrawn and the tested convex-hull control
+restored byte-for-byte. These paragraphs describe the experiment, not current
+runtime behavior. See [test evidence](../ValidationEvidence/WaterFast/README.md).
