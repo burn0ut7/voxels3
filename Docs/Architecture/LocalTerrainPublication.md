@@ -242,3 +242,14 @@ passed88mesh audits. Fast placement preparation reached42.262ms and background
 settlement remains slow; the candidate is unaccepted and uncommitted. Removing
 seam counting waits improves the critical path but does not ensure nearby
 replacement dependencies are prepared before the player needs them.
+
+## Diagnostic ownership
+
+2026-09-15: [coarse-coverage recorder and reports](../ValidationEvidence/CoarseCoverage/Experiment.md)
+are implemented in VoxelManager.Coverage.cs. Opt-in250ms/27-cell occupancy
+samples use a fixed256-entry ring. Explicit voxel_coverage_report snapshots add
+current-field mesh work,water,draw eligibility and bounded missing coarse
+subregions. Figure-eight result schema29 includes the ring and counters.
+These are diagnostics,not a guarantee of complete visible ground. No loading
+priority or temporary coarse-fallback prototype from this investigation is
+adopted; see the report and ledger for rejected behavior and pending reproduction.

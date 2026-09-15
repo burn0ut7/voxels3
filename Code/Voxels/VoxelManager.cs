@@ -29,7 +29,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private const int DefaultGameplayRadius = 4;
 	private const int MaximumSupportedVisualLod = TerrainClipboxLimits.MaximumSupportedVisualLod;
 	private const int SupportedVisualLevelCount = TerrainClipboxLimits.SupportedVisualLevelCount;
-	private const int PerformanceResultSchemaVersion = 28;
+	private const int PerformanceResultSchemaVersion = 29;
 	// s&box world units are inches: ten meters of vertical exterior clearance.
 	private const float FigureEightTerrainClearance = 10f / 0.0254f;
 	private const int RenderWarmShellChunks = 1;
@@ -543,6 +543,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		UpdateTerrainPrediction();
 		UpdateWaterCellGeneration();
 		if ( _clipboxPlacementPending ) TryCommitPendingClipboxPlacement();
+		UpdateCoverageTrace();
 		int meshDispatches;
 		using ( MeasureDeformation( DeformationStage.MeshPump ) )
 		{
@@ -834,6 +835,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		var result = new PerformanceTestResult
 		{
 			SchemaVersion = PerformanceResultSchemaVersion,
+			CoverageTrace = CaptureCoverageTrace(),
 			LodArrivalReportPath = LodArrivalReportPath,
 			LodArrivalStatus = LodArrivalStatus,
 			Collision = _collision?.Capture(),

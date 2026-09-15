@@ -1,0 +1,141 @@
+diff --git a/Code/Voxels/VoxelManager.Coverage.cs b/Code/Voxels/VoxelManager.Coverage.cs
+index 1d57455..76abf91 100644
+--- a/Code/Voxels/VoxelManager.Coverage.cs
++++ b/Code/Voxels/VoxelManager.Coverage.cs
+@@ -187,6 +187,7 @@ public sealed partial class VoxelManager
+ 	private HashSet<GpuMeshRegionKey> _coverageRequired = new();
+ 	private HashSet<GpuMeshRegionKey> _coverageNextRequired = new();
+ 	private long _coverageLocalCommits;
++	private long _coverageCoarseFallbackCommits;
+ 	private bool _coverageAdmissionDeferred;
+ 	private double _coverageMaximumPublicationMilliseconds;
+ 	private long _coverageTopologyRetries;
+@@ -208,6 +209,7 @@ public sealed partial class VoxelManager
+ 		public GpuMeshRegionKey Parent;
+ 		public readonly HashSet<GpuMeshRegionKey> Requests = new();
+ 		public bool Split;
++		public bool CoarseFallback;
+ 		public readonly List<GpuMeshRegionKey> Incoming = new( 8 );
+ 		public readonly List<GpuMeshRegionKey> Dependencies = new( 14 );
+ 		public readonly List<GpuTransitionKey> NewSeams = new( 6 );
+@@ -280,9 +282,9 @@ public sealed partial class VoxelManager
+ 		var dx = MathF.Max( 0, MathF.Max( minimum.x - position.x, position.x - maximum.x ) );
+ 		var dy = MathF.Max( 0, MathF.Max( minimum.y - position.y, position.y - maximum.y ) );
+ 		var dz = MathF.Max( 0, MathF.Max( minimum.z - position.z, position.z - maximum.z ) );
+-		// Immediate player detail first, then missing exterior, then layout convergence.
+-		var service = IsImmediateCoverageRequired( key ) ? 0 :
+-			IsExteriorCoverageRequired( key ) && !HasCoverageDescendant( key ) ? 1 : 2;
++		// Cover missing ground before refining ground that can already be shown.
++		var service = IsExteriorCoverageRequired( key ) && !HasCoverageDescendant( key ) ? 0 :
++			IsImmediateCoverageRequired( key ) ? 1 : 2;
+ 		_coverageQueue.Enqueue( key, (service, dx * dx + dy * dy + dz * dz, -key.Level,
+ 			key.Coordinate.z, key.Coordinate.y, key.Coordinate.x) );
+ 	}
+@@ -513,8 +515,8 @@ public sealed partial class VoxelManager
+ 		}
+ 		else
+ 		{
+-			// An uncovered region needs its requested mesh, not a temporary coarse tree.
+ 			if ( !IsLocalCoverageRequired( requested ) || HasCoverageDescendant( requested ) ) return;
++			if ( IsImmediateCoverageRequired( requested ) && TryAdmitCoarseCoverage( requested ) ) return;
+ 			if ( FindCoarseCoverageBlocker( requested, requested.Level + 1, out var blocker ) )
+ 			{
+ 				TryAdmitLocalReplacement( blocker, requested, split: true );
+@@ -527,6 +529,28 @@ public sealed partial class VoxelManager
+ 	private bool HasCoverageDescendant( GpuMeshRegionKey key ) =>
+ 		_gpuMesher.IsRenderActive( key ) || _gpuMesher.HasRenderDescendant( key );
+ 
++	private bool TryAdmitCoarseCoverage( GpuMeshRegionKey requested )
++	{
++		for ( var level = _stagedVisualConfiguration.MaximumVisualLod; level > requested.Level; level-- )
++		{
++			var parent = CoverageAncestor( requested, level );
++			if ( !CanAddCoverageRegion( parent ) ) continue;
++			foreach ( var pending in _coveragePending )
++			{
++				if ( pending.Parent != parent ) continue;
++				pending.Requests.Add( requested );
++				return true;
++			}
++			var operation = new LocalReplacement { Parent = parent, CoarseFallback = true };
++			operation.Requests.Add( requested );
++			if ( !DescribeLocalReplacement( operation ) ) return false;
++			_coveragePending.Add( operation );
++			RefreshLocalCoverageRequirements();
++			return true;
++		}
++		return false;
++	}
++
+ 	private bool FindCoarseCoverageBlocker( GpuMeshRegionKey parent, int maximumNeighborLevel, out GpuMeshRegionKey blocker )
+ 	{
+ 		for ( var z = -1; z <= 1; z++ )
+@@ -748,17 +772,9 @@ public sealed partial class VoxelManager
+ 		operation.Dependencies.Clear();
+ 		operation.NewSeams.Clear();
+ 		operation.OldSeams.Clear();
+-		if ( !IsLocalCoverageRequired( parent ) || FindCoverageAncestor( parent, out _ ) ||
+-			HasCoverageDescendant( parent ) || FindCoarseCoverageBlocker( parent, parent.Level + 1, out _ ) ) return false;
+-		// Adding uncovered volume must also respect finer edge/corner neighbors.
+-		for ( var z = -1; parent.Level > _stagedVisualConfiguration.MinimumVisualLod && z <= 2; z++ )
+-		for ( var y = -1; y <= 2; y++ )
+-		for ( var x = -1; x <= 2; x++ )
+-		{
+-			if ( x >= 0 && x < 2 && y >= 0 && y < 2 && z >= 0 && z < 2 ) continue;
+-			var neighbor = new GpuMeshRegionKey( parent.Level - 1, parent.Coordinate * 2 + new Vector3Int( x, y, z ) );
+-			if ( !FindCoverageAncestor( neighbor, out _ ) && HasCoverageDescendant( neighbor ) ) return false;
+-		}
++		if ( (!IsLocalCoverageRequired( parent ) &&
++			!(operation.CoarseFallback && operation.Requests.Any( IsLocalCoverageRequired ))) ||
++			!CanAddCoverageRegion( parent ) ) return false;
+ 		operation.Incoming.Add( parent );
+ 		for ( var face = 0; face < 6; face++ )
+ 		{
+@@ -788,6 +804,21 @@ public sealed partial class VoxelManager
+ 		return true;
+ 	}
+ 
++	private bool CanAddCoverageRegion( GpuMeshRegionKey parent )
++	{
++		if ( FindCoverageAncestor( parent, out _ ) || HasCoverageDescendant( parent ) ||
++			FindCoarseCoverageBlocker( parent, parent.Level + 1, out _ ) ) return false;
++		for ( var z = -1; parent.Level > _stagedVisualConfiguration.MinimumVisualLod && z <= 2; z++ )
++		for ( var y = -1; y <= 2; y++ )
++		for ( var x = -1; x <= 2; x++ )
++		{
++			if ( x >= 0 && x < 2 && y >= 0 && y < 2 && z >= 0 && z < 2 ) continue;
++			var neighbor = new GpuMeshRegionKey( parent.Level - 1, parent.Coordinate * 2 + new Vector3Int( x, y, z ) );
++			if ( !FindCoverageAncestor( neighbor, out _ ) && HasCoverageDescendant( neighbor ) ) return false;
++		}
++		return true;
++	}
++
+ 
+ 	private bool PrepareLocalReplacement( LocalReplacement operation )
+ 	{
+@@ -846,6 +877,7 @@ public sealed partial class VoxelManager
+ 
+ 	private void CommitLocalReplacement( LocalReplacement operation )
+ 	{
++		if ( operation.CoarseFallback ) _coverageCoarseFallbackCommits++;
+ 		var publicationStarted = Stopwatch.GetTimestamp();
+ 		foreach ( var key in operation.OldSeams )
+ 		{
+@@ -901,7 +933,7 @@ public sealed partial class VoxelManager
+ 		}
+ 		var operations = _coveragePending.Select( operation => new
+ 		{
+-			operation.Parent, Kind = operation.Split ? "refinement-patch" : "add-region",
++			operation.Parent, Kind = operation.Split ? "refinement-patch" : operation.CoarseFallback ? "coarse-fallback" : "add-region",
+ 			AgeSeconds = Stopwatch.GetElapsedTime( operation.Started ).TotalSeconds,
+ 			Incoming = operation.Incoming.Count, Dependencies = operation.Dependencies.Count,
+ 			WaitingRequests = operation.Requests.Count,
+@@ -915,7 +947,7 @@ public sealed partial class VoxelManager
+ 		return new
+ 		{
+ 			LocalPlan = _coverageLocalPlan, LocalWorkComplete = _coverageLocalWorkComplete, Converged = _coverageConverged, DiffersFromLayout = _coverageDiffersFromLayout,
+-			Commits = _coverageLocalCommits, TopologyRetries = _coverageTopologyRetries,
++			Commits = _coverageLocalCommits, CoarseFallbackCommits = _coverageCoarseFallbackCommits, TopologyRetries = _coverageTopologyRetries,
+ 			ResumedRequests = _coverageResumedRequests,
+ 			MaximumPublicationMilliseconds = _coverageMaximumPublicationMilliseconds,
+ 			FinalReadinessChecks = _finalCoverageReadinessChecks,

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 public sealed partial class VoxelManager
 {
-	private bool _coverageTraceEnabled;
+	private bool _coverageTraceEnabled = true;
 	private float _coverageTraceElapsed;
 	private readonly CoverageTraceSample[] _coverageTrace = new CoverageTraceSample[256];
 	private int _coverageTraceCount;
@@ -16,8 +16,7 @@ public sealed partial class VoxelManager
 	private long _coverageTraceStarted = Stopwatch.GetTimestamp();
 
 	private readonly record struct CoverageTraceSample( double Seconds, Vector3Int Center,
-		int MissingCells, int AssignedWithoutResident, int FineCells, int CoarseCells,
-		Vector3Int FirstMissing, int LargestUncoveredLod,
+		int MissingCells, Vector3Int FirstMissing, int LargestUncoveredLod,
 		bool RootHasPartialCoverage, bool LayoutPending, bool RefinementPending );
 
 	// Sample coverage occupancy, not terrain density. An uncovered air cell is not
@@ -32,9 +31,6 @@ public sealed partial class VoxelManager
 		var started = Stopwatch.GetTimestamp();
 		var center = WorldToChunkCoordinate( ActiveStreamingTarget.WorldPosition );
 		var missing = 0;
-		var assignedWithoutResident = 0;
-		var fine = 0;
-		var coarse = 0;
 		var firstMissing = default(Vector3Int);
 		var largest = -1;
 		var partial = false;
@@ -44,12 +40,7 @@ public sealed partial class VoxelManager
 		{
 			var coordinate = center + new Vector3Int( x, y, z );
 			var key = new GpuMeshRegionKey( 0, coordinate );
-			if ( FindCoverageAncestor( key, out var active ) )
-			{
-				if ( !_gpuMesher.IsResident( active ) ) assignedWithoutResident++;
-				if ( active.Level == 0 ) fine++; else coarse++;
-				continue;
-			}
+			if ( FindCoverageAncestor( key, out _ ) ) continue;
 			if ( missing++ != 0 ) continue;
 			firstMissing = coordinate;
 			var maximum = _targetVisualConfiguration.MaximumVisualLod;
@@ -61,7 +52,7 @@ public sealed partial class VoxelManager
 			}
 		}
 		var sample = new CoverageTraceSample( Stopwatch.GetElapsedTime( _coverageTraceStarted ).TotalSeconds,
-			center, missing, assignedWithoutResident, fine, coarse, firstMissing, largest, partial, _clipboxPlacementPending,
+			center, missing, firstMissing, largest, partial, _clipboxPlacementPending,
 			_coveragePending.Count == 1 && _coveragePending[0].Split );
 		_coverageTrace[_coverageTraceCursor] = sample;
 		_coverageTraceCursor = (_coverageTraceCursor + 1) % _coverageTrace.Length;
@@ -102,30 +93,18 @@ public sealed partial class VoxelManager
 		if ( !TryGetActiveManager( "coverage.report", out var manager ) || manager._gpuMesher is null ) return;
 		var center = manager.WorldToChunkCoordinate( manager.ActiveStreamingTarget.WorldPosition );
 		var probes = new List<object>( 27 );
-		var roots = new HashSet<GpuMeshRegionKey>();
 		for ( var z = -1; z <= 1; z++ )
 		for ( var y = -1; y <= 1; y++ )
 		for ( var x = -1; x <= 1; x++ )
 		{
 			var key = new GpuMeshRegionKey( 0, center + new Vector3Int( x, y, z ) );
-			roots.Add( CoverageAncestor( key, manager._targetVisualConfiguration.MaximumVisualLod ) );
-			var covered = manager.FindCoverageAncestor( key, out var active );
-			if ( covered )
-			{
-				var activeDescriptor = manager.CreateRegularDescriptor( active.Level, active.Coordinate, captureRegion: false );
-				probes.Add( new { Key = key, ActiveAncestor = active,
-					CurrentFieldResident = manager._gpuMesher.IsResident( activeDescriptor ),
-					DrawEligible = manager._gpuMesher.IsRegionPresented( activeDescriptor ),
-					Work = manager._gpuMesher.InspectRegionWork( activeDescriptor ) } );
-				continue;
-			}
+			if ( manager.FindCoverageAncestor( key, out _ ) ) continue;
 			var ancestors = new List<object>( SupportedVisualLevelCount );
 			for ( var level = 0; level <= manager._targetVisualConfiguration.MaximumVisualLod; level++ )
 			{
 				var ancestor = CoverageAncestor( key, level );
 				var descriptor = manager.CreateRegularDescriptor( level, ancestor.Coordinate, captureRegion: false );
 				ancestors.Add( new { Key = ancestor, Requested = manager._gpuMesher.Contains( descriptor ),
-					Work = manager._gpuMesher.InspectRegionWork( descriptor ),
 					Resident = manager._gpuMesher.IsResident( descriptor ), WaterReady = manager.IsChunkContentPrepared( descriptor ),
 					HasAnyFinerCoverage = manager._gpuMesher.HasRenderDescendant( ancestor ),
 					Desired = manager.IsLocalCoverageRequired( ancestor ), Queued = manager._coverageQueued.Contains( ancestor ),
@@ -136,39 +115,13 @@ public sealed partial class VoxelManager
 				manager._appliedCellSize, manager.CurrentField ).Classification;
 			probes.Add( new { Key = key, Classification = classification.ToString(), Ancestors = ancestors } );
 		}
-		var coarseRoots = new List<object>( roots.Count );
-		foreach ( var root in roots )
-		{
-			var pending = new Stack<GpuMeshRegionKey>();
-			var missingRegions = new List<object>();
-			pending.Push( root );
-			var inspected = 0;
-			while ( pending.Count > 0 && inspected++ < 512 && missingRegions.Count < 32 )
-			{
-				var key = pending.Pop();
-				if ( manager.FindCoverageAncestor( key, out _ ) ) continue;
-				if ( key.Level > 0 && manager._gpuMesher.HasRenderDescendant( key ) )
-				{
-					for ( var child = 7; child >= 0; child-- ) pending.Push( CoverageChild( key, child ) );
-					continue;
-				}
-				var descriptor = manager.CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false );
-				missingRegions.Add( new { Key = key, Work = manager._gpuMesher.InspectRegionWork( descriptor ),
-					WaterReady = manager.IsChunkContentPrepared( descriptor ),
-					Desired = manager.IsLocalCoverageRequired( key ), Queued = manager._coverageQueued.Contains( key ),
-					CoarseNeighborBlocked = manager.FindCoarseCoverageBlocker( key, key.Level + 1, out _ ) } );
-			}
-			coarseRoots.Add( new { Root = root, HasAnyFinerCoverage = manager._gpuMesher.HasRenderDescendant( root ),
-				MissingRegions = missingRegions, Truncated = pending.Count > 0, InspectedNodes = inspected } );
-		}
 		var path = $"performance/coverage/{Guid.NewGuid():N}.json";
 		global::Sandbox.FileSystem.Data.CreateDirectory( "performance/coverage" );
 		global::Sandbox.FileSystem.Data.WriteAllText( path, System.Text.Json.JsonSerializer.Serialize( new
 		{
 			SchemaVersion = 1, CapturedAtUtc = DateTimeOffset.UtcNow, manager.CurrentField.WorldId,
 			manager.CurrentField.Revision, PlayerPosition = manager.ActiveStreamingTarget.WorldPosition,
-			Trace = manager.CaptureCoverageTrace(), Coverage = manager.CaptureLocalCoverage(), NearCells = probes,
-			CoarseRoots = coarseRoots,
+			Trace = manager.CaptureCoverageTrace(), Coverage = manager.CaptureLocalCoverage(), MissingCells = probes,
 			Interpretation = "Any finer descendant is partial occupancy, not proof of full coarse-volume coverage. PotentiallySurfaceContaining is conservative, not proof of a visible hole."
 		}, PerformanceJsonOptions ) );
 		Log.Info( $"[VoxelWorld] coverage.report.saved path={(global::Sandbox.FileSystem.Data.GetFullPath( path ))}" );

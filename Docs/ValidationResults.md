@@ -27775,3 +27775,100 @@ collision regions ready,320/320predictionpackages and1920faces ready,all pending
 queues0 and water/terrain pairing errors0. Fresh88/88mesh audit has0stale/failures/
 invalid geometry/draw errors; detailed settled coverage has0overlap/imbalance/
 missing/extra seams. These are reapplication checks,not a fresh timed benchmark.
+
+## COARSE-COVERAGE-001/v1 - fast-flight occupancy and fallback, 2026-09-15
+
+User reports giant gaps beneath fast flight while coarse exterior and individual
+fine chunks appear. Diagnose actual missing volume separately from density/air.
+Use LOCAL-COVERAGE-001/v4 route unchanged:10000speed,200000distance,1loop,
+clearance393.7008,1848x960physical,LOD0..5,near/cache/gameplay4/8/8,radius256,
+seed1337,generator47,saved held-dig-v1 world547ae8f0-bf9e-45e0-8f36-27d0e8d95771
+revision1990/125pages,normal spawn,allactualqueues0 then48.86s warmup,10s
+stationary,240s cap. New source fe6c5e5 adopted water/prediction; old timing is
+not a current-source baseline. Capture an instrumented control before behavioral
+changes. No code changes during a run. Same diagnostics for candidate.
+
+Diagnostics: default-on250ms bounded27-cell occupancy sampling,256sample ring,
+begin/end gap logs,counts,maxsamplingCPU; report command writes missing-cell
+classification and each ancestor's requested/resident/water/partial/queue/interest
+state. Trace included in performance result. Occupancy is not proof of a visible
+hole, and conservative density classification is not exact surface intersection.
+Capture report+screenshot near30s,fullcoverage and88-mesh audit after completion.
+Pass: zero overlapping/unbalanced/incorrectseams,zeroexceptions/unsafecommits,
+zero finalqueues/collision4913/waterready. Reduce missing occupied-near samples
+without >5%FPS or >10%p99/allocation/memory regression unexplained. Existing
+near<=5s,drain<=10s,prep<=16.67ms still reported; main adoption exceptions are
+not blanket approval of a new regression. Record all outcomes and rejected work.
+
+Control8a9f10af794044f298caf0e594311c7e:507.45563FPS,p99=8.1956ms,max96.9279ms.
+Initial recorder1040samples (session includes startup/warmup/route/drain),0near
+occupancy gaps,maxsample0.2235ms. Snapshot intended30s arrived49.455s; preserve
+actualtiming. Screenshot shows coarse ground,not the reported hole. Finalmesh
+audit was requested immediately before Play stopped; completion unverified.
+Initial compilation failed CS0103 interpolation alias; corrected before run.
+Report expanded to bounded coarse-root subdivision (512nodes/32missingregions
+perroot) and assigned-without-resident plus coarse/fine near-cell counts. Reports
+are explicit commands; expensive snapshots are not taken in the update loop.
+
+Prototype: uncovered regions should try their largest compatible coarse ancestor
+before individual desired fine cells. Existing local replacement owns the temporary
+coarse operation,its requested fine cells,regular/water/seam readiness and atomic
+publication. Structural overlap and26-neighbor balance checks remain mandatory;
+if no compatible coarse ancestor exists,use the existing path. Existing fine
+requests resume after coarse publication. Prioritize uncovered exterior before
+fine-detail requests. Keep8pending additions,0.75mslocalbudget and GPUlimits.
+No second render path or overlapping parent/child drawing. Record coarsefallback
+commits and operation type in the existing report. This is a prototype,not an
+accepted fix; evaluate FPS,coverage and near/drain outcomes on the fixedroute.
+
+Prototype scope refinement before timing: temporary coarse additions are limited
+to missing immediate27 player cells. Background convergence keeps its original
+requests; exterior coverage is already coarse and moves ahead in priority.
+This bounds speculative additions and targets the user's under-player gap.
+
+Prototype49c5c4f30647435591770850bd8f29ad:474.96948FPS versus507.45563control
+(-6.4%),p99=8.6808ms versus8.1956. Max158.5841ms,GPUmax150.44188ms.
+Trace1058samples,0missing,maxsample0.3482ms;0coarsefallbackcommits in moving
+report. The target branch was not exercised; no claimed hole fix. Diagnostic
+asymmetries: enhanced report at50.112s vs49.455control and accidental extra
+report/88-mesh audit at120.136s before route end (audit passed). These may affect
+frame tails; do not assign the entire difference causally to the source patch.
+Nevertheless no demonstrated benefit offsets the >5%FPS loss: reject behavior
+prototype,restore Coverage.instrumented.txt (enhanced diagnostics only). Keep
+all evidence and archive the exactpatch. No accepted optimization or gapfix.
+
+Final diagnostics-only verification uses samev4route/warmup,enhanced snapshot
+at49.455s,finalaudit after saved result. No extra moving audit. Code finalsource
+has original admission/priority and adoptedwater/prediction unchanged. This run
+validates recorder/report functionality and checks FPS impact against control.
+
+Diagnostics-only4ff2852341a2418297fdb3051d040430:466.89474FPS,p99=8.9676ms,
+near1.897581s,drain14318.387ms;trace max0.3333ms,0missing samples. Relative to
+first controlFPS -8.0%,so default-on monitoring is NOT yet performance accepted.
+The removal of prototype behavior did not restore the first control'sFPS.
+Do not attribute the observed loss to either change without an independent
+recorder-off control. Preserve all measurements. Finalaudits captured after save.
+
+Predeclare recorder-off control: same v4source/route/resolution/settings/warmup,
+normalPlay restart; voxel_coverage_trace false before warmup. Same49.455s report,
+screenshot and detailedcoverage,final88audit after save. Public recorder control
+is the measured variant; no shipping/test-only alternate loader. Compare final
+recorder-on result to this same-session recorder-off control as well as preserving
+originalcontrol. If recording causes a material regression,default it off and
+retain explicit report commands; do not claim a reliable FPS improvement.
+
+Recorder-offb268de6b7bd64162a3e7a3576a0c94b2:396.42273FPS,p99=9.6876ms,
+drain31611.023ms;recordingdisabled,samples0. Alloc7398084688/perframe153036.38,
+processavg/peak5532875524/5660999680,GPUavg/peak1925672622/2247252612,
+GC876.389ms/max12.901ms,exceptions0. Snapshot50.189s. Preserve worse control:
+this rules out assigning session decline solely to recorder but does not prove
+recording is free or beneficial. No causal FPS claim or overall performance pass.
+
+Final decision: keep diagnostics as opt-in,defaultfalse. The off route exercises
+that exact runtime setting; finalsource changes only its default initialization.
+Both finaldiagnostics and off movingcoverage/final88audits pass;queues0 and
+collision/waterready. No missing occupancy samples on recorded routes; coarse
+fallback branch not exercised. Restore all prototype scheduling/priority changes.
+The user's precise hole is not reproduced and not fixed. Only diagnostic code,
+reports and evidence are eligible for commit. Existing mainwater/prediction
+adoption preserved. Detailedreport commands remain available regardless oftrace.

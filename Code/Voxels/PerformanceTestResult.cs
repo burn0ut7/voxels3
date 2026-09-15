@@ -3,6 +3,7 @@ using System;
 internal sealed class PerformanceTestResult
 {
 	public int SchemaVersion { get; init; }
+	public object CoverageTrace { get; init; }
 	public string LodArrivalReportPath { get; init; }
 	public string LodArrivalStatus { get; init; }
 	public PerformanceCollisionMetrics Collision { get; init; }

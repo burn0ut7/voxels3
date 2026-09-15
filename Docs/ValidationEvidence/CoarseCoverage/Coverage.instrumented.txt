@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 public sealed partial class VoxelManager
 {
-	private bool _coverageTraceEnabled;
+	private bool _coverageTraceEnabled = true;
 	private float _coverageTraceElapsed;
 	private readonly CoverageTraceSample[] _coverageTrace = new CoverageTraceSample[256];
 	private int _coverageTraceCount;
