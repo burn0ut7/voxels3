@@ -16,6 +16,7 @@ public sealed partial class VoxelManager
 		public double AttemptedSeconds { get; set; }
 		public bool Accepted { get; set; }
 		public string ToolStatus { get; set; }
+		public string PublicationStatus { get; set; }
 		public bool CancelledBeforeCommit { get; set; }
 		public int Revision { get; set; }
 		public int ChangedSamples { get; set; }
@@ -34,6 +35,9 @@ public sealed partial class VoxelManager
 		public string Scenario;
 		public string Task;
 		public string Revision;
+		public Guid StartingWorld;
+		public int StartingFieldRevision;
+		public int StartingPages;
 		public int Count;
 		public double Interval;
 		public long Started = Stopwatch.GetTimestamp();
@@ -81,22 +85,23 @@ public sealed partial class VoxelManager
 	{
 		if ( !Networking.IsHost || _deformationBenchmark is not null || _playerFigureEightEnabled ||
 			_playerFigureEightTestRunning || _performanceVisibilityPending || _performanceCompletionPhase != PerformanceCompletionPhase.None ||
-			_terrainSaveTask is not null || _terrainEditTask is not null || _terrainEditQueue.Count > 0 || CurrentField.Revision != 0 ||
+			_terrainSaveTask is not null || _terrainEditTask is not null || _terrainEditQueue.Count > 0 || (scenario != "held-dig" && CurrentField.Revision != 0) ||
 			!_collision.Settled || _gpuMesher.AllPendingCount > 0 || _gpuMesher.TransitionPendingCount > 0 || HasClipboxPlacementWork )
 			throw new InvalidOperationException( "Start on a fresh, fully settled host world with no other test or terrain operation active." );
 		var workload = scenario switch
 		{
-			"tool-stationary" or "tool-cycle" or "tool-sweep" or "sprint-look" or "occupied" => (600, 0.1),
+			"held-dig" or "tool-stationary" or "tool-cycle" or "tool-sweep" or "sprint-look" or "occupied" => (600, 0.1),
 			"overload" => (600, 0.025),
 			"large" or "distant" or "underground" or "boundaries" => (12, 0.5),
 			_ => throw new ArgumentException( "Unknown deformation scenario." )
 		};
 		var player = Scene.GetAllComponents<PlayerController>().FirstOrDefault( value => !value.IsProxy );
-		if ( !player.IsValid() || MathF.Abs( player.WorldPosition.x ) > 1f || MathF.Abs( player.WorldPosition.y ) > 1f )
+		if ( !player.IsValid() || scenario != "held-dig" && (MathF.Abs( player.WorldPosition.x ) > 1f || MathF.Abs( player.WorldPosition.y ) > 1f) )
 			throw new InvalidOperationException( "The benchmark requires the player at the unchanged spawn; it never moves the player or camera." );
 		_deformationBenchmark = new DeformationBenchmark
 		{
 			Scenario = scenario, Task = RequirePerformanceContext( task, nameof( task ) ),
+			StartingWorld = CurrentField.WorldId, StartingFieldRevision = CurrentField.Revision, StartingPages = CurrentField.PageCount,
 			Revision = RequirePerformanceContext( revision, nameof( revision ) ), Count = workload.Item1, Interval = workload.Item2,
 			Player = player, PlayerStart = player.WorldPosition, StartingHoldSteps = _collisionHoldSteps, StartingCommitted = _terrainEditsCommitted, StartingRejected = _terrainEditsRejected
 		};
@@ -199,9 +204,10 @@ public sealed partial class VoxelManager
 			var timestamp = Stopwatch.GetTimestamp();
 			long requestId;
 			bool accepted;
-			if ( benchmark.Scenario is "tool-stationary" or "tool-cycle" or "tool-sweep" or "sprint-look" or "overload" )
+			if ( benchmark.Scenario is "held-dig" or "tool-stationary" or "tool-cycle" or "tool-sweep" or "sprint-look" or "overload" )
 			{
-				var aim = new Vector3( 512f, benchmark.Scenario == "tool-sweep" ? MathF.Sin( index * 0.05f ) * 256f : 0f, 0f );
+				var aim = benchmark.Scenario == "held-dig" ? benchmark.PlayerStart + new Vector3( 512f, 0f, -128f ) :
+					new Vector3( 512f, benchmark.Scenario == "tool-sweep" ? MathF.Sin( index * 0.05f ) * 256f : 0f, 0f );
 				accepted = TryUseTerrainTool( benchmark.Player, benchmark.DrivingPlayer ? Rotation.From( benchmark.Player.EyeAngles ).Forward : (aim - benchmark.Player.EyePosition).Normal,
 					(benchmark.Scenario is "tool-cycle" or "sprint-look" or "overload") && index % 20 >= 10, out requestId );
 			}
@@ -223,7 +229,8 @@ public sealed partial class VoxelManager
 			{
 				Index = index, RequestId = requestId, ScheduledSeconds = index * benchmark.Interval,
 				AttemptedSeconds = seconds, Accepted = accepted, RequestedTimestamp = timestamp,
-				ToolStatus = benchmark.Scenario is "tool-stationary" or "tool-cycle" or "tool-sweep" or "sprint-look" or "overload" ? _terrainToolStatus : null
+				ToolStatus = benchmark.Scenario is "held-dig" or "tool-stationary" or "tool-cycle" or "tool-sweep" or "sprint-look" or "overload" ? _terrainToolStatus : null,
+				PublicationStatus = !accepted && _gpuMesher.FieldPublicationPending ? _gpuMesher.FieldPublicationStatus : null
 			};
 			benchmark.Observations.Add( observation );
 			if ( accepted ) benchmark.Requests.Add( requestId, observation );
@@ -271,6 +278,7 @@ public sealed partial class VoxelManager
 				Failure = failure, Acceptance = "Unreviewed; this output alone is not feature acceptance.",
 				Settings = CurrentField.Settings, GeneratorVersion = ProceduralTerrainSdf.CurrentVersion,
 				PlayerStart = benchmark.PlayerStart, GameplayRadius = _appliedGameplayRadius, VisualRadius = VisualChunkRadius,
+				benchmark.StartingWorld, benchmark.StartingFieldRevision, benchmark.StartingPages,
 				benchmark.Baseline, WorkAndDrain = _lastStationaryMetrics, Collision = _collision.Capture(),
 				Committed = _terrainEditsCommitted - benchmark.StartingCommitted, Rejected = _terrainEditsRejected - benchmark.StartingRejected,
 				benchmark.PeakQueue, benchmark.PeakPageBytes, benchmark.PeakHeldBodies,

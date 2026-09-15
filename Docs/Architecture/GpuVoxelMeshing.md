@@ -1,5 +1,10 @@
 # GPU Voxel Meshing
 
+2026-09-15 integration: the user adopted the exact tested water-plus-prediction
+source snapshot for main. See [the adoption record](../ValidationEvidence/IdleWork/Experiment.md)
+for measurements and explicit allocation/drain exceptions. Historical prototype
+results below remain unchanged; this is not a blanket pass of older scenarios.
+
 ## Production Slice
 
 RIVERS-016 prototype (unaccepted): generation resolves material runs at refined cell
@@ -113,8 +118,11 @@ Gameplay membership and bounded CPU preparation are defined in the
 [voxel foundation](VoxelChunkFoundation.md#canonical-ownership-and-data-flow).
 
 `VoxelManager` computes changed regular boxes and adjacent transition boundaries
-through one placement builder. The boundary-step candidate described below
-limits ordinary movement to one nested boundary per publication. Each transition identity contains its fine
+through one placement builder. The current unaccepted local-publication redesign
+stages the destination directly and converges through parent/child replacements.
+It supersedes the historical boundary-step movement policy below; initialization
+and configuration replacement retain the atomic path. See
+[Local terrain publication](LocalTerrainPublication.md). Each transition identity contains its fine
 level, coarse level, coarse coordinate, and face. The same identity,
 descriptor, queue, scratch pipeline, resident cache, allocator, visibility path,
 and draw path serve every enabled pair. Transition work is ordered by coarse
@@ -435,10 +443,12 @@ changes that coordinate's resident record. Only then are old ranges released.
 Empty results follow the same revision lifecycle without consuming an arena.
 
 Coordinate-local publication is separate from manager-visible clipbox placement.
-Incoming residents may publish inactive in any completion order, but the committed
-level and adjacent-pair active sets change only through the atomic
-whole-placement handoff described above. There is no partial active-set mutation
-and no second renderer masking an incomplete placement.
+Incoming residents may publish inactive in any completion order. In the current
+unaccepted redesign, ordinary streaming changes actual activation through local
+parent/child replacements, including required seams and water. Desired box metadata
+is reconciled after convergence. Initialization and configuration changes retain
+whole-placement publication. The existing mesher activation sets own actual
+coverage; there is no second renderer masking incomplete placement.
 
 Dimension or generator-configuration changes clear incompatible resident and
 in-flight derived state. Terrain authority remains the canonical procedural SDF
@@ -958,76 +968,60 @@ removed: canonical meshing now owns all visible terrain holes. Coarse narrow-riv
 fidelity, edited-solid visibility and the unchanged figure-eight are acceptance
 gates. Do not reintroduce procedural pixel clipping to hide a mesh deficiency.
 
-## Terrain Depth and Shadows (implementation in progress)
+## Terrain Depth and Shadows
 
-The forward arena submissions remain GPU-culled indexed indirect draws at the
-camera AfterOpaque stage. Explicit per-camera draw attributes receive scene
-lighting through the existing render rendezvous, so terrain can receive shadows.
-One additional infinite-bounds SceneCustomObject participates only in depth-prepass
-and shadow layers. Each view GPU-culls the canonical published bounds and source
-arguments independently, preserving off-camera shadow casters.
+Forward arena submissions remain GPU-culled indexed indirect draws at the
+camera AfterOpaque stage, with explicit scene-lighting attributes so terrain
+receives shadows. One infinite-bounds SceneCustomObject participates only in
+depth-prepass and shadow layers. Each view independently culls the canonical
+published region bounds; off-camera shadow casters remain eligible.
 
-One512-thread compute group per active arena scans visible triangle counts into
-512uint4 range records and one20-byte indirect argument. A three-vertex driver
-model instances one canonical triangle per instance. Its depth vertex shader
-finds the region by a prefix-range search, fetches the existing local index and
-base-offset28-byte vertex, and emits the same world position and decoded normal.
-The driver contains no terrain geometry; no mesh copy, readback, second mesher,
-per-region scene objects or CPU triangle expansion is introduced. Regular and
-transition publication share their existing active descriptor contract. The
-frustum predicate and normal decoding each retain one shared implementation.
+The SHADOW-FPS-003 revised shared-dispatch candidate submits one compute launch per
+view, with one 512-thread group per arena. Each group retains the same frustum
+predicate and prefix scan, and writes disjoint compact block records plus one
+indirect argument. A block represents up to64 canonical triangles. The192-index
+driver model fetches the block's first index, base vertex and valid index count,
+then reads the existing28-byte terrain vertex. Final partial-block padding is
+clipped without reading terrain geometry. World positions and decoded normals
+remain identical; no terrain copy, alternate mesher or GPU readback is added.
 
-Each arena owns8212bytes of additional GPU scratch. Render views reuse it
-sequentially with UAV and resource transitions; it is released with its arena.
-Depth submission is gated by field-presentation readiness and available published
-visibility buffers. Each camera command rebuild publishes an immutable arena
-snapshot alongside its descriptor buffers; depth never enumerates the live arena
-list while streaming adds arenas. The camera-state lock serializes snapshot and
-descriptor lifetime access.
-Forward submissions explicitly restore vertex/index buffer states after depth
-reads. The scene object is deleted before arena resources on mesher disposal.
+GpuVoxelMesher owns DepthTrianglesPerBlock, DepthIndicesPerBlock and
+DepthBlockCapacity. Per-arena capacity is ceil(IndexArenaCapacity/192)+512,
+covering the indexed allocation and each region's possible partial block.
+The per-camera VisibilityBuffers snapshot owns shared block and argument buffers,
+sized to its descriptor arena capacity. Each arena uses a fixed block-range
+offset. Its20-byte argument is GPU-copied to the original private argument buffer
+before the existing zero-offset model draw. All transfers precede all depth draws.
+GeometryArena retains that argument buffer and canonical vertices/indices; its
+former private block scratch is removed. The first shared-argument nonzero-offset
+model-draw candidate lost part of the character shadow in a matching secondary
+view and is rejected, despite higher FPS and passing forward geometry audits.
 
-The initial per-geometry scene-object prototype rendered but the user reported
-poor FPS (bounded observation:169.7FPS,engine Render average7.03ms). It is replaced
-by one compute and one indirect draw per arena per depth/shadow view. Public
-Graphics.Draw lacks a base-vertex parameter, and direct indexed indirect drawing
-is internal outside camera command lists; public DrawModelInstancedIndirect is
-the engine-supported batching entry point. GPU triangle-instance lookup costs,
-shadow correctness and the unchanged figure-eight remain acceptance gates.
-This implementation is unaccepted until TERRAIN-SHADOWS-001 validates it.
+The existing camera-state lock protects descriptor/scratch lifetime and the
+immutable arena snapshot. Every view rewrites its scratch before UAV/read/copy/indirect
+barriers and the per-arena draws. Snapshot growth retires buffers under the same
+visibility lifecycle; disposal releases both depth buffers. The power-of-two
+descriptor capacity can reserve more scratch than currently occupied arenas.
+Scratch is16*DepthBlockCapacity+20 bytes per reserved arena per snapshot; retired
+snapshots remain subject to the existing visibility disposal policy. Forward
+submissions restore vertex/index resource states after depth reads.
 
-### Block-instancing prototype (TERRAIN-SHADOWS-002, proposed)
+This replaces per-arena compute launches and barriers, while retaining one draw
+per arena per view. It preserves cascades, contact shadows, published geometry,
+field-readiness gating, light-view culling and terrain materials. Combining terrain
+arenas or reducing shadow quality was unnecessary for this slice. Camera-only
+occlusion cannot safely replace light-view visibility and remains outside scope.
 
-Facepunch's [TerrainClipmapSceneObject](https://github.com/Facepunch/sbox-public/blob/master/engine/Sandbox.Engine/Scene/Components/Terrain/TerrainClipmapSceneObject.cs)
-uses reusable instanced blocks, CPU camera-frustum culling and the full clipmap
-for shadow views. Current upstream also refreshes camera culling per view and
-uses pass-local Graphics.Attributes. It does not provide a transferable cave
-occlusion solution: its heightmap blocks do not represent our volumetric caves.
-Adopt block instancing, retaining our published SDF mesh and light-view culling;
-do not adopt shadow rendering of the entire resident world.
-
-Replace one triangle per depth instance and per-vertex512-range binary search
-with64triangles per instance. The visibility group scans visible block counts;
-each visible region emits compact uint4 records (first index, base vertex,
-valid index count, unused). A192-index driver fetches one block record directly,
-then the same canonical index/vertex. Only a region's last partial block has
-padding; those vertices form clipped degenerates and perform no terrain fetch.
-All published triangles, world positions, normal decoding, LODs, transitions,
-shadow cascades and camera/light frustum predicates remain unchanged.
-
-The mesher owns the64-triangle constant and supplies the corresponding index
-count to both shaders. Capacity is ceil(arena index capacity /192)+512 records:
-the total indexed allocation plus at most one partially filled block per region.
-Each arena owns this bounded scratch and the existing20-byte indirect argument;
-no terrain geometry is copied or read back. Reuse/disposal and immutable camera
-arena snapshots retain the existing lifetime contract. Writes stay GPU-only,
-with UAV/read barriers before drawing. Buffer growth is under0.4MiB per arena.
-
-This targets instance scheduling and repeated vertex lookup before adding an
-occlusion subsystem. Camera-only occlusion cannot remove shadow casters safely;
-a depth hierarchy would need conservative light-view/receiver handling, edit
-invalidation and camera-motion recovery. That broader work is deferred until
-the unchanged-workload measurement identifies the remaining cost.
+Historical triangle-instance and per-arena block-dispatch measurements are kept
+in the validation ledger. SHADOW-FPS-003 records the current edited-world
+comparison, matching cold-start memory controls, screenshots and88-region audit.
+The measured gain does not accept the unrelated existing10-second streaming
+drain failure or editor shutdown errors. Full performance acceptance and commit
+remain pending the failing streaming gate. The corrected cold comparison measured
+403.88->425.46 moving FPS and472.81->533.66 stationary FPS, with GPU frame time
+1.617->1.232ms. Relative criteria pass; drain remains12.826s. Secondary character
+shadows and88-region audits pass; complete shadow/occlusion coverage is unverified.
+The first candidate timing does not qualify the corrected per-arena argument path.
 
 ### Landform include hotload qualification
 
@@ -1468,8 +1462,8 @@ They follow preparation, GPU residency, draw publication, then water ownership
 in that order. Water can itself block draw publication, so a zero near-water
 count does not rule water out; inspect the detailed missing-water count too.
 Request age includes queue time; count/readback and emit/publication are combined
-states, not independent GPU execution timings. First-observed milestones have
-one-second sampling resolution. A collision-only aim hit belongs to the actual
+states, not independent GPU execution timings. Historical milestones retain one-second sampling resolution. V23 adds near-only
+observations at a50ms requested cadence and records the actual maximum gap. A collision-only aim hit belongs to the actual
 streaming player; it is not a rendered-depth measurement.
 
 This retains the existing mesher and deterministic field. Alternatives rejected
@@ -1488,3 +1482,169 @@ reports. See the ledger for timestamps, old staged destination, dependency count
 and qualifications. This identifies publication coupling as a design problem;
 it does not measure the independent cost of seams or adopt an approximate seam
 replacement. Rendering changes must retain coverage before releasing fine detail.
+
+### Compact arrival publication experiment (2026-09-12; rejected)
+
+The compact recovery, seam-priority, stable four-face batching and coherent
+four-face batching experiments were removed after failing arrival acceptance.
+Runtime placement, transition scheduling and scratch capacity remain at the
+pre-experiment implementation. No approximate seam replacement was adopted.
+
+Compact recovery retained the normal LOD0 box, reduced intermediate ring half
+extents to four and retained configured coarsest reach. Exact transitions and
+required water still gated the compact handoff; configured extents grew back
+through existing boundary steps. This preserved independent deterministic mesh
+inputs but did not remove the cross-level publication barrier.
+
+On COMPACT-ARRIVAL-001/v3 fast, the same-world control drained in 18.760s and
+observed nearby detail at 1.511s. Bare compact recovery drained in 41.236s and
+observed detail at 8.287s, with 37.2% more total managed allocation. Stable
+four-face batching reduced that candidate's first-detail time to 6.789s but
+still failed the five-second target and drained in 42.281s. Seam priority and
+spatial batch grouping did not improve the result. These comparisons reject
+the tested implementation; they do not establish the cost of GPU seam
+computation separately from scheduling, sampling or readback.
+
+The canonical figure-eight returns to its starting area. Its final arrival is
+not equivalent to landing at a new distant location. In compact samples all
+27 nearby meshes were prepared while exact transition dependencies blocked
+publication. This confirms that generation readiness alone cannot establish
+visible arrival latency. A fresh manual arrival report is required to relate
+the current complaint to target coalescing, old placement completion and
+current-target dependency waits. Keep authoritative field determinism and
+coverage before releasing coarse fallback as design constraints for a future
+publication redesign. No local per-parent publication or skirt design is
+implemented or validated by these experiments.
+
+See COMPACT-ARRIVAL-001 in the validation ledger and
+[retained raw evidence](../ValidationEvidence/CompactArrival/) for parameters,
+failed candidates, invalid comparisons and limitations.
+
+
+### Stationary destination recovery (2026-09-12; superseded prototype)
+
+The manual arrival b9198d4a90a2435f968b6211621bdba7 completed nearby geometry
+by2.776s but presented all27 near chunks only at21.795s. For roughly the
+first11s it completed an earlier fine anchor, then advanced nested boundaries
+through several intermediate anchors. This is a scheduling defect independently
+of the separate full-hierarchy publication cost.
+
+The recovery change uses the existing full placement builder when the target
+anchor has remained stable for one second, lies outside committed fine coverage,
+and the pending fine coverage also misses that target. VoxelManager owns
+the stability timestamp and pending recovery flag. Existing cancellation retains
+committed coverage, preserves requests resident or needed by the replacement,
+and discards superseded-only requests. The replacement uses full configured
+extents and exact transition/water readiness before the same atomic publication.
+No field, mesh descriptor, shader, thread ownership or GPU buffer changes.
+Timing affects scheduling only; canonical chunk and transition inputs remain
+independent of loaded neighbors. The change does not authorize publishing an
+unstitched fine chunk or removing coarse fallback early.
+
+This bypasses obsolete-destination completion and serial boundary advancement
+for a stopped far arrival. It does not reintroduce the rejected compact-ring
+layout or its restoration workload. The existing moving-target policy remains
+in effect while anchors change. `lod.retarget.staged` records previous/current
+fine anchors and the abandoned placement age; `lod.retarget.committed` records
+recovery duration. The five-second arrival objective and normal regression
+criteria still require measurement. Local per-parent publication remains an
+unimplemented alternative if the full hierarchy barrier remains too expensive.
+
+
+The guarded recovery failed the next manual far-arrival check: report
+68a3c431faf845f899854be42213c5fb prepared all27 near chunks by1.364s but
+presented them at18.411s. Correct-target recovery started about0.699s after
+the stop and took16.953s. Its initial dependencies included6525 coarse regular
+regions and744 transitions; at15.400s,640 coarse regular regions and32
+transitions still blocked ready nearby terrain. Thus the scheduling correction
+does not resolve the full-hierarchy publication barrier. It remains unaccepted.
+
+The next architectural slice must separate desired LOD layout from locally
+committed spatial coverage. A replacement must wait only on geometry and
+boundaries necessary for its own covered region, retaining coarse fallback
+until that replacement is valid. Cache fill and unrelated far regions cannot
+be dependencies of nearby publication. This requires one canonical owner of
+actual coverage used by terrain activation, water activation, edits and arrival
+diagnostics; adding a fine-only rendering bypass would make those consumers
+inconsistent. Preserve immutable field/revision descriptors, exact stale-result
+rejection and deterministic chunk generation. A balanced local refinement
+scheme is a design candidate, not implemented behavior or a validated fix.
+Its edge/corner transition compatibility and cancellation rules must be
+qualified before replacing the existing placement implementation.
+
+
+### Local terrain publication (2026-09-12; implemented, unaccepted)
+
+The [local publication design](LocalTerrainPublication.md) now implements the
+next slice described above. The first travel run presented nearby terrain within
+1.46s of its recorded stop but did not converge; it is a failure, not acceptance.
+The revised candidate tracks divergence between actual coverage and old layout
+metadata, recovers stale destinations after100ms of actual motion quiet, and
+retires out-of-range coverage ahead of refinement. Geometry generation and exact
+transition shaders are unchanged. Tests and limitations are recorded under
+LOCAL-COVERAGE-001/v1 in the validation ledger. Historical acceptance statements
+above apply to their source revisions, not this redesign.
+
+
+The current candidate replaces the single-level split described in the initial
+local design with a balanced virtual refinement patch. It can retain LOD5 while
+preparing LOD0 and its graded surroundings, then publish the replacement once.
+No intermediate virtual parent is a publication prerequisite. Local additions
+remain; v9 removes serial coarsening and prepares the final layout concurrently.
+The existing atomic full-layout commit completes background work without making
+nearby local refinement wait for it. The patch's exclusive topology ownership,
+sliced readiness, field invalidation, bounds and diagnostics are documented in
+[LocalTerrainPublication](LocalTerrainPublication.md). Runtime qualification is
+pending; previous origin-return timing does not qualify this direct handoff.
+
+V11 streaming qualification: generator46 fast background drain47.726s baseline
+became16.212s; nearby LOD0 presented1.410s. Standard drain19.400s. Final seam
+audits passed, but the10s drain target, allocation differences and final-swap
+stalls remain open. The later two-service-per-frame experiment was reverted
+after an editor startup crash; current code retains one GPU service per tick.
+See LOCAL-COVERAGE-001/v2 and the local-publication design for evidence/limits.
+
+
+### Exterior admission restoration (2026-09-13, unaccepted)
+
+The local coverage redesign suppressed the earlier independent exterior
+activation path. Exterior requests now enter the canonical local addition
+queue with regular/water/seam readiness and overlap/balance checks. Preparation
+alternates exterior and main slices within the existing2ms budget instead of
+waiting for changed LOD0 placement preparation to finish. Immediate player
+LOD0 remains first, exterior coverage precedes general layout convergence.
+See [the local publication lifecycle](LocalTerrainPublication.md) and v13/v14
+ledger runs for measured outcomes and outstanding correctness/performance.
+
+V20 exterior service correction: exterior interest is now a scheduling input
+independent of actual activation. It participates in the existing nearest-first
+outer queue, lane eligibility and spatial batches before local publication.
+Exterior publication may progress during distant cleanup while retaining the
+existing overlap/balance/content/seam guards. See LocalTerrainPublication.md
+and the v20 ledger entry; this is implemented but not performance accepted.
+
+## Surface skirt experiment (unaccepted, 2026-09-13)
+
+[TerrainSkirts.md](TerrainSkirts.md) owns the user-authorized approximate
+boundary experiment on v26. Eligible regular X/Y edges emit lips in existing
+count/output stages; marked transition records substitute for exact geometry
+only where both sides qualify. Bounds include lip geometry and edit dependencies.
+Exact fallback, authority and canonical field sampling remain. Before/after
+results and failed preflight/timing deviations remain in the validation ledger;
+this experiment does not supersede the prior exact-seam acceptance evidence.
+The skirt runtime was reverted on2026-09-13 at user request. The current
+PredictiveTerrainLoading.md experiment retains exact seams and preloads bounded
+near-detail cache interest ahead of observed movement; it is not yet accepted.
+
+## Complete nearby seam cache experiment (2026-09-13)
+
+[CompleteSeamCache.md](CompleteSeamCache.md) owns the current unaccepted extension
+of predictive loading. Existing exact transition keys retain all six directions
+for bounded current/forecast coarse owners at each enabled adjacent LOD pair.
+V2 derives this footprint from the actual near LOD0 ancestors plus one coarse
+neighbor. Existing GPU stages, field identity checks and active-face publication
+remain canonical; no shaders or approximate seam geometry changed. Independent
+regular/seam service cursors use a 0.5ms soft budget and 48 inspections. This is
+not a hard frame-time guarantee. Payload and cache-readiness diagnostics support
+fixed before/after figure-eight evidence; additional cache work is not accepted
+as a shipping improvement without the recorded performance gates.

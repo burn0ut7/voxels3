@@ -1,0 +1,30 @@
+{
+  "observedDuring": "v19 fast route and settling, 2026-09-13; host clock afterward 12:13:34.0251389-04:00",
+  "gpu": "RTX5090",
+  "temperatureC": 64,
+  "gpuUtilizationPercent": 96,
+  "graphicsClockMHz": 2865,
+  "memoryClockMHz": 14001,
+  "powerWatts": 347.59,
+  "powerLimitWatts": 600,
+  "windowsGpuEngines": [
+    {
+      "process": "WardogsClient-Win64-Shipping",
+      "pid": 10580,
+      "utilizationPercent": 77.7,
+      "startLocal": "2026-09-13T11:50:03-04:00"
+    },
+    {
+      "process": "sbox-dev",
+      "pid": 36160,
+      "utilizationPercent": 19.5,
+      "startLocal": "2026-09-13T11:13:05-04:00"
+    }
+  ],
+  "sources": [
+    "nvidia-smi read-only query",
+    "Windows GPU Engine performance counters",
+    "Get-Process StartTime"
+  ],
+  "qualification": "External process existed during v17, v18 and v19; utilization measured only during v19. Timing differences across those runs cannot be attributed solely to source changes. No application was terminated or controlled."
+}

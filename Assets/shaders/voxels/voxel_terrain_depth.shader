@@ -35,9 +35,10 @@ VS
 	StructuredBuffer<TerrainVertex> DepthVertices < Attribute( "DepthVertices" ); >;
 	StructuredBuffer<uint> DepthIndices < Attribute( "DepthIndices" ); >;
 	StructuredBuffer<uint4> DepthBlocks < Attribute( "DepthBlocks" ); >;
+	uint DepthBlockOffset < Attribute( "DepthBlockOffset" ); >;
 	PixelInput MainVs( const VertexInput input )
 	{
-		uint4 block = DepthBlocks[input.InstanceId];
+		uint4 block = DepthBlocks[DepthBlockOffset + input.InstanceId];
 		if ( input.VertexId >= block.z )
 		{
 			// Padding belongs to the final partial block, never to terrain geometry.

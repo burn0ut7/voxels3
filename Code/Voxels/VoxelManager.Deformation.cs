@@ -11,6 +11,14 @@ public sealed partial class VoxelManager
 	private const float TerrainToolStrength = 64f;
 	private float _terrainToolElapsed = TerrainToolTickSeconds;
 	private string _terrainToolStatus = "Idle";
+	private Vector3 _terrainToolRayStart;
+	private Vector3 _terrainToolRayEnd;
+	private bool _terrainToolRayHit;
+	private bool _terrainToolRayStartedSolid;
+	private int _terrainToolSkippedCells;
+	private int _terrainToolRayRevision;
+	private bool _terrainToolSolidContinuation;
+	private Vector3 _terrainToolTarget;
 	private bool TerrainToolPublicationPending => _terrainEditTask is not null ||
 		_terrainEditQueue.Count > 0 || _gpuMesher.FieldPublicationPending;
 	private readonly Queue<TerrainEditIntent> _terrainEditQueue = new();
@@ -58,6 +66,7 @@ public sealed partial class VoxelManager
 
 	private void UpdateTerrainEdits()
 	{
+		ObserveDeformationReport();
 		UpdateTerrainTool();
 		if ( _terrainSaveTask is not null && _terrainSaveTask.IsCompleted )
 		{
@@ -84,6 +93,7 @@ public sealed partial class VoxelManager
 			try
 			{
 				var change = _terrainEditTask.GetAwaiter().GetResult();
+				using var commitTiming = MeasureDeformation( DeformationStage.CommitAndInvalidate );
 				_activeTerrainEditCancellation?.Token.ThrowIfCancellationRequested();
 				if ( _activeTerrainEdit.Strength < 0 && !CanBuildTerrain( _activeTerrainEdit.Center, _activeTerrainEdit.Radius ) )
 					throw new InvalidOperationException( "An actor entered the build volume before commit." );
@@ -106,12 +116,13 @@ public sealed partial class VoxelManager
 					_terrainEditedSamples += change.ChangedSamples;
 				}
 				_terrainEditLastCommitMilliseconds = (float)Stopwatch.GetElapsedTime( _activeTerrainEdit.RequestedAt ).TotalMilliseconds;
+				ReportDeformationCommit( change );
 				if ( !ReferenceEquals( change.Source, change.Result ) )
 				{
 					_terrainEditVisualDependencies = _gpuMesher.InvalidateField( change, _playerFigureEightRouteDistance );
 					_terrainEditCollisionDependencies = _collision.InvalidateField( change );
 					// Prepared LOD0 empty regions have no mesh record until their first surface.
-					var dirtyBounds = change.DependencyPageBounds;
+					var dirtyBounds = change.AffectedBounds;
 					if ( change.ChangedSamples > 0 )
 					{
 						foreach ( var coordinate in _renderPreparedChunks )
@@ -124,7 +135,7 @@ public sealed partial class VoxelManager
 							if ( _gpuMesher.Contains( descriptor ) ) continue;
 							_gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance,
 								IsGameplayCoordinate( coordinate ) ? GpuMeshResidency.Gameplay : GpuMeshResidency.Warm );
-							_gpuMesher.SetRenderActive( descriptor.Key, _levels[0].Active.Contains( coordinate ) );
+							_gpuMesher.SetRenderActive( descriptor.Key, _gpuMesher.IsRenderActive( descriptor.Key ) );
 							_terrainEditVisualDependencies++;
 						}
 					}
@@ -184,8 +195,10 @@ public sealed partial class VoxelManager
 		_activeTerrainEdit = intent;
 		_activeTerrainEditCancellation = CancellationTokenSource.CreateLinkedTokenSource( _terrainEditCancellation.Token );
 		var cancellation = _activeTerrainEditCancellation.Token;
+		var capture = _deformationCapture;
 		_terrainEditTask = Task.RunInThreadAsync( () =>
 		{
+			using var prepareTiming = new DeformationTiming( capture, DeformationStage.PrepareBrush, this );
 			using var reservedSamples = reservation;
 			return TerrainField.PrepareBrush( source, reader, intent.Center, intent.Radius, intent.Strength, cancellation, reservedSamples );
 		} );
@@ -215,6 +228,7 @@ public sealed partial class VoxelManager
 
 	private bool TryUseTerrainTool( PlayerController player, Vector3 direction, bool build, out long requestId )
 	{
+		using var toolTiming = MeasureDeformation( DeformationStage.Tool );
 		requestId = 0;
 		// Sample the current aim only when it can enter the pipeline, never queue stale tool targets.
 		if ( TerrainToolPublicationPending )
@@ -231,13 +245,17 @@ public sealed partial class VoxelManager
 		var eye = player.EyeTransform;
 		var forward = direction.Normal;
 		var end = eye.Position + forward * TerrainToolReach;
-		var hit = Scene.Trace.Ray( eye.Position, end )
-			.WithTag( "voxel_terrain" ).Run();
+		_terrainToolSkippedCells = 0;
+		_terrainToolSolidContinuation = false;
+		var hit = TraceTerrainTool( eye.Position, end );
+		var hasTarget = hit.Hit;
+		var target = hit.HitPosition;
+		var samplePosition = target - hit.Normal * 0.01f;
 		// Logical empty remnants still render and collide, but must not trap the
 		// dig ray in a cell whose remaining solid volume is at most ten percent.
-		for ( var skipped = 0; !build && hit.Hit && skipped < (int)(TerrainToolReach / TerrainField.SampleSpacing); skipped++ )
+		for ( var skipped = 0; !build && hasTarget && skipped < (int)(TerrainToolReach / TerrainField.SampleSpacing); skipped++ )
 		{
-			if ( !CurrentField.TrySampleCell( hit.HitPosition - hit.Normal * 0.01f, out var cell ) )
+			if ( !CurrentField.TrySampleCell( samplePosition, out var cell ) )
 			{
 				_terrainToolStatus = "Cell data pending";
 				return false;
@@ -250,27 +268,60 @@ public sealed partial class VoxelManager
 			}
 			var low = new Vector3( cell.Coordinate.x, cell.Coordinate.y, cell.Coordinate.z ) * TerrainField.SampleSpacing;
 			var high = low + Vector3.One * TerrainField.SampleSpacing;
-			var exitX = forward.x == 0f ? float.PositiveInfinity : ((forward.x > 0f ? high.x : low.x) - hit.HitPosition.x) / forward.x;
-			var exitY = forward.y == 0f ? float.PositiveInfinity : ((forward.y > 0f ? high.y : low.y) - hit.HitPosition.y) / forward.y;
-			var exitZ = forward.z == 0f ? float.PositiveInfinity : ((forward.z > 0f ? high.z : low.z) - hit.HitPosition.z) / forward.z;
-			var start = hit.HitPosition + forward * (MathF.Max( 0f, MathF.Min( exitX, MathF.Min( exitY, exitZ ) ) ) + 0.02f);
+			var exitX = forward.x == 0f ? float.PositiveInfinity : ((forward.x > 0f ? high.x : low.x) - target.x) / forward.x;
+			var exitY = forward.y == 0f ? float.PositiveInfinity : ((forward.y > 0f ? high.y : low.y) - target.y) / forward.y;
+			var exitZ = forward.z == 0f ? float.PositiveInfinity : ((forward.z > 0f ? high.z : low.z) - target.z) / forward.z;
+			var start = target + forward * (MathF.Max( 0f, MathF.Min( exitX, MathF.Min( exitY, exitZ ) ) ) + 0.02f);
 			if ( Vector3.Dot( end - start, forward ) <= 0f )
 			{
 				_terrainToolStatus = "Only empty cell remnants within reach";
 				return false;
 			}
-			hit = Scene.Trace.Ray( start, end ).WithTag( "voxel_terrain" ).Run();
+			_terrainToolSkippedCells++;
+			if ( !CurrentField.TryCaptureRegion( new SdfWorldAabb( start, start ), out var reader ) )
+			{
+				_terrainToolStatus = "Cell data pending";
+				return false;
+			}
+			if ( reader.SampleWorld( start ) < 0f )
+			{
+				// A skipped remnant can connect directly to solid terrain in the next
+				// cell. A ray starting inside that triangle mesh can miss its surface.
+				// Continue the logical-cell traversal instead; the next iteration still
+				// rejects <=10% remnants before admitting a dig at this field position.
+				target = start;
+				samplePosition = start;
+				_terrainToolSolidContinuation = true;
+				continue;
+			}
+			hit = TraceTerrainTool( start, end );
+			hasTarget = hit.Hit;
+			target = hit.HitPosition;
+			samplePosition = target - hit.Normal * 0.01f;
 		}
-		if ( !hit.Hit ) { _terrainToolStatus = "No terrain within tool reach"; return false; }
-		var coordinate = WorldToChunkCoordinate( hit.HitPosition );
+		if ( !hasTarget ) { _terrainToolStatus = "No terrain within tool reach"; return false; }
+		_terrainToolTarget = target;
+		var coordinate = WorldToChunkCoordinate( target );
 		if ( !_collision.IsReady( coordinate, coordinate ) )
 		{
 			_terrainToolStatus = "Hit collision revision pending";
 			return false;
 		}
-		var accepted = TryQueueTerrainEdit( hit.HitPosition, TerrainToolRadius, build ? -TerrainToolStrength : TerrainToolStrength, out requestId );
+		var accepted = TryQueueTerrainEdit( target, TerrainToolRadius, build ? -TerrainToolStrength : TerrainToolStrength, out requestId );
 		_terrainToolStatus = accepted ? "Accepted" : "Mutation admission rejected";
 		return accepted;
+	}
+
+	private SceneTraceResult TraceTerrainTool( Vector3 start, Vector3 end )
+	{
+		using var rayTiming = MeasureDeformation( DeformationStage.Ray );
+		var hit = Scene.Trace.Ray( start, end ).WithTag( "voxel_terrain" ).Run();
+		_terrainToolRayStart = start;
+		_terrainToolRayEnd = end;
+		_terrainToolRayHit = hit.Hit;
+		_terrainToolRayStartedSolid = hit.StartedSolid;
+		_terrainToolRayRevision = CurrentField.Revision;
+		return hit;
 	}
 
 	private bool CanBuildTerrain( Vector3 center, float radius )
@@ -332,6 +383,8 @@ public sealed partial class VoxelManager
 		if ( !TryGetActiveManager( "terrain.edit.inspect", out var manager ) ) return;
 		var player = manager.Scene.GetAllComponents<PlayerController>().FirstOrDefault( value => !value.IsProxy );
 		var checkpoint = manager._terrainField.Checkpoint;
+		var rayStartDensity = manager.CurrentField.TryCaptureRegion( new SdfWorldAabb( manager._terrainToolRayStart, manager._terrainToolRayStart ), out var rayField )
+			? rayField.SampleWorld( manager._terrainToolRayStart ) : (float?)null;
 		var publicationMilliseconds = manager._activeTerrainEdit.RequestedAt > 0 &&
 			manager._gpuMesher.LastFieldPublicationRevision == manager.CurrentField.Revision
 			? Stopwatch.GetElapsedTime( manager._activeTerrainEdit.RequestedAt, manager._gpuMesher.LastFieldPublicationTimestamp ).TotalMilliseconds
@@ -339,12 +392,16 @@ public sealed partial class VoxelManager
 		Log.Info( $"[TerrainEdit] toolStatus={manager._terrainToolStatus} eye={player?.EyePosition} world={manager.CurrentField.WorldId} revision={manager.CurrentField.Revision} pages={manager.CurrentField.PageCount} " +
 			$"epoch={manager.CurrentField.Epoch} savedRevision={checkpoint?.Identity.Revision} checkpoint={checkpoint?.Sequence} saving={manager._terrainSaveTask is not null} saveSlot={manager.TerrainSaveSlot} saveStatus={manager.TerrainSaveStatus} " +
 			$"bytes={manager.CurrentField.PageBytes} queued={manager._terrainEditQueue.Count} preparing={manager._terrainEditTask is not null} " +
+			$"digHeld={Input.Down( "Attack1" )} rayHit={manager._terrainToolRayHit} rayStartedSolid={manager._terrainToolRayStartedSolid} skippedCells={manager._terrainToolSkippedCells} rayRevision={manager._terrainToolRayRevision} rayStart={manager._terrainToolRayStart} rayEnd={manager._terrainToolRayEnd} rayStartDensity={rayStartDensity} " +
+			$"solidContinuation={manager._terrainToolSolidContinuation} toolTarget={manager._terrainToolTarget} " +
 			$"residentBytes={manager.CurrentField.ResidentPageBytes} retainedSampleBytes={TerrainFieldPage.RetainedSampleBytes} sampleBudget={TerrainField.MaximumSampleBytes} reservedSampleBytes={TerrainFieldPage.ReservedSampleBytes} readCapacityDeferred={manager._terrainField.ReadCapacityDeferred} editCapacityDeferred={manager._terrainEditCapacityDeferred} " +
 			$"storageReads={manager._terrainField.PendingReads} loadedPages={manager._terrainField.LoadedPages} evictedPages={manager._terrainField.EvictedPages} reusedSamplePages={TerrainFieldPage.ReusedSamplePages} readIntegrationMaxMs={manager._terrainReadIntegrationMaximumMilliseconds} sweepMaxMs={manager._terrainSweepMaximumMilliseconds} storageFailure={manager._terrainField.ReadFailure} " +
 			$"committed={manager._terrainEditsCommitted} rejected={manager._terrainEditsRejected} samples={manager._terrainEditedSamples} " +
 			$"staleReadCompletions={manager._terrainField.StaleReadCompletions} readCapacityDeferrals={manager._terrainField.ReadCapacityDeferrals} " +
 			$"publicationMs={publicationMilliseconds} publicationPending={manager._gpuMesher.FieldPublicationPending} " +
+			$"publicationState=({manager._gpuMesher.FieldPublicationStatus}) " +
 			$"commitMs={manager._terrainEditLastCommitMilliseconds} visualDependencies={manager._terrainEditVisualDependencies} " +
+			$"visualReused={manager._gpuMesher.LastFieldRegularReused} transitionsReused={manager._gpuMesher.LastFieldTransitionsReused} " +
 			$"collisionDependencies={manager._terrainEditCollisionDependencies} visualPending={manager._gpuMesher.EditRebuildPending} " +
 			$"collisionPending={manager._collision.EditRebuildPending} failure={manager._terrainEditFailure}" );
 	}

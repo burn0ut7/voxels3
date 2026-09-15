@@ -1,0 +1,214 @@
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -252,6 +252,14 @@
+ 	public int ActiveLevelCount( int level ) => _renderActive.Count( key => key.Level == level );
+ 	public int TransitionDesiredCount => _transitionRenderActive.Count;
+ 	public int TransitionReadyCount => _transitionResident.Count;
++	public long TransitionGeometryBytes( IEnumerable<GpuTransitionKey> keys )
++	{
++		long bytes = 0;
++		foreach ( var key in keys )
++			if ( _transitionResident.TryGetValue( key, out var resident ) && resident.Handle is not null )
++				bytes += (long)resident.Counts.VertexCount * TerrainVertexBytes + (long)resident.Counts.IndexCount * sizeof(uint);
++		return bytes;
++	}
+ 	public int TransitionDrawableCount => _transitionResident.Count( value => value.Value.Handle is not null );
+ 	public int TransitionPendingCount => _transitionPending.Count + CountTransitionInFlight();
+ 	public int TransitionDesiredCountForPair( int coarseLevel ) =>
+--- a/Code/Voxels/VoxelManager.Coverage.cs
++++ b/Code/Voxels/VoxelManager.Coverage.cs
+@@ -650,8 +650,15 @@
+ 			else
+ 			{
+ 				var key = operation.NewSeams[index - operation.Dependencies.Count];
++				_predictionSeamReadinessChecks++;
+ 				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key, captureRegion: false ) ) )
+ 				{
++					_predictionSeamReadinessMisses++;
++					if ( !_predictionSeams.Contains( key ) )
++					{
++						_predictionOutsidePackageMisses++;
++						_predictionLastOutsideSeam = key;
++					}
+ 					operation.PreparationReady = false;
+ 					_gpuMesher.SetPlacementTransitionRequired( key );
+ 					_gpuMesher.ScheduleTransition( CreateTransitionDescriptor( key ), _playerFigureEightRouteDistance );
+--- a/Code/Voxels/VoxelManager.cs
++++ b/Code/Voxels/VoxelManager.cs
+@@ -1221,7 +1221,8 @@
+ 				Prediction = new { Regions = manager._predictionRegions.Count, Seams = manager._predictionSeams.Count,
+ 					Scheduled = manager._predictionScheduled, SeamsScheduled = manager._predictionSeamsScheduled,
+ 					Entered = manager._predictionEntered, ReadyOnEntry = manager._predictionReadyOnEntry,
+-					MaximumMilliseconds = manager._predictionMaximumMilliseconds },
++					MaximumMilliseconds = manager._predictionMaximumMilliseconds,
++					Packages = manager.CapturePredictionPackages() },
+ 				VisualPending = manager._gpuMesher?.AllPendingCount,
+ 				TransitionPending = manager._gpuMesher?.TransitionPendingCount,
+ 				TransitionUniformRegionsSkipped = manager._gpuMesher?.TransitionUniformRegionsSkipped ?? 0,
+@@ -2482,7 +2483,8 @@
+ 		_predictionSeamOrder.Clear();
+ 		_predictionHasPosition = false;
+ 		_predictionVelocity = Vector3.Zero;
+-		_predictionCursor = 0;
++		_predictionRegionCursor = 0;
++		_predictionSeamCursor = 0;
+ 		_coverageDiffersFromLayout = false;
+ 		_coverageLocalPlan = false;
+ 		_coveragePending.Clear();
+--- a/Code/Voxels/VoxelManager.Prediction.cs
++++ b/Code/Voxels/VoxelManager.Prediction.cs
+@@ -14,12 +14,44 @@
+ 	private Vector3 _predictionVelocity;
+ 	private bool _predictionHasPosition;
+ 	private float _predictionRefreshElapsed;
+-	private int _predictionCursor;
++	private int _predictionRegionCursor;
++	private int _predictionSeamCursor;
++	private bool _predictionServiceSeam;
++	private long _predictionSeamReadinessChecks;
++	private long _predictionSeamReadinessMisses;
++	private long _predictionOutsidePackageMisses;
++	private GpuTransitionKey? _predictionLastOutsideSeam;
++	private long _predictionPeakSeamBytes;
+ 	private long _predictionScheduled;
+ 	private long _predictionSeamsScheduled;
+ 	private long _predictionEntered;
+ 	private long _predictionReadyOnEntry;
+ 	private double _predictionMaximumMilliseconds;
++
++	private object CapturePredictionPackages()
++	{
++		var owners = 0;
++		var complete = 0;
++		var facesReady = 0;
++		foreach ( var key in _predictionRegions )
++		{
++			if ( key.Level == 0 ) continue;
++			owners++;
++			var ready = _gpuMesher.IsResident( CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false ) );
++			for ( var face = 0; face < 6; face++ )
++			{
++				var seam = new GpuTransitionKey( key.Level - 1, key.Level, key.Coordinate, (GpuTransitionFace)face );
++				if ( _gpuMesher.IsTransitionResident( CreateTransitionDescriptor( seam, captureRegion: false ) ) ) facesReady++;
++				else ready = false;
++			}
++			if ( ready ) complete++;
++		}
++		return new { Owners = owners, Complete = complete, FacesReady = facesReady,
++			GeometryBytes = _gpuMesher.TransitionGeometryBytes( _predictionSeams ),
++			PeakGeometryBytes = _predictionPeakSeamBytes,
++			LocalReadinessChecks = _predictionSeamReadinessChecks, LocalReadinessMisses = _predictionSeamReadinessMisses,
++			OutsidePackageMisses = _predictionOutsidePackageMisses, LastOutsideSeam = _predictionLastOutsideSeam };
++	}
+ 
+ 	private void UpdateTerrainPrediction()
+ 	{
+@@ -41,27 +73,45 @@
+ 			_predictionRefreshElapsed = 0f;
+ 			_nextPredictionRegions.Clear();
+ 			_nextPredictionSeams.Clear();
++			var forecastPosition = position;
+ 			if ( validMotion && _predictionVelocity.Length > 64f && _levels[0].HasPlacement &&
+ 				_targetVisualConfiguration.MinimumVisualLod == 0 && _targetVisualConfiguration.MaximumVisualLod >= 1 )
+ 			{
+ 				var lead = _predictionVelocity * 0.75f;
+ 				var maximumLead = _appliedCellsPerAxis * _appliedCellSize * 8f;
+ 				if ( lead.Length > maximumLead ) lead = lead.Normal * maximumLead;
++				forecastPosition = position + lead;
+ 				for ( var step = 1; step <= 3; step++ )
+ 				{
+ 					var forecast = position + lead * (step / 3f);
+-					for ( var level = 0; level <= 1; level++ )
++					var center = WorldToLevelAnchor( forecast, 0 );
++					for ( var z = -1; z <= 1; z++ )
++					for ( var y = -1; y <= 1; y++ )
++					for ( var x = -1; x <= 1; x++ )
++						_nextPredictionRegions.Add( new GpuMeshRegionKey( 0, center + new Vector3Int( x, y, z ) ) );
++				}
++			}
++			if ( _levels[0].HasPlacement )
++			{
++				for ( var level = _targetVisualConfiguration.MinimumVisualLod + 1;
++					level <= _targetVisualConfiguration.MaximumVisualLod; level++ )
++				for ( var sample = 0; sample < 2; sample++ )
++				{
++					var nearCenter = WorldToChunkCoordinate( sample == 0 ? position : forecastPosition );
++					// Include ancestors of every immediate LOD0 target and the coarse
++					// neighbors that can own its faces. Rounded anchors miss negative parents.
++					var minimum = CoverageAncestor( new GpuMeshRegionKey( 0, nearCenter - new Vector3Int( 1 ) ), level ).Coordinate - new Vector3Int( 1 );
++					var maximum = CoverageAncestor( new GpuMeshRegionKey( 0, nearCenter + new Vector3Int( 1 ) ), level ).Coordinate + new Vector3Int( 1 );
++					for ( var z = minimum.z; z <= maximum.z; z++ )
++					for ( var y = minimum.y; y <= maximum.y; y++ )
++					for ( var x = minimum.x; x <= maximum.x; x++ )
+ 					{
+-						var center = WorldToLevelAnchor( forecast, level );
+-						for ( var z = -1; z <= 1; z++ )
+-						for ( var y = -1; y <= 1; y++ )
+-						for ( var x = -1; x <= 1; x++ )
+-							_nextPredictionRegions.Add( new GpuMeshRegionKey( level, center + new Vector3Int( x, y, z ) ) );
++						var owner = new Vector3Int( x, y, z );
++						if ( !_nextPredictionRegions.Add( new GpuMeshRegionKey( level, owner ) ) ) continue;
++						for ( var face = 0; face < 6; face++ )
++							_nextPredictionSeams.Add( new GpuTransitionKey( level - 1, level, owner, (GpuTransitionFace)face ) );
+ 					}
+ 				}
+-				var anchor = WorldToLevelAnchor( position + lead, 1 );
+-				var half = new Vector3Int( _targetVisualConfiguration.Lod0VisualHalfExtent / 2 );
+-				AddTransitionFaces( _nextPredictionSeams, 0, 1, anchor - half, anchor + half );
+ 			}
+ 			if ( !_predictionRegions.SetEquals( _nextPredictionRegions ) || !_predictionSeams.SetEquals( _nextPredictionSeams ) )
+ 			{
+@@ -87,37 +137,41 @@
+ 				_predictionSeamOrder.Clear();
+ 				_predictionSeamOrder.AddRange( _predictionSeams );
+ 				SortTransitionsNearestFirst( _predictionSeamOrder );
+-				_predictionCursor = 0;
++				// Preserve progress across forecast changes; each cursor wraps its new list.
+ 				_waterRequestSerial++;
+ 				RetireSupersededPlacementWork();
+ 			}
++			_predictionPeakSeamBytes = Math.Max( _predictionPeakSeamBytes,
++				_gpuMesher.TransitionGeometryBytes( _predictionSeams ) );
+ 		}
+ 		var total = _predictionRegionOrder.Count + _predictionSeamOrder.Count;
+-		for ( var inspected = 0; inspected < Math.Min( 12, total ) &&
++		for ( var inspected = 0; inspected < Math.Min( 48, total ) &&
+ 			Stopwatch.GetElapsedTime( started ).TotalMilliseconds < 0.5; inspected++ )
+ 		{
+-			var cursor = _predictionCursor++ % total;
+-			// Keep the cursor bounded even during long stationary sessions.
+-			if ( _predictionCursor >= total ) _predictionCursor = 0;
+-			if ( cursor < _predictionRegionOrder.Count )
++			_predictionServiceSeam = !_predictionServiceSeam;
++			if ( _predictionRegionOrder.Count > 0 && (!_predictionServiceSeam || _predictionSeamOrder.Count == 0) )
+ 			{
+-				var key = _predictionRegionOrder[cursor];
+-				var descriptor = CreateRegularDescriptor( key.Level, key.Coordinate );
++				var key = _predictionRegionOrder[_predictionRegionCursor++ % _predictionRegionOrder.Count];
++				if ( _predictionRegionCursor >= _predictionRegionOrder.Count ) _predictionRegionCursor = 0;
++				var descriptor = CreateRegularDescriptor( key.Level, key.Coordinate, captureRegion: false );
+ 				if ( _gpuMesher.Contains( descriptor ) ) continue;
+ 				var classification = key.Level == 0
+ 					? VoxelChunk.ClassifyDensityRange( key.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField ).Classification
+ 					: ClassifyClipboxRegion( key.Level, key.Coordinate );
++				var residency = key.Level == 0 ? GpuMeshResidency.Warm : GpuMeshResidency.Visual;
+ 				if ( classification != ChunkDensityClassification.PotentiallySurfaceContaining )
+-					_gpuMesher.PublishKnownEmpty( descriptor, GpuMeshResidency.Warm );
+-				else _gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, GpuMeshResidency.Warm );
++					_gpuMesher.PublishKnownEmpty( descriptor, residency );
++				else _gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, residency );
+ 				if ( key.Level == 0 && _renderPreparedChunks.Add( key.Coordinate ) ) _renderPreparedRevision++;
+ 				_predictionScheduled++;
+ 			}
+ 			else
+ 			{
+-				var descriptor = CreateTransitionDescriptor( _predictionSeamOrder[cursor - _predictionRegionOrder.Count] );
++				var key = _predictionSeamOrder[_predictionSeamCursor++ % _predictionSeamOrder.Count];
++				if ( _predictionSeamCursor >= _predictionSeamOrder.Count ) _predictionSeamCursor = 0;
++				var descriptor = CreateTransitionDescriptor( key, captureRegion: false );
+ 				if ( _gpuMesher.ContainsTransition( descriptor ) ) continue;
+-				_gpuMesher.ScheduleTransition( descriptor, _playerFigureEightRouteDistance );
++				_gpuMesher.ScheduleTransition( CreateTransitionDescriptor( key ), _playerFigureEightRouteDistance );
+ 				_predictionSeamsScheduled++;
+ 			}
+ 		}

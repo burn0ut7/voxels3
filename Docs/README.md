@@ -8,8 +8,10 @@ link to it elsewhere instead of copying its state, settings, or results.
 | How should an agent work in this repository? | [AGENTS.md](../AGENTS.md): project rules and route selection. |
 | What constraints apply to a domain? | [Agent routes](../AGENTS.md#route-map): domain-specific design and validation requirements, not implementation snapshots. |
 | How do host debug flight and teleport work? | [Admin menu](Architecture/AdminMenu.md). |
+| What controls the two-color fog and camera far-plane fade? | [Distance fog](Architecture/DistanceFog.md). |
 | What owns terrain state, coordinates, generation, and CPU preparation? | [Voxel foundation](Architecture/VoxelChunkFoundation.md). |
 | What owns material identity, soil layers and checker appearance? | [Voxel materials](Architecture/VoxelMaterials.md). |
+| Which water/prediction performance changes were adopted? | [Completed-work experiments](ValidationEvidence/IdleWork/Experiment.md): measured gains, explicit adoption and allocation/drain exceptions. |
 | What owns sea-level water, its medium queries and blue surface? | [Static surface water](Architecture/SurfaceWater.md); [implementation plan](Plans/SeaLevelWaterFirstSlice.md). |
 | What owns live terrain edits and their implementation gates? | [Terrain deformation](Architecture/TerrainDeformation.md): in-progress implementation, validation status and remaining scope. |
 | How do visual LOD, GPU extraction, allocation, publication, and drawing work? | [GPU meshing](Architecture/GpuVoxelMeshing.md). |

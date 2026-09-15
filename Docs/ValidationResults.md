@@ -23217,7 +23217,7 @@ Result: source adjustment and compilation PASS; final visual verification PENDIN
 No runtime performance claim. Changes left uncommitted pending visual acceptance;
 preexisting renderer/material/world work is preserved.
 
-## HILLS-001/v1 � rolling hill shape and spacing
+## HILLS-001/v1 � rolling hill shape and spacing
 
 2026-09-10. User authorizes application after staging. Engine26.09.08b,
 current block-instancing renderer and darker palette. Reuse the exact
@@ -23289,9 +23289,9 @@ Earlier candidate44screenshots do not establish GPU v44shape acceptance;
 repeat actual rendered/support checks after this rebuild.
 
 
-## HILLS-STREAMING-001/v1 � flight arrival and edit visibility
+## HILLS-STREAMING-001/v1 � flight arrival and edit visibility
 
-2026-09-10 user reports10�15s wait after player noclip flight (not detached
+2026-09-10 user reports10�15s wait after player noclip flight (not detached
 camera), with edits initially invisible. Current generator44, engine26.09.08b,
 scene basic_example, authored recipe, visual512/gameplay8/LOD0..6/extents4/8.
 Read-only reproduction snapshot10:16:17: pending placement missing regular
@@ -24398,6 +24398,24 @@ is under Docs/ValidationEvidence/ChunkWaterLifecycle; no tests/scenes/hooks adde
 
 Final checks: engine compiler succeeded with0errors; task diff whitespace check passed. New lifecycle/readiness documentation links resolve. A broader scan also found the pre-existing VoxelChunkFoundation link to absent voxel_sdf_v22.hlsl; that unrelated historical link was not changed. Original-slot save completed at10:00:47EDT,checkpoint120,revision1584; original selection restored.
 
+CHUNK-WATER-SHORE-HANDOFF-001/v1 (user reproduction after533bfd1): user pauses during travel into new areas. Camera271128.7,-1661258,37820.49,rotation0.2371,0.17319,-0.77192,0.56385,streaming center529,-3246,73. Preserve paused frame while inspecting. Screenshot1600x900 shows middle-right river-shaped sky openings inside otherwise present land. Current owner-only diagnostics report0pairing mismatches with1149publishedwater,131awaitingterrain,0awaitingwater;885regularpending. This falsifies the earlier diagnostic as a complete visible-shore acceptance check. Add bounded read-only counts for the upper terrain neighbor at exact sea-plane chunk boundaries, and record the original paused state before mutation. Criterion: no presented upper shore terrain over a missing requested lower terrain/water owner; both halves become drawable in one publication phase. Preserve existing figure-eight parameters for performance comparison against533bfd1 candidate runs; near readiness and full drain remain separate.
+
+Paused diagnostic confirmed11upper shoreline chunks visible over missing ready-water owners, all sampled atLOD5. Corrected visibility pairs lower water/bed with upper bank when SeaLevel lies exactly on their shared Z boundary. Water generation remains asynchronous; prepared edit groups depend on water data, whereas draw visibility depends on published water and completed terrain. This separation avoids an edit-publication dependency cycle. An upper exterior neighbor admitted before the lower neighbor no longer bypasses the dependency. The first advanced paused frame reports0shoreWithoutWater while queues884remain, and screenshotshows whole absent chunks rather than river-shaped holes. LIVE HOTLOAD RUN INVALID: an intermediate constructor-signature edit invalidated an existing priority-queue lambda, producing engine hotload/substitution errors and stopping queue progress. Final source retains the original constructor signature and binds presentation readiness through a property on creation/hotload. Preserve this failure; restart Play for subsequent validation. No terrain edits occurred (revision1584/pages327).
+
+Intermediate shore candidate ecace99fc3c44f3d9723fe0cfc3a3657 rejected for performance: moving300.77435FPS,p95=6.5152ms,p99=8.4527ms,max29.9491ms;stationary457.14874FPS;alloc2,317,746,400bytes;averageprocess4,037,030,022/GPU1,930,275,231bytes;prepmax12.2567ms;drain7647.1025ms;exceptions0. All41nearby samples27/27, but that does not excuse the frame regression. Sampled ProcessPendingMeshes rose from0.4591 to1.7533ms/frame. Source inspection found repeated regional descriptor/revision lookups in the added upper-shore refresh. Cache the owner and upper descriptors on request/field changes, retain normal publication checks as dictionary lookups, and revisit retired dependencies so unchanged upper chunks cannot retain blocked masks. Final candidate needs the same full run.
+
+CHUNK-WATER-EDIT-001/v2 repeat definition before mutation: preserve v1 center(-1024,-800,0),radius128,strength-512then+512, geometry/fingerprint checks and30s publication cap. Only disposable save-copy slot changes to chunk-water-shore-edit-20260912: the v1 destination now contains newer saved edits and cannot safely accept the older restored source. This is a new scratch destination, not a change to terrain or edit workload. Sourceworld remains1584/pages327. Restore original slot and selector after the check. Also require shoreWithoutWater0 in the recorded edit snapshots.
+
+Cached candidate fedc295cd1bc453fbd3861c7b36c0baf not accepted: moving400.13455FPS,p95=4.3785ms,p99=6.0156ms,max30.6397ms;stationary489.97995FPS;allocated2,675,137,352bytes;averageprocess4,381,261,723/GPU1,936,165,548bytes;prepmax2.7337ms;drain11033.167ms;exceptions0. Nearby initialsamples fall to0presented and returnlater, unlikecontrol; preserve complete41sample series. Source review found exterior admission invalidated all water requests for every3Dchunk, including unrelated heights; rebuilding added dependency maps made that waste more expensive. Restrict serial invalidation to the sea-plane owner and exact-boundary upper neighbor. This changes no terrain scheduling, distance, field, or worker budgets. Hotload also invalidates the request-map serial. Repeat unchanged performance scenario.
+
+### 2026-09-12: shoreline candidate withdrawn
+
+User reported substantially slower local chunk loading. The cached candidate fedc295cd1bc453fbd3861c7b36c0baf is rejected: moving FPS 400.13455 versus accepted 428.68085, p95 4.3785 ms versus 3.8311 ms, drain 11033.167 ms versus 6519.8857 ms; nearby presentation remained 0/27 even when terrain readiness reached 27/27. These measurements do not support accepting the publication barrier.
+
+A subsequent request-invalidation optimization was interrupted during startup before a benchmark began. Partial startup observations at 40.583/50.636/60.679 seconds showed visual pending 4251/923/267 and collision pending 4782/4824/4733; placement stayed pending. The user could move during startup, so these are not comparable performance results. No claim is made for this unmeasured optimization.
+
+All four experimental runtime files restored to 533bfd1; experimental source preserved externally at C:\Users\Gray\AppData\Local\Temp\voxels3-rejected-shore-a1j75ohm. Original and failed-run evidence retained. The upper-bank river gap remains unresolved; rollback is not a new fix or performance acceptance.
+
 ### DISTANT-REFINEMENT-001/v1 — pre-run definition, 2026-09-12
 
 User authorizes a prototype comparing cheaper distant geometry with closed joins and deterministic region generation. Design: [DistantEdgeRefinementExperiment](Plans/DistantEdgeRefinementExperiment.md). Baseline helper: eight bisections; A: eight for edge lengths <=32 units, four otherwise; B (only if A remains viable): eight/two. Shared regular/transition helper and edge-length rule preserve matching inputs on both faces. No world, topology, collision, batch or scheduling changes.
@@ -24779,6 +24797,674 @@ that check. Detached camera was returned to the player and free render sizing
 restored. Implementation is live for manual review; exact-artifact visual
 acceptance and the deferred figure-eight comparison remain open.
 
+
+### COMPACT-ARRIVAL-001/v1 - pre-run definition, 2026-09-12
+
+Prototype compact near publication using existing exact seams; generation stays
+deterministic and unrelated to neighbor loading. HILLS-PLACEMENT-PRIORITY-001/v1
+route inputs unchanged: visible basic_example, one player, engine26.09.08b,
+RTX5090, actual2769x1436, seed1337, land.75/mountain.3/plains.6, scales
+77724.09/18681.756/5232.39, relief3072/ruggedness.45/sea0, 32cells/16spacing,
+gameplay8, LOD0..5, near4/cache8/radius256, Play resetXY0, all queues/collision/
+water settled then30s warmup, speed2500/distance50000/one loop, clearance393.7008,
+10s stationary,240s cap. Terrain source changed by accepted erosion task to
+generator45; use a fresh matched baseline on e732065 and current world
+aab7f6c5-2522-483e-9c5b-db8c763646ff revision0/pages0. Preserve all user saves.
+The older generator44 edited-world result is not a comparable baseline.
+Criteria: max preparation<=16.67ms, drain<=10s, no material unexplained
+frame/pacing/allocation/memory regression, all final queues0 and no exceptions,
+unsafe commits or transition mismatches. Local recovery must reach configured
+full extents after early publication. Manual far-arrival acceptance target<=5s
+first near27 presented, with source revision/actual position logged and geometry
+audited; user movement is not replaced by a diagnostic teleport. Different
+manual trajectories cannot establish a controlled speedup. Preserve failures.
+No Computer Use, desktop input or OS window automation.
+
+
+### COMPACT-ARRIVAL-001/v2 - native viewport constraint, before timing
+
+v1 could not start: native resolution requests1846x957 and2769x1436 both left
+the actual game renderer at1847x959. Installed SceneViewWidget.Game.cs117-124
+and SceneViewportWidget.Sizing.cs40-75 show this API sets widget constraints;
+SceneViewportWidget.cs316 uses actual Renderer.Size*DpiScale. There is no
+independent render-size setter in those public viewport APIs. OS/window control
+is prohibited by the user, so the original physical resolution cannot currently
+be established through the allowed operations. No timed v1 run occurred.
+Issue v2 with actual1847x959 and all other v1 world, recipe, route, warmup and
+criteria unchanged. Capture a fresh e732065 baseline at this exact resolution,
+then candidate; abort timing if actual dimensions or field identity change.
+This is a new comparison, not an extension of the2769x1436 history.
+
+Intermediate live hotload was not an acceptance run. The user's within-outer-
+coverage arrival b719a0899f5b48308a9a9381b7cf245f still reached near detail at
+23.5s before the revised stationary recovery trigger loaded. Preserve that
+failure: the first candidate only covered outside-root relocations, leaving
+serial boundary walking inside root coverage. The revised trigger stages at
+the stable destination whenever committed fine coverage misses it. Hotload
+reported unresolved old method definitions on retained warm-generation tasks;
+use a fresh Play lifecycle for controlled validation. Compilation succeeded.
+
+Coverage review adds the old coarsest hole to required fallback readiness: before
+removing previous finer coverage, its new root replacements must be ready, in
+addition to the one-region shell around the new fine hierarchy. Full-sized
+caches remain owned to avoid rebuilding them after compact publication.
+
+Pre-timing world correction: latest native save readback is revision34/pages8,
+savedRevision34/checkpoint4 in the same aab7f6c5 world/slot. Preserve these
+new user edits and use34/8 for both v2 runs; no edits are reset. Target remained
+at(-72416.875,113259.508,3391.93652) across readbacks before Play reset.
+
+COMPACT-ARRIVAL-001/v2 also reuses the existing HILLS-FAST-001/v1 /
+EDGE-PARTIAL-002 unpolled-moving route:10000/200000/1, all other v2 inputs
+unchanged including Play reset and warmup; read-only near observations begin
+at122.1s and continue through142.1s (240s result cap). Take a matched pre-change
+control before candidate source is restored. This stress run exercises relocation
+beyond coarsest coverage; return-to-origin timing is not a substitute for a
+manual new-destination arrival. Same correctness and preparation/drain gates.
+
+COMPACT-ARRIVAL-001/v2 baseline standard e7be002fdfc3490d9f96f9d1d6d2fb17,
+16:34:59UTC,1847x959, e732065, generator45/world34/pages8:507.43423FPS,
+p95/p99/max2.9788/4.6582/22.4764ms, GPUavg1.4139102ms, allocation
+3,631,948,520bytes, average process/GPU5,786,404,897/1,789,637,369bytes.
+Preparation max11.5741ms, drain5,631.1084ms; exceptions/unsafe commits0,
+final queues0. Topology/position11F61F9D5FDB0F41/886901FB44937EC5.
+The normal landing report observed nearby detail at1.1s and overall settle3.1s
+from its post-fall stop; not a reproduction of a distant new destination.
+Source manifest, result JSON, read-only observations and arrival are retained
+in ValidationEvidence/CompactArrival. Fast control begins16:38:50UTC on the
+same preserved34/8field; native readback confirms no edits during controls.
+
+
+COMPACT-ARRIVAL-001/v2 fast baseline 0ed88e6b16db4773be4ae0c975644f95,
+16:38:50UTC, same source/world34/pages8/1847x959:313.7328FPS,
+p95/p99/max6.3579/9.2497/817.0946ms; maximum GC pause808.03ms.
+Allocation4,717,988,360bytes; average process/GPU5,835,649,191/1,999,568,112bytes.
+Preparation max3.2795ms, drain10,173.175ms (FAIL <=10,000ms criterion).
+Exceptions/unsafe commits and transition mismatch counters0; final queues0,
+collision4913/4913 ready. Final topology/position match the standard baseline.
+Raw result and observations retained in ValidationEvidence/CompactArrival.
+The native export completed12:41:13; the observation helper was delayed beyond
+its intended142.1s endpoint and missed matching the already-saved log. Use the
+native result for workload timing; late observations are not the fixed endpoint.
+Subsequent user movement stopped far away and remained publication-blocked
+with27/27 prepared; this happened on baseline source, outside the timed run.
+A user edit saved revision35/pages8 at12:41:56, after baseline export.
+
+Candidate preflight on the restored two-file compact-recovery change compiled
+successfully and started a fresh Play. Startup settled at105.19s. No compact
+recovery event occurred during startup. Native readback12:46:25 showed saved
+world revision35/pages8/checkpoint8. Cancelled the helper during warmup before
+its timed trigger: the planned34/8 comparison was no longer available. Preserve
+all edits. This preflight is neither a matched performance run nor acceptance.
+Hotload emitted old GameMenu TaskFactory.FromAsyncImpl resolution errors before
+Play; these are recorded separately from compiler success. The candidate source
+manifest differs from baseline in VoxelManager.cs and VoxelManager.LodArrival.cs
+only (90 tracked runtime/shader/scene/prefab inputs).
+
+
+### COMPACT-ARRIVAL-001/v3 - preserved edit, before timing
+
+The user changed the saved authoritative world from34/8 to35/8 after the v2
+baseline. Reverting that edit is not authorized. Define v3 with revision35/pages8
+in the same world, all v2 parameters/criteria unchanged. Preserve v2 controls;
+use a matched35/8 control for comparison, even if collected after the candidate.
+Check source/world identity before and after every run. Discard no measurements.
+No candidate timed run occurred before this definition. The game is observed
+stationary after preflight. Source hashes are in candidate-source.json.
+
+COMPACT-ARRIVAL-001/v3 standard candidate05c9c7ac815a431fa88993e4be78c448,
+16:49:58UTC, field35/8 unchanged before/after,1847x959:139.8263FPS,
+p95/p99/max10.3162/14.9055/75.5274ms, preparation max9.1802ms,
+drain17,106.615ms (FAIL <=10,000ms). Allocation1,423,344,312bytes,
+average process/GPU3,354,939,996/1,696,034,134bytes. No compact recovery event
+occurred on this route. Near detail observed2.1s after post-fall stop, overall
+settle12.1s. Raw result/observations/arrival retained. The current35/8 control
+must explain the frame-rate difference before accepting any candidate comparison.
+
+COMPACT-ARRIVAL-001/v3 control preflight aborted before timing: actual viewport
+changed to1863x975 after Play restart. The matching1847x959 guard rejected it.
+No performance result was generated. Source was HEAD; compact candidate remains
+preserved in a temporary copy pending restoration. Native viewport constraints
+are the only permitted recovery mechanism; do not use desktop/window automation.
+
+The v3 control viewport was restored through the native engine tool: an explicit
+1847x959 request now took effect (unlike the earlier v1 preflight). The helper
+then verified1847x959 before timing. Startup reached settled at120.016s from
+Play start, followed by30s warmup; timed control began16:56:07UTC on HEAD.
+This preserves v3 inputs; it is not a viewport/scenario change.
+
+Correction to v3 standard candidate record: saved profiler dimensions are1863x975,
+although startup was1847x959. Treat candidate05c9... as an INVALID matched
+comparison; retain all measurements and its drain-budget failure. The viewport
+changed during the run. Do not use the stated1847x959 label as measured truth.
+
+V3 standard HEAD control a9418c45bed14ba8ba1ee5976cef1666,16:56:07UTC,
+world35/8 unchanged after run, actual1847x959:124.90094FPS,
+p95/p99/max10.4586/14.2952/27.3786ms; preparation max2.949ms,
+drain17,951.627ms (FAIL <=10,000ms). Raw full result and arrival retained.
+This reproduces slow current-session streaming without compact recovery.
+It does not establish the cause of the session-wide frame-rate change or a
+clean candidate comparison. Restore candidate and run the already-defined
+10000/200000/1 fast route to exercise compact recovery. No source, world,
+route, resolution or budget is changed for that run.
+
+Fast v3 candidate preflight helper stopped after its12 readiness polls while49
+background visual requests remained. No timed run began; the hierarchy was
+already committed and water/collision ready. This helper polling limit is not
+the scenario's240s timed-run cap. Continue observing the same untouched Play
+instance until all queues settle, then apply the required30s warmup; no scene,
+world, route or source change. Preserve the slow startup observation.
+
+V3 fast compact candidate37a08a4a92804109b8efd660a98c9956,17:03:52UTC,
+actual1847x959,35/8,144.88835FPS,p95/p99/max10.1154/13.9772/68.7562ms,
+preparation max16.3123ms, drain41,236.305ms (FAIL <=10,000ms).
+Final queues0,unsafe commits0,transition mismatches0; configured1632 transitions
+restored and transition topology/position match the prior controls. At5.3s after
+stop all27near meshes were prepared; regular/water dependencies0,135 seams
+missing while10,060visual requests remained. Compact origin handoff committed
+in6,804.6ms; moving compact handoffs took9,969.8..15,595.9ms, which are not
+stationary arrival timings. First-detail target was not met. Raw results and
+arrival retained; no acceptance or performance speedup claim.
+
+Next candidate changes the existing seam-priority gate: when near detail is
+prioritized and required regular work has finished, unrelated active outer
+regions no longer suppress priority for the blocking seams. The existing250ms
+outer-service deadline still precedes seam priority. No additional queues or
+meshing path. Reuse exact v3 fast parameters for before/after; retain standard
+regression requirement. This change follows the measured zero-regular/135-seam
+publication block, not an assumption that every delay is seam computation.
+
+V3 seam-priority fast cda5fcaef64444878e760b6bc45edb3e:148.68987FPS,
+p95/p99/max9.619/13.2958/64.6948ms,drain44,520.164ms. Compact handoff
+7,663.2ms; first nearby detail8.6457523s (FAIL <=5s); at5.630s regular/water
+missing0 and161 seams pending. Priority did not improve arrival; remove it.
+Retain result and priority-fast-v3-arrival.json. No acceptance.
+
+Next candidate: capacity4 in the existing transition scratch, dispatch limit2
+except a compact recovery whose target anchor has been stable for1s, when limit4
+is permitted. Keep three lanes, existing shader/stages/scheduler, canonical field
+and exact transitions. HILLS-SEAM-BATCH-001's four-face88/88 audit passed but
+moving p99 regressed47%; therefore moving work keeps2. Eight-face historical GPU
+failure remains excluded. Extra scratch capacity is measured as part of this
+candidate; no workload/criterion changes. Reuse exact v3 fast and standard tests.
+
+V3 stable-four-face fast3aa328e5eb9d4212a98e163e6adbe672:144.70851FPS,
+p95/p99/max10.008/13.2998/62.4338ms,prep9.3707ms,drain42,281.34ms.
+Actual1847x959,exceptions/unsafe0. First near6.7889297s (FAIL <=5s);
+compact handoff6,073.7ms, at5.8s regular/water missing0,seams79. Capacity
+increase is1,591,032bytes across three lanes, calculated from owned buffer sizes.
+
+Next candidate keeps the same dispatch limits and adds bounded32-request lookahead
+only for stable compact batches. Match coarse level, XY neighboring coordinates
+and edit-priority class to the first face; requeue other exact requests unchanged.
+The shared river atlas otherwise covers the union of distant faces; existing
+visible regular batches already bound XY for this reason. No changes to moving
+transition batching, field sampling, shader geometry, visibility or test inputs.
+Measure the same v3 fast workload; do not infer a speedup from the source change.
+
+Stable-local batching e217d03a3b7b4659b706365c4d573903 did not improve the
+compact handoff (6,703.4ms). Retain raw result and local-fast-v3-arrival.json.
+Remove all seam-priority, larger-batch and local-batch changes; use a same-world
+HEAD fast control to assess compact recovery itself. No failed candidate accepted.
+
+
+V3 fast HEAD control 898ad4d2180042839b0573242c47cee1, timed start
+2026-09-12T17:45:26.407Z, actual1847x959, gen45/world35/pages8:
+140.10143FPS, p95/p99/max10.3301/14.1129/46.1188ms,
+preparation max12.8417ms, drain18,760.223ms (FAIL <=10,000ms).
+Managed allocation2,899,745,064bytes; average process/GPU
+3,692,250,028/1,819,269,850bytes. Exceptions/unsafe commits0;
+final visual/collision queues0, collision4913/4913 ready, failures0.
+Arrival report16a7001acd67454faed2db9a24a25102 first prepared/presented
+1.5108828s. Raw result and fast-control-v3-arrival.json retained.
+The observation helper missed the saved notification and its first nominal
+122.1s poll completed243.2s after trigger; do not use helper poll timings as
+arrival measurements. The closed native report is the timing evidence.
+
+Experiment decision: reject all runtime candidates. Relative to the current
+same-world fast control, bare compact recovery increased drain from18.760s
+to41.236s and managed allocation from2,899,745,064 to3,978,049,352bytes
+(+37.19%). First nearby detail worsened from1.511s to8.287s on this return
+route. Four-face candidates did not meet the five-second arrival target and
+retained the larger drain. All four runtime files were restored to HEAD;
+no candidate is accepted, committed or pushed. Preserve all failed evidence.
+The game's native viewport sizing constraint was released after the control.
+
+Limitations: the fast figure-eight returns to origin and does not reproduce
+cold arrival at a new distant stop. The original code also fails the drain
+budget. No visual transient-coverage claim is made: the settled88/88 audit
+cannot prove compact handoff coverage. The earlier session frame-rate shift
+remains unexplained and earlier different-world/viewport runs are not matched
+comparisons. A fresh manual new-destination arrival was requested with the
+restored runtime; automatic production arrival reporting remains enabled.
+The user's long-arrival defect remains unresolved.
+
+
+### Manual new-destination arrival capture - 2026-09-12 18:21:59 UTC
+
+User repeated the requested flight and reported "Done". Production automatic
+arrival report b9198d4a90a2435f968b6211621bdba7 captured the stationary stop
+at145994.5,-111157.828,2072.36621 (near chunk285,-218,4), world
+aab7f6c5-2522-483e-9c5b-db8c763646ff, epoch1, revision36, seed1337,
+LOD0..5, half extents4/8, viewport1847x959. World revision changed from the
+figure-eight control's35; this is a manual diagnostic reproduction, not a
+COMPACT-ARRIVAL-001/v3 matched performance run. Flight path/speed were not
+fixed or captured. The report's performanceTask/performanceRevision retain
+labels from the earlier completed figure-eight and are not this run's identity.
+The four experiment runtime files still match HEAD at capture inspection.
+
+First all27 near chunks prepared2.775728s; target LOD0 first presented
+19.7916875s (18/27 near chunks); all27 presented21.7949197s; all streaming
+settled31.8145956s. Approximately19.019s elapsed between the first observed
+all-near-ready and all-near-presented samples. Sampling is approximately1Hz;
+these are first-observed times, not exact sub-frame completion timestamps.
+
+For the first10.783s sample the staged fine anchor remained240,-180,8,
+while the requested anchor was286,-218,4. At5.779s all27 near chunks were
+ready but hidden, with regular dependencies by level[0,0,0,1191,1280,100,0]
+and468 transitions missing. At10.783s dependencies were[0,0,0,0,255,24,0]
+and84 transitions. By11.783s the old anchor had committed. Subsequent fine
+anchors included250,-190,4,262,-198,4,282,-218,4, then286,-218,4.
+The commit count rose26->35 before all27 nearby chunks appeared, and to40
+before total settle. At20.793s all regular/water dependencies were ready,
+32 transitions remained, and9 near chunks were still publication-blocked.
+
+Diagnosis: prepared near geometry is delayed by completion of an earlier
+placement plus serial nested-boundary advancement and regular/transition
+publication dependencies. The capture does not isolate GPU seam compute from
+queue service, sampling or readback. Water was ready by2.776s and cannot
+explain the later near-display delay in this episode. No new runtime change
+or speedup is claimed. Preserve coarse fallback until a valid replacement
+and its boundaries are ready; changing field accuracy alone does not address
+the measured stale-target/serial-publication wait.
+
+Evidence: [complete arrival report](ValidationEvidence/CompactArrival/manual-far-arrival-20260912.json).
+Result: reproduced long arrival; first-near five-second objective failed.
+No frame-rate, allocation or transient visual-coverage acceptance is inferred
+from this diagnostic report. No commit/push of unaccepted runtime work.
+
+
+### COMPACT-ARRIVAL-001/v4 - preserved-world revision, pre-run definition
+
+The user reproduction advanced the authoritative world to revision36. Preserve
+that world; do not restore revision35. Version4 inherits every v3 standard/fast
+parameter and criterion, changing only the world revision36 (page count to be
+recorded by native inspection before timing). Establish a new HEAD control.
+No results from v3 are a matched v4 comparison. Same engine, playable world,
+seed1337/gen45,1847x959, origin reset by normal Play restart, full startup settle
+then30s warmup, standard2500/50000/1 and fast10000/200000/1,240s run cap.
+All earlier <=16.67ms preparation, <=10s drain, no material unexplained regression,
+zero exceptions/unsafe commits/mismatches/final queues and coverage criteria remain.
+The manual five-second nearby arrival objective remains separate from this
+return-to-origin regression test.
+
+Candidate design: once the target anchor is stable for one second and both
+committed and staged fine coverage miss it, replace the stale pending placement
+with the existing full configured hierarchy at the current target. Bypass serial
+boundary stepping for this recovery only. Retain all configured extents, regular
+and exact transition readiness checks, existing coarse fallback and canonical
+cancellation/reuse. Do not reintroduce compact rings, growth, additional buffers
+or larger batches. Log old/new fine anchor and placement age for this event.
+The small change targets the observed old-destination wait and subsequent serial
+advancement; it does not claim to eliminate the full hierarchy readiness barrier.
+
+
+V4 fast HEAD control1e53dacabc3444bf8aec7daf0cbe67cd, actual1847x959,
+world36/pages8 verified by native terrain inspection before Play restart:
+127.21463FPS,p95/p99/max13.3426/16.7709/688.1362ms,
+managed allocation2,791,532,280bytes; average process/GPU
+2,883,767,782/1,818,241,687bytes; preparation max7.039ms;
+drain22,298.45ms (FAIL <=10,000ms). Exceptions/unsafe commits0,
+final visual/collision queues0, collision4913/4913, failures0.
+First prepared/presented1.7744628s on the return-to-origin arrival.
+Raw control/arrival retained under retarget-fast-control-v4*.json.
+
+Applied the stopped-target recovery change to VoxelManager.cs only. Native
+engine compile completed successfully with0 errors before fresh candidate
+Play start. Retarget-source.json records source hashes. The same v4 fast
+route follows full startup settle and30s warmup. No acceptance is inferred
+from compilation or the control's already-failed drain criterion.
+
+
+V4 first recovery candidate c6171ebdcb90481291c1641fd1518966, actual1847x959,
+world36/pages8 unchanged:120.747215FPS,p95/p99/max13.8858/18.2723/165.011ms,
+allocation2,803,686,992bytes; average process/GPU3,141,573,950/1,781,212,101bytes,
+prep7.4609ms,drain21,836.365ms (FAIL <=10,000ms). Exceptions/unsafe/mismatches0,
+final visual queues0. First near prepared1.927s,presented5.949s (FAIL <=5s).
+Retarget staged previousFine=-2,0,0 to0,0,0, previousAge444.4ms; committed4794.8ms
+later. The trigger used anchor inequality and canceled a pending fine box which
+already covered the target. This worsened return arrival relative to control1.774s.
+Candidate not accepted; preserve raw results. Correct the trigger to require that
+the pending fine coverage actually misses the target, as specified in the pre-run
+design. Keep all other behavior and exact v4 fast parameters for the next run.
+
+
+V4 coverage-guard repeat01b5e70b8f774490b5c402a41970ed56, actual1847x959:
+119.242195FPS,p95/p99/max14.5721/18.7081/47.6306ms,
+allocation2,785,728,440bytes; average process/GPU3,209,879,585/1,781,160,666bytes;
+prep5.536ms,drain21,172.084ms (FAIL <=10,000ms). Exceptions/unsafe/mismatches0,
+final visual queues0. First near prepared/presented1.8253603s. No retarget event
+occurred in this route; this verifies the earlier unnecessary restart is absent
+but does not exercise current recovery at a cold destination. Compared with
+control, average FPS is lower and p99 is higher; this remains unexplained and
+precludes final performance acceptance. Allocation is slightly lower. Do not
+attribute the timing difference to source or environment without evidence.
+Raw result and arrival are retained under retarget-coverage-fast-v4*.json.
+
+Post-run native coverage audit at14:45:12: selected/completed88/88,
+stale/failures/mutationFailures/invalidIndices/outOfBounds/nonFinite/identity/
+oversized/degenerate/drawArgumentFailures all0; maximumEdgeCells1.722,
+178readbacks,2,655,932bytes,528.652ms. Native1280x720 camera screenshot was
+inspected at settled origin: rendered terrain covered the view with no visible
+sky holes within that frame. This is not evidence of transient far-recovery
+coverage. Free viewport sizing was restored after the timed run.
+
+The guarded recovery remains implemented in VoxelManager.cs for a user-driven
+far-arrival validation, requested after automated tests. A bounded40s read-only
+check saw no new retarget event. Far-arrival improvement, transient coverage and
+frame-pacing acceptance remain pending. No task commit or push while these
+requirements are outstanding. Do not claim the original long-arrival defect
+resolved solely from this return-route result.
+
+
+### Guarded recovery manual arrival - 2026-09-12 18:57:03 UTC
+
+User reports the updated code still took a very long time. Captured production
+report68a3c431faf845f899854be42213c5fb, world36/epoch1, arrival position
+-273298.562,72567.8281,2092.33521. All27 near chunks prepared1.3640876s,
+first all27 presented18.4105038s, final settle21.7445536s. This is a different
+manual path/destination than the prior manual report; do not claim a matched
+speedup from18.4s versus21.8s. Per-report performance labels are inherited
+from an earlier automated run, not the manual run identity.
+
+Recovery staged at14:57:04 from fine-272,42,18 to-534,142,4, abandoning a
+6518.9ms-old placement. It committed at14:57:20 after16,953.1ms. In the first
+sample, placement age0.6654184s at elapsed1.3640876s establishes that the correct
+replacement began around0.699s after the recorded movement stop. It was already
+past CPU placement preparation, with6525 missing regular dependencies
+[0,705,1454,2400,1408,558,0] and744 transitions. At15.400s,640 regular regions
+(level4=438,level5=202) and32 transitions still blocked publication. Water was
+not a blocker in the detailed samples. Near meshes waited about17.046s after
+all were first observed ready. An earlier recovery event at14:56:50 belongs
+to another target during the flight; it must not be counted as this stop's start.
+
+Result: FAIL near-arrival objective; stopped-target recovery is insufficient
+as a resolution. It removed the obsolete-target/serial-step phase in this
+reproduction, leaving a17s full-hierarchy barrier. Seam compute alone is not
+established as the bottleneck: coarse regular geometry also remained required.
+Further queue/batch tuning cannot remove this publication dependency.
+Evidence: [complete arrival report](ValidationEvidence/CompactArrival/retarget-manual-arrival-20260912.json).
+No runtime acceptance, commit, push or resolved-defect claim.
+
+
+### LOCAL-COVERAGE-001/v1 - pre-run definition, 2026-09-12
+
+Reuse COMPACT-ARRIVAL-001/v4 parameters unchanged: basic_example, seed1337,
+generator45, saved world aab7f6c5-2522-483e-9c5b-db8c763646ff revision36/pages8,
+LOD0..5, half extents4/8, gameplay8,32cells/base16,1847x959, normal Play restart
+at origin, all startup queues/water/collision settled then30s warmup. Canonical
+fast figure-eight10000/200000/1; standard2500/50000/1. Existing v4 HEAD control
+is retained as the comparable source control, with its recorded failures and
+session qualifications. All prior preparation<=16.67ms, drain<=10s, no material
+unexplained frame/memory regression and zero errors/unsafe/mismatch criteria
+remain; nearby first presentation objective<=5s remains separately qualified.
+
+New production assertions: no simultaneously active ancestor and descendant;
+local split has exactly8 incoming children, merge exactly1 parent, and no more
+than6 incoming transition faces. Current neighboring coarse regular regions are
+also readiness dependencies for their seams (at most14 regular dependencies).
+Terrain/water/arrival diagnostics must use actual activation membership.
+Capture coverage.inspect before/after and during the route, plus existing mesh
+coverage audit and native camera frames. No synthetic scene or teleport path.
+The first slice retains atomic initialization/configuration replacement; ordinary
+streaming within the applied configuration uses local coverage convergence.
+The whole-layout final commit only reconciles metadata after local convergence.
+
+Source changes: direct desired layout replaces serial boundary walking; bounded
+8 pending local operations,0.75ms update budget and64 admission candidates per
+update; actual activation ancestor index; local geometry/water/seam readiness;
+active-coverage retention under cancellation; water and arrival readers moved
+to actual activation sets. Existing exact transition shader remains unchanged.
+Implementation is unaccepted until runtime and transient-boundary validation.
+
+
+### LOCAL-COVERAGE-001/v1 - first local candidate, 2026-09-12 (FAIL)
+
+Source e732065 + local-source-v1.json; exact scenario parameters unchanged.
+Task local-fast-v1, timed start 2026-09-12T19:22:48.830Z. Startup settled
+after120.778s plus30s warmup. Nearby27/27 were first prepared and presented
+at1.4573392s after the recorded stop, but final convergence never completed.
+The external observer ended at approximately240s; Play was actually stopped
+around19:27:26Z (approximately278s), so this was not an exact240s abort.
+No closed native performance result was emitted; allocation total unavailable.
+Incomplete snapshot:132.8FPS avg, frame p95/p99=13.15/16.95ms; process
+3481.3MiB avg/3605.9MiB peak, GPU1748.5MiB avg/1869.0MiB peak.
+These rounded, incomplete observations are not an accepted baseline comparison.
+Final snapshot had placement pending,0 regular and1 transition pending;
+collision4913/4913, pending0/failures0; terrain/water mismatch counters0.
+Six coverage observations found0 overlapping ancestors, at most8 operations,
+and active coverage up to28852 versus18880 desired. Local coverage remained
+on an earlier destination after return to origin. A settled-origin native frame
+showed no visible holes; it does not establish transient boundary correctness.
+Result: FAIL convergence/drain; incomplete performance acceptance.
+Evidence: [observations](ValidationEvidence/LocalCoverage/local-fast-v1-observations.json),
+[coverage samples](ValidationEvidence/LocalCoverage/local-fast-v1-coverage-observations.json),
+[incomplete snapshot](ValidationEvidence/LocalCoverage/local-fast-v1-incomplete-snapshot.log),
+[arrival](ValidationEvidence/LocalCoverage/local-fast-v1-incomplete-arrival.json).
+
+Next candidate retains the same scenario. It tracks actual-coverage divergence
+from committed layout metadata, retargets stale plans after one second of target
+anchor stability, and retires out-of-range active leaves before refinement
+admission. Placement timing now includes local-plan construction. No acceptance
+or performance-improvement claim before the repeated run.
+
+
+### LOCAL-COVERAGE-001/v1 - local-fast-v2 aborted, 2026-09-12
+
+Source local-source-v2.json. Same parameters; startup settled136.443s plus30s
+warmup, timed start2026-09-12T19:36:57.781Z. Aborted during travel at about
+19:37:40Z after source inspection found that the new out-of-range retirement
+removed LOD0 GPU records without clearing CPU prepared membership. The normal
+readiness contract interprets prepared-without-record as proven empty, so this
+could falsely report returned surface regions ready. No timing/visual acceptance
+or closed native performance result. This is a source-established correctness
+defect; no claim that the runtime observations themselves demonstrated a hole.
+
+Next candidate uses one local-retirement operation: deactivate coverage, retain
+LOD0 records still required by gameplay preparation, otherwise evict and clear
+prepared membership together. Reset also clears the new retirement/desired sets.
+Scenario parameters and acceptance criteria remain unchanged.
+
+
+### LOCAL-COVERAGE-001/v1 - local-fast-v3 source and observation scope
+
+Source hashes: [local-source-v3.json](ValidationEvidence/LocalCoverage/local-source-v3.json).
+Same immutable scenario; startup settled134.689s then30s warmup; timed start
+2026-09-12T19:41:49.893Z. Regular/seam computation and terrain inputs unchanged.
+The prior aborted-v2 run emitted no identifiable automatic arrival report while
+moving; its two coverage samples are retained separately. A diagnostic issued
+around the v2 teardown logged a null active-scene exception at19:38:22Z, outside
+the v3 measurement. Preserve that tooling error; it is not a v3 runtime event.
+
+
+### LOCAL-COVERAGE-001/v1 - local-fast-v3 result (FAIL)
+
+Same scenario and recorded source. Arrival09fc440c1ecf4c548043fa589e03aaac
+prepared27/27 at1.7116716s; target-coordinate LOD0 first presented24.6184481s;
+all27 first presented87.9545088s. Final convergence did not complete. At
+19:46:41Z,15296/18880 desired leaves were active,1664 candidates remained,
+no operations were pending, and overlapping ancestor count was0.
+Local root-only insertion cannot fill a vacant desired region once another
+part of that root contains finer coverage; root insertion can also be blocked
+by fine neighbors. This is a source-established convergence defect.
+Intermediate replacements repeatedly awaited seams while their regular geometry
+was ready. The experiment therefore fails both arrival and drain requirements.
+No closed native performance result was emitted; do not infer a whole-run FPS
+or allocation comparison from incomplete rolling snapshots.
+
+The observer stopped polling after240s, but native Play continued until about
+19:47:35.712Z, approximately345.8s after trigger. Record this late enforcement
+explicitly. The next observer will stop Play itself if its240s cap expires.
+Evidence: [arrival](ValidationEvidence/LocalCoverage/local-fast-v3-arrival.json),
+[travel observations](ValidationEvidence/LocalCoverage/local-fast-v3-observations.json),
+[coverage samples](ValidationEvidence/LocalCoverage/local-fast-v3-coverage-observations.json),
+[incomplete snapshot](ValidationEvidence/LocalCoverage/local-fast-v3-incomplete-snapshot.log).
+
+Next candidate publishes uncovered desired regions directly at their requested
+LOD, with no active ancestor/descendant overlap, checked2:1 neighboring coverage,
+and current local seams/water. Existing coverage still refines/coarsens through
+atomic replacements. Coarsening can include vacant immediate child volumes,
+without dropping any finer descendant. Outgoing geometry is retained only within
+requested caches/gameplay interest; obsolete temporary seams are released.
+Cancelled local dependencies enter existing superseded-work retirement.
+Coverage diagnostics add optional balance/seam checks and measured update CPU
+time. Idle diagnostics reject a missing active scene instead of throwing.
+No scenario parameter or acceptance threshold changes.
+
+
+### LOCAL-COVERAGE-001/v1 - local-fast-v4 result (FAIL drain)
+
+Source local-source-v4.json, same scenario. Startup113.446s plus30s warmup;
+trigger2026-09-12T19:54:07.941Z. Arrivald3d794defc6241d6bd59fac23974a07f
+first prepared and presented all27 near chunks at1.7651158s. It did converge:
+arrival settled119.28876s after its recorded stop, at19:58:10.125Z. The observer
+stopped Play at242.560s after trigger, before the native10s stationary capture
+could finish; therefore no closed performance result, allocation total or accepted
+whole-run frame/memory comparison exists. This corrects the preliminary
+observation that the background work had not finished: convergence occurred just
+before the cap, but drain still exceeded10s by a wide margin.
+
+Final incomplete snapshot: visual/seam pending0, placement false;166.6FPS
+rolling average,p95/p99=10.57/15.24ms;CPU3838.3MiB avg/3890.7peak,
+GPU1617.7MiB avg/1629.4peak. During route/drain, four coverage samples had
+zero overlapping ancestors and up to8 pending operations. Ready operations
+with all missing counters0 still waited; maximum measured local update13.9456ms.
+Startup detailed coverage check had0 unbalanced regions and0 missing/extra
+active seams; no post-travel detailed audit or transient visual acceptance yet.
+Evidence: [arrival](ValidationEvidence/LocalCoverage/local-fast-v4-arrival.json),
+[coverage](ValidationEvidence/LocalCoverage/local-fast-v4-coverage-observations.json),
+[observations](ValidationEvidence/LocalCoverage/local-fast-v4-observations.json),
+[incomplete snapshot](ValidationEvidence/LocalCoverage/local-fast-v4-incomplete-snapshot.log).
+
+Next candidate retains the same scenario. It removes full water-request-set
+rebuilding from each pending-operation iteration; local readiness registers only
+its sea-plane dependencies, while normal water update reconciles the full set.
+Already-ready operations commit during admission, bounded by the same CPU budget
+and candidate limit; the8-operation limit applies to waiting work. Completed
+desired leaves are not needlessly requeued. Inactive temporary seams are retired
+at retarget/final convergence. These changes require a fresh runtime comparison.
+
+
+### LOCAL-COVERAGE-001/v1 - local-fast-v5 completed result (UNACCEPTED)
+
+Same immutable scenario. Source e732065+local-coverage-v5+gen45-world36-pages8
+with [exact source hashes](ValidationEvidence/LocalCoverage/local-source-v5.json).
+Startup123.759s plus30s warmup; trigger2026-09-12T20:03:47.844Z. Native run
+1a8725df5c0c4282a3d34ebb398d4c60 completed and saved at20:07:35Z.
+[Complete result](ValidationEvidence/LocalCoverage/local-fast-v5.json);
+[arrival](ValidationEvidence/LocalCoverage/local-fast-v5-arrival.json);
+[observations](ValidationEvidence/LocalCoverage/local-fast-v5-observations.json);
+[coverage samples](ValidationEvidence/LocalCoverage/local-fast-v5-coverage-observations.json).
+
+All27 nearby regions were first prepared and presented at1.4923152s. This is
+the canonical return-to-origin observation, not a reproduction of the user's
+previous manual far destination. Arrival settled94.8979243s; native post-loop
+drain95,725.3ms versus control22,298.45ms: FAIL10s drain and a material regression.
+Maximum placement preparation18.9563ms: FAIL16.67ms.
+Frame173.02444FPS avg; p95/p99/max11.1844/14.9449/815.5362ms.
+Average GPU1.2303253ms; GPU p95/p99=6.5808296/8.426428ms.
+Managed allocation3,540,623,888bytes; maximum GC pause809.693ms,3 gen2 collections.
+Average process/GPU4,029,355,024/1,696,719,030bytes. Native exceptions0; unsafe
+commits0; final mesh queues0; collision4913/4913, pending0/failures0.
+
+Compared with retained v4 control: FPS+36.01%, p95-16.18%, p99-10.89%, total
+allocation+26.83%, average process+39.73%, GPU-6.68%. These are measurements,
+not accepted performance gains: moving visual coverage is not yet qualified,
+frame counts differ, editor uptime/hotload history can affect process residency,
+and allocation/memory/preparation/drain regressions remain unresolved.
+
+Detailed final coverage had18880/18880 desired/active leaves, no queued/pending
+operations,0 overlapping ancestors,0 unbalanced regions, and0 missing or extra
+active seams. Mesh audit at20:08:13Z completed88/88 selected regular/transition
+meshes with0 failures/stale/mutation/index/bounds/nonfinite/identity/oversized/
+degenerate/draw-argument failures; maximum edge1.722cells,178readbacks,
+2,695,080bytes,412.936ms.
+[Final audit logs](ValidationEvidence/LocalCoverage/local-fast-v5-final-audits.json).
+A1280x720 native camera frame showed closed terrain in the settled-origin view.
+Neither this frame nor the sampled mesh audit proves transient no-hole coverage.
+
+The complete arrival trace localizes a remaining drain phase:45.7s through90.9s
+was dominated by merge operations, typically16-25 missing seams across up to8
+pending merges, with individual ages about0.37-0.73s. Earlier20.6-40.6s samples
+were additions, often awaiting regular geometry. Local update total8,609.7952ms
+over32,600 updates; maximum11.9275ms since world reset (includes startup).
+Thus repeated intermediate coarsening boundaries remain material after removing
+per-operation water-set rebuilding; seam batching alone is not an established
+complete solution.
+
+Decision: prototype implemented but NOT accepted, committed, or pushed. Standard
+route, manual original far-stop reproduction, and transient coverage qualification
+remain outstanding. Play remains available for the user's manual reproduction;
+fixed benchmark render resolution was released after all timed capture.
+
+
+### LOCAL-COVERAGE-001/v1 manual far arrival, local-v5 (2026-09-12)
+
+User reported about ten seconds through intermediate LODs. Automatic report246658eacaa24804bae22e3c2e520ee0 started20:50:59.544Z, destination(-62939.1758,40260.7305,2799.70044), same gen45/seed1337/world revision36 and LOD0..5/4/8 settings. Manual flight trajectory and free viewport are not the canonical route; do not compare performance as an identical workload. Near27 prepared1.6488351s, all27 presented134.5250292s, target-coordinate LOD0 first133.5209635s, settled151.638419s. The collision-view hit and27-region metric differ from perceived visible detail. At5.7s target LOD1 was active; only2/27 near regions were presented from15.7s through131.5s while distant queue drained. FAIL five-second arrival objective. Evidence: [manual report](ValidationEvidence/LocalCoverage/local-v5-manual-far-arrival.json). No exceptions newly reported.
+
+Next candidate local-v6 preserves every request waiting on an already-pending local operation and requeues all dependents after publication or topology invalidation. Previously only the first requester survived; subsequent requesters were dropped until a full queue rescan. Instrument waiting request counts and resumed totals. Run unchanged LOCAL-COVERAGE-001/v1 fast figure-eight with existing source/world/environment parameters and240s external cap; criteria unchanged. This candidate isolates scheduling before larger multi-level publication changes.
+
+
+### LOCAL-COVERAGE-001/v1 local-fast-v6 result (2026-09-12)
+
+Source e732065+local-coverage-v6+gen45-world36-pages8; [manifest](ValidationEvidence/LocalCoverage/local-source-v6.json). Build26.09.08b, RTX5090, basic_example, saved world aab7f6c5-2522-483e-9c5b-db8c763646ff epoch1/revision36/pages8. Immutable scenario settings unchanged: seed1337/gen45, LOD0..5, near4/cache8/gameplay8,32cells/base16, terrain settings recorded in raw result, viewport1847x959. Normal Play restart; startup119.368s to settled,30s warmup. Fast route speed10000/distance200000/one loop, ten-second stationary capture. Trigger21:00:01.145Z; result5dc803683876475d84cb2f978c89a4db saved21:03:46.237Z before240s cap. Readiness sampled122.1..142.1s every0.5s. One inexpensive moving coverage observation at21:01:51Z; detailed checks and geometry audit after timed capture. No computer-use tools used.
+
+Near27/27 prepared and presented1.1080981s. Arrival report c8d252ff4e454700a335ea0409dee66c settled92.5604682s; native post-loop drain93028.97ms FAIL10s. Maximum placement preparation14.246ms PASS16.67ms. FPS162.12111; p95/p99/max frame11.5526/15.9323/60.4309ms; GPU mean1.1758717ms. Allocated3451408496bytes (174569.23/frame), max GC pause25.24ms, one gen2 collection. Average process3431812347bytes/GPU1696047554bytes. Zero runtime exceptions or unsafe commits; final regular/transition queues zero, collision4913/4913 ready/pending0/failures0.
+
+Final actual/desired18880/18880, pending/queued0, overlaps0, unbalanced regions0, missing/extra active seams0.52428 local commits,3744 resumed requests; automatic arrival snapshots observed up to8 requests sharing one pending operation.31137 local updates since reset,8789.2775ms total,19.4548ms maximum (the0.75ms target remains a soft overrun, not a hard bound). Moving snapshot active3265 versus desired18880; moving coverage is not qualified by FPS. Geometry audit at21:04:36Z passed88/88, all error categories0, max edge1.722cells,178readbacks/2793012bytes/470.826ms. No transient no-hole claim.
+
+Compared with accepted-source fast control v4: FPS+27.439%, p95-13.416%, p99-5.000%, total allocated+23.638%, average process+19.004%. These are measurements, not accepted gains; coverage completion, frame counts and long editor-session memory differ. v5 had95.7253s drain versus93.02897s here: background convergence remains severely over budget. FAIL overall; do not commit/push or claim resolved. The standard route and exact manual far-stop on v6 remain unrun. Request lifetime is fixed in source; this automated origin return does not establish that the user's original multi-level arrival is fixed.
+
+Evidence: [result](ValidationEvidence/LocalCoverage/local-fast-v6.json), [arrival](ValidationEvidence/LocalCoverage/local-fast-v6-arrival.json), [observations](ValidationEvidence/LocalCoverage/local-fast-v6-observations.json), [moving coverage](ValidationEvidence/LocalCoverage/local-fast-v6-moving-coverage.json), [final audits](ValidationEvidence/LocalCoverage/local-fast-v6-final-audits.json). Source hashes verified unchanged after execution.
+
+
+### LOCAL-COVERAGE-001/v1 direct refinement candidate v7, planned checks
+
+Run unchanged fast route parameters and240s cap after normal Play restart, settled startup and30s warmup. Source e732065+local-coverage-v7+gen45-world36-pages8; all prior world/configuration/viewport settings retained. Require the existing timing/memory/frame/coverage criteria. Additionally capture refinement commit records proving a removed coarse parent can become LOD0 in one publication with no intermediate publication for that volume; verify final26-neighbor balance and exact active seam set, and88 geometry samples outside timed capture. The automatic origin return alone cannot qualify the user's distinct manual far-stop. Retain all failures; do not accept on compilation alone.
+
+
+### LOCAL-COVERAGE-001/v1 local-fast-v7 result (2026-09-12)
+
+Unchanged scene/world/seed/gen45/settings/1847x959 viewport and fast10000/200000/one-loop workload; normal Play restart, startup133.385s,30s warmup, ten-second stationary capture. Trigger21:18:41.961Z; run6073edff94424f8996433e3f04065619 completed21:22:28Z before240s cap. Source [manifest](ValidationEvidence/LocalCoverage/local-source-v7.json); hashes unchanged at completion. Native log collection every15s; inexpensive coverage observations during travel/drain; detailed final coverage and88-geometry audit after timing.
+
+Near prepared1.0694621s/presented2.0753064s, full arrival93.5031437s, post-loop drain94138.336ms FAIL10s. Prep13.8447ms PASS16.67ms. FPS162.66405; p95/p99/max11.236/16.4023/85.6795ms; GPU mean1.2571415ms. Allocated3548749168bytes/178904.47per frame; max GC pause49.404ms, one gen2; average process3904892525bytes/GPU1696671758bytes. Exceptions0. Final actual/desired18880 each, all queues0, overlaps/balance violations/missing/extraneous seams0.49953 local commits; maximum measured publication0.8127ms, maximum whole local update18.6969ms. The0.75ms soft target is not a hard bound.
+
+A captured refinement replaced27 LOD3 parents with314 leaves including16 LOD0,94 LOD1 and204 LOD2 leaves in one publication;41 virtual splits,96 seams,1.7718584s preparation age and0.487ms publication. This proves multi-level replacement in that volume; the moving player's sampled coordinate transitioned3 to1 because the in-flight desired layout was behind the moving target. It does not qualify a stationary5-to0 arrival. No planning-limit warnings.
+
+Overall FAIL; background drain remains94s, allocations/process memory exceed the control, and moving coverage is unqualified. Origin-return sampling does not reproduce the manual LOD5 stop. Source inspection also identified an incomplete retention contract for multi-frame refinement readiness: explicit patch LOD0 dependencies must survive warm-interest eviction and be admitted through the existing warm-preparation pipeline. Correct before acceptance. Next v8 retains those dependencies, flags the existing warm-interest rebuild for newly required unprepared LOD0 and includes them in canonical warm requests. Same scenario/criteria/cap, no alternate test path.
+
+Evidence: [result](ValidationEvidence/LocalCoverage/local-fast-v7.json), [arrival](ValidationEvidence/LocalCoverage/local-fast-v7-arrival.json), [observations](ValidationEvidence/LocalCoverage/local-fast-v7-observations.json), [refinement logs](ValidationEvidence/LocalCoverage/local-fast-v7-refinement-logs.json), [final audits](ValidationEvidence/LocalCoverage/local-fast-v7-final-audits.json).
+
+
+### Manual staircase after v6, retrieved during direct-handoff work
+
+Two reports after the completed v6 route retain its performanceTask/revision labels even though their timestamps are later than the route result. Do not treat them as additional canonical route runs. First pause91170bec660948bdaf21eb08b57ce622 began21:06:25.449Z at(-35776.7383,-120792.195,2966.69067), resumed movement2.4799524s later; target LOD5 first1.2727191s then LOD4 at2.2756468s. Final stop2b76e20c6aa14a8e890842254a0b812c began21:06:29.131Z at(-36251.2266,-121085.258,2803.47095), nearby prepared2.6122932s/all27 presented4.6156185s; target LOD1 first1.6117958s/LOD0 at3.6140086s; full settle122.1885096s. These are different coordinates and episodes, not an exact continuous single-chunk timing. They preserve the user's reported intermediate-level behavior; a passing final-stop five-second metric does not negate the visible staircase across the flight. Evidence: [first pause](ValidationEvidence/LocalCoverage/local-v6-manual-first-pause.json), [final stop](ValidationEvidence/LocalCoverage/local-v6-manual-final-stop.json).
+
+
+### LOCAL-COVERAGE-001/v1 local-fast-v8 result (2026-09-12)
+
+Source e732065+local-coverage-v8+gen45-world36-pages8; [manifest](ValidationEvidence/LocalCoverage/local-source-v8.json). Normal Play restart, startup125.169s,30s warmup. Same basic_example, saved world aab7f6c5-2522-483e-9c5b-db8c763646ff epoch1/revision36/pages8, seed1337/gen45, LOD0..5/near4/cache8/gameplay8/32cells/base16, terrain settings and1847x959 viewport as the preceding v1 runs. RTX5090/engine26.09.08b. Fast10000/200000/one-loop route with ten-second stationary capture. Trigger21:27:18.313Z; resultdc8fbccf49a04535ba6c5c4cbfb4c323 saved21:31:01Z, before240s cap. Readiness probes122.1..142.1s at0.5s intervals; native commit-log retrieval every15s. No computer-use tools used.
+
+Near27/27 prepared1.132695s/presented2.1348677s; full arrival90.5435788s, native drain90955.58ms FAIL10s. Placement preparation13.5687ms PASS16.67ms. FPS161.84888; frame p95/p99/max11.6372/16.7204/80.0187ms, GPU mean1.1988432ms. Allocated3540132792bytes (179365.3/frame), max GC pause23.717ms, one gen2. Average process4355898921bytes/GPU1696367311bytes. Zero runtime exceptions and unsafe commits; all final mesh queues0 and collision4913/4913/pending0/failures0.
+
+Final detailed coverage:18880 actual/desired, pending/queued0, overlapping parents0, unbalanced regions0, missing/extra active seams0.50072 local commits; largest measured publication0.8308ms;31148 local updates since reset,7963.7751ms total/16.2675ms maximum. The0.75ms update budget remains soft. Geometry audit21:32:05Z passed88/88, all reported failure categories0, maximum edge1.724cells,178readbacks/2798580bytes/457.952ms. Native1280x720 camera capture after timing showed continuous checkerboard terrain in the settled view. This is not transient no-hole proof.
+
+The84 captured refinement publications include a314-leaf patch replacing27 LOD3 parents with16 LOD0,94 LOD1 and204 LOD2 leaves,41 virtual splits and96 seams:1.681119s admission-to-publication age,0.4828ms publication. No intermediate parent publication exists inside that patch. Its specifically requested leaf and moving player coordinate went3 to1 because the staged layout lagged travel; LOD0 was simultaneously published elsewhere inside those removed LOD3 parents. The direct single-target5-to0 manual case remains unverified, as does moving transient coverage. No refinement-limit warnings were observed.
+
+Overall FAIL performance acceptance: background convergence remains91s and allocations/process residency exceed the control. Increasing editor-session process residency remains unexplained; do not attribute it all to the patch or call higher FPS an accepted gain while moving coverage is unqualified. The mandatory single-level refinement implementation has been replaced, and its multi-level publication behavior was exercised. The standard route and original manual far-stop are still pending. Keep the candidate unaccepted/uncommitted; no claim that all LOD streaming performance is resolved.
+
+Evidence: [result](ValidationEvidence/LocalCoverage/local-fast-v8.json), [arrival](ValidationEvidence/LocalCoverage/local-fast-v8-arrival.json), [observations](ValidationEvidence/LocalCoverage/local-fast-v8-observations.json), [refinement logs](ValidationEvidence/LocalCoverage/local-fast-v8-refinement-logs.json), [final audits](ValidationEvidence/LocalCoverage/local-fast-v8-final-audits.json). Source hashes verified unchanged after execution; runtime/editor compilation succeeded.
+
 ### EROSION-CREST-002/v1 — ridge fade prototype, predeclared 2026-09-13
 
 User authorizes prototype after remaining serrations/lip around long crests.
@@ -24842,10 +25528,1360 @@ Returned to normal player camera for manual review. Prototype remains unaccepted
 visually; exact close-up and crash qualification remain open. Performance stays
 deferred by user instruction; no figure-eight run or regression acceptance claimed.
 
+
+### LOCAL-COVERAGE-001/v2 - generator46 streaming regression (predeclared 2026-09-13)
+
+The separately authorized erosion prototype changed generator45 to46. The v1
+saved correction field cannot be loaded into the new generator identity; preserve
+v1 history and do not compare v1/v2 as identical workloads. Establish an unedited
+generator46 baseline with current local-v8 publication source before the streaming
+correction. Current fresh world4834d9ad-73fb-402a-92b4-5e3f8a17e55a,epoch0/revision0/
+pages0; normal Play restarts may issue a new UUID with the same unedited field.
+All other v1 scenario inputs and criteria are unchanged: basic_example,seed1337,
+LOD0..5/near4/cache8/gameplay8/32cells/base16,land.75/mountains.3/plains.6,
+scales77724.09/18681.756/5232.39,relief3072/ruggedness.45/sea0;RTX5090,
+engine26.09.08b,1847x959. Normal Play restart,fully settled startup,30s warmup;
+fast10000/200000/one loop and ten-second stationary capture,240s route cap.
+Standard2500/50000/one loop remains required for acceptance. No direct origin
+mutation or computer use. Record source hashes before each run. Require near27
+LOD0 presented<=5s,post-loop drain<=10s,placement preparation<=16.67ms,zero unsafe
+commits/errors/final overlaps/balance violations/missing or extra seams;all final
+queues empty. Compare frame pacing,allocation and process/GPU memory against the
+v2 baseline; unexplained material regressions prevent acceptance. Full final-layout
+publication scan and activation costs must be measured. The original manual far
+stop and transient no-hole coverage remain separately qualified observations.
+
+
+LOCAL-COVERAGE-001/v2 baseline stream-fast-v8-gen46 result: run874714e9576344b98db57ca8bd55c162, trigger2026-09-13T06:11:36.136Z; startup33.002s plus30s warmup; unchanged source hashes in stream-source-v8-gen46.json. Full drain47725.6ms FAIL10s; nearby observed1.5s. FPS370.03845,p95/p99/max5.4284/10.2604/59.5095ms; allocated6039558200bytes/133843.6per frame; maxGCpause12.151ms; process average4741474639bytes,GPU1781027255bytes. Preparation10.7951ms PASS; exceptions0; final queues0,actual/desired18880each,overlap/balance/missing/extra seams0.78255local commits. Source v8 remains regressed; this is a new workload baseline, not an accepted performance result. Evidence under ValidationEvidence/LocalCoverage/stream-fast-v8-gen46*.
+
+Next v9 removes serial local merges, schedules final transitions concurrently, retains foreground seam priority, and completes through existing full atomic publication after checking every final mesh/water/seam descriptor. Same v2 fast scenario, inputs, criteria and cap. New diagnostics record maximum final readiness and publication times. No GPU batch/lane or terrain algorithm changes.
+
+
+LOCAL-COVERAGE-001/v2 stream-fast-v9 result: run1589517da80e4a28aa4ca222240e93dc, trigger2026-09-13T06:16:36.118Z,startup30.153s+30s warmup,same fixed v2 inputs. Source stream-source-v9.json unchanged. Near prepared/presented1.3447213s;full arrival15.3645897s;post-loop drain16230.486ms FAIL10s,65.99% shorter than47725.6ms baseline. FPS323.53983 versus370.03845; p95/p99/max6.5639/12.0706/46.421ms versus5.4284/10.2604/59.5095. Frame pacing regressed; not accepted. Allocated5985595120bytes/151706.88perframe;maxGCpause19.074ms;process avg5226321349bytes/GPU1708295187bytes. Preparation10.8077ms;final readiness max7.4882ms/final publication25.3148ms (includes bootstrap);local update max19.5347ms. Final queues0,actual/desired18880each,overlap/balance/missing/extra seams0. Audit88/88zero failures,178readbacks2646936bytes291.295ms. Source hashes unchanged. Evidence stream-fast-v9.json,-arrival.json,-observations.json,-coverage-logs.json,-final-audits.json.
+
+Next v10 retains v9 final completion. Existing outer scheduler permits only one
+regular scratch lane when PrioritizePlayerDetail=false despite three allocated
+lanes. Lend idle lanes to background work, retaining one for pending/anticipated
+near work; do not change scratch count,batch size or per-service submission.
+Gate the expensive final readiness scan while regular mesh requests remain;
+near local handoffs continue independently. Full current-descriptor scan remains
+mandatory before final publication. Same v2 fast inputs,criteria/cap; preserve
+v9 failure and compare both frame pacing and drain against baseline.
+
+
+LOCAL-COVERAGE-001/v2 stream-fast-v10 result: run3b22a388f9e949fbbc23569b62a35274,trigger2026-09-13T06:22:47.189Z,startup30.107s+30s warmup,unchanged fixed v2 inputs/source hashes. Near1.3096189s;full arrival16.325493s;drain17296.738ms FAIL10s. FPS339.7977,p95/p99/max6.0728/11.3242/543.2313ms;GPU max28.345585ms. The543ms outlier is unexplained, not GC-only (maxGCpause13.517ms);do not discard it. Allocated6495623672bytes/156789.3perframe,process avg5132218065/GPU1738928929bytes. Preparation9.681ms;final readiness11checks/max6.9889ms,publication36.4236ms;local update max10.4885ms. Final allqueues0,collision4913ready/4913desired/failures0,unsafe0,coverage18880actual/desired,overlap/balance/missing/extra seams0. Overall FAIL drain/frame pacing/allocations. Evidence stream-fast-v10 files/source-v10 manifest; no performance acceptance.
+
+Next v11 corrects two remaining scheduling policies exposed by concurrent final
+preparation. Reserve an existing regular lane only for actual pending near work,
+not stale committed-anchor lag after local LOD0 already completed. Existing
+per-service work and three lanes remain bounded. The early seam-service shortcut
+must apply only while foreground placement seams are queued; background final
+seams use existing fair near/outer/seam service instead of taking every tick
+after local regular dependencies finish. Same fixed v2 fast scenario/criteria.
+
+V11 first startup attempt aborted before timing: render viewport1863x975 differed from fixed1847x959. No route trigger occurred. Restore native render resolution and perform a fresh normal Play restart before retry; source unchanged.
+
+V10 qualification correction: final result recorded1863x975 despite1847x959 at startup. The viewport changed during the run; its timing is non-comparable to the fixed baseline. Preserve the543ms stall without assigning cause. V11 second preflight also saw1863x975 because setting resolution before Play restart did not survive recreation. Native API applied after Play is live; an intermediate1831x943 diagnostic request was observed correctly once updates progressed, then restored1847x959. No benchmark ran at either diagnostic size. Require1847x959 at preflight and final result; do not change scenario inputs.
+
+V11 preflight teardown evidence:02:26:53 native console reported TerrainStorage unload.save_failed NullReferenceException at VoxelManager.Storage.cs:53 (MarkSaved), before the valid06:29:01.546Z timed trigger. Preserve stream-v11-preflight-unload-error.json; source was not modified in storage. Cause remains unresolved; do not count it as an in-route exception or claim all lifecycle checks passed.
+
+
+LOCAL-COVERAGE-001/v2 stream-fast-v11 result: run964ca4ea1d8f4dff9b7e44f35b8af503,trigger2026-09-13T06:29:01.546Z,settled preflight58.987s+30s warmup after aborted preflights. Fixed1847x959 confirmed at startup and final result; other v2 inputs unchanged,source hashes unchanged. Near1.4099032s,full arrival15.4351373s,drain16212.145ms FAIL10s,66.03% shorter than baseline47725.6ms. FPS364.6827 versus370.03845; p95/p99/max5.3653/9.6438/62.749ms versus5.4284/10.2604/59.5095. Earlier pacing regression largely recovered; no all-performance acceptance. Allocated6400330328bytes/143921.44perframe,+5.97% total versus baseline;process average5086382180bytes/GPU1827204182bytes. Outer published44174 versus38983 and cancelled3503 versus7901; workload inputs unchanged but more completed moving terrain. Preparation9.3955ms;final10readiness checks,max6.5771ms;final publication34.8501ms. All final queues0,collision4913/4913/failures0,unsafe0,coverage18880actual/desired with0overlap/balance/missing/extra seams. Audit88/88zero failures,178readbacks2842232bytes236.886ms. Overall FAIL drain; allocation/process differences and final swap cost remain. Evidence stream-fast-v11 files/source-v11 manifest.
+
+Next standard v11 run uses the same v2 scenario field/settings/viewport/startup/30s warmup/one loop/10s stationary capture/240s cap,with the predeclared standard speed2500,distance50000. It establishes the first standard measurement on generator46; no directly comparable standard generator46 baseline exists yet. Do not compare its numbers to the fast route as identical work.
+
+
+LOCAL-COVERAGE-001/v2 stream-standard-v11: run27981a8ffa024d56aae2ecabdc34aea4,trigger2026-09-13T06:35:37.634Z,startup30.104s+30s warmup;standard2500/50000/one loop and fixed remaining v2 inputs. Source hashes unchanged,1847x959 at start/end. Prepared1.3016221s,presented2.3038496s,full arrival19.3462102s,drain19400.035ms FAIL10s. FPS362.10938,p95/p99/max6.5372/11.195/88.5173ms,GPU avg1.7779317ms. Allocated6180485568bytes/139962.98perframe;maxGCpause11.666ms;process avg3705366259bytes/GPU1850764846bytes. Preparation8.8111ms;final-readiness215checks/max8.0829ms,publication58.2868ms. Final allqueues0,collision4913/4913/failures0,unsafe0,coverage18880/18880 with0overlap/balance/missing/extra seams. This is the first standard gen46 measurement, not a passing comparison against gen45. Evidence stream-standard-v11 files and source-v11 manifest.
+
+Next v12 experiment: at most two ready GPU service phases per claimed render
+tick under0.75ms soft CPU budget, sharing one eight-new-regular-region admission
+budget across near and outer submissions. Existing three scratch lanes,batch
+geometry,readback/generation invalidation and publication paths remain. Record
+MaximumRegularRegionsPerRenderTick and require<=8. No new GPU extraction
+implementation or shader change. Run fixed v2 fast then standard,compare to
+v11 and the fast v8-gen46 baseline; preserve failures and new stalls.
+
+
+### LOCAL-COVERAGE-001/v2 v12 startup failure and rollback (2026-09-13)
+
+The two-service experiment compiled successfully, then the visible editor exited
+during startup before the first10s readiness poll; no benchmark trigger occurred.
+Sentry last_crash advanced to2026-09-13T06:40:13.073827Z; fatal event
+06:40:13.072779Z belongs to session started06:06:08.585993Z. Session metadata
+reports crashed/errors1; a preceding external session item says ok/errors0.
+Retain both rather than treating the latter as crash-free. No exception stack
+is present in the event. The engine log shows a hotload anonymous-type
+replacement warning and repeated gpu.render.command_list_reset messages during
+startup. These are observations, not a proven crash root cause. No fresh GPU
+device-fault dump was found (latest September9).
+
+Rejected and reverted the two-service scheduling experiment and its added
+MaximumRegularRegionsPerRenderTick diagnostic. All runtime hashes exactly match
+stream-source-v11.json after rollback; no other task's changes were reverted.
+Native MCP is unavailable and no sbox process remains. No OS/computer-use
+control was used to relaunch it. Further runtime/visual qualification is blocked
+until a visible editor is reopened; exact restored source had already compiled
+and completed v11 fast and standard routes before this experiment. No commit
+or push:10s drain criteria still fail, allocation differences/final publication
+stalls and transient/manual coverage remain open. Current code is v11.
+
+Evidence: [crash metadata](ValidationEvidence/LocalCoverage/stream-v12-crash-summary.json),
+[engine log](ValidationEvidence/LocalCoverage/stream-v12-engine.log.gz),
+[rejected source hashes](ValidationEvidence/LocalCoverage/stream-source-v12.json),
+[restored source hashes](ValidationEvidence/LocalCoverage/stream-source-v11.json).
+
+Current outcome: v2 fast baseline47.726s drain became16.212s with nearby LOD0
+1.410s. Fast p95/p99 improved slightly; mean FPS1.45% lower; total allocation
+5.97% higher and moving outer publications13.32% higher. Standard v11 drained
+19.400s and nearby LOD0 presented2.304s. Final coverage audits passed both;
+fast88/88 geometry samples passed. These are measured improvements, not full
+performance/visual acceptance. No transient screenshot qualification was made.
+
+
+### LOCAL-COVERAGE-001/v2 exterior restoration v13 predeclared run
+
+2026-09-13: user reports waiting several seconds at the loaded edge. Code
+evidence: e073aaf independently activated prepared exterior regions; current
+local plans suppress that activation. Restore exterior interest through the
+canonical local addition path with regular/water/seam readiness and topology
+checks. Visible editor reopened; normal Play stopped before source changes.
+
+Run unchanged v2 fast (10000/200000/one loop) and standard
+(2500/50000/one loop), basic_example seed1337 gen46 unedited revision0/pages0,
+RTX5090 engine26.09.08b, actual1847x959, settled startup then30s warmup,
+10s stationary,240s cap. All other v2 settings and acceptance remain unchanged.
+Compare fast v11 and v8 gen46; standard v11. New read-only observation criterion:
+while placement is pending, ExteriorRequested > 0 and ExteriorActive > 0
+before final publication. Counts include empty regions; not a visual assertion.
+Capture coverage diagnostics at60s on both routes, including detailed
+overlap/balance/missing/extra seam checks (all zero required). This additional
+observation is recorded as instrumentation overhead relative to earlier runs.
+Existing near27 LOD0 <=5s, drain <=10s, preparation <=16.67ms, zero runtime
+errors/unsafe publications, settled queues and final topology criteria stand.
+Source manifest stream-source-v13.json will pin runtime inputs. Not accepted.
+
+
+### LOCAL-COVERAGE-001/v2 v13 fast: FAIL
+
+Run68a31951141749928fb28c7ed3cb145e, trigger2026-09-13T15:26:12.190Z,
+source stream-source-v13.json verified unchanged, viewport1847x959. Near LOD0
+1.978s; arrival16.002s; drain16.542s FAIL. FPS360.125, p95/p99/max
+5.5479/10.1147/475.8124ms; alloc6,179,129,896 bytes,140700.19/frame,
+process avg5,010,497,838/GPU1,825,038,305 bytes; maxGC12.461ms; exceptions0.
+Max preparation16.2683ms, max local update18.2531ms, final publication32.5049ms.
+Outer published40918/cancelled4621, median renderability7.766s/p95 16.143s.
+At60s pending plan: exterior requested0/active0, overlap0/balance0,
+missing seams2/extra121 FAIL. Settled topology18880 regions, all audits0;
+all queues0/collision4913 ready. The475.8ms stall remains unexplained.
+Do not proceed to standard v13: failed independent exterior observation and
+transient correctness. Evidence: stream-fast-v13-moving-coverage.log,
+stream-fast-v13-observations.json, local-coverage-v13-fast-gen46.json and arrival.
+
+### LOCAL-COVERAGE-001/v2 v14 predeclared follow-up
+
+Same fast/standard parameters, criteria and60s observation as v13. Fairly
+alternate exterior/main preparation slices within existing2ms budget; LOD0
+placement changes must not suppress exterior enumeration. Candidate service
+order: immediate27 LOD0, exterior, then other convergence; preserve existing
+8-operation limit and exclusive refinement topology. Retiring the last finer
+region also deactivates the adjacent coarse seam owner. Extend on-demand
+audit with first8 offending keys for missing/extra seam attribution. No GPU
+service/batch or density changes. Source stream-source-v14.json.
+
+
+### LOCAL-COVERAGE-001/v2 v14 fast measured, not accepted
+
+Runffb3ffffce194af9966610b315bb620c, trigger2026-09-13T15:31:36.559Z.
+Source stream-source-v14.json unchanged; viewport1847x959. LOD0 prepared1.033s,
+presented2.033s; full arrival14.055s/drain14.550s FAIL10s. FPS365.58545;
+p95/p99/max6.0024/10.8689/167.03ms. Alloc7,981,367,392 bytes,179026.67/frame
+(+24.70% total vs v11); process avg5,448,166,853/GPU1,794,742,274 bytes.
+Max preparation10.5332ms, max local update19.9916ms, final publication22.5648ms.
+Outer published44860/cancelled1508; median renderability6.721s/p95 14.594s.
+Exceptions0/unsafe0; final queues0/collision4913 ready. At60s and settled: all
+overlap/balance/missing/extra seam counts0. Near criterion passes; whole-world
+drain, pacing/allocation comparison remain unaccepted. Added detailed in-flight
+audit is instrumentation overhead; max frame stalls are not causally attributed.
+Evidence stream-fast-v14-moving-coverage.log, stream-fast-v14-observations.json,
+local-coverage-v14-fast-gen46.json and arrival.
+
+Correction to v13 interpretation: ExteriorRequested0 at60s does NOT establish
+preparation starvation by itself. The fast figure-eight is returning through
+the starting area around that time; no new exterior interest may be needed.
+The source gate is real, but observed zero has this alternate explanation.
+The60s exterior >0 observation is not a valid standalone edge qualification.
+Keep both prior samples and failures; do not alter the route or performance
+criteria. Predeclare outward observation at30s for unchanged v14 standard and
+fast repeat; log coverage then with the same counters and audit. Code and all
+scenario inputs remain unchanged. This is an instrumentation-timing correction,
+not a new accepted performance baseline or weakened topology criterion.
+
+
+### LOCAL-COVERAGE-001/v2 v14 standard: partial evidence, not accepted
+
+Runce5d2b49261d4a88b4caef6c671355cf, trigger2026-09-13T15:36:11.431Z,
+source v14 unchanged,1847x959. At30s: exterior736 requested/514 active while
+local plan pending; all overlap/balance/missing/extra seam counts0. All eight
+pending local additions are LOD5, missingRegular0/missingSeams0/missingWater1,
+ages0.759-0.900s. Independent exterior publication is exercised.
+
+Near LOD0 presented1.689s; arrival18.762s/drain19.590s FAIL10s. Moving FPS
+359.45837, p95/p99/max6.3519/12.2099/84.0253ms, alloc5,903,536,000 bytes,
+134676.31/frame, process avg5,305,684,941/GPU1,864,502,661 bytes. Exceptions0,
+unsafe0, preparation max9.9132ms. Final snapshot NOT comparable to settled
+v11: target moved to20283.191,-25114.582,5797.671 by saved capture, placement
+pending again and collision body count0; observed near27 was fully presented
+at142.1s before saving. Cause of renewed movement is not attributed. Retain
+this contradiction, do not assert final queues settled. Post-save detailed
+coverage audit again zero errors but at another moving location. Evidence:
+stream-standard-v14-moving-coverage.log, observations, result and arrival JSON.
+
+### LOCAL-COVERAGE-001/v2 v15 water dependency priority predeclared
+
+Same fixed fast and standard routes/parameters/criteria with30s outward audit,
+no workload change. Water's existing single worker now prioritizes admitted
+local coverage dependencies before background layout water, then distance and
+LOD/coordinate tie breaks. Current snapshot provides the concrete blocked-slot
+evidence above. Geometry, worker count, readiness and water/terrain publication
+contract unchanged. Source stream-source-v15.json. No performance acceptance.
+
+
+### LOCAL-COVERAGE-001/v2 v15 fast: not accepted
+
+Run7a04d9c6aed44febbc56f3f1341a39c1, trigger2026-09-13T15:41:02.517Z;
+source unchanged,1847x959. At30s exterior3072 requested/985 active, no pending
+local operation at that instant, all topology/seam audit counts0. Nearby LOD0
+1.770s; arrival15.800s/drain16.488s FAIL10s. FPS352.99445,p95/p99/max
+6.2539/11.1725/76.4165ms; alloc7,906,985,960bytes,183686.89/frame.
+Process avg5,645,805,433/GPU1,801,167,085bytes; exceptions0/unsafe0;
+preparation max10.4333ms; final queues settled/collision4913 ready.
+Evidence stream-fast-v15-moving-coverage.log, observations, result/arrival, after.json.
+
+New bounded counter evidence: river atlas startup packs9010/sharedReuses25659/
+packMilliseconds68116.3146; post-run11457/29855/92601.2318. Thus2447 packs
+and4196 shared reuses,24.485s aggregate worker packing (not wall latency).
+Cache retains only10.09MB/64entries post-run despite existing64MiB byte cap.
+More coarse transition publication is observed versus v11; these counts do not
+prove an allocation source. Water8969 generated/20.320s accumulated generation.
+
+### LOCAL-COVERAGE-001/v2 v16 predeclared
+
+Unchanged fast and standard workloads/criteria,30s outward audit. Correct
+priority promotion when an already queued desired region becomes exterior:
+insert its new priority, skip consumed old entries with bounded inspection.
+Log ExteriorPromotions. Preserve immediate LOD0 priority. Separately, allow
+256 exact river atlas entries within the unchanged64MiB byte budget, compared
+with64 entries that exhaust count while retaining10-15MB in measured snapshots.
+No broader footprint, density change, GPU buffer/lane/batch change or new cache.
+Compare atlas packs/reuses/worker ms and allocations against v15, in addition
+to existing performance/correctness checks. Source stream-source-v16.json
+adds the previously unchanged atlas file to the manifest. No acceptance yet.
+
+
+### LOCAL-COVERAGE-001/v2 v16 fast: not accepted
+
+Run4d8ea80f4fc34c6a87899e1ded4da3e5, trigger2026-09-13T15:46:57.673Z;
+source unchanged,1847x959. At30s exterior3072/987 active,256 promotions,
+one pending background LOD5 refinement, all topology/seam audit counts0.
+Near LOD0 1.467s, arrival15.497s/drain16.289s FAIL. FPS363.24298,
+p95/p99/max5.8234/10.9565/78.3743ms; alloc7,909,616,728bytes/178566.81frame;
+process avg4,040,531,732/GPU1,801,612,274bytes. Exceptions0/unsafe0;
+preparation max11.1643ms; final queues settled/collision4913 ready.
+Atlas delta2186 packs/4736 shared reuses/23.382s worker packing; retained
+54,886,400bytes/256entries. Fewer packs than v15, but similar total allocation
+and full drain. Revert the entry-limit experiment to64 to keep this correction
+focused on admission/publication. Retain promotion fix and all evidence.
+
+### LOCAL-COVERAGE-001/v2 v17 predeclared
+
+Same workloads and30s outward audit; criteria unchanged. The30s v16 sample
+shows a far LOD5 refinement occupying exclusive topology while exterior is
+still missing. Local refinement of already-covered background regions duplicates
+final-layout preparation and needlessly delays uncovered additions. Restrict
+covered-region local refinement to immediate27 LOD0 requests. Keep refinement
+required for balancing an uncovered addition; never bypass seam readiness.
+Other covered regions retain their current mesh until the existing atomic final
+layout publication. Remove superseded coarse-parent refinement queue entries
+and avoid requeueing covered background requests. Existing resident exterior
+does not get uncovered-exterior priority. This changes publication scheduling,
+not the final LOD distances, deterministic geometry or required topology.
+Source stream-source-v17.json; atlas restored64 entries/64MiB.
+
+
+### LOCAL-COVERAGE-001/v2 v17 fast: edge success, arrival FAIL
+
+Run1212fe076aa54e989bdc0c1f1f4e398e, trigger2026-09-13T15:53:12.265Z;
+source unchanged,1847x959. At30s all3072 exterior regions active, local work
+complete while final layout pending; all topology/seam checks0. Final18880
+coverage also passes all counts. Outside timing,88/88 real geometry samples
+passed,0 stale/failures/draw failures,178 readbacks/2,791,156bytes/179.989ms.
+FPS371.34195, p95/p99/max4.892/7.152/93.4385ms; alloc7,292,766,128bytes,
+161045.1/frame; process avg3,580,671,261/GPU1,955,477,372bytes. Preparation
+max11.322ms; final publication max53.6638ms; exceptions0/unsafe0. Final queues
+settled/collision4913 ready. Full drain13.688s FAIL10s. Near terrain prepared
+1.362s but presented5.367s FAIL5s; arrival13.384s.
+
+Decision-critical arrival sample at1.362s: local pending[], queued18880,
+retiring12432, retiringSeams716, active16400; all near27 terrain meshes ready.
+The retirement-before-admission barrier delays starting the local near patch.
+At5.367s retirement queues0 and all27 presented. Edge improvement alone is
+not acceptance. Evidence: stream-fast-v17 moving/final coverage, observations,
+local-coverage-v17-fast-gen46 result and arrival.
+
+### LOCAL-COVERAGE-001/v2 v18 predeclared
+
+Same fast/standard scenarios, criteria and30s outward observation. Keep the
+bounded16 regular/16 seam retirement slices, but remove their whole-queue
+completion gate before new local admission. Pending refinement still owns
+topology exclusively, pausing retirement until its atomic publication; additions
+continue to re-describe topology after each retirement slice. Final publication
+retains its full sweep of old active coverage. Measure near arrival, retirement
+progress, memory and coverage along with existing metrics. No geometry changes.
+Source stream-source-v18.json; all v17 behavior otherwise unchanged.
+
+V18 pre-run lifecycle guard: retirement rechecks seam activation at dequeue.
+A seam queued while unused can become active during the interleaved local
+handoff; do not remove that active face. Regular-owner retirement deactivates
+its faces; final cleanup reclaims remaining inactive cached faces. Manifest
+updated before the first v18 run.
+
+
+### LOCAL-COVERAGE-001/v2 v18 fast: rejected broad cleanup bypass
+
+Run0145f8e908bc48e4853d3fd6cec9a3ad, trigger2026-09-13T16:00:56.722Z,
+source unchanged,1847x959. Near LOD0 1.480s PASS; arrival28.591s/drain30.105s
+FAIL and regression vs v17. FPS309.51785,p95/p99/max6.2061/8.7606/581.8056ms;
+alloc6,265,270,024bytes/165989.4frame; process avg3,487,677,087/GPU1,879,790,410.
+Exceptions0/unsafe0; preparation max9.0748ms; final publication24.0214ms.
+At30s exterior3072 requested/3045 coarse active,3929 retiring, all topology
+checks0. Final18880 coverage/all queues0/collision4913 ready; all final
+topology/seam counts0. Local commits58894 vs v17's22360 and local update
+time11.285s vs2.298s; coarse published40348/cancelled9179. Retain unexplained
+581.8ms frame maximum and678.9ms collision sampling maximum without assigning
+a cause. Evidence stream-fast-v18 observations, moving/final audit, result/arrival.
+
+### LOCAL-COVERAGE-001/v2 v19 predeclared
+
+Same fixed fast and standard routes/criteria and30s observation. Narrow the
+retirement bypass to service0 immediate player-detail candidates. Background
+additions wait until out-of-range retirement has completed, so they do not build
+balancing patches against regions already queued for removal. Keep bounded
+retirement, pending-topology revalidation, active-seam recheck and exclusive
+refinement. This retains the concrete near-arrival correction without the broad
+v18 background interleaving. Source stream-source-v19.json.
+
+V19 first startup attempt did not reach the benchmark: after Play entered during
+hotload, engine warnings reported missing VoxelManager/AdminMenu/debug overlay
+types and an unavailable player prefab. The prefab exists on disk. The test
+trigger rejected the scene as not ready. A prior console snapshot had been
+misread as fresh startup readiness. No performance result was created; preserve
+this failed startup. The external runner now requires a console cursor newer
+than each startup diagnostic command. Normal Play restart after compilation
+settles is the recovery; no computer-use or external client is involved.
+
+
+### Environment correction: v17-v19 timing comparisons are unqualified
+
+Read-only Windows GPU Engine counters during v19 showed WardogsClient-Win64-Shipping
+PID10580 using77.7% of the GPU3D engine versus sbox-dev PID36160 at19.5%.
+Nvidia query reported96% GPU utilization,64C,2865MHz graphics clock,347.59W
+of600W power limit. Wardogs StartTime is2026-09-13 11:50:03 local, before v17,
+v18 and v19. Its utilization was only measured during v19; do not assume the
+same percentage throughout earlier runs. The source changes are not isolated
+causes of those timing differences. Preserve every result, but do not accept
+or reject a performance design solely from those comparisons. In particular,
+prior language attributing the v18 regression to broad interleaving is provisional.
+Source-level queue/ownership findings and sampled correctness observations remain
+factual. No other application was stopped or controlled. Clean performance
+qualification requires an uncontended GPU; the user has been asked to make it
+available. Evidence gpu-contention-v19.json.
+
+### LOCAL-COVERAGE-001/v2 v19 fast: functional checks, timings contaminated
+
+Run1fa431c7a11c46d0898508849418b34e, trigger2026-09-13T16:10:34.829Z. Fresh
+startup diagnostics settled81.344s then30s warmup; source v19 unchanged and
+viewport1847x959. At30s exterior3072 requested/2290 coarse active, missing
+terrain work in remaining sampled additions; all overlap/balance/seam audits0.
+Nearby LOD0 prepared/presented1.821s; arrival39.968s, drain40.590s.
+FPS152.59792,p95/p99/max11.3786/15.6355/667.0284ms; allocation4,621,002,608bytes
+(248320.86/frame), process avg3,309,416,380/GPU1,658,600,096bytes. MaxGC660.305ms.
+Do not compare these timings to uncontended baselines. Exceptions0/unsafe0;
+final queues settled/collision4913 ready; final18880 coverage and all topology
+checks0. Max local update400.7131ms/final publication19.0074ms are retained
+observations, not accepted budgets.
+
+After timing,88/88 real geometry samples passed,0 stale/failures/draw failures,
+178 readbacks/2,686,284bytes/357.078ms. Native main-camera screenshot inspected
+at1847x959: continuous checker terrain to the visible horizon, no obvious gap
+in this settled view. This is not transient far-edge visual qualification.
+Evidence stream-fast-v19 moving/final coverage, observations, result/arrival,
+and stream-fast-v19-settled.png. No standard v19 run or clean fast rerun yet.
+
+Current source v19 retains independent exterior admission, fair preparation,
+priority promotion, water-dependency priority, no unnecessary covered-background
+refinement, and immediate-only cleanup bypass with active-seam recheck. Atlas
+entry cap is restored64; the two-service experiment remains removed. No commit
+or push: clean performance comparison and remaining visual/edited-world
+qualification are pending. No benchmark is left running.
+
+
+### LOCAL-COVERAGE-001/v2: v20 exterior service correction (2026-09-13, pending)
+
+User still reports outrunning exterior coverage at speed10000. Source inspection
+finds new exterior requests inactive until local publication, whereas the fast
+outer queue previously required activation. v20 gives exterior interest that same
+existing queue independently of activation, including batch/service eligibility.
+Exterior additions now bypass distant retirement, retaining all topology/readiness
+checks; water serves admitted dependencies, exterior, then background. No extra GPU
+lanes, dispatch calls, geometry algorithm or publication slots. New diagnostic
+counts distinguish exterior missing terrain, missing content and ready-inactive.
+
+Use unchanged LOCAL-COVERAGE-001/v2 fast10000/200000 and standard2500/50000,
+one loop each, startup settled plus30s warmup, viewport1847x959, gen46 seed1337
+unedited, existing arrival/drain/frame/memory/correctness criteria and30s outward
+observation. Preserve prior failures. Wardogs remains running; timing evidence
+is not an isolated comparison until GPU contention is removed by the user.
+No performance acceptance, commit or push is authorized by compilation alone.
+
+V20 run1830491f37b247ffb9161bf03bfcf3e0 at16:25:40.627Z, source stream-source-v20.json:
+startup81.887s plus30s warmup; fast scenario unchanged. Near27 presented1.7436853s,
+drain36.270613s (FAIL10s criterion);155.80261FPS,p95/p99/max11.0845/14.4962/110.6832ms;
+alloc3,406,525,872 bytes, average process3,254,917,757/GPU1,700,877,398 bytes.
+Prep maximum11.5157ms, exceptions0/unsafe0. Final queues0,4913collision ready;
+final overlap/balance/missing/extra seam counts0. Outward30s exterior2991/3072active,
+12missing regular,0missing content after regular,60ready-inactive,8admitted ages
+0.076-0.106s. Wardogs68.67%3D,sbox17.33% measured in gpu-contention-v20.json.
+An additional main-camera capture during flight (stream-fast-v20-moving.png)
+showed exposed cave geometry/sky-colored openings: visual correctness NOT passed.
+Capture overhead is additional instrumentation; timings remain non-isolated.
+At12:27:37 refinement logs show previous/publishedFocusLod=-1 while moving.
+All raw results/arrival/observations retained in LocalCoverage. No acceptance.
+
+V21 planned follow-up, same fixed scenario/criteria: preparation must discover
+missing ACTUAL coverage inside the historical committed outer box as well as
+outside it. Local retirement can invalidate that metadata as a coverage test.
+Retain requested coarse fallback until the final layout actually adopts it;
+existing descendant/balance/seam/content checks remain. PlayerCoverageLod=-1
+explicitly diagnoses no active ancestor. No workload changes. GPU contention
+still qualifies timing evidence; run remains a functional/failure investigation.
+
+V21 run6c940fbc2eb9449e83986c5ae44f7177 at16:32:07.469Z, source stream-source-v21.json:
+startup101.741s plus30s warmup, unchanged fast10000/200000 scenario. All10 source
+hashes matched at extraction. Near27 prepared1.4474498s/presented2.4475771s
+(PASS5s); drain27.956424s (FAIL10s), arrival27.5530406s. FPS150.67558;
+p95/p99/max11.0851/14.9138/105.8087ms; allocated4,046,587,824bytes;
+average process3,358,961,328/GPU1,703,578,341bytes; maxGC16.416ms;
+max placement prep13.2099ms; exceptions0/unsafe commits0. Final queues0,
+4913collision ready,18880active regions; final overlap/balance/missing/extra seams0.
+
+At30s playerCoverageLod5; frontier3256requested/2941active,47missing regular,
+1missing content,258ready-inactive; topology audit0. Additional diagnostic and
+camera checkpoint at16:32:59 (about52s) showed playerLOD5, no pending frontier
+regular/content/ready-inactive work,2783requested/2765coarse-active (descendants
+also count as coverage), topology0. Image shows land/water rather than exposed
+cave geometry; this single view does not qualify all transient boundaries.
+Additional return checkpoint at16:33:23 (about76s): playerLOD5,416missing regular,
+0missing content,2241ready-inactive;8admitted ages0.952-1.057s,retirement1211,
+cleanup admission gate false; topology0. Ready-inactive count includes empty
+regions and is not a count of missing visible surfaces. Eight refinement commit
+records all had nonnegative publishedFocusLod, compared with5negative of9 in
+v20. These sampled focus points are not continuous player-coverage measurement.
+
+Post-run geometry audit88selected/88completed,0stale/failures/mutationFailures/
+invalidIndices/nonfinite/out-of-bounds/identity/oversized/degenerate/draw failures;
+178readbacks,2,660,648bytes,352.649ms. Raw performance/arrival/observations,
+refinement logs, three coverage checkpoints, moving image and geometry audit
+are under Docs/ValidationEvidence/LocalCoverage/stream-fast-v21* and
+local-coverage-v21-fast-gen46*. Added in-flight image/audits are instrumentation
+overhead. Other game's process still overlaps; v20 measured substantial GPU
+contention. Do not attribute v20-v21 timing differences solely to source changes.
+
+Decision: sampled coverage/geometry checks pass; background drain fails. Clean
+fast and standard runs, continuous flight coverage, and remaining timing/memory
+comparison are pending. No performance acceptance, commit or push. No computer
+use or unrelated application control was performed.
+
+### LOCAL-COVERAGE-001/v2 LOD priority baseline and candidate (2026-09-13, predeclared)
+
+Ownership handed off from the v21 local-publication task. Baseline is unchanged
+v21 at HEAD96d94f5; hashes: ValidationEvidence/LodPriority/baseline-source.json.
+Run unchanged fast10000/200000/1 and standard2500/50000/1, normal Play restart,
+fully settled startup plus30s warmup, all original v2 parameters and gates.
+Wardogs remains running at setup: record contention, qualify timings, and repeat
+clean comparisons if environment changes. No other application is controlled.
+Candidate scope: refresh immediate27 candidate priority on chunk movement and
+remove admission waits on unrelated unpublished additions; preserve exclusive
+balanced refinement and all terrain/water/seam readiness checks. Reject changes
+that worsen correctness, near arrival, or materially regress comparable pacing,
+allocation/memory or drain. Existing5s near/10s drain gates remain unchanged.
+Readiness/coverage observations at30s and final, plus existing automatic arrival
+reports; all observation overhead is included. Do not claim subsecond timing
+from the existing one-second reporter. Record each tested source manifest.
+Baseline attempt1: task lod-priority-v21-baseline-fast-gen46, trigger2026-09-13
+20:08:33UTC. Arrival6cc8bf36ed664230a778637d3cf2d7f6 settled20:11:05UTC,
+near first observed approximately2.2s; reporter elapsed29.4s. At20:11:15UTC
+performance.result.failed: results-v1.jsonl was locked by the agent's concurrent
+PowerShell tail read. That read was canceled. This is an invalid performance
+comparison (missing final result), retained as an instrumentation failure.
+Repeat unchanged baseline after normal Play restart; do not open the live result
+file until performance.result.saved. Source remains v21. Wardogs still present.
+Baseline attempt2 completed: c99f8d6ab4174b69956624641910744f, task
+lod-priority-v21-baseline2-fast-gen46, trigger20:14:38.997UTC; settled startup
+observed20:14:08.997UTC plus30s warmup, fixed v2 fast parameters. Source unchanged
+v21. Near prepared1.5589691s/presented3.5655644s; drain29.990803s FAIL10s.
+FPS157.81017,p95/p99/max9.9691/15.0292/65.9698ms; allocated4,100,957,624bytes,
+process average2,911,917,341bytes,GPU1,702,955,278bytes; maxGC18.483ms.
+Maximum placement preparation17.5687ms FAIL16.67ms. Exceptions/unsafe commits0;
+final terrain/seam queues0,collision4913ready, moving30s and final topology
+checks0overlap/balance/missing/extra seams. GPU contention remains qualified.
+Evidence: LodPriority/baseline2-performance.json, baseline2-observations.json,
+baseline2-arrival-0e905939e26f4bcf9cd2d32225713e1a.json. No acceptance.
+
+V22 source applied after baseline completion: v22-source.json. Native compiler
+succeeded0errors before Play restart. Only Coverage.cs differs from v21:
+bounded near promotions, stale head priority refresh, unpublished distant
+admission deferral. Fast test keeps all fixed v2 parameters and gates above.
+V23 follow-up predeclared (before run): retain v22 priority if correctness holds,
+then recover a stale staged destination after100ms of actual motion quiet, using
+one base-cell displacement16units to refresh the motion timestamp. Replace the
+previous1s snapped-anchor quiet condition; do not shorten an anchor-based timer,
+which could repeatedly cancel work between fast movement anchor crossings.
+Keep the same cancellation/rebuild path and exact publication checks. Add a
+separate50ms near-only observation to the existing arrival reporter, recording
+actual maximum observation gaps and first prepared/presented observations. Keep
+historical one-second metrics unchanged for comparisons; the new metric is not
+comparable with legacy timings and does not establish actual pixel presentation.
+Same fixed v2 fast/standard workload and all gates; require no unexplained
+increase in cancellations, pacing, memory/allocations or background drain. New
+observations stop after first readiness within each existing motion episode.
+V22 fast completed893cccf9e3d74540990bd479917b54d1,trigger20:21:09.202UTC;
+startup observed settled20:20:39.201UTC+30s warmup. Near1.8797308s prepared/
+3.8805343s presented; drain31.58394s FAIL. FPS157.08017,p95/p99/max
+11.1877/16.09/79.8999ms; allocated4,149,094,520bytes,process2,973,740,988bytes/
+GPU1,741,833,302bytes averages; preparation17.3797ms FAIL; cancellations9150
+versus8814 baseline. Exceptions/unsafe0; final queues0,18880active and topology
+all0. ImmediatePromotions979,DeferredAdditions0: admission deferral unexercised.
+Moving audit captured48s rather than30s due agent timing; preserve deviation,
+observation overhead differs. Both moving and final topology pass. Wardogs
+contention remains. REJECT v22: no measured arrival/drain benefit, extra complexity
+and worse observed tails. Restored Coverage.cs exactly to v21 hash before v23.
+Evidence v22-performance.json,v22-observations.json and v22-arrival JSON.
+
+V23 tests recovery/near observation alone against v21, not the rejected priority
+change. Source manifest v23-source.json; fixed v2 fast/standard criteria unchanged.
+V23 fast completed6fe3bc30fb9c46f793bb24dce4eb8cb9,trigger20:28:22.022UTC,
+settled startup observed20:27:52.019UTC+30s. Historical near prepared1.10743s/
+presented3.1145134s; new near-only observation prepared0.2466112s, presented
+3.1425409s, maximum observation gap0.0648584s. These separate sample streams
+are first observations, not precise GPU scanout; do not compare0.2466 to legacy
+baseline1.559 as a like-for-like speedup. Drain30.3975s FAIL10; preparation18.6694ms
+FAIL16.67. FPS148.05762,p95/p99/max10.6065/15.1457/101.7645ms; allocated
+4,049,879,136bytes,process3,171,759,993/GPU1,703,012,757average; canceled8582
+versus8814baseline. Exceptions/unsafe0; moving30s/final topologyall0 and final
+queues0. Wardogs contention remains; pacing/process changes unqualified, not
+accepted. Evidence v23-performance/observations/arrival files.
+
+First1.10743s sample: local patch288incoming/312dependencies/120seams; missing
+regular0,water0,seams78. Published after2.9785704s patch age, publication0.3979ms.
+The remaining local delay is therefore transition preparation in this observation.
+
+V24 predeclared: foreground transition service must wait only for its placement
+regular dependencies, not unrelated outer queue/in-flight work. Remove the outer
+queue-empty and outer-in-flight gating from the existing foreground shortcut;
+also do not require a nonempty placement-regular set when seams alone are missing.
+Retain the250ms outer service deadline before that shortcut, edit priority,
+all exact geometry/revision checks and ONE service per render tick. No GPU
+lane/batch/shader/allocator change. Same v2 fast and standard workloads/gates.
+Compare near observations to v23 and unchanged historical metrics to baseline;
+require no exterior starvation, topology or material pacing/allocation regression.
+V24 diagnostic fast run d1445454474f4b08b61e91f63e60ea95,trigger20:37:05.333UTC.
+DEVIATION: settled at20:35:49.781UTC; agent delayed trigger,75.552s warmup rather
+than30s. This is not a valid fixed-scenario acceptance comparison; retain as
+diagnostic evidence, repeat proper timing for the next candidate. First fine
+observations: prepared0.2799058s,presented1.8975367s,gap0.0622136s; historical
+1.4991768/2.5004019s. Patch age1.7661648s/120seams/publication0.4477ms.
+Drain34.105535s FAIL;FPS133.70195,p95/p99/max11.46/17.3961/56.7387ms; allocated
+4,005,273,976bytes,process3,328,306,259/GPU1,660,725,653average,preparation14.1861ms,
+canceled7299. Exceptions/unsafe0, final queues0/topologyall0. Outer eligible
+service gap1685.6948ms: the prior deadline could submit/emit outer work but could
+not continue a partly executed count while foreground seams took every shortcut.
+Not accepted. Evidence v24 files; Wardogs contention remains.
+
+V25 predeclared: complete deadline handling by continuing an in-flight outer
+count when no outer submission/emission can run. Return immediately, retaining
+one GPU service per tick and existing submission/emission measurement semantics.
+Also classify unedited transition emptiness over its closed face footprint;
+keep the normal-probe halo unchanged for field revisions, edit dependencies and
+sampling. TransitionCase uses only the9face-plane samples per cell at coordinates
+0..64 (voxel_transition_geometry.hlsl TransitionCase/TransitionDensity), so a
+strict same-sign conservative bound over the entire face proves zero geometry.
+Normal probes cannot create geometry in an empty case. No shader/field formula
+or approximate seams. Descriptor owns FaceBounds and derives SamplingBounds by
+the same existing coarse-cell halo. Require unchanged final geometry identity,
+actual geometry audits, topology/edge checks and fixed fast/standard v2 gates.
+Record11source hashes including GpuSdfDescriptor.cs. Automatic30s settled warmup
+and30s flight audit timing; no source/result-file access while native writer runs.
+V25 fast36a463d6b36946ff8c1bfb7727157141,trigger20:49:42.855UTC,settled observation
+20:49:12.854UTC+30s. Fixed v2 fast parameters. Fine near observations prepared
+0.4266489s,presented1.6418521s,maxgap0.0596055s; historical1.1601062/2.1616786s.
+Patch age1.4947379s,publication0.222ms. Drain29.045535s FAIL10. FPS161.8669,
+p95/p99/max9.9211/14.6382/107.3069ms; allocated4,144,236,360bytes, process
+3,302,036,127/GPU1,660,612,173average;preparation12.3482ms,canceled9614.
+Outer eligible service gap280.6443ms versus1685.6948ms v24 diagnostic.
+Exceptions/unsafe0,final queues0 and moving/final topologyall0. Final transition
+topology751A39EE7A9417E7,positionE6D948B4B9E69595,33696indices exactly match
+v21/v23/v24. Wardogs contention and unexplained tail/process differences remain;
+no acceptance. Evidence v25-performance/arrival/observations.
+
+V26 predeclared: urgent local transition batches (still at most2faces) may finish
+their existing three count phases in one selected batch service. Background
+batches retain single-phase progression. The same phase code, all GPU barriers,
+readback validation, later emit and render-boundary publication remain. This is
+not the rejected second independent service per render tick; no additional
+batch/lane/shader/arena is admitted. Old three-phase pacing qualification used
+8faces; current2faces warrant measurement of latency versus peak GPU frame cost.
+Same fixed v2 fast/standard gates, full geometry identity/audit and outer-service
+checks. Reject if phase consolidation introduces failures or material pacing
+regression. Source manifest adds GpuTransitionScratch.cs (12paths).
+V26 fast a28c69069294492fbdb6efc97424494f completed with exact v2 fast
+parameters and automatic30s settled warmup/30s flight audit (UTC in
+v26-observations.json). Near prepared/presented first observed together at
+0.5409848s,max observation gap0.0776507s; historical1s fields both1.5312775s.
+FPS154.91086,p95/p99/max10.2803/15.2514/109.4775ms; GPU p99/max9.823561/
+19.97757ms. Allocated4,261,860,864bytes,average process3,366,694,509/GPU
+1,660,603,041bytes. Maximum placement preparation42.2619ms FAIL16.67; outer
+eligible service gap265.8264ms. Runtime exceptions0. Moving/final coverage
+checks all0; final transition topology751A39EE7A9417E7,positionE6D948B4B9E69595,
+33696indices exactly match baseline. Final pending chunks0/collision4913ready.
+Post-measurement native mesh audit8nearest:88selected/completed,failures0,
+stale0,invalidIndices0,outOfBounds0,nonfinite0,identity0,oversized0,degenerate0,
+drawArgumentFailures0,178readbacks/3390800bytes,371.047ms. Native1847x959
+camera image inspected: continuous checkered terrain in the captured view;
+this is a stationary visual check, not proof of all moving frames. Wardogs
+PID10580 still running. Candidate retained for standard qualification; no
+performance acceptance: preparation stall and background drain remain unresolved.
+Evidence: v26-source/performance/arrival/observations/mesh-audit in LodPriority.
+V26 standard71b286174d7847c6b25002d3bee4cb29 completed fixed v2 standard
+2500/50000/1loop with automatic30s settled warmup/30s moving audit; unchanged
+12source hashes from v26-source.json. Exact UTCs in v26-standard-observations.
+Near prepared first observed0s,presented1.3017778s,max observation gap0.0687305s;
+historical1s fields both1.3124228s. This contradicts any universal0.54s arrival
+bound inferred from fast. FPS141.72008,p95/p99/max11.1878/17.2026/93.3481ms;
+GPU p99/max14.482021/20.565748ms. Allocated2,133,339,080bytes;average process
+3,440,700,768/GPU1,814,100,843bytes. Preparation12.7491ms passes16.67;outergap
+274.3728ms. Exceptions0,collision4913/4913ready,pending0,failures0. Final
+transition topology751A39EE7A9417E7,positionE6D948B4B9E69595,33696indices.
+Post-measurement88mesh audit all passed,stale0,mutationFailures0,geometry errors0,
+drawArgumentFailures0;178readbacks/3390800bytes,342.44ms. Wardogs contention
+persists and no same-source v21 standard baseline was captured this turn;
+standard result is qualification evidence, not an attributed before/after speedup.
+Candidate remains UNACCEPTED: fast preparation42.2619ms and long background
+settlement need resolution; no commit or push. Diff whitespace check passed,
+and all12 runtime source hashes matched the pre-run manifest after fast.
+V26 exact post-loop drain from meshing.throughput.postLoopDrainMilliseconds:
+fast27.948951s,standard26.750734s; both FAIL10s. Standard moving/final coverage
+checks overlap/balance/missing/extra all0. Editor compile succeeded with0errors.
+Final source verification matched all12 v26 manifest hashes; diff check passed.
+
+### LOD-SKIRT before measurements - 2026-09-13 (predeclared)
+
+`LOCAL-COVERAGE-001/v2` fast and standard before-skirt measurements will use
+`basic_example`, seed `1337`, generator `46`, viewport `1847x959`, settled
+startup plus exact `30s` warmup, one loop, fast `10000/200000` and standard
+`2500/50000`, `10s` stationary capture, and `240s` route cap. Existing arrival,
+drain, preparation, correctness, pacing, allocation, and memory gates remain
+unchanged. Source manifests and native performance/arrival/coverage evidence
+will be stored under `ValidationEvidence/LodSkirt/before-*.json`.
+
+Fast before result: run `c12ed61f98564d6697fdf7e964f9d7a4`, captured
+`2026-09-13T21:34:09.9789579Z`; route `121.958725s`; average FPS
+`127.71597`; frame p95/p99/max `13.3075/17.9056/190.2569ms`; managed
+allocation `3,891,731,792` bytes; process average/peak `3,159,648,524 /
+3,332,431,872` bytes; GPU average `1,663,340,826` bytes; placement preparation
+maximum `14.5232ms`; collision `4913/4913`, pending `0`, exceptions `0`;
+arrival report elapsed `33.4084285s`, first prepared/presented `1.2626734s`.
+Evidence: `ValidationEvidence/LodSkirt/before-fast-result.json`,
+`before-fast-arrival.json`, `before-fast-source.json`,
+`before-fast-moving-coverage.json`, `before-fast-final-coverage.json`.
+
+Standard before result: run `dac4c5c1d53a47a39c2d43ff451d408b`, captured
+`2026-09-13T21:42:11.9568061Z`; route `121.94781s`; average FPS `126.70209`;
+frame p95/p99/max `13.338/17.9885/83.5815ms`; managed allocation
+`2,136,187,264` bytes; process average/peak `3,223,932,088 /
+3,286,765,568` bytes; GPU average `1,790,639,940` bytes; placement preparation
+maximum `13.5582ms`; collision `4913/4913`, pending `0`, exceptions `0`;
+arrival report elapsed `35.5810147s`, first prepared `1.3739086s`, first presented
+`2.3807136s`. Evidence: `ValidationEvidence/LodSkirt/before-standard-result.json`,
+`before-standard-arrival.json`, `before-standard-source.json`,
+`before-standard-moving-coverage.json`, `before-standard-final-coverage.json`.
+
+### LOD-SKIRT candidate v1 - predeclared 2026-09-13
+
+Implement the user-authorized visual approximation described in
+Architecture/TerrainSkirts.md. Keep LOCAL-COVERAGE-001/v2 route/field inputs,
+viewport1847x959, settled30s warmup, fast10000/200000 and standard2500/50000,
+one loop,10s stationary capture,240s route cap. Compare fine50ms near
+prepared/presented observations and difference, frame/GPU tails, allocation,
+memory, preparation, drain and errors with v26. Additional pass criteria:
+nonzero skirt-covered transition count; no invalid indices/nonfinite vertices,
+identity errors, degenerate triangles or draw argument failures; declared lip
+bounds and edge lengths; no visible holes or protruding curtains in captured
+views. Approximate geometry cannot match exact seam digests. Preserve exact
+lateral mismatch readings and distinguish them from regular geometry safety.
+Cold-start verification and actual geometry audit before timed runs. Expanded
+edit dependency bounds include lip depth; no new density sampling, readback,
+lane, test component, scene or alternate mesher. Live edited/cave views remain
+required before production acceptance, not established by the static routes.
+
+Preflight: three affected shaders compiled successfully via compile_source_shader.
+Closing the stopped editor after compilation produced a prefab destruction
+assertion (5components not deleted), then normal Source2Shutdown logging and an
+Error dialog. No skirt Play/benchmark had run. Preserved full shutdown log in
+ValidationEvidence/LodSkirt/shader-preflight-shutdown.log. Terminated only that
+already-shutdown sbox-dev36160 Error process and relaunched visible editor13820
+with the same project. This failure is retained; causality is not assigned to
+skirt geometry. A fresh process can change process memory compared with the
+long-running baseline; report this environment difference. Sentry last_crash
+location was not found in scoped engine/LocalAppData Sentry searches.
+Baseline qualification correction: the delegated fresh before runs deviated
+from fixed timing. Fast settled observation21:30:45Z,trigger21:31:24Z (~39s
+warmup),moving21:32:03Z (~39s checkpoint). Standard settled21:38:41.5825Z,
+trigger21:39:24.1195Z (42.537s warmup),moving21:40:05.6703Z (41.5508s).
+Retain them as diagnostic comparisons only; do not present as exact v2 passes.
+Fine fields: fresh fast prepared0.2508202/presented1.2791939s; standard
+0.5273275/1.6251707s. Prior v26 fast a28c69069294492fbdb6efc97424494f and
+standard71b286174d7847c6b25002d3bee4cb29 used the automatic30s warmup and are
+the available correctly timed same-source baselines. Verify prior source
+hashes against preserved pre-skirt source and explicitly record environment
+variation; a fully isolated causal timing claim remains unavailable.
+Cold editor startup compiled successfully, original viewport1847x959 restored;
+regular skirt geometry and2skirt-covered transitions observed during startup.
+Fresh warnings concerned missing unrelated stock assets; no shader/parser
+failure observed in that capture. No timed after run yet.
+V1 fast after run3f57e90fa7c244228aa774f13f4a22ca completed with automatic
+30s settled warmup and30s moving audit, fixed v2 inputs; exact times in
+after-v1-fast-observations.json, hashes after-v1-source.json. Fine near
+prepared0.3132206/presented1.3865304s,gap1.0733098s,max observation gap0.065513s.
+FPS130.36873,p95/p99/max12.1898/17.9191/89.0521ms;GPU p99/max10.602951/
+21.280527ms. Drain34.913562s FAIL10;preparation13.0613ms PASS16.67;
+outergap281.3874ms. Allocated4,133,051,160bytes,average process4,827,157,084/
+GPU1,626,649,821bytes. Process differs from pre-restart baseline; not attributed
+solely to skirts. Exceptions0,all final queues0,collision4913ready.
+Skirt-covered transitions scheduled117 during process lifetime (includes
+startup),2resident at final;581regular regions carry skirt capability. Count
+is not117 proven savings within the timed route alone. Moving/final coverage
+structure remains distinct from geometric watertightness. Exact lateral digest
+mismatch1 atLOD1->2 preserved; fine/coarse mismatch/invalid tables0.
+88selected/completed post-run audit passed:geometry/draw errors0,stale0,
+maxedge2.326cells within declared lip bound,178readbacks3397000bytes553.018ms.
+No demonstrated near-arrival gain: prior valid v26 fast0.5409848s; fresh
+warmup-deviating diagnostic1.2791939s. Candidate remains unaccepted. Standard
+v1 follows unchanged predeclared v2 parameters; no runtime source changes.
+V1 standard after run43011299f364413a8cbc39a811dad000 completed with fixed v2
+inputs, automatic30s settled warmup and30s moving observation; source unchanged
+from after-v1-source.json. Fine prepared0.3572915/presented0.4719209s,
+gap0.1146294s,max observation gap0.060154s. FPS106.13704,frame p95/p99/max
+16.9304/20.1167/83.741ms;GPU average/p99/max3.9367008/16.947746/21.943808ms.
+Drain20.022428s FAIL10;preparation12.3705ms PASS16.67;outergap257.5167ms.
+Allocated1,319,922,216bytes;GC pause225.108ms,total,max14.996ms;process
+average/peak4,858,629,203/4,924,747,776bytes;GPU average1,656,225,761bytes.
+Exceptions0,final queues0,collision4913ready. Moving/final structural coverage
+overlap/balance/missing/extra0;exact lateral mismatch1 atLOD1->2 retained.
+Final audit88/88 passed,stale0,all geometry and draw argument errors0,
+maxedge2.326cells,178readbacks3397000bytes546.669ms. Evidence in
+ValidationEvidence/LodSkirt/after-v1-standard-{result,arrival,summary,observations,audit}.json.
+
+Post-run native ejected-camera views (not timed workload) inspected x8192 LOD2
+NegativeX substituted boundary. Close view(8350,1000,400),angles(40,180,0),
+FOV60,1847x959:continuous nearby checker terrain, no obvious open hole/curtain.
+Oblique view(8020,1000,210),angles(10,0,0):nearby terrain continuous; distant
+dark dashed seam lines visible, cause unresolved. Elevated water-facing view
+(8050,-1000,700),angles(35,0,0) inconclusive for underwater continuity.
+Screenshots boundary-close.png/boundary-oblique.png preserved in same directory.
+Player streaming origin unchanged and ejected mode disabled after inspection.
+No fresh Error console entries in final capture. These observations do not
+qualify live edits, caves, mixed corners or shadows. PositionDigest covers base
+intersection positions only, not extra skirt vertices; geometry safety audit
+does inspect emitted vertices. Do not claim complete skirt geometry identity.
+
+Decision: v1 unaccepted, retained as working-tree prototype, no commit/push.
+Correctly timed v26 before has fast visible0.5409848s vs1.3865304s after,
+standard1.3017778s vs0.4719209s after. Fast arrival/FPS and standard frame pacing
+regressed; both drains fail10s. All12v26 source hashes matched preserved before
+bytes. Warmup-deviating fresh runs are diagnostic only. Editor restart changes
+memory comparability; concurrent Wardogs GPU load prevents an isolated causal
+claim. Full comparison and limits: ValidationEvidence/LodSkirt/Comparison.md.
+Final source check: all82files in after-v1-source.json matched SHA256 after both runs. Standard session skirt substitutions46 including startup,2resident,581regular skirt-capable; these cumulative counters do not measure timed-route-only savings.
+
+### LOD-PREDICTION candidate v1 - predeclared 2026-09-13
+
+User requested skirt rollback and prediction preloading prototype. Restored all
+six modified runtime/shader files from the preserved exact v26 before copies,
+with matching skirt-after hashes checked before replacement; removed only the
+new skirt shader helper. Historical skirt measurements retained. Three restored
+shader wrappers force-compiled successfully. Cold restart from stopped Play again
+left an Error process after Source2Shutdown; preserved rollback-shutdown.log,
+terminated only editor13820 and relaunched visible editor10584. A transient compile
+failure during partial source integration is retained in that shutdown log.
+
+Prediction design: Architecture/PredictiveTerrainLoading.md. Reuse immutable
+LOCAL-COVERAGE-001/v2 parameters: basic_example, seed1337 generator46, unedited
+field0, LOD0..5, cells32/base16, near4/cache8/gameplay8, land0.75,mountain0.3,
+plains0.6, scales77724.09/18681.756/5232.39, relief3072,ruggedness0.45,sea0,
+viewport1847x959. Normal Play restart, settled30s warmup; fast10000/200000/1loop
+and standard2500/50000/1loop,30s moving coverage,10s stationary after drain,
+240s route cap. Use correctly timed exact-v26 before measurements from LodPriority;
+fresh skirt-before warmup deviations remain diagnostic only. Source manifests
+identify current prediction source and unchanged restored shaders.
+
+Experimental near-instant criterion: near27LOD0 visible<=0.1s after arrival;
+canonical<=5s remains reported separately. Drain<=10s,preparation<=16.67ms,
+no material unexplained FPS/tail/memory/allocation regression, final queues0,
+collision4913ready,exceptions0,unsafe commits0,coverage overlap/balance/missing/
+extra0,88mesh audit safety and exact seam identity. Record prediction region/seam
+counts, scheduled requests, ready-on-entry and maximum prediction CPU time.
+Neither cache hits nor better endpoint arrival prove sustained instant streaming.
+Changes to workload or accepting regressions still require user approval.
+V1 fast aborted after moving30s audit due repeated ArgumentOutOfRangeException:
+ClassifyClipboxRegion requires level>0, but predictor supplied LOD0. No valid
+completed performance result. v1-failure.json and v1-observations.json preserve
+errors/timing/coverage; startup72-mesh audit passed before motion. Fix v2 uses
+canonical VoxelChunk.ClassifyDensityRange for LOD0, existing coarse wrapper for
+LOD1. Same v2 scenario inputs, budgets and acceptance criteria, fresh Play restart.
+V2 fast completed run048d3f0e14584aa49404af2f5430a671, exact automatic30s warmup
+and30s moving audit, unchanged fixed inputs. Fine prepared0.4583832s,
+presented1.3662896s,gap0.9079064s,max observation gap0.062067s. The coarse1s
+console arrival text is not the fine metric. FPS137.6211,frame p95/p99/max
+12.2158/16.021/105.117ms;GPU average/p99/max2.4018362/10.564804/20.11776ms.
+Drain32.706703s FAIL10;prep11.921ms PASS16.67;outergap283.2135ms. Allocated
+4,229,116,952bytes;process average/peak4,998,929,726/5,094,998,016bytes;
+GPU average1,626,989,316bytes;GC pause653.841ms,total,max16.161ms;exceptions0.
+Final pending0,collision4913ready;all exact fine/coarse/lateral/table mismatches0.
+At30s prediction scheduled9235regular/11940seams cumulative including startup;
+4419forecast entries reached normal warm interest,2308already resident. These
+are requests/hits, not measured extra GPU work or visible coverage. Moving
+coverage overlap/balance/missing/extra0. Full JSON under LodPrediction/v2-fast*.
+Compared with exact-v26 fast0.5409848s visible and154.91086FPS, no win. Continue
+predeclared normal-speed scenario without source changes; no acceptance.
+V2 standard completed run70c211089d054488bd5d82bbad7f82b8, unchanged v2 scenario,
+automatic30s warmup and30s moving observation. Fine prepared/presented0.0217621s,
+gap0,max observation gap0.0217621s: experimental<=0.1s PASS for first observation.
+All10saved later stationary samples from1.6920534 through10.7536496s report27/27
+near presented. No per-frame continuity proof between samples or entire-route
+near-instant claim. FPS106.20977,frame p95/p99/max17.7164/20.0883/81.5901ms;
+GPU average/p99/max4.2280097/18.440723/28.534174ms. Drain20.453133s FAIL10;
+prep12.7169ms PASS16.67;outergap186.6266ms. Allocated1,231,345,808bytes;
+process average/peak5,101,241,763/5,128,781,824bytes;GPU average1,657,685,546bytes;
+GC pause200.57ms total,max14.66ms;exceptions0. Final queues0,collision4913ready,
+water ready,forecast regular/seam interest0/0. Prediction counters6139regular,
+21794seams scheduled including startup/empty requests,entry0 because forecast
+remains inside ordinary warm area,maximum update4.3285ms including startup.
+Fast final counters36304regular/49669seams,16186entries/6535resident on entry,
+maximum prediction update7.8141ms. Maxima exceed0.5ms soft prediction service
+budget; building forecast and individual operations are not hard preemptible.
+
+Both final mesh audits88/88 PASS,all geometry/draw errors0,stale0,maxedge1.71cells;
+fast178readbacks3388588bytes395.931ms;standard178readbacks3390800bytes451.297ms.
+Exact fine/coarse/lateral/table mismatch counts0. Both moving/final structural
+coverage audits overlap/balance/missing/extra0. Native stationary player screenshot
+1847x959 shows continuous nearby checker terrain; no moving visual qualification
+or abrupt reversal/teleport/live-edit/multiplayer acceptance inferred.
+All82v2 source manifest paths match after measurements. Restored three HLSL files
+and GpuSdfDescriptor match preserved pre-skirt bytes. Compile passed, no fresh
+runtime Error entries after v2 startup. V1 failure and shutdown retained.
+
+Fast diagnostic snapshot1.0842493s: near preparationMissing0,meshMissing0,
+waterBlocked0,publicationBlocked27; local patch missingRegular0,missingWater0,
+missingSeams22. It still waited for exact local refinement seams despite forecast
+layout preloading. This is measured evidence for the next dependency-focused
+experiment, not proof that arbitrarily enlarging prediction will fix it.
+Decision: keep v2 unaccepted prototype, no commit/push. Normal first observation
+improved1.3017778->0.0217621s;fast worsened0.5409848->1.3662896s;both drain
+fail10s and pacing regressed against v26. Single runs, changed process lifetime,
+and concurrent Wardogs prevent isolated causal claims. Full comparison and
+artifacts: ValidationEvidence/LodPrediction/Comparison.md. User-authorized skirt
+rollback complete; prediction prototype and before/after experiment complete,
+production qualification pending.
+
+### LOD-SEAM-CACHE candidate v1 - predeclared 2026-09-13
+
+User authorizes all-face cache prototype and before/after performance catalog.
+Before: prediction-v2 source82/82SHA256 matches; saved fast048d3f0e14584aa49404af2f5430a671
+and standard70c211089d054488bd5d82bbad7f82b8 are the same-source before runs.
+All results, including prediction-v1 failure, remain in their original evidence.
+Design: Architecture/CompleteSeamCache.md; stationary and forecast27-owner cubes
+at each enabled coarseLOD, all6faces, existing exact pipeline and prediction
+retention. Canonical spatial cap1620faces; payload acceptance budget192MiB,
+not a hard allocator limit. Count completed owner+six-face packages explicitly.
+
+Unchanged LOCAL-COVERAGE-001/v2: basic_example,seed1337,generator46,field0,
+LOD0..5,cells32/base16,near4/cache8/gameplay8,land0.75,mountain0.3,plains0.6,
+scales77724.09/18681.756/5232.39,relief3072,ruggedness0.45,sea0,1847x959.
+Normal Play restart,fully settled startup,automatic30s warmup. Fast10000/200000
+and standard2500/50000,one loop,30s moving coverage+diagnostics,10s stationary
+capture after drain,240s route cap. Existing22ms normal/1.366s fast fine arrival
+observations are before values; old1s report cadence is not substituted.
+Pass targets: near27 visible<=0.1s,canonical<=5s also reported,drain<=10s,
+prep<=16.67ms,all final queues0,collision4913ready,exceptions0,unsafe commits0,
+exact face/lateral/table errors0,overlap/balance/missing/extra0,88mesh audit
+errors0,stationary packages complete,payload<=192MiB,no unexplained pacing,
+allocation or memory regression. Report single-run uncertainty and concurrent
+Wardogs/process lifetime; no acceptance/commit/push while gates fail.
+V1 fast completed3552953766ec450298a673ae04590522. Fine ready0.2434349s,
+visible2.6071069s,gap2.363672s,max observation gap0.0658979s. FPS135.2598,
+p95/p99/max12.0175/17.1602/1020.363ms;GPU max1004.8046ms;GC max1015.547ms.
+The approximately1s frame/GC/GPU pause is retained without causal attribution.
+Drain41.28585s FAIL10,prep12.7549ms,alloc4,266,699,832bytes,process average/
+peak2,682,755,427/2,745,696,256bytes,GPU average1,627,525,209bytes. Same editor
+PID10584/background Wardogs10580 but process lifetime/working-set variation means
+memory reduction is not attributed to this cache. Exceptions0,finalpending0,
+collision4913ready,all exact mismatch/table counts0. Final88mesh audit PASS,
+maxedge1.71cells,178readbacks3390800bytes408.895ms. Final135/135packages and
+810/810faces ready,payload1232884bytes. Moving30s39/189packages,307/1134faces,
+no structural coverage errors. Prediction requests49732regular/156312seams,
+readiness checks362790/misses152145,CPU max14.4248ms including startup.
+Evidence v1-fast-{result,arrival,summary,observations,audit}.json under LodSeamCache.
+
+Candidate v2 corrects an implementation footprint defect before further runs;
+no v1 standard run performed. NearLOD0 uses floor coordinates and ancestors,
+whereas v1 used rounded level centers. At near center0, target-1 has coarse
+parent-1 and a face neighbor-2; the v1[-1,1] owner cube omitted-2. V2 uses actual
+CoverageAncestor of near center+/-1, expanded by one coarse neighbor, for current
+and forecast positions. This can be up to64owners per position/level (not27),
+maximum4608faces atLOD6/3840atcanonicalLOD5,849regular keys including81LOD0.
+The workload LOCAL-COVERAGE-001/v2 and all performance/correctness/payload criteria
+remain unchanged. This is an algorithm correction, not changed player inputs.
+Add readiness-miss membership count and last outside key to distinguish incomplete
+cached faces from requests outside the warmed footprint. V1 source copies kept
+in Temp/voxels3-seam-cache-v1; v1 measurements/failure remain in catalog.
+
+Seam cache v2 fast completed 0a1f8cc800c44cc596116a3790161f61, LOCAL-COVERAGE-001/v2,
+seam-cache-v2 source manifest (82/82 hashes verified), unchanged fast parameters,
+normal Play restart, fully settled 320/320 packages then automatic 30s warmup.
+Fine prepared0.2292696s, presented1.0283571s, observation gap0.0654482s.
+Near-instant<=0.1 FAIL; canonical<=5 PASS. FPS140.87526; p95/p99/max frame
+11.1171/14.7791/76.6001ms. GPU max22.803545ms, GC max20.56ms. Drain54.98833s
+FAIL10, prep14.0295ms PASS16.67, outer service max280.9036ms.
+Allocated4,350,404,200bytes; process avg/peak2,757,649,156/2,964,201,472bytes;
+GPU avg/peak1,632,130,669/1,648,571,879bytes. Before fast drain32.706703s,
+visible1.3662896s, allocations4,229,116,952bytes. Visible improves about25%,
+drain worsens about68%, allocations rise about2.9%; no performance acceptance.
+Final all queues0, waterready, collision4913, exceptions0, exact fine/coarse/
+lateral/table counts0. 88mesh audit completed88 stale0 failures0, all geometry
+and draw errors0, maxedge1.71cells,178readbacks3390800bytes463.139ms.
+Final320/320packages,1920/1920faces,payload/observedpeak2,570,204bytes PASS192MiB.
+Moving30s53/356packages,462/2136faces; readiness checks65140/misses25845,
+outside membership16782. Final checks371553/misses155221/outside109279.
+These are repeated readiness checks, not unique faces or jobs. Prediction
+requests65527regular/219123seams; prediction CPU max14.0548ms includes startup.
+Evidence v2-fast-{result,arrival,summary,observations,audit}.json in LodSeamCache.
+Standard v2 proceeds with identical source and unchanged standard parameters.
+
+Seam cache v2 standard completed58bf648351d54eac9e8d4e2a06443e12,
+LOCAL-COVERAGE-001/v2, unchanged2500/50000/1, same82-filev2source, settled
+320/320packages then automatic30s warmup. Fine prepared0s (already prepared
+at first observation), presented0.3408208s, max observation gap0.0655827s.
+Near-instant<=0.1 FAIL; canonical<=5 PASS. FPS123.04396; p95/p99/max frame
+13.5149/18.1649/82.4104ms; GPU max25.554895ms, GC max19.086ms.
+Drain41.033973s FAIL10, prep13.0531ms PASS16.67, outer gap269.3387ms.
+Allocations2,105,148,688bytes (before1,231,345,808; approximately71% increase).
+Process avg/peak2,901,904,803/2,967,597,056bytes; GPU avg/peak
+1,739,365,829/1,829,189,095bytes. Before GPU peak1,676,801,511bytes.
+Final all queues0,waterready,collision4913,exceptions0; all exact fine/coarse/
+lateral/table errors0,placementUnsafeCommits0. Moving and final structural
+coverage overlap/balance/missing/extra0. 88mesh audit completed88,stale0,
+all geometry/draw errors0,maxedge1.71cells,178readbacks3390800bytes424.239ms.
+Final320/320packages,1920/1920faces,payload/samplepeak2,570,204bytes PASS192MiB.
+Moving30s55/288packages,498/1728faces,readinesschecks516/misses118/outside0.
+Finalchecks50838/misses27715/outside19233; these are repeated checks, not jobs.
+Prediction requests13181regular/80055seams; CPU max6.8435ms including startup.
+Evidence v2-standard-{result,arrival,summary,observations,audit}.json in LodSeamCache.
+
+Final assessment: v2 near-instant fails both routes, drain fails/regresses both,
+standard allocation/GPU memory increase is not accepted. Correctness checks pass
+for the measured unedited routes; no performance acceptance, commit or push.
+Both current source tests used unchanged82hashes, verified again after completion.
+Fast final coverage overlap/balance/missing/extra0; placementUnsafeCommits0.
+Final native1847x959 player camera screenshot inspected: continuous checkered
+terrain visible without an obvious opening in this view. This does not establish
+all boundaries or continuity during motion. Native compile succeeded, no new
+errors in captured run console checks. All six inactive directions were checked
+for residency, not individually geometry-audited; edit invalidation, multiplayer,
+teleports, arbitrary trajectories and worst-case192MiB payload not runtime-tested.
+These remain unverified. Wardogs/background process lifetime remains a comparison
+limitation. PerformanceCatalog.md includes five rows, exact raw JSON and a
+prototype-only patch relative to prediction-v2; v1 failure is preserved.
+
+## LOD current versus strongest standard-arrival candidate (2026-09-13)
+
+User requested fresh benchmarks of current and best potential prototype.
+Predeclared comparison: A=current seam-cache-v2 (all82hashes match); B=lighter
+prediction-v2 (best previously measured standard arrival0.0217621s, not an
+accepted overall winner). All82Bhashes verified using preserved four-file
+pre-cache copies and unchanged remaining source. No new algorithm or workload.
+Evidence owner Docs/ValidationEvidence/LodHeadToHead; source manifests identify
+exact revisions. Order fixed before runs: current-fast-r1, current-standard-r1,
+prediction-fast-r1, prediction-standard-r1. Keep every run, no cherry-picking.
+Restore original current four-file source after comparison; preserve other edits.
+
+All four use unchanged LOCAL-COVERAGE-001/v2 from prior seam-cache catalog:
+basic_example,seed1337/gen46/field0,LOD0..5,cells32/base16,near4/cache8/gameplay8,
+viewport1847x959,land.75/mountain.3/plains.6,scales77724.09/18681.756/5232.39,
+relief3072,ruggedness.45,sea0. Normal visible interactive Play restart for each,
+fully settled startup (all packages complete where applicable), automatic30s
+warmup. Fast10000/200000/1; standard2500/50000/1; moving read-only coverage/
+collision capture30s after trigger, native10s post-drain capture, route cap240s.
+Final88mesh audit nearest8perlevel. Same machine, engine26.09.08b,RTX5090;
+record actual process/environment at run start. Do not stop Wardogs.
+Pass gates unchanged: experimental first fine near27presented<=0.1s,canonical<=5s,
+drain<=10s,prep<=16.67ms,zero exceptions/unsafe commits,exactface/lateral/table
+errors0,overlap/balance/missing/extra0,88mesh/draw errors0,allfinalqueues0,
+waterready,collision4913ready,payload<=192MiBwhereavailable,nomaterialunexplained
+pacing/allocation/memory regression. One fresh run per route/revision plus
+previous runs retained; no claim of statistically proven winner. Source changes
+only between variants with Play stopped, verify native compile before starting.
+No shader changes. No commit/push of unaccepted runtime changes.
+
+Environment at fresh benchmark start: sbox-dev PID10584 remains (started local
+2026-09-13 18:44:32). Prior background Wardogs PID10580 no longer exists;
+Get-Process lookup returned no process. The agent did not stop it. Therefore
+fresh A/B runs are primary; prior contended measurements are historical context,
+not interchangeable repeats. Native compile succeeded before dispatch. Console
+cursor3989 separates historical LOD0 classifier error from new run errors.
+
+Current-fast-r1 timing deviation: moving diagnostic at40s instead of30s.
+Preserve saved eec44305b51443e0a1b667e7bc52505a and partial/final observations;
+exclude from matched A/B. Warmup delay itself was30000ms. No source/workload
+change; rerun current-fast-r2 with automatic trigger-to-checkpoint timing in one
+orchestration cell. Remaining order current-standard-r1, prediction-fast-r1,
+prediction-standard-r1 unchanged. This repeats a mis-timed run, not a new scenario.
+
+Current valid fast-r2:93b4ef84a90f43249ba9d1ee9e43c90c, fine ready.0492352s,
+visible.2129225s, FPS344.02002,p99 8.3777ms,max61.3537ms,drain13.716306s,
+prep11.1358ms,alloc6,246,116,520bytes,GPUpeak1,901,540,839bytes.
+Current standard-r1:2d5a91d2bde448c9a03e3212a6ea99d7, fine ready.0457774s,
+visible.1009559s,FPS398.65686,p99 6.5423ms,max93.4232ms,drain13.999351s,
+prep11.2755ms,alloc4,418,849,736bytes,GPUpeak1,985,279,463bytes.
+Both exact30001ms warmup; moving captures30001/30000ms respectively. Both88mesh
+completed88 stale0 failures0 drawerrors0 maxedge1.71cells; exceptions0.
+Current82sourcehashes verified unchanged after both runs. Fine arrival<=0.1 and
+drain<=10 fail both (standard arrival is just above target; report precision).
+Only four preserved files swapped while Play stopped; prediction82hashes match.
+Full numeric results and raw audits/observations retained in LodHeadToHead.
+
+Prediction fast-r1 completed569a05ebeeac47e39c18212c3fe988f5: fine ready.0359989s,
+visible.189984s,FPS358.1705,p99 8.254ms,max68.9881ms,drain19.897078s,
+prep10.4127ms,alloc6,150,068,472bytes,GPUpeak1,850,455,527bytes. Exact30.002s
+warmup and30.001s moving checkpoint;88mesh pass,exceptions0.
+Prediction standard setup interrupted before test trigger: player observed at
+-49143.1094,-49677.2773,4183.01855 (center-96,-98,8), outside recorded origin.
+No performance.test.begin for this standard task occurred. Cause not established;
+do not assign manual input or an engine defect. Raw setup state saved separately.
+Restart setup once with explicit origin check; same scene/source/workload, no
+benchmark result to replace. Stop if origin changes again rather than measure
+another position or fight player input.
+
+Last setup then observed Play stopped; root play_stop returned Not playing.
+No further start issued pending clarification about active play controls.
+Original current four files restored after verifying all82candidate hashes;
+all82current hashes match after restore. Three matched results complete, candidate
+standard pending; do not claim a complete comparison or use its historical result
+as the missing fresh run. Comparison.md records partial results and deviations.
+
+## SHADOW-FPS-003/v1 — current-world optimization (2026-09-14)
+
+Before optimization, use the unchanged LOCAL-COVERAGE-001/v2 standard route:
+visible basic_example, engine26.09.08b, RTX5090,1847x959,one player,seed1337,
+generator46,LOD0..5,32cells/base16,near4/cache8/gameplay8,land.75/mountain.3/
+plains.6,scales77724.09/18681.756/5232.39,relief3072,ruggedness.45,sea0.
+The user's current world is4834d9ad-73fb-402a-92b4-5e3f8a17e55a,revision3,
+4pages,epoch1. Historical field0 runs cannot be matched controls; retain this
+current world without rollback and establish a fresh before/after pair.
+Start at normal authored origin after physics settling, all queues0 and collision
+4913ready,then>=30s warmup. Speed2500,distance50000,one loop,clearance393.7008,
+normal10s stationary,240s cap. Keep all four shadow cascades,contact shadows,
+materials and geometry. Snapshot source identity before runs, change only between
+runs. Pass: improved frame time with no >5% FPS or >10% tail/alloc/memory
+regression; zero exceptions/unsafe commits/mesh-audit failures and all queues0.
+Existing drain<=10s and prep<=16.67ms gates remain; preserve pre-existing failures.
+Visual checks cover terrain self-shadow, character cast shadow and occlusion.
+No acceptance based solely on startup or instantaneous FPS.
+
+Initial read-only setup observation00:04:41:574.2FPS,p952.32/p992.79ms,
+GPU1.29ms,engine Render1.212ms,manager Update.193ms (different sampling windows).
+9arenas,allqueues0,collision4913ready,player(1.55023146,1.59262586,276.347656).
+GPU scope list unavailable; these values do not isolate shadow GPU cost.
+
+Before run aborted after route completion: repeated NullReferenceException at
+GpuVoxelMesher.TrySubmitOuterCount line2530,first observed00:06:06. At00:08:17,
+5036regular requests remain,placementpending,collision4913ready. Source manifest
+unchanged. No complete benchmark result; retained before-failed-observation.json.
+A concurrent read-only PowerShell log-tail command also ran during this failed
+run; exclude it from performance comparison. Do not accept its FPS as baseline.
+The prediction path constructs metadata-only descriptors with captureRegion:false
+then submits the same descriptor to Schedule; after loading edited world revision3,
+its EditRevision can be nonzero with Field null. Transition prediction already
+recreates a captured descriptor on submission. Correct regular prediction likewise
+before retrying the unchanged current-world route; leave shadow code unchanged
+until a usable control is captured. This is prerequisite correctness work.
+
+Control9c696b714eac4f24abfc647818b3c649 completed04:14:39UTC,400.90906FPS,
+p954.5609/p996.8838/max91.3759ms,GPU1.5690705ms average. Reference camera
+(-250,-350,520),angles(25,54,0),FOV60,1280x720 after run: character and cast
+shadow visible next to edited pit. Camera restored to game mode before stopping.
+Candidate shared-dispatch patch applied only after control completion. Managed
+compile succeeded, depth visibility and terrain depth native shader compiles
+succeeded. Clean editor restart now required; pre-restart Sentry last_crash is
+2026-09-13T06:40:13.073827Z. No quality/scene settings changed.
+
+Editor shutdown reached Source2Shutdown/ShutdownSource2Logging but left PID10584
+at an Error dialog. Log also reports prefab destruction assertion:5 components
+weren't deleted (prefabs/terrain_player.prefab),outside measured run. Terminated
+that already-shutdown process to finish restart. Preserve shutdown error as an
+environment limitation; no claim of clean shutdown. Sentry marker unchanged.
+
+Candidate cold startup: PID54584,compiled native shaders/managed source loaded,
+no captured managed errors and Sentry unchanged. Initial settled729.5FPS,
+p952.06/p992.51ms,GPU.93ms,allqueues0,320packagescomplete,collision4913ready,
+1847x959,player(1.55023146,1.59262586,276.347656). This is screening only.
+Control has0measuredexceptions/allqueues0; full drain exceeded10s (about14s),
+so the prerequisite corrects stalled requests without accepting overall streaming.
+Candidate uses same field3/4pages and source snapshot,30s warmup from readiness.
+
+Candidate91a214d58c174da287518945caae7fde completed04:21:34UTC. Comparison.json
+retains all values: moving400.909->430.296FPS(+7.33%),p996.8838->7.461ms(+8.38%),
+GPU1.56907->1.07391ms(-31.56%); stationary463.7585->597.6226FPS(+28.87%),
+p993.8294->2.8841ms(-24.69%). Alloc4,572,747,408->4,832,638,136(+5.68%),
+GPUpeak2,016,836,995->1,890,363,119(-6.27%),drain14.666641->13.004943s,
+prep9.7533->9.9833ms. Both0exceptions/allqueues/unsafecommits. Candidate audit
+88/88,stale0,all geometry/draw failures0; reference1280x720 image retains
+character/pit appearance and visible cast shadow at the identical camera.
+
+Whole-process peak3,042,332,672->4,868,091,904(+60%)fails the memory comparison.
+The control used a long-running editor and candidate a fresh process; this is
+not yet a proven cause. Do not accept it as explained without a matching cold
+control. Next: restore only three shadow source files with Play stopped, verify
+against control hashes,compile/restart editor,and repeat unchanged same-world
+scenario as cold-control. Then restore candidate,compile/restart and repeat if
+needed. Keep all results, including current moving-p99 increase and memory fail.
+Control-errors.json captured only through cursor5224 (before run); do not present
+it as full-run console coverage. Runtime result records0exceptions; later console
+checks also found none. Candidate console Error checks through229 found none.
+
+After restoring control source (all non-generated control hashes verified), the
+candidate editor exited and Sentry advanced to2026-09-14T04:23:48.171704Z during
+shutdown. Candidate startup/rendering/audit completed before this. Shutdown
+stability is not qualified; preserve the crash rather than attribute it to the
+shader parser or this optimization without evidence. Prior editor also failed
+shutdown. Cold-control startup uses this marker as its pre-start reference.
+
+Cold-control PID55648: same source as control (all non-generated hashes match),
+Sentry marker unchanged during startup,allqueues0,packages320complete,waterready,
+collision4913ready,player at exact original XY. Before warmup whole process is
+4,220.1MiB average,4,221.1MiB peak with the original renderer,versus original
+long-running control2,716.3MiB. This reproduces most of the memory difference
+without the optimization. Repeat full route after30s warmup to compare peaks.
+
+Cold-control c4c578dd480a44e6a9f17e2992c0ff6a completed04:28:50UTC. Matching cold
+comparison:403.8807->430.296FPS(+6.54%),stationary472.81287->597.6226(+26.40%),
+GPU1.6174253->1.0739139ms(-33.60%),movingp996.9897->7.461ms(+6.74%),
+stationaryp993.3676->2.8841ms(-14.36%). Allocation4,684,765,328->4,832,638,136
+(+3.16%); processpeak4,742,803,456->4,868,091,904(+2.64%),GPUpeak1,881,171,695
+->1,890,363,119(+.49%). This resolves the large unmatched whole-process memory
+difference as an editor-startup/environment effect; exact allocation attribution
+is not claimed. Coldcontrol drain13.615844s vs candidate13.004943s,prep9.592ms
+vs9.9833ms. Both0exceptions/unsafecommits/allqueues,matching recipe/field/source
+apart from the three shadow files. No shader/parser errors during either startup.
+Supplemental occlusion view after coldcontrol:(500,0,250),angles(0,180,0),FOV60,
+1280x720; compare same view after final candidate restoration outside timing.
+
+Occlusion probe(500,0,250) is inside solid terrain, showing backfaces; it is not
+valid evidence of front-face occlusion. Retain that limitation. Use above-ground
+view(500,0,500),angles(20,180,0),sameFOV/resolution for the supplemental comparison;
+this adjusts only an invalid visual probe,not the figure-eight workload.
+
+Final restoration matches every candidate-source hash. Both shaders and managed
+source compiled successfully. Cold-control editor again stopped at Error dialog
+after normal shutdown request; Sentry unchanged at04:23:48.171704Z. Terminated
+that already-shutdown process and restarted the measured candidate for final
+visible checks. This preserves the recurring shutdown limitation.
+
+Final restored-candidate startup secondary view shows a weaker character shadow
+than the original post-route secondary view. Those views differ in startup versus
+post-route state (and slight player settling). Do not claim complete visual parity
+from this pair. Supplemental diagnostic: restore original three shadow files,
+compile with Play stopped,restart visible Play in this same process,and compare
+above-ground secondary camera after allqueues0 at the original startup position.
+This is a visual state comparison,not another FPS benchmark. Retain both outcomes;
+if original differs under matching startup state, candidate acceptance fails.
+
+Original renderer under matching startup state retains the stronger secondary
+character shadow. Shared-buffer candidate therefore FAILS visual parity despite
+matching the first reference and passing forward geometry audits. Its reported
+FPS gains are provisional,not accepted shipping gains. Next candidate retains
+one private20-byte indirect argument per arena and GPU-copies that arena's shared
+compute result into it before the existing zero-offset draw. This isolates the
+nonzero-offset indirect-model path without changing compute/culling or geometry.
+Installed XML confirms GpuBuffer<T>.CopyTo range overload; official source
+https://github.com/Facepunch/sbox-public/blob/master/engine/Sandbox.Engine/Systems/Render/GpuBuffer.cs
+shows srcElementOffset/destElementOffset/elementCount and Graphics.Context copy.
+Existing engine resource-barrier source confirms CopySource/CopyDestination.
+No CPU readback or extra terrain representation. Visual probe first,then fixed
+figure-eight only if parity passes; preserve prior candidate failure.
+
+Private zero-offset argument buffers restore the stronger character shadow at
+matching startup position/camera; the shared nonzero-offset model-draw path is
+not visually equivalent on this engine. This does not establish its undocumented
+internal offset interpretation. Retain public zero-offset draws. Group all20-byte
+argument copies before any depth draws to avoid transfer/draw alternation. Same
+shared block buffer and single compute dispatch; no extra geometry copies.
+The first candidate's measured gains are invalid as shipping optimization evidence.
+Revised candidate requires matching visual check,cold startup,and unchanged route.
+
+Preserved secondary-original.png,secondary-rejected-shared-args.png and
+secondary-private-args.png establish the argument-path visual difference and
+restoration. Revised grouped-copy managed build succeeded. Editor again remained
+at Error on shutdown; marker unchanged04:23:48.171704Z. Restart revised source
+for cold measurement; previous first-candidate gain remains rejected.
+
+Revised grouped-copy cold startup PID50828 succeeds,Sentry unchanged,allqueues0,
+320packagescomplete,waterready,collision4913ready,exactstartupplayerposition.
+Screening663.3FPS,p952.23/p992.62ms,GPU1.03ms. Secondary above-ground image
+retains the original extended character cast shadow after2s camera settling.
+Return gamecamera,30s warmup,then unchanged SHADOW-FPS-003/v1 standard route,
+revision grouped-private-depth-arguments. Same criteria and cold-control comparator.
+No source edits during the run; revised-source.json identifies this candidate.
+
+Revised run8df9ec719e894bd099db23792f6bc54d completed04:48:48UTC on the
+unchanged SHADOW-FPS-003/v1 workload, revision grouped-private-depth-arguments.
+Cold original->revised: moving403.8807->425.46228FPS(+5.34%),p954.5612->4.4917ms,
+p996.9897->7.189ms(+2.85%),max91.0422->96.8279ms(+6.35%),
+GPU1.6174253->1.2319286ms(-23.83%). Stationary472.81287->533.6551FPS(+12.87%),
+p993.3676->3.1588ms(-6.20%). Allocation4,684,765,328->5,024,774,832(+7.26%),
+processpeak4,742,803,456->4,783,255,552(+.85%),GPUpeak1,881,171,695->
+1,889,008,559(+.42%). Drain13.615844->12.826123s; prep9.592->10.2973ms.
+Both0exceptions/unsafecommits/pendingqueues. Relative criteria pass; absolute
+drain<=10s FAILS in both variants. No gate or workload was changed.
+
+Post-route revised audit88/88,stale0,all geometry/draw failure counters0,
+maximumEdgeCells1.71,178readbacks/3394516bytes. Error scan since114 through227
+found none. Revised secondary camera(500,0,500),angles(20,180,0),FOV60,1280x720
+retains extended character cast shadow after camera settling; saved
+revised-secondary.png. The audit covers forward geometry/draws, not all shadow
+indirect submissions. Complete terrain self-shadow/behind-terrain occlusion
+coverage remains unverified. Do not reuse rejected shared-argument timing as
+evidence for this corrected implementation. Single-run comparisons have no
+statistical confidence estimate.
+
+All nongenerated entries in the96-entry revised-source manifest match after the
+run. Corrected isolated optimization.patch regenerated from pre-task source.
+Comparison.md and revised-comparison.json summarize the corrected measurements.
+Normal game camera restored; visible Play remains running. Full acceptance,
+commit and push remain pending the existing streaming gate and incomplete visual
+coverage; editor shutdown stability also remains unqualified. Preserve all
+pre-existing source changes and untracked terrain-prototype work.
+
+## DEFORM-LATENCY-OBS-001/v1 (2026-09-14, before optimization)
+
+Read-only diagnosis of the user's current interactive digging session. No fixed
+player route or edit sequence: this observation is NOT a comparable performance
+acceptance benchmark. Keep source unchanged during a 30-second window, sample
+voxel_terrain_edit_info once per second, and retain the entire console output.
+Record distinct committed revisions, request-to-field and request-to-publication
+latencies, dependency counts, pending state and failure messages. No terrain,
+player, input, scene, or quality-setting mutations. Zero observed failures is a
+screening criterion only; no sampling during a dig means no deformation coverage.
+Environment: visible basic_example on engine26.09.08b, current user world
+4834d9ad-73fb-402a-92b4-5e3f8a17e55a, moving player, 2769x1436 at initial
+inspection, existing worktree over96d94f527678aba306b2cc8275f797d7739fa947.
+Source copies and observations: ValidationEvidence/DeformationLatency/.
+Initial pre-window inspection: request revision172, publication39.0907ms,
+field3.8308ms,16visual/2collision dependencies; this single observation does not
+identify the underground bottleneck. Lifetime collision sampling p9553.4221ms
+versus extraction.8267ms and native mesh creation1.0442ms; these are mixed
+streaming/edit histories, not isolated edit timings. Pending collision1017 while
+player moved; no failure, no held bodies.
+
+Required later acceptance remains a fixed deformation scenario and unchanged
+canonical figure-eight with source/environment identity and before/after values.
+Do not claim a speedup, commit, or push on the basis of this observation alone.
 ## EROSION-COVERAGE-001/v1 — broader hills and slopes (2026-09-14)
 
 Predeclared before runs: active basic_example recipe, seed1337, land .75, mountains .3, plains .6, scales77724.09/18681.756/5232.39, relief3072, ruggedness .45, sea0. Export production surveys before generator46 and after47: regional grid minimum(-131072,-131072),129x129,spacing2048; ridge grid minimum(-10240,-79872),129x129,spacing32. No edits, one local player; record actual recipe and engine with exports. Criteria: all samples finite, exact repeated heights, zero sampled bound escapes; newly changed natural heights among hills>0.25 and mountains<0.5, and mountains>0.5. Report counts, maximum slopes and changes without treating slopes alone as a visual pass. Rebuild both dependent geometry shaders and restart the visible editor; run production mesh audit8. Closeup crest/valley appearance and multiplayer remain unqualified without direct comparable inspection. Figure-eight/performance is deferred per the user's apply-now instruction; expanded sampling coverage may cost more. Existing gen46 streaming timings are not a comparable gen47 baseline.
 
+DEFORM-LATENCY-OBS-001/v1 completed:30samples,revision309 throughout,
+field4.5939ms/publication62.3995ms,58visual/4collision dependencies. No new
+commit during the observation; no active-dig timing distribution measured.
+Raw before-observation.json preserved. User clarified response delay, not FPS,
+and authorized taking over visible Play for controlled tests.
+
+## DEFORM-LATENCY-002/v1 — controlled production baseline (2026-09-14)
+
+Fresh copies of the same current procedural recipe, visible basic_example,
+engine26.09.08b,generator46,seed1337,one host player,2769x1436,LOD0..5,
+near4/cache8/gameplay8,32cells/base16,land.75/mountain.3/plains.6,
+scales77724.09/18681.756/5232.39,relief3072,ruggedness.45,sea0.
+Save and preserve the user's current world selector before setup; temporarily
+remove only that selector while Play is stopped to exercise ordinary new-world
+startup. Keep every created world. Restore the original selector with Play
+stopped at completion. Each scenario starts in a separate fresh field0 world
+at its normal spawn, after all terrain/collision work settles and30s warmup.
+Source copies identify initial worktree; record manifest and exact environment.
+
+Run the existing underground scenario unchanged:12alternating+1024/-1024
+impacts,center(2048,0,-1536),radius512,interval.5s,10s baseline and10s tail,
+60s drain cap. Also run existing tool-cycle unchanged:600attempts at.1s,
+aim(512,0,0),10dig then10build alternating,standard radius128/strength64/reach2048,
+through TryUseTerrainTool; same baseline/tail/drain. Separate fresh worlds.
+These are new current-generator controls, not comparable to old generator runs.
+Record field/visual/collision latency p50/p95/p99/max,accepted commits,tool
+rejection reasons,changed samples,pending work,frame tails,allocations,memory,
+collision failures and geometry/contact audits. Pass: lower input-to-usable
+terrain latency without dropping the existing ordered mutations,changing brush
+shape/strength,expanding queues,or degrading geometry/material/contact behavior.
+Aim for publication and current-hit collision p95<=100ms for10Hz responsiveness;
+no>10% latency/alloc/memory regression or>5%FPS regression versus matched control.
+Failures remain failures. Benchmark collision-drain latency is broader than
+current-hit collision readiness and must not be mislabeled.
+
+Run canonical figure-eight on a separate fresh field0 world before and after:
+2500speed,50000distance,one loop,normal exterior clearance393.7008,10s stationary,
+240s cap,unchanged quality settings above. Record throughput,frame tails,
+streaming/drain,memory,allocations,failures;same relative gates above,existing
+10s drain/16.67ms prep limits remain. Do not alter tests to obtain a pass.
+No source changes during a measured run. No sprint-look workload because it
+disables player controls. Manual interruption invalidates a run and is retained.
+DEFORM-LATENCY-002/v1 setup invalidated before any benchmark invocation:
+external generator changes46->47 and RegionalLandforms edits occurred during
+setup,followed by editor MCP becoming unavailable. Fresh-world readiness check:
+player(1.62395203,1.90974128,276.435577),collision4913/4913ready,pending0;
+visual3757pending,transitions388pending,placementpending. The unchanged benchmark
+also requires abs(X/Y)<=1, which this normal spawn did not satisfy. No attempt
+was run; no baseline/result claimed. Do not quietly widen the benchmark guard.
+A new scenario/version must resolve the spawn prerequisite before future runs.
+
+The version46 original selector was copied to original-world-selector.vxl and
+renamed beside the data file while Play was stopped. Its content identified
+4834d9ad73fb402a92b45e3f8a17e55a. The original selector was restored after source
+changed; original version46world and preserved selector remain intact. Source
+47 selects a separate recipe/version; restoring a selector is not migrating the
+saved version46terrain into47. The earlier stop request returned Not playing;
+editor_status confirmed stopped before selector setup.
+
+Candidate source changes after setup termination: reuse published GPU regions
+outside actual changed sample dependencies,retain stale asynchronous checks,
+limit empty-region activation to actual edit support,and expose reuse counters.
+No collision optimization or queue expansion. Source whitespace check passes;
+engine compilation,in-world geometry,continuous dig/build,underground latency,
+and canonical figure-eight remain NOT RUN. No speedup or acceptance claimed;
+commit/push withheld. Other worktree changes preserved.
+Editor reconnected/restarted externally; editor_status at follow-up reports
+visible basic_example,IsCompiling=false,LastCompileSucceeded=true,0errors with
+the candidate present. Compilation passes, not a behavior/performance result.
+The user clarified sustained left-click digging with intermittent ~0.5s pauses;
+future coverage must include tool-stationary/held-dig timing and the slowest
+edits, not just alternating world impacts. Source stability coordination pending.
+Only this task's two-file implementation diff is preserved in optimization.patch.
 #### EROSION-COVERAGE-001/v1 results
 
 Source: HEAD96d94f527678aba306b2cc8275f797d7739fa947 plus this generation47
@@ -24903,6 +26939,431 @@ before/after regional and ridge subdirectories contain raw production exports.
 Decision: requested wider-coverage prototype implemented and active; numerical
 survey and selected mesh checks pass, full appearance/performance acceptance
 is not claimed.
+
+## WATER-EVENTS-001/v1 — event-driven water bookkeeping (2026-09-14)
+
+Defined before the first timed run. Current generator47 replaces the old47-free
+comparison context: no gen46 timing is a baseline for this experiment.
+Use visible basic_example, engine26.09.08b, RTX5090,1847x959,one host player,
+seed1337,land.75/mountain.3/plains.6,scales77724.09/18681.756/5232.39,
+relief3072,ruggedness.45,sea0,LOD0..5,32cells/base16,near4/cache8/gameplay8.
+World547ae8f0-bf9e-45e0-8f36-27d0e8d95771,revision0,pages0,epoch1.
+Preserve shadow settings and current erosion/deformation changes in both variants.
+Start normal authored spawn after physics settling; record exact position, all
+terrain/seam/prediction/water queues ready and4913collision regions ready.
+Warm up >=30s after readiness. Standard figure-eight:2500speed,50000distance,
+one loop,393.7008clearance,10s stationary,240s cap. Source unchanged during run.
+Restart visible Play between variants so neither starts with the other's route
+cache; use equivalent editor process startup if memory differs materially.
+
+Pass: improved frame time; no>5%FPS or>10%p95/p99/max-frame,allocation or peak
+memory regression; zero measured exceptions,unsafe commits,pending queues at end;
+88-region geometry audit no new failures. Existing drain<=10s/prep<=16.67ms
+criteria remain; record baseline failures without weakening gates.
+No new shoreline gaps,missing water,early water,changed terrain/shadow appearance,
+or added visible publication delay. Require settled pairing counters0 and
+matching fixed-view images and water mesh digests for the same unchanged chunks.
+Changes only replace repeated scheduling/publication scans; same worker count,
+priority order,immutable generation,edit checks and same-frame publication.
+
+Supplemental WATER-EVENTS-EDIT-001/v1 uses a preserved save copy of the same
+gen47world after route,site(-1024,-800,0),radius128,strength-512 then+512,
+wait<=30s for each operation. This reuses the boundary-owner workload from
+CHUNK-WATER-EDIT-001 but establishes a new generator47 before/after comparison.
+Inspect ownersLOD0(-3,-2,-1)/(-2,-2,-1),column(-1024,-800),minimumZ-64,
+spacing32,count5,regional fingerprint center/radius512. Compare geometry
+digests,medium,zero invalid/degenerate/reversed water vertices and settled
+pairing0. Camera(-1100,-800,1600),pitch90,FOV60,1280x720. Preserve source save,
+restore original field/fingerprint/selector after edits. No multiplayer claim.
+If the new generator makes the old medium assertion invalid, retain the
+observation and define a justified new scenario before changing inputs.
+Evidence directory:ValidationEvidence/WaterEvents. Source manifests identify
+the prototype; previous profiler capture is diagnosis,not a matched baseline.
+
+WATER-EVENTS-001/v1 control594ed1bd85d44d8d8c8600523bdd7154 is INVALID for
+performance comparison: user reports two s&box instances were open. Retain
+before-result.json (moving366.10327/stationary369.40146FPS) but do not use it
+to claim a speedup. Both boundary-water edits passed correctness: initial/dig
+digests12DC49E363757778/F4A67FED02D670D8; build3AB3A65CBF6C9414/
+795C03A99310C8B6,zero vertex failures,publication110.9573/82.4054ms. These
+latencies also have the duplicate-instance confound. Original field0 restored,
+fingerprintCCDF71ECDF55B1F6557423FDE3F3DEA190848F7DFF67E35873EA7B6C6D1CE894,
+original slot saved. Scratch edit copy retained.
+
+User explicitly requested rerun. Process inventory now shows only sbox-dev PID37280;
+the earlierPID10356 is gone. No duplicate was terminated by this task. Prototype
+had compiled and Play restarted but no candidate benchmark ran. Restore only
+the five prototype files to their byte-verified pre-change copies with Play
+stopped, then rerun unchanged workload with one instance. Preserve invalid run.
+
+Single-instance control5e9588f62240424eb538d6e466afdbbb:443.1582movingFPS,
+555.32214stationaryFPS,p954.0446/p996.2682/max91.2349ms,GPU1.3233353ms,
+drain11.859037s. Source manifest unchanged; process inventory contains only
+PID37280 before/after. All other scenario inputs unchanged.
+
+Supplemental single-instance build/dig publication77.2682/68.1608ms. Setup
+mistake: requested scratch name water-events-single-control-20260914 exceeds
+the32-character limit and was rejected; the subsequent edits therefore ran
+against the loaded original slot instead of a confirmed copy. No autosave
+completed before recovery. Saved revision2 to valid water-events-control-single,
+then loaded the original checkpoint4, confirmed revision0/pages0 and original
+fingerprint. Preserve rejected commands and this deviation; never classify it
+as a correctly executed save-copy scenario. Future edits must verify the exact
+successful save destination before mutation. The original world was restored.
+
+After restoration, external/manual edits advanced the original live world from
+revision0 to10, then54. Saved the newest original state (revision54,checkpoint8)
+before switching away; original slot remains547ae8f0bf9e45e08f3627d0e8d95771.
+For the candidate, copied the checksum-verified zero-page checkpoint1 from the
+first scratch save into new water-events-pristine. No existing checkpoint was
+edited or deleted. Native load verified same WorldId,revision0,pages0.
+Save location changes only; same field/generator/workload. Restart Play to reset
+route caches and local epoch. Restore the latest original slot after testing.
+This is an exact existing checkpoint copy, not reconstructed synthetic terrain.
+
+## HELD-DIG-001/v1 (2026-09-14, defined before first run)
+
+Reproduction of intermittent0.5–several-second waits while holding dig. Existing
+manager deformation runner adds held-dig; historical scenarios remain unchanged.
+The new scenario admits a settled saved world and its recorded player position,
+so it does not silently widen the historical absolute-origin/fresh-field guard.
+600attempts at0.1s through TryUseTerrainTool,all dig,radius128/strength64/reach2048.
+Aim is PlayerStart+(512,0,-128),normalized from the live eye;player/camera are not
+moved or disabled. Moving>2units aborts.10s idle baseline,60s attempts,10s tail,
+60s drain allowance. Capture blocked tool reason and publication regular/seam/
+content readiness for rejected attempts. No queue increase or gameplay change.
+
+Initial saved field:world547ae8f0-bf9e-45e0-8f36-27d0e8d95771,revision37,5pages,
+slotwater-events-pristine. Copy it via successful save to held-dig-v1 before
+mutations; verify destination. Before/after reload this exact unchanged original
+checkpoint and use the same recorded player position(638.617798,231.874466,
+106.506554),then warm30s after all queues settle. Save experimental edits only
+to held-dig-v1; original saved field is preserved. Visible basic_example,
+engine26.09.08b,generator47,seed1337,1847x959,one player,LOD0..5,near4/cache8,
+gameplay8,32cells/base16,current recipe captured in each result. Snapshot source
+before/after;any concurrent edit invalidates comparison and remains recorded.
+
+Report accepted/blocked attempts,reason breakdown,longest contiguous blocked
+interval between accepted edits,field/publication/collision p50/p95/p99/max,
+frame tails,allocations,memory,failures,remaining queues and visual/contact
+checks. Meaningful failure:>=0.5s blocked by pipeline between successful digs.
+Aim to eliminate these stalls and publication p95<=100ms,without weakening
+correctness or increasing queuedinput. No>10%regression in tail/alloc/memory or
+>5%FPS loss relative to matched control. No-terrain misses are coverage limits,
+not successful responsiveness. Canonical figure-eight regression remains required.
+The historical underground and figure-eight scenarios remain unrun here.
+
+Second observational window:60samples,revision37unchanged,No terrain within
+reach throughout,all pendingfalse. No active-dig performance coverage.
+HELD-DIG-001/v1 runa513f5cbab7c46628cc2ea64064d866c aborted immediately for
+player movement,0attempts/commits;actual start(882.454346,280.700623,85.4115067)
+also differed from fixed setup. All94source hashes unchanged. No performance
+result. User reports moving only the camera can resume stalled held-click digging;
+prioritize canonical tool target traversal rather than assume mesher latency.
+
+DEFORM-LATENCY-OBS-001/v2 diagnostic extension,defined before capture: same
+bounded read-only30s observation at2Hz with manual movement/input recorded,not
+comparable acceptance. Existing edit-info additionally records held-input,last
+ray endpoints/hit/StartedSolid,skipped logical cells,ray field revision,and current
+canonical density at that last ray start. A negative density with no hit after
+skipping is evidence of a ray restarted inside solid;stale ray revisions remain
+explicit and cannot establish that condition at trace time. No brush or target
+behavior changes yet. Density lookup occurs only on explicit diagnostic command.
+DEFORM-LATENCY-OBS-001/v2 caught the targeting defect: tool-ray-before.json
+contains four matching field/ray revision215 observations with No terrain within
+reach,skippedCells1,rayHitfalse,StartedSolidfalse,and canonical ray-start density
+-9.102325,-9.162109(twice),-9.380951. The ray had restarted inside solid after
+skipping a logically empty remnant. Native StartedSolid did not detect this
+triangle-mesh interior. These observations identify a targeting failure; they
+are not a matched speed benchmark or proof that all stalls share this cause.
+
+Candidate: after advancing past a logically empty cell, sample the canonical
+field at the continuation point. If solid, continue logical-cell traversal there
+instead of issuing a physics ray from inside the solid. The next iteration still
+requires>10%solid volume; reach,traversal cap,current collision readiness,host
+validation and canonical mutation admission remain unchanged. If air,continue
+the normal terrain ray. Building retains its original first-hit path. No queued
+input increase,brush change,new representation or collision bypass.
+
+Post-change observational criterion,defined before capture: record real accepted
+requests using solidContinuation after skipping,subsequent committed revision
+advances,and no repeated no-hit ray restarted in solid at matching revision.
+Retain unrelated pauses and No-terrain misses rather than claiming universal
+fix. Canonical figure-eight and controlled held-dig comparison remain pending.
+## HELD-RAY-001/v1 (2026-09-14, defined before first run)
+
+Controlled reproduction after ordinary Play restart. Source47,current saved
+world547ae8f0-bf9e-45e0-8f36-27d0e8d95771,revision432,24pages,player
+(0.189062953,0.240374133,262.950958),eye64units above. Copy to held-ray-base,
+then held-ray-work through verified saves; preserve the user's held-dig-v1
+checkpoint5. Same600attempt/.1s held-dig scenario,aim PlayerStart+(512,0,-128),
+10sbaseline/10stail/60sdrain cap. Same1847x959,gen47/seed1337/LOD0..5/
+near4/cache8/gameplay8/32cells/base16 and active recipe.30s settled warmup.
+Run corrected traversal first,then legacy traversal on the exact saved baseline
+if restoration is safe;record order,no claims of pre-change chronology. Sources
+must match except the traversal. Keep original rejected attempts;zero no-terrain
+misses is not required after true reach exhaustion. Pass: retained revision
+progress through solid-continuation cases,absence of matching-revision interior
+restart misses,and no>10%pipeline/frame-tail/alloc/memory or>5%FPS regression.
+Manual movement abort remains active. Publish/collision correctness and remaining
+figure-eight qualification must be reported separately.
+
+During source hotload,engine logged NoMatchLambda on a PriorityQueue comparator
+at01:44:05 and worker pause timeout01:45:26. Play was stopped and restarted.
+Current settled observation has0pending/0collisionfailures and611.2FPS;old errors
+are retained,not misreported as a clean hotload. Post-restart cursor4037starts
+new error coverage. Saved original world revision432remains intact.
+Corrected runfc70accee35d460d8ee1a76107f9ab8e completed,failure none,
+208commits,field432->640. Last target~(1917.14,-2.0363,-387.77),near full2048
+reach from eye;final no-hit ray starts in air(density65.99904),skipped0.
+Comparison pending raw result review. Corrected experimental world saved under
+held-ray-work;original held-ray-base checkpoint1remains field432.
+
+For matched legacy comparison,stopped Play,verified current selector still
+held-ray-work and source exactly Deformation.fixed.txt. Preserved its selector,
+then selected held-ray-base using the existing SelectionPath payload format
+SHA256(UTF8slot)+UTF8slot;no density/checkpoint data edited. Replaced only the
+16-line solid-continuation block with the preserved legacy traversal. Restart
+resets player to the original authored/settled position and clears runtime caches.
+Keep run order explicit;restore corrected source after comparison.
+HELD-RAY-001/v1 matched results: corrected run fc70accee35d460d8ee1a76107f9ab8e
+preceded legacy a7731a25bc63484e93f0e0ef379c1810. Identical recorded field432,
+24pages,world,recipe,playerStart; both source checks94hashes/0discrepancies.
+Corrected208accepted;legacy17accepted. Legacy last accepted attempt17 then
+582 No terrain within tool reach overall; sampled stuck state rayRevision449=
+field449,skipped1,rayHitfalse,rayStartDensity-9.434814. This reproduces the
+interior-ray targeting failure under fixed input. Corrected continued to640
+and near full reach. No solidContinuation=true caught at2s diagnostic cadence;
+the matched progress difference supports the correction but does not constitute
+an individually timestamped branch/commit observation.
+Corrected600attempts:208Accepted,257No terrain,132Publication pending,3Collision
+revision pending. No>=0.5s pipeline-only stall between successful digs recorded.
+Publication p50/p95/p99/max corrected106.7028/131.1722/181.5245/192.1523ms;
+legacy85.6149/104.8934/104.8934/104.8934ms (nearest rank). Corrected commit
+8.9052/15.0097/17.082/19.7883ms; collision drain69.8617/103.8192/112.2394/115.43ms.
+Corrected FPS358.10214,frame p95/p99/max8.9752/13.6091/24.708ms,allocation
+1368800424bytes,process average4481999959/peak4521750528bytes. Legacy FPS562.89264,
+frame1.9109/2.1246/15.6611ms,allocation1252326864bytes,process average4316773814/
+peak4359507968bytes. These aggregate performance gates do NOT pass; corrected
+executes208edits versus17 in legacy, so they cannot isolate per-edit overhead.
+The100ms publication p95target is also NOT met. No overall latency acceptance.
+Both runs completed failure=null; raw observations and diagnostics retained under
+ValidationEvidence/DeformationLatency/held-ray-{fixed,legacy}-*.json.
+Corrected source restored after stopped Play; user's held-dig-v1 selector restored
+from experimental held-ray-legacy. User checkpoint5/revision432 remains preserved.
+
+HELD-RAY-FIGURE-001/v1 supplemental regression defined before run: same source,
+engine,quality,recipe and user field432/24pages as HELD-RAY-001/v1; standard
+figure-eight2500speed/50000distance/1loop,clearance393.7008,10s stationary,
+30s settled warmup,240s external cap. Visible interactive Play,one host,authored
+spawn after settling. This edited field has no accepted comparable figure-eight
+baseline; no comparison to generator46 or pristine-field results is valid.
+Record FPS/frame tails,allocations,memory,streaming completion and errors;
+existing10s drain/16.67ms prep gates retained. This supplementary current-world
+run cannot qualify the earlier unmeasured meshing optimization or substitute
+for its pristine-field matched comparison. No source changes during run.
+
+HELD-RAY-FIGURE-001/v1 run 832b63e1772f4a14999613b2eb36c322 completed one
+standard loop in 121.944016 seconds. Start center (0.18906926,0.24038202).
+Raw result: ValidationEvidence/DeformationLatency/latest-figure-result.json.
+Average FPS 503.3353; frame p95/p99/max 3.3499/7.0436/87.5225 ms.
+Managed allocation 5,471,681,056 bytes; GC pause total 638.856 ms, maximum
+11.959 ms; measured exceptions 0. Process peak 4,437,602,304 bytes; GPU peak
+2,131,998,565 bytes. Prepared 106,546 chunks (873.7288/s); loaded 4913,
+chunk and all meshing pending 0. Maximum placement preparation 8.7681 ms,
+maximum synchronous streaming 7.2138 ms. Stationary tail 10.001553 seconds,
+FPS 507.12827, frame p95/p99/max 2.1361/2.2819/11.7718 ms.
+This completed run has no comparable accepted edited-field baseline, so no
+relative regression acceptance is claimed. The 87.5225 ms frame maximum is
+retained; average FPS is not a claim of hitch-free movement.
+Post-run production mesh audit 8: 88/88 complete, stale 0, failures 0,
+mutation/index/position/identity/oversized/degenerate/draw-argument failures 0.
+Native 1280x720 camera image inspected after the route: saved openings and
+terrain surfaces render; this single view does not establish all seam/contact
+or multiplayer behavior. Current corrected source compiles with zero errors;
+94 hashes match the corrected manifest and scoped whitespace checks pass.
+Both held-ray tests ended pending 0, collision failures 0, ready regions 4913.
+Decision: targeting defect reproduced and correction supported by matched
+in-world behavior. General deformation latency and the earlier mesh-reuse
+candidate remain unqualified; no commit or push while those gates remain open.
+
+## TOOL-POLL-001/v1 (2026-09-14, defined before runtime observation)
+
+User requests maximum responsive held-input digging. Candidate removes the local
+100 ms cooldown, polling held dig/build once per frame through TryUseTerrainTool.
+Publication and current-hit collision readiness remain mandatory. Remote aim
+requests are capped at 60 Hz with the existing two-token host limiter. No accepted
+input backlog or catch-up loop is added. Historical benchmark intervals remain
+unchanged and cannot validate this UpdateTerrainTool input change.
+Visible basic_example, engine26.09.08b, current saved world547ae8f0-bf9e-45e0-8f36-27d0e8d95771,
+revision587/pages28/checkpoint7/held-dig-v1, generator47 and existing recipe.
+Read-only observation:30 seconds, edit-info every0.5 seconds; preserve manual
+movement/input and record them. Pass for observed held-input samples: revision
+progress with no edit failure or queued input growth beyond one. Idle input is
+NOT a throughput test. This observation cannot establish sub-100ms cadence at
+2Hz; source inspection establishes timer removal, measured throughput remains
+pending unless an adequately sampled real held-input run is captured.
+TOOL-POLL-001/v1 observation result: 60 samples, held-input samples 0, field
+revision 587 unchanged, queue 0, preparing false, status Idle. Empty edit failure
+fields throughout; console error scan since cursor4488 had no matches through
+4548. Evidence: ValidationEvidence/DeformationLatency/tool-poll-observation.json.
+Engine compilation succeeded with zero errors and scoped whitespace checks pass.
+This verifies idle integration only; held-input throughput, multiplayer pacing,
+and a new figure-eight comparison are NOT RUN. Changes remain uncommitted;
+no measured speedup or overall performance acceptance is claimed.
+
+## DIG-FLICKER-001/v1 (2026-09-14, defined before observation)
+
+User reports slower digging and transient see-through mesh after TOOL-POLL-001.
+Rolled back only the polling change to the previous 100 ms timer and 10 Hz remote
+rate. Targeting correction and existing unrelated source changes retained. This
+is a mitigation, not a conclusion that polling caused the geometry failure.
+Visible basic_example, engine26.09.08b, generator47, current user world
+547ae8f0-bf9e-45e0-8f36-27d0e8d95771, manual held digging/movement preserved.
+At initial diagnostic revision1567/pages68, retained samples527106048 of536870912
+bytes. Thirty-second read-only observation:60 edit-info samples at0.5s, record
+revision progress, capacity deferral, publication/collision pending and failures.
+Native camera views inspect current tunnel; a still image cannot rule out flicker.
+No comparison speed claim from an uncontrolled moving/aiming workload.
+Pass criterion for this observation: no failures; classify any sampled stalls by
+actual pending/deferral flags. Geometry repair requires a captured failing state
+or a concrete publication invariant defect plus runtime validation.
+
+## DISTANCE-FOG-001/v1 - two-color camera fog, 2026-09-14
+
+Predeclared visual scenario: visible interactive basic_example, engine26.09.08b,
+current generator47/seed1337 and user-held-dig-v1 world; do not alter terrain or
+interrupt manual digging. Default colors(0.27,0.49,0.72)/(0.76,0.82,0.87),
+StartFraction0.08, camera ZFar100000. Native C# and shader compilation must succeed.
+Inspect the actual playable camera: foreground remains clear, distance transitions
+through blue to gray-blue, background equals far endpoint and HUD remains clear.
+When camera control is available, use fixed view(0,0,16000),angles(12,30,0),
+FOV90,1000x563; compare disabled/enabled at ZFar100000 then ZFar20000, restore100000.
+Use exact same view per pair; inspect terrain/water and clipping/background at
+both distances. Also check disable/re-enable and non-default color/start changes.
+No synthetic scene, geometry or test hooks. A cave-only capture cannot establish
+horizon behavior. Capture changing manual input as observational, not matched.
+
+Required performance comparison: unchanged canonical2500speed/50000distance/
+1loop,393.7008clearance,10s stationary,30s settled warmup,240s cap; current saved
+field must remain identical before/after. Record source hashes, player center,
+resolution and world revision before scheduling. FPS regression<=5%; tails,
+allocations,memory<=10%; prep<=16.67ms,full drain<=10s and no correctness failures.
+Prior fields/generators are not comparable baselines. User actively digging at
+initial read, field1279/pages57 and pending publication; performance takeover
+question pending. No controlled performance run yet; no performance acceptance.
+
+DISTANCE-FOG-001/v1 initial integration result: component compiled and registered;
+live Main Camera readback returned NearColor0.27/0.49/0.72,FarColor0.76/0.82/0.87,
+StartFraction0.08,enabledtrue; authored scene JSON also contains those settings.
+Native compiler reported0errors; two SB2000 description warnings appeared on a
+subsequent build, and the component's description attributes were converted to
+XML comments. Engine generated distance_fog.shader_c at09:14:31 after initial
+09:14:29 on-demand file-not-found warning. Compiled output was not hand-edited.
+Explicit shader rebuild could not run: custom compile_source_shader disappeared
+from live discovery(81->66tools); stock asset_compile rejected the shader as not
+recompilable. Do not equate generated-file existence with verified shader loading.
+Camera screenshots1000x563 inspected before/after: current close cave retained
+clear checker surfaces. Manual pose changed; these are not matched frames and
+cannot establish distant fog or far-plane continuity. Horizon,ZFar20000,custom
+settings,toggle and canonical figure-eight checks remain NOT RUN, takeover
+question unanswered. No visual/performance acceptance,commit or push.
+Session also logged terrain-edit diagnostic NullReferenceExceptions09:14:15-18
+and engine FromAsyncImpl hotload resolution errors09:14:30; no DistanceFog-named
+warnings/errors matched through cursor4918. These errors are retained as session
+limitations; no clean-runtime claim. Scoped diff whitespace and scene JSON checks
+passed. Existing terrain/source/ledger changes remain outside this task.
+
+DIG-FLICKER-001/v1 rollback result: user reports no flicker so far after rollback.
+Raw60poll responses contained31diagnostics/29no-match gaps;8held samples,
+revision1586->1601,queue0,failure empty. Sample memory26.5–40.3MB after earlier
+527MB reading; no read-capacity deferrals observed. Memory pressure remains a
+hypothesis, not an established stall cause. Source returned exactly to the
+previous corrected targeting file (SHA256 3F2B28E1606E88CBD6697AF29FDA73F9DA59487338579AA8CD2F5D1B51DC0B95),
+networking diff empty. No underlying geometry defect proven by this rollback.
+
+## DEFORM-REPORT-001/v1 (2026-09-14, before first capture)
+
+User explicitly requests production logging/debugging/reporting. New opt-in
+voxel_deformation_report observes existing gameplay; 30s manual capture on the
+current visible basic_example world, gen47/seed1337/current recipe and player
+position, unchanged restored10Hz cadence. No input/camera/world manipulation.
+Capture world/revision/eye, tool outcomes, stage scoped times and request latency,
+frame samples, allocations/GC, sample memory and pending/failure state.
+Pass: bounded report saved, finite nonnegative timing samples, outcome counts
+match Tool count, per-stage8192stored cap explicit, exclusive held gates sum to
+held seconds, no request queue increase, no new errors. A capture with no held
+input/commits is idle-report validation only. Manual workload is not comparable
+performance acceptance. Current streaming/figure-eight and multiplayer gates
+remain separate. No claim that these counters detect visual flicker.
+
+DEFORM-REPORT-001/v1 first capture b6bb333d34ca44739fb8c2426541f53e: 30.0026771s,
+field1923 unchanged,0held/0commits/0exceptions. Bounded counts/timing/gate checks
+pass.13891frames,8192stored/5699truncated; frame max504.93628ms retained.
+This is idle coverage only, not a digging performance result.
+
+## DEFORM-REPORT-IMPACT-001/v1 (defined before first run)
+
+Player is now high above ground (eye~0.0655,-0.0465,8921.146); the held-dig
+benchmark's fixed aim cannot reach terrain, so do not run it as digging proof.
+Validate reporting through the existing trusted mutation entry point instead:
+preserve held-dig-v1 revision1923/checkpoint18 (verify save), then save a working
+copy named report-impact-0924. Start30sreport; six world impacts at(2048,0,-1536),
+radius128,strength+64,-64,+64,-64,+64,-64,one per second,only when the previous
+operation has fully drained (5s cap,abort rather than accumulate). Current host,
+scene/recipe/quality/position unchanged. This is not a benchmark comparison or
+a tool-targeting validation; its purpose is nonzero prepare/commit/publication
+telemetry and matching committed revision counts. Preserve original saved world,
+restore via native load after work drains; no player/camera manipulation.
+Pass: six accepted commits with finite stage timings, reported revision progress,
+no failures, no queued backlog, correct saved original restored. Capture-boundary
+latency censoring remains explicit. Preserve partial or failed runs.
+
+DEFORM-REPORT-IMPACT-001/v1 result: report3cae03e5bb2e4c19a5d763ec9b02fce7,
+30.0006171s,6commits/0rejected,field1923->1929,peakqueue1,finalpending0,
+publicationpendingfalse,failure null,exceptions0. Each impact fully drained
+before the next. Tool/Ray/held input counts0 (trusted world impacts only).
+PrepareBrush count6 mean4.64765/p50 4.2121/p95=max5.8237ms;
+CommitAndInvalidate mean3.6703/p50 2.4812/p95=max9.366ms;
+AdmissionToCommit mean7.46238/p50 6.7276/p95=max10.0092ms;
+AdmissionToPublication mean47.03725/p50 44.5807/p95=max60.4442ms.
+These overlapping scopes/latencies must not be added. Six samples are insufficient
+for stable tail estimates; publication is the larger latency in this sample.
+MeshPump14522calls mean0.0058917/max2.641ms,CollisionIntegration mean0.0006909/
+max0.1467ms; both include idle/streaming. Frame p95 2.9518/max13.6496ms.
+Whole-game allocation482698408bytes,GCpause80.406ms,sample-memory peak35586048.
+Raw report and command evidence: ValidationEvidence/DeformationLatency/
+report-impact-result.json and report-impact-run.json. This validates active
+mutation-stage reporting, not held-click targeting or a speed improvement.
+Native restore completed field1923/pages109/checkpoint18/held-dig-v1,epoch2;
+09:26:25 confirms all edit/publication/collision queues drained and failure empty.
+Restore itself took~22.4s to republish the full epoch; outside capture, retained
+as an unrelated restore cost, not presented as an individual digging latency.
+Compilation succeeds. Scoped whitespace checks pass. Held-input cost attribution,
+multiplayer reports and a new figure-eight overhead comparison remain unrun;
+no performance acceptance or commit/push is claimed for the combined worktree.
+
+## DISTANCE-FOG-PALETTE-002/v1 - bluer horizon, 2026-09-14
+
+User accepts the initial appearance but requests less white-gray and more natural
+blue. Color-only revision: NearColor remains(0.27,0.49,0.72); FarColor changes
+from(0.76,0.82,0.87) to(0.60,0.74,0.87). StartFraction0.08 and ZFar100000 unchanged.
+Before live application: inspect current component, then apply the far color and
+inspect1000x563 playable-camera capture without moving the player. Criterion:
+visibly bluer pale horizon with the same depth fade; readback matches the authored
+palette. No shader/workload change. This simple palette adjustment does not run
+the figure-eight; prior feature performance qualification remains pending.
+
+DISTANCE-FOG-PALETTE-002/v1 result: source default, authored scene and architecture
+updated to FarColor(0.60,0.74,0.87); native set_component accepted FarColor.
+C# compilation0errors/0warnings and scoped whitespace check passed. Before/after
+screenshots had changing player poses and the same old pale background; they do
+NOT verify live palette application. Installed Scene.cs ResolveComponent searches
+SceneEditorSession.All and resolves the authored component before the running
+copy with the same GUID. Earlier authored-camera readback must not be treated as
+runtime readback. New palette is saved for next Play restart; no restart performed
+while user is playing. Visual acceptance remains pending. Existing overall fog
+performance gate remains open, so no commit/push of the unqualified feature.
 
 ## LOCAL-COVERAGE-001 v2 to v3 - approved current-world baseline, 2026-09-14
 
@@ -25174,6 +27635,7 @@ preserved. Reopened original playable code with free viewport sizing after
 restoration; successful engine compilation0errors. Performance acceptance remains
 open. Follow-up report: ValidationEvidence/FastFlightFps/Experiment.md.
 
+
 ## WATER-EVENTS-001/v2 and PREDICTION-IDLE-001/v1 (2026-09-14)
 
 Predeclared before runs. The v1 pristine scratch world was subsequently edited
@@ -25284,3 +27746,32 @@ New prediction changes reverted; all runtime/scene/shader hashes equal entry
 manifest. Existing water prototype preserved exactly as on entry,unaccepted.
 No repeat/fast/multiplayer acceptance runs performed because allocation and
 absolute drain gates remain unresolved. Full report:ValidationEvidence/IdleWork/Experiment.md.
+
+
+## Water plus prediction adoption — 2026-09-15
+
+User explicitly requests implementing water plus prediction and updating main
+after reviewing the reported38%movingFPS gain,29%total-allocation increase and
+10.24s drain. Adopt the exact tested candidate with those known allocation/drain
+exceptions; do not weaken scenario thresholds or relabel historical failures.
+Reapplied IdleWork/prediction.patch onto the existing water integration. Every
+source/scene/shader entry matches IdleWork/prediction-source.json byte-for-byte.
+The existing completed real-world run0517110b1a84443b87c66589a299cd70 and its
+matched control,88-mesh/coverage audits and boundary-edit checks therefore cover
+the identical adopted source. No fresh FPS measurement is claimed or required
+for this reapplication; live engine compilation and startup checks follow.
+
+Main receives the complete tested runtime integration, including previously
+untracked coverage/prediction/deformation-reporting partials needed by the manager,
+its existing depth/shadow shader integration and authored fog scene dependencies.
+These were already present in the tested source manifest; no new behavior is
+introduced beyond reapplying the prediction patch. Preserve supporting architecture
+and experiment history. Exclude generated engine outputs and local skill caches.
+Original held-dig-v1 worldrevision1990 was saved before normal Play restart.
+
+Adoption verification: engine26.09.08b compilation succeeded with0errors; normal
+visible Play startup and settled current-world inspection have waterready,4913
+collision regions ready,320/320predictionpackages and1920faces ready,all pending
+queues0 and water/terrain pairing errors0. Fresh88/88mesh audit has0stale/failures/
+invalid geometry/draw errors; detailed settled coverage has0overlap/imbalance/
+missing/extra seams. These are reapplication checks,not a fresh timed benchmark.

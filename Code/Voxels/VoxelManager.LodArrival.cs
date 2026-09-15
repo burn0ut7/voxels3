@@ -5,6 +5,12 @@ using System.Text.Json;
 public sealed partial class VoxelManager
 {
 	private const double LodArrivalSampleSeconds = 1;
+	private const double LodNearObservationSeconds = 0.05;
+	private long _lodNearNextObservation;
+	private long _lodNearLastObservation;
+	private double? _lodNearFirstPreparedSeconds;
+	private double? _lodNearFirstPresentedSeconds;
+	private double _lodNearMaximumObservationGapSeconds;
 	private const double LodArrivalWarningSeconds = 5;
 	private const double LodArrivalLimitSeconds = 240;
 	private const int LodArrivalMaximumSamples = 256;
@@ -52,6 +58,10 @@ public sealed partial class VoxelManager
 			_lodArrivalExamined = false;
 			_lodArrivalSawMovement = false;
 			_lodArrivalHasSettled = false;
+			_lodNearFirstPreparedSeconds = null;
+			_lodNearFirstPresentedSeconds = null;
+			_lodNearLastObservation = now;
+			_lodNearMaximumObservationGapSeconds = 0;
 		}
 		if ( (position - _lodArrivalMotionPosition).LengthSquared >= LodArrivalMovementDistance * LodArrivalMovementDistance )
 		{
@@ -60,6 +70,25 @@ public sealed partial class VoxelManager
 			_lodArrivalMotionPosition = position;
 			_lodArrivalExamined = false;
 			_lodArrivalSawMovement = true;
+			_lodNearFirstPreparedSeconds = null;
+			_lodNearFirstPresentedSeconds = null;
+			_lodNearLastObservation = now;
+			_lodNearMaximumObservationGapSeconds = 0;
+		}
+		// Keep the historical one-second reports comparable. This separate bounded
+		// near-only observation avoids quantizing readiness to that report cadence.
+		if ( now >= _lodNearNextObservation && !_lodNearFirstPresentedSeconds.HasValue &&
+			_appliedVisualConfiguration.MinimumVisualLod == 0 )
+		{
+			_lodNearNextObservation = now + (long)(Stopwatch.Frequency * LodNearObservationSeconds);
+			using var nearProfiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.LodArrivalReporting );
+			_lodNearMaximumObservationGapSeconds = Math.Max( _lodNearMaximumObservationGapSeconds,
+				Stopwatch.GetElapsedTime( _lodNearLastObservation, now ).TotalSeconds );
+			_lodNearLastObservation = now;
+			var observed = CaptureNearChunkReadiness();
+			var observedSeconds = Stopwatch.GetElapsedTime( _lodArrivalMotionTime, now ).TotalSeconds;
+			if ( observed.TerrainPrepared == observed.Requested ) _lodNearFirstPreparedSeconds ??= observedSeconds;
+			if ( observed.Presented == observed.Requested ) _lodNearFirstPresentedSeconds = observedSeconds;
 		}
 		if ( now < _lodArrivalNextSample ) return;
 		_lodArrivalNextSample = now + (long)(Stopwatch.Frequency * LodArrivalSampleSeconds);
@@ -153,7 +182,7 @@ public sealed partial class VoxelManager
 			var empty = !_gpuMesher.Contains( descriptor.Key );
 			if ( !empty && !_gpuMesher.IsResident( descriptor ) ) { meshMissing++; continue; }
 			preparedCount++;
-			if ( !_levels[0].Active.Contains( coordinate ) || !empty && !_gpuMesher.IsRegionPresented( descriptor ) )
+			if ( !_gpuMesher.IsRenderActive( descriptor.Key ) || !empty && !_gpuMesher.IsRegionPresented( descriptor ) )
 			{
 				publicationBlocked++;
 				continue;
@@ -184,7 +213,7 @@ public sealed partial class VoxelManager
 			var descriptor = CreateRegularDescriptor( level, coordinate, captureRegion: false );
 			var state = _levels[level];
 			var uniform = level == 0 && _renderPreparedChunks.Contains( coordinate ) && !_gpuMesher.Contains( descriptor.Key );
-			var active = state.Active.Contains( coordinate ) || level == _partialOuterLevel && _partialOuterChunks.Contains( coordinate );
+			var active = _gpuMesher.IsRenderActive( descriptor.Key );
 			levels[level] = new( level, coordinate, state.OuterAnchor, state.StagedOuterAnchor,
 				state.OuterMinimum, state.OuterMaximum, _targetLevelAnchors[level], active,
 				active && (uniform || _gpuMesher.IsRegionPresented( descriptor )),
@@ -217,8 +246,7 @@ public sealed partial class VoxelManager
 						viewHitInsideDesiredFine = _targetVisualConfiguration.MinimumVisualLod == 0 &&
 							IsInsideHalfOpenBox( coordinate, anchor - extent, anchor + extent );
 					}
-					if ( viewHitLevel == -1 && (_levels[level].Active.Contains( coordinate ) ||
-						level == _partialOuterLevel && _partialOuterChunks.Contains( coordinate )) &&
+					if ( viewHitLevel == -1 && _gpuMesher.IsRenderActive( new GpuMeshRegionKey( level, coordinate ) ) &&
 						_gpuMesher.IsRegionPresented( CreateRegularDescriptor( level, coordinate, captureRegion: false ) ) ) viewHitLevel = level;
 				}
 			}
@@ -229,7 +257,7 @@ public sealed partial class VoxelManager
 			_clipboxPreparation is not null, SurfaceWaterPrepared,
 			_clipboxPlacementPending && _lodPlacementStartTime != 0 ? Stopwatch.GetElapsedTime( _lodPlacementStartTime ).TotalSeconds : 0,
 			_clipboxPlacementCommits, _clipboxPlacementSuperseded,
-			player?.EyePosition, player?.EyeTransform.Rotation.Forward, hitPosition, viewHitLevel, viewHitInsideDesiredFine );
+			player?.EyePosition, player?.EyeTransform.Rotation.Forward, hitPosition, viewHitLevel, viewHitInsideDesiredFine, detailed ? CaptureLocalCoverage() : null );
 	}
 
 	[ConCmd( "voxel_lod_report" )]
@@ -277,7 +305,13 @@ public sealed partial class VoxelManager
 		_lodArrival.FirstPreparedSeconds, _lodArrival.FirstPresentedSeconds,
 		_lodArrival.FirstTargetPresentedSeconds.ToArray(),
 		_lodArrival.Samples.ToArray(), _playerFigureEightTestTask, _playerFigureEightTestRevision,
-		(int)global::Sandbox.Screen.Width, (int)global::Sandbox.Screen.Height, _lodArrivalCoalescedWrites );
+		(int)global::Sandbox.Screen.Width, (int)global::Sandbox.Screen.Height, _lodArrivalCoalescedWrites )
+		{
+			NearObservationIntervalSeconds = LodNearObservationSeconds,
+			FirstPreparedObservedSeconds = _lodNearFirstPreparedSeconds,
+			FirstPresentedObservedSeconds = _lodNearFirstPresentedSeconds,
+			MaximumNearObservationGapSeconds = _lodNearMaximumObservationGapSeconds
+		};
 
 	private void QueueLodArrivalReport( LodArrivalReport report )
 	{
@@ -357,12 +391,18 @@ public sealed partial class VoxelManager
 		double ElapsedSeconds, Guid World, long Epoch, long Revision, ProceduralTerrainSettings Settings,
 		VoxelVisualConfiguration Configuration, Vector3 ArrivalPosition, long CommitsAtStart, long SupersededAtStart,
 		double? FirstPreparedSeconds, double? FirstPresentedSeconds, double?[] FirstTargetPresentedSecondsByLod, LodArrivalSample[] Samples,
-		string PerformanceTask, string PerformanceRevision, int ScreenWidth, int ScreenHeight, long CoalescedWrites );
+		string PerformanceTask, string PerformanceRevision, int ScreenWidth, int ScreenHeight, long CoalescedWrites )
+	{
+		public double? NearObservationIntervalSeconds { get; init; }
+		public double? FirstPreparedObservedSeconds { get; init; }
+		public double? FirstPresentedObservedSeconds { get; init; }
+		public double? MaximumNearObservationGapSeconds { get; init; }
+	}
 	private sealed record LodArrivalSample( double ElapsedSeconds, string CapturedAtUtc, Vector3 Position,
 		NearChunkReadiness Near, LodArrivalLevel[] Levels, bool DetailedReadiness, int[] MissingLevels,
 		int MissingTransitions, int MissingWater, bool PreparingPlacement, bool WaterReady, double PlacementAgeSeconds,
 		long Commits, long Superseded, Vector3? EyePosition, Vector3? EyeForward, Vector3? CollisionOnlyViewHit,
-		int? CollisionOnlyViewHitPresentedLod, bool? ViewHitInsideDesiredLod0 );
+		int? CollisionOnlyViewHitPresentedLod, bool? ViewHitInsideDesiredLod0, object LocalCoverage );
 	private sealed record LodArrivalLevel( int Level, Vector3Int TargetRegion, Vector3Int CommittedAnchor,
 		Vector3Int StagedAnchor, Vector3Int OuterMinimum, Vector3Int OuterMaximum, Vector3Int RequestedAnchor,
 		bool Active, bool Presented, GpuRegionWorkStatus Work, int Pending );

@@ -79,6 +79,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private int _partialOuterLevel = -1;
 	private IEnumerator<int> _clipboxPreparation;
 	private IEnumerator<int> _exteriorPreparation;
+	private bool _prepareExteriorNext;
 	private bool _clipboxWarmInterestDirty;
 	private const double ClipboxPreparationBudgetMilliseconds = 2.0;
 	private bool _clipboxPlacementTargetAvailable;
@@ -93,6 +94,10 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private long _clipboxPlacementRequests;
 	private long _clipboxPlacementCommits;
 	private long _clipboxPlacementSuperseded;
+	private const double StoppedTargetRecoverySeconds = 0.1;
+	private long _clipboxRecoveryMotionTimestamp;
+	private Vector3 _clipboxRecoveryMotionPosition;
+	private bool _clipboxRecoveringAtTarget;
 	private long _clipboxPlacementDeferredUpdates;
 	private long _clipboxPlacementReadinessBlocks;
 	private long _clipboxPlacementUnsafeCommits;
@@ -102,6 +107,10 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private double _clipboxClassificationMilliseconds;
 	private long _renderPreparedRevision;
 	private long _lastClipboxReadinessResidentRevision = -1;
+	private long _lastFinalCoverageReadinessTimestamp;
+	private long _finalCoverageReadinessChecks;
+	private double _maximumFinalCoverageReadinessMilliseconds;
+	private double _maximumFinalCoveragePublicationMilliseconds;
 	private long _lastClipboxReadinessRenderPreparedRevision = -1;
 	private long _performanceClipboxPlacementRequestStart;
 	private long _performanceClipboxPlacementCommitStart;
@@ -398,7 +407,9 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	{
 		if ( Scene.IsEditor ) return;
 		ResolveStreamingTarget();
-		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks );
+		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks,
+			key => { MarkWaterPresentationDirty( key ); _predictionReadyRegions.Remove( key ); },
+			key => _predictionReadySeams.Remove( key ) );
 		_gpuMesher.SetFieldPresentationReady( Networking.IsHost );
 		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
 		if ( !StagedTerrainSettings.IsValid )
@@ -512,7 +523,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_waterRenderer ??= new SurfaceWaterRenderer( Scene.SceneWorld );
 		UpdateTerrainReplication();
 		UpdatePlayerCollisionInterests();
-		_collision?.Integrate();
+		using ( MeasureDeformation( DeformationStage.CollisionIntegration ) )
+			_collision?.Integrate();
 
 		if ( IntegrateCompletedWarmChunks() )
 		{
@@ -528,11 +540,16 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			}
 		}
 		AdvanceClipboxPreparation();
+		UpdateTerrainPrediction();
 		UpdateWaterCellGeneration();
 		if ( _clipboxPlacementPending ) TryCommitPendingClipboxPlacement();
-		var meshDispatches = _gpuMesher.ProcessPending(
-			GpuVoxelMesher.MaximumDispatchesPerUpdate,
-			++_gpuRenderUpdateEpoch );
+		int meshDispatches;
+		using ( MeasureDeformation( DeformationStage.MeshPump ) )
+		{
+			meshDispatches = _gpuMesher.ProcessPending(
+				GpuVoxelMesher.MaximumDispatchesPerUpdate,
+				++_gpuRenderUpdateEpoch );
+		}
 		if ( _playerFigureEightTestRunning )
 		{
 			_performancePeakMeshDispatchesPerUpdate = Math.Max(
@@ -548,6 +565,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	protected override void OnDestroy()
 	{
+		FinishDeformationReport();
 		FinishLodArrivalOnDestroy();
 		_clipboxPreparation?.Dispose();
 		_clipboxPreparation = null;
@@ -1208,6 +1226,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				RiverAtlas = GpuRiverAtlas.CaptureMetrics(),
 				WaterPreparation = manager._waterCellPreparation?.Status.ToString(),
 				WaterCellsReady = manager.SurfaceWaterPrepared,
+				Prediction = new { Regions = manager._predictionRegions.Count, Seams = manager._predictionSeams.Count,
+					Scheduled = manager._predictionScheduled, SeamsScheduled = manager._predictionSeamsScheduled,
+					Entered = manager._predictionEntered, ReadyOnEntry = manager._predictionReadyOnEntry,
+					MaximumMilliseconds = manager._predictionMaximumMilliseconds,
+					Packages = manager.CapturePredictionPackages() },
 				VisualPending = manager._gpuMesher?.AllPendingCount,
 				TransitionPending = manager._gpuMesher?.TransitionPendingCount,
 				TransitionUniformRegionsSkipped = manager._gpuMesher?.TransitionUniformRegionsSkipped ?? 0,
@@ -1295,7 +1318,13 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	private static bool TryGetActiveManager( string operation, out VoxelManager manager )
 	{
 		manager = null;
-		foreach ( var candidate in Game.ActiveScene.GetAllComponents<VoxelManager>() )
+		var scene = Game.ActiveScene;
+		if ( scene is null )
+		{
+			Log.Warning( $"[VoxelWorld] {operation}.rejected reason=\"no active scene\"" );
+			return false;
+		}
+		foreach ( var candidate in scene.GetAllComponents<VoxelManager>() )
 		{
 			if ( manager is not null )
 			{
@@ -2456,6 +2485,38 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_terrainContentRevision++;
 		if ( !preserveTerrain ) _terrainField = new TerrainField( CurrentTerrainSettings );
 		_gpuMesher.Reset( _appliedCellsPerAxis );
+		_predictionRegions.Clear();
+		_predictionSeams.Clear();
+		_predictionRegionOrder.Clear();
+		_predictionSeamOrder.Clear();
+		_predictionReadyRegions.Clear();
+		_predictionReadySeams.Clear();
+		_predictionHasPosition = false;
+		_predictionVelocity = Vector3.Zero;
+		_predictionRegionCursor = 0;
+		_predictionSeamCursor = 0;
+		_coverageDiffersFromLayout = false;
+		_coverageLocalPlan = false;
+		_coveragePending.Clear();
+		_coverageRequired.Clear();
+		_coverageQueue.Clear();
+		_coverageQueued.Clear();
+		_coverageRetireQueue.Clear();
+		_coverageRetireSeams.Clear();
+		_coverageDesired.Clear();
+		_coverageSplitTargets.Clear();
+		_coverageRoots.Clear();
+		_coverageConverged = false;
+		_coverageUpdates = 0;
+		_coverageLocalWorkComplete = false;
+		_finalCoverageReadinessChecks = 0;
+		_maximumFinalCoverageReadinessMilliseconds = 0;
+		_maximumFinalCoveragePublicationMilliseconds = 0;
+		_coverageResumedRequests = 0;
+		_coverageExteriorPromotions = 0;
+		_coverageMaximumPublicationMilliseconds = 0;
+		_coverageUpdateMilliseconds = 0;
+		_coverageMaximumUpdateMilliseconds = 0;
 		ResetSurfaceWater();
 		_renderDesiredChunks.Clear();
 		_nextRenderDesiredChunks.Clear();
@@ -2637,11 +2698,21 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_hasStreamingCenter = true;
 		_playerStatusChunk = null;
 		var desiredUpdateMilliseconds = (float)Stopwatch.GetElapsedTime( desiredUpdateStart ).TotalMilliseconds;
+		foreach ( var coordinate in _renderEnteringBuffer )
+		{
+			if ( !_predictionRegions.Contains( new GpuMeshRegionKey( 0, coordinate ) ) ) continue;
+			_predictionEntered++;
+			if ( _gpuMesher.IsResident( CreateRegularDescriptor( 0, coordinate, captureRegion: false ) ) ) _predictionReadyOnEntry++;
+		}
 		foreach ( var coordinate in _renderLeavingBuffer )
 		{
 			if ( RetainsLod0PlacementCoordinate( coordinate ) ) continue;
 			_gpuMesher.Remove( new GpuMeshRegionKey( 0, coordinate ) );
-			if ( _renderPreparedChunks.Remove( coordinate ) ) _renderPreparedRevision++;
+			if ( _renderPreparedChunks.Remove( coordinate ) )
+			{
+				_renderPreparedRevision++;
+				MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, coordinate ) );
+			}
 		}
 		foreach ( var coordinate in _renderPreparedChunks )
 		{
@@ -2683,6 +2754,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			{
 				_warmCoordinateBuffer.Add( coordinate );
 			}
+		}
+		foreach ( var key in _coverageRequired )
+		{
+			if ( key.Level == 0 && !_renderPreparedChunks.Contains( key.Coordinate ) &&
+				_coordinateSetBuffer.Add( key.Coordinate ) ) _warmCoordinateBuffer.Add( key.Coordinate );
 		}
 		foreach ( var coordinate in _levels[0].Active )
 		{
@@ -2796,6 +2872,14 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		Vector3 viewerPosition,
 		VoxelVisualConfiguration visualConfiguration )
 	{
+		// Observe actual travel, not just snapped anchors. A short quiet interval
+		// must not repeatedly cancel useful work between fast-moving anchor steps.
+		if ( _clipboxRecoveryMotionTimestamp == 0 ||
+			(viewerPosition - _clipboxRecoveryMotionPosition).LengthSquared >= RequiredBaseCellSize * RequiredBaseCellSize )
+		{
+			_clipboxRecoveryMotionPosition = viewerPosition;
+			_clipboxRecoveryMotionTimestamp = Stopwatch.GetTimestamp();
+		}
 		var maximumAnchorLevel = Math.Max( 1, visualConfiguration.MaximumVisualLod );
 		for ( var level = 1; level <= maximumAnchorLevel; level++ )
 		{
@@ -2812,7 +2896,25 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			targetChanged |= _candidateLevelAnchors[level] != _targetLevelAnchors[level];
 		}
-		if ( !targetChanged ) return;
+		if ( !targetChanged )
+		{
+			if ( _levels[0].HasPlacement && visualConfiguration == _appliedVisualConfiguration &&
+				Stopwatch.GetElapsedTime( _clipboxRecoveryMotionTimestamp ).TotalSeconds >= StoppedTargetRecoverySeconds )
+			{
+				var staleTarget = !_clipboxPlacementPending && _coverageDiffersFromLayout;
+				if ( _clipboxPlacementPending )
+					for ( var level = 0; level <= visualConfiguration.MaximumVisualLod; level++ )
+						staleTarget |= _levels[level].StagedOuterAnchor != TargetOuterAnchor( level, visualConfiguration );
+				if ( staleTarget )
+				{
+					var previousAnchor = _levels[0].StagedOuterAnchor;
+					if ( _clipboxPlacementPending ) CancelPendingClipboxPlacement();
+					PrepareLodPlacement( recoverAtTarget: true );
+					Log.Info( $"[VoxelWorld] lod.retarget.staged previousFine={previousAnchor} fine={_targetLevelAnchors[0]} localCoverage=true" );
+				}
+			}
+			return;
+		}
 		if ( exteriorTargetChanged ) _gpuMesher.SetStreamingPosition( viewerPosition );
 
 		if ( _clipboxPlacementTargetAvailable && HasClipboxPlacementWork )
@@ -2841,20 +2943,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			var coverageLevel = _stagedVisualConfiguration.MaximumVisualLod;
 			var stagedCoverage = _levels[coverageLevel];
-			// Let useful coverage finish even when the viewer outruns its fine detail.
-			// A newly available closer boundary preempts distant work when LOD0 misses the player.
-			var prioritizePlayer = false;
-			if ( !configurationChanged && !IsInsideHalfOpenBox( _targetLevelAnchors[0],
-				_levels[0].OuterMinimum, _levels[0].OuterMaximum ) )
-			{
-				var nextBoundary = SelectClipboxBoundary( visualConfiguration, out _ );
-				if ( nextBoundary >= 0 )
-				{
-					var pendingBoundary = Array.FindIndex( _levels, state => state.PlacementChanged );
-					prioritizePlayer = pendingBoundary > nextBoundary;
-				}
-			}
-			if ( prioritizePlayer || MatchesCommittedPlacementTarget() || configurationChanged ||
+			if ( MatchesCommittedPlacementTarget() || configurationChanged ||
 				!IsInsideHalfOpenBox( _targetLevelAnchors[coverageLevel],
 					stagedCoverage.StagedOuterMinimum, stagedCoverage.StagedOuterMaximum ) )
 			{
@@ -2867,7 +2956,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	private bool MatchesCommittedPlacementTarget()
 	{
-		if ( _targetVisualConfiguration != _appliedVisualConfiguration ) return false;
+		if ( _coverageDiffersFromLayout || _targetVisualConfiguration != _appliedVisualConfiguration ) return false;
 		for ( var level = 0; level <= _targetVisualConfiguration.MaximumVisualLod; level++ )
 		{
 			if ( !_levels[level].HasPlacement ||
@@ -2893,71 +2982,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		level > 0 && level < configuration.MaximumVisualLod ? _targetLevelAnchors[level + 1] * 2 :
 		_targetLevelAnchors[level];
 
-	private int SelectClipboxBoundary( VoxelVisualConfiguration configuration, out Vector3Int boundaryAnchor )
-	{
-		var boundaryLevel = -1;
-		var fallbackLevel = -1;
-		var fallbackAnchor = Vector3Int.Zero;
-		boundaryAnchor = Vector3Int.Zero;
-		var coverage = _levels[configuration.MaximumVisualLod];
-		if ( coverage.HasPlacement && configuration == _appliedVisualConfiguration &&
-			IsInsideHalfOpenBox( _targetLevelAnchors[coverage.Level], coverage.OuterMinimum, coverage.OuterMaximum ) )
-		{
-			// Advance one nested boundary. Keep a coarse-region gap between seams.
-			for ( var level = configuration.MinimumVisualLod; level <= configuration.MaximumVisualLod; level++ )
-			{
-				var state = _levels[level];
-				var target = TargetOuterAnchor( level, configuration );
-				if ( target == state.OuterAnchor ) continue;
-				var extent = level == 0 ? configuration.Lod0VisualHalfExtent : configuration.LodCacheHalfExtent;
-				var minimum = new Vector3Int( int.MinValue );
-				var maximum = new Vector3Int( int.MaxValue );
-				if ( level < configuration.MaximumVisualLod )
-				{
-					minimum = _levels[level + 1].OuterMinimum * 2 + new Vector3Int( extent + 2 );
-					maximum = _levels[level + 1].OuterMaximum * 2 - new Vector3Int( extent + 2 );
-				}
-				if ( level > configuration.MinimumVisualLod )
-				{
-					var childMinimum = _levels[level - 1].OuterMaximum / 2 + new Vector3Int( 1 - extent );
-					var childMaximum = _levels[level - 1].OuterMinimum / 2 + new Vector3Int( extent - 1 );
-					minimum = new Vector3Int( Math.Max( minimum.x, childMinimum.x ), Math.Max( minimum.y, childMinimum.y ), Math.Max( minimum.z, childMinimum.z ) );
-					maximum = new Vector3Int( Math.Min( maximum.x, childMaximum.x ), Math.Min( maximum.y, childMaximum.y ), Math.Min( maximum.z, childMaximum.z ) );
-				}
-				if ( level < configuration.MaximumVisualLod )
-				{
-					minimum += new Vector3Int( minimum.x & 1, minimum.y & 1, minimum.z & 1 );
-					maximum -= new Vector3Int( maximum.x & 1, maximum.y & 1, maximum.z & 1 );
-				}
-				boundaryAnchor = new Vector3Int( Math.Clamp( target.x, minimum.x, maximum.x ),
-					Math.Clamp( target.y, minimum.y, maximum.y ), Math.Clamp( target.z, minimum.z, maximum.z ) );
-				if ( boundaryAnchor == state.OuterAnchor ) continue;
-				if ( fallbackLevel < 0 )
-				{
-					fallbackLevel = level;
-					fallbackAnchor = boundaryAnchor;
-				}
-				// Move the boundary limiting the largest player offset before sideways adjustments.
-				var delta = target - state.OuterAnchor;
-				var x = Math.Abs( delta.x );
-				var y = Math.Abs( delta.y );
-				var z = Math.Abs( delta.z );
-				var advancesDominantAxis = x >= y && x >= z ? boundaryAnchor.x != state.OuterAnchor.x :
-					y >= z ? boundaryAnchor.y != state.OuterAnchor.y : boundaryAnchor.z != state.OuterAnchor.z;
-				if ( !advancesDominantAxis ) continue;
-				boundaryLevel = level;
-				break;
-			}
-		}
-		if ( boundaryLevel < 0 && fallbackLevel >= 0 )
-		{
-			boundaryLevel = fallbackLevel;
-			boundaryAnchor = fallbackAnchor;
-		}
-		return boundaryLevel;
-	}
-
-	private void PrepareLodPlacement()
+	private void PrepareLodPlacement( bool recoverAtTarget = false )
 	{
 		_lodPlacementStartTime = Stopwatch.GetTimestamp();
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.PreparePlacement );
@@ -2966,7 +2991,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			throw new InvalidOperationException( "A clipbox placement step is already pending." );
 
 		var configuration = _targetVisualConfiguration;
-		var boundaryLevel = SelectClipboxBoundary( configuration, out var boundaryAnchor );
+		_clipboxRecoveringAtTarget = recoverAtTarget;
 		for ( var level = 0; level < SupportedVisualLevelCount; level++ )
 		{
 			var state = _levels[level];
@@ -2975,11 +3000,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			var anchor = level <= configuration.MaximumVisualLod
 				? _targetLevelAnchors[level]
 				: default;
-			var outerAnchor = boundaryLevel >= 0 && visualEnabled
-				? level == boundaryLevel ? boundaryAnchor : state.OuterAnchor
-				: TargetOuterAnchor( level, configuration );
-			if ( boundaryLevel >= 0 && visualEnabled )
-				anchor = level == configuration.MinimumVisualLod ? outerAnchor : _levels[level - 1].StagedOuterAnchor / 2;
+			var outerAnchor = TargetOuterAnchor( level, configuration );
 			var halfExtent = level == 0
 				? configuration.Lod0VisualHalfExtent
 				: configuration.LodCacheHalfExtent;
@@ -3052,16 +3073,10 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			CaptureSetDelta( pair.Desired, pair.NextDesired, pair.Entering, pair.Leaving );
 		}
 
-		if ( _playerFigureEightTestRunning )
-		{
-			var milliseconds = (float)Stopwatch.GetElapsedTime( preparationStart ).TotalMilliseconds;
-			_performanceStreaming.PlacementPreparationMilliseconds += milliseconds;
-			_performanceStreaming.MaximumPlacementPreparationMilliseconds = Math.Max(
-				_performanceStreaming.MaximumPlacementPreparationMilliseconds, milliseconds );
-		}
 		_stagedVisualConfiguration = configuration;
 		_stagedVisualConfigurationRevision = _targetVisualConfigurationRevision;
 		_lastClipboxReadinessResidentRevision = -1;
+		_lastFinalCoverageReadinessTimestamp = 0;
 		_lastClipboxReadinessRenderPreparedRevision = -1;
 		_clipboxPlacementPending = true;
 		_waterRequestSerial++;
@@ -3077,6 +3092,15 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			}
 		}
 		_clipboxPreparation = PrepareLodPlacementMeshes().GetEnumerator();
+		_coverageLocalPlan = _levels[0].HasPlacement && configuration == _appliedVisualConfiguration;
+		if ( _coverageLocalPlan ) BeginLocalCoveragePlan();
+		if ( _playerFigureEightTestRunning )
+		{
+			var milliseconds = (float)Stopwatch.GetElapsedTime( preparationStart ).TotalMilliseconds;
+			_performanceStreaming.PlacementPreparationMilliseconds += milliseconds;
+			_performanceStreaming.MaximumPlacementPreparationMilliseconds = Math.Max(
+				_performanceStreaming.MaximumPlacementPreparationMilliseconds, milliseconds );
+		}
 		RetireSupersededPlacementWork();
 	}
 
@@ -3097,11 +3121,22 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			var previous = _levels[_partialOuterLevel];
 			_partialOuterChunks.RemoveWhere( coordinate =>
 			{
-				if ( enabled && _partialOuterLevel == level && IsInsideHalfOpenBox( coordinate, minimum, maximum ) &&
-					!IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) return false;
 				var key = new GpuMeshRegionKey( _partialOuterLevel, coordinate );
-				_gpuMesher.SetRenderActive( key, previous.Active.Contains( coordinate ) );
-				if ( !previous.DesiredCache.Contains( coordinate ) &&
+				if ( enabled && _partialOuterLevel == level && IsInsideHalfOpenBox( coordinate, minimum, maximum ) &&
+					(!IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ||
+					!state.Active.Contains( coordinate ) || !HasCoverageDescendant( key )) ) return false;
+				_gpuMesher.SetExteriorStreamingRequired( key, false );
+				if ( _coverageLocalPlan )
+				{
+					// Retire through the topology owner after any in-flight refinement.
+					if ( !_coverageRoots.Contains( CoverageAncestor( key, _stagedVisualConfiguration.MaximumVisualLod ) ) )
+					{
+						_coverageRetireQueue.Enqueue( key );
+						_coverageLocalWorkComplete = false;
+					}
+				}
+				else _gpuMesher.SetRenderActive( key, previous.Active.Contains( coordinate ) );
+				if ( !_predictionRegions.Contains( key ) && !_gpuMesher.IsRenderActive( key ) && !previous.DesiredCache.Contains( coordinate ) &&
 					!(_clipboxPlacementPending && previous.PlacementChanged && previous.NextDesiredCache.Contains( coordinate )) )
 					_gpuMesher.Remove( key );
 				return true;
@@ -3123,17 +3158,27 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				{
 					if ( ++inspected % 32 == 0 ) yield return 0;
 					var coordinate = new Vector3Int( x, y, z );
-					if ( !IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) incoming.Add( coordinate );
+					// Committed box metadata can outlive its retired actual coverage.
+					if ( !IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ||
+						!HasCoverageDescendant( new GpuMeshRegionKey( state.Level, coordinate ) ) ) incoming.Add( coordinate );
 				}
 		SortNearestFirst( incoming, anchor );
 		foreach ( var coordinate in incoming )
 		{
 			if ( ++inspected % 32 == 0 ) yield return 0;
 			// A hierarchy commit may adopt this region between preparation slices.
-			if ( IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) ) continue;
+			if ( IsInsideHalfOpenBox( coordinate, state.OuterMinimum, state.OuterMaximum ) &&
+				HasCoverageDescendant( new GpuMeshRegionKey( state.Level, coordinate ) ) ) continue;
 			var descriptor = CreateRegularDescriptor( state.Level, coordinate );
-			if ( _partialOuterChunks.Add( coordinate ) ) _waterRequestSerial++;
-			_gpuMesher.SetRenderActive( descriptor.Key, true );
+			var exteriorAdded = _partialOuterChunks.Add( coordinate );
+			_gpuMesher.SetExteriorStreamingRequired( descriptor.Key, true );
+			if ( exteriorAdded ) _waterRequestSerial++;
+			if ( _coverageLocalPlan )
+			{
+				if ( !_gpuMesher.IsRenderActive( descriptor.Key ) )
+					QueueCoverageCandidate( descriptor.Key, promoteExterior: exteriorAdded );
+			}
+			else if ( !_gpuMesher.HasRenderDescendant( descriptor.Key ) ) _gpuMesher.SetRenderActive( descriptor.Key, true );
 			if ( _gpuMesher.Contains( descriptor ) ) continue;
 			if ( ClassifyClipboxRegion( state.Level, coordinate ) != ChunkDensityClassification.PotentiallySurfaceContaining )
 				_gpuMesher.PublishKnownEmpty( descriptor, GpuMeshResidency.Visual );
@@ -3149,8 +3194,9 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		var start = Stopwatch.GetTimestamp();
 		do
 		{
-			if ( _exteriorPreparation is not null && (_clipboxPreparation is null || !_levels[0].PlacementChanged) )
+			if ( _exteriorPreparation is not null && (_clipboxPreparation is null || _prepareExteriorNext) )
 			{
+				_prepareExteriorNext = false;
 				if ( !_exteriorPreparation.MoveNext() )
 				{
 					_exteriorPreparation.Dispose();
@@ -3159,6 +3205,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				continue;
 			}
 			if ( _clipboxPreparation is null ) break;
+			_prepareExteriorNext = true;
 			if ( !_clipboxPreparation.MoveNext() )
 			{
 				_clipboxPreparation.Dispose();
@@ -3182,7 +3229,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		foreach ( var coordinate in _levels[0].Entering )
 		{
 			if ( ++inspected % 32 == 0 ) yield return 0;
-			_gpuMesher.SetPlacementRequired( new GpuMeshRegionKey( 0, coordinate ) );
+			if ( !_coverageLocalPlan ) _gpuMesher.SetPlacementRequired( new GpuMeshRegionKey( 0, coordinate ) );
 		}
 		for ( var level = 1; level < SupportedVisualLevelCount; level++ )
 		{
@@ -3192,7 +3239,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			state.Readiness.Clear();
 			// Independent exterior residents are disjoint from the unchanged committed cache.
 			var exteriorCount = level == _partialOuterLevel ? _partialOuterChunks.Count : 0;
-			if ( !state.PlacementChanged && _gpuMesher.PendingLevelCount( level ) == 0 &&
+			if ( !_coverageLocalPlan && !state.PlacementChanged && _gpuMesher.PendingLevelCount( level ) == 0 &&
 				_gpuMesher.ResidentLevelCount( level ) == stagedCache.Count + exteriorCount )
 			{
 				// Unchanged complete caches have no new publication dependency.
@@ -3222,7 +3269,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			{
 				if ( ++inspected % 32 == 0 ) yield return 0;
 				var descriptor = CreateRegularDescriptor( level, coordinate );
-				_gpuMesher.SetPlacementRequired( descriptor.Key );
+				if ( !_coverageLocalPlan ) _gpuMesher.SetPlacementRequired( descriptor.Key );
 				if ( !_gpuMesher.Contains( descriptor ) )
 				{
 					_gpuMesher.Schedule(
@@ -3281,7 +3328,16 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 
 	private void TryCommitPendingClipboxPlacement()
 	{
-		if ( _gpuMesher is null || !_clipboxPlacementPending || _clipboxPreparation is not null ) return;
+		if ( _gpuMesher is null || !_clipboxPlacementPending ) return;
+		if ( _coverageLocalPlan )
+		{
+			AdvanceLocalCoverage();
+			if ( _lastFinalCoverageReadinessTimestamp != 0 &&
+				Stopwatch.GetElapsedTime( _lastFinalCoverageReadinessTimestamp ).TotalMilliseconds < 100 ) return;
+		}
+		if ( _clipboxPreparation is not null ) return;
+		// Local handoffs above remain independent while final regular work drains.
+		if ( _coverageLocalPlan && _gpuMesher.AllPendingCount > 0 ) return;
 		RefreshWaterCellRequests();
 		var residentRevision = _gpuMesher.ResidentPublicationRevision;
 		if ( residentRevision == _lastClipboxReadinessResidentRevision &&
@@ -3294,7 +3350,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_lastClipboxReadinessResidentRevision = residentRevision;
 		_lastClipboxReadinessRenderPreparedRevision = _renderPreparedRevision;
 		_lastClipboxReadinessWaterRevision = _waterCellRevision;
+		_lastFinalCoverageReadinessTimestamp = Stopwatch.GetTimestamp();
 		var readiness = CapturePendingClipboxReadiness( stopAtFirstMissing: true );
+		_finalCoverageReadinessChecks++;
+		_maximumFinalCoverageReadinessMilliseconds = Math.Max( _maximumFinalCoverageReadinessMilliseconds,
+			Stopwatch.GetElapsedTime( _lastFinalCoverageReadinessTimestamp ).TotalMilliseconds );
 		if ( !readiness.IsReady )
 		{
 			_clipboxPlacementDeferredUpdates++;
@@ -3316,6 +3376,13 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				$"[VoxelWorld] lod.handoff.rejected missingLevels=[{string.Join( ',', readiness.MissingLevels )}] " +
 				$"missingTransitions={readiness.MissingTransitions}" );
 			return;
+		}
+
+		var publicationStarted = Stopwatch.GetTimestamp();
+		foreach ( var operation in _coveragePending )
+		{
+			foreach ( var key in operation.Dependencies ) _supersededPlacementRegions.Add( key );
+			_supersededPlacementTransitions.AddRange( operation.NewSeams );
 		}
 
 		_transitionRetainedBuffer.Clear();
@@ -3347,44 +3414,61 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 					!IsInsideHalfOpenBox( coordinate, minimum, maximum ) ) return false;
 				var key = new GpuMeshRegionKey( _partialOuterLevel, coordinate );
 				_gpuMesher.SetRenderActive( key, nextActive.Contains( coordinate ) );
-				if ( !nextCache.Contains( coordinate ) ) _gpuMesher.Remove( key );
+				if ( !nextCache.Contains( coordinate ) && !_predictionRegions.Contains( key ) ) _gpuMesher.Remove( key );
 				return true;
 			} );
 		}
+		_coverageRegularBuffer.Clear();
+		foreach ( var key in _gpuMesher.ActiveRegionKeys )
+		{
+			var state = _levels[key.Level];
+			if (!(state.PlacementChanged ? state.NextActive : state.Active).Contains( key.Coordinate ) &&
+				!(key.Level == _partialOuterLevel && _partialOuterChunks.Contains( key.Coordinate ) &&
+				 !IsInsideHalfOpenBox( key.Coordinate, state.StagedOuterMinimum, state.StagedOuterMaximum )) )
+				_coverageRegularBuffer.Add( key );
+		}
+		foreach ( var key in _coverageRegularBuffer )
+		{
+			_gpuMesher.SetRenderActive( key, false );
+			_supersededPlacementRegions.Add( key );
+		}
 		foreach ( var state in _levels )
-		{
-			foreach ( var coordinate in state.ActiveLeaving )
-			{
-				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( state.Level, coordinate ), false );
-			}
-			foreach ( var coordinate in state.ActiveEntering )
-			{
+			foreach ( var coordinate in state.PlacementChanged ? state.NextActive : state.Active )
 				_gpuMesher.SetRenderActive( new GpuMeshRegionKey( state.Level, coordinate ), true );
-			}
-		}
-		foreach ( var pair in _transitionPairs )
+		_coverageSeamBuffer.Clear();
+		foreach ( var key in _gpuMesher.ActiveTransitionKeys )
 		{
-			foreach ( var key in pair.Leaving ) _gpuMesher.SetTransitionActive( key, false );
-			foreach ( var key in pair.Entering ) _gpuMesher.SetTransitionActive( key, true );
+			var pair = _transitionPairs[key.CoarseLevel - 1];
+			if (!(pair.PlacementChanged ? pair.NextDesired : pair.Desired).Contains( key )) _coverageSeamBuffer.Add( key );
 		}
+		foreach ( var key in _coverageSeamBuffer ) _gpuMesher.SetTransitionActive( key, false );
+		foreach ( var pair in _transitionPairs )
+			foreach ( var key in pair.PlacementChanged ? pair.NextDesired : pair.Desired ) _gpuMesher.SetTransitionActive( key, true );
 
 		foreach ( var state in _levels )
 		{
 			foreach ( var coordinate in state.Leaving )
 			{
+				if ( _predictionRegions.Contains( new GpuMeshRegionKey( state.Level, coordinate ) ) ) continue;
 				if ( state.Level == 0 && _renderDesiredChunks.Contains( coordinate ) ) continue;
 				if ( state.Level == _partialOuterLevel && _partialOuterChunks.Contains( coordinate ) ) continue;
 				_gpuMesher.Remove( new GpuMeshRegionKey( state.Level, coordinate ) );
 				if ( state.Level == 0 && _renderPreparedChunks.Remove( coordinate ) )
 				{
 					_renderPreparedRevision++;
+					MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, coordinate ) );
 				}
 			}
 		}
 		foreach ( var pair in _transitionPairs )
 		{
-			foreach ( var key in pair.Leaving ) _gpuMesher.RemoveTransition( key );
+			foreach ( var key in pair.Leaving )
+				if ( !_predictionSeams.Contains( key ) ) _gpuMesher.RemoveTransition( key );
 		}
+		_coverageSeamBuffer.Clear();
+		foreach ( var key in _gpuMesher.CachedTransitionKeys )
+			if ( !_predictionSeams.Contains( key ) && !_gpuMesher.IsTransitionActive( key ) ) _coverageSeamBuffer.Add( key );
+		foreach ( var key in _coverageSeamBuffer ) _gpuMesher.RemoveTransition( key );
 
 		foreach ( var state in _levels )
 		{
@@ -3394,16 +3478,33 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			if ( pair.PlacementChanged ) pair.CommitPlacement();
 		}
-		var exteriorConfigurationChanged = _appliedVisualConfiguration != _stagedVisualConfiguration;
 		_appliedVisualConfiguration = _stagedVisualConfiguration;
 		_appliedVisualConfigurationRevision = _stagedVisualConfigurationRevision;
+		_coverageDiffersFromLayout = false;
 		_clipboxPlacementPending = false;
+		_coverageLocalPlan = false;
+		_coverageConverged = true;
+		_coverageLocalWorkComplete = true;
+		_coveragePending.Clear();
+		_coverageRequired.Clear();
+		_coverageQueue.Clear();
+		_coverageQueued.Clear();
+		_coverageRetireQueue.Clear();
+		_coverageRetireSeams.Clear();
+		RetireSupersededPlacementWork();
 		_waterRequestSerial++;
 		_gpuMesher.ClearPlacementPriority();
 		_gpuMesher.PrioritizePlayerDetail = _targetVisualConfiguration.MinimumVisualLod == 0 &&
 			_targetLevelAnchors[0] != _levels[0].OuterAnchor;
 		_clipboxPlacementCommits++;
-		if ( bootstrap || exteriorConfigurationChanged ) RefreshExteriorPreparation();
+		if ( _clipboxRecoveringAtTarget )
+		{
+			Log.Info( $"[VoxelWorld] lod.retarget.committed fine={_levels[0].OuterAnchor} elapsedMs={Stopwatch.GetElapsedTime( _lodPlacementStartTime ).TotalMilliseconds:0.0}" );
+			_clipboxRecoveringAtTarget = false;
+		}
+		// Re-admit exterior interest after clearing local queues, including candidates
+		// that waited for a refinement patch when the final layout became ready.
+		RefreshExteriorPreparation();
 
 		if ( VerboseLogging )
 		{
@@ -3419,12 +3520,24 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				$"identityBefore={retainedBefore.Digest:X16} identityAfter={retainedAfter.Digest:X16} " +
 				$"identityPreserved={retainedBefore == retainedAfter}" );
 		}
+		var publicationMilliseconds = Stopwatch.GetElapsedTime( publicationStarted ).TotalMilliseconds;
+		_maximumFinalCoveragePublicationMilliseconds = Math.Max( _maximumFinalCoveragePublicationMilliseconds, publicationMilliseconds );
+		Log.Info( $"[VoxelWorld] coverage.final.commit bootstrap={bootstrap} publicationMs={publicationMilliseconds:0.000} readinessMaxMs={_maximumFinalCoverageReadinessMilliseconds:0.000}" );
 		PrepareNextClipboxPlacementStep();
 	}
 
 	private void CancelPendingClipboxPlacement()
 	{
 		if ( !_clipboxPlacementPending ) return;
+		_clipboxRecoveringAtTarget = false;
+		_coverageLocalPlan = false;
+		foreach ( var operation in _coveragePending )
+		{
+			foreach ( var key in operation.Dependencies ) _supersededPlacementRegions.Add( key );
+			_supersededPlacementTransitions.AddRange( operation.NewSeams );
+		}
+		_coveragePending.Clear();
+		_coverageRequired.Clear();
 		_gpuMesher.ClearPlacementPriority();
 		_clipboxPreparation?.Dispose();
 		_clipboxPreparation = null;
@@ -3449,17 +3562,23 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			var state = _levels[key.Level];
 			var desired = _clipboxPlacementPending && state.PlacementChanged ? state.NextDesiredCache : state.DesiredCache;
-			if ( desired.Contains( key.Coordinate ) ||
+			if ( _predictionRegions.Contains( key ) || _coverageRequired.Contains( key ) ||
+				_gpuMesher.IsRenderActive( key ) || desired.Contains( key.Coordinate ) ||
 				key.Level == 0 && _renderDesiredChunks.Contains( key.Coordinate ) ||
 				key.Level == _partialOuterLevel && _partialOuterChunks.Contains( key.Coordinate ) ) continue;
 			_gpuMesher.Remove( key );
-			if ( key.Level == 0 && _renderPreparedChunks.Remove( key.Coordinate ) ) _renderPreparedRevision++;
+			if ( key.Level == 0 && _renderPreparedChunks.Remove( key.Coordinate ) )
+			{
+				_renderPreparedRevision++;
+				MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, key.Coordinate ) );
+			}
 		}
 		foreach ( var key in _supersededPlacementTransitions )
 		{
 			var pair = _transitionPairs[key.CoarseLevel - 1];
 			var desired = _clipboxPlacementPending && pair.PlacementChanged ? pair.NextDesired : pair.Desired;
-			if ( !desired.Contains( key ) ) _gpuMesher.RemoveTransition( key );
+			if ( !_predictionSeams.Contains( key ) && !desired.Contains( key ) && !_gpuMesher.IsTransitionActive( key ) &&
+				!_coveragePending.Any( operation => operation.NewSeams.Contains( key ) ) ) _gpuMesher.RemoveTransition( key );
 		}
 		_supersededPlacementRegions.Clear();
 		_supersededPlacementTransitions.Clear();
@@ -3473,21 +3592,13 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		Array.Clear( _pendingMissingByLevel );
 		var missingTransitions = 0;
 		var missingWater = 0;
-		foreach ( var coordinate in _levels[0].Entering )
+		foreach ( var state in _levels )
 		{
-			if ( !IsClipboxRegionReady( 0, coordinate ) )
+			foreach ( var coordinate in state.PlacementChanged ? state.NextActive : state.Active )
 			{
-				_pendingMissingByLevel[0]++;
-				if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
-			}
-		}
-		for ( var level = 1; level < SupportedVisualLevelCount; level++ )
-		{
-			foreach ( var coordinate in _levels[level].Readiness )
-			{
-				if ( !IsClipboxRegionReady( level, coordinate ) )
+				if ( !IsClipboxRegionReady( state.Level, coordinate ) )
 				{
-					_pendingMissingByLevel[level]++;
+					_pendingMissingByLevel[state.Level]++;
 					if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 				}
 			}
@@ -3497,15 +3608,15 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		foreach ( var descriptor in _waterCellRequests.Keys )
 		{
 			var state = _levels[descriptor.Key.Level];
-			if ( !state.PlacementChanged || !state.NextActive.Contains( descriptor.Key.Coordinate ) ||
-				state.Active.Contains( descriptor.Key.Coordinate ) || _waterCells.ContainsKey( descriptor ) ) continue;
+			if ( !(state.PlacementChanged ? state.NextActive : state.Active).Contains( descriptor.Key.Coordinate ) ||
+				_waterCells.ContainsKey( descriptor ) ) continue;
 			_pendingMissingByLevel[state.Level]++;
 			missingWater++;
 			if ( stopAtFirstMissing ) return new PendingClipboxReadiness( _pendingMissingByLevel, missingTransitions, missingWater );
 		}
 		foreach ( var pair in _transitionPairs )
 		{
-			foreach ( var key in pair.Readiness )
+			foreach ( var key in pair.PlacementChanged ? pair.NextDesired : pair.Desired )
 			{
 				if ( !_gpuMesher.IsTransitionResident( CreateTransitionDescriptor( key, captureRegion: false ) ) )
 				{
@@ -3577,9 +3688,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_terrainContentRevision ).WithField( CurrentField, captureRegion );
 
 	private bool RetainsLod0PlacementCoordinate( Vector3Int coordinate ) =>
-		_levels[0].Active.Contains( coordinate ) ||
-		(_clipboxPlacementPending && _levels[0].PlacementChanged &&
-			_levels[0].NextActive.Contains( coordinate ));
+		_predictionRegions.Contains( new GpuMeshRegionKey( 0, coordinate ) ) ||
+		_coverageRequired.Contains( new GpuMeshRegionKey( 0, coordinate ) ) ||
+		_gpuMesher.IsRenderActive( new GpuMeshRegionKey( 0, coordinate ) ) ||
+		(_clipboxPlacementPending &&
+			(_levels[0].PlacementChanged ? _levels[0].NextActive : _levels[0].Active).Contains( coordinate ));
 
 	private bool HasClipboxPlacementWork =>
 		_clipboxPlacementPending || _exteriorPreparation is not null ||
@@ -3991,7 +4104,11 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 			if ( _renderDesiredChunks.Contains( result.Coordinate ) ||
 				RetainsLod0PlacementCoordinate( result.Coordinate ) )
 			{
-				if ( _renderPreparedChunks.Add( result.Coordinate ) ) _renderPreparedRevision++;
+				if ( _renderPreparedChunks.Add( result.Coordinate ) )
+				{
+					_renderPreparedRevision++;
+					MarkWaterPresentationDirty( new GpuMeshRegionKey( 0, result.Coordinate ) );
+				}
 				var chunk = result.Chunk;
 				if ( result.FieldRevision != CurrentField.Revision || result.FieldEpoch != CurrentField.Epoch )
 					chunk = new VoxelChunk( result.Coordinate, _appliedCellsPerAxis, _appliedCellSize, CurrentField );
@@ -4007,7 +4124,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 						residency );
 					_gpuMesher.SetRenderActive(
 						new GpuMeshRegionKey( 0, result.Coordinate ),
-						_levels[0].Active.Contains( result.Coordinate ) );
+						_gpuMesher.IsRenderActive( new GpuMeshRegionKey( 0, result.Coordinate ) ) );
 				}
 				processedCount++;
 			}

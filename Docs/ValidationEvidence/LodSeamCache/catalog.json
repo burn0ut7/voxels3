@@ -1,0 +1,557 @@
+[
+  {
+    "label": "Before fast",
+    "directory": "LodPrediction",
+    "prefix": "v2-fast",
+    "runId": "048d3f0e14584aa49404af2f5430a671",
+    "task": "prediction-v2-fast-gen46",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 10000,
+      "distance": 200000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.95167,
+      "startCenter": {
+        "x": 1.5197817,
+        "y": 1.5453321
+      }
+    },
+    "prepared": 0.4583832,
+    "presented": 1.3662896,
+    "observationGap": 0.062067,
+    "frame": {
+      "samples": 16783,
+      "truncatedSamples": 0,
+      "averageFps": 137.6211,
+      "p95Milliseconds": 12.2158,
+      "p99Milliseconds": 16.021,
+      "maximumMilliseconds": 105.117,
+      "averageGpuMilliseconds": 2.4018362,
+      "p95GpuMilliseconds": 8.378267,
+      "p99GpuMilliseconds": 10.564804,
+      "maximumGpuMilliseconds": 20.11776
+    },
+    "runtime": {
+      "samples": 16783,
+      "managedBytesAllocated": 4229116952,
+      "averageManagedBytesAllocatedPerFrame": 251988.14,
+      "maximumManagedBytesAllocatedPerFrame": 46047928,
+      "gen0Collections": 84,
+      "gen1Collections": 52,
+      "gen2Collections": 3,
+      "framesWithCollections": 84,
+      "gcPauseMilliseconds": 653.841,
+      "maximumGcPauseMilliseconds": 16.161,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 4962758656,
+      "endProcessBytes": 5055348736,
+      "averageProcessBytes": 4998929726,
+      "peakProcessBytes": 5094998016,
+      "startGpuBytes": 1570911719,
+      "endGpuBytes": 1629976039,
+      "averageGpuBytes": 1626989316,
+      "peakGpuBytes": 1648489959,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 32706.703,
+    "prepMs": 11.921,
+    "outerGapMs": 283.2135,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 1608,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 3261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 6426,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 12120,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 10281,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ]
+  },
+  {
+    "label": "Before standard",
+    "directory": "LodPrediction",
+    "prefix": "v2-standard",
+    "runId": "70c211089d054488bd5d82bbad7f82b8",
+    "task": "prediction-v2-standard-gen46",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.956856,
+      "startCenter": {
+        "x": 1.7055545,
+        "y": 1.9631865
+      }
+    },
+    "prepared": 0.0217621,
+    "presented": 0.0217621,
+    "observationGap": 0.0217621,
+    "frame": {
+      "samples": 12953,
+      "truncatedSamples": 0,
+      "averageFps": 106.20977,
+      "p95Milliseconds": 17.7164,
+      "p99Milliseconds": 20.0883,
+      "maximumMilliseconds": 81.5901,
+      "averageGpuMilliseconds": 4.2280097,
+      "p95GpuMilliseconds": 10.775328,
+      "p99GpuMilliseconds": 18.440723,
+      "maximumGpuMilliseconds": 28.534174
+    },
+    "runtime": {
+      "samples": 12953,
+      "managedBytesAllocated": 1231345808,
+      "averageManagedBytesAllocatedPerFrame": 95062.59,
+      "maximumManagedBytesAllocatedPerFrame": 46012472,
+      "gen0Collections": 23,
+      "gen1Collections": 9,
+      "gen2Collections": 1,
+      "framesWithCollections": 23,
+      "gcPauseMilliseconds": 200.57,
+      "maximumGcPauseMilliseconds": 14.66,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 5096640512,
+      "endProcessBytes": 5088489472,
+      "averageProcessBytes": 5101241763,
+      "peakProcessBytes": 5128781824,
+      "startGpuBytes": 1571567079,
+      "endGpuBytes": 1672525287,
+      "averageGpuBytes": 1657685546,
+      "peakGpuBytes": 1676801511,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 20453.133,
+    "prepMs": 12.7169,
+    "outerGapMs": 186.6266,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 1608,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 3261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 6426,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 12120,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 10281,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ]
+  },
+  {
+    "label": "Cache v1 fast",
+    "directory": "LodSeamCache",
+    "prefix": "v1-fast",
+    "runId": "3552953766ec450298a673ae04590522",
+    "task": "seam-cache-v1-fast-gen46",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 10000,
+      "distance": 200000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.91393,
+      "startCenter": {
+        "x": 1.6949438,
+        "y": 1.9634752
+      }
+    },
+    "prepared": 0.2434349,
+    "presented": 2.6071069,
+    "observationGap": 0.0658979,
+    "frame": {
+      "samples": 16490,
+      "truncatedSamples": 0,
+      "averageFps": 135.2598,
+      "p95Milliseconds": 12.0175,
+      "p99Milliseconds": 17.1602,
+      "maximumMilliseconds": 1020.363,
+      "averageGpuMilliseconds": 2.2327917,
+      "p95GpuMilliseconds": 9.423733,
+      "p99GpuMilliseconds": 11.196136,
+      "maximumGpuMilliseconds": 1004.8046
+    },
+    "runtime": {
+      "samples": 16490,
+      "managedBytesAllocated": 4266699832,
+      "averageManagedBytesAllocatedPerFrame": 258744.69,
+      "maximumManagedBytesAllocatedPerFrame": 46249568,
+      "gen0Collections": 85,
+      "gen1Collections": 54,
+      "gen2Collections": 3,
+      "framesWithCollections": 84,
+      "gcPauseMilliseconds": 1856.953,
+      "maximumGcPauseMilliseconds": 1015.547,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 2499919872,
+      "endProcessBytes": 2681720832,
+      "averageProcessBytes": 2682755427,
+      "peakProcessBytes": 2745696256,
+      "startGpuBytes": 1570911719,
+      "endGpuBytes": 1630975463,
+      "averageGpuBytes": 1627525209,
+      "peakGpuBytes": 1648293351,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 41285.85,
+    "prepMs": 12.7549,
+    "outerGapMs": 296.9072,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 5403,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 7914,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 13317,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 24003,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 31902,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ]
+  },
+  {
+    "label": "Cache v2 fast",
+    "directory": "LodSeamCache",
+    "prefix": "v2-fast",
+    "runId": "0a1f8cc800c44cc596116a3790161f61",
+    "task": "seam-cache-v2-fast-gen46",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 10000,
+      "distance": 200000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.945465,
+      "startCenter": {
+        "x": 1.5204765,
+        "y": 1.5459039
+      }
+    },
+    "prepared": 0.2292696,
+    "presented": 1.0283571,
+    "observationGap": 0.0654482,
+    "frame": {
+      "samples": 17179,
+      "truncatedSamples": 0,
+      "averageFps": 140.87526,
+      "p95Milliseconds": 11.1171,
+      "p99Milliseconds": 14.7791,
+      "maximumMilliseconds": 76.6001,
+      "averageGpuMilliseconds": 2.4500904,
+      "p95GpuMilliseconds": 9.827852,
+      "p99GpuMilliseconds": 11.761427,
+      "maximumGpuMilliseconds": 22.803545
+    },
+    "runtime": {
+      "samples": 17179,
+      "managedBytesAllocated": 4350404200,
+      "averageManagedBytesAllocatedPerFrame": 253239.66,
+      "maximumManagedBytesAllocatedPerFrame": 46118904,
+      "gen0Collections": 89,
+      "gen1Collections": 56,
+      "gen2Collections": 2,
+      "framesWithCollections": 89,
+      "gcPauseMilliseconds": 790.544,
+      "maximumGcPauseMilliseconds": 20.56,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 2712596480,
+      "endProcessBytes": 2867441664,
+      "averageProcessBytes": 2757649156,
+      "peakProcessBytes": 2964201472,
+      "startGpuBytes": 1622504935,
+      "endGpuBytes": 1631073767,
+      "averageGpuBytes": 1632130669,
+      "peakGpuBytes": 1648571879,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 54988.33,
+    "prepMs": 14.0295,
+    "outerGapMs": 280.9036,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 10161,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 13899,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 20892,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 33261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 58152,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ]
+  },
+  {
+    "label": "Cache v2 standard",
+    "directory": "LodSeamCache",
+    "prefix": "v2-standard",
+    "runId": "58bf648351d54eac9e8d4e2a06443e12",
+    "task": "seam-cache-v2-standard-gen46",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94838,
+      "startCenter": {
+        "x": 1.6756104,
+        "y": 1.9751611
+      }
+    },
+    "prepared": 0,
+    "presented": 0.3408208,
+    "observationGap": 0.0655827,
+    "frame": {
+      "samples": 15005,
+      "truncatedSamples": 0,
+      "averageFps": 123.04396,
+      "p95Milliseconds": 13.5149,
+      "p99Milliseconds": 18.1649,
+      "maximumMilliseconds": 82.4104,
+      "averageGpuMilliseconds": 3.3561125,
+      "p95GpuMilliseconds": 9.859562,
+      "p99GpuMilliseconds": 14.620543,
+      "maximumGpuMilliseconds": 25.554895
+    },
+    "runtime": {
+      "samples": 15005,
+      "managedBytesAllocated": 2105148688,
+      "averageManagedBytesAllocatedPerFrame": 140296.48,
+      "maximumManagedBytesAllocatedPerFrame": 45907904,
+      "gen0Collections": 35,
+      "gen1Collections": 14,
+      "gen2Collections": 1,
+      "framesWithCollections": 35,
+      "gcPauseMilliseconds": 324.256,
+      "maximumGcPauseMilliseconds": 19.086,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 2965114880,
+      "endProcessBytes": 2844676096,
+      "averageProcessBytes": 2901904803,
+      "peakProcessBytes": 2967597056,
+      "startGpuBytes": 1622488551,
+      "endGpuBytes": 1825043943,
+      "averageGpuBytes": 1739365829,
+      "peakGpuBytes": 1829189095,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 41033.973,
+    "prepMs": 13.0531,
+    "outerGapMs": 269.3387,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 10161,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 13899,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 20892,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 33261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 58152,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ]
+  }
+]

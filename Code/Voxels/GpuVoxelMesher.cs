@@ -79,6 +79,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private ScratchLane[] _scratchLanes;
 	private readonly HashSet<GpuMeshRegionKey> _cancelledInFlight = new();
 	private readonly HashSet<GpuMeshRegionKey> _renderActive = new();
+	private readonly Dictionary<GpuMeshRegionKey, int> _renderDescendants = new();
 	private readonly HashSet<CameraComponent> _currentRenderCameras = new();
 	private readonly HashSet<CameraComponent> _leavingRenderCameras = new();
 	private readonly Dictionary<CameraComponent, RenderCameraState> _renderCameraStates = new();
@@ -88,6 +89,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private readonly Dictionary<GpuTransitionKey, GpuTransitionDescriptor> _transitionDesiredDescriptors = new();
 	private readonly Dictionary<GpuTransitionKey, PendingTransition> _transitionPending = new();
 	private readonly Queue<PendingTransition> _transitionDispatchQueue = new();
+	private readonly Queue<PendingTransition> _placementTransitionDispatchQueue = new();
+	private readonly HashSet<GpuTransitionKey> _placementTransitionRequired = new();
 	private readonly HashSet<uint> _transitionCancelledGenerations = new();
 	private readonly HashSet<GpuTransitionKey> _transitionRenderActive = new();
 	private TransitionScratchLane[] _transitionScratchLanes;
@@ -249,6 +252,14 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public int ActiveLevelCount( int level ) => _renderActive.Count( key => key.Level == level );
 	public int TransitionDesiredCount => _transitionRenderActive.Count;
 	public int TransitionReadyCount => _transitionResident.Count;
+	public long TransitionGeometryBytes( IEnumerable<GpuTransitionKey> keys )
+	{
+		long bytes = 0;
+		foreach ( var key in keys )
+			if ( _transitionResident.TryGetValue( key, out var resident ) && resident.Handle is not null )
+				bytes += (long)resident.Counts.VertexCount * TerrainVertexBytes + (long)resident.Counts.IndexCount * sizeof(uint);
+		return bytes;
+	}
 	public int TransitionDrawableCount => _transitionResident.Count( value => value.Value.Handle is not null );
 	public int TransitionPendingCount => _transitionPending.Count + CountTransitionInFlight();
 	public int TransitionDesiredCountForPair( int coarseLevel ) =>
@@ -371,12 +382,18 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private readonly Func<GpuSdfDescriptor, bool> _chunkContentPrepared;
 	private readonly Action _publishChunkContent;
+	private readonly Action<GpuMeshRegionKey> _chunkPresentationChanged;
+	private readonly Action<GpuTransitionKey> _transitionResidencyChanged;
 
 	public GpuVoxelMesher( Scene scene, int cellsPerAxis,
-		Func<GpuSdfDescriptor, bool> chunkContentPrepared, Action publishChunkContent )
+		Func<GpuSdfDescriptor, bool> chunkContentPrepared, Action publishChunkContent,
+		Action<GpuMeshRegionKey> chunkPresentationChanged,
+		Action<GpuTransitionKey> transitionResidencyChanged )
 	{
 		_chunkContentPrepared = chunkContentPrepared;
 		_publishChunkContent = publishChunkContent;
+		_chunkPresentationChanged = chunkPresentationChanged;
+		_transitionResidencyChanged = transitionResidencyChanged;
 		_scene = scene;
 		_cellsPerAxis = cellsPerAxis;
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
@@ -553,7 +570,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		{
 			var boundsStarted = Stopwatch.GetTimestamp();
 			var range = ProceduralTerrainSdf.GetConservativeDensityRange(
-				descriptor.SamplingBounds, descriptor.FineCellSize, descriptor.TerrainSettings );
+				descriptor.FaceBounds, descriptor.FineCellSize, descriptor.TerrainSettings );
 			TransitionClassificationMilliseconds += Stopwatch.GetElapsedTime( boundsStarted ).TotalMilliseconds;
 			if ( range.MinimumDensity > 0f || range.MaximumDensity < 0f )
 			{
@@ -580,7 +597,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			playerRouteDistance );
 		_transitionPending[descriptor.Key] = pending;
 		if ( _editTransitionDependencies.Contains( descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
-		else _transitionDispatchQueue.Enqueue( pending );
+		else
+		{
+			_transitionDispatchQueue.Enqueue( pending );
+			if ( _placementTransitionRequired.Contains( pending.Descriptor.Key ) ) _placementTransitionDispatchQueue.Enqueue( pending );
+		}
 	}
 
 	public void SetTransitionActive( GpuTransitionKey key, bool active )
@@ -610,6 +631,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			}
 		}
 		if ( !_transitionResident.Remove( key, out var resident ) ) return;
+		_transitionResidencyChanged( key );
 		ReleaseTransitionResident( resident );
 		MarkDrawCommandsDirty();
 	}
@@ -1015,13 +1037,30 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			QueuePending( pending );
 	}
 
+	public void SetPlacementTransitionRequired( GpuTransitionKey key )
+	{
+		if ( _placementTransitionRequired.Add( key ) && _transitionPending.TryGetValue( key, out var pending ) )
+			_placementTransitionDispatchQueue.Enqueue( pending );
+	}
+
+	private readonly HashSet<GpuMeshRegionKey> _exteriorStreamingRequired = new();
+
+	private bool IsOuterStreamingRequired( GpuMeshRegionKey key ) =>
+		_renderActive.Contains( key ) || _exteriorStreamingRequired.Contains( key );
+
+	public void SetExteriorStreamingRequired( GpuMeshRegionKey key, bool required )
+	{
+		var changed = required ? _exteriorStreamingRequired.Add( key ) : _exteriorStreamingRequired.Remove( key );
+		if ( changed && _pending.TryGetValue( key, out var pending ) ) QueuePending( pending );
+	}
+
 	public void SetStreamingPosition( Vector3 position )
 	{
 		_streamingPosition = position;
 		_activeOuterDispatchQueue.Clear();
 		foreach ( var pending in _pending.Values )
 		{
-			if ( pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key ) )
+			if ( pending.Descriptor.Key.Level >= 2 && IsOuterStreamingRequired( pending.Descriptor.Key ) )
 				QueueActiveOuter( pending );
 		}
 	}
@@ -1039,12 +1078,35 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public void ClearPlacementPriority()
 	{
 		_placementRequired.Clear();
+		_placementTransitionRequired.Clear();
+		_placementTransitionDispatchQueue.Clear();
 		_placementQueued.Clear();
 	}
+
+	public IEnumerable<GpuMeshRegionKey> ActiveRegionKeys => _renderActive;
+	public IEnumerable<GpuTransitionKey> ActiveTransitionKeys => _transitionRenderActive;
+	public IEnumerable<GpuTransitionKey> CachedTransitionKeys => _transitionDesiredDescriptors.Keys;
+	public bool IsTransitionActive( GpuTransitionKey key ) => _transitionRenderActive.Contains( key );
+	public bool IsRenderActive( GpuMeshRegionKey key ) => _renderActive.Contains( key );
+	public bool HasRenderDescendant( GpuMeshRegionKey key ) => _renderDescendants.ContainsKey( key );
 
 	public void SetRenderActive( GpuMeshRegionKey key, bool active )
 	{
 		var changed = active ? _renderActive.Add( key ) : _renderActive.Remove( key );
+		if ( changed )
+		{
+			_chunkPresentationChanged( key );
+			for ( var level = key.Level + 1; level < SupportedVisualLevelCount; level++ )
+			{
+				var shift = level - key.Level;
+				var ancestor = new GpuMeshRegionKey( level, new Vector3Int(
+					key.Coordinate.x >> shift, key.Coordinate.y >> shift, key.Coordinate.z >> shift ) );
+				_renderDescendants.TryGetValue( ancestor, out var count );
+				count += active ? 1 : -1;
+				if ( count == 0 ) _renderDescendants.Remove( ancestor );
+				else _renderDescendants[ancestor] = count;
+			}
+		}
 		if ( changed && key.Level >= 2 && _pending.TryGetValue( key, out var pending ) )
 			QueuePending( pending );
 		if ( !changed || !_resident.TryGetValue( key, out var resident ) || resident.Handle is null ) return;
@@ -1582,6 +1644,9 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		lock ( _visibilityDescriptorLock ) return _sourceArgumentData[resident.Handle.GlobalSlot].IndexCount > 0;
 	}
 
+	public bool ContainsTransition( GpuTransitionDescriptor descriptor ) =>
+		_transitionDesiredDescriptors.TryGetValue( descriptor.Key, out var desired ) && desired == descriptor;
+
 	public bool IsTransitionResident( GpuTransitionDescriptor descriptor ) =>
 		_transitionResident.TryGetValue( descriptor.Key, out var resident ) &&
 		resident.Descriptor == descriptor;
@@ -1608,7 +1673,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	{
 		_editRegularDependencies.Remove( key );
 		if ( _editRegularCandidates.Remove( key, out var candidate ) ) Release( candidate.Handle );
-		_renderActive.Remove( key );
 		_placementRequired.Remove( key );
 		if ( _scheduleLatencyMeasurementActive && _pending.ContainsKey( key ) )
 		{
@@ -1619,6 +1683,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			_outerCancelledCount++;
 		}
 		RemovePending( key );
+		SetRenderActive( key, false );
 		if ( _scratchLanes.Any( lane =>
 			lane.CountInFlight.Any( value => value.Descriptor.Key == key ) ||
 			lane.EmitInFlight.Any( value => value.Descriptor.Key == key ) ) )
@@ -1627,6 +1692,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 		if ( !_resident.Remove( key, out var resident ) ) return;
 		_residentPublicationRevision++;
+		_chunkPresentationChanged( key );
 		ReleaseResident( resident );
 		MarkDrawCommandsDirty();
 	}
@@ -2161,7 +2227,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		if ( _disposed || _scratchLanes is null ) return;
 		// Removed requests can leave queue entries after the final outer batch drains.
 		while ( _activeOuterDispatchQueue.TryPeek( out var queued, out _ ) &&
-			(!_pending.ContainsKey( queued ) || !_renderActive.Contains( queued )) )
+			(!_pending.ContainsKey( queued ) || !IsOuterStreamingRequired( queued )) )
 			_activeOuterDispatchQueue.Dequeue();
 		var outerServiceGap = ObserveOuterServiceGap();
 		// The service deadline applies before shortcuts that can keep returning for seams.
@@ -2171,14 +2237,22 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			RecordOuterService( outerServiceGap, true );
 			return;
 		}
-		// Once required terrain is complete, its seams outrank hidden cache fill.
-		if ( !_editPublicationPending && _activeOuterDispatchQueue.Count == 0 &&
-			_placementRequired.Count > 0 && _placementQueued.Count == 0 &&
+		if ( outerServiceGap >= OuterMaximumServiceDelayMilliseconds )
+		{
+			// An outer lane may need more count stages before it can emit. Let it
+			// progress at the deadline instead of waiting behind every foreground seam.
+			foreach ( var lane in _scratchLanes )
+				if ( lane.CountInFlight.Count > 0 && lane.CountInFlight[0].Descriptor.Key.Level >= 2 &&
+					lane.Scratch.TryContinueCount() ) return;
+		}
+		// Foreground seams outrank cache fill; final-layout seams retain fair service.
+		// Only the placement's regular dependencies can delay foreground seams.
+		// Unrelated exterior work retains its deadline above, not a global barrier.
+		if ( !_editPublicationPending && _placementTransitionDispatchQueue.Count > 0 &&
+			_placementQueued.Count == 0 &&
 			!_scratchLanes.Any( lane =>
-				lane.CountInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ||
-					(value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ||
-				lane.EmitInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ||
-					(value.Descriptor.Key.Level >= 2 && _renderActive.Contains( value.Descriptor.Key )) ) ) &&
+				lane.CountInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ) ||
+				lane.EmitInFlight.Any( value => _placementRequired.Contains( value.Descriptor.Key ) ) ) &&
 			ProcessTransitionGpuRenderTick() )
 		{
 			_transitionLastServiceTimestamp = Stopwatch.GetTimestamp();
@@ -2316,7 +2390,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 		foreach ( var lane in _transitionScratchLanes )
 		{
-			if ( lane.CountInFlight.Count > 0 && lane.Scratch.TryContinueCount() ) return true;
+			if ( lane.CountInFlight.Count > 0 && lane.Scratch.TryContinueCount(
+				completeBatch: lane.CountInFlight.Any( value => _placementTransitionRequired.Contains( value.Descriptor.Key ) ) ) ) return true;
 		}
 
 		var targetLane = _transitionScratchLanes.FirstOrDefault( lane => lane.IsIdle );
@@ -2355,7 +2430,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		{
 			_transitionPending[pending.Descriptor.Key] = pending;
 			if ( _editTransitionDependencies.Contains( pending.Descriptor.Key ) ) _editTransitionDispatchQueue.Enqueue( pending );
-			else _transitionDispatchQueue.Enqueue( pending );
+			else
+			{
+				_transitionDispatchQueue.Enqueue( pending );
+				if ( _placementTransitionRequired.Contains( pending.Descriptor.Key ) ) _placementTransitionDispatchQueue.Enqueue( pending );
+			}
 		}
 		if ( processed == 0 )
 		{
@@ -2415,8 +2494,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private bool TrySubmitOuterCount()
 	{
 		if ( PendingOuterVisualCount == 0 ) return false;
-		// Catch-up can use a second existing lane; retain one lane for near meshes.
-		var outerLaneLimit = PrioritizePlayerDetail ? ScratchLaneCount - 1 : 1;
+		// Lend idle lanes to background work; reserve one when near work needs service.
+		var outerLaneLimit = PendingCount > 0 ? ScratchLaneCount - 1 : ScratchLaneCount;
 		var outerLanes = 0;
 		foreach ( var activeLane in _scratchLanes )
 		{
@@ -2464,7 +2543,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			}
 			// One atlas covers the batch bounds. Do not span distant previews and parent work.
 			if ( batchService < 0 ) batchService = _editRegularDependencies.Contains( pending.Descriptor.Key ) ? 0 :
-				_renderActive.Contains( pending.Descriptor.Key ) ? 1 : _placementRequired.Contains( pending.Descriptor.Key ) ? 2 : 3;
+				IsOuterStreamingRequired( pending.Descriptor.Key ) ? 1 : _placementRequired.Contains( pending.Descriptor.Key ) ? 2 : 3;
 			var generation = ++_nextGeneration;
 			var inFlight = new InFlightMesh(
 				pending.Descriptor,
@@ -2792,6 +2871,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		_levelTopologyDigests[key.Level] ^= CoordinateDigest( key, counts.TopologyDigest );
 		_levelPositionDigests[key.Level] ^= CoordinateDigest( key, counts.PositionDigest );
 		_residentPublicationRevision++;
+		_chunkPresentationChanged( key );
 	}
 
 	private void AllocateAndEmitTransitions( TransitionScratchLane lane, GpuTransitionCountResult[] counts,
@@ -2924,6 +3004,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		var resident = new ResidentTransition(
 			completed.Descriptor, completed.Handle, completed.Counts, latencyMilliseconds );
 		_transitionResident.Add( key, resident );
+		_transitionResidencyChanged( key );
 		if ( completed.Handle is not null )
 		{
 			completed.Handle.Arena.ActiveResidentCount++;
@@ -3161,7 +3242,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			return;
 		}
 		if ( _placementRequired.Contains( pending.Descriptor.Key ) &&
-			!(pending.Descriptor.Key.Level >= 2 && _renderActive.Contains( pending.Descriptor.Key )) )
+			!(pending.Descriptor.Key.Level >= 2 && IsOuterStreamingRequired( pending.Descriptor.Key )) )
 		{
 			if ( pending.Residency == GpuMeshResidency.Gameplay ) _pendingGameplayCount++;
 			else if ( pending.Residency == GpuMeshResidency.Warm ) _pendingWarmCount++;
@@ -3181,7 +3262,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		}
 		else if ( pending.Residency == GpuMeshResidency.Visual )
 		{
-			if ( _renderActive.Contains( pending.Descriptor.Key ) ) QueueActiveOuter( pending );
+			if ( IsOuterStreamingRequired( pending.Descriptor.Key ) ) QueueActiveOuter( pending );
 			else _outerVisualDispatchQueue.Enqueue( pending );
 		}
 		else
@@ -3247,7 +3328,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	{
 		while ( _activeOuterDispatchQueue.TryDequeue( out var queued, out _ ) )
 		{
-			if ( !_renderActive.Contains( queued ) || !_pending.TryGetValue( queued, out pending ) ) continue;
+			if ( !IsOuterStreamingRequired( queued ) || !_pending.TryGetValue( queued, out pending ) ) continue;
 			RemovePending( queued );
 			return true;
 		}
@@ -3268,7 +3349,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private bool TryDequeuePendingTransition( out PendingTransition pending )
 	{
-		while ( _editTransitionDispatchQueue.TryDequeue( out var queued ) || _transitionDispatchQueue.TryDequeue( out queued ) )
+		while ( _editTransitionDispatchQueue.TryDequeue( out var queued ) ||
+			_placementTransitionDispatchQueue.TryDequeue( out queued ) || _transitionDispatchQueue.TryDequeue( out queued ) )
 		{
 			if ( _transitionPending.TryGetValue( queued.Descriptor.Key, out var current ) && current == queued )
 			{
@@ -3771,6 +3853,8 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		foreach ( var resident in _resident.Values ) ReleaseResident( resident );
 		_resident.Clear();
 		_renderActive.Clear();
+		_exteriorStreamingRequired.Clear();
+		_renderDescendants.Clear();
 		_transitionPending.Clear();
 		_transitionDispatchQueue.Clear();
 		_transitionDesiredDescriptors.Clear();
@@ -4288,7 +4372,6 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		public int IndexFreeRangeCount => _indices.FreeRangeCount;
 		public GpuBuffer<TerrainVertex> Vertices { get; }
 		public GpuBuffer<uint> Indices { get; }
-		public GpuBuffer<Vector4> DepthBlocks { get; } = new( DepthBlockCapacity, GpuBuffer.UsageFlags.Structured, "Voxel Depth Blocks" );
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> DepthArguments { get; } = new( 1,
 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Depth Arguments" );
 
@@ -4331,7 +4414,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			_freeSlots.Push( handle.Slot );
 		}
 
-		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); DepthBlocks.Dispose(); DepthArguments.Dispose(); }
+		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); DepthArguments.Dispose(); }
 	}
 
 	private sealed class RenderCameraState : IDisposable, IHotloadManaged
@@ -4398,15 +4481,23 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> SourceArguments { get; }
 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> VisibleArguments { get; }
 		public GpuBuffer<uint> FrameCounters { get; }
+		public GpuBuffer<Vector4> DepthBlocks { get; }
+		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> DepthArguments { get; }
 		public VisibilityBuffers( GpuBuffer<Vector4> bounds,
 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source,
 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> visible, GpuBuffer<uint> frame )
 		{
 			Bounds = bounds; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
+			var arenaCapacity = source.ElementCount / RegionsPerSlab;
+			DepthBlocks = new GpuBuffer<Vector4>( checked( arenaCapacity * DepthBlockCapacity ),
+				GpuBuffer.UsageFlags.Structured, "Voxel View Depth Blocks" );
+			DepthArguments = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( arenaCapacity,
+				GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel View Depth Arguments" );
 		}
 		public void Dispose()
 		{
 			Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
+			DepthBlocks.Dispose(); DepthArguments.Dispose();
 		}
 	}
 
@@ -4430,6 +4521,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 			mesh.CreateIndexBuffer( indices.Length, indices.AsSpan() );
 			_block = Model.Builder.AddMesh( mesh ).Create();
 			_visibility.Attributes.Set( "DepthIndicesPerBlock", DepthIndicesPerBlock );
+			_visibility.Attributes.Set( "DepthBlockCapacity", DepthBlockCapacity );
 		}
 
 		public override void RenderSceneObject()
@@ -4440,28 +4532,40 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				var state = _owner._visibilityReadbackState;
 				var visibility = state?.Visibility;
 				if ( visibility is null || !_owner._fieldPresentationReady ) return;
+				var arenaCount = Math.Min( state.DepthArenas.Length, visibility.DepthArguments.ElementCount );
+				if ( arenaCount == 0 ) return;
 				_visibility.Attributes.Set( "VisibilityBounds", visibility.Bounds );
 				_visibility.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
+				_visibility.Attributes.Set( "DepthBlocks", visibility.DepthBlocks );
+				_visibility.Attributes.Set( "DepthArguments", visibility.DepthArguments );
 				Graphics.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
 				Graphics.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
+				Graphics.ResourceBarrierTransition( visibility.DepthBlocks, ResourceState.UnorderedAccess );
+				Graphics.ResourceBarrierTransition( visibility.DepthArguments, ResourceState.UnorderedAccess );
+				// Independent arena groups share one launch and one barrier pair per view.
+				_visibility.Dispatch( arenaCount * RegionsPerSlab, 1, 1 );
+				Graphics.UavBarrier( visibility.DepthBlocks );
+				Graphics.UavBarrier( visibility.DepthArguments );
+				Graphics.ResourceBarrierTransition( visibility.DepthBlocks, ResourceState.GenericRead );
+				Graphics.ResourceBarrierTransition( visibility.DepthArguments, ResourceState.CopySource );
+				// Finish argument transfers before drawing, avoiding transfer/draw alternation.
+				foreach ( var arena in state.DepthArenas )
+				{
+					if ( arena.Index >= arenaCount ) break;
+					if ( arena.ActiveResidentCount == 0 ) continue;
+					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.CopyDestination );
+					visibility.DepthArguments.CopyTo( arena.DepthArguments, arena.Index, 0, 1 );
+				}
+				Attributes.Set( "DepthBlocks", visibility.DepthBlocks );
 				foreach ( var arena in state.DepthArenas )
 				{
 					// A newly allocated arena waits for the next camera descriptor publication.
 					if ( (arena.Index + 1) * RegionsPerSlab > visibility.SourceArguments.ElementCount ) break;
 					if ( arena.ActiveResidentCount == 0 ) continue;
-					_visibility.Attributes.Set( "DepthSlotOffset", arena.Index * RegionsPerSlab );
-					_visibility.Attributes.Set( "DepthBlocks", arena.DepthBlocks );
-					_visibility.Attributes.Set( "DepthArguments", arena.DepthArguments );
-					Graphics.ResourceBarrierTransition( arena.DepthBlocks, ResourceState.UnorderedAccess );
-					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.UnorderedAccess );
-					_visibility.Dispatch( RegionsPerSlab, 1, 1 );
-					Graphics.UavBarrier( arena.DepthBlocks );
-					Graphics.UavBarrier( arena.DepthArguments );
-					Graphics.ResourceBarrierTransition( arena.DepthBlocks, ResourceState.GenericRead );
 					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.IndirectArgument );
 					Graphics.ResourceBarrierTransition( arena.Vertices, ResourceState.GenericRead );
 					Graphics.ResourceBarrierTransition( arena.Indices, ResourceState.GenericRead );
-					Attributes.Set( "DepthBlocks", arena.DepthBlocks );
+					Attributes.Set( "DepthBlockOffset", arena.Index * DepthBlockCapacity );
 					Attributes.Set( "DepthVertices", arena.Vertices );
 					Attributes.Set( "DepthIndices", arena.Indices );
 					Graphics.DrawModelInstancedIndirect( _block, arena.DepthArguments, 0, Attributes );

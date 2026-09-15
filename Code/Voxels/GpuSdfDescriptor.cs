@@ -90,7 +90,9 @@ internal readonly record struct GpuTransitionDescriptor(
 	public TerrainFieldSnapshot Field { get; init; }
 	public int EditRevision { get; init; }
 	public int FieldEpoch { get; init; }
-	public SdfWorldAabb SamplingBounds
+	// Transition cases depend only on samples on this closed face. Normal probes
+	// use the wider SamplingBounds, including for revision and edit invalidation.
+	public SdfWorldAabb FaceBounds
 	{
 		get
 		{
@@ -106,7 +108,16 @@ internal readonly record struct GpuTransitionDescriptor(
 				case GpuTransitionFace.NegativeZ: maximum.z = minimum.z; break;
 				case GpuTransitionFace.PositiveZ: minimum.z = maximum.z; break;
 			}
-			return new SdfWorldAabb( minimum - new Vector3( CoarseCellSize ), maximum + new Vector3( CoarseCellSize ) );
+			return new SdfWorldAabb( minimum, maximum );
+		}
+	}
+	public SdfWorldAabb SamplingBounds
+	{
+		get
+		{
+			var face = FaceBounds;
+			var halo = new Vector3( CoarseCellSize );
+			return new SdfWorldAabb( face.Minimum - halo, face.Maximum + halo );
 		}
 	}
 

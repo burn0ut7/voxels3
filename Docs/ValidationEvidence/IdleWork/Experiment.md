@@ -1,5 +1,11 @@
 # Completed-work scheduling experiments
 
+**Adoption update, 2026-09-15:** the user explicitly requested implementation
+of water plus prediction and updating main after reviewing the results below.
+The exact tested candidate has now been reapplied. The original allocation and
+drain failures remain recorded exceptions; the historical restoration decision
+below describes the end of the experiment, not the newly adopted source state.
+
 2026-09-14. Three completed standard figure-eight runs show promising FPS and
 CPU savings, but neither prototype receives full performance acceptance. All
 runtime source was restored byte-for-byte to the entry manifest. This retains

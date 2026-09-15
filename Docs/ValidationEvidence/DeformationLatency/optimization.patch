@@ -1,0 +1,98 @@
+diff --git a/Code/Voxels/GpuVoxelMesher.Deformation.cs b/Code/Voxels/GpuVoxelMesher.Deformation.cs
+index 11914ab..8afec05 100644
+--- a/Code/Voxels/GpuVoxelMesher.Deformation.cs
++++ b/Code/Voxels/GpuVoxelMesher.Deformation.cs
+@@ -29,6 +29,8 @@ internal sealed partial class GpuVoxelMesher
+ 
+ 	public int LastFieldPublicationRevision { get; private set; }
+ 	public long LastFieldPublicationTimestamp { get; private set; }
++	public int LastFieldRegularReused { get; private set; }
++	public int LastFieldTransitionsReused { get; private set; }
+ 
+ 	public bool FieldPublicationPending => _editPublicationPending;
+ 
+@@ -50,19 +52,26 @@ internal sealed partial class GpuVoxelMesher
+ 		_editDependencyBounds = dirtyBounds;
+ 		_editEpochChanged = change.Source.Epoch != field.Epoch;
+ 		var identicalRestore = _editEpochChanged && change.ChangedSamples == 0;
++		LastFieldRegularReused = 0;
++		LastFieldTransitionsReused = 0;
+ 		_editPublicationOpen = true;
+ 		_editPublicationPending = true;
+ 		_editRegularRefresh.Clear();
+ 		foreach ( var resident in _resident.Values )
+ 		{
+-			// Exact replacement comparison proved equal samples. Rebase published
+-			// metadata only; old asynchronous work still fails its epoch checks.
+-			if ( identicalRestore && resident.Descriptor.MatchesField( change.Source ) )
++			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
++			// Revision blocks cover more than the changed samples. Published geometry
++			// outside the actual sampling dependency is still exact; only rebase its
++			// identity. Pending work keeps the ordinary stale-result checks below.
++			if ( (identicalRestore || !_editEpochChanged &&
++				!TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, change.AffectedBounds )) &&
++				resident.Descriptor.MatchesField( change.Source ) )
+ 			{
+-				resident.Descriptor = resident.Descriptor.WithField( field ) with { Field = null };
++				var replacement = resident.Descriptor.WithField( field, captureRegion: false );
++				if ( replacement != resident.Descriptor ) LastFieldRegularReused++;
++				resident.Descriptor = replacement with { Field = null };
+ 				continue;
+ 			}
+-			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
+ 			_editRegularRefresh[resident.Descriptor.Key] = new PendingMesh(
+ 				resident.Descriptor, resident.Residency, 0, routeDistance );
+ 		}
+@@ -87,17 +96,20 @@ internal sealed partial class GpuVoxelMesher
+ 		foreach ( var descriptor in _transitionDesiredDescriptors.Values )
+ 		{
+ 			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( descriptor.SamplingBounds, dirtyBounds ) ) continue;
+-			var replacement = descriptor.WithField( field );
++			var replacement = descriptor.WithField( field, captureRegion: false );
+ 			if ( replacement != descriptor ) _editTransitionRefresh.Add( replacement );
+ 		}
+ 		foreach ( var descriptor in _editTransitionRefresh )
+ 		{
+ 			var desired = _transitionDesiredDescriptors[descriptor.Key];
+-			if ( identicalRestore && desired.MatchesField( change.Source ) &&
++			if ( (identicalRestore || !_editEpochChanged &&
++				!TerrainFieldChange.Intersects( desired.SamplingBounds, change.AffectedBounds )) &&
++				desired.MatchesField( change.Source ) &&
+ 				_transitionResident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == desired )
+ 			{
+ 				resident.Descriptor = descriptor with { Field = null };
+ 				_transitionDesiredDescriptors[descriptor.Key] = resident.Descriptor;
++				LastFieldTransitionsReused++;
+ 				continue;
+ 			}
+ 			ScheduleTransition( descriptor, routeDistance );
+@@ -139,6 +151,8 @@ internal sealed partial class GpuVoxelMesher
+ 		_editPublicationPending = false;
+ 		LastFieldPublicationRevision = 0;
+ 		LastFieldPublicationTimestamp = 0;
++		LastFieldRegularReused = 0;
++		LastFieldTransitionsReused = 0;
+ 	}
+ 
+ }
+diff --git a/Code/Voxels/VoxelManager.Deformation.cs b/Code/Voxels/VoxelManager.Deformation.cs
+index 2678837..0071e82 100644
+--- a/Code/Voxels/VoxelManager.Deformation.cs
++++ b/Code/Voxels/VoxelManager.Deformation.cs
+@@ -111,7 +111,7 @@ public sealed partial class VoxelManager
+ 					_terrainEditVisualDependencies = _gpuMesher.InvalidateField( change, _playerFigureEightRouteDistance );
+ 					_terrainEditCollisionDependencies = _collision.InvalidateField( change );
+ 					// Prepared LOD0 empty regions have no mesh record until their first surface.
+-					var dirtyBounds = change.DependencyPageBounds;
++					var dirtyBounds = change.AffectedBounds;
+ 					if ( change.ChangedSamples > 0 )
+ 					{
+ 						foreach ( var coordinate in _renderPreparedChunks )
+@@ -345,6 +345,7 @@ public sealed partial class VoxelManager
+ 			$"staleReadCompletions={manager._terrainField.StaleReadCompletions} readCapacityDeferrals={manager._terrainField.ReadCapacityDeferrals} " +
+ 			$"publicationMs={publicationMilliseconds} publicationPending={manager._gpuMesher.FieldPublicationPending} " +
+ 			$"commitMs={manager._terrainEditLastCommitMilliseconds} visualDependencies={manager._terrainEditVisualDependencies} " +
++			$"visualReused={manager._gpuMesher.LastFieldRegularReused} transitionsReused={manager._gpuMesher.LastFieldTransitionsReused} " +
+ 			$"collisionDependencies={manager._terrainEditCollisionDependencies} visualPending={manager._gpuMesher.EditRebuildPending} " +
+ 			$"collisionPending={manager._collision.EditRebuildPending} failure={manager._terrainEditFailure}" );
+ 	}

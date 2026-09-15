@@ -179,52 +179,61 @@ internal sealed class GpuTransitionScratch : IDisposable
 		Barrier( _densitySamples );
 	}
 
-	public bool TryContinueCount()
+	public bool TryContinueCount( bool completeBatch = false )
 	{
-		ScratchState previousState;
-		lock ( _stateLock )
+		var progressed = false;
+		// Urgent two-face batches can finish the count chain in one service.
+		// This never emits geometry or admits another batch; every barrier remains.
+		for ( var phase = 0; phase < (completeBatch ? 3 : 1); phase++ )
 		{
-			if ( !_disposed && _state == ScratchState.PreparingRivers && _riverPreparation.IsCompleted )
+			ScratchState previousState;
+			lock ( _stateLock )
 			{
-				_state = ScratchState.CountSamplingSubmitted;
-				SubmitPreparedCount();
-				return true;
+				if ( !_disposed && _state == ScratchState.PreparingRivers && _riverPreparation.IsCompleted )
+				{
+					_state = ScratchState.CountSamplingSubmitted;
+					SubmitPreparedCount();
+					progressed = true;
+					continue;
+				}
+				if ( _disposed || _state is not (
+					ScratchState.CountSamplingSubmitted or ScratchState.CountClassificationSubmitted) ) return progressed;
+				previousState = _state;
+				_state = previousState == ScratchState.CountSamplingSubmitted
+					? ScratchState.CountClassificationSubmitted
+					: ScratchState.CountSubmitted;
 			}
-			if ( _disposed || _state is not (
-				ScratchState.CountSamplingSubmitted or ScratchState.CountClassificationSubmitted) ) return false;
-			previousState = _state;
-			_state = previousState == ScratchState.CountSamplingSubmitted
-				? ScratchState.CountClassificationSubmitted
-				: ScratchState.CountSubmitted;
-		}
-		if ( previousState == ScratchState.CountSamplingSubmitted )
-		{
-			_shader.Attributes.Set( "TransitionStage", 2 );
+			if ( previousState == ScratchState.CountSamplingSubmitted )
+			{
+				_shader.Attributes.Set( "TransitionStage", 2 );
+				_shader.Dispatch( CellCount * _batchSize, 1, 1 );
+				Barrier( _cells, _edgeFlags, _auditCounts, _digests );
+				_shader.Attributes.Set( "TransitionStage", 3 );
+				_shader.Dispatch( EdgeGroupCount * 256 * _batchSize, 1, 1 );
+				Barrier( _edgeVertexIds, _edgeGroupSums );
+				progressed = true;
+				continue;
+			}
+			_shader.Attributes.Set( "TransitionStage", 6 );
+			_shader.Dispatch( EdgeSlotCount * _batchSize, 1, 1 );
+			Barrier( _digests, _auditCounts, _lateralDigests, _edgeFlags );
+			_shader.Attributes.Set( "TransitionStage", 10 );
 			_shader.Dispatch( CellCount * _batchSize, 1, 1 );
-			Barrier( _cells, _edgeFlags, _auditCounts, _digests );
-			_shader.Attributes.Set( "TransitionStage", 3 );
-			_shader.Dispatch( EdgeGroupCount * 256 * _batchSize, 1, 1 );
-			Barrier( _edgeVertexIds, _edgeGroupSums );
+			Barrier( _cells );
+			_shader.Attributes.Set( "TransitionStage", 4 );
+			_shader.Dispatch( CellGroupCount * 256 * _batchSize, 1, 1 );
+			Barrier( _cells, _cellGroupSums );
+			_shader.Attributes.Set( "TransitionStage", 5 );
+			_shader.Dispatch( 256 * _batchSize, 1, 1 );
+			Barrier( _edgeGroupSums, _cellGroupSums, _blockCounts );
+			_shader.Attributes.Set( "TransitionStage", 7 );
+			_shader.Dispatch( _batchSize, 1, 1 );
+			Barrier( _countResults );
+			_readbackTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
+			_countResults.GetDataAsync<GpuTransitionCountResult>( OnCountsRead, 0, _batchSize );
 			return true;
 		}
-		_shader.Attributes.Set( "TransitionStage", 6 );
-		_shader.Dispatch( EdgeSlotCount * _batchSize, 1, 1 );
-		Barrier( _digests, _auditCounts, _lateralDigests, _edgeFlags );
-		_shader.Attributes.Set( "TransitionStage", 10 );
-		_shader.Dispatch( CellCount * _batchSize, 1, 1 );
-		Barrier( _cells );
-		_shader.Attributes.Set( "TransitionStage", 4 );
-		_shader.Dispatch( CellGroupCount * 256 * _batchSize, 1, 1 );
-		Barrier( _cells, _cellGroupSums );
-		_shader.Attributes.Set( "TransitionStage", 5 );
-		_shader.Dispatch( 256 * _batchSize, 1, 1 );
-		Barrier( _edgeGroupSums, _cellGroupSums, _blockCounts );
-		_shader.Attributes.Set( "TransitionStage", 7 );
-		_shader.Dispatch( _batchSize, 1, 1 );
-		Barrier( _countResults );
-		_readbackTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
-		_countResults.GetDataAsync<GpuTransitionCountResult>( OnCountsRead, 0, _batchSize );
-		return true;
+		return progressed;
 	}
 
 	public bool TryTakeCounts( out GpuTransitionCountResult[] counts, out int count,

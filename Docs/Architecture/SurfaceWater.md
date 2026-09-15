@@ -359,3 +359,67 @@ independent water publication causes the reported early surfaces; a whole-world
 readiness barrier blocks unrelated chunks. Chunk-local preparation with shared
 publication is selected. Smaller mesh sections remain a measured future option,
 not another active implementation. Visual LOD changes derived geometry only.
+
+### Shoreline boundary follow-up
+
+The upper-bank/lower-bed publication experiment was rejected and reverted on
+2026-09-12. It delayed nearby chunk presentation and regressed frame pacing.
+Current runtime behavior remains commit 533bfd1: lower terrain and water share
+publication, but upper banks can appear before the lower river owner. This
+streaming defect remains unresolved. See CHUNK-WATER-SHORE-HANDOFF-001 in the
+validation ledger for preserved observations and rejected measurements.
+
+## Event-driven water bookkeeping prototype (2026-09-14)
+
+Implemented and adopted with prediction on 2026-09-15 by explicit user request.
+WATER-EVENTS-001/v2 and PREDICTION-IDLE-001/v1 supply the recorded measurements;
+total allocation and drain exceptions are accepted for this adoption, not
+reclassified as passing the original thresholds. See the latest ledger entry. The current
+profiler capture identifies repeated water request and presentation scans; it is
+not a matched timing baseline for generator47. VoxelManager remains the single
+owner of requests, generated water cells and published water coverage.
+
+Keep a derived set of requested descriptors that do not yet have generated cells.
+Rebuild it with the existing placement/field request refresh; remove a descriptor
+when its current completion integrates. It includes the in-flight request until
+completion, so readiness cannot pass early. Select the same minimum priority tuple
+over missing requests; do not cache camera distance or change admission priority.
+No outstanding work means constant-time scheduling, rather than scanning ready
+chunks. The single existing worker and immutable descriptor/cancellation contract
+remain unchanged.
+
+Regular terrain publication/removal, active-set changes and LOD0 preparation
+changes mark their affected sea-plane owners. Water completion and request changes
+also mark owners. A deduplicated manager-owned set is drained in the existing
+main-thread chunk-content publication callback, before GPU draw commands commit.
+It revalidates current descriptors and active ownership; it is not a history of
+mutations or a queue of player inputs. No new frame delay is introduced.
+Known-empty/dry owners still complete dependencies; compatible old edit water
+remains paired with retained old solid terrain. Reset clears pending/dirty state.
+Renderer synchronization runs only when coverage or retained resources change.
+
+Budgets: existing coverage bounds, one water worker and existing generation
+priority; pending entries bounded by water requests, dirty entries by changed
+sea-plane owners since the last publication. No geometry/data copies beyond
+existing immutable generated chunks. Main-thread callbacks only mark IDs and
+cannot render or recursively publish. The field remains authoritative; these sets
+are disposable derived indexes.
+
+Research reviewed:
+- [Nystrom, Dirty Flag](https://raw.githubusercontent.com/munificent/game-programming-patterns/master/book/dirty-flag.markdown):
+  coalesce dependent changes before use, but prefer incremental maintenance when
+  cheap. Every invalidating mutation must participate. Adopt coalescing per owner;
+  reject a whole-world dirty flag and deferred work that adds visible latency.
+- [Nystrom, Event Queue](https://raw.githubusercontent.com/munificent/game-programming-patterns/master/book/event-queue.markdown):
+  queued references can become stale and notifications can form feedback loops.
+  Adopt current-state revalidation and owner-local notification. No global bus.
+- [Godot Voxel engine completion processing](https://github.com/Zylann/godot_voxel/blob/master/engine/voxel_engine.cpp):
+  process completed tasks before main-thread follow-up work to avoid an extra
+  frame delay. Transfer is scheduling order only, not Godot APIs or performance.
+
+Alternatives deferred: compact descriptor identity would affect wider cache
+contracts; a persistent sorted priority queue would need dynamic movement/service
+reprioritization; replacing terrain readiness globally expands beyond the measured
+water slice. Existing broad request refresh on placement/edit remains for now.
+Only repeated completed-work scans and unrelated mesh-completion water scans are
+replaced. Runtime/visual acceptance and all baseline failures stay in the ledger.

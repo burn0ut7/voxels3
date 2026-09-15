@@ -266,3 +266,21 @@ records the project hypotheses, transfer limits and measured acceptance decision
 | [Nanite Virtualized Geometry](https://dev.epicgames.com/documentation/unreal-engine/nanite-virtualized-geometry-in-unreal-engine), [Voxel Plugin 2 overview](https://docs.voxelplugin.com/getting-started/working-with-voxel-plugin/) | Epic's clustered renderer and a current on-demand interactive-terrain integration targeting Nanite. | Comparing hierarchical detail, indirect rendering and runtime terrain integration. | Unreal-specific integration; Voxel Plugin demonstrates runtime applicability, but neither source establishes a portable or callable s&box replacement. |
 | [World Partition](https://dev.epicgames.com/documentation/unreal-engine/world-partition-in-unreal-engine) | Epic documentation for source-driven spatial streaming, priorities, loaded versus activated states, and destination preloading. | Studying multiple streaming sources, directional importance, bounded concurrent loads, or explicit teleport preparation. | Actor/cell streaming semantics are not terrain-mesh ownership and must be adapted rather than copied. |
 | [Virtual Texture Memory Pools](https://dev.epicgames.com/documentation/unreal-engine/virtual-texture-memory-pools-in-unreal-engine) | Epic documentation for fixed GPU page pools, working-set fit, eviction, and residency diagnostics. | Researching bounded-cache behavior, thrash, utilization telemetry, and desired-versus-resident detail. | Texture pages are only an analogy for derived mesh residency; they do not define voxel publication or transition topology. |
+
+### Surface skirts for early LOD publication
+
+[Cesium QuantizedMeshTerrainData](https://cesium.com/learn/cesiumjs/ref-doc/QuantizedMeshTerrainData.html)
+exposes per-edge vertices and skirt heights. Use: independent boundary curtains
+can remove exact neighbor stitching from the visible arrival path. Limit: this
+is heightfield terrain, not proof of coverage for caves/overhangs or of a speedup
+in s&box. The bounded project experiment and eligibility restrictions are in
+[Surface terrain skirts](Architecture/TerrainSkirts.md); it is not accepted.
+### Event-driven chunk-content work
+
+See [water lifecycle prototype](Architecture/SurfaceWater.md#event-driven-water-bookkeeping-prototype-2026-09-14)
+for adopted/deferred decisions and validation status.
+
+| Source | Use | Transfer limits |
+| --- | --- | --- |
+| [Nystrom: Dirty Flag](https://raw.githubusercontent.com/munificent/game-programming-patterns/master/book/dirty-flag.markdown), [Event Queue](https://raw.githubusercontent.com/munificent/game-programming-patterns/master/book/event-queue.markdown) | Coalesce changed owners; keep invalidation complete and revalidate delayed notifications. | Pattern explanations, not measured s&box speedups. Avoid a global bus and extra visible delay. |
+| [Godot Voxel: engine completion processing](https://github.com/Zylann/godot_voxel/blob/master/engine/voxel_engine.cpp) | Applies worker results before follow-up main-thread work to avoid an additional frame. | Source scheduling example only; engine APIs, thread guarantees and timings do not transfer. |

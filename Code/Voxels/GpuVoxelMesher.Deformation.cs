@@ -29,8 +29,13 @@ internal sealed partial class GpuVoxelMesher
 
 	public int LastFieldPublicationRevision { get; private set; }
 	public long LastFieldPublicationTimestamp { get; private set; }
+	public int LastFieldRegularReused { get; private set; }
+	public int LastFieldTransitionsReused { get; private set; }
 
 	public bool FieldPublicationPending => _editPublicationPending;
+	public string FieldPublicationStatus => $"regular={_editRegularCandidates.Count}/{_editRegularDependencies.Count} " +
+		$"transitions={_editTransitionCandidates.Count}/{_editTransitionDependencies.Count} " +
+		$"contentWaiting={_editRegularCandidates.Values.Count( candidate => !_chunkContentPrepared( candidate.Descriptor ) )} open={_editPublicationOpen}";
 
 	public bool EditRebuildPending => _editPublicationPending || _editedField is not null &&
 		(_pending.Values.Any( request => request.Descriptor.EditRevision > 0 ) ||
@@ -50,19 +55,26 @@ internal sealed partial class GpuVoxelMesher
 		_editDependencyBounds = dirtyBounds;
 		_editEpochChanged = change.Source.Epoch != field.Epoch;
 		var identicalRestore = _editEpochChanged && change.ChangedSamples == 0;
+		LastFieldRegularReused = 0;
+		LastFieldTransitionsReused = 0;
 		_editPublicationOpen = true;
 		_editPublicationPending = true;
 		_editRegularRefresh.Clear();
 		foreach ( var resident in _resident.Values )
 		{
-			// Exact replacement comparison proved equal samples. Rebase published
-			// metadata only; old asynchronous work still fails its epoch checks.
-			if ( identicalRestore && resident.Descriptor.MatchesField( change.Source ) )
+			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
+			// Revision blocks cover more than the changed samples. Published geometry
+			// outside the actual sampling dependency is still exact; only rebase its
+			// identity. Pending work keeps the ordinary stale-result checks below.
+			if ( (identicalRestore || !_editEpochChanged &&
+				!TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, change.AffectedBounds )) &&
+				resident.Descriptor.MatchesField( change.Source ) )
 			{
-				resident.Descriptor = resident.Descriptor.WithField( field ) with { Field = null };
+				var replacement = resident.Descriptor.WithField( field, captureRegion: false );
+				if ( replacement != resident.Descriptor ) LastFieldRegularReused++;
+				resident.Descriptor = replacement with { Field = null };
 				continue;
 			}
-			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( resident.Descriptor.SamplingBounds, dirtyBounds ) ) continue;
 			_editRegularRefresh[resident.Descriptor.Key] = new PendingMesh(
 				resident.Descriptor, resident.Residency, 0, routeDistance );
 		}
@@ -87,17 +99,20 @@ internal sealed partial class GpuVoxelMesher
 		foreach ( var descriptor in _transitionDesiredDescriptors.Values )
 		{
 			if ( !_editEpochChanged && !TerrainFieldChange.Intersects( descriptor.SamplingBounds, dirtyBounds ) ) continue;
-			var replacement = descriptor.WithField( field );
+			var replacement = descriptor.WithField( field, captureRegion: false );
 			if ( replacement != descriptor ) _editTransitionRefresh.Add( replacement );
 		}
 		foreach ( var descriptor in _editTransitionRefresh )
 		{
 			var desired = _transitionDesiredDescriptors[descriptor.Key];
-			if ( identicalRestore && desired.MatchesField( change.Source ) &&
+			if ( (identicalRestore || !_editEpochChanged &&
+				!TerrainFieldChange.Intersects( desired.SamplingBounds, change.AffectedBounds )) &&
+				desired.MatchesField( change.Source ) &&
 				_transitionResident.TryGetValue( descriptor.Key, out var resident ) && resident.Descriptor == desired )
 			{
 				resident.Descriptor = descriptor with { Field = null };
 				_transitionDesiredDescriptors[descriptor.Key] = resident.Descriptor;
+				LastFieldTransitionsReused++;
 				continue;
 			}
 			ScheduleTransition( descriptor, routeDistance );
@@ -139,6 +154,8 @@ internal sealed partial class GpuVoxelMesher
 		_editPublicationPending = false;
 		LastFieldPublicationRevision = 0;
 		LastFieldPublicationTimestamp = 0;
+		LastFieldRegularReused = 0;
+		LastFieldTransitionsReused = 0;
 	}
 
 }

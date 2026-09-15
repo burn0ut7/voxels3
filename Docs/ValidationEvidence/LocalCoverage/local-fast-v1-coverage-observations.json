@@ -1,0 +1,311 @@
+{
+  "task": "local-fast-v1",
+  "observations": [
+    {
+      "observedAtUtc": "2026-09-12T19:21:18.233157+00:00",
+      "raw": "[VoxelWorld] coverage.inspect {\"coverage\":{\"localPlan\":true,\"converged\":true,\"commits\":32,\"topologyRetries\":0,\"queued\":0,\"pending\":[],\"desired\":18880,\"active\":18880,\"planAgeSeconds\":29.845358},\"overlappingParents\":0}",
+      "coverage": {
+        "localPlan": true,
+        "converged": true,
+        "commits": 32,
+        "topologyRetries": 0,
+        "queued": 0,
+        "pending": [],
+        "desired": 18880,
+        "active": 18880,
+        "planAgeSeconds": 29.845358
+      },
+      "overlappingParents": 0
+    },
+    {
+      "observedAtUtc": "2026-09-12T19:22:10.349878+00:00",
+      "raw": "[VoxelWorld] coverage.inspect {\"coverage\":{\"localPlan\":true,\"converged\":true,\"commits\":32,\"topologyRetries\":0,\"queued\":0,\"pending\":[],\"desired\":18880,\"active\":18880,\"planAgeSeconds\":80.7855291},\"overlappingParents\":0}",
+      "coverage": {
+        "localPlan": true,
+        "converged": true,
+        "commits": 32,
+        "topologyRetries": 0,
+        "queued": 0,
+        "pending": [],
+        "desired": 18880,
+        "active": 18880,
+        "planAgeSeconds": 80.7855291
+      },
+      "overlappingParents": 0
+    },
+    {
+      "observedAtUtc": "2026-09-12T19:23:01.469127+00:00",
+      "raw": "[VoxelWorld] coverage.inspect {\"coverage\":{\"localPlan\":false,\"converged\":true,\"commits\":32,\"topologyRetries\":0,\"queued\":0,\"pending\":[],\"desired\":18880,\"active\":18880,\"planAgeSeconds\":129.4095907},\"overlappingParents\":0}",
+      "coverage": {
+        "localPlan": false,
+        "converged": true,
+        "commits": 32,
+        "topologyRetries": 0,
+        "queued": 0,
+        "pending": [],
+        "desired": 18880,
+        "active": 18880,
+        "planAgeSeconds": 129.4095907
+      },
+      "overlappingParents": 0
+    },
+    {
+      "observedAtUtc": "2026-09-12T19:24:27.449486+00:00",
+      "coverage": {
+        "localPlan": true,
+        "converged": false,
+        "commits": 1333,
+        "topologyRetries": 5,
+        "queued": 33323,
+        "pending": [
+          {
+            "parent": {
+              "level": 4,
+              "coordinate": "-12,9,-1"
+            },
+            "kind": "split",
+            "ageSeconds": 0.8793214,
+            "incoming": 8,
+            "dependencies": 11,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 0
+          },
+          {
+            "parent": {
+              "level": 4,
+              "coordinate": "-13,9,-2"
+            },
+            "kind": "split",
+            "ageSeconds": 0.7447458,
+            "incoming": 8,
+            "dependencies": 13,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-8,6,0"
+            },
+            "kind": "split",
+            "ageSeconds": 0.6992713,
+            "incoming": 8,
+            "dependencies": 10,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 1
+          },
+          {
+            "parent": {
+              "level": 4,
+              "coordinate": "-13,10,-2"
+            },
+            "kind": "split",
+            "ageSeconds": 0.5291374,
+            "incoming": 8,
+            "dependencies": 12,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 4,
+              "coordinate": "-14,10,-1"
+            },
+            "kind": "split",
+            "ageSeconds": 0.3471665,
+            "incoming": 8,
+            "dependencies": 12,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-7,6,-2"
+            },
+            "kind": "split",
+            "ageSeconds": 0.3471173,
+            "incoming": 8,
+            "dependencies": 12,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-6,6,0"
+            },
+            "kind": "split",
+            "ageSeconds": 0.2668695,
+            "incoming": 8,
+            "dependencies": 11,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 2
+          },
+          {
+            "parent": {
+              "level": 4,
+              "coordinate": "-14,10,0"
+            },
+            "kind": "split",
+            "ageSeconds": 0.0833565,
+            "incoming": 8,
+            "dependencies": 13,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 3
+          }
+        ],
+        "desired": 18880,
+        "active": 19097,
+        "planAgeSeconds": 4.441171
+      },
+      "overlappingParents": 0
+    },
+    {
+      "observedAtUtc": "2026-09-12T19:26:00.423505+00:00",
+      "coverage": {
+        "localPlan": true,
+        "converged": false,
+        "commits": 2724,
+        "topologyRetries": 16,
+        "queued": 32973,
+        "pending": [
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-4,-7,-1"
+            },
+            "kind": "split",
+            "ageSeconds": 1.1610725,
+            "incoming": 8,
+            "dependencies": 12,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 2
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-6,-7,0"
+            },
+            "kind": "split",
+            "ageSeconds": 1.0039151,
+            "incoming": 8,
+            "dependencies": 12,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 3
+          },
+          {
+            "parent": {
+              "level": 3,
+              "coordinate": "-18,-19,-1"
+            },
+            "kind": "split",
+            "ageSeconds": 0.9345958,
+            "incoming": 8,
+            "dependencies": 9,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 1
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-5,-5,-3"
+            },
+            "kind": "split",
+            "ageSeconds": 0.8111017,
+            "incoming": 8,
+            "dependencies": 13,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-6,-5,-3"
+            },
+            "kind": "split",
+            "ageSeconds": 0.6298266,
+            "incoming": 8,
+            "dependencies": 13,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-5,-7,0"
+            },
+            "kind": "split",
+            "ageSeconds": 0.4730872,
+            "incoming": 8,
+            "dependencies": 12,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 3
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-5,-6,-3"
+            },
+            "kind": "split",
+            "ageSeconds": 0.256649,
+            "incoming": 8,
+            "dependencies": 13,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          },
+          {
+            "parent": {
+              "level": 5,
+              "coordinate": "-6,-6,-3"
+            },
+            "kind": "split",
+            "ageSeconds": 0.099505,
+            "incoming": 8,
+            "dependencies": 13,
+            "missingRegular": 0,
+            "missingWater": 0,
+            "missingSeams": 4
+          }
+        ],
+        "desired": 18880,
+        "active": 28810,
+        "planAgeSeconds": 58.7878859
+      },
+      "overlappingParents": 0
+    },
+    {
+      "observedAtUtc": "2026-09-12T19:27:12.877309+00:00",
+      "coverage": {
+        "localPlan": true,
+        "converged": false,
+        "commits": 5302,
+        "topologyRetries": 16,
+        "queued": 13620,
+        "pendingCount": 8,
+        "pendingKinds": [
+          "merge"
+        ],
+        "desired": 18880,
+        "active": 28852,
+        "planAgeSeconds": 144.3554323
+      },
+      "overlappingParents": 0
+    }
+  ]
+}

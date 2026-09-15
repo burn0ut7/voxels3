@@ -25,15 +25,16 @@ CS
 	StructuredBuffer<IndexedArguments> SourceIndirectArguments < Attribute( "SourceIndirectArguments" ); >;
 	RWStructuredBuffer<uint4> DepthBlocks < Attribute( "DepthBlocks" ); >;
 	RWStructuredBuffer<IndexedArguments> DepthArguments < Attribute( "DepthArguments" ); >;
-	uint DepthSlotOffset < Attribute( "DepthSlotOffset" ); >;
+	uint DepthBlockCapacity < Attribute( "DepthBlockCapacity" ); >;
 	uint DepthIndicesPerBlock < Attribute( "DepthIndicesPerBlock" ); >;
 	// One group covers one 512-record geometry arena (GpuVoxelMesher.RegionsPerSlab).
 	groupshared uint BlockEnds[512];
 	[numthreads( 512, 1, 1 )]
-	void MainCs( uint3 threadId : SV_GroupThreadID )
+	void MainCs( uint3 threadId : SV_GroupThreadID, uint3 groupId : SV_GroupID )
 	{
 		uint lane = threadId.x;
-		uint slot = DepthSlotOffset + lane;
+		uint arena = groupId.x;
+		uint slot = arena * 512 + lane;
 		IndexedArguments source = SourceIndirectArguments[slot];
 		float4 minimum = VisibilityBounds[slot * 2];
 		float3 maximum = VisibilityBounds[slot * 2 + 1].xyz;
@@ -49,7 +50,7 @@ CS
 			BlockEnds[lane] += addend;
 			GroupMemoryBarrierWithGroupSync();
 		}
-		uint firstBlock = BlockEnds[lane] - blockCount;
+		uint firstBlock = arena * DepthBlockCapacity + BlockEnds[lane] - blockCount;
 		for ( uint block = 0; block < blockCount; block++ )
 		{
 			uint indexOffset = block * DepthIndicesPerBlock;
@@ -64,7 +65,7 @@ CS
 			draw.FirstIndex = 0;
 			draw.BaseVertex = 0;
 			draw.FirstInstance = 0;
-			DepthArguments[0] = draw;
+			DepthArguments[arena] = draw;
 		}
 	}
 }

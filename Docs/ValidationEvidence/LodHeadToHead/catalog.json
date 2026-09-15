@@ -1,0 +1,365 @@
+[
+  {
+    "runId": "93b4ef84a90f43249ba9d1ee9e43c90c",
+    "task": "lod-headtohead-current-fast-r2",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 10000,
+      "distance": 200000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94782,
+      "startCenter": {
+        "x": 1.7895519,
+        "y": 1.8163991
+      }
+    },
+    "prepared": 0.0492352,
+    "presented": 0.2129225,
+    "observationGap": 0.0608804,
+    "frame": {
+      "samples": 41952,
+      "truncatedSamples": 0,
+      "averageFps": 344.02002,
+      "p95Milliseconds": 5.5651,
+      "p99Milliseconds": 8.3777,
+      "maximumMilliseconds": 61.3537,
+      "averageGpuMilliseconds": 1.1330585,
+      "p95GpuMilliseconds": 1.5633106,
+      "p99GpuMilliseconds": 2.0141602,
+      "maximumGpuMilliseconds": 9.242058
+    },
+    "runtime": {
+      "samples": 41952,
+      "managedBytesAllocated": 6246116520,
+      "averageManagedBytesAllocatedPerFrame": 148887.22,
+      "maximumManagedBytesAllocatedPerFrame": 45819880,
+      "gen0Collections": 78,
+      "gen1Collections": 70,
+      "gen2Collections": 3,
+      "framesWithCollections": 78,
+      "gcPauseMilliseconds": 783.757,
+      "maximumGcPauseMilliseconds": 15.653,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 2609819648,
+      "endProcessBytes": 2774753280,
+      "averageProcessBytes": 2657626481,
+      "peakProcessBytes": 2789580800,
+      "startGpuBytes": 1622554087,
+      "endGpuBytes": 1883813351,
+      "averageGpuBytes": 1833870890,
+      "peakGpuBytes": 1901540839,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 13716.306,
+    "prepMs": 11.1358,
+    "outerGapMs": 252.686,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 10161,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 13899,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 20892,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 33261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 58152,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ],
+    "variant": "current",
+    "route": "fast",
+    "prefix": "current-fast-r2",
+    "unsafeCommits": 0,
+    "meshingWork": {
+      "dispatches": 63166,
+      "regularCountBatches": 11333,
+      "regularCountRegions": 79903,
+      "transitionCountReadbacks": 5134,
+      "transitionCountReadbackMilliseconds": 16440.97340000001,
+      "transitionCountCallbackWaitMilliseconds": 19196.486399999972,
+      "cancelledTransitionCountResults": 58
+    }
+  },
+  {
+    "runId": "2d5a91d2bde448c9a03e3212a6ea99d7",
+    "task": "lod-headtohead-current-standard-r1",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94875,
+      "startCenter": {
+        "x": 1.74612,
+        "y": 1.8309554
+      }
+    },
+    "prepared": 0.0457774,
+    "presented": 0.1009559,
+    "observationGap": 0.0551785,
+    "frame": {
+      "samples": 48615,
+      "truncatedSamples": 0,
+      "averageFps": 398.65686,
+      "p95Milliseconds": 4.3577,
+      "p99Milliseconds": 6.5423,
+      "maximumMilliseconds": 93.4232,
+      "averageGpuMilliseconds": 1.6132615,
+      "p95GpuMilliseconds": 2.7797222,
+      "p99GpuMilliseconds": 3.6275387,
+      "maximumGpuMilliseconds": 13.100624
+    },
+    "runtime": {
+      "samples": 48615,
+      "managedBytesAllocated": 4418849736,
+      "averageManagedBytesAllocatedPerFrame": 90894.78,
+      "maximumManagedBytesAllocatedPerFrame": 45954672,
+      "gen0Collections": 53,
+      "gen1Collections": 34,
+      "gen2Collections": 2,
+      "framesWithCollections": 53,
+      "gcPauseMilliseconds": 536.892,
+      "maximumGcPauseMilliseconds": 15.075,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 2706710528,
+      "endProcessBytes": 2735394816,
+      "averageProcessBytes": 2698211798,
+      "peakProcessBytes": 2779009024,
+      "startGpuBytes": 1622586855,
+      "endGpuBytes": 1985050087,
+      "averageGpuBytes": 1884296141,
+      "peakGpuBytes": 1985279463,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 13999.351,
+    "prepMs": 11.2755,
+    "outerGapMs": 253.9163,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 10161,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 13899,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 20892,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 33261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 58152,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ],
+    "variant": "current",
+    "route": "standard",
+    "prefix": "current-standard-r1",
+    "unsafeCommits": 0,
+    "meshingWork": {
+      "dispatches": 89123,
+      "regularCountBatches": 12079,
+      "regularCountRegions": 93445,
+      "transitionCountReadbacks": 6130,
+      "transitionCountReadbackMilliseconds": 20364.162999999982,
+      "transitionCountCallbackWaitMilliseconds": 17592.682899999934,
+      "cancelledTransitionCountResults": 21
+    }
+  },
+  {
+    "runId": "569a05ebeeac47e39c18212c3fe988f5",
+    "task": "lod-headtohead-prediction-fast-r1",
+    "test": {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 10000,
+      "distance": 200000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94616,
+      "startCenter": {
+        "x": 1.7579734,
+        "y": 2.0332327
+      }
+    },
+    "prepared": 0.0359989,
+    "presented": 0.189984,
+    "observationGap": 0.0533573,
+    "frame": {
+      "samples": 43677,
+      "truncatedSamples": 0,
+      "averageFps": 358.1705,
+      "p95Milliseconds": 5.7174,
+      "p99Milliseconds": 8.254,
+      "maximumMilliseconds": 68.9881,
+      "averageGpuMilliseconds": 1.0913626,
+      "p95GpuMilliseconds": 1.4996529,
+      "p99GpuMilliseconds": 2.0270348,
+      "maximumGpuMilliseconds": 16.710758
+    },
+    "runtime": {
+      "samples": 43677,
+      "managedBytesAllocated": 6150068472,
+      "averageManagedBytesAllocatedPerFrame": 140807.94,
+      "maximumManagedBytesAllocatedPerFrame": 45988744,
+      "gen0Collections": 82,
+      "gen1Collections": 76,
+      "gen2Collections": 3,
+      "framesWithCollections": 82,
+      "gcPauseMilliseconds": 813.559,
+      "maximumGcPauseMilliseconds": 15.503,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "memory": {
+      "startProcessBytes": 3001323520,
+      "endProcessBytes": 3071590400,
+      "averageProcessBytes": 3021320964,
+      "peakProcessBytes": 3119136768,
+      "startGpuBytes": 1571386855,
+      "endGpuBytes": 1836021223,
+      "averageGpuBytes": 1805646629,
+      "peakGpuBytes": 1850455527,
+      "gpuBudgetBytes": 32945209344
+    },
+    "drainMs": 19897.078,
+    "prepMs": 10.4127,
+    "outerGapMs": 254.4003,
+    "pending": 0,
+    "collisionReady": 4913,
+    "transitionPairs": [
+      {
+        "fineLevel": 0,
+        "coarseLevel": 1,
+        "indices": 1608,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 1,
+        "coarseLevel": 2,
+        "indices": 3261,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 2,
+        "coarseLevel": 3,
+        "indices": 6426,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 3,
+        "coarseLevel": 4,
+        "indices": 12120,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      },
+      {
+        "fineLevel": 4,
+        "coarseLevel": 5,
+        "indices": 10281,
+        "fineFaceMismatchCount": 0,
+        "coarseFaceMismatchCount": 0,
+        "lateralMismatchCount": 0,
+        "invalidTableCount": 0
+      }
+    ],
+    "variant": "prediction",
+    "route": "fast",
+    "prefix": "prediction-fast-r1",
+    "unsafeCommits": 0,
+    "meshingWork": {
+      "dispatches": 69340,
+      "regularCountBatches": 12012,
+      "regularCountRegions": 87127,
+      "transitionCountReadbacks": 4041,
+      "transitionCountReadbackMilliseconds": 14462.31110000001,
+      "transitionCountCallbackWaitMilliseconds": 19413.332400000058,
+      "cancelledTransitionCountResults": 122
+    }
+  }
+]

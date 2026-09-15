@@ -38,8 +38,7 @@ evidence satisfy each row. Runtime compilation alone cannot close a row.
   from immutable snapshots and commit page versions atomically. Bound page
   memory, queued intents, snapshots and derivative candidates. Reject invalid or
   oversized work explicitly before mutation, rather than lose accepted edits.
-- Keep the compact progressive radial brush and fixed 10 Hz logical tick
-  proposed by research. UI preview is separate presentation. Both buttons means
+- Keep the compact progressive radial brush and the restored 10 Hz tool pacing. UI preview is separate presentation. Both buttons means
   no edit. Tool rays require current local collision; authorized world-centered
   impacts do not require render residency.
 - Continue using the existing GPU regular/transition extractors and CPU
@@ -594,3 +593,87 @@ the current field. Published geometry remains until the refreshed gate passes.
 The canonical collision world now trials three CPU workers and three combined in-flight/completed geometry slots after measured two-worker sampling dominated fast-flight catch-up. Each worker still owns one mesher, uses captured authoritative field data, obeys region cancellation and publishes through the unchanged engine-thread0.5ms integration budget. Pending actor/nearest ordering and source-revision rejection remain unchanged. This supersedes the two-worker cap only if the unchanged standard and fast streaming scenarios pass; see the validation ledger. No GPU lane or terrain representation changes.
 
 The three-worker cap passed the2026-09-11 standard and fast streaming drain/preparation/correctness criteria. This qualifies streaming on the recorded machine; it does not establish multiplayer capacity or replace edit-specific stress coverage.
+
+## Response-latency candidate (2026-09-14, unqualified)
+
+Published regular and transition geometry can retain its allocation when its
+sampling bounds do not intersect the edit's actual interpolation-expanded
+AffectedBounds, even if conservative revision blocks changed its identity.
+Reuse requires the published descriptor to match the source field; transition
+reuse also requires it to match the desired descriptor. Rebase only metadata
+without capturing a field snapshot. Pending/in-flight work still follows the
+existing cancellation, revision/epoch checks and rescheduling path. Identical
+restores retain their existing proven-equal optimization. Changed epochs retain
+full invalidation unless the replacement was proven identical.
+
+Prepared LOD0 regions without a mesh are activated only where actual changed
+sample support intersects their sampling bounds. They cannot acquire a surface
+from a disjoint edit. Coherent publication and current-aim admission stay intact;
+no larger queue, deferred input, brush change, or additional terrain representation.
+voxel_terrain_edit_info reports visualReused/transitionsReused for metadata-only
+reuse events. These are work counters, not latency or correctness proof.
+
+This candidate targets avoidable visual work in digging and placing. It does
+not yet qualify collision latency, change the10Hz tick, or claim real-time
+acceptance. See DEFORM-LATENCY-002/v1 in ValidationResults for pending gates.
+## Logical-cell targeting correction (2026-09-14)
+
+A thin logically empty remnant may connect directly to solid in the next cell.
+Restarting a native triangle-mesh ray beyond the remnant can start inside solid
+and return no hit; camera movement then changes whether the tool finds a target.
+The live revision215 observations in DeformationLatency/tool-ray-before.json
+record this case,including negative canonical density and StartedSolid=false.
+After each skipped cell,the tool now queries the canonical field at its bounded
+continuation point. Solid continues through the same logical-cell traversal;
+only a cell with>10%solid volume is eligible. Air resumes the physics ray. The
+selected target still requires current collision readiness and uses the same
+host brush admission. Build behavior,brush shape/strength,and tick are unchanged.
+This corrects the lost-target case without removing remnants from world geometry.
+Runtime and performance qualification are tracked in ValidationResults.
+The matched HELD-RAY-001/v1 run on saved revision 432 reproduced the old tool
+stopping after 17 successful digs with a ray restarted inside solid. The corrected
+traversal completed 208 digs with the same fixed aim, reaching approximately the
+2048-unit limit. Both variants included the response-latency candidate above;
+this comparison isolates targeting, not that candidate's performance benefit.
+Publication p95 was 131 ms in the corrected run, so the 100 ms responsiveness
+target and general deformation performance acceptance remain unmet.
+
+## Held-input polling experiment (2026-09-14, rolled back)
+
+The user's responsiveness request supersedes the earlier fixed 10 Hz tool rule.
+Local dig/build now calls the canonical tool path once per frame while held,
+with no cooldown or catch-up loop. Publication and current collision readiness
+still gate admission; accepted targets are not buffered ahead of those gates.
+Network aim messages use a separate 1/60-second interval and the existing
+two-token host bucket replenishes at 60 Hz. This bounds remote request traffic;
+it is not a promise of 60 committed edits per second. Remote sequence, authority,
+coverage, brush and build safety checks are unchanged. Historical benchmark
+intervals remain fixed and do not measure the local input polling change.
+
+The polling experiment above was reverted after the user reported slower digging
+and see-through flicker. The user reported no flicker so far after reverting.
+The previous 100 ms cadence and 10 Hz remote limiter are active again. The
+targeting correction remains; the flicker's underlying cause is not proven.
+
+## Opt-in deformation reports
+
+Run voxel_deformation_report 30 to observe ordinary gameplay for 30 seconds
+(valid range 5–120); voxel_deformation_report_stop saves early. No automation
+of player input or movement occurs. Each capture writes a separate bounded JSON
+report under performance/deformation-report-<id>.json and logs timings and waits
+once at completion. The capture is inactive by default.
+
+Scopes measure tool/ray work, brush preparation, commit/invalidation, mesh-pump
+and collision integration, plus admitted-request-to-commit/publication latency.
+Frame times, whole-game allocations/GC pauses, one-second sample-memory readings,
+held-input gate durations, tool outcomes, pending work and failures give context.
+Scoped elapsed times are not exclusive CPU or GPU timings: Ray is inside Tool;
+mesh/collision pumps include streaming. Collision details are a cumulative final
+snapshot. Publication is not display scanout or a flicker detector.
+
+Each stage retains the first 8192 samples, with explicit truncation and lifetime
+count/total/max. Captures own their data and synchronize worker writes; finished
+captures reject late samples. Only fixed-size timing buffers are written on hot
+paths, without per-attempt logging. Sorting/serialization happens at completion;
+that reporting cost is outside the sampled window. Disabled captures do not
+read clocks, allocate samples or scan memory. No new gameplay queue is involved.

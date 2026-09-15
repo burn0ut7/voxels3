@@ -1,0 +1,167 @@
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -4361,7 +4361,6 @@
+ 		public int IndexFreeRangeCount => _indices.FreeRangeCount;
+ 		public GpuBuffer<TerrainVertex> Vertices { get; }
+ 		public GpuBuffer<uint> Indices { get; }
+-		public GpuBuffer<Vector4> DepthBlocks { get; } = new( DepthBlockCapacity, GpuBuffer.UsageFlags.Structured, "Voxel Depth Blocks" );
+ 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> DepthArguments { get; } = new( 1,
+ 			GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel Depth Arguments" );
+ 
+@@ -4404,7 +4403,7 @@
+ 			_freeSlots.Push( handle.Slot );
+ 		}
+ 
+-		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); DepthBlocks.Dispose(); DepthArguments.Dispose(); }
++		public void Dispose() { Vertices.Dispose(); Indices.Dispose(); DepthArguments.Dispose(); }
+ 	}
+ 
+ 	private sealed class RenderCameraState : IDisposable, IHotloadManaged
+@@ -4471,15 +4470,23 @@
+ 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> SourceArguments { get; }
+ 		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> VisibleArguments { get; }
+ 		public GpuBuffer<uint> FrameCounters { get; }
++		public GpuBuffer<Vector4> DepthBlocks { get; }
++		public GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> DepthArguments { get; }
+ 		public VisibilityBuffers( GpuBuffer<Vector4> bounds,
+ 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source,
+ 			GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> visible, GpuBuffer<uint> frame )
+ 		{
+ 			Bounds = bounds; SourceArguments = source; VisibleArguments = visible; FrameCounters = frame;
++			var arenaCapacity = source.ElementCount / RegionsPerSlab;
++			DepthBlocks = new GpuBuffer<Vector4>( checked( arenaCapacity * DepthBlockCapacity ),
++				GpuBuffer.UsageFlags.Structured, "Voxel View Depth Blocks" );
++			DepthArguments = new GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments>( arenaCapacity,
++				GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Voxel View Depth Arguments" );
+ 		}
+ 		public void Dispose()
+ 		{
+ 			Bounds.Dispose(); SourceArguments.Dispose(); VisibleArguments.Dispose(); FrameCounters.Dispose();
++			DepthBlocks.Dispose(); DepthArguments.Dispose();
+ 		}
+ 	}
+ 
+@@ -4503,6 +4510,7 @@
+ 			mesh.CreateIndexBuffer( indices.Length, indices.AsSpan() );
+ 			_block = Model.Builder.AddMesh( mesh ).Create();
+ 			_visibility.Attributes.Set( "DepthIndicesPerBlock", DepthIndicesPerBlock );
++			_visibility.Attributes.Set( "DepthBlockCapacity", DepthBlockCapacity );
+ 		}
+ 
+ 		public override void RenderSceneObject()
+@@ -4513,28 +4521,40 @@
+ 				var state = _owner._visibilityReadbackState;
+ 				var visibility = state?.Visibility;
+ 				if ( visibility is null || !_owner._fieldPresentationReady ) return;
++				var arenaCount = Math.Min( state.DepthArenas.Length, visibility.DepthArguments.ElementCount );
++				if ( arenaCount == 0 ) return;
+ 				_visibility.Attributes.Set( "VisibilityBounds", visibility.Bounds );
+ 				_visibility.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
++				_visibility.Attributes.Set( "DepthBlocks", visibility.DepthBlocks );
++				_visibility.Attributes.Set( "DepthArguments", visibility.DepthArguments );
+ 				Graphics.ResourceBarrierTransition( visibility.Bounds, ResourceState.GenericRead );
+ 				Graphics.ResourceBarrierTransition( visibility.SourceArguments, ResourceState.GenericRead );
++				Graphics.ResourceBarrierTransition( visibility.DepthBlocks, ResourceState.UnorderedAccess );
++				Graphics.ResourceBarrierTransition( visibility.DepthArguments, ResourceState.UnorderedAccess );
++				// Independent arena groups share one launch and one barrier pair per view.
++				_visibility.Dispatch( arenaCount * RegionsPerSlab, 1, 1 );
++				Graphics.UavBarrier( visibility.DepthBlocks );
++				Graphics.UavBarrier( visibility.DepthArguments );
++				Graphics.ResourceBarrierTransition( visibility.DepthBlocks, ResourceState.GenericRead );
++				Graphics.ResourceBarrierTransition( visibility.DepthArguments, ResourceState.CopySource );
++				// Finish argument transfers before drawing, avoiding transfer/draw alternation.
++				foreach ( var arena in state.DepthArenas )
++				{
++					if ( arena.Index >= arenaCount ) break;
++					if ( arena.ActiveResidentCount == 0 ) continue;
++					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.CopyDestination );
++					visibility.DepthArguments.CopyTo( arena.DepthArguments, arena.Index, 0, 1 );
++				}
++				Attributes.Set( "DepthBlocks", visibility.DepthBlocks );
+ 				foreach ( var arena in state.DepthArenas )
+ 				{
+ 					// A newly allocated arena waits for the next camera descriptor publication.
+ 					if ( (arena.Index + 1) * RegionsPerSlab > visibility.SourceArguments.ElementCount ) break;
+ 					if ( arena.ActiveResidentCount == 0 ) continue;
+-					_visibility.Attributes.Set( "DepthSlotOffset", arena.Index * RegionsPerSlab );
+-					_visibility.Attributes.Set( "DepthBlocks", arena.DepthBlocks );
+-					_visibility.Attributes.Set( "DepthArguments", arena.DepthArguments );
+-					Graphics.ResourceBarrierTransition( arena.DepthBlocks, ResourceState.UnorderedAccess );
+-					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.UnorderedAccess );
+-					_visibility.Dispatch( RegionsPerSlab, 1, 1 );
+-					Graphics.UavBarrier( arena.DepthBlocks );
+-					Graphics.UavBarrier( arena.DepthArguments );
+-					Graphics.ResourceBarrierTransition( arena.DepthBlocks, ResourceState.GenericRead );
+ 					Graphics.ResourceBarrierTransition( arena.DepthArguments, ResourceState.IndirectArgument );
+ 					Graphics.ResourceBarrierTransition( arena.Vertices, ResourceState.GenericRead );
+ 					Graphics.ResourceBarrierTransition( arena.Indices, ResourceState.GenericRead );
+-					Attributes.Set( "DepthBlocks", arena.DepthBlocks );
++					Attributes.Set( "DepthBlockOffset", arena.Index * DepthBlockCapacity );
+ 					Attributes.Set( "DepthVertices", arena.Vertices );
+ 					Attributes.Set( "DepthIndices", arena.Indices );
+ 					Graphics.DrawModelInstancedIndirect( _block, arena.DepthArguments, 0, Attributes );
+--- a/Assets/shaders/voxels/voxel_depth_visibility_cs.shader
++++ b/Assets/shaders/voxels/voxel_depth_visibility_cs.shader
+@@ -25,15 +25,16 @@
+ 	StructuredBuffer<IndexedArguments> SourceIndirectArguments < Attribute( "SourceIndirectArguments" ); >;
+ 	RWStructuredBuffer<uint4> DepthBlocks < Attribute( "DepthBlocks" ); >;
+ 	RWStructuredBuffer<IndexedArguments> DepthArguments < Attribute( "DepthArguments" ); >;
+-	uint DepthSlotOffset < Attribute( "DepthSlotOffset" ); >;
++	uint DepthBlockCapacity < Attribute( "DepthBlockCapacity" ); >;
+ 	uint DepthIndicesPerBlock < Attribute( "DepthIndicesPerBlock" ); >;
+ 	// One group covers one 512-record geometry arena (GpuVoxelMesher.RegionsPerSlab).
+ 	groupshared uint BlockEnds[512];
+ 	[numthreads( 512, 1, 1 )]
+-	void MainCs( uint3 threadId : SV_GroupThreadID )
++	void MainCs( uint3 threadId : SV_GroupThreadID, uint3 groupId : SV_GroupID )
+ 	{
+ 		uint lane = threadId.x;
+-		uint slot = DepthSlotOffset + lane;
++		uint arena = groupId.x;
++		uint slot = arena * 512 + lane;
+ 		IndexedArguments source = SourceIndirectArguments[slot];
+ 		float4 minimum = VisibilityBounds[slot * 2];
+ 		float3 maximum = VisibilityBounds[slot * 2 + 1].xyz;
+@@ -49,7 +50,7 @@
+ 			BlockEnds[lane] += addend;
+ 			GroupMemoryBarrierWithGroupSync();
+ 		}
+-		uint firstBlock = BlockEnds[lane] - blockCount;
++		uint firstBlock = arena * DepthBlockCapacity + BlockEnds[lane] - blockCount;
+ 		for ( uint block = 0; block < blockCount; block++ )
+ 		{
+ 			uint indexOffset = block * DepthIndicesPerBlock;
+@@ -64,7 +65,7 @@
+ 			draw.FirstIndex = 0;
+ 			draw.BaseVertex = 0;
+ 			draw.FirstInstance = 0;
+-			DepthArguments[0] = draw;
++			DepthArguments[arena] = draw;
+ 		}
+ 	}
+ }
+--- a/Assets/shaders/voxels/voxel_terrain_depth.shader
++++ b/Assets/shaders/voxels/voxel_terrain_depth.shader
+@@ -35,9 +35,10 @@
+ 	StructuredBuffer<TerrainVertex> DepthVertices < Attribute( "DepthVertices" ); >;
+ 	StructuredBuffer<uint> DepthIndices < Attribute( "DepthIndices" ); >;
+ 	StructuredBuffer<uint4> DepthBlocks < Attribute( "DepthBlocks" ); >;
++	uint DepthBlockOffset < Attribute( "DepthBlockOffset" ); >;
+ 	PixelInput MainVs( const VertexInput input )
+ 	{
+-		uint4 block = DepthBlocks[input.InstanceId];
++		uint4 block = DepthBlocks[DepthBlockOffset + input.InstanceId];
+ 		if ( input.VertexId >= block.z )
+ 		{
+ 			// Padding belongs to the final partial block, never to terrain geometry.
+--- a/Code/Voxels/VoxelManager.Prediction.cs
++++ b/Code/Voxels/VoxelManager.Prediction.cs
+@@ -161,7 +161,7 @@
+ 				var residency = key.Level == 0 ? GpuMeshResidency.Warm : GpuMeshResidency.Visual;
+ 				if ( classification != ChunkDensityClassification.PotentiallySurfaceContaining )
+ 					_gpuMesher.PublishKnownEmpty( descriptor, residency );
+-				else _gpuMesher.Schedule( descriptor, _playerFigureEightRouteDistance, residency );
++				else _gpuMesher.Schedule( CreateRegularDescriptor( key.Level, key.Coordinate ), _playerFigureEightRouteDistance, residency );
+ 				if ( key.Level == 0 && _renderPreparedChunks.Add( key.Coordinate ) ) _renderPreparedRevision++;
+ 				_predictionScheduled++;
+ 			}
