@@ -27872,3 +27872,86 @@ fallback branch not exercised. Restore all prototype scheduling/priority changes
 The user's precise hole is not reproduced and not fixed. Only diagnostic code,
 reports and evidence are eligible for commit. Existing mainwater/prediction
 adoption preserved. Detailedreport commands remain available regardless oftrace.
+
+## RING-SHADOW-001/v1 — 2026-09-15 diagnostic definition
+
+Before runtime variants: investigate the user-visible distant broken black contour
+in the current basic_example playable world, engine 26.09.08b, source
+5a77686dd0fc57455ef3eb8b94a8a6a174ad6c59. Preserve the current player/view;
+no automated movement, regeneration, streaming changes, or persisted scene edits.
+Capture the main camera at 1920x1080 with UI. Baseline sun: Shadows=true,
+ContactShadows=true, ShadowBias=0.0005, four cascades, split ratio=0.91.
+Camera ZNear=10, ZFar=100000; DistanceFog StartFraction=0.08, enabled.
+Ordered variants: baseline; ContactShadows=false only; restore contact shadows
+and set Shadows=false only; restore both original values. Capture each variant
+after the property update has rendered. Record any user view changes as a
+comparison limitation. Criterion: disappearance and return of the contour with
+one setting identifies that feature as necessary for this reproduction; persistence
+rules out that toggle alone as a remedy. This is visual diagnosis, not a fix or
+performance acceptance. No figure-eight is required for unchanged runtime source.
+
+Initial component-ID toggles did not change the visible character shadow or ring.
+Installed Scene.cs ResolveComponent searches all sessions before the active scene;
+edit and play copies share component IDs. These captures therefore do not establish
+that the live light changed. Originals were restored. Repeat v1 using game-object
+ID plus type, which routes through active-first FindByGuid; require readback and
+visible character-shadow response before interpreting the no-shadow comparison.
+
+Additional diagnostic control declared: both Shadows and ContactShadows false together, then restore; character cast-shadow disappearance required to validate control. If neither individual toggle reaches that control, do not claim a shadow subsystem exclusion.
+
+Additional control before run: temporarily disable Directional Light game object (includes AmbientLight), capture, re-enable. Expected whole-scene lighting change validates that active scene mutation reaches rendered view; no persistent change.
+
+All component/object controls above failed the visible lighting-change control;
+ring and character shadow persisted even with the light object disabled. Original
+values restored. These are inconclusive, not evidence excluding shadows.
+
+RING-SHADOW-002/v1 declared before run: same scene/view/source/resolution as001.
+Use discovered engine console controls directly. Baseline live values from find
+shadow: r.shadows.contact.enabled=True, r.shadows.csm.enabled=True,
+r.shadows.csm.distance=20000, maxcascades=4, maxresolution=4096, quality=3,
+depthbias=-1, slopescale=-1.5. Ordered variants: contact.enabled=false only;
+restore true, csm.enabled=false only; restore true. Capture each and inspect
+ring presence plus character shadow. If CSM is necessary, additionally set
+csm.distance=10000 only, capture ring displacement, then restore20000 and capture.
+Do not change other settings. Criterion: disappearance/return identifies necessary
+feature; distance-dependent movement supports shadow range/cascade-boundary cause.
+No fix/performance claim; source remains unchanged.
+
+Additional boundary isolation declared: original distance20000, set r.shadows.csm.maxcascades=1, capture, restore4. Persistence of a single ring with only one cascade supports outer shadow coverage edge rather than an internal cascade transition. Preserve all other inputs. No shipping change.
+
+### RING-SHADOW-001/v1 and RING-SHADOW-002/v1 outcomes
+
+Same-session captures, 2026-09-15, source/engine and settings declared above.
+The landscape/view remained visually stationary; character idle animation varied.
+No player movement was commanded. Absolute runtime player coordinates and world
+save identity were not recovered, so this is a preserved visual reproduction,
+not a fully portable fixed-world benchmark. No FPS/memory measurements or claims.
+
+| Variant | Observed contour | Character cast shadow | Result |
+| --- | --- | --- | --- |
+| Baseline | Thin broken black arc, central y~381 | Present | Reproduced |
+| Component-ID contact off / shadows off | Persists | Present | Inconclusive control |
+| Active-object/type contact off / shadows off / both off | Persists | Present | Inconclusive control |
+| Light object disabled | Persists; lighting unchanged | Present | Failed lighting control |
+| Engine contact shadows off | Persists at original arc | Present | Contact shadow removal does not remove artifact |
+| Engine CSM off | Arc disappears | Cast shadow disappears | CSM causally implicated |
+| CSM distance10000 (original20000) | Arc shifts nearer, central y~610 | Present | Shadow-distance-dependent boundary |
+| CSM maxcascades1 (original4), distance20000 | Arc persists, central y~387 | Much weaker/coarser | Supports outer coverage edge, not an internal cascade transition |
+| Restored original engine settings | Original arc returns, central y~381 | Present | Reversible reproduction confirmed |
+
+All image coordinates are approximate visual readings of1920x1080 images,
+not a pixel-classifier metric. Every capture, including failed controls, remains
+in [ShadowRing evidence](ValidationEvidence/ShadowRing/README.md).
+Restored engine values were confirmed by console readback; light object enabled,
+Shadows=true and ContactShadows=true confirmed by property readback. No scene was
+saved, and no runtime source or asset source changed. The editor game session was
+marked dirty by its undo scopes; original authored scene remained unsaved=false.
+
+Conclusion: the artifact depends on cascaded directional shadows and tracks their
+outer distance boundary. Contact shadows and internal cascade transitions are not
+required for the observed ring. Installed DirectionalLightShadow.hlsl selects
+spherical cascade coverage and returns early outside it; ShadowFiltering.hlsl
+computes receiver offsets using pixel derivatives. Boundary derivative behavior
+is a candidate to inspect, not an established root cause. Neither engine fault
+versus terrain integration fault nor a safe fix is established by these runs.
+Figure-eight intentionally not run: this task changes documentation/evidence only.
