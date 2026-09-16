@@ -28646,3 +28646,95 @@ Only removal patch and this ledger appendix can be isolated for commit: the
 working shader depends on pre-existing uncommitted texture/material changes
 absent from HEAD. Keep the applied source and architecture update in working
 tree; do not include those unrelated additions in this commit.
+
+## TERRAIN-DISTANCE-001/v1 (2026-09-16)
+
+Before runs: retain TERRAIN-SAMPLING-PERF-001/v2 fixed world/config/center,
+speed2500,distance50000,loop1,clearance393.7008,automatic settle+10s stationary.
+Current baseline is parallax-free SHA8168B7D0535830AB211A18AA41ABCF62AB72EB7E0E50525A838602B3899127AF.
+This is a new shader comparison, not a change to the canonical workload.
+Engine26.09.15,RTX5090/Ryzen79800X3D,efba6b2 plus existing working changes.
+SetForceResolution receives logical pixels:1846x1019 yields VERIFIED2769x1529
+through voxel_collision_info profiler before the first run. Recheck each run.
+Baseline and candidate same session, same exact XY(-1.6258175,1.2225341).
+Require reduced GPU time; no unexplained>5%FPS or>10%tail/memory regression,
+zero exceptions/failures and settled queues. Preserve every attempt.
+Candidate: retain full near maps; smooth32..64m fade to coarsest texture mip
+color/roughness/AO with geometric normal beyond64m, eliminating triplanar and
+stochastic detail work there. Explicit branches skip negligible contributions.
+No parallax, geometry, world, CPU scheduling or draw-distance changes.
+Visual checks: fixed near camera(64,0,340),angles(35,0,0),FOV60; horizon
+view(64,0,1600),angles(12,0,0),FOV60. Same1280x720 capture dimensions per pair.
+Near detail must remain; no hard fade band or missing material in horizon view.
+Candidate first start rejected: enabled visual LODs unsettled after camera changes. No measured run from that attempt; waited before retry. Candidate shader CB775427... compiled successfully; fixed near and horizon screenshots inspected, no missing material or hard fade band observed.
+
+baseline run5942ddb173a24016b029e570aee0602d: resolution2769x1529; frame={'samples': 26671, 'truncatedSamples': 0, 'averageFps': 218.73344, 'p95Milliseconds': 9.8812, 'p99Milliseconds': 15.1115, 'maximumMilliseconds': 550.9337, 'averageGpuMilliseconds': 3.3910787, 'p95GpuMilliseconds': 5.6011677, 'p99GpuMilliseconds': 6.8700314, 'maximumGpuMilliseconds': 541.1973}; stationary={'samples': 2799, 'truncatedSamples': 0, 'averageFps': 279.85712, 'p95Milliseconds': 4.9617, 'p99Milliseconds': 6.0419, 'maximumMilliseconds': 12.8087, 'averageGpuMilliseconds': 3.0988035, 'p95GpuMilliseconds': 3.61228, 'p99GpuMilliseconds': 4.1365623, 'maximumGpuMilliseconds': 6.5977573}; memory={'startProcessBytes': 3581104128, 'endProcessBytes': 1621520384, 'averageProcessBytes': 2118037302, 'peakProcessBytes': 3584397312, 'startGpuBytes': 2252986329, 'endGpuBytes': 2253068249, 'averageGpuBytes': 2252902931, 'peakGpuBytes': 2254247897, 'gpuBudgetBytes': 32945209344}; allocation=2599663360B (97471.54B/frame); exceptions=0; collision=4913/4913,pending=0,failures=0; settled: nearby LOD0 first observed at 1.6s; 17.6s observed.
+
+candidate run9223af0a8206412e8ba6c145ccc287b2: resolution2769x1529; frame={'samples': 44990, 'truncatedSamples': 0, 'averageFps': 368.93878, 'p95Milliseconds': 4.9693, 'p99Milliseconds': 10.679, 'maximumMilliseconds': 90.3096, 'averageGpuMilliseconds': 2.12428, 'p95GpuMilliseconds': 3.3051968, 'p99GpuMilliseconds': 4.183054, 'maximumGpuMilliseconds': 12.648582}; stationary={'samples': 2614, 'truncatedSamples': 0, 'averageFps': 261.34958, 'p95Milliseconds': 5.2578, 'p99Milliseconds': 6.3523, 'maximumMilliseconds': 10.9502, 'averageGpuMilliseconds': 3.4044857, 'p95GpuMilliseconds': 3.861189, 'p99GpuMilliseconds': 4.4281483, 'maximumGpuMilliseconds': 5.248308}; memory={'startProcessBytes': 3055198208, 'endProcessBytes': 3277778944, 'averageProcessBytes': 3147712847, 'peakProcessBytes': 3287343104, 'startGpuBytes': 2253707225, 'endGpuBytes': 2252740569, 'averageGpuBytes': 2253254113, 'peakGpuBytes': 2254772185, 'gpuBudgetBytes': 32945209344}; allocation=4361576472B (96945.46B/frame); exceptions=0; collision=4913/4913,pending=0,failures=0; settled: nearby LOD0 first observed at 1.2s; 24.3s observed.
+Candidate moving GPU/FPS improves; stationary FPS -6.6% versus first baseline
+requires repeat original before acceptance. Baseline contains550.93ms frame/
+541.20ms GPU outlier; no shader compilation occurred during its measured route.
+Candidate total allocations rise with68.7%more frames; per-frame allocation
+remains approximately97KB. Near image mean absolute RGB difference0.00001194/255;
+far0.55478/255. Far loses fine texture detail intentionally; no hard band observed.
+Restoring baseline initially hit transient mounted path lookup; second explicit
+compile succeeded before repeat started. Preserve this transient tool failure.
+
+Resumed controlled tests: background Wardogs process absent; available RAM15588MiB,pages/sec3 before run. Previous baseline-repeat23006a64f31d4c6991d776e752e37a7e measured95.52moving/57.55stationaryFPS with2769x1529 but concurrent Wardogs load (~7.3GiB RAM,several CPU cores),available949MiB,paging1708/sec discovered afterward. Preserve as contaminated; preceding same-session comparisons are not acceptance evidence. Repeat unchanged workload with background game closed; baseline remains parallax-free8168B7D0.
+Fresh-start attempt: saved stopped editor then normal close raised prefab destruction Assert AreEqual5 components not deleted; error dialog persisted after second close. Terminated only saved/stopped PID75648 after Source2Shutdown log; restored scene bytes from task snapshot (only auto-generated prefab objects/flag differed). Launched one visible editor. This is failed clean shutdown, not shader parser evidence. Old log also contains CSwapChainBase::QueuePresentAndWait looped21 iterations without a present event at11:45:30 during controlled candidate; possible frame-stall evidence, not exact maximum-frame attribution.
+
+controlled-baseline 8fb5856c15b24a27a2527329f7b686f9: frame={'samples': 36465, 'truncatedSamples': 0, 'averageFps': 299.02426, 'p95Milliseconds': 7.3195, 'p99Milliseconds': 11.6054, 'maximumMilliseconds': 99.9083, 'averageGpuMilliseconds': 2.7445714, 'p95GpuMilliseconds': 4.1315556, 'p99GpuMilliseconds': 5.0616264, 'maximumGpuMilliseconds': 12.130737}; stationary={'samples': 2455, 'truncatedSamples': 0, 'averageFps': 245.42798, 'p95Milliseconds': 5.3785, 'p99Milliseconds': 5.8799, 'maximumMilliseconds': 10.298, 'averageGpuMilliseconds': 3.6993704, 'p95GpuMilliseconds': 4.0664673, 'p99GpuMilliseconds': 4.7791004, 'maximumGpuMilliseconds': 5.143404}; memory={'startProcessBytes': 1488687104, 'endProcessBytes': 2384900096, 'averageProcessBytes': 2065417702, 'peakProcessBytes': 2449797120, 'startGpuBytes': 2203342809, 'endGpuBytes': 2203178969, 'averageGpuBytes': 2202863106, 'peakGpuBytes': 2204227545, 'gpuBudgetBytes': 32945209344}; allocations/frame=100317.52; exceptions=0; collision4913/4913,pending0,failures0; settled: nearby LOD0 first observed at 1.3s; 23.4s observed; exact2769x1529 and canonical XY/config.
+
+controlled-candidate 74ae385855b94bd7932a667d0f084602: frame={'samples': 44922, 'truncatedSamples': 0, 'averageFps': 368.3872, 'p95Milliseconds': 5.0399, 'p99Milliseconds': 10.6947, 'maximumMilliseconds': 223.8435, 'averageGpuMilliseconds': 2.118746, 'p95GpuMilliseconds': 3.2954216, 'p99GpuMilliseconds': 4.131794, 'maximumGpuMilliseconds': 10.021687}; stationary={'samples': 3189, 'truncatedSamples': 0, 'averageFps': 318.8855, 'p95Milliseconds': 4.2793, 'p99Milliseconds': 5.0497, 'maximumMilliseconds': 11.0023, 'averageGpuMilliseconds': 2.776878, 'p95GpuMilliseconds': 3.1635761, 'p99GpuMilliseconds': 3.8814545, 'maximumGpuMilliseconds': 7.078409}; memory={'startProcessBytes': 3183095808, 'endProcessBytes': 3159437312, 'averageProcessBytes': 3193507772, 'peakProcessBytes': 3260719104, 'startGpuBytes': 2203949017, 'endGpuBytes': 2253264857, 'averageGpuBytes': 2228170477, 'peakGpuBytes': 2254706649, 'gpuBudgetBytes': 32945209344}; allocations/frame=98597.86; exceptions=0; collision4913/4913,pending0,failures0; settled: nearby LOD0 first observed at 1.2s; 19.3s observed; exact2769x1529 and canonical XY/config.
+Candidate moving+23.2%,stationary+29.9%; GPUmean -22.8%/-24.9%.
+Candidate maximum frame223.84ms versus99.91ms unresolved; maxGC11.543ms and
+streaming8.7588ms do not explain it. QueuePresentAndWait engine warning during
+run is relevant evidence. Process working-set peak +33.1% is also unqualified;
+baseline started with paged-out working set after prior background pressure.
+Fresh candidate process started successfully, C#compile success, crash marker
+unchanged2026-09-16T03:40:57.725399Z. Stock missing clothing/sound/prop resources
+reported at startup; no terrain shader/parser/pipeline errors observed.
+Fresh candidate first attempt aborted immediately: after restart editor DPI scaling changed, requested1846x1019 now rendered1846x1019. No completed result/comparison. Restarted play and requested2769x1529 directly; verify effective dimensions before retry. Same original pixel workload retained.
+
+Before next variant: packed shader adds roughness to color alpha and AO to
+normal alpha, removes SurfaceMap texture; preserves source maps, BC7,16x filtering,
+normal/color processing and distance32..64m. Nearby worst-case18reads/material
+versus27; distant2unchanged. Same route and visual criteria. Compare packing
+incrementally against distance-only candidate, not a claim of lossless BC7.
+Installed core/shaders/blendable.shader:126 verifies mixed sRGB RGB/linear alpha
+BC7 grammar. No source image edits or new gameplay feature.
+
+Fresh candidate 35606c71b2dc4cc2be72cc591419c50b: {"frame": {"samples": 45051, "truncatedSamples": 0, "averageFps": 369.43848, "p95Milliseconds": 5.3335, "p99Milliseconds": 10.4533, "maximumMilliseconds": 93.6605, "averageGpuMilliseconds": 2.1060083, "p95GpuMilliseconds": 3.4296513, "p99GpuMilliseconds": 4.359007, "maximumGpuMilliseconds": 10.171652}, "memory": {"startProcessBytes": 4973105152, "endProcessBytes": 4981616640, "averageProcessBytes": 4960687288, "peakProcessBytes": 5012406272, "startGpuBytes": 1906574105, "endGpuBytes": 2208154393, "averageGpuBytes": 2146439356, "peakGpuBytes": 2209350425, "gpuBudgetBytes": 32945209344}, "runtime": {"samples": 45051, "managedBytesAllocated": 3972963232, "averageManagedBytesAllocatedPerFrame": 88188.125, "maximumManagedBytesAllocatedPerFrame": 7040208, "gen0Collections": 51, "gen1Collections": 31, "gen2Collections": 2, "framesWithCollections": 51, "gcPauseMilliseconds": 428.971, "maximumGcPauseMilliseconds": 13.698, "exceptions": 0, "framesWithExceptions": 0}}; stationary={"samples": 3559, "truncatedSamples": 0, "averageFps": 355.85587, "p95Milliseconds": 3.9286, "p99Milliseconds": 4.5579, "maximumMilliseconds": 10.0338, "averageGpuMilliseconds": 2.495277, "p95GpuMilliseconds": 3.03936, "p99GpuMilliseconds": 3.6404133, "maximumGpuMilliseconds": 5.219221}; collision4913/4913,0pending/failures,settled15.3s; exact2769x1529.
+Packed variant17D02D4409B16BB0E8D8BD0B87B47DE25F47DA7290ADB087BCE8DE5177EF2A2E: shader and material full compile successful. Near view compared against distance-only candidate: mean absolute RGB[0.533709,0.465876,0.485132]/255,max[21,17,23]. No apparent lost texture detail or missing material in inspected view; BC7 is not lossless. Existing input height bindings retained unused to avoid unrelated source/material edits; packed maps only sample color/roughness and normal/AO.
+Packed run0f7b35efa25f4051ba3b5d3ee2704192 INVALID comparison: camera mode switch reset forced render dimensions; actual1847x1021,not2769x1529. 496.70moving/502.48stationaryFPS cannot establish gain. Frame/GPUmax285.72/281.36ms; raw retained. No acceptance. Reapply resolution after camera changes, verify before corrected run.
+Packed startup check: normal close of saved/stopped PID77216 repeated prefab teardown Error window after Source2Shutdown. Terminated idle failed process, restored task scene snapshot and launched one visible editor. Not a clean-shutdown pass; packed shader17D02D44 remains selected.
+
+Corrected packed run 007040ca6a644a388ebd2c65f88338c6: {"frame": {"samples": 50449, "truncatedSamples": 0, "averageFps": 413.70126, "p95Milliseconds": 4.3387, "p99Milliseconds": 9.5734, "maximumMilliseconds": 90.7868, "averageGpuMilliseconds": 1.9577916, "p95GpuMilliseconds": 2.9845238, "p99GpuMilliseconds": 3.7207603, "maximumGpuMilliseconds": 9.614468}, "memory": {"startProcessBytes": 5928157184, "endProcessBytes": 5888741376, "averageProcessBytes": 5884597566, "peakProcessBytes": 5928157184, "startGpuBytes": 2131122313, "endGpuBytes": 2180044937, "averageGpuBytes": 2162247078, "peakGpuBytes": 2181503113, "gpuBudgetBytes": 32945209344}, "runtime": {"samples": 50449, "managedBytesAllocated": 4754432664, "averageManagedBytesAllocatedPerFrame": 94242.35, "maximumManagedBytesAllocatedPerFrame": 7330024, "gen0Collections": 57, "gen1Collections": 34, "gen2Collections": 3, "framesWithCollections": 57, "gcPauseMilliseconds": 469.349, "maximumGcPauseMilliseconds": 11.135, "exceptions": 0, "framesWithExceptions": 0}}; stationary={"samples": 3716, "truncatedSamples": 0, "averageFps": 371.5719, "p95Milliseconds": 3.8018, "p99Milliseconds": 4.2066, "maximumMilliseconds": 8.8949, "averageGpuMilliseconds": 2.387666, "p95GpuMilliseconds": 2.8629303, "p99GpuMilliseconds": 3.5512447, "maximumGpuMilliseconds": 4.4662952}; collision4913/4913,0pending/failures,settled15.6s; exact2769x1529.
+Corrected packed vs fresh distance-only: moving+12.0%,stationary+4.4%;
+GPUmean1.958vs2.106ms/2.388vs2.495ms; p95/p99/max moving4.339/9.573/90.787ms
+vs5.334/10.453/93.661ms; allocations/frame94.2KBvs88.2KB(+6.9%); GPU peak
+2.1815GBvs2.2094GB. Process peak5.928GBvs5.012GB includes hot shader/material
+compilation; fresh packed process required before memory acceptance.
+
+Fresh packed a090e192887f4d05b6aba384c33ad223: {"frame": {"samples": 48932, "truncatedSamples": 0, "averageFps": 401.25912, "p95Milliseconds": 4.5139, "p99Milliseconds": 9.6179, "maximumMilliseconds": 88.7778, "averageGpuMilliseconds": 1.9873594, "p95GpuMilliseconds": 3.1778812, "p99GpuMilliseconds": 4.037142, "maximumGpuMilliseconds": 10.520697}, "runtime": {"samples": 48932, "managedBytesAllocated": 4436087072, "averageManagedBytesAllocatedPerFrame": 90658.2, "maximumManagedBytesAllocatedPerFrame": 7346032, "gen0Collections": 55, "gen1Collections": 33, "gen2Collections": 3, "framesWithCollections": 55, "gcPauseMilliseconds": 448.115, "maximumGcPauseMilliseconds": 11.775, "exceptions": 0, "framesWithExceptions": 0}, "memory": {"startProcessBytes": 4773326848, "endProcessBytes": 4847955968, "averageProcessBytes": 4715391009, "peakProcessBytes": 4885336064, "startGpuBytes": 1877366921, "endGpuBytes": 2179176585, "averageGpuBytes": 2129800849, "peakGpuBytes": 2180176009, "gpuBudgetBytes": 32945209344}}; stationary={"samples": 3559, "truncatedSamples": 0, "averageFps": 355.8656, "p95Milliseconds": 3.9146, "p99Milliseconds": 4.3862, "maximumMilliseconds": 9.9051, "averageGpuMilliseconds": 2.49535, "p95GpuMilliseconds": 3.0026436, "p99GpuMilliseconds": 3.6416054, "maximumGpuMilliseconds": 4.5924187}; collision4913/4913,0pending/failures; settled15.5s; exact2769x1529 and canonical center/config.
+Final decision: retain combined packed+distance shader17D02D44 locally.
+Fresh packed vs fresh distance-only: moving+8.61%,GPUmean-5.63%;stationary
+355.8656vs355.8559FPS (no repeatable incremental gain). Moving p95/p99/max
+4.5139/9.6179/88.7778ms improve vs5.3335/10.4533/93.6605ms. Stationary
+p95/p99/max3.9146/4.3862/9.9051ms vs3.9286/4.5579/10.0338ms.
+Peak process4.885GBvs5.012GB;GPU2.180GBvs2.209GB;allocation/frame90.66KB
+vs88.19KB(+2.8%). Incremental final candidate passes declared FPS/tail/memory
+criteria; no new terrain exception/failure. Hot compile memory growth did not
+persist after restart. Earlier223ms distance-only outlier remains in history.
+Overall original299/245 to combined401..414/356..372FPS is measured at identical
+resolution/workload but spans an editor restart; stationary session variability
+prevents attributing its full magnitude to packing. No claim of600FPS recovery.
+Near images inspected with tiny compression changes; all-material/motion and
+minimum-hardware qualification remains outside this bounded comparison.
+Runtime changes remain applied in the shared working tree. Evidence/patch and
+own ledger append can be committed independently; existing uncommitted texture
+dependencies are not swept into this task commit. Scene disk remains restored.
+Final viewport restored to free sizing after all measurements. Final playable
+view inspected, no terrain Error entries; shader hash17D02D44 unchanged; scene
+SHA865988D7694B7EB4617164C8AE83AC576BB483F00CCCF8F0EB59C6EC52CEA25E matches
+task snapshot; Sentry marker unchanged. Whitespace checks pass for source/docs.

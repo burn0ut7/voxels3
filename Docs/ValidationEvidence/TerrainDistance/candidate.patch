@@ -1,0 +1,114 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -103,6 +103,7 @@
+ 	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, Texture2D surfaceMap, float2 uv, float2 gradientX, float2 gradientY, float contribution )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
++		[branch]
+ 		if ( contribution <= 0.0 )
+ 		{
+ 			return result;
+@@ -137,6 +138,7 @@
+ 		blend /= dot( blend, float3( 1.0, 1.0, 1.0 ) );
+ 		for ( int patch = 0; patch < 3; patch++ )
+ 		{
++			[branch]
+ 			if ( blend[patch] <= 0.0 )
+ 			{
+ 				continue;
+@@ -160,12 +162,28 @@
+ 	// One surface path: maps and physical tile size are material inputs.
+ 	TerrainSample SampleTerrain( Texture2D colorMap, Texture2D normalMap, Texture2D surfaceMap,
+ 		float tileMetres, float weight, float3 position, float3 gradientX,
+-		float3 gradientY, float3 normal, float3 projection )
++		float3 gradientY, float3 normal, float3 projection, float detail )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
+-		if ( weight <= 0.0 )
++		[branch]
++		if ( weight <= 0.00001 )
+ 		{
+ 			return result;
++		}
++		TerrainSample distant = (TerrainSample)0;
++		[branch]
++		if ( detail < 1.0 )
++		{
++			// The coarsest mip preserves each material's average color and surface.
++			// Two uniform reads replace all projection/patch/normal reads at distance.
++			distant.Color = colorMap.SampleLevel( TerrainSampler, float2( 0.5, 0.5 ), 20.0 ).rgb;
++			distant.Surface = surfaceMap.SampleLevel( TerrainSampler, float2( 0.5, 0.5 ), 20.0 ).rg;
++			distant.Normal = normal;
++		}
++		[branch]
++		if ( detail <= 0.0 )
++		{
++			return distant;
+ 		}
+ 		float scale = 0.0254 / tileMetres;
+ 		position *= scale;
+@@ -184,6 +202,13 @@
+ 			float3( normal.x * sampleX.Normal.z, normal.y + sampleX.Normal.x, normal.z + sampleX.Normal.y ) * projection.x
+ 			+ float3( normal.x + sampleY.Normal.x, normal.y * sampleY.Normal.z, normal.z + sampleY.Normal.y ) * projection.y
+ 			+ float3( normal.x + sampleZ.Normal.x, normal.y + sampleZ.Normal.y, normal.z * sampleZ.Normal.z ) * projection.z );
++		[branch]
++		if ( detail < 1.0 )
++		{
++			result.Color = lerp( distant.Color, result.Color, detail );
++			result.Surface = lerp( distant.Surface, result.Surface, detail );
++			result.Normal = normalize( lerp( distant.Normal, result.Normal, detail ) );
++		}
+ 		return result;
+ 	}
+ 
+@@ -199,6 +224,9 @@
+ 		// Derivatives precede material/plane/patch branches.
+ 		float3 gradientX = ddx( position );
+ 		float3 gradientY = ddy( position );
++		// Full nearby texture detail; distant terrain keeps material color and lighting.
++		float distanceMetres = length( g_vCameraPositionWs - position ) * 0.0254;
++		float detail = 1.0 - smoothstep( 32.0, 64.0, distanceMetres );
+ 		float4 weights = max( input.vMaterialWeights, 0.0 );
+ 		float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
+ 		float sandWeight = saturate( 1.0 - total );
+@@ -209,13 +237,13 @@
+ 		material.AmbientOcclusion = 0.0;
+ 		material.Metalness = 0.0;
+ 		TerrainSample grass = SampleTerrain( GrassColorMap, GrassNormalMap, GrassSurfaceMap,
+-			1.4, weights.x, position, gradientX, gradientY, normal, projection );
++			1.4, weights.x, position, gradientX, gradientY, normal, projection, detail );
+ 		material.Albedo += grass.Color * weights.x;
+ 		material.Normal += grass.Normal * weights.x;
+ 		material.Roughness += lerp( 0.85, 1.0, saturate( grass.Surface.r ) ) * weights.x;
+ 		material.AmbientOcclusion += grass.Surface.g * weights.x;
+ 		TerrainSample dirt = SampleTerrain( DirtColorMap, DirtNormalMap, DirtSurfaceMap,
+-			2, weights.y, position, gradientX, gradientY, normal, projection );
++			2, weights.y, position, gradientX, gradientY, normal, projection, detail );
+ 		// Dark earthy soil: reduce the red cast while retaining source variation.
+ 		dirt.Color *= float3( 0.55, 0.65, 0.60 );
+ 		material.Albedo += dirt.Color * weights.y;
+@@ -223,7 +251,7 @@
+ 		material.Roughness += clamp( dirt.Surface.r, 0.65, 1.0 ) * weights.y;
+ 		material.AmbientOcclusion += dirt.Surface.g * weights.y;
+ 		TerrainSample stone = SampleTerrain( StoneColorMap, StoneNormalMap, StoneSurfaceMap,
+-			2.38, weights.z, position, gradientX, gradientY, normal, projection );
++			2.38, weights.z, position, gradientX, gradientY, normal, projection, detail );
+ 		// Retain a little mineral color while removing the source rock's brown cast.
+ 		float stoneLuminance = dot( stone.Color, float3( 0.2126, 0.7152, 0.0722 ) );
+ 		stone.Color = lerp( stoneLuminance.xxx, stone.Color, 0.15 );
+@@ -232,13 +260,13 @@
+ 		material.Roughness += lerp( 0.65, 1.0, saturate( stone.Surface.r ) ) * weights.z;
+ 		material.AmbientOcclusion += stone.Surface.g * weights.z;
+ 		TerrainSample snow = SampleTerrain( SnowColorMap, SnowNormalMap, SnowSurfaceMap,
+-			1.0, weights.w, position, gradientX, gradientY, normal, projection );
++			1.0, weights.w, position, gradientX, gradientY, normal, projection, detail );
+ 		material.Albedo += snow.Color * weights.w;
+ 		material.Normal += snow.Normal * weights.w;
+ 		material.Roughness += lerp( 0.8, 1.0, saturate( snow.Surface.r ) ) * weights.w;
+ 		material.AmbientOcclusion += snow.Surface.g * weights.w;
+ 		TerrainSample sand = SampleTerrain( SandColorMap, SandNormalMap, SandSurfaceMap,
+-			1.0, sandWeight, position, gradientX, gradientY, normal, projection );
++			1.0, sandWeight, position, gradientX, gradientY, normal, projection, detail );
+ 		material.Albedo += sand.Color * sandWeight;
+ 		material.Normal += sand.Normal * sandWeight;
+ 		material.Roughness += lerp( 0.85, 1.0, saturate( sand.Surface.r ) ) * sandWeight;

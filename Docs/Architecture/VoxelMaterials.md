@@ -206,3 +206,42 @@ natural surface and material growth over player additions are not modeled. The
 current renderer still approximates the procedural material field on edited
 geometry as documented above; it does not sample the edited density in the pixel
 shader. This limits claims about grass on newly sculpted or hidden surfaces.
+
+## Distance shading and channel packing (2026-09-16)
+
+The parallax-free shared surface sampler still performs up to 27 SampleGrad
+operations per contributing material (three planes, three stochastic patches,
+three maps). Geometry LOD does not reduce that pixel cost. Explicit branches
+skip zero plane/patch weights and material weights at or below 0.00001 (below
+stored 1/255 material precision), including floating-point sand remainders.
+
+Candidate ownership stays in voxel_terrain.shader. Inputs are camera/world
+position, canonical interpolated material weights, geometric normal and the
+existing textures. No new state, buffers, world data, networking, geometry or
+passes. Full detail through32m fades smoothly to each source texture's coarsest
+mip by64m. Beyond64m two SampleLevel reads per contributing material retain mean
+color and roughness/AO, with the geometric normal. The fade band samples both
+representations; explicit branches avoid near-only work beyond64m and far-only
+reads within32m. Existing per-material color/roughness tuning still applies.
+
+Distance thresholds belong only to this shared shader, independent of clipbox
+LOD boundaries. This avoids material changes at mesh swaps. Using source mip
+averages avoids duplicate hand-authored palette constants; removing all normal
+maps or lowering nearby filtering would sacrifice useful close detail. No
+performance acceptance until the fixed canonical route and visual comparison;
+TERRAIN-DISTANCE-001 records measurements and decisions.
+
+Channel packing: color RGB (sRGB) plus roughness alpha
+(linear), normal RGB plus AO alpha (linear), both BC7. This replaces the separate
+roughness/AO surface texture with existing unused alpha channels, reducing15
+compiled texture bindings to10 and worst-case near sampling27to18/material.
+Full color/normal/roughness/AO behavior remains; compression may differ slightly.
+Height inputs remain unused because parallax is disabled. Source images and
+material input paths do not change. Shader rebuild must be followed by a full
+material compile so generated channel packing matches the new shader layout.
+
+Validated combined candidate is active locally: see TERRAIN-DISTANCE-001 and
+../ValidationEvidence/TerrainDistance/Investigation.md for exact measurements,
+failed attempts, source hashes and limits. Fresh packed versus fresh distance-only
+improved moving FPS8.6%, with unchanged stationary FPS and lower peak process/GPU
+memory. Existing uncommitted material dependencies remain outside the evidence commit.
