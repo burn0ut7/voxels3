@@ -1,0 +1,159 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -93,44 +93,6 @@
+ 	Texture2D SnowNormalMap < Channel( RGB, Box( SnowNormal ), Linear ); OutputFormat( BC7 ); SrgbRead( false ); >;
+ 	Texture2D SnowSurfaceMap < Channel( R, Box( SnowRoughness ), Linear ); Channel( G, Box( SnowOcclusion ), Linear ); Channel( B, Box( SnowHeight ), Linear ); OutputFormat( BC7 ); SrgbRead( false ); >;
+ 	SamplerState TerrainSampler < Filter( ANISOTROPIC ); MaxAniso( 16 ); AddressU( WRAP ); AddressV( WRAP ); >;
+-	float2 TerrainParallax( Texture2D surfaceMap, float reliefRatio, float2 uv, float2 gradientX, float2 gradientY, float3 view, float strength )
+-	{
+-		strength *= smoothstep( 0.08, 0.25, view.z );
+-		if ( strength <= 0.0001 )
+-		{
+-			return uv;
+-		}
+-		int steps = (int)ceil( lerp( 24.0, 12.0, saturate( view.z ) ) );
+-		float depthStep = 1.0 / steps;
+-		float2 uvStep = view.xy / max( view.z, 0.15 )
+-			* reliefRatio * strength * depthStep;
+-		float2 previousUv = uv;
+-		float previousGap = 1.0 - surfaceMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY ).b;
+-		if ( previousGap <= 0.0 )
+-		{
+-			return uv;
+-		}
+-		// Height white is the top of the layer. Trace inward and refine the first
+-		// crossing rather than quantizing the visible depth to the march steps.
+-		for ( int step = 1; step <= 24; step++ )
+-		{
+-			float2 currentUv = uv - uvStep * step;
+-			float surfaceDepth = 1.0 - surfaceMap.SampleGrad( TerrainSampler, currentUv, gradientX, gradientY ).b;
+-			float gap = surfaceDepth - step * depthStep;
+-			if ( gap <= 0.0 )
+-			{
+-				return lerp( previousUv, currentUv, saturate( previousGap / max( previousGap - gap, 0.00001 ) ) );
+-			}
+-			previousUv = currentUv;
+-			previousGap = gap;
+-			if ( step >= steps )
+-			{
+-				break;
+-			}
+-		}
+-		return previousUv;
+-	}
+-
+ 	struct TerrainSample
+ 	{
+ 		float3 Color;
+@@ -138,7 +100,7 @@
+ 		float2 Surface;
+ 	};
+ 
+-	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, Texture2D surfaceMap, float reliefRatio, float2 uv, float2 gradientX, float2 gradientY, float3 view, float relief, float contribution )
++	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, Texture2D surfaceMap, float2 uv, float2 gradientX, float2 gradientY, float contribution )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
+ 		if ( contribution <= 0.0 )
+@@ -186,8 +148,7 @@
+ 			hash *= 0x7FEB352Du;
+ 			hash ^= hash >> 15;
+ 			float2 offset = float2( hash & 65535u, hash >> 16 ) / 65536.0;
+-			float2 patchUv = TerrainParallax( surfaceMap, reliefRatio, uv + offset, gradientX, gradientY, view,
+-				relief * smoothstep( 0.0, 0.01, contribution ) );
++			float2 patchUv = uv + offset;
+ 			result.Color += blend[patch] * colorMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY ).rgb;
+ 			result.Surface += blend[patch] * surfaceMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY ).rg;
+ 			result.Normal += blend[patch] * (normalMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY ).xyz * 2.0 - 1.0);
+@@ -196,10 +157,10 @@
+ 	}
+ 
+ 
+-	// One surface path: maps, physical tile size and authored relief are material inputs.
++	// One surface path: maps and physical tile size are material inputs.
+ 	TerrainSample SampleTerrain( Texture2D colorMap, Texture2D normalMap, Texture2D surfaceMap,
+-		float tileMetres, float reliefMetres, float weight, float3 position, float3 gradientX,
+-		float3 gradientY, float3 normal, float3 projection, float3 view, float reliefFade )
++		float tileMetres, float weight, float3 position, float3 gradientX,
++		float3 gradientY, float3 normal, float3 projection )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
+ 		if ( weight <= 0.0 )
+@@ -210,17 +171,12 @@
+ 		position *= scale;
+ 		gradientX *= scale;
+ 		gradientY *= scale;
+-		float relief = reliefFade * weight;
+-		// Trace in the actual surface tangent plane. Axis-plane denominators
+-		// become grazing inside an otherwise front-facing surface and smear it.
+-		float normalView = dot( normal, view );
+-		float3 tangentView = view - normal * normalView;
+-		TerrainSample sampleX = SampleTerrainProjection( colorMap, normalMap, surfaceMap, reliefMetres / tileMetres,
+-			position.yz, gradientX.yz, gradientY.yz, float3( tangentView.yz, normalView ), relief, projection.x );
+-		TerrainSample sampleY = SampleTerrainProjection( colorMap, normalMap, surfaceMap, reliefMetres / tileMetres,
+-			position.xz, gradientX.xz, gradientY.xz, float3( tangentView.xz, normalView ), relief, projection.y );
+-		TerrainSample sampleZ = SampleTerrainProjection( colorMap, normalMap, surfaceMap, reliefMetres / tileMetres,
+-			position.xy, gradientX.xy, gradientY.xy, float3( tangentView.xy, normalView ), relief, projection.z );
++		TerrainSample sampleX = SampleTerrainProjection( colorMap, normalMap, surfaceMap,
++			position.yz, gradientX.yz, gradientY.yz, projection.x );
++		TerrainSample sampleY = SampleTerrainProjection( colorMap, normalMap, surfaceMap,
++			position.xz, gradientX.xz, gradientY.xz, projection.y );
++		TerrainSample sampleZ = SampleTerrainProjection( colorMap, normalMap, surfaceMap,
++			position.xy, gradientX.xy, gradientY.xy, projection.z );
+ 		result.Color = sampleX.Color * projection.x + sampleY.Color * projection.y + sampleZ.Color * projection.z;
+ 		result.Surface = sampleX.Surface * projection.x + sampleY.Surface * projection.y + sampleZ.Surface * projection.z;
+ 		// OpenGL U/V axes; whiteout preserves the geometry normal for flat maps.
+@@ -240,12 +196,9 @@
+ 		float3 normal = normalize( input.vNormalWs );
+ 		float3 projection = max( pow( abs( normal ), 4.0 ) - 0.001, 0.0 );
+ 		projection /= dot( projection, float3( 1.0, 1.0, 1.0 ) );
+-		// Derivatives precede material/plane/patch branches and all ray marches.
++		// Derivatives precede material/plane/patch branches.
+ 		float3 gradientX = ddx( position );
+ 		float3 gradientY = ddy( position );
+-		float3 toCamera = g_vCameraPositionWs - position;
+-		float3 view = normalize( toCamera );
+-		float reliefFade = 1.0 - smoothstep( 2.0, 8.0, length( toCamera ) * 0.0254 );
+ 		float4 weights = max( input.vMaterialWeights, 0.0 );
+ 		float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
+ 		float sandWeight = saturate( 1.0 - total );
+@@ -256,13 +209,13 @@
+ 		material.AmbientOcclusion = 0.0;
+ 		material.Metalness = 0.0;
+ 		TerrainSample grass = SampleTerrain( GrassColorMap, GrassNormalMap, GrassSurfaceMap,
+-			1.4, 0.02, weights.x, position, gradientX, gradientY, normal, projection, view, reliefFade );
++			1.4, weights.x, position, gradientX, gradientY, normal, projection );
+ 		material.Albedo += grass.Color * weights.x;
+ 		material.Normal += grass.Normal * weights.x;
+ 		material.Roughness += lerp( 0.85, 1.0, saturate( grass.Surface.r ) ) * weights.x;
+ 		material.AmbientOcclusion += grass.Surface.g * weights.x;
+ 		TerrainSample dirt = SampleTerrain( DirtColorMap, DirtNormalMap, DirtSurfaceMap,
+-			2, 0.033, weights.y, position, gradientX, gradientY, normal, projection, view, reliefFade );
++			2, weights.y, position, gradientX, gradientY, normal, projection );
+ 		// Dark earthy soil: reduce the red cast while retaining source variation.
+ 		dirt.Color *= float3( 0.55, 0.65, 0.60 );
+ 		material.Albedo += dirt.Color * weights.y;
+@@ -270,7 +223,7 @@
+ 		material.Roughness += clamp( dirt.Surface.r, 0.65, 1.0 ) * weights.y;
+ 		material.AmbientOcclusion += dirt.Surface.g * weights.y;
+ 		TerrainSample stone = SampleTerrain( StoneColorMap, StoneNormalMap, StoneSurfaceMap,
+-			2.38, 0.04, weights.z, position, gradientX, gradientY, normal, projection, view, reliefFade );
++			2.38, weights.z, position, gradientX, gradientY, normal, projection );
+ 		// Retain a little mineral color while removing the source rock's brown cast.
+ 		float stoneLuminance = dot( stone.Color, float3( 0.2126, 0.7152, 0.0722 ) );
+ 		stone.Color = lerp( stoneLuminance.xxx, stone.Color, 0.15 );
+@@ -279,13 +232,13 @@
+ 		material.Roughness += lerp( 0.65, 1.0, saturate( stone.Surface.r ) ) * weights.z;
+ 		material.AmbientOcclusion += stone.Surface.g * weights.z;
+ 		TerrainSample snow = SampleTerrain( SnowColorMap, SnowNormalMap, SnowSurfaceMap,
+-			1.0, 0.003, weights.w, position, gradientX, gradientY, normal, projection, view, reliefFade );
++			1.0, weights.w, position, gradientX, gradientY, normal, projection );
+ 		material.Albedo += snow.Color * weights.w;
+ 		material.Normal += snow.Normal * weights.w;
+ 		material.Roughness += lerp( 0.8, 1.0, saturate( snow.Surface.r ) ) * weights.w;
+ 		material.AmbientOcclusion += snow.Surface.g * weights.w;
+ 		TerrainSample sand = SampleTerrain( SandColorMap, SandNormalMap, SandSurfaceMap,
+-			1.0, 0.002, sandWeight, position, gradientX, gradientY, normal, projection, view, reliefFade );
++			1.0, sandWeight, position, gradientX, gradientY, normal, projection );
+ 		material.Albedo += sand.Color * sandWeight;
+ 		material.Normal += sand.Normal * sandWeight;
+ 		material.Roughness += lerp( 0.85, 1.0, saturate( sand.Surface.r ) ) * sandWeight;

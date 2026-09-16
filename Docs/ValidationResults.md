@@ -28619,3 +28619,30 @@ the restored source. Patch context intentionally contains a leading space before
 tabs; ordinary text whitespace checks pass when excluding the patch container.
 Only this task's ledger appendix and evidence are staged; pre-existing ledger
 entries and all other user changes remain unstaged.
+
+## Terrain parallax removal (2026-09-16)
+
+User explicitly requests complete parallax removal. Shared POM function and all
+camera/relief arguments removed; normal/color/surface sampling unchanged.
+Shader compiled successfully with stock engine include/profile warnings only.
+Before run: reuse TERRAIN-SAMPLING-PERF-001/v2 speed2500/distance50000/loop1,
+2769x1529 and previous criteria. Exact center/world must match original-fixed
+for comparison; otherwise record as non-comparable smoke run.
+
+Run ff27e97349914506855bd82422956b36 completed: moving188.44649FPS,
+p95/p99/max9.8731/13.2499/78.4142ms; GPUmean4.722851ms. Stationary
+142.55202FPS,p95/p99/max10.4341/11.6563/13.6072ms,GPUmean6.4002433ms.
+Allocation2,530,277,360B; peak process6,389,891,072B/GPU2,657,796,988B.
+Collision4913/4913,pending0,failures0,exceptions0; arrival settled41.7s.
+Exact XY/config match, but ACTUAL resolution4154x2294 differs from requested
+2769x1529 and earlier baseline; invalid performance comparison. Do not infer
+regression or gain from this run. Screenshot captured after movement, during
+settlement: textured grass rendered without missing material. No new errors.
+Post-run GPU95%,2835MHz/14001MHz,70C,484.26W. No cold-start check this turn.
+Parallax remains removed per explicit user request; performance acceptance
+remains incomplete. Shader SHA2568168B7D0535830AB211A18AA41ABCF62AB72EB7E0E50525A838602B3899127AF.
+Raw evidence: ValidationEvidence/TerrainPerformance/parallax-removed.json.gz.
+Only removal patch and this ledger appendix can be isolated for commit: the
+working shader depends on pre-existing uncommitted texture/material changes
+absent from HEAD. Keep the applied source and architecture update in working
+tree; do not include those unrelated additions in this commit.
