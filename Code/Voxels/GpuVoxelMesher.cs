@@ -51,7 +51,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private readonly Scene _scene;
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
 	private readonly GpuVoxelMaterials _voxelMaterials = new();
-	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_terrain.shader" );
+	private readonly Material _material = Material.Load( "materials/voxels/voxel_terrain.vmat" );
 	private readonly Dictionary<GpuMeshRegionKey, ResidentMesh> _resident = new();
 	private readonly Dictionary<GpuMeshRegionKey, PendingMesh> _pending = new();
 	private readonly Queue<PendingMesh> _gameplayDispatchQueue = new();

@@ -91,10 +91,11 @@ materials/voxels/voxel_terrain.vmat before measuring. The source images and
 material input paths remain unchanged. The engine's blendable.shader line 126
 provides the installed mixed sRGB-RGB/linear-alpha BC7 declaration pattern.
 
-Runtime shader edits remain in the shared working tree because their existing
-uncommitted texture/material dependencies are absent from HEAD. This evidence
-commit must not silently include those unrelated changes. Patches preserve the
-exact task changes for review and later integration.
+The initial evidence commit left the runtime edits in the shared working tree.
+Following the explicit implementation request, the tested shader, source material,
+referenced texture images and material-loading line are integrated together.
+Unrelated terrain-generation and water changes remain outside this integration.
+The patches preserve the exact optimization relative to the prior working shader.
 
 ## Final decision
 

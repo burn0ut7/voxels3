@@ -28738,3 +28738,21 @@ Final viewport restored to free sizing after all measurements. Final playable
 view inspected, no terrain Error entries; shader hash17D02D44 unchanged; scene
 SHA865988D7694B7EB4617164C8AE83AC576BB483F00CCCF8F0EB59C6EC52CEA25E matches
 task snapshot; Sentry marker unchanged. Whitespace checks pass for source/docs.
+
+## Optimized terrain integration (2026-09-16)
+
+User explicitly requested implementing the validated optimized version. Integrate
+shader17D02D4409B16BB0E8D8BD0B87B47DE25F47DA7290ADB087BCE8DE5177EF2A2E,
+materials/voxels/voxel_terrain.vmat, its25 source image references (5 grass already
+tracked;20 terrain added), provenance, and the exact Material.Load binding line.
+Do not include unrelated mesher visibility, water, sand-generation or scene edits.
+Runtime source bytes are identical to the measured fresh-packed run
+a090e192887f4d05b6aba384c33ad223. This turn changes integration/documentation only,
+not tested behavior: reuse the existing canonical figure-eight, cold shader-load
+and visual checks rather than claim a new run. Verified source SHA, every input
+file, tracked include dependencies and existing Grass/Dirt/Stone/Snow channel
+order. Standalone HEAD does not include the separate uncommitted sand-generation
+work; this integration supplies its visual material without introducing that world
+feature. Existing measured scene includes those separately documented changes.
+500–600FPS is not achieved or guaranteed; recorded optimized figures remain
+401–414 moving and356–372 stationary at2769x1529 on this test machine.
