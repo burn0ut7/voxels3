@@ -1,0 +1,66 @@
+--- a/Assets/shaders/voxels/voxel_frustum.hlsl
++++ b/Assets/shaders/voxels/voxel_frustum.hlsl
+@@ -4,4 +4,11 @@
+-		uint outsideCounts[6] = { 0, 0, 0, 0, 0, 0 };
+-
+-		[unroll]
+-		for ( uint cornerIndex = 0; cornerIndex < 8; cornerIndex++ )
++		float3 center = (minimum + maximum) * 0.5;
++		float3 extent = (maximum - minimum) * 0.5;
++		float4 clipCenter = Position3WsToPs( center );
++		// Homogeneous directions omit the camera translation. Each scaled matrix
++		// column is the contribution of one box axis to every clip-space plane.
++		float4 axisX = Position4WsToPs( float4( extent.x, 0.0, 0.0, 0.0 ) );
++		float4 axisY = Position4WsToPs( float4( 0.0, extent.y, 0.0, 0.0 ) );
++		float4 axisZ = Position4WsToPs( float4( 0.0, 0.0, extent.z, 0.0 ) );
++		float4 radius = abs( axisX ) + abs( axisY ) + abs( axisZ );
++		if ( any( isnan( clipCenter ) ) || any( isinf( clipCenter ) ) ||
++			any( isnan( radius ) ) || any( isinf( radius ) ) )
+@@ -9,17 +16 @@
+-			float3 corner = float3(
+-				(cornerIndex & 1) != 0 ? maximum.x : minimum.x,
+-				(cornerIndex & 2) != 0 ? maximum.y : minimum.y,
+-				(cornerIndex & 4) != 0 ? maximum.z : minimum.z );
+-			float4 clip = Position3WsToPs( corner );
+-			if ( any( isnan( clip ) ) || any( isinf( clip ) ) || abs( clip.w ) < 1e-6 )
+-			{
+-				return false;
+-			}
+-
+-			float tolerance = max( 1.0, abs( clip.w ) ) * 1e-5;
+-			outsideCounts[0] += clip.x < -clip.w * LateralGuardScale - tolerance;
+-			outsideCounts[1] += clip.x > clip.w * LateralGuardScale + tolerance;
+-			outsideCounts[2] += clip.y < -clip.w * LateralGuardScale - tolerance;
+-			outsideCounts[3] += clip.y > clip.w * LateralGuardScale + tolerance;
+-			outsideCounts[4] += clip.z < -tolerance;
+-			outsideCounts[5] += clip.z > clip.w + tolerance;
++			return false;
+@@ -27,3 +18,3 @@
+-
+-		[unroll]
+-		for ( uint planeIndex = 0; planeIndex < 6; planeIndex++ )
++		// Retain uncertain boxes crossing the eye plane. The old corner test
++		// also retained corners with effectively zero homogeneous W.
++		if ( clipCenter.w - radius.w <= 1e-6 && clipCenter.w + radius.w >= -1e-6 )
+@@ -31,4 +22 @@
+-			if ( outsideCounts[planeIndex] == 8 )
+-			{
+-				return true;
+-			}
++			return false;
+@@ -36,2 +24,11 @@
+-
+-		return false;
++		float tolerance = max( 1.0, abs( clipCenter.w ) + radius.w ) * 1e-5;
++		float4 sides = float4( clipCenter.x, -clipCenter.x, clipCenter.y, -clipCenter.y )
++			+ LateralGuardScale * clipCenter.w;
++		float4 sideRadius =
++			abs( float4( axisX.x, -axisX.x, axisX.y, -axisX.y ) + LateralGuardScale * axisX.w )
++			+ abs( float4( axisY.x, -axisY.x, axisY.y, -axisY.y ) + LateralGuardScale * axisY.w )
++			+ abs( float4( axisZ.x, -axisZ.x, axisZ.y, -axisZ.y ) + LateralGuardScale * axisZ.w );
++		float farMaximum = clipCenter.w - clipCenter.z
++			+ abs( axisX.w - axisX.z ) + abs( axisY.w - axisY.z ) + abs( axisZ.w - axisZ.z );
++		return any( sides + sideRadius < -tolerance ) ||
++			clipCenter.z + radius.z < -tolerance || farMaximum < -tolerance;
+@@ -39 +35,0 @@
+-

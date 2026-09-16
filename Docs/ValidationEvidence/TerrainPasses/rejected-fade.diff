@@ -1,0 +1,5 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -228 +228 @@
+-		float detail = 1.0 - smoothstep( 32.0, 64.0, distanceMetres );
++		float detail = 1.0 - smoothstep( 24.0, 48.0, distanceMetres );
