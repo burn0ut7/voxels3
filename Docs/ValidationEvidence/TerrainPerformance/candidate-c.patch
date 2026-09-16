@@ -1,0 +1,52 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -96,11 +96,12 @@
+ 	float2 TerrainParallax( Texture2D surfaceMap, float reliefRatio, float2 uv, float2 gradientX, float2 gradientY, float3 view, float strength )
+ 	{
+ 		strength *= smoothstep( 0.08, 0.25, view.z );
++		[branch]
+ 		if ( strength <= 0.0001 )
+ 		{
+ 			return uv;
+ 		}
+-		int steps = (int)ceil( lerp( 24.0, 12.0, saturate( view.z ) ) );
++		int steps = (int)ceil( lerp( 16.0, 8.0, saturate( view.z ) ) );
+ 		float depthStep = 1.0 / steps;
+ 		float2 uvStep = view.xy / max( view.z, 0.15 )
+ 			* reliefRatio * strength * depthStep;
+@@ -112,7 +113,8 @@
+ 		}
+ 		// Height white is the top of the layer. Trace inward and refine the first
+ 		// crossing rather than quantizing the visible depth to the march steps.
+-		for ( int step = 1; step <= 24; step++ )
++		[loop]
++		for ( int step = 1; step <= 16; step++ )
+ 		{
+ 			float2 currentUv = uv - uvStep * step;
+ 			float surfaceDepth = 1.0 - surfaceMap.SampleGrad( TerrainSampler, currentUv, gradientX, gradientY ).b;
+@@ -141,6 +143,7 @@
+ 	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, Texture2D surfaceMap, float reliefRatio, float2 uv, float2 gradientX, float2 gradientY, float3 view, float relief, float contribution )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
++		[branch]
+ 		if ( contribution <= 0.0 )
+ 		{
+ 			return result;
+@@ -175,6 +178,7 @@
+ 		blend /= dot( blend, float3( 1.0, 1.0, 1.0 ) );
+ 		for ( int patch = 0; patch < 3; patch++ )
+ 		{
++			[branch]
+ 			if ( blend[patch] <= 0.0 )
+ 			{
+ 				continue;
+@@ -202,7 +206,8 @@
+ 		float3 gradientY, float3 normal, float3 projection, float3 view, float reliefFade )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
+-		if ( weight <= 0.0 )
++		[branch]
++		if ( weight <= 0.00001 )
+ 		{
+ 			return result;
+ 		}

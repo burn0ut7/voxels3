@@ -28404,3 +28404,218 @@ hull remains the working prototype; this comparison does not qualify it against
 the original precise mesher. No rejected runtime code is accepted or committed.
 Raw results, source snapshots and both fixed views:
 [WaterFast evidence](ValidationEvidence/WaterFast/README.md).
+
+## TERRAIN-SAMPLING-PERF-001/v1
+
+Defined2026-09-15 before baseline. Live visible basic_example, engine26.09.15,
+HEAD2c6ec13 with existing uncommitted terrain/material/water work retained.
+Saved worldf5ce10f3-6d75-428e-b3dd-63dee14891c6 revision2312.
+Canonical figure-eight speed2500,distance50000,loopCount1,10m terrain clearance,
+automatic settle and10s stationary capture. One local player, current third-person
+camera and unchanged live render size/settings. Reset player XY to
+(-10179.6758,-6985.00439) before each run; native result must confirm exact center,
+world/configuration,resolution and hardware for comparability. User input remains
+available; input/environment changes invalidate exact comparison. Preserve all runs.
+Baseline shader SHA25623469486F30E5BE10307B529929A679E7F30743E7D072280FAD969F0C205D01D.
+Measure moving/stationary FPS,frame/GPU p95/p99,allocations,peak process/GPU memory,
+streaming/collision completion and exceptions. Require improvement in GPU time,
+no unexplained>5%FPS or>10%tail/memory regression,zero terrain errors and settled
+queues. Visual acceptance requires retained map/detail/anti-tiling behavior and
+same-camera inspection. Diagnostic shader variants are temporary sequential edits
+to the production shader, restored if not qualified; no alternate runtime path.
+Capture supplied by user resolves from live console to
+C:/Program Files (x86)/Steam/steamapps/profiler_captures/sbox_2026-09-15_23_16_30.json.gz.
+CPU sampling capture alone cannot assign per-feature GPU time.
+
+TERRAIN-SAMPLING-PERF-001/v1 baseline attempt rejected before run: visual LODs
+unsettled. Live world continued editing (autosave revision2813) and play stopped.
+A second request rejected because play was stopped. No measurements or shader
+changes occurred. The captured world revision is not a stable benchmark input.
+V1 cannot be compared across those edits; retain definition and failed attempts.
+V2 establishes a fresh baseline after play resumes, using the now-saved world and
+native-recorded start center. Reuse all canonical movement and acceptance settings
+above; record initial world identity/settings/resolution before run. V2 candidates
+must match this new baseline center and world, not the superseded v1 inputs.
+V2 fixed environment: loaded saved revision2844 after play restart, engine26.09.15,
+RTX5090 driver32.0.16.1664,Ryzen79800X3D. Seed1337,generator48,
+gameplayRadius8,visualRadius256,levels0..5,half extents4/8,32cells,cellSize16.
+Recipe: land0.75,mountains0.3,plains0.6,continental77724.09,mountain18681.756,
+local5232.39,relief3072,ruggedness0.45,sea0. Baseline center is the settled player's
+native-recorded XY near origin after ordinary startup; all subsequent runs must
+restore that exact XY. Native results contain resolution but not hardware identity;
+hardware above was read from Windows rather than inferred from the result schema.
+
+Candidate A, defined before editing: make material/plane/patch early-outs explicit
+HLSL [branch], retain marching loop with [loop], and skip material contributions
+<=0.00001 (below the stored1/255weight quantum). This targets negligible implicit
+sand weights caused by floating-point interpolation/subtraction and avoids issuing
+full texture work for an invisible contribution. All maps,16x filtering,12..24POM
+steps,relief amplitudes,distance fades and anti-tiling remain unchanged. No guarantee
+of compiler improvement: compare measured GPU/FPS before accepting.
+
+V2 baseline completed1bba2a968dfa4a22a9afa705abe07aee. Resolution2769x1529,
+center(-1.6258175,1.2225341),121.943954s. Moving330.79257FPS,
+framep95/p99=5.6641/10.5869ms,GPUavg/p95/p99=2.5259805/3.64995/4.442692ms.
+Stationary243.1787FPS,GPUavg3.605397ms,framep95/p99=5.5592/6.7293ms.
+Moving allocation3,854,869,792B,peak process6,042,939,392B,GPU2,204,751,833B;
+zero exceptions. Raw baseline.json retained. A read-only PowerShell log-tail
+operation ran for roughly20s during movement before cancellation; flag potential
+CPU/I/O interference, require a final original-shader repeat if acceptance depends
+on moving-tail improvement. No heavy capture analysis in subsequent route runs.
+
+## TERRAIN-SAMPLING-CLOSE-001/v1
+
+Defined before fixed-camera observations. Same V2 world,renderer2769x1529,
+fixed ejected camera(64,0,340),angles(35,180,0),FOV60;1280x720 screenshots.
+Player stays near origin; streaming center unchanged. Wait20s after camera/shader
+change,then collect3existing10-second FramePerformance overview samples at11s
+intervals, with no extra rendering during timed windows. Observational rounded
+metrics,not the canonical route replacement. Compare baseline,candidate A and
+restored baseline; inspect same-camera screenshots for retained detail,tiling,
+color and seams. Require consistently lower GPU time with no visible degradation.
+
+CLOSE-001/v1 camera faces the player and is substantially occluded. No timed
+observations taken. V2 retains position/FOV/resolution and changes yaw to0 so
+it faces away from the player. Establish baseline at angles(35,0,0).
+
+CLOSE-001/v2 original FPS276.2/275.7/274.5;candidateA318.6/321.3/321.2;
+restored original302.8/307.7/307.8. Original changed substantially across the
+session,so the initial16%uplift is not an isolated candidate effect. Both compiled
+successfully; inspected same-camera images show no visible candidateA degradation.
+The reported GPU value stayed exactly3.83ms in every ejected-camera sample despite
+FPS changes; do not use this apparently stale engine value as GPU validation.
+Hotcompiles increased process working set; memory acceptance needs cold-start.
+Next diagnostic: original shader with only reliefFade=0, same CLOSE-v2 protocol.
+This removes POM temporarily to measure its cost; original shader is restored
+before any shipping decision. Do not call this a visual-preserving optimization.
+CLOSE-v2 POM-disabled diagnostic FPS391.6/392.9/393.0,framep953.15..3.18ms,
+p993.65..3.71ms; settled meshes,unchanged stale3.83ms GPU counter. Relative to
+immediately preceding restored original(~306FPS),parallax adds about0.72ms/frame
+in this specific close mixed-material view; session drift remains a limitation.
+Candidate B retains all POM rays/steps/fades and16x final color/normal/surface
+filtering; use a separate4x anisotropic sampler only for intermediate height
+queries. Includes candidateA negligible-contribution skip/branch hints. Hypothesis:
+reduce ray-query filtering cost while preserving final texture sharpness. Inspect
+same-camera relief/edge continuity; reject obvious detail loss. No extra textures.
+CLOSE-v2 candidateB FPS326.2/321.8/330.4. Only a small increase over A;4xheight
+filtering is not established as a useful quality tradeoff. Do not adopt B.
+Candidate C instead retains16x filtering everywhere and candidateA early-outs,
+reducing POM march budget from12..24 to8..16,retaining intersection interpolation,
+relief amplitudes,normal maps,anti-tiling,distance/grazing fades. This trades some
+intersection precision for fewer height queries; inspect for quantization/streaks
+at fixed camera before comparing canonical route. Preserve rejected candidates.
+CLOSE-v2 candidateC FPS338.3/340.3/342.3,p953.64..3.77ms,p994.10..4.43ms.
+Proceed to canonical validation after inspecting same-camera output. CandidateB
+height sampler removed; final maps and height queries all remain16x anisotropic.
+
+CLOSE-v2 candidateC visual inspection: same fixed camera retains grass blades,
+dirt aggregate,stone cracks,material transitions and apparent relief. No obvious
+new stepping,hard patch edges or broad smear observed in the inspected1280x720
+image. This is not exhaustive grazing-angle or motion qualification. Original
+texture source resolution/BC7 data/draw count/geometry unchanged. Candidate C
+canonical run started with the exact baseline center(-1.6258175,1.2225341).
+V2 candidateC6a1de4080b554dc6a018f53e8ca37eae: exact matching start XY/config/
+2769x1529.121.94528s,moving347.43515FPS,framep95/p995.4665/10.2808ms,
+GPUavg/p95/p992.3678522/3.4356117/4.2955875ms. Stationary320.30066FPS,
+framep95/p994.257/4.8887ms,GPUavg2.7925527ms. Allocation4,028,465,176B,
+peak process8,318,443,520B,GPU2,305,791,961B,zero exceptions. Raw candidate-c.json.
+MovingFPS+5.03%,GPUmean-6.26%;stationaryFPS+31.71%,GPUmean-22.55% versus
+first baseline. Process peak+37.7%after hotcompiles prevents memory acceptance;
+GPUmax42.497158ms versus14.929295ms also needs qualification. Re-run original
+shader in the same warmed session to isolate baseline warmup/interference,then
+cold-start candidate before final judgment. Keep the initial results unchanged.
+Original-repeat attempt: initial explicit compile request hit a transient mounted
+file lookup failure after copying source; automatic compilation completed at
+23:38:37. A later explicit retry succeeded while the route was already running.
+This invalidates moving timing for an uncontaminated comparison. Preserve the
+attempt as invalid and stop it before cold original/candidate validation; no
+workload tuning. Cold restart also removes accumulated compiler memory.
+Cold-restart attempt with ORIGINAL shader: old editor PID74660 raised teardown
+assertions and NullReferenceException in ResourceLibrary.GetAll ->
+EditorMainWindow.GetUnsavedResources/ShowCloseDialog at23:39:34,then retained an
+Error window. Replacement PID71572 launched before old exit and MCP failed to
+bind7269. Old process exited by23:40:57; last_crash marker advanced to
+2026-09-16T03:40:57Z. This is a failed clean shutdown,not a passed cold-start check,
+and not evidence against candidate shader (original SHA restored). Close fresh
+unmodified replacement normally and wait for exit before another launch.
+Recovery: fresh PID71572 closed via normal window close and exit verified before
+launching PID54056. MCP recovered; active correct project,scene clean,play stopped,
+compile successful. last_crash unchanged03:40:57Z through startup. Original
+shader remains active. Run V2 original cold baseline after full startup settlement.
+Comparison images retained as original.png/candidate-[a-c].png. Pillow RGB
+absolute differences original->A mean0.0000098/255,0%pixels>2;
+B mean0.00358/255,0.00890%pixels>2; C mean0.00992/255,0.02691%pixels>2.
+These support this specific view only,not all materials/angles/motion.
+Cold original43e3796238e847f2a86977223ca52702 completed373.4325movingFPS,
+334.29044stationaryFPS,but native resolution1847x1021 differs from V2's2769x1529.
+Restart changed the viewport/DPI sizing. This run is NOT comparable; retain raw
+original-cold.json. No acceptance from the lower workload. Subsequent cold runs
+explicitly force2769x1529 before play. Other settings/center remain V2 unchanged.
+Normal scene save introduced generated Dresser clothing serialization; restore
+scene byte-for-byte from pre-save task snapshot (SHA865988D7...) before restart.
+No intended scene change. Use normal window close instead of engine quit command.
+Editor PID54056 did not exit after two normal close requests despite play stopped
+and SceneHasUnsavedChanges=false. After saving, terminate that idle process,
+restore exact original scene bytes and start one fresh visible editor. This is a
+forced process restart,not a clean-shutdown pass. Explicitly pin2769x1529 before
+play for remaining runs. No source/workload change beyond the candidate shader.
+Original-cold-fixed attempt aborted before completion: installed
+SceneViewWidget.SetForceResolution returns without action when GetGameTarget()
+is invalid before play. Tool response reports requested dimensions,not effective
+resolution. Start play first,then set2769x1529; preserve prior invalid attempt.
+Source evidence: addons/tools/Code/Scene/SceneView/SceneViewWidget.Game.cs:117.
+V2 input/criteria unchanged; correction is to enforce originally specified size.
+
+Remaining paired runs briefly pause only during start-position assignment and
+benchmark initiation,then immediately resume. This prevents the observed tiny
+physics drift between tool calls from changing recorded XY. The measured route
+itself remains visible,unpaused and interactive with unchanged parameters.
+V2 corrected baseline7771be61d1704ccba0b1b69710a5b931: confirmed2769x1529,
+exact(-1.6258175,1.2225341),moving343.80475FPS,framep95/p995.3373/9.8608ms,
+GPUavg/p95/p992.4391484/3.5123825/4.3451786ms,maxGPU9.037495ms.
+Stationary274.76102FPS,framep95/p994.8708/5.5284ms,GPUavg3.2902567ms.
+Allocation3,931,201,208B(93,763B/frame),peak process5,018,378,240B,
+GPU2,258,671,577B. Collision4913/4913,pending0,failures0,exceptions0.
+Raw original-fixed.json. Candidate C compiled successfully in stopped editor;
+normal close again failed to exit in5s,so terminate saved idle process73772,
+restore source scene byte-identically,and start fresh candidate process.
+No compiler activity is permitted during the candidate measured route.
+V2 candidate-fixed5824e1e6c5c845a6858b2ebe2a906d3f: confirmed2769x1529,
+exact matching center/config. Moving335.91583FPS,framep95/p995.6424/9.7686ms,
+GPUavg/p95/p992.341634/3.5660267/4.4312477ms. But maxframe1322.2792ms and
+maxGPU161.726ms versus baseline80.5713/9.037495ms: unexplained outlier,NOT accepted.
+Stationary337.26578FPS,p95/p993.145/3.2491ms,GPUavg2.670654ms:22.75%FPS gain,
+18.83%GPUmean reduction. Allocation4,082,164,816B(99,698.734B/frame),peak process
+4,899,909,632B,GPU2,208,405,465B. Collision4913/4913,pending0,failures0,exceptions0.
+Cold shader loaded with last_crash unchanged03:40:57Z and no game Error entries.
+Repeat unchanged candidate route once to determine whether stall recurs; retain
+this failure. Do not accept an unexplained worst-frame regression based on averages.
+V2 candidate-repeat aa34288a3ebe486ab93e40cf32c2b6b5: exact center/config/
+2769x1529,385.10562movingFPS,p95/p994.0429/8.8987ms,GPUavg2.1959445ms.
+Stationary330.83267FPS,p95/p993.2332/3.3638ms,GPUavg2.7272937ms. Peak process
+5,001,768,960B,GPU2,208,749,529B;allocation4,141,326,472B(88,184.63B/frame).
+Collision4913/4913,pending0,failures0,exceptions0. Maximum frame192.4598ms,
+GPU9.57799ms:1.32soutlier did not recur,but worst frame remains above80.5713ms
+baseline. No attribution to shader established. Candidate cold-run GCmax11.292ms
+and streaming synchronous max9.5529ms do not explain the1.32sframe; setup pauses,
+engine/driver stalls and external scheduling remain unisolated possibilities.
+Decision: candidate NOT accepted; restore exact original shader SHA23469486...
+for the user. Preserve candidate-c.patch and all raw evidence. No runtime fix,
+600FPS recovery,or regression-free optimization claimed. The reproducible result
+is20.4..22.7%stationary FPS improvement with8..16POMsteps/branch skips,near-identical
+fixed screenshots,and unresolved worst-frame spikes. Broader material acceptance
+remains unchanged. Evidence/documentation only may be committed; do not commit
+pre-existing unqualified texture/material/water work or this rejected candidate.
+Final restoration: original shader hash23469486... confirmed; force compile
+successful,2combos2015.04ms. Inspected the restored playable terrain image.
+Scene source SHA865988D7694B7EB4617164C8AE83AC576BB483F00CCCF8F0EB59C6EC52CEA25E
+matches task pre-save snapshot. Editor playing,unpaused,C#compile succeeded.
+Capture uncompressed SHA256F1545A2177E597E9657DD69740D7C3723621914672E008F06C679363D72A596E.
+Evidence packaging: the six raw result JSON files are preserved losslessly as
+*.json.gz in Docs/ValidationEvidence/TerrainPerformance; decompression was verified
+byte-identical. Original uncompressed copies remain under .codex/terrain-performance/
+raw-results. Report links checked. Candidate patch passes git apply --check against
+the restored source. Patch context intentionally contains a leading space before
+tabs; ordinary text whitespace checks pass when excluding the patch container.
+Only this task's ledger appendix and evidence are staged; pre-existing ledger
+entries and all other user changes remain unstaged.
