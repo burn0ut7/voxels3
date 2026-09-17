@@ -46,14 +46,18 @@ PS
 	#include "postprocess/common.hlsl"
 	#include "common/classes/Depth.hlsl"
 
-	Texture2D ColorBuffer < Attribute( "ColorBuffer" ); SrgbRead( true ); >;
+	// Blend directly over the scene; keep its alpha untouched.
+	RenderState( ColorWriteEnable0, RGB );
+	RenderState( BlendEnable, true );
+	RenderState( BlendOp, ADD );
+	RenderState( SrcBlend, SRC_ALPHA );
+	RenderState( DstBlend, INV_SRC_ALPHA );
 	float4 FogNearColor < Attribute( "FogNearColor" ); >;
 	float4 FogFarColor < Attribute( "FogFarColor" ); >;
 	float FogStartFraction < Attribute( "FogStartFraction" ); >;
 
 	float4 MainPs( PixelInput input ) : SV_Target0
 	{
-		float4 color = ColorBuffer.SampleLevel( g_sBilinearMirror, input.vTexCoord, 0 );
 		float2 screenPosition = input.vTexCoord * g_vViewportSize;
 		float depth = Depth::GetNormalized( screenPosition );
 		// Reverse depth is zero at the far plane, including the cleared background.
@@ -61,6 +65,6 @@ PS
 		float distance = Depth::Linearize( depth, screenPosition );
 		float fade = smoothstep( FogStartFraction, 1.0, saturate( distance / max( farDistance, 0.001 ) ) );
 		float3 fogColor = lerp( SrgbGammaToLinear( FogNearColor.rgb ), SrgbGammaToLinear( FogFarColor.rgb ), fade );
-		return float4( lerp( color.rgb, fogColor, fade ), color.a );
+		return float4( fogColor, fade );
 	}
 }

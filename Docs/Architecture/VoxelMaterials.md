@@ -456,3 +456,36 @@ failed attempts, source hashes and limits. Fresh packed versus fresh distance-on
 improved moving FPS 8.6%, with unchanged stationary FPS and lower peak process/GPU
 memory. The optimized shader, source material, referenced images and material-loading
 line are integrated together. Unrelated generation/water work remains separate.
+
+## Baked grass pattern (2026-09-17)
+
+Grass now samples an offline periodic pattern instead of evaluating three
+stochastic patches per pixel. The shared sampler takes a compile-time pattern
+period for baked grass and zero for the other materials, which retain stochastic
+sampling. Projection weights, triplanar normal reconstruction, 16x filtering,
+material weights, physical 1.4 m grass tile scale and 32-64 m distance fade remain.
+Grass needs two map reads per contributing projection instead of up to six.
+No runtime texture cache, additional terrain draw or field representation exists.
+
+`Tools/bake_grass_pattern.py` owns the two-cell lattice period and 2048 source
+texels per physical tile. Run it with NumPy 2.3.5 and Pillow 12.3.0 to regenerate
+the four 4096-square PNGs and manifest in `Assets/textures/terrain/grass_pattern`,
+plus `voxel_grass_pattern.hlsl`. The generated scalar include keeps shader UVs
+consistent with the bake. Original Grass004 maps remain the authoritative art.
+The manifest records source, generator, output and include hashes. Source-art or
+bake changes require regeneration, shader and full material compilation, then
+visual/runtime qualification; world edits do not invalidate these material maps.
+
+The baker blends color in linear space, uses the same fourth-power patch weights
+and cutoff, and wraps vertex hashes and relative UVs for a continuous periodic
+pattern. It preserves blended normal-vector length; the grass texture input must
+not normalize the already blended vectors again. The material compiler packs
+the same color/roughness and normal/AO BC7 pairs, including ordinary mipmaps.
+The pair uses about 42.67 MiB, replacing about 10.67 MiB: a 32 MiB increase.
+
+This rearranges the grass pattern and introduces a finite two-cell repeat; it is
+not pixel-identical to the former unbounded hash pattern. Nearby density and all
+surface channels remain. Close grass, mixed cut faces and character shadows are
+compared in TERRAIN-STANDSTILL-OPT-001; its ledger owns the performance acceptance
+and any remaining limitations. The larger 8192/four-cell prototype is superseded
+and is not a runtime option.

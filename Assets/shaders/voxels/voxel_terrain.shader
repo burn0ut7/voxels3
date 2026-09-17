@@ -52,8 +52,9 @@ VS
 PS
 {
 	#include "common/pixel.hlsl"
+	#include "voxels/voxel_grass_pattern.hlsl"
 	CreateInputTexture2D( GrassColor, Srgb, 8, "", "_color", "Grass,10/10", Default3( 1.0, 1.0, 1.0 ) );
-	CreateInputTexture2D( GrassNormal, Linear, 8, "NormalizeNormals", "_normal", "Grass,10/20", Default3( 0.5, 0.5, 1.0 ) );
+	CreateInputTexture2D( GrassNormal, Linear, 8, "", "_normal", "Grass,10/20", Default3( 0.5, 0.5, 1.0 ) );
 	CreateInputTexture2D( GrassRoughness, Linear, 8, "", "_rough", "Grass,10/30", Default( 0.9 ) );
 	CreateInputTexture2D( GrassOcclusion, Linear, 8, "", "_ao", "Grass,10/40", Default( 1.0 ) );
 	CreateInputTexture2D( GrassHeight, Linear, 8, "", "_height", "Grass,10/50", Default( 1.0 ) );
@@ -95,12 +96,25 @@ PS
 		float2 Surface;
 	};
 
-	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, float2 uv, float2 gradientX, float2 gradientY, float contribution )
+	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, float2 uv, float2 gradientX, float2 gradientY, float contribution, float patternPeriod )
 	{
 		TerrainSample result = (TerrainSample)0;
 		[branch]
 		if ( contribution <= 0.0 )
 		{
+			return result;
+		}
+		[branch]
+		if ( patternPeriod > 0.0 )
+		{
+			float2 cacheUv = float2( uv.x - uv.y * 0.577350269, uv.y * 1.154700538 ) / patternPeriod;
+			float2 cacheDx = float2( gradientX.x - gradientX.y * 0.577350269, gradientX.y * 1.154700538 ) / patternPeriod;
+			float2 cacheDy = float2( gradientY.x - gradientY.y * 0.577350269, gradientY.y * 1.154700538 ) / patternPeriod;
+			float4 colorRoughness = colorMap.SampleGrad( TerrainSampler, cacheUv, cacheDx, cacheDy );
+			float4 normalOcclusion = normalMap.SampleGrad( TerrainSampler, cacheUv, cacheDx, cacheDy );
+			result.Color = colorRoughness.rgb;
+			result.Surface = float2( colorRoughness.a, normalOcclusion.a );
+			result.Normal = normalOcclusion.xyz * 2.0 - 1.0;
 			return result;
 		}
 		// Shared lattice vertices have identical offsets on both sides of an edge.
@@ -159,7 +173,7 @@ PS
 	// One surface path: maps and physical tile size are material inputs.
 	TerrainSample SampleTerrain( Texture2D colorMap, Texture2D normalMap,
 		float tileMetres, float weight, float3 position, float3 gradientX,
-		float3 gradientY, float3 normal, float3 projection, float detail )
+		float3 gradientY, float3 normal, float3 projection, float detail, float patternPeriod )
 	{
 		TerrainSample result = (TerrainSample)0;
 		[branch]
@@ -189,11 +203,11 @@ PS
 		gradientX *= scale;
 		gradientY *= scale;
 		TerrainSample sampleX = SampleTerrainProjection( colorMap, normalMap,
-			position.yz, gradientX.yz, gradientY.yz, projection.x );
+			position.yz, gradientX.yz, gradientY.yz, projection.x, patternPeriod );
 		TerrainSample sampleY = SampleTerrainProjection( colorMap, normalMap,
-			position.xz, gradientX.xz, gradientY.xz, projection.y );
+			position.xz, gradientX.xz, gradientY.xz, projection.y, patternPeriod );
 		TerrainSample sampleZ = SampleTerrainProjection( colorMap, normalMap,
-			position.xy, gradientX.xy, gradientY.xy, projection.z );
+			position.xy, gradientX.xy, gradientY.xy, projection.z, patternPeriod );
 		result.Color = sampleX.Color * projection.x + sampleY.Color * projection.y + sampleZ.Color * projection.z;
 		result.Surface = sampleX.Surface * projection.x + sampleY.Surface * projection.y + sampleZ.Surface * projection.z;
 		// OpenGL U/V axes; whiteout preserves the geometry normal for flat maps.
@@ -236,13 +250,13 @@ PS
 		material.AmbientOcclusion = 0.0;
 		material.Metalness = 0.0;
 		TerrainSample grass = SampleTerrain( GrassColorMap, GrassNormalMap,
-			1.4, weights.x, position, gradientX, gradientY, normal, projection, detail );
+			1.4, weights.x, position, gradientX, gradientY, normal, projection, detail, TerrainGrassPatternPeriod );
 		material.Albedo += grass.Color * weights.x;
 		material.Normal += grass.Normal * weights.x;
 		material.Roughness += lerp( 0.85, 1.0, saturate( grass.Surface.r ) ) * weights.x;
 		material.AmbientOcclusion += grass.Surface.g * weights.x;
 		TerrainSample dirt = SampleTerrain( DirtColorMap, DirtNormalMap,
-			2, weights.y, position, gradientX, gradientY, normal, projection, detail );
+			2, weights.y, position, gradientX, gradientY, normal, projection, detail, 0.0 );
 		// Dark earthy soil: reduce the red cast while retaining source variation.
 		dirt.Color *= float3( 0.55, 0.65, 0.60 );
 		material.Albedo += dirt.Color * weights.y;
@@ -250,7 +264,7 @@ PS
 		material.Roughness += clamp( dirt.Surface.r, 0.65, 1.0 ) * weights.y;
 		material.AmbientOcclusion += dirt.Surface.g * weights.y;
 		TerrainSample stone = SampleTerrain( StoneColorMap, StoneNormalMap,
-			2.38, weights.z, position, gradientX, gradientY, normal, projection, detail );
+			2.38, weights.z, position, gradientX, gradientY, normal, projection, detail, 0.0 );
 		// Retain a little mineral color while removing the source rock's brown cast.
 		float stoneLuminance = dot( stone.Color, float3( 0.2126, 0.7152, 0.0722 ) );
 		stone.Color = lerp( stoneLuminance.xxx, stone.Color, 0.15 );
@@ -259,13 +273,13 @@ PS
 		material.Roughness += lerp( 0.65, 1.0, saturate( stone.Surface.r ) ) * weights.z;
 		material.AmbientOcclusion += stone.Surface.g * weights.z;
 		TerrainSample snow = SampleTerrain( SnowColorMap, SnowNormalMap,
-			1.0, weights.w, position, gradientX, gradientY, normal, projection, detail );
+			1.0, weights.w, position, gradientX, gradientY, normal, projection, detail, 0.0 );
 		material.Albedo += snow.Color * weights.w;
 		material.Normal += snow.Normal * weights.w;
 		material.Roughness += lerp( 0.8, 1.0, saturate( snow.Surface.r ) ) * weights.w;
 		material.AmbientOcclusion += snow.Surface.g * weights.w;
 		TerrainSample sand = SampleTerrain( SandColorMap, SandNormalMap,
-			1.0, sandWeight, position, gradientX, gradientY, normal, projection, detail );
+			1.0, sandWeight, position, gradientX, gradientY, normal, projection, detail, 0.0 );
 		material.Albedo += sand.Color * sandWeight;
 		material.Normal += sand.Normal * sandWeight;
 		material.Roughness += lerp( 0.85, 1.0, saturate( sand.Surface.r ) ) * sandWeight;

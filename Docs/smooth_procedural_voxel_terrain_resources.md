@@ -99,6 +99,8 @@ sources establish rendering mechanisms, not an accepted occlusion implementation
 | Source | Project use | Transfer limits |
 | --- | --- | --- |
 | [Facepunch directional shadow shader](https://github.com/Facepunch/sbox-public/blob/804420939f467a3fb13c534a5c63a415dd55bd58/game/core/shaders/Shadows/DirectionalLightShadow.hlsl), [receiver normal offset](https://github.com/Facepunch/sbox-public/blob/804420939f467a3fb13c534a5c63a415dd55bd58/game/core/shaders/Shadows/ShadowFiltering.hlsl) | Explain cascade coverage and derivative ordering in the [ring investigation](ValidationEvidence/ShadowRing/README.md). Moving the receiver offset before the per-pixel coverage return removes the reproduced ring without disabling sun shadows. | Only the existing terrain receiver was recompiled for the temporary experiment; other materials, near-shadow fidelity, cold-start safety and performance remain unqualified. Patch restored, not adopted. |
+| [Facepunch directional shadow mapper, pinned source](https://github.com/Facepunch/sbox-public/blob/880def129dc3900d830233cf62678671033f1267/engine/Sandbox.Engine/Systems/Render/Shadows/ShadowMapper.Directional.cs) | Establish how cascade count, logarithmic/uniform split ratio and camera frustum affect shadow work for the [standstill optimization](Research/TerrainStandstillOptimization.md). | Upstream source is not proof of installed26.09.15 behavior. The implementation body, not its first-cascade comment, defines the shown split formula; nearby equivalence still needs runtime visual checks at the qualified FOV/distance. |
+
 ### Volumetric Systems
 
 The [fast-flight experiment](Research/FastFlightStreamingExperiment.md) connects

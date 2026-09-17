@@ -526,6 +526,20 @@ thresholds, baseline runs, and acceptance decisions belong to the
   queues, publication handoff, and telemetry arrays; they cannot introduce
   per-level scratch, shaders, or publication paths.
 
+## Scene shadow budget
+
+`basic_example.scene` uses two directional-light shadow cascades with split
+ratio 0.9704. Shadows, contact shadows and close geometry remain enabled. The
+ratio approximately preserves the original four-cascade first split for the
+qualified camera while allocating less precision to distant shadows. It is an
+authored scene policy, not a new terrain shadow renderer or a universal guarantee
+across camera FOVs and engine shadow-distance settings. The same terrain depth
+objects serve the engine's cascades. Close cast/self-shadow and distant landscape
+comparisons, along with the unchanged figure-eight workload, are recorded under
+TERRAIN-STANDSTILL-OPT-001. See its
+[investigation](../Research/TerrainStandstillOptimization.md) for tradeoffs and
+qualification; shadow-map resolution reduction alone did not provide a useful gain.
+
 ## s&box VFX Shader Parser Gotcha
 
 s&box 26.08.19 can terminate in native `vfx_vulkan` code while reflecting a

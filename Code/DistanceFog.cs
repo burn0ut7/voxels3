@@ -30,6 +30,6 @@ public sealed class DistanceFog : BasePostProcess<DistanceFog>
 		Attributes.Set( "FogStartFraction", float.IsFinite( start ) ? start.Clamp( 0f, 0.95f ) : 0.08f );
 
 		_material ??= Material.FromShader( "shaders/distance_fog.shader" );
-		Blit( BlitMode.WithBackbuffer( _material, Stage.BeforePostProcess, 0, false ), "Distance Fog" );
+		Blit( BlitMode.Simple( _material, Stage.BeforePostProcess, 0 ), "Distance Fog" );
 	}
 }

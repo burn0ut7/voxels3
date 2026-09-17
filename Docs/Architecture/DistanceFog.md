@@ -23,8 +23,11 @@ at background depth; the existing scene has a flat camera background.
 The engine postprocess system owns registration, command lists and enable/disable
 lifecycle. The component owns its cached material and attributes; updates remain
 on the engine rendering path, with no jobs or recurring collection allocations.
-Cost is one color copy plus one fullscreen draw at camera resolution, two texture
-reads per pixel, no raymarching and no per-region work. Performance must meet the
+The pass uses `BlitMode.Simple` and hardware source-alpha RGB blending. It
+outputs fog color and fade, reads scene depth once, and preserves destination
+alpha with an RGB write mask. This removes the former backbuffer copy and color
+sample while retaining the same depth reconstruction and two-color fade. There
+is one fullscreen draw, no raymarching and no per-region work. Performance must meet the
 existing figure-eight 5% FPS / 10% tail, allocation and memory comparison gates.
 
 Built-in GradientFog exposes only one color. Per-material fog would duplicate
@@ -39,3 +42,8 @@ API evidence: installed 26.09.08b `Sandbox.Engine.xml` BasePostProcess entries,
 Implementation and validation status are recorded in the
 [validation ledger](../ValidationResults.md); source alone is not visual or
 performance acceptance.
+
+Qualification uses the terrain standstill optimization scenario. Its matched
+image comparison, figure-eight results and
+cold-start limitations belong to that ledger entry and
+[investigation](../Research/TerrainStandstillOptimization.md).
