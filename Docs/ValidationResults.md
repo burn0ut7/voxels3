@@ -28306,6 +28306,263 @@ Evidence JSON compacted losslessly (parsed values compared equal). Patch artifac
 use local Git attributes to preserve literal bytes and exclude patch-context
 indentation from source whitespace rules. Staged source/document checks pass.
 
+## RIVER-DEPTH-002/v1 — narrow-stream proportional depth, 2026-09-15
+
+Before implementation: retain the River13 profile for half-width >=192; multiply
+its bounded seeded depth by clamp(radius/192,0,1) below that width. River14,
+generator48 separate the changed base from generator47 saves; no edit migration.
+Same graph, widths, noise and flat water. Endpoint preparation owns the change;
+CPU/GPU consume the same endpoint data. Bounds remain conservatively216.
+
+Fixed survey uses RIVER-DEPTH-001/v1's minimumXY(-131072,-131072),65x65,
+spacing4096 through export_landform_survey in basic_example with the authored
+seed1337 recipe: land.75,mountains.3,plains.6,continental77724.09,
+mountain18681.756,local5232.39,relief3072,ruggedness.45,sea0.
+Criteria: identical graph/widths; all depths finite and positive <=216;
+new/old depth=min(radius/192,1) within1e-5; broad endpoints unchanged;
+shared XY/radius endpoints agree; repeated heights exact; variation retained.
+The exploratory pre-change export67966c4614944e80b3d9ebb33423e00b occurred
+before this entry (protocol deviation, not a qualified scenario run).
+
+Performance: canonical LOCAL-COVERAGE-001/v4 route/settings as SIMPLIFY-001/v1:
+normal Play spawn, physical1848x960,cells32/base16,LOD0..5,near4/cache8,
+gameplay8,visual256,speed2500,distance50000,1loop,clearance393.7008,
+48.86s settled warmup,10s stationary,240s cap,one local player,no edits.
+Use current f0f1e63 generator47 saved world as pre-change context, then new
+generator48 fresh world. Recipe/save change prevents identical-content comparison;
+record both with unchanged route settings and treat after as new-content baseline.
+Apply existing <=5% FPS loss and <=10% tails/allocation/memory comparison gates;
+near<=5s,drain<=10s,prep<=16.67ms,zero new exceptions/mesh/coverage errors.
+Preserve existing adoption exceptions; no new exception implied.
+Visuals: camera(-1800,-1700,800),angles35,47,0,FOV60,1280x720;
+inspect actual generated river if visible, record opaque-water depth limits.
+
+## WATER-EDIT-FLICKER-001/v1 — local retained-mesh visibility, 2026-09-15
+
+Defined before runtime qualification. Source f0f1e63 plus pre-existing River14 /
+generator48 working changes. Existing generator47 scenarios cannot provide a
+same-content baseline for generator48. Preserve their history; use the canonical
+LOCAL-COVERAGE-001/v4 workload on saved world
+f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision711, checkpoint7.
+Normal basic_example Play spawn; seed1337 and authored recipe unchanged;
+1848x960, cells32/base16, LOD0..5, near4/cache8, gameplay8, visual256,
+speed2500, distance50000, one loop, clearance393.7008, 48.86s settled
+warmup, 10s stationary, 240s cap, one local player, no edits during route.
+Compare before/after in the same editor26.09.08b on Ryzen7 9800X3D/RTX5090.
+Criteria: FPS loss<=5%, tails/allocations/memory increase<=10%; near<=5s,
+drain<=10s, prep<=16.67ms, zero new exceptions and mesh/coverage errors.
+Existing allocation/drain adoption exceptions are retained, not new passes.
+
+Defect: resident geometry rebased to a newer edit dependency revision can lose
+ContentPrepared while replacement water generates. Retained geometry must keep
+its completed presentation until replacement; new residents must still wait for
+matching water. Inspect actual water-adjacent edits and retained draw eligibility;
+a settled screenshot alone cannot prove absence of one-frame flicker.
+Local edit workload after the performance pair: at(-1024,-800,0), radius128,
+strength-512 then+512, wait<=30s per operation; inspect LOD0 owners(-3,-2,-1)
+and(-2,-2,-1). Camera(-1100,-800,1600),angles90,0,0,FOV60,1280x720.
+Criteria: both requests commit, publication/collision settle within30s, no
+retained terrain withdrawn while water prepares, no observed water/terrain gaps,
+zero final water/terrain pairing errors. Runtime and visual checks pending.
+
+Setup observation: save completed at revision711/checkpoint7, but further
+interactive edits advanced the saved world to712 before Play restarted. After
+restart the player was moving at(2749.17969,-3874.16455,36.9629707), not the
+fixed spawn; actual resolution remained2769x1436 despite the1848x960 request.
+No figure-eight was triggered and no qualified before/after measurement exists.
+Do not compare this setup to v1 or silently substitute its inputs. Controlled
+qualification awaits an idle editor/player and a frozen source/world snapshot.
+
+Candidate changes only GpuVoxelMesher.RefreshChunkPresentation and
+SetVisibilityActive: completed readiness cannot become false on a retained mesh.
+Source evidence: InvalidateField rebases unchanged residents while water request
+refresh removes old revision cache entries; the previous readiness comparison
+then called SetVisibilityActive with false content readiness. Compatible water
+coverage was already retained. New ResidentMesh instances still default false;
+removal still writes inactive draw arguments independently of content readiness.
+This proves removal of that source-level withdrawal path, not all possible
+causes of the reported water flicker.
+
+Engine26.09.08b reported hotload compilation success/zero errors after the edit;
+source whitespace check passed. The only screenshot inspected was an exploratory
+main-camera landscape view before the fix, not a water-edit reproduction.
+No fixed edit run, temporal visual verification, mesh audit or figure-eight
+comparison is claimed. Candidate remains unaccepted and uncommitted pending
+those checks. A separate water simplification task was asked to hold source/editor
+mutations during this investigation; its geometry files are outside this patch.
+
+## WATER-COVERAGE-001/v1 — conservative cell rectangles, 2026-09-15
+
+Predeclared before applying the candidate. The user requests lower water meshing
+cost and fewer vertices, accepting shoreline overlap hidden by terrain.
+Production candidate replaces precise clipped faces/refined leaf payloads with
+one wet-coverage bit represented as a bool per native XY cell. Any existing wet
+corner qualifies; all-dry corners still use the previous river-support refinement
+criterion and sample positions, stopping at the first wet sample. Meshing merges
+adjacent occupied cells into disjoint rectangles within the same chunk. No change
+to field/medium queries, recipe, terrain, publication or draw shader.
+
+Overlap bound: each extra point stays within the same native cell as a confirmed
+wet sample (at most cellSize per XY axis, sqrt(2)*cellSize distance). LOD0 is16
+units; LOD5 is512, LOD6 is1024. This is an LOD-relative bound, not a universal
+16-unit shoreline tolerance. Confirm distant overlaps remain terrain-occluded;
+sea-plane cave openings and additive edits may expose the approximation.
+
+Canonical performance workload follows LOCAL-COVERAGE-001/v4: basic_example,
+seed1337, authored River14/generator48 recipe, normal Play spawn, cells32/base16,
+LOD0..5, near4/cache8/gameplay8/visual256, physical1848x960,
+speed2500/distance50000/one loop, clearance393.7008, settled warmup48.86s,
+stationary10s, route cap240s, one player, recorder disabled, no route edits.
+Record saved world/revision/checkpoint before the pair; require identical save,
+settings and other source in both variants. Pre-existing river changes and the
+concurrent flicker candidate must be identified, preserved and held constant.
+Readiness: visual/transition/placement/collision queues0, water ready, collision4913,
+prediction320/320. Older generator47 results are context only.
+
+Criteria: reduce settled water vertex count by >=50% and generated-cell payload;
+reduce aggregate generation+meshing milliseconds per generated chunk (same fresh
+startup and route), report total uploads and generated chunk count. FPS loss<=5%;
+p95/p99/max, allocation and process/GPU peak increases<=10%; near<=5s,
+full drain<=10s, preparation<=16.67ms, no new exceptions, invalid/wrong-winding/
+degenerate water geometry, terrain audit failures or coverage/pairing errors.
+Retain previous adoption exceptions without granting new exceptions. Capture
+voxel_collision_info after initial settle and after the completed figure-eight;
+voxel_water_info owners(level,x,y)=(0,-3,-2),(0,-2,-2),(1,-2,-1),(2,-2,-1),
+(3,-2,-1),(4,-2,-1),(5,-2,-1), recording unavailable owners rather than replacing
+with favorable samples. Run standard88-mesh and detailed coverage audits.
+Visual camera(-1800,-1700,800),angles35,47,0,FOV60,1280x720; check shoreline,
+chunk seams and dry ground. Supplement local additive then inverse edits only on
+an explicitly isolated save; do not change the user's current corrections.
+
+Status: source candidate prepared outside Code while the flicker task used the
+editor. No timed run yet. Live inspection showed continued player movement and
+physical2769x1436; this is not the fixed performance workload. Awaiting the user's
+choice of an idle test window versus applying with performance checks deferred.
+
+WATER-COVERAGE-001/v1 application/checks,11:22 local:
+Applied the three-file candidate after the flicker task released the editor.
+Engine26.09.08b reports LastCompileSucceeded=true,errors0; native console has no
+Error entries. Source diff whitespace passes and removed refined/clipping symbols
+have no remaining Code/Editor consumers. No benchmark/restart was performed.
+The seven predeclared water owners were inspected: LOD0..3 unavailable; retained
+LOD4(-2,-1)609vertices/digestF5C9B1C23125601F and LOD5(-2,-1)8838vertices/
+digestA3F6896389BD4558 have zero invalid/degenerate/reversed triangles. These are
+pre-hotload cached geometry (609 is not a six-vertex rectangle count), so they do
+NOT validate new geometry or establish a candidate speedup. Arbitrary current
+1280x720 game-camera screenshot inspected: distant rivers/terrain visible and
+player airborne; mixed cached/new geometry and uncontrolled view do not qualify
+shoreline appearance. Fixed visual, edit and figure-eight checks remain NOT RUN.
+No timing/vertex reduction is claimed. User test-window question remains pending;
+source is left uncommitted, unaccepted, ready for a controlled Play restart.
+
+WATER-COVERAGE-001/v1 controlled pair begins after user authorization to proceed.
+Frozen save: f5ce10f3-6d75-428e-b3dd-63dee14891c6,revision1417,checkpoint16
+(save.complete11:25:18local). Source f0f1e63 + existing River14/generator48 and
+flicker readiness patch held constant; control restores only the two water
+coverage/meshing files and their status row. Source manifest/patch under
+ValidationEvidence/WaterCoverage. Requested logical1232x640 to obtain the fixed
+physical1848x960 under current display scaling; verify actual before timing.
+Control readiness15:26:57UTC: actual1848x960, queues0, water ready,
+collision4913,prediction320/320. Normal settled spawn
+(0.189069256,0.240382016,262.950958). Initial water910728vertices,
+1152generated chunks,4307.1ms generation+meshing,16.5MiB payload.
+Prescribed shoreline screenshot inspected: continuous river/bank contact.
+Returned to Game camera;48.86s minimum warmup begins15:26:57UTC.
+
+Control cae4d162d089426ebbe6d710c41fb5c5 completed:376.74582FPS,
+p95/p99/max5.2177/9.2504/193.934ms,GPUavg2.0714548ms;
+allocated4632517120bytes,processpeak5421416448,GPUpeak2155051396;
+exceptions0,prepmax9.6535ms. Near1.3s/full13.3s observed (drain target fails).
+Final water910728vertices,3661080uploads,9146generated,27219.9ms cumulative,
+20.9MiB cell payload. All queues0,pairing0;88/88mesh audit passes; detailed
+coverage overlap/imbalance/missing/extra seams all0. Raw result/start/end/audits
+and arrival report saved under ValidationEvidence/WaterCoverage/control*.
+Original source retained only as evidence; candidate reapplied after Play stopped.
+Other three changed runtime files match fixed-source hashes exactly.
+
+Correction: control cae4d162d089426ebbe6d710c41fb5c5 is INVALID for timing.
+Saved moving/stationary profiler and arrival report all record2769x1436, not
+1848x960. Initial size was correct before camera eject/return; that view switch
+reset sizing. Preserve raw files as control-invalid-viewport*. Geometry counts
+still describe the fixed source/owner set, but cannot establish timing acceptance.
+Do not change scenario inputs. Reassert logical1232x640 after all view switches
+and verify physical size immediately before triggering each replacement run.
+The candidate was already restarted when this was discovered; measure it first,
+then a fresh restored control with identical frozen save/source/settings. This
+changes observation order only, not the workload or acceptance criteria.
+
+Candidate startup (before camera checks/player movement): same saved1417 world
+and owner set,1152generated,1072published chunks;52194vertices,52194uploads,
+2814.1ms cumulative generation+meshing,1.1MiB payload,44500refinement samples.
+Relative to control geometry910728 this is94.269%fewer vertices. The prescribed
+camera views are saved as control-shoreline.png and candidate-shoreline.png:
+river-bank contact visually matches, without exposed rectangular steps in this
+nearby view. This does not qualify distant LOD/cave/additive-edit appearance.
+All seven candidate sampled owners have0invalid/degenerate/reversed triangles;
+vertices114,138,78,162,102,24,180 in scenario order (LOD0..5).
+
+15:33:42UTC setup interrupted before candidate timing: player moved to
+(-689.710632,-891.642578,-73.3237534), queues active,generated1283instead of1152.
+Snapshot candidate-start.json records this interrupted state; it is NOT a fixed
+startup comparison. Screen1848x960 correctly persisted after the final resolution
+request. No candidate figure-eight triggered. Await idle controls versus user
+manual testing preference; don't silently benchmark a different route center.
+
+## WATER-HULL-001/v1 — user-requested bank-line simplification, 2026-09-15
+
+User reviewed the live bank line and requested only a handful of vertices.
+Supersedes rectangle emission in WATER-COVERAGE-001; generation is unchanged.
+Before runtime qualification: for each32-cell chunk, take min/max occupied cell
+corners at each XY column boundary (<=66sorted grid points). Monotone chains
+remove collinear/interior points, yielding the minimum convex enclosure of its
+coverage. One upward triangle fan, one exactly sized output allocation, no list,
+coverage copy, precise clipping, rectangle strips or procedural meshing queries.
+
+The hull may bridge concave banks, islands and disconnected wet cells with buried
+water. It stays inside the owner chunk, but DOES NOT retain the earlier one-cell
+expansion bound. Maximum possible extent is the32-cell footprint; no overdraw
+across chunk owners. This follows the user's explicit request to let terrain
+hide simplified edges. Check exposed water across dry voids/cave entrances;
+rendered bank facets can still create a jagged contact line independently of
+water mesh vertex count. Full-chunk bounding quads were rejected as a looser
+cover; the hull is the tightest convex cover of the generated wet cells.
+
+Reuse WATER-COVERAGE-001/v1 route/settings/criteria and frozen1417/checkpoint16
+for any timed comparison; do not reinterpret its invalid viewport control as a
+pass. Additional geometry target: reduce the seven sampled owner vertex counts
+against the rectangle candidate114,138,78,162,102,24,180; every sampled hull has
+zero invalid/reversed/degenerate triangles. Empty chunks stay empty; all wet
+cell coverage remains enclosed. Same prescribed camera and current-user-view
+inspection; record any remaining unverified cave/edit/LOD boundaries.
+No timed candidate has run; current-user movement prevented a fixed start.
+
+Hull candidate compiled successfully on26.09.08b,errors0. User's current save
+has advanced to1460/checkpoint21 during manual testing; save completed before
+normal Play restart. This is a local hull qualification startup, not the frozen
+1417 timing workload and not a same-content timing comparison. Preserve all
+user edits; frozen baseline is not restored over the live save.
+
+WATER-HULL-001/v1 local1460 run,11:39local: fresh Play1152generated chunks,
+1072published,8187vertices/uploads,2873.3ms cumulative generation+meshing,
+44500refinement samples,1.1MiB retained payload. All visual/transition/placement
+queues0; terrain/water pairing errors0. Seven sampled vertex counts in order
+18,15,24,18,27,15,18 (convex outline corners8,7,10,8,11,7,8); all invalid,
+degenerate and reversed triangle counts0. Native88/88terrain mesh audit passes,
+no stale/failures; detailed coverage has0overlap/imbalance/missing/extra seams.
+Current-generation timing is informational; no valid matched figure-eight pair
+exists. Save revision1460 differs from the earlier1417 sample set; no precise
+same-content hull-vs-rectangle timing or percentage reduction is claimed.
+
+Inspected hull-shoreline.png at the prescribed camera: continuous bank contact,
+no visible water gaps or exposed hull corners in that view. Current bank region
+also inspected at(1145.297,-2667.613,161.0231),angles26,154,0,FOV60;
+hull-bank-shoreline.png shows continuous water against the bank. This camera is
+an approximate reconstruction of the user's view, and the player remained at
+spawn so its terrain LOD can differ from the user's earlier nearby-player view.
+Do not attribute any smoother terrain edge to water meshing. Distant/cave/additive
+edge cases and canonical timing remain pending. Returned camera to normal Game.
+Hull source is live, unaccepted/uncommitted pending performance qualification.
+
 ## WATER-FAST-001/v1 — quads and uniform submerged chunks, 2026-09-15
 
 User explicitly requests prototyping/testing both further improvements. Current
@@ -28404,6 +28661,821 @@ hull remains the working prototype; this comparison does not qualify it against
 the original precise mesher. No rejected runtime code is accepted or committed.
 Raw results, source snapshots and both fixed views:
 [WaterFast evidence](ValidationEvidence/WaterFast/README.md).
+
+## SAND-001/v1 — shoreline sand and seeded regions, 2026-09-15
+
+Defined before sand runtime execution. Sand ID6 and the recipe in
+[ProceduralSand](Architecture/ProceduralSand.md) are the candidate; unrestricted
+inland/deep deposits were removed from the proposal before execution at the
+user's request. No density, terrain/water recipe, or field edit changes.
+
+Reuse WATER-FAST-001/v1's frozen1545/checkpoint26/world
+f5ce10f3-6d75-428e-b3dd-63dee14891c6, generator48/River14/seed1337,
+authored recipe and normal settled spawn. The restored hull control
+8b48ba7281764eba9a9dd52e2695782e is the pre-sand measurement; its full source
+manifest was checked against the workspace before applying sand (zero differences).
+The later rejected water candidate is not a sand baseline. Engine26.09.08b,
+Ryzen9800X3D/RTX5090; record fresh process identity after required shader cold start.
+
+Unchanged route: visible basic_example, cells32/base16, LOD0..5, near4/cache8,
+gameplay8, visual256, physical1848x960, speed2500, distance50000, one loop,
+clearance393.7008, minimum48.86s settled warmup, 10s stationary,240s cap,
+one local player, recorder disabled, no edits/manual movement during timing.
+Readiness: queues0, waterready, collision4913, prediction320/320. Reassert
+logical1232x640 after every camera mode switch and check actual size immediately
+before the trigger and in the saved profiler/arrival report.
+
+Criteria: FPS loss<=5%; p95/p99/max frame time, total allocation, process/GPU
+memory peaks increase<=10%; preparation<=16.67ms; near arrival<=5s;
+drain<=10s, with the baseline's10.746932s drain failure retained explicitly.
+No new regression exemption is granted. Zero exceptions, terrain/water pairing
+errors, missing/extra seams, overlap/imbalance, and88/88mesh audit success.
+Sand adds32palette bytes, with no vertex/edge buffer stride change. Report
+generation/streaming counters, fixed-workload comparability and unresolved gates.
+
+Visual qualification after timing: reuse camera(-1800,-1700,800),angles35,47,0,
+FOV60,1280x720 and wide Z8000/angles65,47,0. Expect warm pale-yellow banks at
+the water contact, without yellow water, missing geometry, or changed edit shape.
+Inspect at least one visible transition between sand and existing ground.
+
+Read-only node qualification outside timing: at each XY pair from
+x={-2048,-1024,0,1024,2048}, y={-3072,-2048,-1024,0,1024}, obtain the canonical
+height using inspect_terrain_column with minimumZ=-512,spacing16,count65.
+Use voxel_material_info at z=floor(height/16)*16 and that node minus64,160,400,
+plus z=16. Repeat the same queries after a normal Play rebuild and compare IDs.
+Require valid IDs, Sand6 at unedited solid shore nodes within the96-unit sand
+layer, no Sand6 beyond the384-unit burial limit, and water/air/placed-dirt
+precedence. Record missing coverage (including random patches/deposits not
+encountered) rather than change the grid to force a pass. Existing edits can
+exclude a node from the procedural expectation and must be reported.
+
+Cold start: explicitly compile both generation shaders and the terrain draw
+shader, then clean editor restart. Baseline crash marker at
+engine/.source2/sentry/last_crash is2026-09-14T05:07:15.416540Z. Require unchanged
+marker, live editor, successful compiler status and no fresh shader/parser/
+pipeline/dispatch/managed exceptions. Matching source formulas alone do not
+establish CPU/GPU parity or multiplayer convergence; report those limits.
+
+
+Pre-apply save12:05:52local retains revision1545 and advances serialization checkpoint to30; no field edits. Prior repeated Play/save cycles advanced checkpoint numbering without changing the frozen content. Water test task completed before sand application.
+
+SAND-001/v1 startup/setup outcome: live shaders compiled successfully (regular
+and transition no diagnostics; draw has profile-upgrade warning only). Runtime
+and editor C# compilers succeeded with0errors/0warnings. Closing old editor72028
+advanced the crash marker to2026-09-15T16:06:48.608871Z. Rotated log.8 records
+QPushButton-null exceptions in ConsoleWidget.StatusBarLog while
+VoxelManager.FinishLodArrivalOnDestroy logs during editor teardown, then a
+five-components-not-deleted assertion and Source2Shutdown. No readable native
+stack was recovered; do not call the complete restart clean. New editor53464
+started16:07:14UTC, compiled successfully, opened basic_example and rendered sand
+in the saved1545 world. Crash marker has not advanced during the new startup or
+Play. No fresh terrain shader/parser/pipeline/dispatch exception observed.
+Unrelated missing built-in resources/blue-noise header errors are present in the
+startup log. Full cold-restart qualification remains incomplete.
+
+Timing setup was interrupted by player movement: first observation
+(-530.615234,-347.804138,78.2445984),velocity(-298.069,-114.656845,0),physical
+2769x1436. Readiness was not settled. No sand figure-eight was triggered and
+none of those frame statistics is a comparable performance measurement.
+Manual editing then advanced revision1546. Preserve those edits; do not silently
+restore the old1545 save over them. User was asked for an idle testing window.
+
+The fixed25-column read-only grid ran on revision1546 through production field
+queries, followed by125voxel_material_info queries:23Sand,15Grass,17Dirt,
+63Stone,7Air. Every observed Sand node lies within the prescribed water-height
+and surface-depth bands. No sand appeared at depth>=400. Existing placed dirt
+at(1024,-3072,-112) takes precedence over procedural seabed sand. This grid
+encountered no random fringe/buried deposits, no Snow, and no Water sample;
+those properties and restart reproducibility remain unverified. Raw observations:
+ValidationEvidence/Sand/columns.json and nodes.json. A current-player-camera
+image was inspected: pale-yellow material borders visible rivers and green
+terrain; water remains blue. This is a qualitative live appearance check, not
+the fixed camera/LOD audit or proof of per-node GPU parity.
+
+### SAND-MEDIUM-001/v1 — supplemental water identity check
+
+Defined before execution: same live world/current recipe, read-only
+voxel_material_info at(0,-2048,-16) and(0,-2048,16), then repeat both unchanged.
+Expected Water4 below sea level above the canonical bed, Air0 above sea level;
+no field edits or player movement are performed by this check.
+
+SAND-001/v1 visual result: REJECTED by user. Continuous river bands were too
+abundant and wide, and ocean edges should have gaps and varying beach widths.
+Keep the first source as rejected history in the version-control/evidence record;
+replace its recipe rather than keeping a selectable legacy path. Supplemental
+SAND-MEDIUM-001/v1 passed: both repeats returned Water4 at z=-16 and Air0 at z=16.
+
+## SAND-002/v1 — intermittent beaches and sparse river deposits
+
+Defined before the revised runtime check. Same material identity/density and
+render encoding. Use natural (pre-river) height to distinguish coastal ground
+from lowered inland river valleys, smoothly blending rules across river mouths.
+Two seeded noise scales create gaps and modulate width/layer thickness. Oceans
+have substantially greater coverage and wider patches; rivers have sparse short
+sand patches among exposed dirt. No unconditional continuous sand strip remains.
+Buried sand is allowed only under a selected sandy shoreline column and within
+144..256units of the exterior. Preserve current user edits before rebuilding.
+
+Visual acceptance: in the same recorded near/wide cameras, rivers must contain
+clear non-sand stretches and dirt/sand mixtures; ocean shorelines must contain
+non-sand stretches and visibly varying sand width. The initial rejected version
+must not remain as a second path. CPU material IDs/placed dirt/water/air retain
+precedence. Keep SAND-001's route performance criteria and comparable frozen
+content; current manual-edited world requires a new matched baseline if timing
+cannot use the prior preserved content without overwriting user edits. Do not
+change route inputs or claim a comparison across different edited worlds.
+
+## WATER-SHORE-FLICKER-001/v1 — stationary rotation investigation
+
+User reports shoreline flicker while standing still and rotating the camera.
+No runtime fix has been applied. Initial read-only coverage inspection reported
+zero overlapping parents, unbalanced regions, missing or unexpected seams.
+Observed player(546616,-123408.773,0.486164242), detached camera
+(546491.625,-123242.773,215.00415),angles(33.2828903,-53.1572227,0),FOV60.
+A1600x900 capture showed a thin broken contact line; one frame does not establish
+temporal flicker or its cause. The sand task stopped Play before the planned
+second camera angle. User explicitly requests both tasks proceed concurrently;
+coordinate live editor use while keeping file ownership separate.
+
+Fixed next diagnostic: same camera position/FOV, yaw offsets0,-0.2,+0.2,0degrees,
+1600x900 captures at each, player stationary and normal input enabled. Compare
+water/terrain contact and repeatability after returning to the first angle.
+Capture baseline with the final concurrent sand source held unchanged, record
+source/save identities, require settled geometry before each sequence. No field
+edits, mesh rebuild, or streaming-origin mutation as a substitute for rotation.
+Acceptance for any subsequent candidate: no broken/flickering contact, no visible
+shoreline displacement or water loss, unchanged mesh counts and clean geometry/
+coverage audits. Runtime changes still require the canonical matched figure-eight
+and shader changes require the existing clean-editor-start validation. Neither
+initial screenshot nor compilation alone qualifies a fix.
+
+WATER-SHORE-FLICKER-001/v1 rotation sequence NOT RUN: sand restart returned the
+player to spawn, so the original far-bank terrain is no longer resident. Do not
+move streaming origin or call this a comparable far-bank test.
+
+## WATER-SHORE-FLICKER-001/v2 — resident spawn-bank rotation
+
+Revised only because the v1 far-bank content is unavailable after the coordinated
+sand restart. Source includes revised sparse/patchy sand, save1560/checkpoint35,
+editor53464. Use resident bank camera(-1800,-1700,800),pitch35,yaw47,46.8,47.2,47,
+roll0,FOV60,1600x900; wait for settled generation before capture. Same stationary
+rotation/geometry acceptance as v1, no edits or player movement. This diagnostic
+cannot establish whether the original far-bank symptom is fixed.
+SAND-002/v1 recipe parameters: ocean(wavelength2048,cutoff-.10,maxBank48,
+maxLayer64),river(512,.40,12,32); natural-height blend32..160 above sea;
+coverage.75primary+.25quarter-scale with salts17011/41333; strength clamps
+2*(coverage-cutoff); bankHeight=maxBank*(.15+.85*strength),layerDepth=
+16+(maxLayer-16)*strength. Minimum exterior height-256. River-bank grass is
+suppressed below sea+16 when natural height>sea+96. Buried region768x768x384,
+probability.15,salt29137,depth144..256,only where the sand layer is selected.
+Saved revision1560/checkpoint35 before normal Play restart. Both compute shaders
+and runtime/editor code compiled with zero errors. Play resumed for concurrent
+user-authorized shoreline-flicker camera inspection; no timing run is active.
+
+Additional fixed read-only patch survey for SAND-002:17x17XY grid,minimum
+(-2048,-4096),spacing256; inspect_terrain_column minimumZ=-512,spacing16,count2
+provides canonical height, then voxel_material_info at floor(height/16)*16.
+Record counts/coordinates, including absence of coverage; do not alter grid.
+Expected: river sand is sparse, with dirt banks and non-sand stretches. This
+near-spawn survey does not cover the distant ocean. No scene/player mutation.
+SAND-002 near-river survey on revision1560 completed:289samples yielded
+5Sand,99Dirt,150Grass,35Air. Sand coordinates and raw outputs are preserved in
+ValidationEvidence/Sand/patch-survey-v2.json. Five samples all use the inland
+river rule (natural exterior heights>434); two are at positive bank heights
+0.58/0.23 and three are submerged. This is sample coverage, not world frequency.
+Air results are retained and not counted as solid sand failures.
+
+Before the ocean survey: use17x17XY grid minimum(544256,-125440),spacing256,
+same count2column height lookup and floor(height/16)*16 material query. This
+covers the known user-view coastline near(546491,-123243) without moving the
+player or streaming origin. Record all outcomes and natural/composed heights.
+Require mixed sand/non-sand among available coastal samples; this numerical
+survey supplements, but does not replace, rendered beach-width inspection.
+SAND-002 far-bank survey completed on revision1560:22Sand,133Dirt,134Grass
+of289surface nodes;8sand samples above water and14submerged. Raw observations:
+ValidationEvidence/Sand/ocean-survey-v2.json. Natural heights117.31..144.43 show
+that this user-view area falls in the coast/river-mouth blend, not the full-ocean
+preset. Mixed coverage is confirmed locally; full-ocean coverage and rendered
+width variation remain separate visual qualification. No claim that these counts
+represent global shoreline percentages.
+
+V2 baseline captured four prescribed angles after visualPending0,1152/1152
+water generated,1072published,8187vertices. The contact edge switches between
+straight and jagged fragments with angle; geometric contact alone cannot yet
+prove the exact depth conflict. Test candidate: water VS uses rendered z=SeaLevel
+minus0.125world units (3.175mm), staying inside existing +/-1draw bounds. This is
+render-only; stored vertices, terrain/medium/edits and water counts remain exact.
+Check whether near-coplanar competition disappears without a visible gap or
+shoreline shift. Shallow water thinner than this offset is an explicit risk;
+do not qualify all streams from a single bank view.
+
+## SAND-003/v1 — bounded dry beach reach
+
+Defined before implementation/run. SAND-002 reduced river abundance, but an
+altitude band alone does not bound horizontal width on very flat ocean coasts.
+Retain the patch coverage and vary a horizontal water-search reach with coverage
+strength: ocean maximum256units, river maximum48units, minimum25%of that reach.
+A dry sandy column must find a canonical submerged exterior at one of four
+cardinal probes at that reach. Thus every admitted dry sand column is within
+its selected reach of a known wet base-field point; absence of a probe hit leaves
+the prior ground material. This conservative stencil may omit diagonal/narrow
+wet contacts, acceptable for interrupted beaches. Submerged sand retains the
+existing bounded patch rule and does not perform these probes.
+
+Generation must capture the additional256-unit XY river dependency for both
+regular and transition material reconstruction. CPU and GPU use the same
+composed landform probes; no draw-time queries or extra material state. Measure
+the real cost before performance acceptance. Reuse SAND-002's fixed surveys and
+camera comparisons; dry admitted sand must have a wet probe within its bound.
+Keep route criteria unchanged. Runtime source changes wait for the concurrent
+shoreline-flicker camera comparison to release the editor.
+
+V2 offset candidate compiled successfully but is REJECTED as an unproven fix.
+Saved baseline-0..3 and candidate-0..3 PNGs. Candidate includes an additional
+1.2s settle after each camera change; initial immediate captures were not used
+for the candidate record. At exact repeated yaw47, baseline and candidate each
+repeat pixel-identically; baseline-to-candidate differs in6951pixels. A rough
+camera-ray reprojected color-mask comparison found baseline705/555changed water
+classifications at yaw-0.2/+0.2, candidate551/505; beyond a1pixel neighbor check,
+37/20baseline versus15/10candidate. This is supporting image analysis with a
+color threshold, not a correctness oracle or proof that temporal flicker is
+resolved. Many changes lie at the sampling edge. Water shader was restored
+byte-for-byte to the pre-test source and native compilation succeeded. No new
+runtime fix remains; no performance claim or figure-eight acceptance is made.
+Released camera to Game for concurrent sand rebuild. Next investigation must
+check actual viewport antialiasing, since RenderToBitmap captures may differ.
+
+Investigation paused: concurrent sand task reports editor shutdown Error modal
+and user-stopped Computer Use. Respect that stop; do not use another automation
+path to dismiss the modal. No further live checks were possible in this session.
+No water fix retained. Original shader hash matches pre-test backup:
+7E03C13B3FA5C12D3CD37C578132EF48BE25AA887543F5392AF5B0849B577124.
+Actual viewport MSAA and far-bank reproduction remain unverified. Current work
+is an incomplete investigation, not accepted runtime behavior.
+
+## SAND-GRASS-001/v1 — restore grassy river banks
+
+User accepts current sand distribution and requests mostly grass at river edges.
+Remove SAND-002's explicit low-river-bank grass suppression from CPU and GPU;
+retain sand eligibility, widths, coverage, buried rules and palette exactly.
+Natural exposed non-mountain top nodes above water use the existing Grass1
+stratum; submerged/covered soil and explicit placed dirt retain their meanings.
+Remove the unused RiverDirtHeight setting and its GPU parameter component.
+
+Before runtime: use fixed near-bank camera(-1800,-1700,800),angles35,47,0,FOV60,
+1280x720 to inspect grass reaching unsanded dry banks and retained small sand
+patches. Read the unchanged near-grid production nodes; specifically
+(-1024,-2048,48),(1024,-2048,32),(-2048,-1024,0),(-2048,0,48) are unsanded
+exposed bank controls, with sand controls(-512,-3584,0),(2048,-3328,0).
+Expected controls Grass1 and Sand6 respectively unless explicit edits supersede
+base generation; preserve failures. Compile both generation entry shaders and
+runtime/editor code. Full sand cold-start and canonical figure-eight acceptance
+remain required and pending; a hot shader compile is not a cold-start claim.
+SAND-GRASS-001/v1: both compute shaders and runtime/editor code compiled with
+zero errors. Saved world remains revision1560,checkpoint39; normal Play rebuilt
+material derivatives. Four grass controls returned Grass1. The two historical
+SAND-002 dry sand controls also returned Grass1: that expectation is not met;
+they precede SAND-003's horizontal-proximity restriction, and are not evidence
+that this grass-only revision changed sand eligibility. No sand recipe or palette
+values changed in this correction. Raw results: Sand/grass-bank-controls.json.
+
+Inspected fixed near-bank image Sand/grassy-bank.png: the broad dirt strip is
+gone, grassy upper surfaces reach the water, and a small pale sand area remains
+at the foreground waterline. Exposed vertical soil faces still show dirt below
+the grass stratum, rather than painting the entire terrain interior grass.
+No live console errors. Returned to normal Game camera. Full prior sand
+performance/cold-start acceptance remains pending; no commit/push of runtime
+sand code is claimed while that gate is incomplete.
+
+## SAND-WIDTH-001/v1 — modestly wider ocean beaches
+
+User requests ocean sand extending a little farther along the coast. Increase
+OceanReach from256 to320 world units (25%); retain Ocean dry height48, coverage,
+layer depth, noise, salts and the sparse RiverReach48 preset. The shared CPU
+parameter also binds GPU reach and both atlas halos; no shader source change.
+The four directional probes remain a bounded proximity approximation, so this
+is a wider allowed reach, not a guaranteed25% increase in every visible beach.
+
+Before runtime validation: reuse SAND-002 near/ocean surveys and fixed camera
+parameters unchanged. Compare sand material counts and visible extent against
+the previous320-disabled recipe at the same saved world revision. Require
+unchanged full-river preset and continued gaps between ocean patches. Compile
+runtime/editor code. Full visual comparison, cold-start and figure-eight gates
+remain pending; this parameter edit is not performance acceptance.
+
+SAND-WIDTH-001/v1 implementation check: runtime/editor compilers report success,
+zero errors. Saved production world revision1560/checkpoint42, then restarted
+normal Play to rebuild material derivatives with the320-unit reach. No visual
+width comparison or figure-eight was performed; those remain unverified. This
+change does not diagnose or resolve the separately reported coastline dots.
+
+## SAND-WIDTH-002/v1 — double current ocean reach
+
+User requests2x following the320-unit setting: OceanReach becomes640 world
+units. RiverReach48, height limits, coverage thresholds, salts and depths remain
+unchanged. CPU/GPU reach and regular/transition atlas halos share this constant.
+This doubles the allowed horizontal reach, not necessarily every beach width:
+height, noise and the existing four-probe proximity condition still constrain it.
+Before runtime: reuse SAND-002 surveys and cameras unchanged for future visual
+comparison at the same saved world revision. Require patchy ocean coverage and
+unchanged full-river preset. Compile and rebuild normal Play after saving edits.
+Visual comparison, cold-start and figure-eight acceptance remain pending; larger
+atlas capture cost is unmeasured. This does not address the coastline dots.
+
+SAND-WIDTH-002/v1: runtime/editor compile succeeded with zero errors; saved
+world revision1561/checkpoint46 and rebuilt normal Play. Visual width and
+performance are unverified; no full acceptance or commit/push claimed.
+
+## SAND-DEPTH-001/v1 — several blocks of sand
+
+Set minimum selected layer depth to3 base cells (48units), ocean maximum6cells
+(96units), river maximum4cells (64units). Preserve coverage and width rules.
+Bind the CPU-owned minimum as VoxelSandDepths.z for the generation shader mirror.
+Before runtime: query the production material nodes at(2048,-4096), starting
+z=-112 descending16 for7nodes, and(256,-2304),startingz=-96 descending16 for7nodes.
+These existing submerged sand controls must contain at least3 consecutive Sand6
+nodes below the exterior unless an explicit edit or air cavity supersedes them.
+Record exceptions. Compile both compute entry shaders, rebuild saved normal Play,
+and query canonical nodes. Visual excavation, cold-start and figure-eight remain
+separate pending acceptance checks; queries do not establish rendered correctness.
+
+SAND-DEPTH-001/v1: runtime/editor and both compute shaders compiled successfully.
+Saved revision1617/checkpoint50 before normal Play rebuild. Initial14queries ran
+before CurrentField initialized and threw NullReferenceException; no valid data
+from that attempt. After production column inspection confirmed readiness,
+repeat14queries returned Sand6 at the first3nodes in both columns, then Dirt2
+at each remaining4nodes: minimum-depth criterion passed for both controls.
+Live revision1660 observed during inspection (user edits continued); sampled
+column density matched base density. Raw output: Sand/depth-controls.json.
+These samples do not validate maximum ocean depth, rendering, cold-start or
+performance. Those acceptance gates remain pending; no commit/push claimed.
+
+## SAND-SEABED-001/v1 — patches on deep ocean floors
+
+Remove the-256 sea-relative exterior cutoff for naturally submerged ocean
+columns (naturalHeight<=SeaLevel). Retain that cutoff for carved inland river
+columns and rename its CPU owner MinimumRiverHeight. CPU and GPU conditions
+match; depth remains surface-relative3..6cells for ocean sand, with existing
+seeded patch gaps. Dry beaches and river coverage/depth settings are unchanged.
+Before runtime: inspect a fixed5x5grid over XY[-65536,65536],spacing32768, seed1337
+and current saved world settings. For every natural/composed exterior<-256,
+query7production material nodes starting floor(height/16)*16 descending16.
+Require at least one Sand6 deep-ocean column, at least3consecutive Sand6 nodes
+in each admitted unedited solid column, and at least one non-sand deep column
+for coverage gaps. Retain all results and failures. Queries establish canonical
+material assignment, not visual or GPU parity. Compile both compute shaders;
+full cold-start, visual and figure-eight acceptance remain pending.
+
+SAND-SEABED-001/v1: runtime/editor and both compute shaders compiled successfully.
+The25-column fixed grid found5deep natural ocean columns at revision1660.
+Of those,3selected sand: (-65536,65536) had3Sand6nodes then4Dirt2;
+(0,65536) and(65536,-65536) each had4Sand6 then3Dirt2. The remaining
+(-65536,-65536) and(-32768,65536) were7Dirt2 each, retaining coverage gaps.
+All logical sample criteria passed. Raw coordinates/heights and35material
+responses: Sand/deep-ocean-materials.json. This is live canonical sampling,
+not a rendered deep-ocean comparison. Full visual/cold-start/performance
+acceptance remains pending; no commit/push of the sand slice claimed.
+
+Saved revision1660/checkpoint54 and restarted normal Play to rebuild derivatives.
+
+## GRASS-PBR-001/v1 — human-test material candidate
+
+Defined 2026-09-15 before candidate runtime. Use current normal Play basic_example,
+seed1337, saved world revision1660, engine26.09.08b, one local player. Preserve
+terrain generation, edits, existing sand/water work, lighting and view settings.
+Capture the initial player camera at1280x720, then a detached close ground view
+at1280x720 whose exact transform is recorded with the run. Inspect dense grass
+blade detail, normal response, absence of missing-texture errors, continuous
+projection on slopes and grass/dirt/sand boundaries. Require engine and material
+compilation with zero errors. Source maps: ambientCG Grass004 2048-square;
+physical tile1.4metres (1.4/0.0254 engine units). No displacement of SDF or geometry.
+Human approval of appearance remains pending. Canonical figure-eight and clean
+editor restart remain required for full acceptance; this request is to expose a
+candidate for human testing/screenshots. Do not commit/push as accepted until those
+gates are resolved. Initial exploratory screenshot showed the existing grass
+checker material and river/sand boundaries before implementation.
+
+GRASS-PBR-001/v1 initial candidate: material compiled; shader asset_compile
+rejected its compiled-only lookup, while on-demand shader compilation succeeded
+with a profile-upgrade warning. Hotloaded Play repeatedly failed with Terrain
+sample memory budget exhausted; save command was rejected because no world was
+loaded. Full editor restart restored the saved world and terrain/collision.
+Shutdown reached Source2Shutdown but left an Error window; the exited-engine
+process was terminated before visible relaunch. New process had no terrain
+startup errors. Initial slope screenshot showed grass and retained checker dirt.
+Close camera(240,0,350),angles(45,45,0),FOV60 faced mostly edited dirt and was not
+a useful grass close-up. User rejected excessive reflectivity; player screenshot
+confirmed severe white glare. Before the next run, remap source roughness to
+0.85..1.0 and require that broad white glare disappear while retaining grass detail.
+This is an appearance correction, not a weakened performance gate.
+
+GRASS-PBR-001/v1 matte correction: material full compile succeeded. Comparable
+player screenshots before/after show the broad white hillside glare removed and
+near grass detail retained. Evidence: ValidationEvidence/Grass/matte-player-view.png.
+Player camera was left under user control throughout the reflectivity comparison;
+scene composition visibly matches but exact camera transform was not logged.
+Engine diagnostics reported only the shader profile-upgrade warning for this edit.
+Normal direction, close detail, repetition and full performance acceptance remain
+for review. Canonical figure-eight not run during active human testing; no commit
+or push of this candidate. Clean restart worked for initial shader; final roughness
+change was hot compiled and is not a second clean-restart qualification.
+
+## GRASS-PARALLAX-001/v1 — bounded depth for human testing
+
+Defined before first implementation run2026-09-15. Use current playable
+basic_example, one local player, seed1337, engine26.09.08b, current saved terrain
+and user lighting. Candidate base is GRASS-PBR-001 matte material. Require zero
+material compile errors, no new loading failure, same grass color/matte response,
+coherent color/normal depth and no obvious UV tearing from normal to grazing
+views. Capture fixed detached camera at(4857.405,5341.681,669.5579),angles(45,0,0),
+FOV60,1280x720; second at same position,angles(15,0,0),same FOV/resolution.
+Restore player camera immediately after inspection. Define2cm visual depth,
+1.4m tiling,12..24 steps per axis, fade2..8m,16x anisotropy before run. Record
+all failures and exact revisions. Human approval, full figure-eight comparison
+and final clean-start qualification remain open; do not commit this candidate
+as accepted. Existing user-edited scene/material work must be retained.
+
+GRASS-PARALLAX-001/v1 first compile attempt failed: engine rejects OutputFormat(BC4).
+Material asset_compile incorrectly returned Success:true while shader warnings
+reported failure; initial after screenshots are invalid evidence of POM. Retain
+the failure. Replace separate BC4 height with the unused B channel of the existing
+BC7 surface map. Recompile and verify the shader log before interpreting images.
+
+GRASS-PARALLAX-001/v1 corrected candidate: shader completed2combos in1869.22ms
+and material was recompiled after shader completion. Engine common Decals.hlsl
+produced dynamic-uniform warnings; shader profile-upgrade warning remained.
+No shader failure after the BC7 packing correction. Fixed45-degree view shows
+visible blade relief versus pre-POM;15-degree view retains matte grass with no
+obvious tearing. Evidence: Grass/parallax-before.png,parallax-close.png and
+parallax-shallow.png. First45-degree camera call threw in its diagnostic readback
+after changing the transform; screenshot composition matches the specified view.
+Second15-degree camera readback succeeded exactly. Player camera restored.
+Static screenshots do not validate temporal shimmer or accurate physical depth.
+Live terrain/collision remained available. Full clean-start and matched canonical
+figure-eight comparison remain pending; no performance acceptance or commit/push.
+Current scene now records LOD0..5 and generator48; older LOD0..6/generator5 baseline
+is not comparable. Player was actively moving during human testing.
+
+## GRASS-TILING-001/v1 — remove visible texture rows
+
+Defined2026-09-15 before candidate run. Current user view shows repeating bands
+across grass beyond the near parallax range. Live camera position
+(5377.459,6192.155,657.656),quaternion(-.04009,.09252,.39553,.9129).
+Fixed comparison camera uses same position,angles(11.574189,46.850896,0),FOV60,
+1600x900. Close control: same position,angles(45,46.850896,0),FOV60,1600x900.
+Scene basic_example, seed1337, generator48, one local player, current saved world,
+LOD0..5, gameplay radius8; preserve user scene lighting and edited terrain.
+Require material/shader compile success, removal of long regularly spaced rows
+without new straight blend seams, retained near blade relief and matte response.
+Before source: .codex/grass-application/voxel_terrain.pre-antitile.shader.
+Use deterministic triangular patch offsets, fourth-power blend weights, common
+coordinates/weights for color, normal, surface and parallax. Patch lattice shares
+the existing physical tile scale. No texture rescale, tint camouflage or geometry
+change. Preserve16x anisotropy and2cm/2..8m parallax settings.
+Full figure-eight comparison and clean-start remain acceptance gates. Record
+human-view evidence separately; no claim that screenshots establish frame pacing.
+
+GRASS-TILING-001/v1 camera is invalid for detached captures: player head/eyes
+occlude the view because the first-person model hide is camera-specific.
+Retain that failure. GRASS-TILING-001/v2 changes only both camera positions to
+(5473.459,6288.155,657.656),96units forward on X/Y to clear the player. All other
+parameters and criteria remain identical. Establish a new before capture.
+
+GRASS-TILING-001/v2 first candidate: shader compiled2combos in1909.80ms with
+existing engine Decals dynamic-uniform warnings. Fixed view shows long rows
+broken up; close view retains relief. Same live player transform sampled before
+and after:347.0 versus312.6FPS; CPU p95/p99 3.87/4.50 versus4.18/4.71ms;
+GPU mean2.45 versus2.81ms. These are rolling observations, not canonical matched
+benchmarks; they flag extra shading cost and do not establish acceptance.
+Next correction retains a continuous zero-support fringe: subtract0.001 from
+fourth-power patch weights, clamp and normalize, then skip zero-weight patches.
+No workload or acceptance criteria changes. Recheck appearance and rolling cost.
+
+GRASS-TILING-001/v2 final candidate: shader completed2combos in1894.48ms.
+Fixed before/after screenshots show repeated rows broken up without new straight
+patch borders; matte response retained. Close control retained blade relief
+before the zero-support optimization; final shallow view verifies that optimization.
+Evidence under ValidationEvidence/Grass: tiling-user-before.png,
+tiling-fixed-before.png,tiling-first-candidate.png,tiling-fixed-after.png,
+tiling-close.png. Final same-player-transform rolling observation:358.2FPS,
+CPU p95/p99 3.77/4.34ms, GPU mean2.41ms, versus initial347FPS,3.87/4.50ms,2.45ms.
+This supports removing the first candidate's observed extra cost; it is not
+a matched figure-eight regression result. Human motion review, canonical route
+and clean restart remain pending. Leave candidate live for review; no commit/push.
+
+## TERRAIN-PBR-001/v1 — five surface materials
+
+Defined before implementation on 2026-09-15. Current visible basic_example,
+engine26.09.08b, seed1337, generator48, saved edited world, one local player,
+LOD0..5, visual radius256, gameplay8, half extents4/8, existing user lighting.
+Pre-change grass-only shader retained in .codex/terrain-textures/before.shader.
+Figure-eight: production run_performance_test speed2500 distance50000 loopCount1,
+current player center(-28889.957,-3921.43066,3371.83911), unchanged runner10m
+clearance and10s stationary. Record resulting actual start and all metrics.
+This new baseline is required because old generator5/LOD6 workload is incompatible.
+Require no unexplained p95/p99 regression exceeding max(5%,0.25ms), no new
+streaming/collision errors or persistent memory/capacity increase beyond added
+texture budget (four sets of three2K BC7 maps, approximately64MiB).
+Visual criteria: all five surfaces load, matched color/normal/AO/roughness/height,
+no straight repeating tile seams or broad wet glare on dry terrain; world-anchored
+scale and smooth material transitions. Near relief fades2..8m,12..24steps.
+Separate close screenshots are required since10m route does not exercise POM.
+Shader hot compile plus clean restart required before full acceptance.
+
+TERRAIN-PBR-001/v1 before run completed route and stationary phase but report save
+failed14:33:02 because a concurrent PowerShell Get-Content held results-v1.jsonl.
+The read has exited. Preserve this failed run; no comparable baseline metrics
+were saved. Subsequent candidate route can establish observations only, not a
+before/after acceptance. Do not read JSONL while a run may append.
+
+TERRAIN-PBR-001/v1 candidate run ce0b46ba8f6c41aba7d9089ba297f538 completed,
+2026-09-15T18:38:15Z; exact record: ValidationEvidence/TerrainTextures/candidate-performance.json.
+Actual start XY(-28890.176,-3921.3972), slight post-route physics drift versus
+requested v1 center: treat this as an observation, not exact comparable acceptance.
+Moving121.947205s:432.15228FPS, frame p95/p99=4.2752/9.2867ms,
+GPU average/p95/p99=1.7760016/2.991438/3.8592815ms; managed allocation5,076,663,352B.
+Stationary10.000356s:273.59174FPS, p95/p99=4.7058/5.3425ms,
+GPU average/p95/p99=3.2489974/3.681898/4.3342113ms; allocation115,323,016B.
+Process peak6,031,167,488B, GPU peak2,154,277,865B. Required collision4913/4913,
+pending0, failures0, runtime/stationary exceptions0. No baseline comparison claim.
+Shader completed2combos in2218.85ms; engine Decals dynamic-uniform warnings retained.
+Material references all15 generated textures;20 provider maps match MD5/size.
+Player-applied screenshot confirms grass and exposed rock. Historical sand and
+snow detached cameras no longer isolate those materials under current generator48
+and player-centered coarse LOD; those captures do not establish close-up quality.
+Saved user world revision1821 checkpoint63 before clean editor restart.
+Pre-restart Sentry marker2026-09-15T16:27:43.108813Z.
+
+2026-09-15 human review requested gray stone. Added luminance-preserving85%
+desaturation to Stone3 color only; validation requires neutral gray appearance
+with retained cracks/detail and unchanged grass/dirt. This small color-only
+correction does not change texture samples or parallax cost.
+
+Fresh editor67916 opened on engine26.09.08e (previous process26.09.08b), C# compile
+succeeded with0errors, saved edited world loaded and playable. Sentry marker
+unchanged2026-09-15T16:27:43.108813Z. Fresh log has unrelated packaged-content
+missing-resource warnings; no terrain shader/parser/load failures. Player screenshot
+dirt-cold-start.png shows textured excavated soil, grass and deeper rock.
+Stone gray correction compiled2combos in2397.86ms. stone-brown.png versus
+stone-gray.png at(-55296,-63500,3500),angles(15,90,0),FOV60,1280x720 confirms
+brown replaced by neutral gray with retained rock detail. Engine and player/LOD
+state changed between these captures; they establish color, not performance.
+Player camera restored. River-bank capture shows only a narrow pale sand strip;
+snow and isolated near sand remain unverified. User is actively moving/editing:
+post-restart saved-world settings differ from scene-file defaults (LandAmount.75,
+MountainAmount.3,ContinentalScale77724.09,MountainRegionScale18681.756,
+LocalLandformScale5232.39). Do not treat earlier scene-file defaults as runtime
+baseline truth. Full matching performance acceptance remains incomplete; leave
+materials live for human review, without committing/pushing as accepted.
+
+## SAND-FINE-001/v1 — remove coarse soil appearance
+
+2026-09-15 pre-change definition: current playable saved world, engine26.09.08e,
+seed1337, existing lighting and material weights. Fixed view camera
+(-230332,173044.234,2172.36304),angles(16.0055809,-130.84169,0),FOV60,1280x720.
+Require no cracked soil clumps/rocks in new sand, fine pale grain, dry response,
+coherent map alignment and retained anti-tiling. Replace Poly Haven sand_01 with
+ambientCG Ground101 five2K maps; authored1m tile (provider dimensions unspecified),
+2mm relief versus12mm. Retain map count/resolution/filtering and bounded POM.
+This is an asset/parameter refinement to the existing unqualified candidate.
+
+SAND-FINE-001/v1 compile succeeded2combos in2153.12ms. Material recompiled after
+shader completion. Source color inspection confirms fine pale grains without
+cracked clumps or rocks. The player moved from sandy area to snowy peak before
+camera coordinates were sampled; fixed capture therefore does not validate sand.
+Retain this limitation: applied live, close sand view pending. Source files and
+SHA256 recorded in terrain/source-manifest.json. Rejected uncommitted sand_01
+assets archived under .codex/terrain-textures/rejected-sand_01, outside shipping
+assets. Texture count/memory unchanged; full candidate qualification still open.
+
+## SNOW-CLEAN-001/v1 — clean fine snow
+
+Defined2026-09-15 before refinement. Live basic_example, saved world, engine26.09.08e,
+current player-centered terrain/lighting. Fixed camera(-230332,173044.234,2172.36328),
+angles(16.0055809,-130.84169,0),FOV60,1280x720. Before capture shows dark embedded
+debris and coarse gray relief. Require mostly clean white snow, fine subdued detail,
+no dark embedded debris, retained terrain shading and no wet glare.
+Replace the matched source set rather than whitening the debris texture. Author1m
+tile and3mm relief (previous2m/25mm); preserve existing anti-tiling and map budget.
+This is a visual parameter/asset refinement to the unqualified PBR candidate.
+
+SNOW-CLEAN-001/v1: shader compiled2combos in2136.75ms; material compiled after
+shader completion. Exact fixed before/after camera confirmed. snow-before.png and
+snow-clean.png in ValidationEvidence/TerrainTextures show removal of embedded
+dark debris/coarse gray marks, mostly clean white response and fine shading.
+Player camera restored. Five2048-square maps verified; ZIP size61,557,689B.
+No added textures or changed ray step count; memory budget unchanged. This visual
+refinement is live; overall PBR candidate performance/cold-start qualification
+remains pending, and it is not committed/pushed as accepted.
+
+## DIRT-COLOR-001/v1 — darker earthy brown
+
+Defined2026-09-15 before color adjustment. Live engine26.09.08e, current saved
+world and lighting. Multiply only Dirt2 linear albedo by(0.55,0.65,0.60), reducing
+brightness and red relative to green while retaining original fine variation.
+No map/normal/parallax/roughness/geometry changes. Require successful shader
+compile and darker less reddish visible soil. Current player is over a beach;
+use excavated soil capture where available, otherwise report visual check pending.
+DIRT-COLOR-001/v1 applied live. Shader hot-compile verification recorded in tool
+output; player view at change time is grass/sand beach and does not isolate dirt.
+No claim of same-camera dirt visual validation or full PBR performance acceptance.
+
+## TERRAIN-DEPTH-AUDIT-001/v1
+
+Defined2026-09-15 before A/B. Current playable world, engine26.09.08e, fixed
+camera(2000,1600,725),angles(35,90,0),FOV60,1280x720. Canonical field height at
+(2000,1600)=666.4289. Capture current renderer, temporarily set existing relief
+fade to zero and compare same frame, restore exact shader. Then temporarily use
+geometric normal at final shading and compare, restoring exact shader afterward.
+These are sequential edits of the shipping shader, with no added hooks/components
+or alternate renderer. Require visible image difference for active features;
+absence must be reported. Preserve current inputs/maps and camera parameters.
+
+TERRAIN-DEPTH-AUDIT-001/v1 outcome: both parallax and normal mapping affect the
+live grass renderer. Same fixed camera,1280x720: disabling POM mean absolute RGB
+change12.0644/255,98.0792%pixels change by>2 in at least one channel,p99channel45.
+Disabling detail normal only: mean1.72544/255,30.0520%pixels>2,p99channel8.
+Restored production shader capture versus original is pixel-identical (mean0),
+ruling out temporal scene changes as the source of these differences.
+Evidence: depth-on.png,depth-off.png,normal-off.png,depth-restored.png under
+ValidationEvidence/TerrainTextures. All three shader states compiled successfully;
+final restoration2combos2177.95ms. Exact pre-audit source restored, player camera
+restored. No shipping code changes from audit. Source confirms POM full<=2m,
+fades to zero8m; grass relief20mm,sand2mm,snow3mm. No geometry/silhouette change
+or parallax self-shadowing exists. Normal-lighting effect is substantially weaker
+than POM in this scene. These measurements prove grass wiring, not visual quality
+or separate sand/snow/stone/dirt A/B checks. No performance acceptance claimed.
+
+## DIRT-RELIEF-001/v1 — research and physical-detail correction
+
+Defined2026-09-15 before runtime comparison. Visible basic_example, engine26.09.08e,
+saved worldf5ce10f3-6d75-428e-b3dd-63dee14891c6, current lighting/configuration.
+Fixed view(2328.35327,1607.02246,769.563171),angles(36.4028816,-11.2596598,0),
+FOV60,1600x900. Capture original, POM-disabled, normal-disabled and restored
+production shader; restore between isolated changes. No alternate renderer/hooks.
+Require both maps independently affect dirt, raised debris appearance improves
+without UV tearing or plastic shine, dark brown preserved. Candidate parameters:
+45mm full height interval instead18mm;1.35x detail slope before normal composition,
+source roughness clamped minimum0.65 rather than remapped into0.98..1.
+Map count,2K BC7 memory and12..24step budget unchanged. Full performance acceptance
+requires matched canonical route and cold-start; visual comparison alone is not it.
+
+Source analysis: normalized dirt height percentiles1/10/50/90/99=
+0.22614/0.30752/0.40766/0.51313/0.63333. Central98%height span0.40719 means
+7.33mm at old18mm scale. Finite-difference least-squares correspondence between
+height gradient and source OpenGL normal slopes suggests32.57/34.15mm full relief
+at2m tile (approximation, not scan calibration). MaterialX scale0.01 has no units;
+not sufficient evidence to call our chosen scale physically measured. Candidate
+45mm is deliberately emphasized; 1.35x matches the approximate source slope ratio.
+
+DIRT-RELIEF-001/v1 detached camera is obstructed by the player's head (first-person
+model hiding is camera-specific). Reject this capture before interpreting maps.
+v2 moves camera to(2392,1607.02246,769.563171),same angles/FOV/resolution and
+criteria, clearing the player. Establish a new unmodified before view.
+
+DIRT-RELIEF-001/v2 invalid: forward camera offset entered edited solid terrain.
+Read-only canonical queries confirm(2328,1543,769) is Air,density7.871048.
+v3 camera(2328,1543,769),same angles/FOV/resolution/criteria. Retain failures.
+
+DIRT-RELIEF-001/v3 Air point is too close to the wall for readable texel detail.
+v4 backs camera to(2264,1555,800),same angles/FOV/resolution/criteria.
+
+DIRT-RELIEF-001/v4 isolated audit: POM-off mean absolute RGB difference4.26597/255,
+65.69535%pixels differ by>2 in any channel; normal-off2.34247/255,38.17521%pixels.
+Restored versus baseline is pixel-identical. Both dirt effects are active.
+Evidence: dirt-final-before.png,dirt-no-pom.png,dirt-no-normal.png,dirt-restored.png
+under ValidationEvidence/TerrainTextures. Shader completion verified before every
+capture (2181.81ms final restoration). Player camera restored after each capture.
+
+## DIRT-RELIEF-PERF-001/v1
+
+Defined2026-09-15 before baseline. Current saved world and engine26.09.08e from
+DIRT-RELIEF-001, one local player, unchanged runtime recipe/settings. Canonical
+visible figure-eight speed2500,distance50000,loopCount1, automatic settle and10s
+stationary window. Baseline source is .codex/terrain-textures/dirt-before.shader;
+candidate changes only dirt relief/normal strength/roughness. Native tool records
+start center, world/configuration and hardware. Exact start centers must match for
+acceptance; preserve failed/mismatched runs. Compare FPS,framep95/p99,GPU time,
+allocation,peak memory,streaming completion and exceptions. Require no material
+unexplained regression (>5% FPS loss or >10% tail/GPU/memory increase), settled
+queues and no terrain errors. Existing broad PBR candidate is not yet accepted.
+
+DIRT-RELIEF-001/v4 candidate45mm/1.35 compiled2483.42ms and renders stronger
+relief, but fixed-angle screenshot exposes stretched horizontal bands through
+small height features. Visual criterion fails; retained dirt-candidate.png.
+Revise shared march sampling to account for ray travel versus texture footprint,
+minimum12..24 angle-based steps, at most96 steps. Retain45mm/1.35 and dry source
+roughness. This costs additional near-field reads; measure canonical route after
+final visual checks. No sample-budget equality claim for revised candidate.
+
+The96-step adaptive candidate compiles2386.57ms. Same view still shows broad
+stretched features, so sample count alone does not cure45mm exaggeration. Retain
+failed screenshot dirt-adaptive.png. Final candidate uses33mm full height range,
+matching approximate source normal slopes, original1.0 normal strength, source
+roughness. Remove unnecessary normal-strength parameter; keep footprint-aware
+bounded sampling to resolve longer rays. Criteria unchanged.
+
+DIRT-RELIEF-PERF-001/v1: baseline9755edaad5424b33b9cc936b836941a9,
+adaptive96 candidate49ac82f281004a36b82743986d48c6f7. Raw JSON saved beside images.
+Before/after moving FPS301.87088/271.09903,framep95=6.2638/6.6854ms,
+p99=11.4711/10.7055ms,GPUavg2.65810/3.20691ms. StationaryFPS293.6881/268.22397,
+GPUavg2.95144/3.39991ms. Both collision4913/4913,zero pending/failures/exceptions.
+Centers differ(2327.7922,1617.7347)/(2340.4023,1634.3674), so not exact comparable.
+Despite that limitation, slower rendering and insufficient visual benefit reject
+adaptive96. Restore original12..24trace; retain only dirt33mm and source roughness.
+Final candidate run uses unchanged route settings, records center; no acceptance
+of the observed regression. New tests do not overwrite the rejected run.
+
+Final33mm/original12..24step image dirt-kept.png inspected after successful
+1911.12ms shader compile. Dark brown retained, stronger embedded surface relief;
+large protruding stones and surface silhouettes are not produced by this scan.
+No visible checker seams or plastic glare in fixed view. Relief stays restrained
+because45mm failed. This is a material improvement, not a claim of photorealism.
+
+DIRT-RELIEF-PERF-001/v1 final6672a7ff4c1548329bfe4ae1f5ff1160,original24steps.
+121.95312s,center(2336.8555,1639.9392),moving298.4615FPS,p95/p99=5.6357/9.7247ms,
+GPUavg/p95/p99=2.95020/4.15373/4.95958ms; allocation3,749,210,280B;
+peak process8,097,087,488B,GPU2,216,027,107B. Stationary269.38657FPS,
+p95/p99=4.8923/5.3865ms,GPUavg3.38567ms. Collision4913/4913,pending0,failures0,
+exceptions0. Raw dirt-performance-final.json retained. Moving FPS recovers near
+baseline, but stationary/GPU differences remain and centers do not match.
+Performance acceptance is INCOMPLETE, not a passed regression check. Final change
+remains a live human-review candidate; no commit/push until qualified. Save before
+cold restart completed worldrevision2023/checkpoint72 at15:30:19.
+
+Final cold-start check: clean close PID67916, visible restart PID46284 on
+engine26.09.08e; scene basic_example, play resumed. Saved worldrevision2023 loaded
+at15:32:25. Sentry marker unchanged2026-09-15T16:27:43.108813Z. No error console
+entries through cursor57; final dirt camera renders texture and relief after
+restart (dirt-cold.png). Some stretched texture features remain on oblique
+parts; no claim that all grazing artifacts or realism goals are solved. Player
+camera restored. Full exact matched performance acceptance remains incomplete.
+
+## DIRT-BLUR-001/v1
+Defined before diagnostic2026-09-15. Live player view,1600x900,engine26.09.08e.
+Capture reported moving center stripe, temporarily zero only POM strength in
+shipping shader, inspect disappearance of stripe, restore exact shader. This
+is qualitative diagnosis; player movement means pixel comparisons are not claimed.
+No permanent source change or performance acceptance from this isolated test.
+
+DIRT-BLUR-001/v1 outcome: screenshot blur-current.png shows vertical band just
+right of center with lateral stretching. Disabling only POM removes that band
+in blur-no-pom.png while normal detail remains. Source restored byte-identically
+(SHA256 FDCE7EECC8156DBDA8D89675D48DDA7A3758C0DC43998718F87A4C663D2DA731);
+restoration compiled2combos2073.58ms. Confirms POM involvement, not exact internal
+mechanism. No lasting shader edit or claim of fix; diagnostic evidence only.
+
+## TERRAIN-BLUR-FIX-001/v1
+
+Defined2026-09-15 before candidate. Engine26.09.08e,current playable world,
+unchanged lighting/config. Previous dirt camera no longer reproduces same terrain;
+current user view is stone and uses same shared POM. Fixed camera
+(15031.3,38049.39,-82.3422),FOV60,1600x900; anglesA(45.9,16.3,0),
+B(45.9,-15,0),C(65,16.3,0). Capture original and candidate at each position.
+Require removal of camera-oriented stretched band, retained height/normal detail,
+no new checker seams. Include same-view POM-off comparison to prove effect remains.
+No world edits/test hooks. Test candidate derives parallax ray from actual surface
+normal instead of separate axis-plane view denominators. Retain12..24 step cap,
+all maps and material parameters. Confirm shader compile and clean restart.
+Canonical performance before/after speed2500,distance50000,loopCount1; native
+recorded centers/config must match for full acceptance. Require no exceptions,
+settled collision/streaming,no unexplained>5%FPS or>10%GPU/tail/memory regression.
+Retain mismatched/failed runs as qualified evidence, not acceptance.
+Supplemental close view D: same XY as A,z=-106.3422,angles(45.9,16.3,0).
+Define before capture; use to expose narrow streak more clearly, same criteria.
+
+Supplemental E uses original user camera(15031.3,38049.39,-122.3422),
+angles(45.9,16.3,0). Player is now elsewhere after route, allowing detached
+capture without head obstruction. Compare no-POM/original/corrected before
+interpreting this close view; preserve A-D supplemental evidence.
+
+TERRAIN-BLUR-FIX-001/v1: candidate compiled2combos2139.17ms; E comparison final
+restore2152.78ms. A-D fixed-angle stone images show cleaner small sloped details;
+no new hard patch line observed. E original/candidate mean RGB difference2.96674,
+49.46715%pixels differ>2 in a channel. E candidate/no-POM mean3.10712,
+50.11722%pixels differ>2: POM remains active. Images blur-[A-E]-before/after and
+blur-E-off.png retained. User moved from earlier dirt location; this run checks
+shared correction on stone, not an identical reproduction of the prior dirt view.
+No claim that a still image alone proves every camera-motion edge case.
+TERRAIN-BLUR-FIX-001/v1 performance before5193c6db824a40768e9a3a3cea7c528c,
+after8837f5ff6c3d40978c5d84e64b06c2fc; raw blur-performance-before/after.json.
+MovingFPS271.61633/287.80563,framep95=6.6068/6.1339ms,p99=10.1702/9.8124ms,
+GPUavg3.214154/3.052993ms. StationaryFPS202.22356/190.14383,
+GPUavg4.60160/4.91293ms,p99frame7.0742/7.4382ms. Allocations3,123,492,512/
+3,511,716,464B; processpeak5,987,856,384/7,261,450,240B,GPUpeak2,318,893,126/
+2,319,499,334B. Both collision4913/4913,pending0,failures0,exceptions0.
+Start centers(16212.2295,38364.2)/(16212.243,38364.188) differ slightly. Moving
+results improve, stationaryFPS decreases5.97%,processpeak increases21.27% during
+session with shader hotcompiles/captures; cause not isolated. Full performance
+acceptance remains incomplete; do not claim regression-free or commit/push.
+Fix is live for human validation of camera-moving band; no workload weakening.
+Cold start: clean close PID46284,visible restart PID28696,engine26.09.08e.
+Worldrevision2168 restored; basic_example play resumes. Sentry marker unchanged
+2026-09-15T16:27:43.108813Z. No error console entries through cursor55. Captured
+main playable terrain rendering (blur-fix-cold.png); shader SHA256
+23469486F30E5BE10307B529929A679E7F30743E7D072280FAD969F0C205D01D.
+No debug overrides remain. Fix applied, cold-load check passed; exact matched
+performance acceptance and exhaustive moving-camera coverage remain open.
 
 ## TERRAIN-SAMPLING-PERF-001/v1
 

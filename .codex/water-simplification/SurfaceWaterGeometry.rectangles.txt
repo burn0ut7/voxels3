@@ -1,0 +1,56 @@
+using System;
+using System.Collections.Generic;
+
+/// <summary>Merges generated water coverage into coplanar rectangles inside each chunk.</summary>
+internal static class SurfaceWaterGeometry
+{
+	[System.Runtime.InteropServices.StructLayout( System.Runtime.InteropServices.LayoutKind.Sequential )]
+	internal struct WaterVertex
+	{
+		[VertexLayout.Position] public Vector3 Position;
+		public WaterVertex( Vector3 position ) { Position = position; }
+	}
+	internal sealed record Chunk( GpuSdfDescriptor Descriptor, GeneratedWaterCells Cells, WaterVertex[] Vertices, double Milliseconds )
+	{
+		public long CompletedTimestamp { get; } = System.Diagnostics.Stopwatch.GetTimestamp();
+	}
+
+	public static WaterVertex[] Build( GeneratedWaterCells cells )
+	{
+		var vertices = new List<WaterVertex>();
+		const int size = GeneratedWaterCells.CellsPerAxis;
+		var origin = cells.Bounds.Minimum;
+		origin.z = cells.SeaLevel;
+		Span<bool> coverage = stackalloc bool[size * size];
+		cells.SurfaceCoverage.AsSpan().CopyTo( coverage );
+		for ( var y = 0; y < size; y++ )
+		for ( var x = 0; x < size; x++ )
+		{
+			if ( !coverage[x + size * y] ) continue;
+			var endX = x + 1;
+			while ( endX < size && coverage[endX + size * y] ) endX++;
+			var endY = y + 1;
+			while ( endY < size )
+			{
+				var complete = true;
+				for ( var column = x; column < endX; column++ )
+					if ( !coverage[column + size * endY] ) { complete = false; break; }
+				if ( !complete ) break;
+				endY++;
+			}
+			for ( var row = y; row < endY; row++ )
+			for ( var column = x; column < endX; column++ ) coverage[column + size * row] = false;
+			var first = origin + new Vector3( x * cells.CellSize, y * cells.CellSize, 0f );
+			var right = origin + new Vector3( endX * cells.CellSize, y * cells.CellSize, 0f );
+			var diagonal = origin + new Vector3( endX * cells.CellSize, endY * cells.CellSize, 0f );
+			var up = origin + new Vector3( x * cells.CellSize, endY * cells.CellSize, 0f );
+			vertices.Add( new WaterVertex( first ) );
+			vertices.Add( new WaterVertex( right ) );
+			vertices.Add( new WaterVertex( diagonal ) );
+			vertices.Add( new WaterVertex( first ) );
+			vertices.Add( new WaterVertex( diagonal ) );
+			vertices.Add( new WaterVertex( up ) );
+		}
+		return vertices.ToArray();
+	}
+}

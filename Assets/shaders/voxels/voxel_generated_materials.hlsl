@@ -2,10 +2,14 @@
 // stores packed weights beside its edge data. Emission/drawing only consume data.
 float2 VoxelGeneratedLayers < Attribute( "VoxelGeneratedLayers" ); >;
 float4 VoxelGeneratedMountain < Attribute( "VoxelGeneratedMountain" ); >;
+#include "shaders/voxels/voxel_material_regions.hlsl"
 
-float4 GenerateVoxelMaterialColumn( float2 position, float4 terrain, float4 scales, float4 shape )
+float4 GenerateVoxelMaterialColumn( float2 position, float4 terrain, float4 scales, float4 shape, out float sandLayerDepth )
 {
-	float3 landform = SampleVoxelLandform( position, terrain, scales, shape.x, shape.y );
+	float3 landform = SampleVoxelNaturalLandform( position, terrain, scales, shape.x, shape.y );
+	float naturalHeight = landform.x;
+	landform.x = SampleVoxelRiver( position, naturalHeight, shape.y ).x;
+	sandLayerDepth = GenerateVoxelSandLayerDepth( position, landform.x, naturalHeight, terrain, scales, shape );
 	float baseMaterial = landform.y >= VoxelGeneratedMountain.z ? 2.0 : 1.0;
 	float topMaterial = baseMaterial;
 	if ( landform.x >= shape.y )
@@ -39,12 +43,15 @@ float4 GenerateVoxelMaterialWeights( float3 position, float4 terrain, float4 sca
 	float2 origin = floor( lattice );
 	float2 fractionXY = lattice - origin;
 	float4 columns[4];
+	float4 sandLayerDepths;
 	float4 columnWeights;
 	float height = 0.0;
 	for ( uint index = 0u; index < 4u; index++ )
 	{
 		float2 offset = float2( index & 1u, (index >> 1u) & 1u );
-		columns[index] = GenerateVoxelMaterialColumn( (origin + offset) * VoxelGeneratedLayers.x, terrain, scales, shape );
+		float sandLayerDepth;
+		columns[index] = GenerateVoxelMaterialColumn( (origin + offset) * VoxelGeneratedLayers.x, terrain, scales, shape, sandLayerDepth );
+		sandLayerDepths[index] = sandLayerDepth;
 		float2 contribution = lerp( 1.0 - fractionXY, fractionXY, offset );
 		columnWeights[index] = contribution.x * contribution.y;
 		height += columns[index].x * columnWeights[index];
@@ -54,6 +61,7 @@ float4 GenerateVoxelMaterialWeights( float3 position, float4 terrain, float4 sca
 	float node = floor( coordinate );
 	float fraction = coordinate - node;
 	float4 weights = float4( 0.0, 0.0, 0.0, 0.0 );
+	float sand = 0.0;
 	for ( uint index = 0u; index < 4u; index++ )
 	{
 		float4 column = columns[index];
@@ -61,17 +69,39 @@ float4 GenerateVoxelMaterialWeights( float3 position, float4 terrain, float4 sca
 		{
 			float depth = column.x - (node + (float)z) * VoxelGeneratedLayers.x;
 			if ( depth < 0.0 ) continue;
+			float contribution = columnWeights[index] * (z == 0u ? 1.0 - fraction : fraction);
+			float2 offset = float2( index & 1u, (index >> 1u) & 1u );
+			float3 nodePosition = float3( (origin + offset) * VoxelGeneratedLayers.x, (node + (float)z) * VoxelGeneratedLayers.x );
+			if ( GenerateVoxelSand( nodePosition, depth, sandLayerDepths[index], (uint)(int)terrain.x ) )
+			{
+				sand += contribution;
+				continue;
+			}
 			uint material = depth < VoxelGeneratedLayers.x ? (uint)column.z :
 				(depth < VoxelGeneratedLayers.y ? (uint)column.w : 2u);
-			weights[material] += columnWeights[index] * (z == 0u ? 1.0 - fraction : fraction);
+			weights[material] += contribution;
 		}
 	}
-	float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
+	float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ) + sand;
 	return total > 0.000001 ? weights / total : float4( 0.0, 1.0, 0.0, 0.0 );
 }
 
 uint PackGeneratedVoxelWeights( float4 weights )
 {
-	uint4 packed = (uint4)round( saturate( weights ) * 255.0 );
+	// Fifth weight (sand) is the remainder. Preserve the rounded total so
+	// quantization cannot introduce sand into a surface containing none.
+	float4 scaled = saturate( weights ) * 255.0;
+	int4 rounded = (int4)round( scaled );
+	uint largest = 0u;
+	for ( uint index = 1u; index < 4u; index++ )
+	{
+		if ( scaled[index] > scaled[largest] )
+		{
+			largest = index;
+		}
+	}
+	int target = (int)round( min( dot( scaled, float4( 1.0, 1.0, 1.0, 1.0 ) ), 255.0 ) );
+	rounded[largest] += target - (rounded.x + rounded.y + rounded.z + rounded.w);
+	uint4 packed = (uint4)rounded;
 	return packed.x | (packed.y << 8u) | (packed.z << 16u) | (packed.w << 24u);
 }

@@ -9,14 +9,14 @@ using System.Threading;
 /// </summary>
 internal static class RiverNetwork
 {
-	public const int CurrentVersion = 13;
+	public const int CurrentVersion = 14;
 	public const int NodesPerPatch = 8;
 	public const int RiverCatchmentNodes = 8;
 	public const int MinimumCourseEdges = 16;
 	public const float NodeSpacing = 2048f;
 	public const float PatchSize = NodesPerPatch * NodeSpacing;
 	public const float HalfWidth = 192f;
-	// Local half-width deepens the bed gently; bounds use the capped maximum.
+	// Full-width profile limits; narrow streams scale the entire depth below.
 	public const float MinimumDepth = 24f;
 	public const float BaseDepth = 48f;
 	public const float MaximumDepth = 216f;
@@ -137,7 +137,10 @@ internal static class RiverNetwork
 			var variation = 1f + 0.65f * TerrainNoise.SimplexNoise3D(
 				new Vector3( position.x, position.y, 0f ), NodeSpacing * 2f,
 				unchecked((uint)_settings.WorldSeed) ^ 0xD1B54A35u );
-			return Math.Clamp( (BaseDepth + radius * DepthPerRadius) * variation, MinimumDepth, MaximumDepth );
+			// Preserve broad-river pools while shrinking the base depth and its floor
+			// with narrow channels, so a tiny stream cannot inherit a deep trench.
+			var widthScale = Math.Clamp( radius / HalfWidth, 0f, 1f );
+			return Math.Clamp( (BaseDepth + radius * DepthPerRadius) * variation, MinimumDepth, MaximumDepth ) * widthScale;
 		}
 
 		private bool HasCourse( NodeId id )

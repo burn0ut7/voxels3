@@ -292,6 +292,15 @@ for adopted/deferred decisions and validation status.
 
 ## Ground Material Shading
 
+
+
+| Reference | Use in Voxels3 | Transfer limits |
+| --- | --- | --- |
+| [Tatarchuk: Practical Parallax Occlusion Mapping](https://advances.realtimerendering.com/s2006/Tatarchuk-POM.pdf) | Bounded height-field tracing, piecewise-linear intersection refinement, angle-dependent samples and transition to normal mapping. Current adoption is recorded in Architecture/VoxelMaterials.md. | Planar material technique applied per triplanar projection; does not establish s&box texture formats, physical height amplitude, standing grass, collision or measured performance. Our metre-based fade is a project choice, not the paper's mip-based LOD formula. |
+| [Poly Haven texture standards](https://docs.polyhaven.com/en/technical-standards/textures) and [scan workflow](https://blog.polyhaven.com/photoscanned-texture-creation-process/) | Matched color, OpenGL normal, height and AO from one surface; motivates consistent map coordinates and scale for dirt. Adopted in Architecture/VoxelMaterials.md. | Normalized displacement does not by itself specify physical relief. MaterialX scale without units does not calibrate our metre amplitude; source appearance still limits visible protruding stones. |
+
+| [Mikkelsen: Practical Real-Time Hex-Tiling](https://jcgt.org/published/0011/03/05/) | Randomized overlapping patches, sharpened continuous weights and explicit texture gradients to remove visible grass repetition. | Current grass uses translated patches only; it does not implement the full paper's rotations, derivative-normal formulation or histogram treatment. Texture lookup cost requires measurement, especially with POM. |
+
 ### Terrain texturing comparison (2026-09-17)
 
 The [source comparison and experiment ranking](Research/TerrainTexturingComparison.md)

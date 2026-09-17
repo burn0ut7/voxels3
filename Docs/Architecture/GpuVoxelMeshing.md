@@ -52,6 +52,15 @@ while reducing geometry arenas and draw submissions.
 
 ## Ownership and Data Flow
 
+Local water-edit visibility correction (2026-09-15, runtime qualification pending):
+content readiness is monotonic for a resident mesh. Rebinding an unchanged mesh
+to a newer regional edit revision must not withdraw its existing draw while
+water regenerates; the manager retains compatible previous water coverage.
+A replacement creates a new resident and must establish its own content readiness.
+Active-set removal, retirement and the network presentation barrier still hide
+geometry normally. This changes no geometry, allocation or edit-group dependencies.
+See WATER-EDIT-FLICKER-001 in the validation ledger for the incomplete checks.
+
 Identical saved-state restore correction: a replacement with zero
 changed samples may retain already published geometry that matches the source
 field. Rebase only its derived descriptor to the new local epoch and regional

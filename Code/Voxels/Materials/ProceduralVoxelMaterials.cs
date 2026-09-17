@@ -38,6 +38,11 @@ internal static class ProceduralVoxelMaterials
 			return true;
 		}
 		var depth = height - position.z;
+		if ( ProceduralSand.Contains( position, depth, height, landform.Height, field.Settings ) )
+		{
+			materialId = VoxelMaterials.Sand;
+			return true;
+		}
 		if ( depth >= SoilDepth )
 		{
 			materialId = VoxelMaterials.Stone;

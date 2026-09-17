@@ -155,7 +155,9 @@ internal sealed class GpuTerrainScratch : IDisposable
 			minimum = new Vector3( MathF.Min( minimum.x, low.x ), MathF.Min( minimum.y, low.y ), MathF.Min( minimum.z, low.z ) );
 			maximum = new Vector3( MathF.Max( maximum.x, high.x ), MathF.Max( maximum.y, high.y ), MathF.Max( maximum.z, high.z ) );
 		}
-		var bounds = new SdfWorldAabb( minimum, maximum );
+		// Dry sand probes neighboring water on the canonical base field.
+		var materialHalo = new Vector3( ProceduralSand.OceanReach, ProceduralSand.OceanReach, 0f );
+		var bounds = new SdfWorldAabb( minimum - materialHalo, maximum + materialHalo );
 		var cancellation = _riverCancellation.Token;
 		_riverPreparation = _riverAtlas.Prepare( settings, bounds, cancellation );
 		submissionMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime( start ).TotalMilliseconds;

@@ -1,7 +1,7 @@
 # Grass texture sources
 
-These are source texture candidates, not yet bound to the voxel terrain shader.
-The playable terrain still uses its existing palette/checker shading.
+Grass004 is bound by materials/voxels/voxel_terrain.vmat as a human-test candidate.
+Leafy Grass remains an unused alternative. Full runtime acceptance is pending.
 
 ## Dense grass: ambientCG Grass 004
 
@@ -39,12 +39,23 @@ canonical terrain SDF or collision. No height amplitude is assumed here.
 These sets support tiled ground shading. Texture maps alone do not provide
 standing grass silhouettes. Near-camera blades require a separate foliage slice.
 
-## Inspection
+## Initial asset inspection (before integration)
 
 Downloaded 2026-09-15. Both color maps were visually inspected. Their intended
 appearances differ: dense green blades versus leafy, patchy ground. Neither
 material has been accepted in the playable world; tiling seams, normal direction,
 physical scale, grazing-angle appearance and performance remain unverified.
-No runtime source, scene or shader references were changed in this asset slice,
+No runtime source, scene or shader references were changed during acquisition,
 so no figure-eight run was performed. Files are supplied for material selection
 and subsequent integration. No AI-generated images were used.
+
+## Current human-test integration
+
+Grass004 now supplies color, OpenGL normals, roughness and AO to the terrain
+material. Dry-grass roughness is remapped to0.85..1.0 after the user rejected
+excessive glare. The current screenshot and open validation items are recorded
+in Docs/ValidationResults.md under GRASS-PBR-001/v1. Full acceptance is pending.
+
+Grass now uses deterministic overlapping patch offsets to break up repeating
+texture rows. The same patch coordinates drive all PBR maps and parallax.
+See GRASS-TILING-001/v2 for screenshots, observed cost and remaining qualification.

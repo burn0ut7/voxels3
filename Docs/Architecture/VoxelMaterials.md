@@ -1,5 +1,8 @@
 # Voxel Materials
 
+The [sand recipe and seeded material regions](ProceduralSand.md) describe the
+current sand slice, its five-weight rendering contract, and pending qualification.
+
 ## Dirt tool slice (2026-09-10, qualification in progress)
 
 Right-click/build now authors Dirt2 in the same immutable TerrainFieldPage as its
@@ -43,7 +46,7 @@ The canonical density/correction field still owns solid/air geometry; materials
 do not introduce an occupancy grid.
 
 The catalog owns stable unsigned 16-bit IDs, names and two checker colors per type:
-Air 0, Grass 1, Dirt 2, Stone 3, Water 4, Snow 5. Definitions are immutable indexed data,
+Air 0, Grass 1, Dirt 2, Stone 3, Water 4, Snow 5, Sand 6. Definitions are immutable indexed data,
 with constant-time lookup and no subclass, component or shader per type. Explicit
 IDs match their append-only catalog slots; unknown IDs return a named magenta
 fallback. The water candidate now assigns Water4 in the static surface-water
@@ -51,6 +54,8 @@ domain. See [surface water](SurfaceWater.md) for implementation and qualificatio
 No water collision or flow is implemented.
 
 Procedural assignment consumes immutable field/settings and a world lattice node.
+The sand recipe linked above precedes the retained strata rules below and adds
+patchy beaches and sparse river sand among the normal grassy banks.
 Negative/zero density is solid. Depth is measured vertically from the canonical
 unedited landform height. Non-mountain columns have one16-unit grass layer,
 eight dirt layers, then stone. Mountain-dominant columns assign Stone3 to solid
@@ -73,8 +78,8 @@ same field contract, not renderer-owned edits.
 
 ## Derived rendering and limits
 
-One palette buffer contains two float4 colors per registered ID (192 logical bytes
-for these six entries). Its owner uploads it on the engine thread and disposes it
+One palette buffer contains two float4 colors per registered ID (224 logical bytes
+for these seven entries). Its owner uploads it on the engine thread and disposes it
 with the mesher. No per-frame palette allocations or per-type draws are introduced.
 Rules, IDs and scale come from the CPU module. The RIVERS-016 prototype generates
 material cell data beside solid density, replacing procedural draw-time lookups.
@@ -85,7 +90,8 @@ eight nodes. Runs describe the16-unit top layer,144-unit soil envelope,
 then stone. Snow, slope eligibility, river bed and submerged classification are
 evaluated during generation with the existing constants and recipe.
 
-Generation packs four normalized weights beside the resolved edge position in the
+Generation packs four explicit weights (with Sand as their remainder to one)
+beside the resolved edge position in the
 existing edge buffer's second plane. Emission copies those weights to Color32 alongside position
 and normal. The shared packed vertex layout is28bytes, owned by
 GpuVoxelMesher.TerrainVertexBytes. Drawing interpolates weights and reads the
@@ -206,6 +212,211 @@ natural surface and material growth over player additions are not modeled. The
 current renderer still approximates the procedural material field on edited
 geometry as documented above; it does not sample the edited density in the pixel
 shader. This limits claims about grass on newly sculpted or hidden surfaces.
+
+## Grass PBR candidate (2026-09-15, human testing)
+
+The terrain mesher now loads materials/voxels/voxel_terrain.vmat, using the same
+voxel terrain shader, vertex weights, arena draws and canonical material IDs.
+Grass weight (packed channel X) replaces its former checker palette contribution
+with ambientCG Grass004. Other material weights retain their checker colors.
+The material owns five source maps and compiles them into three BC7 textures:
+sRGB color, linear OpenGL normal, and packed linear roughness/AO/height.
+The 2048-square maps with full mip chains budget approximately16MiB in total
+before driver overhead. No new per-frame CPU allocation or draw is introduced;
+fragment work adds nine filtered samples and triplanar blending. Runtime costs
+remain unmeasured and this is not performance acceptance.
+
+The shader owns the single1.4-metre tile scale, converted to inches with0.0254.
+World-coordinate triplanar projection uses fourth-power absolute normal weights;
+whiteout detail-normal blending retains the geometric normal for flat texels.
+Normal orientation and grass transitions need human review. There is no mesh
+or SDF displacement, foliage geometry, material reclassification, save-format
+change or collision change. A single top projection was rejected because steep
+surfaces stretch; separate grass geometry remains a later scope. Source/license
+notes are in Assets/textures/grass/README.md. GRASS-PBR-001/v1 records validation.
+
+Human review rejected the source map's glossy response. Grass roughness now maps
+to0.85..1.0 before blending with other materials, preserving texture variation
+while representing dry ground cover. A same-composition screenshot confirmed
+removal of the broad white glare.
+
+## Grass parallax candidate (2026-09-15)
+
+Requested extension to the current human-test grass material. Adopt bounded
+height-field ray marching with linear intersection refinement and explicit
+texture gradients. Existing source displacement occupies the linear B channel of the BC7 surface
+texture. Source height amplitude is unspecified; the authored presentation depth
+is2cm, not a measured scan depth. All color/normal/roughness/AO samples consume
+the same displaced coordinates per triplanar projection. Keep the dry0.85..1.0
+roughness range. Filtering increases to16x anisotropy.
+
+Use12..24 height steps according to angle, one initial height sample, and fade
+relief from full at2m to zero at8m and at projection grazing/back-facing angles.
+Skip ray marching outside its contribution range. Worst case adds75 height
+samples for three projections; far grass retains its nine material samples.
+This is a bounded cost, not evidence of acceptable performance. Height uses the previously unused B channel, so the three-texture memory budget
+remains approximately16MiB before driver overhead.
+
+No extra CPU work, world state, draw calls, collision or pixel-depth writes.
+POM approximates visual recesses; it does not create standing blades, silhouettes
+or real self-shadowing. Single-sample parallax was rejected because it lacks
+inter-blade view occlusion. Unbounded marching and full-distance POM were rejected
+for cost. Geometry/virtual texturing are not part of this material slice.
+Reference: Natalya Tatarchuk, Practical Parallax Occlusion Mapping (SIGGRAPH2006):
+https://advances.realtimerendering.com/s2006/Tatarchuk-POM.pdf
+Transfer limits: planar height-field technique applied per triplanar projection;
+it does not establish s&box compatibility, measured speed or exact physical depth.
+
+## Grass repetition correction candidate (2026-09-15)
+
+The direct repeated mapping produced visible long rows in the user's grass
+view. Replace it with one deterministic triangular patch sampler per projection:
+three hashed fractional offsets, normalized fourth-power barycentric weights,
+and explicit original UV gradients. Translation preserves the normal-map axes;
+no per-patch rotation is used. Color, normal, surface and bounded parallax share
+each patch's UV. Grass scale, dry roughness, height amplitude and source images
+remain unchanged. Drop vanishing triplanar contributions continuously before
+sampling to avoid paying for effectively invisible planes.
+
+Inputs remain world position, geometric normal, canonical material weight and
+three compiled PBR textures. Outputs remain derived shading only. No CPU state,
+draw calls, texture allocations or terrain edits. Per contributing projection,
+base sample count rises from3 to9 and worst-case height reads from25 to75.
+Most flat surfaces have one contributing projection; worst-case3projection
+cost remains27 base plus225 height reads. Costs need measured qualification.
+Simple hue modulation was rejected because it preserves repeating blade shapes;
+UV warping stretches blade detail. Full histogram-preserving transforms are not
+adopted; sharpened weights limit blending blur without new LUT assets.
+Reference: Mikkelsen, Practical Real-Time Hex-Tiling,
+https://jcgt.org/published/0011/03/05/. This is a simplified translated-patch
+adaptation, not a claim to implement the paper's full surface-gradient or
+histogram algorithms. Runtime evidence belongs in GRASS-TILING-001/v1.
+
+The final patch weights have a0.001 zero-support fringe before normalization.
+This makes discarded contributions reach zero continuously and permits skipping
+those texture/parallax reads. A matching0.001 fringe on fourth-power axis weights
+skips vanishing triplanar projections. These are shading support thresholds,
+not changes to canonical terrain material identity or mesh visibility.
+
+## Five terrain surfaces (2026-09-15 candidate)
+
+Terrain presentation now extends the grass path to Dirt2, Stone3, Snow5 and
+implicit Sand6 weights. One shared sampler implements world-space triplanar
+mapping, continuous triangular patch offsets, matched PBR maps and bounded POM.
+No material classification, SDF, collision, replication or mesh changes are needed.
+Source maps are owned by voxel_terrain.vmat; shader call sites own metre scale,
+authored relief and dry roughness range. Gradients are evaluated before divergent
+material branches. Zero-weight materials and projections skip texture work.
+Texture2D helper parameters follow installed common/utils/triplanar.hlsl evidence.
+The superseded terrain checker shading is removed. Existing CPU palette bindings
+remain untouched in this shader-only slice. Grass mapping is preserved.
+
+| Surface | Source | Tile metres | Authored relief metres | Roughness |
+| --- | --- | --- | --- | --- |
+| Grass | ambientCG Grass004 | 1.4 | 0.020 | 0.85..1 |
+| Dirt | Poly Haven dirt | 2 | 0.033 | source, minimum0.65 |
+| Stone | Poly Haven rock_face | 2.38 | 0.040 | 0.65..1 |
+| Sand | ambientCG Ground101 | 1 | 0.002 | 0.85..1 |
+| Snow | ambientCG Snow007A | 1 | 0.003 | 0.80..1 |
+
+Relief amplitude is art direction, not measured scan depth. Each2K source set
+compiles into three BC7 textures (sRGB color, linear OpenGL normal, linear packed
+roughness/AO/height). Five sets budget approximately80MiB with mipmaps,64MiB more
+than grass alone, before driver overhead. One shared16x anisotropic sampler.
+POM retains12..24steps,2..8m distance fade and grazing fade. At most five materials
+can contribute; each retains the existing three planes/three stochastic patches.
+Only contributing materials execute samples. Blends cost more than pure regions;
+TERRAIN-PBR-001/v1 must qualify the change before performance acceptance.
+No mesh displacement, pixel-depth writes, parallax shadows or snow scattering are
+claimed. Generalizing the existing path avoids five independent algorithms;
+texture arrays and extra draw passes were unnecessary for this slice.
+
+Stone human-review correction: source reads too brown. Preserve linear luminance
+with Rec.709 weights and retain15% chroma in the Stone3 contribution only.
+Normal, relief, roughness and other materials retain their settings. Source maps
+remain unmodified; color correction belongs to the terrain shader.
+
+## Fine sand correction
+
+Sand6 now uses ambientCG Ground101 fine pale sand, replacing clumpy sand_01.
+Provider physical dimensions are unspecified:1m tiling is authored, with2mm
+visual relief. Five matched maps retain normal detail, dry0.85..1roughness,
+stochastic tiling and existing POM fades/step bounds. Texture count and2K BC7
+memory budget are unchanged. The previous sand_01 set is superseded.
+
+## Clean snow correction
+
+Snow5 now uses ambientCG Snow007A clean smooth snow, replacing debris-marked
+Poly Haven snow_02. Tile1m and relief3mm are authored (provider dimensions absent),
+versus former2m/25mm. Matched color/normal/roughness/AO/height, anti-tiling, dry
+roughness and mip/filter budgets remain. Same-camera screenshot verifies mostly
+white appearance with subtle grain and removal of embedded dark gray debris.
+
+Dirt color human-review adjustment: multiply Dirt2 linear albedo by
+(0.55,0.65,0.60) for darker, less reddish earthy brown. Source textures and all
+surface-detail settings remain unchanged. This tint belongs only to Dirt2.
+
+
+## Dirt relief calibration candidate (2026-09-15)
+
+DIRT-RELIEF-001 independently disables dirt POM and normals through the production
+shader; both affect the rendered image, and restoration is pixel-identical.
+The original18mm height interval compressed the central98%of source heights into
+7.33mm. The33mm candidate gives13.44mm for that interval and approximately matches
+source normal slopes at2m tiling. This is an estimate, not measured scan depth.
+An exaggerated45mm/1.35-normal candidate produced objectionable stretching and
+was rejected. Original source normals and dark brown tint are retained.
+
+Source roughness is already0.887..0.987. The old0.8..1 remap compressed it to
+0.977..0.997, suppressing variation. Use the source with a0.65 safety floor;
+this remains a dry, rough dielectric. Height, normal, AO and color still share
+one transformed UV; linear data maps and sRGB color retain their proper reads.
+
+Following Tatarchuk's POM treatment, a footprint-aware12..96step trace was
+implemented and measured. It did not sufficiently improve the exaggerated scan
+and coincided with higher GPU cost in the canonical route. It was rejected;
+the shared12..24step trace is restored. Source maps, memory, draw calls, geometry,
+gradients and existing fades are unchanged. The final shipping diff for this
+correction changes only dirt amplitude and roughness. See failed evidence in
+the ledger; no performance equivalence or full acceptance is claimed.
+
+Poly Haven's texture standards and scan workflow motivate matched maps and
+consistent scale. We retain the scanned embedded soil/debris appearance; normal
+mapping controls lighting, POM controls apparent depth. POM self-shadowing is a
+separate light-ray calculation and remains unimplemented. Actual protruding
+stone silhouettes require geometry and are outside this material correction.
+See the research library and validation ledger for evidence and pending acceptance.
+
+## Surface-tangent parallax correction (2026-09-15)
+
+The previous triplanar POM treated each world-axis projection as a separate
+geometric surface: its denominator was signed view.x/y/z. On sloped ground, a
+projection could approach grazing while the real surface remained front-facing.
+The projection's denominator clamp and fade then stretched and collapsed detail
+in a band tied to camera direction. Increasing sampling did not address this
+coordinate mismatch.
+
+SampleTerrain now derives normalView=dot(geometricNormal,view) and
+worldTangentView=view-geometricNormal*normalView. Each texture plane receives the
+corresponding two components of this tangent vector plus the same normalView.
+The existing POM denominator, grazing fade and step selection therefore refer to
+the real surface. This reduces to the old mapping on axis-aligned surfaces and
+has zero lateral offset looking straight along the actual normal. The same UV
+intersection still drives color, normal, roughness and AO in each patch.
+
+Keep12..24steps,33mm dirt relief,existing material colors/roughness,stochastic
+patch blending and2..8m distance fade. No new textures,draws,mesh/collision changes
+or test hooks. This is a local planar approximation on curved terrain, not
+geometric displacement or self-shadowing. TERRAIN-BLUR-FIX-001 owns visual and
+performance evidence. Full acceptance still requires a comparable canonical run.
+## Parallax disabled (2026-09-16)
+
+User requested complete terrain parallax removal after the sampling investigation.
+The shared shader now samples undisplaced stochastic UVs for all five surfaces.
+Height ray marching, camera-dependent relief, and relief parameters are removed;
+color, normal, roughness, occlusion, triplanar blending and 16x filtering remain.
+Packed height channels are retained as asset data but are not read by shading.
+This supersedes the earlier parallax candidates and surface-tangent correction.
 
 ## Distance shading and channel packing (2026-09-16)
 

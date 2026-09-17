@@ -1,21 +1,24 @@
 # Static surface water
 
 Status, 2026-09-12: connected river appearance approved by the user; the shared
-chunk lifecycle prototype passed the recorded local, edit and figure-eight checks. Current generation is44, river recipe13,
+chunk lifecycle prototype passed the recorded local, edit and figure-eight checks. Current generation is48, river recipe14,
 water recipe7. [The drainage design](../Plans/RiverDrainageBasins.md)
 records the branching method that the user explicitly asked to preserve.
 
 ## Canonical terrain and medium
 
-River13 adds width-biased, seeded bed depth. At each curve endpoint depth is
-clamp((48 + halfWidth*0.125)*(1 + 0.65*seededSimplexXY),24,216), with independent
-depth noise at4096-unit scale. Depth interpolates along segments and retains the
+River14 scales the River13 seeded bed profile with local width. At each curve
+endpoint depth is clamp((48 + halfWidth*0.125)*(1 + 0.65*seededSimplexXY),24,216)
+multiplied by clamp(halfWidth/192,0,1), with independent depth noise at4096-unit
+scale. Below the192-unit reference half-width, the whole profile including its
+minimum scales down: thin streams become shallow without a fixed24-unit floor.
+At or above192, existing depths are unchanged. Depth interpolates along segments and retains the
 existing parabolic cross-section. Broad rivers tend deeper but may have shallow
 stretches. The graph, widths and water elevation are unchanged. CPU endpoints
 store two extra floats; GPU endpoint texels reuse their former uniform elevation
 component for depth, keeping texture size unchanged. CPU and GPU interpolate the
 same depths; no additional noise evaluation occurs per terrain query. All terrain
-lower bounds use the216-unit maximum. Generation42 saves are separate from41;
+lower bounds use the216-unit maximum. Generation48 saves are separate from47;
 existing edits are not silently applied to the changed base. Runtime qualification
 is pending.
 
@@ -423,6 +426,73 @@ reprioritization; replacing terrain readiness globally expands beyond the measur
 water slice. Existing broad request refresh on placement/edit remains for now.
 Only repeated completed-work scans and unrelated mesh-completion water scans are
 replaced. Runtime/visual acceptance and all baseline failures stay in the ledger.
+
+## Conservative water-cell meshing candidate (2026-09-15)
+
+This supersedes the precise clipping and retained adaptive leaf implementation
+above. GeneratedWaterCells stores1024 bool coverage entries per32x32 surface
+chunk, independent of shoreline complexity, instead of two33x33 float arrays and
+48-byte refined leaves. Bytes reports1024 payload bytes, excluding object/array
+headers. Temporary33x33 corner occupancy is stack-local during generation.
+WaterStatus reports actual extra refinement samples, not retained leaf count.
+
+A positive free-surface sample admits the entire native cell. Fully dry corner
+sets still search the same river-support subdivision lattice down to the existing
+radius/16-unit limit, but return immediately upon finding water. No fine leaf
+geometry or bed/clearance payload is retained. Edited samples require bed below
+SeaLevel and positive corrected solid density; unedited sampling preserves the
+existing exterior-height shortcut. Terrain and medium queries stay authoritative;
+this occupancy is only a disposable conservative rendering derivative.
+
+SurfaceWaterGeometry greedily merges all adjacent admitted cells into disjoint
+rectangles inside each owner chunk, emitting two upward triangles per rectangle.
+The same scan order and rectangle growth rule apply throughout; exact shoreline
+clipping/intersections and separate refined emission paths are removed. Meshing
+uses a1024-byte stack-local occupancy copy and never evaluates terrain. Shared
+chunk lifetime, cancellation, descriptors, stale completion rejection, renderer,
+vertex format and palette shader are unchanged. No generator/save version changes.
+
+The user permits bank-hidden overlap to reduce mesh work. Expansion stays inside
+a cell containing a confirmed wet sample: at most one cellSize per XY axis,
+sqrt(2)*cellSize radially. Near LOD0 this is16units per axis; LOD5 is512 and LOD6
+is1024. Merging adds no further expansion. This is not a claim of a globally
+16-unit tolerance. Coarse terrain usually occludes the expanded footprint, but
+sea-plane cave entrances, additive edits, coarse LOD transitions and distant dry
+ground require visual qualification. Old exposed coverage is contained in the
+new admitted cells; narrow-channel detection retains its previous resolution limit.
+
+Chosen over a finer uniform water grid, which adds expensive terrain samples,
+and post-extraction polygon simplification, which retains clipping and leaf work.
+Expected gains are fewer field queries, allocations, vertices and uploads; actual
+speed/overall frame impact remain unmeasured. WATER-COVERAGE-001/v1 in the ledger
+owns the fixed comparison and visual acceptance. This is an unaccepted candidate.
+
+### Convex bank enclosure (2026-09-15 user follow-up)
+
+The user found rectangle strips still too detailed along a bank line. Meshing now
+replaces them with one convex hull per nonempty owner chunk. Generated coverage
+and narrow-river detection remain unchanged. At most66sorted grid points come
+from column boundary extrema; a stack-local monotone-chain hull discards inside
+and collinear corners. The final upward triangle fan allocates its exact vertex
+array once. No list/ToArray or copied occupancy scratch remains. Position-only
+vertices/render ownership are unchanged; no cross-chunk mesh is introduced.
+
+The hull is the minimum convex cover of occupied cells. It can bridge concave dry
+areas within that chunk, relying on terrain occlusion; the prior one-cell overlap
+bound applies only to generation coverage and no longer bounds rendered overlap.
+World state/medium queries are unchanged. Chunk bounds still cap the footprint;
+voids exposed at sea level, additive edits and coarse transitions need inspection.
+A simple straight bank usually needs only a few hull corners per chunk. Terrain
+triangles can still make its visible intersection jagged with a very simple water
+polygon. This candidate is not a promise to smooth the terrain shoreline itself.
+WATER-HULL-001/v1 owns qualification; rectangle results remain historical evidence.
+
+Local hull qualification on saved revision1460:8187submitted water vertices over
+1072published chunks; sampled hulls have7..11outline corners and15..27triangle-list
+vertices. All seven water geometry checks,88/88terrain audit and settled pairing/
+coverage checks pass. Two bank views inspected show continuous contact. These are
+local results only; a matched canonical figure-eight and wider overlap edge cases
+are still pending. See the ledger for invalid viewport timing and user movement.
 
 ### Four-corner water and submerged-region shortcut prototype (2026-09-15)
 

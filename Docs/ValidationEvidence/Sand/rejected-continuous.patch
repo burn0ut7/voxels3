@@ -1,0 +1,169 @@
+diff --git a/Assets/shaders/voxels/voxel_generated_materials.hlsl b/Assets/shaders/voxels/voxel_generated_materials.hlsl
+index cb89244..2890e34 100644
+--- a/Assets/shaders/voxels/voxel_generated_materials.hlsl
++++ b/Assets/shaders/voxels/voxel_generated_materials.hlsl
+@@ -2,6 +2,7 @@
+ // stores packed weights beside its edge data. Emission/drawing only consume data.
+ float2 VoxelGeneratedLayers < Attribute( "VoxelGeneratedLayers" ); >;
+ float4 VoxelGeneratedMountain < Attribute( "VoxelGeneratedMountain" ); >;
++#include "shaders/voxels/voxel_material_regions.hlsl"
+ 
+ float4 GenerateVoxelMaterialColumn( float2 position, float4 terrain, float4 scales, float4 shape )
+ {
+@@ -54,6 +55,7 @@ float4 GenerateVoxelMaterialWeights( float3 position, float4 terrain, float4 sca
+ 	float node = floor( coordinate );
+ 	float fraction = coordinate - node;
+ 	float4 weights = float4( 0.0, 0.0, 0.0, 0.0 );
++	float sand = 0.0;
+ 	for ( uint index = 0u; index < 4u; index++ )
+ 	{
+ 		float4 column = columns[index];
+@@ -61,17 +63,39 @@ float4 GenerateVoxelMaterialWeights( float3 position, float4 terrain, float4 sca
+ 		{
+ 			float depth = column.x - (node + (float)z) * VoxelGeneratedLayers.x;
+ 			if ( depth < 0.0 ) continue;
++			float contribution = columnWeights[index] * (z == 0u ? 1.0 - fraction : fraction);
++			float2 offset = float2( index & 1u, (index >> 1u) & 1u );
++			float3 nodePosition = float3( (origin + offset) * VoxelGeneratedLayers.x, (node + (float)z) * VoxelGeneratedLayers.x );
++			if ( GenerateVoxelSand( nodePosition, depth, column.x, column.y, shape.y, (uint)(int)terrain.x, VoxelGeneratedMountain.z ) )
++			{
++				sand += contribution;
++				continue;
++			}
+ 			uint material = depth < VoxelGeneratedLayers.x ? (uint)column.z :
+ 				(depth < VoxelGeneratedLayers.y ? (uint)column.w : 2u);
+-			weights[material] += columnWeights[index] * (z == 0u ? 1.0 - fraction : fraction);
++			weights[material] += contribution;
+ 		}
+ 	}
+-	float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
++	float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ) + sand;
+ 	return total > 0.000001 ? weights / total : float4( 0.0, 1.0, 0.0, 0.0 );
+ }
+ 
+ uint PackGeneratedVoxelWeights( float4 weights )
+ {
+-	uint4 packed = (uint4)round( saturate( weights ) * 255.0 );
++	// Fifth weight (sand) is the remainder. Preserve the rounded total so
++	// quantization cannot introduce sand into a surface containing none.
++	float4 scaled = saturate( weights ) * 255.0;
++	int4 rounded = (int4)round( scaled );
++	uint largest = 0u;
++	for ( uint index = 1u; index < 4u; index++ )
++	{
++		if ( scaled[index] > scaled[largest] )
++		{
++			largest = index;
++		}
++	}
++	int target = (int)round( min( dot( scaled, float4( 1.0, 1.0, 1.0, 1.0 ) ), 255.0 ) );
++	rounded[largest] += target - (rounded.x + rounded.y + rounded.z + rounded.w);
++	uint4 packed = (uint4)rounded;
+ 	return packed.x | (packed.y << 8u) | (packed.z << 16u) | (packed.w << 24u);
+ }
+diff --git a/Assets/shaders/voxels/voxel_terrain.shader b/Assets/shaders/voxels/voxel_terrain.shader
+index 1f0cfcb..7cfc5c3 100644
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -20,6 +20,7 @@ COMMON
+ 	#include "common/shared.hlsl"
+ 	float4 VoxelMaterialIds < Attribute( "VoxelMaterialIds" ); >;
+ 	float VoxelCheckerSize < Attribute( "VoxelCheckerSize" ); >;
++	float VoxelSandMaterialId < Attribute( "VoxelSandMaterialId" ); >;
+ 	StructuredBuffer<float4> VoxelMaterialPalette < Attribute( "VoxelMaterialPalette" ); >;
+ }
+ 
+@@ -77,13 +78,15 @@ PS
+ 		float2 footprint = fwidth( coordinates );
+ 		checker = lerp( checker, 0.5, saturate( max( footprint.x, footprint.y ) ) );
+ 		float4 weights = max( input.vMaterialWeights, 0.0 );
+-		weights /= max( dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ), 0.000001 );
++		float sand = saturate( 1.0 - dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ) );
+ 		float3 albedo = float3( 0.0, 0.0, 0.0 );
+ 		for ( uint index = 0u; index < 4u; index++ )
+ 		{
+ 			uint id = (uint)VoxelMaterialIds[index];
+ 			albedo += weights[index] * lerp( VoxelMaterialPalette[id * 2u].rgb, VoxelMaterialPalette[id * 2u + 1u].rgb, checker );
+ 		}
++		uint sandId = (uint)VoxelSandMaterialId;
++		albedo += sand * lerp( VoxelMaterialPalette[sandId * 2u].rgb, VoxelMaterialPalette[sandId * 2u + 1u].rgb, checker );
+ 		material.Albedo = albedo;
+ 		material.Roughness = 0.9;
+ 		material.Metalness = 0.0;
+diff --git a/Code/Voxels/Materials/GpuVoxelMaterials.cs b/Code/Voxels/Materials/GpuVoxelMaterials.cs
+index 7b34a24..2d79cc1 100644
+--- a/Code/Voxels/Materials/GpuVoxelMaterials.cs
++++ b/Code/Voxels/Materials/GpuVoxelMaterials.cs
+@@ -10,6 +10,13 @@ internal sealed class GpuVoxelMaterials : IDisposable
+ 		attributes.Set( "VoxelGeneratedMountain", new Vector4( ProceduralVoxelMaterials.SnowPeakFraction,
+ 			ProceduralVoxelMaterials.SnowMountainWeight, ProceduralVoxelMaterials.MountainStoneWeight,
+ 			ProceduralVoxelMaterials.MountainGrassMaxSlopeSquared ) );
++		attributes.Set( "VoxelSandShore", new Vector4( ProceduralSand.ShoreMinimumHeight, ProceduralSand.ShoreMaximumHeight,
++			ProceduralSand.SurfaceDepth, ProceduralSand.BuriedMinimumDepth ) );
++		attributes.Set( "VoxelSandMaximumDepth", ProceduralSand.BuriedMaximumDepth );
++		attributes.Set( "VoxelSandPatchMaximumHeight", ProceduralSand.PatchMaximumHeight );
++		attributes.Set( "VoxelSandSurfaceRegion", new Vector4( ProceduralSand.SurfacePatches.Size, ProceduralSand.SurfacePatches.Probability ) );
++		attributes.Set( "VoxelSandBuriedRegion", new Vector4( ProceduralSand.BuriedDeposits.Size, ProceduralSand.BuriedDeposits.Probability ) );
++		attributes.Set( "VoxelSandRegionSalts", new Vector2( ProceduralSand.SurfacePatches.Salt, ProceduralSand.BuriedDeposits.Salt ) );
+ 	}
+ 
+ 	public GpuVoxelMaterials()
+@@ -35,5 +42,6 @@ internal sealed class GpuVoxelMaterials : IDisposable
+ 		attributes.Set( "VoxelMaterialPalette", _palette );
+ 		attributes.Set( "VoxelMaterialIds", new Vector4( VoxelMaterials.Grass, VoxelMaterials.Dirt, VoxelMaterials.Stone, VoxelMaterials.Snow ) );
+ 		attributes.Set( "VoxelCheckerSize", TerrainField.SampleSpacing );
++		attributes.Set( "VoxelSandMaterialId", (float)VoxelMaterials.Sand );
+ 	}
+ }
+diff --git a/Code/Voxels/Materials/ProceduralVoxelMaterials.cs b/Code/Voxels/Materials/ProceduralVoxelMaterials.cs
+index 4a9cd73..a354ba9 100644
+--- a/Code/Voxels/Materials/ProceduralVoxelMaterials.cs
++++ b/Code/Voxels/Materials/ProceduralVoxelMaterials.cs
+@@ -38,6 +38,11 @@ internal static class ProceduralVoxelMaterials
+ 			return true;
+ 		}
+ 		var depth = height - position.z;
++		if ( ProceduralSand.Contains( position, depth, height, landform.Mountains, field.Settings ) )
++		{
++			materialId = VoxelMaterials.Sand;
++			return true;
++		}
+ 		if ( depth >= SoilDepth )
+ 		{
+ 			materialId = VoxelMaterials.Stone;
+diff --git a/Code/Voxels/Materials/VoxelMaterials.cs b/Code/Voxels/Materials/VoxelMaterials.cs
+index 60ea437..7030505 100644
+--- a/Code/Voxels/Materials/VoxelMaterials.cs
++++ b/Code/Voxels/Materials/VoxelMaterials.cs
+@@ -12,6 +12,7 @@ internal static class VoxelMaterials
+ 	public const ushort Stone = 3;
+ 	public const ushort Water = 4;
+ 	public const ushort Snow = 5;
++	public const ushort Sand = 6;
+ 
+ 	// Keep explicit IDs in ascending order. One row adds a type without changing consumers.
+ 	private static readonly VoxelMaterialDefinition[] Definitions =
+@@ -21,7 +22,8 @@ internal static class VoxelMaterials
+ 		new( Dirt, "Dirt", new( 0.075f, 0.038f, 0.020f ), new( 0.125f, 0.068f, 0.035f ) ),
+ 		new( Stone, "Stone", new( 0.070f, 0.075f, 0.080f ), new( 0.120f, 0.125f, 0.130f ) ),
+ 		new( Water, "Water", new( 0.012f, 0.055f, 0.090f ), new( 0.025f, 0.100f, 0.155f ) ),
+-		new( Snow, "Snow", new( 0.78f, 0.80f, 0.80f ), new( 0.88f, 0.90f, 0.89f ) )
++		new( Snow, "Snow", new( 0.78f, 0.80f, 0.80f ), new( 0.88f, 0.90f, 0.89f ) ),
++		new( Sand, "Sand", new( 0.55f, 0.43f, 0.23f ), new( 0.68f, 0.56f, 0.33f ) )
+ 	];
+ 	private static readonly VoxelMaterialDefinition Unknown =
+ 		new( ushort.MaxValue, "Unknown", new( 1f, 0f, 1f ), new( 0.3f, 0f, 0.3f ) );
+diff --git a/Code/Voxels/TerrainReplicationManifest.cs b/Code/Voxels/TerrainReplicationManifest.cs
+index 5a0ce5f..8f3ff40 100644
+--- a/Code/Voxels/TerrainReplicationManifest.cs
++++ b/Code/Voxels/TerrainReplicationManifest.cs
+@@ -7,7 +7,8 @@ using System.Text;
+ /// <summary>Regional host page identities; density payloads use TerrainFieldCodec unchanged.</summary>
+ internal sealed class TerrainReplicationManifest
+ {
+-	public const int ProtocolVersion = 3;
++	// Version4 requires the sand material recipe; density/page save format is unchanged.
++	public const int ProtocolVersion = 4;
+ 	public const int MaximumBytes = 65536;
+ 	public Guid WorldId;
+ 	public int Revision;
