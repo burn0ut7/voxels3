@@ -289,3 +289,18 @@ for adopted/deferred decisions and validation status.
 | --- | --- | --- |
 | [Nystrom: Dirty Flag](https://raw.githubusercontent.com/munificent/game-programming-patterns/master/book/dirty-flag.markdown), [Event Queue](https://raw.githubusercontent.com/munificent/game-programming-patterns/master/book/event-queue.markdown) | Coalesce changed owners; keep invalidation complete and revalidate delayed notifications. | Pattern explanations, not measured s&box speedups. Avoid a global bus and extra visible delay. |
 | [Godot Voxel: engine completion processing](https://github.com/Zylann/godot_voxel/blob/master/engine/voxel_engine.cpp) | Applies worker results before follow-up main-thread work to avoid an additional frame. | Source scheduling example only; engine APIs, thread guarantees and timings do not transfer. |
+
+## Ground Material Shading
+
+### Terrain texturing comparison (2026-09-17)
+
+The [source comparison and experiment ranking](Research/TerrainTexturingComparison.md)
+separates heightfield rendering from volumetric terrain and records pinned shader
+revisions. These are research options, not adopted runtime changes.
+
+| Reference | Use in Voxels3 | Transfer limits |
+| --- | --- | --- |
+| [Terrain3D shader design](https://github.com/TokisanGames/Terrain3D/blob/f9a216a72b917c8bef5126843e890268c755a82f/doc/docs/shader_design.md) and [main shader](https://github.com/TokisanGames/Terrain3D/blob/f9a216a72b917c8bef5126843e890268c755a82f/src/shaders/main.glsl) | Footprint-based blending simplification, indexed materials, optional projection and repeated-ID reuse in the lightweight variant. | Heightfield system; development snapshot differs from stable docs. Neither sample counts nor screenshots establish Voxels3 FPS. |
+| [HTerrain array shader](https://github.com/Zylann/godot_heightmap_plugin/blob/7f574eb47fbd74cb1a79adc2cc9fb7f0694fccc3/addons/zylann.hterrain/shaders/array.gdshader), [global-map and tiling documentation](https://hterrain-plugin.readthedocs.io/en/latest/#global-map) | Packed indexed materials, spatial far-color cache and detailed-lookup bypass; compare optional two-sample tiling reduction. | Heightfield mapping cannot distinguish stacked cave surfaces; features vary by shader. Edit invalidation is a project responsibility. |
+| [Godot Voxel smooth texturing/detail rendering](https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/) | Compare triplanar material data and cell-addressed geometry-normal atlases for volumetric LOD. | Normal-detail baking is not full material caching; generation/memory costs and streamed edit limitations apply. |
+| [Epic runtime virtual texturing](https://dev.epicgames.com/documentation/unreal-engine/runtimevirtual-texturing-quick-start-in-unreal-engine) | Cache stable surface attributes instead of reevaluating expensive material combinations each frame. | Unreal facility, not verified s&box API support; top-down landscape mapping and cache lifecycle do not directly solve editable caves. |
