@@ -1,0 +1,37 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -103,6 +103,24 @@
+ 		{
+ 			return result;
+ 		}
++		// Pixel footprint in material tiles; preserve original nearby sampling.
++		float footprint = max( length( gradientX ), length( gradientY ) );
++		float simplify = smoothstep( 0.03125, 0.125, footprint );
++		TerrainSample simple = (TerrainSample)0;
++		[branch]
++		if ( simplify > 0.0 )
++		{
++			float4 color = colorMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++			float4 surface = normalMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++			simple.Color = color.rgb;
++			simple.Surface = float2( color.a, surface.a );
++			simple.Normal = surface.xyz * 2.0 - 1.0;
++		}
++		[branch]
++		if ( simplify >= 1.0 )
++		{
++			return simple;
++		}
+ 		// Shared lattice vertices have identical offsets on both sides of an edge.
+ 		// Smooth weights vanish at the edge, so no hard per-tile UV reset is visible.
+ 		float2 lattice = float2( uv.x - uv.y * 0.577350269, uv.y * 1.154700538 );
+@@ -152,6 +170,9 @@
+ 			result.Surface += blend[patch] * float2( colorRoughness.a, normalOcclusion.a );
+ 			result.Normal += blend[patch] * (normalOcclusion.xyz * 2.0 - 1.0);
+ 		}
++		result.Color = lerp( result.Color, simple.Color, simplify );
++		result.Surface = lerp( result.Surface, simple.Surface, simplify );
++		result.Normal = lerp( result.Normal, simple.Normal, simplify );
+ 		return result;
+ 	}
+ 

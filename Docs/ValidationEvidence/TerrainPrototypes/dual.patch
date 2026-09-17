@@ -1,0 +1,84 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -103,55 +103,32 @@
+ 		{
+ 			return result;
+ 		}
+-		// Shared lattice vertices have identical offsets on both sides of an edge.
+-		// Smooth weights vanish at the edge, so no hard per-tile UV reset is visible.
+-		float2 lattice = float2( uv.x - uv.y * 0.577350269, uv.y * 1.154700538 );
+-		float2 cell = floor( lattice );
+-		float2 fraction = frac( lattice );
+-		float3 blend;
+-		float2 vertex0;
+-		float2 vertex1;
+-		float2 vertex2;
+-		if ( fraction.x + fraction.y <= 1.0 )
+-		{
+-			blend = float3( 1.0 - fraction.x - fraction.y, fraction.x, fraction.y );
+-			vertex0 = cell;
+-			vertex1 = cell + float2( 1.0, 0.0 );
+-			vertex2 = cell + float2( 0.0, 1.0 );
+-		}
+-		else
+-		{
+-			blend = float3( fraction.x + fraction.y - 1.0, 1.0 - fraction.x, 1.0 - fraction.y );
+-			vertex0 = cell + 1.0;
+-			vertex1 = cell + float2( 0.0, 1.0 );
+-			vertex2 = cell + float2( 1.0, 0.0 );
+-		}
+-		blend *= blend;
+-		blend *= blend;
+-		// A continuous zero-support fringe avoids sampling invisible patches.
+-		blend = max( blend - 0.001, 0.0 );
+-		blend /= dot( blend, float3( 1.0, 1.0, 1.0 ) );
+-		for ( int patch = 0; patch < 3; patch++ )
+-		{
+-			[branch]
+-			if ( blend[patch] <= 0.0 )
+-			{
+-				continue;
+-			}
+-			float2 vertex = patch == 0 ? vertex0 : (patch == 1 ? vertex1 : vertex2);
+-			uint2 key = asuint( (int2)vertex );
+-			uint hash = (key.x * 0x8DA6B343u) ^ (key.y * 0xD8163841u);
+-			hash ^= hash >> 16;
+-			hash *= 0x7FEB352Du;
+-			hash ^= hash >> 15;
+-			float2 offset = float2( hash & 65535u, hash >> 16 ) / 65536.0;
+-			float2 patchUv = uv + offset;
+-			float4 colorRoughness = colorMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY );
+-			float4 normalOcclusion = normalMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY );
+-			result.Color += blend[patch] * colorRoughness.rgb;
+-			result.Surface += blend[patch] * float2( colorRoughness.a, normalOcclusion.a );
+-			result.Normal += blend[patch] * (normalOcclusion.xyz * 2.0 - 1.0);
+-		}
++		// Two continuous UV projections; smooth periodic noise selects their mix.
++		float2 cell = floor( uv * 0.5 );
++		float2 fraction = frac( uv * 0.5 );
++		fraction = fraction * fraction * (3.0 - 2.0 * fraction);
++		uint4 x = asuint( (int4)float4( cell.x, cell.x + 1.0, cell.x, cell.x + 1.0 ) ) & 3u;
++		uint4 y = asuint( (int4)float4( cell.y, cell.y, cell.y + 1.0, cell.y + 1.0 ) ) & 3u;
++		uint4 hash = (x * 0x8DA6B343u) ^ (y * 0xD8163841u);
++		hash ^= hash >> 16;
++		hash *= 0x7FEB352Du;
++		hash ^= hash >> 15;
++		float4 noise = float4( hash & 65535u ) / 65535.0;
++		float blend = smoothstep( 0.2, 0.8,
++			lerp( lerp( noise.x, noise.y, fraction.x ), lerp( noise.z, noise.w, fraction.x ), fraction.y ) );
++		float2 rotatedUv = float2( -uv.y, uv.x ) + float2( 0.371, 0.713 );
++		float2 rotatedX = float2( -gradientX.y, gradientX.x );
++		float2 rotatedY = float2( -gradientY.y, gradientY.x );
++		float4 color0 = colorMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++		float4 color1 = colorMap.SampleGrad( TerrainSampler, rotatedUv, rotatedX, rotatedY );
++		float4 normal0 = normalMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++		float4 normal1 = normalMap.SampleGrad( TerrainSampler, rotatedUv, rotatedX, rotatedY );
++		float3 direction0 = normal0.xyz * 2.0 - 1.0;
++		float3 direction1 = normal1.xyz * 2.0 - 1.0;
++		direction1.xy = float2( direction1.y, -direction1.x );
++		result.Color = lerp( color0.rgb, color1.rgb, blend );
++		result.Surface = lerp( float2( color0.a, normal0.a ), float2( color1.a, normal1.a ), blend );
++		result.Normal = lerp( direction0, direction1, blend );
+ 		return result;
+ 	}
+ 

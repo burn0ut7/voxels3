@@ -1,0 +1,63 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -103,55 +103,11 @@
+ 		{
+ 			return result;
+ 		}
+-		// Shared lattice vertices have identical offsets on both sides of an edge.
+-		// Smooth weights vanish at the edge, so no hard per-tile UV reset is visible.
+-		float2 lattice = float2( uv.x - uv.y * 0.577350269, uv.y * 1.154700538 );
+-		float2 cell = floor( lattice );
+-		float2 fraction = frac( lattice );
+-		float3 blend;
+-		float2 vertex0;
+-		float2 vertex1;
+-		float2 vertex2;
+-		if ( fraction.x + fraction.y <= 1.0 )
+-		{
+-			blend = float3( 1.0 - fraction.x - fraction.y, fraction.x, fraction.y );
+-			vertex0 = cell;
+-			vertex1 = cell + float2( 1.0, 0.0 );
+-			vertex2 = cell + float2( 0.0, 1.0 );
+-		}
+-		else
+-		{
+-			blend = float3( fraction.x + fraction.y - 1.0, 1.0 - fraction.x, 1.0 - fraction.y );
+-			vertex0 = cell + 1.0;
+-			vertex1 = cell + float2( 0.0, 1.0 );
+-			vertex2 = cell + float2( 1.0, 0.0 );
+-		}
+-		blend *= blend;
+-		blend *= blend;
+-		// A continuous zero-support fringe avoids sampling invisible patches.
+-		blend = max( blend - 0.001, 0.0 );
+-		blend /= dot( blend, float3( 1.0, 1.0, 1.0 ) );
+-		for ( int patch = 0; patch < 3; patch++ )
+-		{
+-			[branch]
+-			if ( blend[patch] <= 0.0 )
+-			{
+-				continue;
+-			}
+-			float2 vertex = patch == 0 ? vertex0 : (patch == 1 ? vertex1 : vertex2);
+-			uint2 key = asuint( (int2)vertex );
+-			uint hash = (key.x * 0x8DA6B343u) ^ (key.y * 0xD8163841u);
+-			hash ^= hash >> 16;
+-			hash *= 0x7FEB352Du;
+-			hash ^= hash >> 15;
+-			float2 offset = float2( hash & 65535u, hash >> 16 ) / 65536.0;
+-			float2 patchUv = uv + offset;
+-			float4 colorRoughness = colorMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY );
+-			float4 normalOcclusion = normalMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY );
+-			result.Color += blend[patch] * colorRoughness.rgb;
+-			result.Surface += blend[patch] * float2( colorRoughness.a, normalOcclusion.a );
+-			result.Normal += blend[patch] * (normalOcclusion.xyz * 2.0 - 1.0);
+-		}
++		float4 colorRoughness = colorMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++		float4 normalOcclusion = normalMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++		result.Color = colorRoughness.rgb;
++		result.Surface = float2( colorRoughness.a, normalOcclusion.a );
++		result.Normal = normalOcclusion.xyz * 2.0 - 1.0;
+ 		return result;
+ 	}
+ 

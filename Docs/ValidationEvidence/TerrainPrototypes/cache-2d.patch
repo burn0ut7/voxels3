@@ -1,0 +1,418 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -87,79 +87,59 @@
+ 	CreateInputTexture2D( SnowHeight, Linear, 8, "", "_height", "Snow,14/50", Default( 1.0 ) );
+ 	Texture2D SnowColorMap < Channel( RGB, Box( SnowColor ), Srgb ); Channel( A, Box( SnowRoughness ), Linear ); OutputFormat( BC7 ); SrgbRead( true ); >;
+ 	Texture2D SnowNormalMap < Channel( RGB, Box( SnowNormal ), Linear ); Channel( A, Box( SnowOcclusion ), Linear ); OutputFormat( BC7 ); SrgbRead( false ); >;
+-	SamplerState TerrainSampler < Filter( ANISOTROPIC ); MaxAniso( 16 ); AddressU( WRAP ); AddressV( WRAP ); >;
+-	struct TerrainSample
+-	{
+-		float3 Color;
+-		float3 Normal;
+-		float2 Surface;
+-	};
+-
+-	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap, float2 uv, float2 gradientX, float2 gradientY, float contribution )
+-	{
+-		TerrainSample result = (TerrainSample)0;
+-		[branch]
++
++	#include "shaders/voxels/voxel_pattern_shared.hlsl"
++	Texture2D CachedPattern0 < Attribute( "TerrainPattern0" ); SrgbRead( false ); >;
++	Texture2D CachedPattern1 < Attribute( "TerrainPattern1" ); SrgbRead( false ); >;
++	Texture2D CachedPattern2 < Attribute( "TerrainPattern2" ); SrgbRead( false ); >;
++	Texture2D CachedPattern3 < Attribute( "TerrainPattern3" ); SrgbRead( false ); >;
++	Texture2D CachedPattern4 < Attribute( "TerrainPattern4" ); SrgbRead( false ); >;
++	Texture2D CachedPattern5 < Attribute( "TerrainPattern5" ); SrgbRead( false ); >;
++	Texture2D CachedPattern6 < Attribute( "TerrainPattern6" ); SrgbRead( false ); >;
++	Texture2D CachedPattern7 < Attribute( "TerrainPattern7" ); SrgbRead( false ); >;
++	Texture2D CachedPattern8 < Attribute( "TerrainPattern8" ); SrgbRead( false ); >;
++	Texture2D CachedPattern9 < Attribute( "TerrainPattern9" ); SrgbRead( false ); >;
++	int TerrainPatternCacheReady < Attribute( "TerrainPatternCacheReady" ); Default( 0 ); >;
++	TerrainSample SampleTerrainProjection( Texture2D colorMap, Texture2D normalMap,
++		float2 uv, float2 gradientX, float2 gradientY, float contribution, Texture2D cachedColor, Texture2D cachedNormal )
++	{
++		TerrainSample cached = (TerrainSample)0;
+ 		if ( contribution <= 0.0 )
+ 		{
+-			return result;
+-		}
+-		// Shared lattice vertices have identical offsets on both sides of an edge.
+-		// Smooth weights vanish at the edge, so no hard per-tile UV reset is visible.
+-		float2 lattice = float2( uv.x - uv.y * 0.577350269, uv.y * 1.154700538 );
+-		float2 cell = floor( lattice );
+-		float2 fraction = frac( lattice );
+-		float3 blend;
+-		float2 vertex0;
+-		float2 vertex1;
+-		float2 vertex2;
+-		if ( fraction.x + fraction.y <= 1.0 )
+-		{
+-			blend = float3( 1.0 - fraction.x - fraction.y, fraction.x, fraction.y );
+-			vertex0 = cell;
+-			vertex1 = cell + float2( 1.0, 0.0 );
+-			vertex2 = cell + float2( 0.0, 1.0 );
+-		}
+-		else
+-		{
+-			blend = float3( fraction.x + fraction.y - 1.0, 1.0 - fraction.x, 1.0 - fraction.y );
+-			vertex0 = cell + 1.0;
+-			vertex1 = cell + float2( 0.0, 1.0 );
+-			vertex2 = cell + float2( 1.0, 0.0 );
+-		}
+-		blend *= blend;
+-		blend *= blend;
+-		// A continuous zero-support fringe avoids sampling invisible patches.
+-		blend = max( blend - 0.001, 0.0 );
+-		blend /= dot( blend, float3( 1.0, 1.0, 1.0 ) );
+-		for ( int patch = 0; patch < 3; patch++ )
+-		{
+-			[branch]
+-			if ( blend[patch] <= 0.0 )
+-			{
+-				continue;
+-			}
+-			float2 vertex = patch == 0 ? vertex0 : (patch == 1 ? vertex1 : vertex2);
+-			uint2 key = asuint( (int2)vertex );
+-			uint hash = (key.x * 0x8DA6B343u) ^ (key.y * 0xD8163841u);
+-			hash ^= hash >> 16;
+-			hash *= 0x7FEB352Du;
+-			hash ^= hash >> 15;
+-			float2 offset = float2( hash & 65535u, hash >> 16 ) / 65536.0;
+-			float2 patchUv = uv + offset;
+-			float4 colorRoughness = colorMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY );
+-			float4 normalOcclusion = normalMap.SampleGrad( TerrainSampler, patchUv, gradientX, gradientY );
+-			result.Color += blend[patch] * colorRoughness.rgb;
+-			result.Surface += blend[patch] * float2( colorRoughness.a, normalOcclusion.a );
+-			result.Normal += blend[patch] * (normalOcclusion.xyz * 2.0 - 1.0);
+-		}
+-		return result;
++			return cached;
++		}
++		// Smaller singular value protects detail along the sharp anisotropic axis.
++		float gx = dot( gradientX, gradientX );
++		float gy = dot( gradientY, gradientY );
++		float gxy = dot( gradientX, gradientY );
++		float minorFootprint = sqrt( max( 0.0, 0.5 * (gx + gy - sqrt( (gx - gy) * (gx - gy) + 4.0 * gxy * gxy )) ) );
++		float blend = TerrainPatternCacheReady != 0 ? smoothstep( 0.0078125, 0.015625, minorFootprint ) : 0.0;
++		[branch]
++		if ( blend > 0.0 )
++		{
++			float4 color = cachedColor.SampleGrad( TerrainSampler, uv / 8.0, gradientX / 8.0, gradientY / 8.0 );
++			float4 surface = cachedNormal.SampleGrad( TerrainSampler, uv / 8.0, gradientX / 8.0, gradientY / 8.0 );
++			cached.Color = color.rgb;
++			cached.Surface = float2( color.a, surface.a );
++			cached.Normal = surface.xyz * 2.0 - 1.0;
++		}
++		[branch]
++		if ( blend >= 1.0 )
++		{
++			return cached;
++		}
++		TerrainSample live = SampleTerrainLive( colorMap, normalMap, uv, gradientX, gradientY, contribution );
++		live.Color = lerp( live.Color, cached.Color, blend );
++		live.Surface = lerp( live.Surface, cached.Surface, blend );
++		live.Normal = lerp( live.Normal, cached.Normal, blend );
++		return live;
+ 	}
+ 
+ 
+ 	// One surface path: maps and physical tile size are material inputs.
+ 	TerrainSample SampleTerrain( Texture2D colorMap, Texture2D normalMap,
+ 		float tileMetres, float weight, float3 position, float3 gradientX,
+-		float3 gradientY, float3 normal, float3 projection, float detail )
++		float3 gradientY, float3 normal, float3 projection, float detail, Texture2D cachedColor, Texture2D cachedNormal )
+ 	{
+ 		TerrainSample result = (TerrainSample)0;
+ 		[branch]
+@@ -189,11 +169,11 @@
+ 		gradientX *= scale;
+ 		gradientY *= scale;
+ 		TerrainSample sampleX = SampleTerrainProjection( colorMap, normalMap,
+-			position.yz, gradientX.yz, gradientY.yz, projection.x );
++			position.yz, gradientX.yz, gradientY.yz, projection.x, cachedColor, cachedNormal );
+ 		TerrainSample sampleY = SampleTerrainProjection( colorMap, normalMap,
+-			position.xz, gradientX.xz, gradientY.xz, projection.y );
++			position.xz, gradientX.xz, gradientY.xz, projection.y, cachedColor, cachedNormal );
+ 		TerrainSample sampleZ = SampleTerrainProjection( colorMap, normalMap,
+-			position.xy, gradientX.xy, gradientY.xy, projection.z );
++			position.xy, gradientX.xy, gradientY.xy, projection.z, cachedColor, cachedNormal );
+ 		result.Color = sampleX.Color * projection.x + sampleY.Color * projection.y + sampleZ.Color * projection.z;
+ 		result.Surface = sampleX.Surface * projection.x + sampleY.Surface * projection.y + sampleZ.Surface * projection.z;
+ 		// OpenGL U/V axes; whiteout preserves the geometry normal for flat maps.
+@@ -236,13 +216,13 @@
+ 		material.AmbientOcclusion = 0.0;
+ 		material.Metalness = 0.0;
+ 		TerrainSample grass = SampleTerrain( GrassColorMap, GrassNormalMap,
+-			1.4, weights.x, position, gradientX, gradientY, normal, projection, detail );
++			1.4, weights.x, position, gradientX, gradientY, normal, projection, detail, CachedPattern0, CachedPattern1 );
+ 		material.Albedo += grass.Color * weights.x;
+ 		material.Normal += grass.Normal * weights.x;
+ 		material.Roughness += lerp( 0.85, 1.0, saturate( grass.Surface.r ) ) * weights.x;
+ 		material.AmbientOcclusion += grass.Surface.g * weights.x;
+ 		TerrainSample dirt = SampleTerrain( DirtColorMap, DirtNormalMap,
+-			2, weights.y, position, gradientX, gradientY, normal, projection, detail );
++			2, weights.y, position, gradientX, gradientY, normal, projection, detail, CachedPattern2, CachedPattern3 );
+ 		// Dark earthy soil: reduce the red cast while retaining source variation.
+ 		dirt.Color *= float3( 0.55, 0.65, 0.60 );
+ 		material.Albedo += dirt.Color * weights.y;
+@@ -250,7 +230,7 @@
+ 		material.Roughness += clamp( dirt.Surface.r, 0.65, 1.0 ) * weights.y;
+ 		material.AmbientOcclusion += dirt.Surface.g * weights.y;
+ 		TerrainSample stone = SampleTerrain( StoneColorMap, StoneNormalMap,
+-			2.38, weights.z, position, gradientX, gradientY, normal, projection, detail );
++			2.38, weights.z, position, gradientX, gradientY, normal, projection, detail, CachedPattern4, CachedPattern5 );
+ 		// Retain a little mineral color while removing the source rock's brown cast.
+ 		float stoneLuminance = dot( stone.Color, float3( 0.2126, 0.7152, 0.0722 ) );
+ 		stone.Color = lerp( stoneLuminance.xxx, stone.Color, 0.15 );
+@@ -259,13 +239,13 @@
+ 		material.Roughness += lerp( 0.65, 1.0, saturate( stone.Surface.r ) ) * weights.z;
+ 		material.AmbientOcclusion += stone.Surface.g * weights.z;
+ 		TerrainSample snow = SampleTerrain( SnowColorMap, SnowNormalMap,
+-			1.0, weights.w, position, gradientX, gradientY, normal, projection, detail );
++			1.0, weights.w, position, gradientX, gradientY, normal, projection, detail, CachedPattern6, CachedPattern7 );
+ 		material.Albedo += snow.Color * weights.w;
+ 		material.Normal += snow.Normal * weights.w;
+ 		material.Roughness += lerp( 0.8, 1.0, saturate( snow.Surface.r ) ) * weights.w;
+ 		material.AmbientOcclusion += snow.Surface.g * weights.w;
+ 		TerrainSample sand = SampleTerrain( SandColorMap, SandNormalMap,
+-			1.0, sandWeight, position, gradientX, gradientY, normal, projection, detail );
++			1.0, sandWeight, position, gradientX, gradientY, normal, projection, detail, CachedPattern8, CachedPattern9 );
+ 		material.Albedo += sand.Color * sandWeight;
+ 		material.Normal += sand.Normal * sandWeight;
+ 		material.Roughness += lerp( 0.85, 1.0, saturate( sand.Surface.r ) ) * sandWeight;
+--- /dev/null
++++ b/Assets/shaders/voxels/voxel_pattern_shared.hlsl
+@@ -0,0 +1,44 @@
++	SamplerState TerrainSampler < Filter( ANISOTROPIC ); MaxAniso( 16 ); AddressU( WRAP ); AddressV( WRAP ); >;
++	struct TerrainSample
++	{
++		float3 Color;
++		float3 Normal;
++		float2 Surface;
++	};
++
++	TerrainSample SampleTerrainLive( Texture2D colorMap, Texture2D normalMap, float2 uv, float2 gradientX, float2 gradientY, float contribution )
++	{
++		TerrainSample result = (TerrainSample)0;
++		[branch]
++		if ( contribution <= 0.0 )
++		{
++			return result;
++		}
++		// Two continuous UV projections; smooth periodic noise selects their mix.
++		float2 cell = floor( uv * 0.5 );
++		float2 fraction = frac( uv * 0.5 );
++		fraction = fraction * fraction * (3.0 - 2.0 * fraction);
++		uint4 x = asuint( (int4)float4( cell.x, cell.x + 1.0, cell.x, cell.x + 1.0 ) ) & 3u;
++		uint4 y = asuint( (int4)float4( cell.y, cell.y, cell.y + 1.0, cell.y + 1.0 ) ) & 3u;
++		uint4 hash = (x * 0x8DA6B343u) ^ (y * 0xD8163841u);
++		hash ^= hash >> 16;
++		hash *= 0x7FEB352Du;
++		hash ^= hash >> 15;
++		float4 noise = float4( hash & 65535u ) / 65535.0;
++		float blend = smoothstep( 0.2, 0.8,
++			lerp( lerp( noise.x, noise.y, fraction.x ), lerp( noise.z, noise.w, fraction.x ), fraction.y ) );
++		float2 rotatedUv = float2( -uv.y, uv.x ) + float2( 0.371, 0.713 );
++		float2 rotatedX = float2( -gradientX.y, gradientX.x );
++		float2 rotatedY = float2( -gradientY.y, gradientY.x );
++		float4 color0 = colorMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++		float4 color1 = colorMap.SampleGrad( TerrainSampler, rotatedUv, rotatedX, rotatedY );
++		float4 normal0 = normalMap.SampleGrad( TerrainSampler, uv, gradientX, gradientY );
++		float4 normal1 = normalMap.SampleGrad( TerrainSampler, rotatedUv, rotatedX, rotatedY );
++		float3 direction0 = normal0.xyz * 2.0 - 1.0;
++		float3 direction1 = normal1.xyz * 2.0 - 1.0;
++		direction1.xy = float2( direction1.y, -direction1.x );
++		result.Color = lerp( color0.rgb, color1.rgb, blend );
++		result.Surface = lerp( float2( color0.a, normal0.a ), float2( color1.a, normal1.a ), blend );
++		result.Normal = lerp( direction0, direction1, blend );
++		return result;
++	}
+--- /dev/null
++++ b/Assets/shaders/voxels/voxel_pattern_cache_cs.shader
+@@ -0,0 +1,37 @@
++HEADER
++{
++	Description = "Bounded terrain material pattern cache";
++}
++MODES
++{
++	Default();
++}
++FEATURES
++{
++}
++COMMON
++{
++	#include "system.fxc"
++}
++CS
++{
++	#include "common.fxc"
++	#include "shaders/voxels/voxel_pattern_shared.hlsl"
++	Texture2D SourceColor < Attribute( "SourceColor" ); SrgbRead( true ); >;
++	Texture2D SourceNormal < Attribute( "SourceNormal" ); SrgbRead( false ); >;
++	RWTexture2D<float4> CacheColor < Attribute( "CacheColor" ); >;
++	RWTexture2D<float4> CacheNormal < Attribute( "CacheNormal" ); >;
++	[numthreads( 8, 8, 1 )]
++	void MainCs( uint3 threadId : SV_DispatchThreadID )
++	{
++		if ( threadId.x >= 1024 || threadId.y >= 1024 )
++		{
++			return;
++		}
++		float2 uv = (float2( threadId.xy ) + 0.5) * (8.0 / 1024.0);
++		TerrainSample value = SampleTerrainLive( SourceColor, SourceNormal, uv,
++			float2( 8.0 / 1024.0, 0.0 ), float2( 0.0, 8.0 / 1024.0 ), 1.0 );
++		CacheColor[threadId.xy] = float4( value.Color, value.Surface.x );
++		CacheNormal[threadId.xy] = float4( value.Normal * 0.5 + 0.5, value.Surface.y );
++	}
++}
+--- a/Code/Voxels/GpuVoxelMesher.cs
++++ b/Code/Voxels/GpuVoxelMesher.cs
+@@ -51,6 +51,8 @@
+ 	private readonly Scene _scene;
+ 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
+ 	private readonly GpuVoxelMaterials _voxelMaterials = new();
++	private TerrainPatternCache _terrainPatternCache;
++	private bool _terrainPatternCacheFailed;
+ 	private readonly Material _material = Material.Load( "materials/voxels/voxel_terrain.vmat" );
+ 	private readonly Dictionary<GpuMeshRegionKey, ResidentMesh> _resident = new();
+ 	private readonly Dictionary<GpuMeshRegionKey, PendingMesh> _pending = new();
+@@ -1775,6 +1777,15 @@
+ 	private void CommitDrawCommands()
+ 	{
+ 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope( VoxelPerformanceProfiler.CommitDrawCommands );
++		if ( _terrainPatternCache is null && !_terrainPatternCacheFailed )
++		{
++			try { _terrainPatternCache = new TerrainPatternCache( _material ); }
++			catch ( Exception exception )
++			{
++				_terrainPatternCacheFailed = true;
++				Log.Warning( $"[TerrainPatternCache] initialization failed: {exception}" );
++			}
++		}
+ 		var rebuilds = 0;
+ 		var milliseconds = 0f;
+ 		lock ( _renderCameraLock )
+@@ -3483,6 +3494,7 @@
+ 					state.DrawAttributes.Add( arena.Index, drawAttributes );
+ 				}
+ 				_voxelMaterials.Bind( drawAttributes );
++				_terrainPatternCache?.Bind( drawAttributes );
+ 				commands.ResourceBarrierTransition( arena.Vertices, ResourceState.VertexOrIndexBuffer );
+ 				commands.ResourceBarrierTransition( arena.Indices, ResourceState.VertexOrIndexBuffer );
+ 				commands.DrawIndexedInstancedIndirect(
+@@ -3853,6 +3865,7 @@
+ 		DisposeScratchLanes();
+ 		DisposeTransitionScratchLanes();
+ 		_voxelMaterials.Dispose();
++		_terrainPatternCache?.Dispose();
+ 		_readbackObject?.Delete();
+ 	}
+ 
+@@ -4536,6 +4549,14 @@
+ 				try
+ 				{
+ 					System.Threading.Interlocked.Increment( ref _owner._renderSequence );
++					lock ( _owner._renderCameraLock )
++					{
++						// Creation occurs on the game thread; GPU writes use this render rendezvous.
++						if ( _owner._terrainPatternCache is not null && _owner._terrainPatternCache.Advance() )
++						{
++							foreach ( var cameraState in _owner._renderCameraStates.Values ) cameraState.CommandsDirty = true;
++						}
++					}
+ 					_owner.ProcessGpuRenderTick();
+ 					_owner.ProcessVisibilityReadback();
+ 				}
+--- /dev/null
++++ b/Code/Voxels/TerrainPatternCache.cs
+@@ -0,0 +1,87 @@
++using Sandbox.Rendering;
++
++// Session-owned source-material patterns. No geometry, world or edit state.
++internal sealed class TerrainPatternCache : System.IDisposable
++{
++	private static readonly string[] AttributeNames = ["TerrainPattern0", "TerrainPattern1", "TerrainPattern2", "TerrainPattern3", "TerrainPattern4", "TerrainPattern5", "TerrainPattern6", "TerrainPattern7", "TerrainPattern8", "TerrainPattern9"];
++	private readonly Texture[] _textures = new Texture[10];
++	private readonly Texture[] _sources = new Texture[10];
++	private readonly ComputeShader _shader = new( "shaders/voxels/voxel_pattern_cache_cs.shader" );
++	private int _nextMaterial;
++	private bool _failed;
++	public bool Ready { get; private set; }
++
++	public TerrainPatternCache( Material material )
++	{
++		string[] names = ["Grass", "Dirt", "Stone", "Snow", "Sand"];
++		for ( var index = 0; index < names.Length; index++ )
++		{
++			_sources[index * 2] = material.GetTexture( names[index] + "ColorMap" );
++			_sources[index * 2 + 1] = material.GetTexture( names[index] + "NormalMap" );
++			if ( _sources[index * 2] is null || _sources[index * 2 + 1] is null )
++				throw new System.InvalidOperationException( $"Missing packed terrain maps: {names[index]}" );
++		}
++		try
++		{
++			for ( var index = 0; index < _textures.Length; index++ )
++			{
++				var builder = Texture.Create( 1024, 1024, ImageFormat.RGBA16161616F );
++				builder.WithMips( 11 );
++				builder.WithUAVBinding();
++				_textures[index] = builder.Finish();
++			}
++		}
++		catch
++		{
++			Dispose();
++			throw;
++		}
++		Log.Info( "[TerrainPatternCache] allocated10x1024x1024 2D RGBA16F full mips; logicalBytes=111848080" );
++	}
++
++	public bool Advance()
++	{
++		if ( Ready || _failed ) return false;
++		try
++		{
++			var index = _nextMaterial * 2;
++			_shader.Attributes.Set( "SourceColor", _sources[index] );
++			_shader.Attributes.Set( "SourceNormal", _sources[index + 1] );
++			_shader.Attributes.Set( "CacheColor", _textures[index], 0 );
++			_shader.Attributes.Set( "CacheNormal", _textures[index + 1], 0 );
++			Graphics.ResourceBarrierTransition( _textures[index], ResourceState.UnorderedAccess );
++			Graphics.ResourceBarrierTransition( _textures[index + 1], ResourceState.UnorderedAccess );
++			_shader.Dispatch( 1024, 1024, 1 );
++			for ( var map = index; map < index + 2; map++ )
++			{
++				Graphics.UavBarrier( _textures[map] );
++				Graphics.ResourceBarrierTransition( _textures[map], ResourceState.GenericRead );
++				Graphics.GenerateMipMaps( _textures[map] );
++				Graphics.ResourceBarrierTransition( _textures[map], ResourceState.GenericRead );
++			}
++			_nextMaterial++;
++			if ( _nextMaterial != 5 ) return false;
++			Ready = true;
++			Log.Info( "[TerrainPatternCache] ready materials=5 periodUV=8 2D textures" );
++			return true;
++		}
++		catch ( System.Exception exception )
++		{
++			_failed = true;
++			Log.Warning( $"[TerrainPatternCache] generation failed: {exception}" );
++			return false;
++		}
++	}
++
++	public void Bind( RenderAttributes attributes )
++	{
++		for ( var index = 0; index < _textures.Length; index++ )
++			attributes.Set( AttributeNames[index], _textures[index] );
++		attributes.Set( "TerrainPatternCacheReady", Ready ? 1 : 0 );
++	}
++
++	public void Dispose()
++	{
++		foreach ( var texture in _textures ) texture?.Dispose();
++	}
++}
