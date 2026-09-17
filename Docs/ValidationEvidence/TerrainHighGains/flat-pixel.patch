@@ -1,0 +1,68 @@
+--- a/Assets/shaders/voxels/voxel_terrain.shader
++++ b/Assets/shaders/voxels/voxel_terrain.shader
+@@ -215,62 +215,6 @@
+ 	RenderState( DepthWriteEnable, true );
+ 	float4 MainPs( PixelInput input ) : SV_Target0
+ 	{
+-		Material material = Material::Init( input );
+-		float3 position = input.vPositionWithOffsetWs + g_vHighPrecisionLightingOffsetWs.xyz;
+-		float3 normal = normalize( input.vNormalWs );
+-		float3 projection = max( pow( abs( normal ), 4.0 ) - 0.001, 0.0 );
+-		projection /= dot( projection, float3( 1.0, 1.0, 1.0 ) );
+-		// Derivatives precede material/plane/patch branches.
+-		float3 gradientX = ddx( position );
+-		float3 gradientY = ddy( position );
+-		// Full nearby texture detail; distant terrain keeps material color and lighting.
+-		float distanceMetres = length( g_vCameraPositionWs - position ) * 0.0254;
+-		float detail = 1.0 - smoothstep( 32.0, 64.0, distanceMetres );
+-		float4 weights = max( input.vMaterialWeights, 0.0 );
+-		float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
+-		float sandWeight = saturate( 1.0 - total );
+-		weights /= max( total, 1.0 );
+-		material.Albedo = 0.0;
+-		material.Normal = 0.0;
+-		material.Roughness = 0.0;
+-		material.AmbientOcclusion = 0.0;
+-		material.Metalness = 0.0;
+-		TerrainSample grass = SampleTerrain( GrassColorMap, GrassNormalMap,
+-			1.4, weights.x, position, gradientX, gradientY, normal, projection, detail );
+-		material.Albedo += grass.Color * weights.x;
+-		material.Normal += grass.Normal * weights.x;
+-		material.Roughness += lerp( 0.85, 1.0, saturate( grass.Surface.r ) ) * weights.x;
+-		material.AmbientOcclusion += grass.Surface.g * weights.x;
+-		TerrainSample dirt = SampleTerrain( DirtColorMap, DirtNormalMap,
+-			2, weights.y, position, gradientX, gradientY, normal, projection, detail );
+-		// Dark earthy soil: reduce the red cast while retaining source variation.
+-		dirt.Color *= float3( 0.55, 0.65, 0.60 );
+-		material.Albedo += dirt.Color * weights.y;
+-		material.Normal += dirt.Normal * weights.y;
+-		material.Roughness += clamp( dirt.Surface.r, 0.65, 1.0 ) * weights.y;
+-		material.AmbientOcclusion += dirt.Surface.g * weights.y;
+-		TerrainSample stone = SampleTerrain( StoneColorMap, StoneNormalMap,
+-			2.38, weights.z, position, gradientX, gradientY, normal, projection, detail );
+-		// Retain a little mineral color while removing the source rock's brown cast.
+-		float stoneLuminance = dot( stone.Color, float3( 0.2126, 0.7152, 0.0722 ) );
+-		stone.Color = lerp( stoneLuminance.xxx, stone.Color, 0.15 );
+-		material.Albedo += stone.Color * weights.z;
+-		material.Normal += stone.Normal * weights.z;
+-		material.Roughness += lerp( 0.65, 1.0, saturate( stone.Surface.r ) ) * weights.z;
+-		material.AmbientOcclusion += stone.Surface.g * weights.z;
+-		TerrainSample snow = SampleTerrain( SnowColorMap, SnowNormalMap,
+-			1.0, weights.w, position, gradientX, gradientY, normal, projection, detail );
+-		material.Albedo += snow.Color * weights.w;
+-		material.Normal += snow.Normal * weights.w;
+-		material.Roughness += lerp( 0.8, 1.0, saturate( snow.Surface.r ) ) * weights.w;
+-		material.AmbientOcclusion += snow.Surface.g * weights.w;
+-		TerrainSample sand = SampleTerrain( SandColorMap, SandNormalMap,
+-			1.0, sandWeight, position, gradientX, gradientY, normal, projection, detail );
+-		material.Albedo += sand.Color * sandWeight;
+-		material.Normal += sand.Normal * sandWeight;
+-		material.Roughness += lerp( 0.85, 1.0, saturate( sand.Surface.r ) ) * sandWeight;
+-		material.AmbientOcclusion += sand.Surface.g * sandWeight;
+-		material.Normal = normalize( material.Normal );
+-		return ShadingModelStandard::Shade( input, material );
+-	}
+-}
++		return float4( 0.18, 0.18, 0.18, 1.0 );
++	}
++}

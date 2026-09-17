@@ -24,7 +24,7 @@ figure-eight FPS/memory gates are pending; prior material-render acceptance does
 not qualify the prototype. See SurfaceWater and VoxelMaterials for ownership.
 
 One integer-indexed clipbox hierarchy owns the enabled terrain render levels.
-The shipping default enables levels 0 through 2. Optional visual-distance tiers
+The component defaults enable levels 0 through 2. Optional visual-distance tiers
 enable ordinary levels 3 through 6 through the same records and queues. The
 authoritative world combines the procedural SDF with the shared correction field
 owned by [terrain deformation](TerrainDeformation.md);
@@ -105,13 +105,25 @@ outermost cache uses its own anchor. Each coarse hole is exactly the finer
 coverage bounds divided by two, so every boundary is complete and 2:1 aligned.
 The lowest enabled level fills its center and has no hole.
 
-The default applied snapshot is `MinimumVisualLod=0`, `MaximumVisualLod=2`,
+The component-default snapshot is `MinimumVisualLod=0`, `MaximumVisualLod=2`,
 `Lod0VisualHalfExtent=4`, and `LodCacheHalfExtent=8`. It produces 512 active
 LOD0 coordinates; a 4096-coordinate level-1 cache with a 64-coordinate hole and
 4032 active coordinates; and a 4096-coordinate level-2 cache with a
 512-coordinate hole and 3584 active coordinates. Its adjacent transition pairs
 contain 96 and 384 face identities. `GameplayRadius=4` independently owns 729
 authoritative gameplay coordinates.
+
+The `basic_example` scene now selects `MinimumVisualLod=0`,
+`MaximumVisualLod=5`, `Lod0VisualHalfExtent=4`, `LodCacheHalfExtent=4`,
+and `VisualChunkRadius=128`. This scene policy keeps the same full-detail near
+box and nominal reach as its previous `4/8`, maximum-level-4 configuration,
+while using coarser geometry sooner outside that box. Coarsest cell spacing
+increases from 256 to 512 world units. It changes derived visual placement only;
+the source field, collision, materials, shadows and component defaults remain
+unchanged. Earlier transitions can alter distant silhouettes and riverbanks.
+Measurements and the bounded visual qualification are recorded in
+[the high-gain investigation](../Research/TerrainHighGainExperiments.md) and
+the ledger's `TERRAIN-HIGH-GAINS-SHIPPING-001/v1` scenario.
 
 `VisualChunkRadius` is the terrain quality policy surface, expressed as nominal
 reach in LOD0-sized chunks. It selects, rather than duplicates, the canonical
