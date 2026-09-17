@@ -186,3 +186,68 @@ opportunity, but needs a supported integration path and its own measurements.
 Occlusion remains constrained by the user's decision against an additional
 terrain geometry draw solely to obtain depth. No unimplemented redesign is
 counted toward the measured gain.
+
+## Standstill follow-up: current player view
+
+The user's follow-up correctly identifies an unresolved cost. The moving gain
+above does not imply a similar standstill gain. The current player view is a
+different angle and saved field revision 3894, so its absolute FPS cannot be
+compared directly with the earlier 0,0,0 camera and revision 3893.
+
+`TERRAIN-STANDSTILL-001/v1` records read-only observations from the existing
+production sampler at camera Euler 11.961, -108.111, 0 and the same player
+position. Source is 6aefb5a, engine/hardware unchanged. Three samples per phase
+preserved camera, field revision, material/lighting settings and settled queues.
+No test component, shader variant or new benchmark path was added.
+
+| Phase | FPS range | Mean GPU time range |
+| --- | ---: | ---: |
+| Current full resolution, 2769 x 1529 | 335.1-339.2 | 2.57-2.61 ms |
+| Diagnostic quarter-pixel count, 1385 x 765 | 542.0-549.9 | 1.30-1.31 ms |
+| Restored full resolution | 328.0-330.9 | 2.62-2.65 ms |
+
+Mean FPS rose from 337.1 to 546.9 (+62.2%) in the resolution diagnostic and
+returned to 329.2 after restoration. The combined full-resolution range was
+within the predeclared 5% stability limit. The diagnostic changes all work
+sensitive to pixel count and texture footprint, not just terrain textures;
+it is evidence of strong screen-pixel cost, not an acceptable visual downgrade
+or proof that a particular shader optimization will deliver 547 FPS.
+
+Separate instrumented snapshots identified the largest named GPU scopes:
+
+| Scope | Smoothed time range |
+| --- | ---: |
+| Terrain color draw, including vertex/material/lighting work | 1.17-1.42 ms |
+| Four opaque cascade depth scopes combined | 0.514-0.522 ms |
+| Large depth/normal prepass | 0.354-0.364 ms |
+| Distance fog | 0.141-0.148 ms |
+
+Do not add nested parent/child scopes or compare instrumented FPS with the
+unprofiled phases. Color-draw timing is not an isolated texture-sampling timer.
+The CPU terrain update was approximately 0.03-0.04 ms in the unprofiled
+observations, with zero visual/transition backlog. All 4913 collision regions
+were ready with zero failures. This points to rendering, particularly visible
+surface shading, rather than ongoing terrain generation. CPU/GPU times overlap.
+
+The inspected current screenshot contains a large foreground grass area,
+water and distant terrain. Standing still stops movement-driven streaming,
+but the view is still rendered every frame. Earlier distant geometry LOD
+therefore does not remove the nearby material/lighting cost. The next targeted
+experiment should isolate material sampling from lighting in this heavier view
+before selecting another appearance-preserving optimization. Previously
+rejected anti-repetition and material-cache prototypes remain rejected; no new
+cache result or 500-600 FPS promise is implied by this diagnosis.
+
+A secondary observation is allocation history: the current scene uses 14 arenas
+(11 have allocations) versus 6 in the earlier cold candidate. Source inspection
+shows empty trailing arena trimming is called at figure-eight completion, not
+ordinary idle, and allocated ranges are not compacted. This deserves a separate
+controlled investigation; no FPS share is attributed to fragmentation here.
+Current configuration is applied automatically by OnUpdate, so the higher arena
+count does not mean that inspector settings failed to apply.
+
+[Standstill evidence](../ValidationEvidence/TerrainStandstill/) retains all 12
+sampler/profiler observations and the inspected image. Full resolution is
+restored, GPU profiling disabled, and no runtime source or visual setting change
+is retained. These documentation-only findings do not require a new figure-eight
+acceptance run. The standstill performance target remains unresolved.

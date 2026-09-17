@@ -30401,3 +30401,53 @@ Final shipping comparison decision: valid return-control repeat317.3385moving/33
 ACCEPT scene cache4/maxLOD5 at unchanged near4/radius128: candidate passes>=20% moving gain, improved tails, settled streaming,0safetyfailures, peak process/GPU within10%gate, and matched nearby appearance. Cold candidate allocations-0.93%total/-22.87%perframe vs firstvalidbaseline; GCpause+6.32% with improved p95/p99. Firstcandidate GCpause+14.59% remains recorded, not claimed as an improvement. Distant geometry/riverbanks are coarser; exhaustive temporal popping, low-sun and cave/multiplayer qualification is not established. Existing supported placement/transition implementation and authoritative field remain unchanged. Restore candidate live after comparison, preserve scene radius128, retain only the two scene values plus documentation/evidence. All diagnostic pass removals and shader changes remain reverted.
 
 Acceptance scope clarification: the>=20% substantial-gain target is met for the canonical moving figure-eight; stationary gain10.4..17.9% is below that target. Final retained live/readback and saved source both near4/cache4/LOD0..5/radius128. Final screenshot inspected with terrain/textures rendered, native errorsnone, last compile succeeded0errors, queues0,4913collisionready/0failures, grounded player, worldrevision3893/checkpoint110/committed0. Crash marker unchanged at2026-09-17T14:07:52.703737Z. Editor remains visible/interactive, original shader/C# and parallax-disabled material policy preserved.
+
+## TERRAIN-STANDSTILL-001/v1 (2026-09-17; defined before observations)
+
+User reports approximately300FPS while standing still after distance-LOD adoption.
+Source6aefb5a, engine26.09.15, sameRTX5090/Ryzen9800X3D, one visible
+interactive local basic_example player; fieldrevision3893/checkpoint110.
+Use the current player(-1.75826252,1.51844168,246.88446), camera
+(-1.75826252,1.51844168,310.884552), Euler(11.9609947,-108.111198,0),
+horizontalFOV75, near10/far100000, resolution2769x1529. Scene configuration
+near4/cache4/LOD0..5/radius128, gameplay8, seed1337/gen48 and recipe as
+HIGH-GAINS-SHIPPING-001/v1. No movement, edits, light or material changes.
+Read-only production sampler observations, not a substitute benchmark runner.
+Require zero pending visual/transition work and4913collisionready; record
+camera before/after, source field, FPS/p95/p99/GPU, CPU profiler and arena usage.
+Three unprofiled samples12seconds apart use the existing10-second window;
+flag>5%FPS range or any camera/input change rather than calling it controlled.
+Then three GPU-attribution snapshots10seconds apart with nativeoverlay_gpu1;
+restoreoverlay_gpu0. Instrumented FPS is not comparable to unprofiled timing.
+A predeclared resolution-only diagnostic may use1385x765 (aboutquarterpixels),
+wait15seconds, take three12-second-spaced samples, then restore2769x1529,
+wait15seconds and repeat baseline. It is a fill/shading-sensitivity diagnostic,
+not a proposed visual downgrade or FPS acceptance claim. Preserve all failures.
+No new runtime source or shader change is being tested in this observation.
+
+Before first standstill sample, current edit-info establishes revision3894/checkpoint111 (one user edit since the prior task). Correct this scenario metadata to the current saved field3894/111; do not restore3893. No samples had been run under the incorrect copied field metadata. All current measurements require3894and stable camera; any further change invalidates their matched comparison.
+
+STANDSTILL-001/v1 current-baseline: [{"utc": "2026-09-17T15:58:21.010555+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "335.1 FPS average; p95 4.30 ms; p99 5.33 ms; GPU 2.61 ms average", "pending": [0, 0], "resolution": [2769, 1529]}, {"utc": "2026-09-17T15:58:33.117574+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "339.2 FPS average; p95 4.29 ms; p99 5.37 ms; GPU 2.57 ms average", "pending": [0, 0], "resolution": [2769, 1529]}, {"utc": "2026-09-17T15:58:45.194897+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "337.0 FPS average; p95 4.25 ms; p99 5.37 ms; GPU 2.59 ms average", "pending": [0, 0], "resolution": [2769, 1529]}]; raw: ValidationEvidence/TerrainStandstill/current-baseline.json
+
+STANDSTILL-001/v1 current-gpu: [{"utc": "2026-09-17T15:59:12.392505+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "321.0 FPS average; p95 4.47 ms; p99 5.53 ms; GPU 2.73 ms average", "pending": [0, 0], "resolution": [2769, 1529]}, {"utc": "2026-09-17T15:59:22.505879+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "301.2 FPS average; p95 4.75 ms; p99 6.04 ms; GPU 2.90 ms average", "pending": [0, 0], "resolution": [2769, 1529]}, {"utc": "2026-09-17T15:59:32.625134+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "290.0 FPS average; p95 5.02 ms; p99 6.20 ms; GPU 2.98 ms average", "pending": [0, 0], "resolution": [2769, 1529]}]; raw: ValidationEvidence/TerrainStandstill/current-gpu.json
+
+STANDSTILL-001/v1 quarter-pixels: [{"utc": "2026-09-17T16:00:18.225483+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "549.9 FPS average; p95 2.73 ms; p99 3.35 ms; GPU 1.30 ms average", "pending": [0, 0], "resolution": [1385, 765]}, {"utc": "2026-09-17T16:00:30.264932+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "548.8 FPS average; p95 2.71 ms; p99 3.37 ms; GPU 1.31 ms average", "pending": [0, 0], "resolution": [1385, 765]}, {"utc": "2026-09-17T16:00:42.349416+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "542.0 FPS average; p95 2.76 ms; p99 3.39 ms; GPU 1.30 ms average", "pending": [0, 0], "resolution": [1385, 765]}]; raw: ValidationEvidence/TerrainStandstill/quarter-pixels.json
+
+STANDSTILL-001/v1 restored-full: [{"utc": "2026-09-17T16:01:32.572421+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "328.6 FPS average; p95 4.47 ms; p99 5.47 ms; GPU 2.65 ms average", "pending": [0, 0], "resolution": [2769, 1529]}, {"utc": "2026-09-17T16:01:44.660117+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "328.0 FPS average; p95 4.32 ms; p99 5.46 ms; GPU 2.65 ms average", "pending": [0, 0], "resolution": [2769, 1529]}, {"utc": "2026-09-17T16:01:56.754388+00:00", "camera": {"WorldPosition": "-1.75826252,1.51844168,310.884552", "WorldRotation": "11.9609947,-108.111198,0"}, "frame": "330.9 FPS average; p95 4.41 ms; p99 5.31 ms; GPU 2.62 ms average", "pending": [0, 0], "resolution": [2769, 1529]}]; raw: ValidationEvidence/TerrainStandstill/restored-full.json
+
+STANDSTILL-001/v1 decision: all12observations preserved camera/position and
+field3894; zero visual/transition backlog,4913collisionready/0failures.
+Full-resolution unprofiled windows335.1/339.2/337.0FPS, GPU2.61/2.57/2.59ms;
+quarterpixels549.9/548.8/542.0FPS, GPU1.30/1.31/1.30ms; restoredfull
+328.6/328.0/330.9FPS, GPU2.65/2.65/2.62ms. Full range within5%gate.
+Quarter mean546.9vs337.1FPS(+62.24%), a diagnostic only. Terrain color scope
+1.173..1.420ms is the largest named GPU draw; shadow cascade depth sum
+0.514..0.522ms, large depth0.354..0.364ms, fog0.141..0.148ms. Instrumented
+FPS excluded from comparison; no sum of nested scopes. The resolution trial
+changes all pixel-sensitive work, so material-only or GPU-only attribution is
+not established. CPU terrain update~0.03..0.04ms; no active terrain generation.
+Current screenshot inspected after timings: substantial foreground grass,
+water/distant terrain rendered. Original2769x1529 restored, overlay_gpu0,
+no native error output. No runtime/source optimization retained; standstill
+target remains unresolved. Save observations and prioritization in the existing
+high-gain research report. Documentation-only changes; no figure-eight required.
