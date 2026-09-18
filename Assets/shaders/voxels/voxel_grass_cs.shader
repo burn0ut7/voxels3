@@ -74,8 +74,9 @@ CS
 			}
 			return;
 		}
-		const float3 GrassLowerPadding = float3( 14.0, 14.0, 1.0 );
-		const float3 GrassUpperPadding = float3( 14.0, 14.0, 20.0 );
+		// Maximum leaf height is 38 * 1.05 inches; lean is at most half its height.
+		const float3 GrassLowerPadding = float3( 22.0, 22.0, 1.0 );
+		const float3 GrassUpperPadding = float3( 22.0, 22.0, 42.0 );
 		uint slot = GrassFirstSlot + group.x;
 		float4 lower = VisibilityBounds[slot * 2];
 		float3 upper = VisibilityBounds[slot * 2 + 1].xyz;
@@ -152,7 +153,7 @@ CS
 				{
 					GrassRoots[index * 2] = float4( root - float3( 0.0, 0.0, 0.3 ), scale );
 					GrassRoots[index * 2 + 1] = float4( GrassRandom( key + 4 ) * 6.2831853,
-						lerp( 5.0, 11.0, GrassRandom( key + 5 ) ), lerp( 0.22, 0.45, GrassRandom( key + 6 ) ),
+						lerp( 22.0, 38.0, GrassRandom( key + 5 ) ), lerp( 0.35, 0.65, GrassRandom( key + 6 ) ),
 						GrassRandom( key + 7 ) );
 				}
 			}

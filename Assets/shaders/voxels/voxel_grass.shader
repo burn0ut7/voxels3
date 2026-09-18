@@ -37,14 +37,14 @@ VS
 		// root, a curved wide middle and a tip, identically in depth and color.
 		uint leaf = input.VertexId / 6;
 		uint corner = input.VertexId % 6;
-		float height = corner == 0 ? 0.0 : (corner == 5 ? 1.0 : 0.4);
+		float height = corner == 0 ? 0.0 : (corner == 5 ? 1.0 : 0.45);
 		float side = (corner == 1 || corner == 4) ? -1.0 : ((corner == 2 || corner == 3) ? 1.0 : 0.0);
 		float variation = frac( shape.w * 7.13 + leaf * 0.618034 );
 		float angle = shape.x + leaf * 2.3999632;
 		float3 bendAxis = float3( cos( angle ), sin( angle ), 0.0 );
 		float3 widthAxis = float3( -bendAxis.y, bendAxis.x, 0.0 );
-		float length = shape.y * lerp( 0.55, 1.1, variation );
-		float lean = lerp( 0.3, 0.65, frac( variation * 3.71 ) );
+		float length = shape.y * lerp( 0.65, 1.05, variation );
+		float lean = lerp( 0.22, 0.5, frac( variation * 3.71 ) );
 		float width = shape.z * lerp( 0.75, 1.15, frac( variation * 5.17 ) );
 		float3 position = root.xyz + root.w * (widthAxis * side * width +
 			float3( 0.0, 0.0, height * length ) + bendAxis * height * height * length * lean);
@@ -70,8 +70,8 @@ PS
 			return DepthNormals::Output( normal, 0.95, 1.0 );
 		#else
 		Material material = Material::Init( input );
-		float3 baseColor = lerp( float3( 0.11, 0.17, 0.032 ), float3( 0.18, 0.245, 0.065 ), input.GrassTint.y );
-		material.Albedo = baseColor * lerp( 0.65, 1.12, input.GrassTint.x );
+		float3 baseColor = lerp( float3( 0.085, 0.19, 0.028 ), float3( 0.17, 0.27, 0.06 ), input.GrassTint.y );
+		material.Albedo = baseColor * lerp( 0.55, 1.12, input.GrassTint.x );
 		material.Normal = normal;
 		material.Roughness = 0.95;
 		material.AmbientOcclusion = lerp( 0.8, 1.0, input.GrassTint.x );

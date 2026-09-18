@@ -31206,3 +31206,92 @@ Acceptance: fuller short tufts replace isolated dark spikes within the unchanged
 in the before/after evidence; that separate user work is excluded from this task.
 Returned player to the original vicinity,ThirdPerson true,normal game camera,
 free viewport sizing and enabled input. All failed previews/runs remain preserved.
+
+## GRASS-MEADOW-001/v1 — long meadow appearance (defined 2026-09-18)
+
+User refines the short-tuft result: long, lush meadow grass. Keep the canonical
+GRASS-NATURAL-001/v2 figure-eight workload and gates unchanged, comparing the
+latest accepted run4e7db047ad1c4c20a8f106204a825306 at48b0806. Saved world is
+f5ce10f3-6d75-428e-b3dd-63dee14891c6, revision3989/pages873; fresh10:00:23
+readback confirms no world drift. Checkpoint138 is save metadata. Seed1337/gen48,
+basic_example, one player,32cells/16units, gameplay8/visual128,LOD0..5,extents4/4,
+startXY(-1.6258175,1.2225341),Z340,eyeEuler0,FOV75,2769x1529,speed2500,
+distance50000,one loop,clearance393.7008,automatic drain plus10s stationary.
+Input enabled; settle before starting and no screenshots during measured windows.
+Require <=10% regression in moving/standing FPS,p95/p99,peak process/GPU memory
+and allocations/frame; stationary GPU increase <=0.3ms. Zero exceptions,
+collision failures and grass overflow; settled streaming. Also retain comparison
+with original v2 blade baselineb518c1394fc248a9b2b20be516760aaf to show total cost.
+Existing uncommitted terrain-fade source remains unchanged and excluded.
+
+Candidate retains five leaves, two triangles/leaf, density, distance thinning,
+root storage and draws. Parent height22..38in times leaf variation0.65..1.05
+produces36..101cm upright height at full size, halfwidth0.35..0.65in times
+0.75..1.15, lean0.22..0.5. Bounds expand22in horizontally/42in above/1in below,
+covering the tallest bent tip. Richer greens and darker roots give depth.
+No wind, added objects, textures, simulation, collision or network state.
+
+Visual criteria: substantial overlapping long grass with varied height and
+lean, rooted geometry, intact skyline/viewport tips and bare non-grass material.
+Reuse close camera(0,-250,267.93129),Euler(25,0,0),FOV75,1440x900 and skyline
+(-775,3919,680),Euler(-4,0,0),FOV75. Add meadow overview from the same closeXY,
+Z310,pitch10 to inspect long silhouettes at player eye height. Range6/12/24/32m
+captures reuse prior patchXY(100,-250),groundZ212.93129,pitch90,FOV45,1440x900.
+Do not claim visual acceptance from statistics. Require final cold visible editor
+restart and fresh log/Sentry verification. Preserve all failed runs/candidates.
+Evidence: ValidationEvidence/MeadowGrass. Prior short-tuft images remain in
+NaturalGrass; return player near pre-task(1248.01477,942.384094,590.192078).
+
+The unchanged low skyline cameraZ680 is now inside the taller leaves and cannot
+show whole tips across the skyline; final-skyline.png preserves that result.
+Add a supplemental visual-only camera(-775,3919,735),Euler(-4,0,0),FOV75,
+1440x900 to inspect the canopy from above the near leaves. This does not replace
+the fixed performance route or its original low-camera capture.
+
+### GRASS-MEADOW-001/v1 result — 2026-09-18
+
+Runf06cc54d7a21461ab5f94a05a8a865d2,revision48b0806-tall-meadow,completed with
+all fixed parameters matching. Moving510.69592FPS(-2.3975%vsacceptedshorttufts),
+p953.572ms(+0.1093%),p995.916ms(-2.3198%),GPU1.533606ms. Standing443.28665FPS
+(-4.9000%),p953.2656ms(+4.2557%),p994.0963ms(+2.1419%),GPU1.7626724ms
+(+0.1202326ms). Every frame/memory/allocation gate passes against the latest
+accepted short-tuft baseline specified before this run. Full candidate.json.gz,
+raw SHA256 and comparison.json retained in ValidationEvidence/MeadowGrass.
+
+Peak process/GPU moving4870430720/1589779201bytes(-1.482%/+0.211%); standing
+4811374592/1539349249bytes(-2.999%/+0.220%). Allocation/frame59647.25moving
+(+2.065%),29877.078standing(+1.072%). Both windows0exceptions. Collision4913ready,
+0pending,0failures. Streaming settled; nearbyLOD0first1.3s/full7.3s. Final camera
+(-1.75829196,1.51846254,310.884521),Euler0,FOV75,2769x1529. Saved world unchanged
+revision3989/pages873;checkpoint139 advanced on Play save and is metadata only.
+
+The original isolated-blade comparison is also retained: standingFPS-8.7997%,
+GPU+0.2130209ms,p95+12.2161% (3.2656ms versus2.9101ms). That older p95 exceeds
+its10%gate. Do not describe this as passing all original-spike gates; the latest
+accepted short-tuft run is the governing baseline for this requested revision.
+No workload or gate was weakened. This is one-player RTX5090/engine26.09.15
+qualification; loaded multiplayer, other hardware and fresh edits remain untested.
+
+Post-route grass diagnostic10:07:16:117614views,2602current/2606peak tufts,
+0overflow,2097152rootbytes/view,52120peak triangle submissions across both draws.
+This covers the camera's session, not an isolated route maximum. The worker's
+initial console filters used command names and matched nothing; diagnostics.json
+retains corrected TerrainGrass/TerrainEdit/VoxelCollision reads. No missing-output
+result is used as evidence of absence.
+
+Cold visible editorPID1804 successfully compiled C# with0errors. Sentry marker
+remains2026-09-17T21:21:41.634073Z. PriorPID66668 reached Source2Shutdown and the
+known shutdown Error window, then only that process was stopped before restart.
+Fresh cold log retains stock missing/invalid resource messages and Vulkan cache
+rename failure; no project shader/parser/dispatch/managed-exception failure.
+Both grass shaders compiled successfully before restart. Final source SHA256
+matches candidate-preflight.json; unchanged terrain-fade source remains excluded.
+
+Final close and meadow views show overlapping36..101cm leaves, varied height/lean,
+rooted geometry and bare dirt/stone. Raised skyline view shows intact canopy and
+viewport edges; fixed low view is preserved from inside the taller stand. The
+6/12/24/32m overheads show progressive thinning and no central geometry at32m.
+Grass remains static, with no animation code. Returned to pre-task vicinity,
+ThirdPerson true,free viewport sizing and enabled input; restored-session.json
+records readback. Acceptance: long meadow appearance and all latest-baseline
+performance gates pass, with the cumulative original-spike p95 limitation above.

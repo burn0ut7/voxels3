@@ -1,6 +1,6 @@
 # Static terrain grass
 
-## Current tufts (one-player qualification accepted)
+## Current meadow tufts
 
 Grass remains derived appearance from published LOD0 terrain triangles and
 canonical interpolated grass weights. The existing GPU mesher and per-camera
@@ -12,11 +12,14 @@ Five curved leaves now share each surface root, replacing isolated triangular
 blades. Each leaf uses two triangles between a narrow root, bent middle and tip.
 Deterministic
 height, width, orientation, outward lean and color variation break up repeated
-silhouettes. Individual leaves span approximately7..31cm height and0.8..2.6cm
-full width. Conservative region bounds include14in horizontal spread,20in height
+silhouettes. The user's meadow refinement replaces the short7..31cm tufts with
+approximately36..101cm upright leaf height and1.3..3.8cm full width at full size.
+The five leaves overlap neighboring tufts while retaining varied silhouettes.
+Parent height22..38in is multiplied by0.65..1.05 per leaf; outward lean is
+0.22..0.5 of leaf height. Conservative region bounds include22in horizontal spread,42in height
 and1in below terrain. Every leaf starts at the actual published surface root.
 
-Upward-biased two-sided normals and green-to-olive variation soften the previous
+Upward-biased two-sided normals and varied rich greens soften the previous
 dark spike shading. This approximates leaf lighting, not physical transmission.
 Standard scene lighting and received shadows remain. There are no alpha cards,
 extra textures, wind or grass shadow pass. Both depth and color use the same
@@ -41,10 +44,14 @@ counts/cost must be measured. Overflow remains a qualification failure. The
 existing16-byte diagnostic now reports currentTufts rather than currentBlades.
 
 The sparse one-root/144square-unit preview was rejected visually because plants
-remained isolated. Denser shorter tufts are measured under GRASS-NATURAL-001/v2
-in the ledger. Its changed saved world requires a fresh before/after baseline;
+remained isolated. Denser shorter tufts were measured under GRASS-NATURAL-001/v2
+in the ledger. Its changed saved world required a fresh before/after baseline;
 historical figures below are contextual. Existing terrain-texture fade changes
-are held identical and excluded. See [current evidence](../ValidationEvidence/NaturalGrass/README.md).
+are held identical and excluded. The long meadow refinement uses the same fixed
+workload, geometry count, density and range; only dimensions, shading and the
+conservative bounds change. Taller coverage can increase pixel work, so unchanged
+triangle count is not itself a performance claim. See the meadow qualification
+below and [short-tuft evidence](../ValidationEvidence/NaturalGrass/README.md).
 
 Alternatives: more isolated triangles retain the spike silhouette; alpha-cutout
 cards add texture/overdraw and depth-cutout work; independent curved leaves
@@ -55,7 +62,28 @@ single-blade geometry is replaced, not retained as a second rendering path.
 The sections below document the historical single-blade implementation and its
 measurements. Current shape, density, draw counts and qualification are above.
 
-## Current qualification
+## Meadow qualification
+
+GRASS-MEADOW-001/v1 compares with the accepted short-tuft run below, with unchanged
+scenario inputs and performance gates. Runf06cc54d7a21461ab5f94a05a8a865d2 passes
+the comparison with that latest accepted baseline: moving510.70FPS(-2.40%),
+standing443.29FPS(-4.90%), standingp953.2656ms(+4.26%) andGPU1.76267ms
+(+0.12023ms). Memory, allocations, frame tails, streaming and collision pass;
+zero exceptions and grass overflow. The post-route diagnostic records2602current
+and2606peak tufts in117614views,2MiBroot storage,52120peak triangle submissions
+across both draws. This is a session observation, not a worst-case capacity bound.
+
+Against the older isolated-blade baseline, standingFPS is down8.80% andGPU rises
+0.21302ms; standingp95 is12.22%higher and exceeds that older10%gate. This historical
+comparison is not an all-gates pass. The governing comparison for this revision
+is the latest accepted short-tuft baseline, defined before the run.
+Cold startup on26.09.15, source identity and close/overview/range views were
+verified. The original low skyline camera is inside the taller grass; a raised
+supplemental view records the canopy. See [meadow evidence](../ValidationEvidence/MeadowGrass/README.md).
+Qualification remains one player on the recordedRTX5090, with static grass and
+the same32m range; other hardware, multiplayer load and fresh edits are untested.
+
+## Previous short-tuft qualification
 
 GRASS-NATURAL-001/v2, run4e7db047ad1c4c20a8f106204a825306, passes the unchanged
 before/after gates on the recorded RTX5090: moving523.24FPS versus520.81,
