@@ -3496,6 +3496,18 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 					RegionsPerSlab,
 					IndirectArgumentStride );
 			}
+			var grassStarted = false;
+			foreach ( var arena in _arenas )
+			{
+				if ( arena.ActiveResidentCount == 0 ) continue;
+				if ( !grassStarted )
+				{
+					state.Grass.Begin( commands, visibility.Bounds, visibility.SourceArguments );
+					grassStarted = true;
+				}
+				state.Grass.AddArena( commands, arena.Vertices, arena.Indices, arena.Index * RegionsPerSlab, RegionsPerSlab );
+			}
+			if ( grassStarted ) state.Grass.End( commands );
 		}
 		state.CommandsDirty = false;
 		var elapsedTicks = Stopwatch.GetTimestamp() - start;
@@ -3504,6 +3516,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		return new DrawCommandCommitResult(
 			true,
 			(float)(elapsedTicks * 1000.0 / Stopwatch.Frequency) );
+	}
+
+	public void RequestGrassStatistics()
+	{
+		lock ( _renderCameraLock ) _visibilityReadbackState?.Grass.RequestStatistics();
 	}
 
 	public void BeginVisibilityMeasurement()
@@ -4353,6 +4370,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 
 	private sealed class RenderCameraState : IDisposable, IHotloadManaged
 	{
+		public TerrainGrassRenderer Grass { get; } = new();
 		public GeometryArena[] DepthArenas { get; set; } = Array.Empty<GeometryArena>();
 		public Dictionary<int, RenderAttributes> DrawAttributes { get; } = new();
 		public CameraComponent Camera { get; }
@@ -4406,6 +4424,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		{
 			DisposeVisibility();
 			AggregateCounters.Dispose();
+			Grass.Dispose();
 		}
 	}
 
@@ -4528,7 +4547,10 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				{
 					var state = _owner._visibilityReadbackState;
 					if ( state is not null )
+					{
 						foreach ( var attributes in state.DrawAttributes.Values ) Graphics.SetupLighting( this, attributes );
+						Graphics.SetupLighting( this, state.Grass.DrawAttributes );
+					}
 				}
 			}
 			if ( _owner.TryBeginGpuRenderTick() )
@@ -4538,6 +4560,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 					System.Threading.Interlocked.Increment( ref _owner._renderSequence );
 					_owner.ProcessGpuRenderTick();
 					_owner.ProcessVisibilityReadback();
+					lock ( _owner._renderCameraLock ) _owner._visibilityReadbackState?.Grass.ProcessReadback();
 				}
 				finally
 				{

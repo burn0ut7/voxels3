@@ -30731,3 +30731,150 @@ Full-resolution final v3 images inspected: close cut-face dirt/stone detail, gra
 Candidate fresh editor PID65240remains visible/alive/interactive; compile succeeded,0managedcompileerrors, no gameplayerror-consoleentries. Last_crash is unchanged2026-09-17T14:07:52.703737Z. Fresh original and candidate logs both contain stock blue_noise_256 header and six missing stock-content errors; neither fresh log contains project shader/include/parser/pipeline failures or managed exceptions. Failed pre-cold include compile is preserved separately. Editor shutdown Error dialog occurred in original-only and long-hotload sessions and is unresolved; normal editor exit is not declared fixed. Candidate startup/rendering qualification passes independently of that existing teardown limitation.
 
 Final source hashes match production-source-hashes.json; generated4096images match screened outputs byte-for-byte. Final2769x1529physicalpixels,first-personEuler0,FOV75,4,913collisionready,queues0,CSMresolution4096,distance20000,overlay_gpu0 verified. Savedworldrevision3894/pages854 preserved; checkpoints advanced only through normal saves on Play stop. Removed the four unreferenced prototype PNG sources, retaining the production grass_pattern assets and research evidence. No experimental runtime switches, diagnostic shader removals, duplicate draws or test hooks remain.
+
+## GRASS-001/v1 — static grass prototype (defined before runs)
+
+Reuse TERRAIN-FADE-EXTEND-001/v2 canonical figure-eight inputs unchanged:
+basic_example, seed1337/gen48, current saved revision3984/pages868 (verify),
+one player,32cells/16units,gameplay8,visual128,LOD0..5,extents4/4,
+startXY(-1.6258175,1.2225341),Z340,eyeEuler(0,0,0),FOV75,
+2769x1529 physical pixels,speed2500,distance50000,one loop,
+393.7008 clearance,automatic drain and10s stationary. Capture a fresh control
+with the existing64..128m terrain fade; it is a separate uncommitted user change.
+Require queues0/collision4913ready before starting. Capture source/environment
+and full results. Gates: <=10% regression in FPS, p95/p99, peak process/GPU
+memory and allocation rate; zero project exceptions/collision failures and
+settled streaming. Preserve interrupted runs. No workload tuning for a pass.
+
+Supplement visual qualification in the same production world at the settled
+origin: grounded player looking down at grass, mixed grass/dirt edge, and
+camera at6/12/20m from that patch. Pass: actual opaque blades rooted on rendered
+grass, no blades on dirt/stone/sand/snow/water, no movement at a stationary
+camera, progressive distance thinning, no grass outside20m. Inspect a normal
+terrain edit through the existing tool when feasible; new meshes must replace
+grass without stale floating blades. These checks do not replace the route.
+Prototype budget: max65536 visible blades/view,32bytes/root (2MiB),3triangles
+per blade (196608 maximum),one indirect grass draw/view,zero geometry readback,
+zero per-blade scene objects. GPU cost target<=0.3ms, a recorded target in
+addition to the unchanged route gates. Shader changes require cold editor start.
+
+GRASS-001/v1 control completed:753d2673f36a4268a0dacf24ab3277c8,
+121.94394s,510.92795FPS,p953.6452ms,p996.044ms,GPU1.463174ms,
+peak process4867227648bytes,GPU1536023297bytes,60018.535allocated bytes/frame,
+0exceptions,4913collisionready/0pending/0failures,LOD0settled1.5s/full5.5s.
+Raw result and final view diagnostics live in ValidationEvidence/StaticGrass.
+The control revision string was accidentally the literal instruction
+`current gitHEAD+existing-fade64-128`; actual HEAD was
+a3dceac7dad39611cb1ea1f607a0733bf84673ba with the existing uncommitted fade.
+No runtime source edits occurred during the run. Setup used PlayerController
+object angles0 because EyeAngles is not an inspector property; final camera
+rotation(0,0,0,1)verified. This same setup is required for the candidate.
+
+First hotload preview: both grass shaders and C# compile successfully. Initial
+on-demand compute asset load warned before explicit compilation; preserved as
+installation failure, resolved by native compile_source_shader. First rendered
+view inspected actual blades only on grass patches beside exposed dirt; backs
+were too dark, so final shading keeps an upward normal component on both sides.
+Diagnostic17873current/17874peak candidates,0overflow,2MiBroot buffer.
+Play stopped before normal editor close. The existing shutdown Error window
+recurred after Source2Shutdown; terminated only oldPID80168. Fresh visible
+PID58724,engine26.09.15,managed compile0errors,worldrevision3984 loaded.
+Sentry marker2026-09-17T21:21:41.634073Z predates this task's editor launch and
+remains unchanged after the fresh start. Candidate measurement follows cold start.
+
+Candidate57e4653532bc49879b1a6c4c288c563d fails stationary gates:
+moving511.97232FPS,p953.5952,p995.9525,GPU1.5206951;stationary397.40234FPS
+versus504.6678control(-21.26%),GPU2.0673506versus1.4712013ms(+0.596ms).
+The main-agent immediate post-run inspection confirms matched grounded camera
+(-1.7582,1.5184,310.8845),quaternion(0,0,0,1),all queues0.
+The worker's collision attachment initially repeated preflight404Z; that stale
+snapshot does not describe the stationary window. Raw run is retained.
+
+GRASS-001/v1 static cost isolation, before screening: same world and grounded
+origin view,Euler0,FOV75,2769x1529,settled queues,>=30s warmup,one10s existing
+FramePerformance window for each source state. Temporarily omit the sole grass
+draw while preserving GPU generation to distinguish generation from shading;
+restore it after the screen. This is a transient source experiment, not a shipped
+option or independent implementation. Record full diagnostics and source patch.
+Use it only for diagnosis; final acceptance still requires the unchanged route.
+
+Static generation-only screen:506.4FPS,p952.59,p993.89,GPU1.54ms,
+queues0,grounded camera(-1.3646,1.5716,310.7393),Euler0. This is a close
+spawn view, not bit-identical to the route final view; it diagnoses drawing
+cost without establishing performance equivalence. Raster omission restored.
+Final candidate reduces each blade from3triangles to1opaque tapered triangle,
+retaining root density, static lean, height, lighting and distance thresholds.
+Updated ceiling65536triangles; initial196608 budget remains preserved above.
+This change targets the observed raster/shading cost and removes the old shape.
+
+Single-triangle cold screen:556.5FPS,p952.15,p993.44,GPU1.47ms,
+queues0,grounded camera(-1.3779,1.559,310.7412),Euler0. Captured screenshot
+confirms actual blades rendering; grass counts17871current/17872peak,
+0overflow. Screen is supportive only; fresh identical canonical route follows.
+After the generation-only diagnostic, restoring renderer code during Play did
+not immediately re-record its cached command list; that interim507FPS snapshot
+is not a valid rendering measurement and is not used. The single-triangle
+measurement above follows a new visible editor and fresh Play with both shaders
+loaded from final compiled sources. Sentry marker remains unchanged.
+
+Single-triangle route309e60bf8d7f4c4580d87b6b3ba6bf35 core gates pass:
+563.4905movingFPS,p953.2453,p995.4472,GPU1.4365025;469.0372stationaryFPS
+(-7.06%),p952.6271,p993.7386,GPU1.8117. Peak process4868268032bytes,
+GPU1531637913bytes,54648.094allocated bytes/frame,0exceptions,collision
+4913ready/0failures,LOD0settled1.3s/full6.4s. Grounded final view matches
+control. Peak17872blades,0overflow. Extra stationary GPU target<=0.3ms
+is missed by0.0405ms; this is not the accepted final candidate.
+
+Next implementation candidate reduces density fromone/24toone/36square world
+units (~65to43blades/m²), retaining the same geometry, lighting, material
+eligibility and6/12/16/20m falloff. This is a rendering quality/cost decision
+within the requested aggressive prototype, not a benchmark workload change.
+Repeat the exact same world, route, view and gate definitions after cold start.
+Preserve final-* files above as the full-density candidate; use accepted-* for
+the next run only if its measurements pass. No rejected implementation retained.
+
+GRASS-001/v1 visual range subcase, fixed before captures: authoritative patch
+XY(100,-250),column base height212.93129,material inspect atZ212 reportsGrass.
+Detached game camera,1440x900 screenshots,FOV45,angles(90,0,0),positions
+(100,-250,449.15176),(100,-250,685.37224),(100,-250,1000.33286),respectively
+6/12/20m vertically above the patch. Check center patch blades thin and vanish;
+other higher terrain may remain within20m. Close composition at(0,-250,267.93129),
+angles(25,0,0),FOV75 is observational; capture again without moving to compare
+static blade silhouettes. Restore game camera after captures. No world edits.
+
+### GRASS-001/v1 accepted prototype — 2026-09-17
+
+Accepted reduced-density run93f6ac8d3ec24cc6b3ca810b30bc481e,
+121.94602s,68584moving samples. Same fixed route and world as control; source
+and preflight hashes in ValidationEvidence/StaticGrass/reduced-hashes.json.
+Windows are compared in comparison.json; full results are losslessly gzip
+compressed with decompression verification and original-content SHA256 records.
+
+Moving:510.92795->562.41455FPS(+10.08%),p953.6452->3.2158ms,
+p996.044->5.4607ms,GPU1.463174->1.4517931ms. The higher moving FPS is an
+observed run difference, not an attributed optimization from adding grass.
+Stationary:504.6678->481.4761FPS(-4.595%),p952.8095->2.9292ms(+4.261%),
+p994.0268->3.7523ms(-6.817%),GPU1.4712013->1.7414695ms(+0.2702682ms).
+Moving peak process4867227648->4883587072bytes(+0.336%),GPU1536023297->
+1587332673bytes(+3.340%);allocated bytes/frame60018.535->58052.75(-3.275%).
+Stationary peak process-0.493%,GPU-3.104%,allocation/frame+0.780%.
+Both windows0exceptions;4913collisionready,0pending/0failures;LOD0settled1.9s,
+full5.9s versus control1.5/5.5s. All queues0 at the matched grounded final
+camera(-1.7583,1.5185,310.8846),quaternion(0,0,0,1). Peak11919grass roots,
+current11916,0overflow in125880observed view executions;2MiBrootbuffer/camera.
+All fixed<=10%core gates and the additional<=0.3msstationaryGPU target pass.
+Accepted single triangle andone/36square-unit density; no discarded shape or
+raster-omission path remains in production. C# and both shaders compile;
+fresh visible editor starts and plays successfully,0projectError console
+entries,unchanged Sentry marker. Engine26.09.15,RTX5090driver32.0.16.1664,
+Ryzen79800X3D;full environment/source context retained beside results.
+
+Visual result: close opaque blades root into rendered grass; exposed dirt and
+stone remain bare. Fixed6m view has clear blades,12m is thinned,20m central
+patch has none. Close/static-repeat images have identical pixels(all-channel
+absolute difference0). Game camera restored and Play remains interactive.
+Fresh live edit cycles and specific snow/sand/water views were not independently
+run; existing edited surfaces and published material filtering were inspected.
+This is one-player prototype acceptance, not broad multiplayer/hardware proof.
+The pre-existing uncommitted64..128mterrain-fade work was held constant for both
+control and candidates and is not part of the grass commit.

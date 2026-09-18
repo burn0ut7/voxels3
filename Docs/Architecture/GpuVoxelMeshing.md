@@ -1707,3 +1707,12 @@ regular/seam service cursors use a 0.5ms soft budget and 48 inspections. This is
 not a hard frame-time guarantee. Payload and cache-readiness diagnostics support
 fixed before/after figure-eight evidence; additional cache work is not accepted
 as a shipping improvement without the recorded performance gates.
+
+## Static grass first slice (2026-09-17)
+
+[Static grass](StaticGrass.md) consumes active published LOD0 vertex/index and
+material data in the existing camera command list. Each RenderCameraState owns
+its bounded root/argument/statistics buffers, with one opaque indirect draw
+after terrain. It shares terrain publication/readiness and adds no authoritative
+field or mesh readback. The grass document owns distance/density budgets and
+GRASS-001/v1 in the ledger owns measured qualification.
