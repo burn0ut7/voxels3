@@ -1,0 +1,234 @@
+{
+  "runId": "96f39103fddc4f9788952b08dfe46c72",
+  "source": {
+    "task": "MATERIAL-TRANSITION-PERF-001/v1-candidate-e",
+    "revision": "8de302f-candidate-e-current-water-grass"
+  },
+  "outcome": "completed",
+  "test": {
+    "name": "player-figure-eight",
+    "completedLoops": 1,
+    "speed": 2500,
+    "distance": 50000,
+    "terrainClearance": 393.7008,
+    "durationSeconds": 121.94643,
+    "startCenter": {
+      "x": -1.6258175,
+      "y": 1.2225341
+    }
+  },
+  "world": {
+    "scene": "basic_example",
+    "cellsPerAxis": 32,
+    "baseCellSize": 16,
+    "gameplayRadius": 8,
+    "visualChunkRadius": 128,
+    "minimumVisualLod": 0,
+    "maximumVisualLod": 5,
+    "lod0VisualHalfExtent": 4,
+    "lodCacheHalfExtent": 4,
+    "grassRenderRangeMeters": 64,
+    "visualConfigurationRevision": 2,
+    "generator": "regional-landforms-retained-caves",
+    "worldSeed": 1337,
+    "generatorVersion": 48,
+    "terrainSettings": {
+      "worldSeed": 1337,
+      "landAmount": 0.75,
+      "mountainAmount": 0.3,
+      "plainsAmount": 0.6,
+      "continentalScale": 77724.09,
+      "mountainRegionScale": 18681.756,
+      "localLandformScale": 5232.39,
+      "reliefHeight": 3072,
+      "ruggedness": 0.45,
+      "seaLevel": 0,
+      "isValid": true
+    },
+    "streamingCenter": {
+      "x": -1,
+      "y": 0,
+      "z": 0
+    },
+    "targetPosition": {
+      "x": -1.6364042,
+      "y": 1.3974622,
+      "z": 262.9084
+    }
+  },
+  "frame": {
+    "samples": 58364,
+    "truncatedSamples": 0,
+    "averageFps": 478.60623,
+    "p95Milliseconds": 3.3543,
+    "p99Milliseconds": 5.0336,
+    "maximumMilliseconds": 20.3091,
+    "averageGpuMilliseconds": 1.8621103,
+    "p95GpuMilliseconds": 2.8703213,
+    "p99GpuMilliseconds": 3.8318634,
+    "maximumGpuMilliseconds": 10.279417
+  },
+  "memory": {
+    "startProcessBytes": 4469493760,
+    "endProcessBytes": 4799205376,
+    "averageProcessBytes": 4639359714,
+    "peakProcessBytes": 4850753536,
+    "startGpuBytes": 1529185981,
+    "endGpuBytes": 1581912137,
+    "averageGpuBytes": 1572960552,
+    "peakGpuBytes": 1581486153,
+    "gpuBudgetBytes": 32945209344
+  },
+  "runtime": {
+    "samples": 58364,
+    "managedBytesAllocated": 3659310480,
+    "averageManagedBytesAllocatedPerFrame": 62698.08,
+    "maximumManagedBytesAllocatedPerFrame": 45837368,
+    "gen0Collections": 52,
+    "gen1Collections": 30,
+    "gen2Collections": 2,
+    "framesWithCollections": 52,
+    "gcPauseMilliseconds": 413.596,
+    "maximumGcPauseMilliseconds": 9.46,
+    "exceptions": 0,
+    "framesWithExceptions": 0
+  },
+  "collision": {
+    "desired": 4913,
+    "ready": 4913,
+    "bodies": 356,
+    "pending": 0,
+    "building": false,
+    "activeWorkers": 0,
+    "workerLimit": 3,
+    "completed": 0,
+    "retiring": 0,
+    "failures": 0,
+    "staleDiscarded": 0,
+    "published": 34044,
+    "peakCompleted": 3,
+    "peakCompletedBytes": 540672,
+    "residentGeometryBytes": 13252056,
+    "peakResidentGeometryBytes": 13252056,
+    "degenerateTriangles": 18766,
+    "weldedIntersections": 32074,
+    "supportPatchRebuilds": 18,
+    "sampleCount": 285615888,
+    "rejectedBlocks": 36824453,
+    "sampling": {
+      "samples": 34044,
+      "truncatedSamples": 0,
+      "average": 8.847373,
+      "p50": 0.0177,
+      "p95": 38.7696,
+      "p99": 60.0334,
+      "maximum": 80.0419
+    },
+    "extraction": {
+      "samples": 34044,
+      "truncatedSamples": 0,
+      "average": 0.18583445,
+      "p50": 0,
+      "p95": 0.8023,
+      "p99": 0.9904,
+      "maximum": 9.7208
+    },
+    "creation": {
+      "samples": 6276,
+      "truncatedSamples": 0,
+      "average": 0.483708,
+      "p50": 0.4941,
+      "p95": 0.8886,
+      "p99": 1.1983,
+      "maximum": 2.8892
+    },
+    "meshCreation": {
+      "samples": 6276,
+      "truncatedSamples": 0,
+      "average": 0.4765387,
+      "p50": 0.4868,
+      "p95": 0.8803,
+      "p99": 1.1887,
+      "maximum": 2.8821
+    },
+    "worstCreationSetupMilliseconds": 0.0038,
+    "worstCreationMeshMilliseconds": 2.8821,
+    "worstCreationPublicationMilliseconds": 0.0033,
+    "worstCreationCoordinate": {
+      "x": 29,
+      "y": 28,
+      "z": -2
+    },
+    "worstCreationVertices": 4076,
+    "worstCreationIndices": 23493,
+    "retirement": {
+      "samples": 6276,
+      "truncatedSamples": 0,
+      "average": 0.0022335246,
+      "p50": 0.0015,
+      "p95": 0.0073,
+      "p99": 0.0084,
+      "maximum": 0.0627
+    },
+    "requestToReady": {
+      "samples": 34044,
+      "truncatedSamples": 0,
+      "average": 1860.8492,
+      "p50": 1562.2374,
+      "p95": 5059.635,
+      "p99": 7003.422,
+      "maximum": 10760.567
+    }
+  },
+  "lodArrivalStatus": "settled: nearby LOD0 first observed at 1.8s; 6.8s observed",
+  "stationary": {
+    "frame": {
+      "samples": 4233,
+      "truncatedSamples": 0,
+      "averageFps": 423.21118,
+      "p95Milliseconds": 2.7267,
+      "p99Milliseconds": 5.0733,
+      "maximumMilliseconds": 11.1717,
+      "averageGpuMilliseconds": 2.0804222,
+      "p95GpuMilliseconds": 2.097845,
+      "p99GpuMilliseconds": 2.4921894,
+      "maximumGpuMilliseconds": 7.2505474
+    },
+    "memory": {
+      "startProcessBytes": 4822044672,
+      "endProcessBytes": 4828102656,
+      "averageProcessBytes": 4824965939,
+      "peakProcessBytes": 4829274112,
+      "startGpuBytes": 1582223433,
+      "endGpuBytes": 1582223433,
+      "averageGpuBytes": 1582223433,
+      "peakGpuBytes": 1582223433,
+      "gpuBudgetBytes": 32945209344
+    },
+    "runtime": {
+      "samples": 4233,
+      "managedBytesAllocated": 127565296,
+      "averageManagedBytesAllocatedPerFrame": 30135.908,
+      "maximumManagedBytesAllocatedPerFrame": 200488,
+      "gen0Collections": 3,
+      "gen1Collections": 1,
+      "gen2Collections": 0,
+      "framesWithCollections": 3,
+      "gcPauseMilliseconds": 25.538,
+      "maximumGcPauseMilliseconds": 9.339,
+      "exceptions": 0,
+      "framesWithExceptions": 0
+    },
+    "collision": null
+  },
+  "resolution": [
+    {
+      "screenWidth": 2769,
+      "screenHeight": 1529
+    },
+    {
+      "screenWidth": 2769,
+      "screenHeight": 1529
+    }
+  ]
+}

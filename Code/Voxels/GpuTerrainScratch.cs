@@ -156,7 +156,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 			maximum = new Vector3( MathF.Max( maximum.x, high.x ), MathF.Max( maximum.y, high.y ), MathF.Max( maximum.z, high.z ) );
 		}
 		// Dry sand probes neighboring water on the canonical base field.
-		var materialHalo = new Vector3( ProceduralSand.OceanReach, ProceduralSand.OceanReach, 0f );
+		var materialHalo = new Vector3( GpuVoxelMaterials.GenerationHalo, GpuVoxelMaterials.GenerationHalo, 0f );
 		var bounds = new SdfWorldAabb( minimum - materialHalo, maximum + materialHalo );
 		var cancellation = _riverCancellation.Token;
 		_riverPreparation = _riverAtlas.Prepare( settings, bounds, cancellation );

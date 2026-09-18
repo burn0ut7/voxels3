@@ -1,7 +1,19 @@
 # Natural terrain material transitions
 
-Research date: 2026-09-18. Status: design for discussion, not implemented or
-performance accepted. The user selected research/design before implementation.
+Research date: 2026-09-18. The initial design below preserves small patches.
+The user subsequently authorized a prototype and explicitly accepted losing tiny
+patches visually. Candidate F now exists in the workspace: quadratic reconstruction
+of neighboring columns, local noise-shaped mixing and matching grass acceptance.
+B retained stepped outlines; C/D explored wider blending; E reduced sample count.
+F skips invisible noise while retaining E's appearance. The final prototype is
+accepted after fixed-view/detail-change review and a passing matched repeat pair.
+The first standing p99 failure and the observed run-to-run variation remain
+disclosed in the validation ledger and evidence index.
+The coverage cache and texture-height blending are deferred for this slice.
+See [prototype contract](../Architecture/VoxelMaterials.md#material-transition-prototype-2026-09-18)
+and [validation history](../ValidationResults.md#material-transition-001v1--local-blending-prototype-2026-09-18).
+The original recommendation and source observations below describe the research
+baseline, not the candidate's implemented reconstruction.
 Current ownership remains in [Voxel materials](../Architecture/VoxelMaterials.md)
 and [procedural sand](../Architecture/ProceduralSand.md).
 

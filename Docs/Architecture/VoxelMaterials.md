@@ -489,3 +489,65 @@ surface channels remain. Close grass, mixed cut faces and character shadows are
 compared in TERRAIN-STANDSTILL-OPT-001; its ledger owns the performance acceptance
 and any remaining limitations. The larger 8192/four-cell prototype is superseded
 and is not a runtime option.
+
+
+## Material transition prototype (2026-09-18)
+
+Candidate F is the accepted prototype. It retains E's visually screened quadratic
+reconstruction and skips fully faded noise. The matched repeat pair passes all
+performance gates, with about 2.1% moving FPS cost. The first F pair failed the
+standing p99 gate; the bounded repeat found comparable variation in the unchanged
+control and did not reproduce that regression. Both pairs remain in the ledger.
+B retained stepped outlines, C was too hazy, and D was too expensive. The user
+accepts tiny visual patches merging or disappearing; discrete cell identities,
+procedural recipes, density, edits, collision and persistence remain unchanged.
+This section supersedes the four-column reconstruction description for this
+prototype. Historical measurements above do not qualify its added cost.
+
+GenerateVoxelMaterialWeights owns presentation reconstruction at extracted edge
+positions. It samples a separable quadratic B-spline over 3x3 XY columns at
+48-unit presentation spacing (every third canonical column) and two vertical
+nodes per column. Each column uses the same depth below
+its own surface, avoiding subsoil bleeding onto inclined grass. Solid weights
+are normalized per column before lateral filtering; air-only columns fall back
+to dirt. The output remains four packed weights plus implicit sand in the existing
+28-byte vertex. Regular and transition extraction use this one function with
+world coordinates and fixed support, independently of mesh LOD.
+
+GpuVoxelMaterials.GenerationHalo owns the river-query dependency: OceanReach plus
+1.5 presentation spacings (712 units). BlendSpacing owns the 48-unit sampling
+spacing and binds it as VoxelMaterialBlendSpacing to both generation paths;
+vertical material-layer spacing remains 16 units. Both scratch paths use it alongside their
+existing geometry/normal bounds. No retained coverage cache, extra mesh pass,
+new texture or per-frame CPU calculation is introduced. Generation column work
+rises from four to nine evaluations per weight request; the ledger records its
+measured cost against the current saved world and unchanged surrounding sources.
+
+voxel_material_blending.hlsl owns the shared local mixture. Continuous value
+noise at 16- and 4-unit wavelengths varies relative weights inside mixed areas;
+integer corner hashes are world-anchored, including negative coordinates.
+Positive multipliers and squaring retain absent materials and renormalize all
+five contributions. Pure interiors skip this work. Ground shading attenuates
+subpixel variation using the pixel footprint, skipping noise octaves with zero
+contribution and skipping the modulation entirely beyond the coarse cutoff. This is procedural edge breakup,
+not texture-height blending. Existing color, normal and surface maps still apply.
+
+Grass evaluates the same mixture at each candidate root, using full local noise,
+and accepts roots probabilistically with smoothstep(0.1, 0.9, grassWeight).
+Stable root hashes thin the population without animated randomness. Ground
+pixel filtering and grass root sampling intentionally differ at a distance.
+The prior hard 0.75 grass threshold is removed. Capacity and generation spacing
+are unchanged; overflow checks remain required.
+
+This is derived visual data only. Existing rebuild/publication owns invalidation;
+there is no new mutable world state or network payload. Coarse triangles can
+still omit small deposits and blend wider regions. The user accepted that tradeoff
+for this experiment. A retained coverage cache would preserve those deposits at
+higher memory and sampling cost; it remains a research alternative, not a second
+runtime path. Fixed-view evidence and every runtime attempt are recorded under
+MATERIAL-TRANSITION in the validation ledger.
+
+Final near/far/near fixed-camera review retained coherent broad deposits with no
+visible material cracks. Small details changed at the coarser placement, as
+authorized. This is not a guarantee of patch preservation across every LOD or
+proof of temporal smoothness from still images. See the [evidence index](../ValidationEvidence/MaterialBlending/README.md).

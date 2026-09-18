@@ -52,6 +52,7 @@ VS
 PS
 {
 	#include "common/pixel.hlsl"
+	#include "shaders/voxels/voxel_material_blending.hlsl"
 	#include "voxels/voxel_grass_pattern.hlsl"
 	CreateInputTexture2D( GrassColor, Srgb, 8, "", "_color", "Grass,10/10", Default3( 1.0, 1.0, 1.0 ) );
 	CreateInputTexture2D( GrassNormal, Linear, 8, "", "_normal", "Grass,10/20", Default3( 0.5, 0.5, 1.0 ) );
@@ -240,7 +241,7 @@ PS
 		// Full nearby texture detail; distant terrain keeps material color and lighting.
 		float distanceMetres = length( g_vCameraPositionWs - position ) * 0.0254;
 		float detail = 1.0 - smoothstep( 32.0, 64.0, distanceMetres );
-		float4 weights = max( input.vMaterialWeights, 0.0 );
+		float4 weights = BlendVoxelMaterials( input.vMaterialWeights, position, max( length( gradientX ), length( gradientY ) ) );
 		float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
 		float sandWeight = saturate( 1.0 - total );
 		weights /= max( total, 1.0 );

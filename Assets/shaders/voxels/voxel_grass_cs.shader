@@ -19,6 +19,7 @@ CS
 	#include "shaders/voxels/voxel_grass_wind.hlsl"
 	#include "shaders/voxels/voxel_grass_color.hlsl"
 	#include "shaders/voxels/voxel_terrain_normal.hlsl"
+	#include "shaders/voxels/voxel_material_blending.hlsl"
 	#include "shaders/voxels/voxel_frustum.hlsl"
 
 	struct TerrainVertex
@@ -111,7 +112,7 @@ CS
 			TerrainVertex b = GrassVertices[source.BaseVertex + GrassIndices[first + 1]];
 			TerrainVertex c = GrassVertices[source.BaseVertex + GrassIndices[first + 2]];
 			float3 weights = float3( a.Second.z & 255, b.Second.z & 255, c.Second.z & 255 ) / 255.0;
-			if ( max( weights.x, max( weights.y, weights.z ) ) < 0.75 )
+			if ( max( weights.x, max( weights.y, weights.z ) ) <= 0.00001 )
 			{
 				continue;
 			}
@@ -124,6 +125,9 @@ CS
 			float3 p0 = asfloat( a.First.xyz );
 			float3 p1 = asfloat( b.First.xyz );
 			float3 p2 = asfloat( c.First.xyz );
+			float4 materialsA = (float4)((a.Second.z >> uint4( 0u, 8u, 16u, 24u )) & 255u) / 255.0;
+			float4 materialsB = (float4)((b.Second.z >> uint4( 0u, 8u, 16u, 24u )) & 255u) / 255.0;
+			float4 materialsC = (float4)((c.Second.z >> uint4( 0u, 8u, 16u, 24u )) & 255u) / 255.0;
 			// Near regions straddle the view. Reject whole source triangles
 			// before sampling roots, preserving every potentially visible leaf.
 			float3 triangleLower = min( p0, min( p1, p2 ) ) - GrassLowerPadding;
@@ -147,11 +151,16 @@ CS
 				float u = sqrt( GrassRandom( key + 1 ) );
 				float v = GrassRandom( key + 2 );
 				float3 barycentric = float3( 1.0 - u, u * (1.0 - v), u * v );
-				if ( dot( barycentric, weights ) < 0.75 )
+				// Match the ground's continuous coverage with fewer full tufts,
+				// instead of ending the population at one hard material threshold.
+				float3 root = p0 * barycentric.x + p1 * barycentric.y + p2 * barycentric.z;
+				float4 mixture = BlendVoxelMaterials( materialsA * barycentric.x + materialsB * barycentric.y +
+					materialsC * barycentric.z, root, 0.0 );
+				float coverage = smoothstep( 0.1, 0.9, mixture.x );
+				if ( GrassRandom( key + 17 ) >= coverage )
 				{
 					continue;
 				}
-				float3 root = p0 * barycentric.x + p1 * barycentric.y + p2 * barycentric.z;
 				float metres = length( root - g_vCameraPositionWs ) * 0.0254;
 				float density = lerp( 1.0, 0.3, smoothstep( 6.0, 12.0, metres ) );
 				density = lerp( density, 0.08, smoothstep( 12.0, 24.0, metres ) );

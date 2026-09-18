@@ -3,9 +3,14 @@ using System;
 /// <summary>One palette and draw contract for every material; owned by the terrain mesher.</summary>
 internal sealed class GpuVoxelMaterials : IDisposable
 {
+	// Presentation spacing is independent of canonical cell/layer identity.
+	private const float BlendSpacing = 3f * ProceduralVoxelMaterials.LayerSize;
+	// Quadratic support plus the existing scratch halo covers slope probes.
+	public const float GenerationHalo = ProceduralSand.OceanReach + 1.5f * BlendSpacing;
 	private readonly GpuBuffer<Vector4> _palette;
 	public static void BindGeneration( RenderAttributes attributes )
 	{
+		attributes.Set( "VoxelMaterialBlendSpacing", BlendSpacing );
 		attributes.Set( "VoxelGeneratedLayers", new Vector2( ProceduralVoxelMaterials.LayerSize, ProceduralVoxelMaterials.SoilDepth ) );
 		attributes.Set( "VoxelGeneratedMountain", new Vector4( ProceduralVoxelMaterials.SnowPeakFraction,
 			ProceduralVoxelMaterials.SnowMountainWeight, ProceduralVoxelMaterials.MountainStoneWeight,

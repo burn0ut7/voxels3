@@ -1,0 +1,53 @@
+[
+  {
+    "Path": "shaders/voxels/voxel_persistent_geometry_cs.shader",
+    "Success": true,
+    "Output": []
+  },
+  {
+    "Path": "shaders/voxels/voxel_transition_geometry_cs.shader",
+    "Success": true,
+    "Output": []
+  },
+  {
+    "Path": "shaders/voxels/voxel_terrain.shader",
+    "Success": true,
+    "Output": [
+      "warning[E41012]: profile implicitly upgraded",
+      "   --> shaders/voxels/voxel_grass_pattern.hlsl:179:9",
+      "    |",
+      "179 | float4 MainPs( PS_INPUT input ) : SV_Target0",
+      "    |        ^ entry point 'MainPs' uses additional capabilities that are not part of the specified profile 'spirv_1_5'. The profile setting is automatically updated to include these capabilities: 'SPV_KHR_non_semantic_info + SPV_GOOGLE_user_type + spvDerivativeControl + spvImageQuery + spvImageGatherExtended + spvSparseResidency + spvMinLod + spvFragmentFullyCoveredEXT'",
+      "----'",
+      "warning[E41201]: argument might not be dynamic uniform",
+      "   --> ./common/common/common/classes/Decals.hlsl:277:56",
+      "    |",
+      "277 | SamplerState textureSampler = Bindless::GetSampler( samplerIndex );",
+      "    |                                                   ^ argument for 'nIndex' might not be a dynamic uniform, use `asDynamicUniform()` to silence this warning.",
+      "----'",
+      "warning[E41201]: argument might not be dynamic uniform",
+      "   --> ./common/common/common/classes/Decals.hlsl:266:56",
+      "    |",
+      "266 | SamplerState textureSampler = Bindless::GetSampler( samplerIndex );",
+      "    |                                                   ^ argument for 'nIndex' might not be a dynamic uniform, use `asDynamicUniform()` to silence this warning.",
+      "----'",
+      "warning[E41201]: argument might not be dynamic uniform",
+      "   --> ./common/common/common/classes/Decals.hlsl:277:56",
+      "    |",
+      "277 | SamplerState textureSampler = Bindless::GetSampler( samplerIndex );",
+      "    |                                                   ^ argument for 'nIndex' might not be a dynamic uniform, use `asDynamicUniform()` to silence this warning.",
+      "----'",
+      "warning[E41201]: argument might not be dynamic uniform",
+      "   --> ./common/common/common/classes/Decals.hlsl:266:56",
+      "    |",
+      "266 | SamplerState textureSampler = Bindless::GetSampler( samplerIndex );",
+      "    |                                                   ^ argument for 'nIndex' might not be a dynamic uniform, use `asDynamicUniform()` to silence this warning.",
+      "----'"
+    ]
+  },
+  {
+    "Path": "shaders/voxels/voxel_grass_cs.shader",
+    "Success": true,
+    "Output": []
+  }
+]

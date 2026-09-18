@@ -31671,3 +31671,316 @@ restored. The player returned to the pre-task location (16725.8672,5754.61084,
 collision were fully settled; no authored scene was saved. The earlier Q-menu
 typing/clicking checks remain interrupted and its UI file remains uncommitted.
 This acceptance covers the grass range backend, wind and final patch color.
+
+## MATERIAL-TRANSITION-001/v1 — local blending prototype (2026-09-18)
+
+User authorizes prototyping smoother transitions and explicitly accepts loss of
+small visual patches. Discrete material IDs, world recipe, density and collision
+must remain unchanged. The proposed coverage cache is deferred. Candidate A:
+separable cubic B-spline blend over4x4 canonical16-unit XY columns, two Z nodes
+per column at the same surface-relative depth;32-unit horizontal support. Keep
+existing packed five-material weights. Match grass with gradual root acceptance.
+No added textures or per-frame CPU work. Widen generation river capture only by
+the filter dependency. Generation work rises from4 to16 column evaluations.
+
+Visual scenario fixed before first capture: current saved world/seed1337/gen48,
+scene basic_example, current recipe, gameplay8,visual128,LOD0..5,extents4/4,
+grass96m,water3m/teal(.12,.4,.34)/speed32/ripple.16,engine26.09.15.
+Detached interactive camera(35475.5078,97076.4297,784.626892),
+angles(62.1739235,-43.5104065,0),FOV60,capture1440x900. Preserve before/after
+source/state snapshots. Pass: visibly softer grid-aligned sand boundaries,
+recognizable broad sand/grass regions and granular surfaces, no black seams,
+invalid colors or detached grass. Tiny isolated visual patches may merge.
+Native screenshots must be inspected; compile success alone is insufficient.
+Boundary/material probes and oblique comparison will be declared before use.
+
+Performance gate: canonical figure-eight required before acceptance/commit.
+Latest ledger correction establishes that historical3991/4005 baselines differ
+from the current4007 saved terrain. No historical timing can establish a matched
+blending comparison. Full source-isolated baseline/candidate and cold startup
+remain required; retain current unrelated water/grass sources exactly. No timed
+run starts until its world/workload identity is resolved. Initial visual work
+is an unaccepted prototype, not a performance claim.
+
+MATERIAL-TRANSITION-001/v1 first image is INVALID: detached camera at the
+player eye renders the avatar head, obscuring the sand. Retain before.png.
+MATERIAL-TRANSITION-001/v2 changes only detached camera position to
+(35373.08,97173.66,1049.93), pulling back along the view ray to clear the avatar.
+All other visual inputs/criteria remain unchanged; new baseline required.
+
+Candidate A shader compiles succeeded for regular, transition and grass compute;
+C# compiler0errors, runtime console0errors. Rebuilt through normal Play stop/start,
+restored player streaming location and the v2 detached camera. Source-only claims:
+no material-query/density/world-recipe code changes; packed vertex size unchanged.
+Per-column vertical normalization avoids pulling subsoil up sloping exteriors.
+GenerationHalo672 plus existing scratch bounds covers cubic support/slope probes.
+Visual inspection pending after actual world regeneration settles.
+
+Candidate A inspected in candidate-a.png at v2 pose: broad sand deposits remain,
+sharp staircase corners soften substantially; a fairly uniform blurry ribbon
+remains. The isolated left sand fleck is weaker, as authorized. No black seams
+observed. Avatar falls to seabed after Play restart (flight is runtime-only);
+ejected v2 camera remains fixed, and sand edges are unobscured. This is a visual
+result, not matched timing. Collision4913ready/0pending/0failures, queues settled.
+
+Candidate B declared before run: retain A's cubic reconstruction. Apply bounded,
+world-anchored two-scale3D value noise (16 and4world units,70/30 contribution) to
+relative material contributions only inside mixed regions; all five types remain
+normalized and absent types stay absent. Integer corner hashing prevents the
+large-coordinate seam defect found in water. Share the same mixture with grass
+root acceptance. Filter subpixel variation in ground shading. No new textures.
+Compare the same v2 camera and source identity; pass additionally requires less
+uniform edge mixing without crawling, new stripes or loss of broad deposits.
+
+Candidate B live visual result: candidate-b.png at the fixed v2 view has softer,
+granular boundaries instead of A's uniform ribbon. Larger sand deposits and
+pure grass interiors remain recognizable; no black seams or invalid colors.
+The source uses two-scale value-noise modulation, not texture-height blending;
+height textures/cache remain deferred. Both shader compiles passed. Terrain
+compiler reported profile-upgrade and engine Decals sampler warnings; grass
+compute returned no diagnostics. Runtime error console empty(cursor139).
+User has been shown B; fresh current-world performance-baseline approval is
+pending because historical saved-world identities differ. No timing claim.
+
+MATERIAL-TRANSITION-OBLIQUE-001/v1 declared before capture: same world/recipe,
+render settings and grass as v2, detached camera(35400,97000,180),
+angles(12,-43.5104065,0),FOV60,1440x900. Inspect ground-level blend and texture
+retention without further source edits. Pass requires recognizable surface
+texture and attached grass roots with no block edge/black seam in visible banks.
+If the intended boundary is outside the frame, record that coverage limitation.
+
+## MATERIAL-TRANSITION-PERF-001/v1 — current-world matched pair
+
+User explicitly approved fresh baseline/candidate benchmarking on the current
+saved world on2026-09-18. This establishes a new comparison, not a continuation
+of the invalid historical3991/4005 timing. Freeze current4007/pages4 terrain,
+worldf5ce10f3-6d75-428e-b3dd-63dee14891c6,seed1337/gen48/river14,
+scene basic_example,32x16cells,gameplay8,visual128,LOD0..5,extents4/4,
+canonical grass64m,water3m/teal(.12,.4,.34)/speed32/ripple.16,
+normal first-person FOV75/identity rotation,start(-1.6258175,1.2225341,340),
+speed2500,distance50000,one loop,clearance393.7008,automatic drain+10s standing,
+physical2769x1529,single player,RTX5090,engine26.09.15. Grass96 preference stays
+saved;64 is runtime-only. Preserve current unrelated water/grass source hashes.
+
+Fresh visible interactive editor per source, compile before cold startup.
+No screenshots/recompiles after cold start before timing. Confirm settled visual,
+transition,placement,water and4913ready collision/0pending/0failures, correct
+pose/zero velocity/camera/resolution on a later-frame preflight. No workspace
+writes, native queries or captures during timing; input remains enabled.
+Capture raw result and source hashes before/after. Restore user view/range after.
+Acceptance: moving and standing FPS decline<=10%,p95/p99 increase<=10%,
+process/GPU peak-memory and managed-allocation/frame increase<=10%,standing GPU
+delta<=0.3ms,0exceptions/collisionfailures/grassoverflows,completed route and
+settled collision/meshing. Preserve every failed/interrupted run. These gates
+qualify only the blending delta against the exact current source control.
+Cold-start Sentry marker must not advance; inspect fresh parser/pipeline logs.
+
+Control preparation: restored only the six blending-modified pre-task files;
+unrelated source remains as checkpointed. First regular compile during C# hotload
+returned mounted-source-not-ready; later retry succeeded, all four shaders pass.
+Editor authored scene was clean before quit. Sentry advanced to
+2026-09-18T19:26:56.959232Z during old-editor shutdown, before fresh control
+PID91144 started15:27:33local. Retain preview-editor.log.gz; distinguish shutdown
+failure from cold startup. New editor started/compiled0errors and entered Play;
+stock missing-resource warnings retained. No timing started before these checks.
+
+Control run2234040476114ff49f25aa832a7c9afd completed (437.835FPS,
+p95=3.6132ms,p99=5.3034ms,0exceptions) but is INVALID for v1: readback
+shows grass96m, not required64m. Native set_component with component GUID
+resolves the first editor session; the running clone shares that GUID. Passing
+the runtime game-object GUID plus type=VoxelManager instead correctly applies
+64m, confirmed by voxel_grass_info. Preserve control raw result and snapshots;
+repeat unchanged scenario from fresh editor with actual runtime setting checked.
+This corrects target selection, not workload or acceptance criteria.
+
+
+MATERIAL-TRANSITION-OBLIQUE-001/v1 candidate B inspected: visible grass roots
+thin into sand; the bank retains surface texture with no black seam. Pass for
+the visible shore only; this still image does not establish motion stability.
+
+Control restart attempt PID92068: MCP failed to bind port7269 while the prior
+editor was still releasing it. No second valid performance run occurred.
+control-restart-port.log.gz preserves the startup report. Sentry marker also
+advanced during the overlapping shutdown/startup interval; this attempt cannot
+establish a clean-start pass. User stopped computer-use interaction, then asked
+to continue without computer control. No further UI automation is permitted.
+Native editor connection remains unavailable. Candidate B source was restored
+from its checkpoint after verifying all six control files still exactly matched
+the before checkpoint. Other task changes remain intact. A user editor restart
+has been requested; native compilation, cold startup and matched64m timings are
+still pending. No commit/push or performance acceptance.
+
+
+Candidate B visual acceptance correction: the user still sees jagged outlines.
+Reinspection of candidate-b.png confirms stepped/angular broad deposit shapes,
+particularly the central patch. Earlier fixed-view screening was too generous:
+B improves edge softness but does not meet the desired flowing outline. Retain
+its images and failed visual decision; it is not an accepted final result.
+
+Candidate C declared before runtime review: double presentation XY spacing from
+16 to32 units while retaining the same 4x4 cubic filter and two vertical nodes.
+This expands support from32 to64 units without increasing column sample count.
+Keep B's noise, vertical depth, texture maps and grass acceptance unchanged to
+isolate the reconstruction-width experiment. CPU-owned spacing is bound to both
+geometry paths; river generation halo becomes704 units. Canonical16-unit cells
+and material IDs remain unchanged. Wider filtering can merge more small patches;
+coarse sampling can miss islands and mesh interpolation may still show corners.
+No visual or timing improvement is claimed before an actual run.
+
+Reuse MATERIAL-TRANSITION-001/v2 and OBLIQUE-001/v1 unchanged. Review the broad
+outline of the central sand patch as well as edge softness: a fuzzy staircase
+fails. Broad deposits and nearby surface texture must remain recognizable.
+Reuse PERF-001/v1 unchanged after visual screening; correct64m control still
+required. Native editor connection unavailable at preparation; no run performed.
+
+
+Candidate C compiled through all four native shader entry points and entered
+Play after editor restart. C#0errors; terrain emitted existing profile/Decals
+warnings, compute shaders no diagnostics. candidate-c.png inspected at v2 pose:
+small steps soften further but the wider mixed band is too hazy; not accepted.
+Snapshot candidate-c-live.json preserves runtime/source. No timing claim.
+
+Candidate D declared: retain C's32-unit cubic spacing; increase shared mixture
+contrast exponent from1.2 to2.0 and halve variation amplitude. Same fixed visual
+scenarios; seek narrower granular boundary without restoring the staircase.
+Only the shared ground/grass mixture changes. Preserve C evidence. Native shader
+rebuild/review and canonical performance qualification required before acceptance.
+
+
+Candidate D native terrain/grass shader compiles passed with the same terrain
+warnings. candidate-d.png and candidate-d-oblique.png inspected: narrower mixed
+band than C, rounded small protrusions and recognizable sand deposits, no black
+seams in these views. Ground-level texture and thinning grass remain visible.
+Some broad angular lobes remain; motion/LOD review and matched performance are
+still pending. candidate-d-live.json records state/source. Not final acceptance.
+
+Control64 run bef93e34c8164085a8303c6df7182983 completed with verified64m grass, all preflight gates true, stable source hashes. Moving494.46667FPS,p95=3.0966ms,p99=4.7571ms. Raw control64.json.gz and summary retained. Sentry unchanged across fresh startup. Previous editor shutdown again logged prefab deletion assertion and ResourceLibrary close exception; preview-d-editor.log.gz retained. Process reached Source2Shutdown but lingered with Error window; terminated that exiting process before fresh launch. Candidate D restored for matched run.
+
+
+MATERIAL-TRANSITION-PERF-001/v1 candidate D run1174597fd37f4c97a5f9db06afac4801:
+FAIL performance acceptance versus controlbef93e34c8164085a8303c6df7182983.
+Both preflights passed; actualgrass64,physical2769x1529; source hashes stable
+within each run. Cold startup Sentry remained2026-09-18T19:36:17.706199Z.
+Moving FPS494.467->461.384(-6.69%),p95 3.0966->3.7013ms(+19.53%),
+p99 4.7571->5.4536ms(+14.64%). Standing FPS432.597->408.667(-5.53%),
+p95 2.627->2.8118ms(+7.03%),p99 4.3626->5.0813ms(+16.47%).
+Standing GPU2.02725->2.15987ms(+0.13262ms). Moving process peak-0.11%,GPU
+peak+0.09%,allocations/frame+5.27%; standing process peak+4.07%,GPUpeak-2.93%,
+allocations/frame+1.16%. Both phases0exceptions,collision0failures,routecompleted,
+LODarrivalsettled. Moving p95/p99 and standing p99 exceed10% gates. Preserve
+candidate-d-perf.json.gz, summaries, candidate-d-comparison.json and snapshots.
+No commit, push or regression acceptance. Next iteration must reduce cost and
+still resolve the visual outline issue; no successful final blend claimed.
+
+
+Candidate E declared: replace4x4 cubic filter with3x3 quadratic B-spline at48-unit
+XY spacing (three canonical cells). Nearest-node origin floor(lattice+0.5),
+localfraction[-0.5,0.5],weights[0.5*(0.5-f)^2,0.75-f^2,0.5*(0.5+f)^2].
+Support72units; GenerationHalo712. Nine column evaluations versusD's16; keep
+vertical sampling and D's shared mixture unchanged. Same v2/oblique visual
+scenarios; same PERFv1 workload/gates. This is an experiment, not acceptance.
+D grass statistics afterrun:0overflowViews,peakCandidates10385,capacity65536.
+
+
+Candidate E fixed v2 and oblique images inspected: reduced small staircase edges,
+recognizable broad deposits and attached grass, no visible black seam. Visual
+screening passes for these two views; motion/LOD coverage still required.
+Native geometry compiles passed; cold C#0errors, Sentry unchanged, preflightalltrue.
+PERFv1 run96f39103fddc4f9788952b08dfe46c72 completed, source hashes stable,
+actualgrass64,physical2769x1529,0exceptions,collision0failures,arrivalsettled.
+FAIL standing p99 gate: control4.3626ms->5.0733ms(+16.29%). Moving FPS478.606
+(-3.21%),p95=3.3543ms(+8.32%),p99=5.0336ms(+5.81%) pass. Standing FPS423.211
+(-2.17%),p95=2.7267ms(+3.80%),GPU2.08042ms(+0.05317ms) pass. Moving process
+peak+0.17%,GPUpeak-0.003%,allocations/frame+5.71%; standing processpeak+2.40%,
+GPUpeak-3.05%,allocations/frame+0.69%, all within gates. Raw candidate-e-perf.json.gz,
+summary and candidate-e-comparison.json retained. No acceptance/commit/push.
+Standing GPU p99 changed2.439022->2.4921894ms; GC collection frames3 in both,
+GCpause24.278->25.538ms. Result contains aggregates, not a per-frame timing series:
+cannot assign CPU frame p99 regression to GC or a specific rendering stage.
+
+
+Candidate F declared: retain E reconstruction and mixture; branch around each
+noise octave when its existing footprint attenuation is exactly zero. At
+footprint>=16 skip both noise and exp2(0); at4..16 skip only fine noise. This
+removes mathematically zero work without changing intended weights. Grass roots
+use footprint0 and retain both octaves. Same v2/oblique views and PERFv1 gates.
+This does not establish the cause of E's standing p99; it tests a concrete shader
+cost reduction while preserving its look. No threshold changes or prior-run exclusion.
+
+
+Candidate F PERFv1 run7af9f9186d51455aa09d31e47db8c760 completed with stable
+source hashes,allpreflighttrue,grass64,physical2769x1529,0exceptions,collision
+0failures,arrivalsettled. Cold startup Sentry unchanged; native shader compiles
+passed. FAIL standingp99:4.3626->4.9427ms(+13.30%). Moving FPS483.946(-2.13%),
+p95=3.2897ms(+6.24%),p99=4.9745ms(+4.57%); standing FPS425.589(-1.62%),
+p95=2.6651ms(+1.45%),GPU2.05891ms(+0.03166ms). Moving processpeak-0.85%,
+GPUpeak+0.007%,allocations/frame+4.10%; standing processpeak+0.29%,GPUpeak-3.01%,
+allocations/frame+0.46%. All other measured numerical gates pass. Preserve
+candidate-f-perf.json.gz,summary,comparison and cold/after snapshots. Do not
+infer p99 cause from averages or treat this failed run as accepted.
+
+
+PERFv1 repeatability check declared before runs: one additional cold control and
+one cold candidate F, same exact workload/source snapshots and original gates.
+Do not repeat until a favorable sample appears. Retain both pairs; compare the
+new pair and report between-run variation alongside the original failure.
+Reason: standing CPU framep99 fails while GPU tail/averages differ much less;
+200-frame profiler snapshots cannot locate the slow frames in the10s window.
+No acceptance-criteria change. Further action depends on this bounded pair.
+
+
+PERFv1 bounded repeat pair completed: control3b801ff6713b4c97aa6ef2e6591e5131,
+candidateFb014bf34682747948e9c950b4631e502. Same source/workload; hashes stable,
+all final preflights pass,grass64,physical2769x1529,0exceptions,collision0failures,
+routecompleted,arrivalsettled. First F preflight had4794ready/116pending/0failures;
+no timing began then. Later preflight passed4913ready/0pending before the run.
+Preparation script issues (no-process exit status and transient shader-tool null
+reference during hotload) occurred before timing; retained logs/compile records.
+
+Repeat pair PASS all numerical gates: moving FPS497.427->486.789(-2.14%),
+p95 3.1727->3.2884ms(+3.65%),p99 4.8425->4.9187ms(+1.57%). Standing FPS
+410.726->426.932(+3.95%),p95 2.7696->2.6742ms(-3.44%),p99 5.0285->4.2179ms
+(-16.12%),GPU2.14241->2.05492ms(-0.08749ms). Moving processpeak+1.04%,GPUpeak
++0.25%,allocations/frame-2.70%; standing processpeak+4.29%,GPUpeak-2.75%,
+allocations/frame-0.75%. See candidate-f-repeat-comparison.json and both rawresults.
+
+Interpretation retains original F FAIL: control standingp99 spans4.3626..5.0285ms,
+F spans4.2179..4.9427ms; control itself changes+15.26%, exceeding first pair's
++13.30% regression. This bounded repeat does not reproduce a standing-tail
+regression. Moving FPS cost is repeatable at2.13..2.14% and within budget. No
+thresholds/workloads changed and neither pair excluded. Latest complete pair
+passes; performance screening accepts F with this measured variability disclosed.
+Final visual/LOD audit and task-only change review remain required before commit.
+
+
+MATERIAL-TRANSITION-LOD-001/v1 declared before capture: currentworld4007/seed1337,
+gen48,gameplay8,visual128,LOD0..5,extents4/4,grass96m,waterdefaults unchanged.
+Native Play world, detached v2 camera(35373.08,97173.66,1049.93),angles
+(62.1739235,-43.5104065,0),FOV60,capture1440x900. Move real player through
+normal object transform to near(35475.5078,97076.4297,720.626892), then
+far(39571.5078,97076.4297,720.626892), then near again; hold camera fixed.
+Wait20s and inspect readiness before captures. This isolates published detail
+changes via the real player streaming target, without mutating streaming origins.
+Pass: no black/cracked material seam, broad visible sand regions remain coherent,
+near roundtrip restores appearance. Tiny patches and coarse outline changes are
+allowed by user decision; do not infer motion smoothness from still frames.
+This supports the canonical moving route, not a separate performance benchmark.
+
+
+MATERIAL-TRANSITION-LOD-001/v1 PASS visible-bank criteria: final-near.png,
+final-far.png and final-return.png inspected. Broad sand deposits remain coherent,
+no black material seam; near outline returns. Coarse small patch/outline changes
+are visible and authorized. All three state snapshots report settled arrivals.
+Avatar partly occupies the return frame but does not obscure the reviewed banks.
+No claim of frame-by-frame temporal smoothness from these stills. Final runtime
+console0errors(cursor62). Source remains candidate F; authoritative material and
+density sources unchanged. Packed vertex contract remains28bytes. Grass range
+restored96m; saved terrain unchanged. Detached review view retained for user.
+
+Final acceptance: F provides smoother flowing local transitions and matches grass
+coverage, with tiny visual patch loss allowed. Latest matched PERFv1 pair passes;
+repeatable moving FPS cost~2.1%,standing tail variability explicitly retained.
+Original F failure is not erased; both source-identical pairs inform acceptance.
+No stable standing-tail regression reproduced. This accepts the blending delta
+only, not unrelated pending water/grass/fade work. Task-only commit/push follows
+source/index review. Gameplay IDs, world generation recipe and collision unchanged.
