@@ -78,10 +78,15 @@ CS
 			return;
 		}
 		// Include the entire wind sweep in both region and triangle culling.
-		// Wind only lowers tips; the existing vertical envelope still contains them.
-		const float horizontalPadding = 22.0 + 38.0 * 1.05 * GRASS_MAX_WIND_BEND;
+		// Wind only lowers tips; derive the vertical envelope from the tallest leaf.
+		const float minimumTuftLength = 25.0;
+		const float maximumTuftLength = 35.0;
+		const float patchHeightVariation = 0.15;
+		// Include the VS's longest leaf, maximum lean and leaf half-width.
+		const float maximumLeafLength = maximumTuftLength * (1.0 + patchHeightVariation) * 1.05;
+		const float horizontalPadding = maximumLeafLength * (0.5 + GRASS_MAX_WIND_BEND) + 0.75;
 		const float3 GrassLowerPadding = float3( horizontalPadding, horizontalPadding, 1.0 );
-		const float3 GrassUpperPadding = float3( horizontalPadding, horizontalPadding, 42.0 );
+		const float3 GrassUpperPadding = float3( horizontalPadding, horizontalPadding, maximumLeafLength + 1.0 );
 		uint slot = GrassFirstSlot + group.x;
 		float4 lower = VisibilityBounds[slot * 2];
 		float3 upper = VisibilityBounds[slot * 2 + 1].xyz;
@@ -170,10 +175,15 @@ CS
 					// Color is shared by all leaves, without adding another root channel.
 					uint angle = (GrassHash( key + 4 ) >> 8) & 65535u;
 					// Bias color to [1,2] so the packed float is never denormal or NaN.
-					uint packedAngleColor = angle | (f32tof16( 1.0 + EvaluateGrassColor( root.xy ) ) << 16);
+					float patchTone = EvaluateGrassColor( root.xy );
+					uint packedAngleColor = angle | (f32tof16( 1.0 + patchTone ) << 16);
+					// Greener patches grow slightly taller; warmer patches stay shorter.
+					// Keep small, stable differences between neighboring tufts as well.
+					float tuftLength = lerp( minimumTuftLength, maximumTuftLength, GrassRandom( key + 5 ) ) *
+						lerp( 1.0 + patchHeightVariation, 1.0 - patchHeightVariation, patchTone );
 					GrassRoots[index * 2] = float4( root - float3( 0.0, 0.0, 0.3 ), scale );
 					GrassRoots[index * 2 + 1] = float4( asfloat( packedAngleColor ),
-						lerp( 22.0, 38.0, GrassRandom( key + 5 ) ), lerp( 0.35, 0.65, GrassRandom( key + 6 ) ),
+						tuftLength, lerp( 0.35, 0.65, GrassRandom( key + 6 ) ),
 						asfloat( packedVariationWind ) );
 				}
 			}

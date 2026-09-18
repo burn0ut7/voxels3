@@ -1,5 +1,30 @@
 # Terrain meadow grass
 
+## Patch height
+
+Tuft length shares the existing smooth color patch: greener areas are up to 15%
+taller and warmer areas up to 15% shorter, with intermediate areas retaining
+the same mean height. Stable local tuft variation is 25–35 units before that
+multiplier, reduced from the previous 22–38 units so neighboring plants read as
+a patch while retaining varied tips. The existing per-leaf 0.65–1.05 multiplier
+remains. Final tuft length is 21.25–40.25 units; maximum leaf length is 42.2625
+units (about 1.07 m) before wind lowers it. Most patch samples are intermediate
+and therefore vary less than these bounds.
+
+The compute shader owns these tuft limits and derives its region/triangle
+culling padding from maximum length, the vertex shader's 0.5 lean and 1.05 leaf
+multiplier, the shared wind bound, and a conservative 0.75-unit half-width.
+The existing shape.y stores the result, shared by depth and forward rendering.
+There is no added noise evaluation, buffer, geometry, dispatch, CPU work or
+network state. Using the existing patch couples greener growth to slightly
+greater height; an independent noise field was unnecessary for this gentle
+variation. GRASS-HEIGHT-001/v1 owns visual and performance qualification.
+The height-only candidate passes all fixed gates against the accepted color
+baseline, with zero timed exceptions, collision failures or capacity overflows.
+Fixed cold-start views confirm subtle canopy variation and intact long coverage.
+See [height evidence](../ValidationEvidence/GrassHeight/README.md). The earlier
+combined water/height failure is retained separately and remains a failure.
+
 ## Patch color
 
 The color include owns a stable world-space field evaluated once per retained
@@ -112,11 +137,12 @@ blades. Each leaf uses two triangles between a narrow root, bent middle and tip.
 Deterministic
 height, width, orientation, outward lean and color variation break up repeated
 silhouettes. The user's meadow refinement replaces the short7..31cm tufts with
-approximately36..101cm upright leaf height and1.3..3.8cm full width at full size.
+approximately 35–107 cm upright leaf height and 1.3–3.8 cm full width at full size.
 The five leaves overlap neighboring tufts while retaining varied silhouettes.
-Parent height22..38in is multiplied by0.65..1.05 per leaf; outward lean is
-0.22..0.5 of leaf height. Conservative region bounds include41.95in horizontal spread with wind,42in height
-and1in below terrain. Every leaf starts at the actual published surface root.
+Patch-adjusted parent height 21.25–40.25 in is multiplied by 0.65–1.05 per leaf;
+outward lean is 0.22–0.5 of leaf height. Conservative region bounds include
+43.0125 in horizontal spread with wind, 43.2625 in height and 1 in below terrain.
+Every leaf starts at the actual published surface root.
 
 Upward-biased two-sided normals and varied rich greens soften the previous
 dark spike shading. This approximates leaf lighting, not physical transmission.
