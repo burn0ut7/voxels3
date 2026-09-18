@@ -1715,13 +1715,24 @@ not a hard frame-time guarantee. Payload and cache-readiness diagnostics support
 fixed before/after figure-eight evidence; additional cache work is not accepted
 as a shipping improvement without the recorded performance gates.
 
-## Static grass first slice (2026-09-17)
+## Grass rendering
 
-[Static grass](StaticGrass.md) consumes active published LOD0 vertex/index and
+[Meadow grass](StaticGrass.md) consumes active published regular vertex/index and
 material data in the existing camera command list. Each RenderCameraState owns
 its bounded root/argument/statistics buffers. Roots generate once in the existing
-terrain DepthPrepass callback and a shared triangle model writes grass depth;
+terrain DepthPrepass callback and a shared tuft model writes grass depth;
 one opaque indirect draw after terrain reuses those roots and the same vertex
 shader. Shadow callbacks skip grass. It shares terrain publication/readiness and adds no authoritative
 field or mesh readback. The grass document owns distance/density budgets and
-GRASS-001/v1 in the ledger owns measured qualification.
+the grass scenarios in the ledger own measured qualification. The local
+GrassRenderRangeMeters setting is copied from VoxelManager to the mesher and
+captured once per depth view; both draws consume the resulting same root count.
+Coarser published regular terrain supports the extended range without enlarging
+terrain streaming. Transition filler and inactive records cannot create grass.
+The same generation dispatch caches one coherent world-space wind value per
+retained tuft in the existing 32-byte root. Depth and color reuse that sample;
+the shared wind include owns the direction and deformation/culling bound.
+The generation dispatch also caches a smooth world-space color patch per tuft.
+Its packed color and orientation share an existing root channel; the forward
+shader adds only small local color variation. StaticGrass owns this palette and
+packing contract and links its fixed visual/performance evidence.

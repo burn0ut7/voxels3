@@ -1,8 +1,107 @@
-# Static terrain grass
+# Terrain meadow grass
+
+## Patch color
+
+The color include owns a stable world-space field evaluated once per retained
+root by the existing generation dispatch. Smooth value noise interpolates hashed
+corners on a 4.5 m grid to form irregular patches without directional waves. The patch
+determines the palette. Tuft and leaf seeds contribute only +/-0.015 and +/-0.005
+respectively, avoiding randomly interleaved yellow and green plants. Green and
+olive-yellow endpoints stay close in brightness, with darker, greener bases and
+gently warmer tips. It is cosmetic, not a new biome or terrain material.
+
+Color has no time or camera input, so wind cannot slide it across a plant.
+The forward vertex pass decodes the cached color; depth only decodes orientation.
+The second root float4.x packs a 16-bit angle fraction and a half-float color tone
+biased into [1,2], keeping the packed float normal and finite even at zero tone.
+Angle quantization is at most 0.0055 degrees; color precision is approximately 0.001.
+The existing two-component interpolant,
+root records, textures, geometry, draw count and CPU responsibilities stay the
+same. Caching replaces 30 forward-vertex noise evaluations with one per tuft
+without a texture lookup or extra root channel.
+GRASS-COLOR-001/v1 owns performance and visual qualification. The first preview
+weighted random plant colors more strongly and was rejected by the user; the
+first patch revision was also rejected for obvious sine bands and stark colors.
+The smooth-noise palette replaces both. Final cached-color qualification passes
+all fixed gates, with +0.02472 ms standing GPU time relative to the wind baseline,
+no timed exceptions or capacity overflows and inspected soft, irregular patches.
+The ledger retains the earlier failed per-vertex candidate; its moving stalls
+are not established as color GPU cost. See [color evidence](../ValidationEvidence/GrassColor/README.md).
+
+## Coherent wind animation
+
+Grass roots and material eligibility remain derived from the published terrain.
+The existing generation dispatch evaluates a world-space wind field once
+per retained tuft: a 20 m sine wave travelling at 4 m/s along (0.8, 0.6), plus a
+smaller 5 m crosswind ripple. Nearby tufts share phases; stable leaf variation
+changes their response amplitude, rather than giving every blade unrelated time.
+Roots remain pinned and quadratic height weighting concentrates bend at the tips.
+Tip lowering and the existing lighting normal follow the bend. Depth and color
+read the same cached wind sample, so their animated silhouettes agree.
+
+Keep the existing 32-byte root record, capacity, dispatches and draw count.
+The second float4.w packs a 16-bit variation fraction and a half-float wind bend.
+This slightly quantizes the existing stable variation; it does not animate or
+reseed placement. The shared wind include owns direction, maximum bend and
+wave parameters; compute culling includes the maximum possible tip displacement.
+No CPU plant simulation, extra texture, per-blade object, world state, network
+replication or geometry readback is introduced. Render time drives a cosmetic
+field; cross-client clock synchronization is not a gameplay requirement.
+
+Alternatives: per-vertex wave evaluation repeats the same field across 30
+vertices and both passes; a separate simulation/texture adds state and dispatches;
+random per-blade phases cannot produce coherent travelling gusts. Reusing the
+existing root generation pays for two sine evaluations only for retained tufts.
+GRASS-WIND-001/v1 owns visual and performance acceptance. The fixed figure-eight
+passes all recorded gates: moving GPU +0.0382 ms, standing GPU +0.1649 ms, with
+unchanged root storage and no overflow or timed exceptions. The baseline contains
+large CPU/GC outliers, so the candidate's higher FPS is not a wind speedup claim.
+Fixed meadow, close and skyline sequences show shared bending, anchored roots
+and intact tips. See [wind evidence](../ValidationEvidence/GrassWind/README.md).
+
+## Adjustable range
+
+VoxelManager owns `GrassRenderRangeMeters`, a local scene property with a 64 m
+default and finite clamping to 0–128 m. The working-tree Q menu exposes the same value
+under Graphics for every local player; 0 disables grass. Menu changes last for the scene
+session; authored inspector values persist when the scene is saved. This option
+is not Sync/RPC world state. No new preference subsystem or terrain rebuild is
+needed. The manager publishes the scalar to its mesher; each depth view captures
+one value, clears its old indirect arguments, and generates both draws from it.
+
+The compute shader consumes only already-published active regular terrain at
+all available LODs. Inactive records and transition filler remain excluded.
+Roots stay barycentric on the rendered geometry with canonical material weights;
+grass does not create its own terrain sampler or enlarge streaming interests.
+Candidate count stays capped at 16 per triangle. For coarser triangles, probability
+weights compensate for the capped area sampling before density thinning; counts
+still cannot exceed that cap. Terrain LOD replacement can change root placement.
+
+Nearby density keeps the existing 6/12/24 m knots. Beyond 32 m it decreases with
+inverse squared distance, with final fade from 75% of the selected range to the
+endpoint. The distant size fade compensates for density thinning so extending
+range does not turn every retained distant tuft into a tiny speck. At 32 m,
+triangles below the sample cap keep the previous density/size formula. The view and triangle
+bounds share the range uniform; they cannot retain a stale hard-coded cutoff.
+Zero range skips generation dispatches and clears both draw counts. Root memory,
+geometry and two draw modes stay bounded as below. Range changes are recorded in
+production performance reports. GRASS-RANGE-001/v1 owns fixed qualification.
+The menu interaction checks were interrupted twice by user Escape; its UI file
+remains uncommitted pending those checks. Native range rendering and the shader
+refinements are qualified separately from clicking/typing in that menu.
+
+Alternatives: enlarging LOD0 streaming increases terrain/collision-related work;
+changing only the shader cutoff still stops grass at the LOD0 boundary; scaling
+all near-density distances quadratically increases dense grass area. Reusing
+published coarser triangles and thinning the tail extends appearance within the
+existing ownership and storage budgets. Both 32 m and 64 m candidates pass the
+unchanged performance gates against a contemporaneous accepted-source control;
+the ledger preserves historical tail failures and a mismatched-resolution run.
+See [range evidence](../ValidationEvidence/GrassRange/README.md).
 
 ## Current meadow tufts
 
-Grass remains derived appearance from published LOD0 terrain triangles and
+Grass remains derived appearance from published active regular terrain triangles and
 canonical interpolated grass weights. The existing GPU mesher and per-camera
 grass renderer own generation, buffers and both draws. Terrain edits, material
 replacement and unloading automatically replace the geometry consumed by grass.
@@ -16,19 +115,22 @@ silhouettes. The user's meadow refinement replaces the short7..31cm tufts with
 approximately36..101cm upright leaf height and1.3..3.8cm full width at full size.
 The five leaves overlap neighboring tufts while retaining varied silhouettes.
 Parent height22..38in is multiplied by0.65..1.05 per leaf; outward lean is
-0.22..0.5 of leaf height. Conservative region bounds include22in horizontal spread,42in height
+0.22..0.5 of leaf height. Conservative region bounds include41.95in horizontal spread with wind,42in height
 and1in below terrain. Every leaf starts at the actual published surface root.
 
 Upward-biased two-sided normals and varied rich greens soften the previous
 dark spike shading. This approximates leaf lighting, not physical transmission.
 Standard scene lighting and received shadows remain. There are no alpha cards,
-extra textures, wind or grass shadow pass. Both depth and color use the same
+extra textures or grass shadow pass. Both depth and color use the same
 vertex generation and roots; the canonical depth/fog integration below remains.
 
 Density is one candidate tuft/36square units (~43tufts or215leaves/m²), full
-through6m,30%at12m,8%at24m,zero32m. Stable hash thresholds and short size fades
-retain progressive thinning. Material eligibility, triangle sampling, maximum
-16candidates/triangle, LOD0 restriction and32m range keep their previous owners.
+through6m,30%at12m,8%at24m. Beyond32m, the relative population decreases by
+(32/distance)². The final quarter of the selected range fades to zero. Stable
+hash thresholds and short size fades retain progressive thinning. Material
+eligibility, triangle sampling and the maximum16candidates/triangle retain their
+owners; coarse candidates are area weighted as described above. Shape and
+nearby density remain those of the accepted meadow.
 The compute pass rejects padded source-triangle bounds by range and guarded
 frustum before sampling, so offscreen parts of nearby regions do not generate
 roots. Region and triangle checks share padding constants; visible density and

@@ -31295,3 +31295,379 @@ Grass remains static, with no animation code. Returned to pre-task vicinity,
 ThirdPerson true,free viewport sizing and enabled input; restored-session.json
 records readback. Acceptance: long meadow appearance and all latest-baseline
 performance gates pass, with the cumulative original-spike p95 limitation above.
+
+## GRASS-RANGE-001/v1 — adjustable meadow range (defined 2026-09-18)
+
+User accepts tall meadow appearance and requests farther adjustable grass range.
+Add a local render option in the existing menu and VoxelManager inspector,0..128m,
+0off. Default64m extends the meadow;32m remains a comparable control. Optional
+user preference was requested before default choice;64m is the stated assumption.
+No terrain edits, expanded terrain streaming/collision radii or extra world state.
+Current saved world remains3989/pages873 at10:26:12,checkpoint139 metadata only.
+
+Use the exact GRASS-MEADOW-001/v1 route and latest accepted control
+f06cc54d7a21461ab5f94a05a8a865d2 atc2838be: basic_example,seed1337/gen48,
+worldf5ce10f3-6d75-428e-b3dd-63dee14891c6,one player,32cells/16units,
+gameplay8/visual128,LOD0..5,extents4/4,startXY(-1.6258175,1.2225341),Z340,
+eyeEuler0,FOV75,2769x1529,speed2500,distance50000,one loop,clearance393.7008,
+automatic drain plus10s stationary,settled before start,inputenabled,no captures
+in timed windows. Source identities include the unchanged user terrain fade.
+
+Qualification has predefined32m control and64m expanded-option figure-eights.
+These intentionally exercise the requested setting change; all other workload
+parameters are fixed. Compare both to the accepted32m meadow baseline; require
+<=10% regression in FPS,p95/p99,peak process/GPU memory and allocation/frame,
+stationaryGPUdelta<=0.3ms,zeroexceptions/collisionfailures/overflow and settled
+streaming. Preserve every run.128m receives bounded visual/capacity observation,
+not an all-hardware/performance acceptance claim. Do not weaken gates after runs.
+
+Visual/UI sequence after cold start: matched meadow camera(0,-250,310),Euler
+(10,0,0),FOV75,1440x900 at0/32/64/128m. Far patchXY(100,-250),groundZ212.93129,
+pitch90,FOV45 at40m overhead:32m must be off,64m must retain visible grass;
+80m overhead:64m off,128m retains grass on loaded published coarser terrain.
+A128m overhead shot checks no central grass at the requested endpoint. Return
+player near pre-task(5373.621,2908.779,412.4628),normalcamera,freeviewport,inputon.
+Use the actual menu input and Apply button: valid0/32/64/128 apply live; negative,
+out-of-range and non-finite/text reject without modifying current range. Reopen
+must show current value. Capture and inspect menu layout and final expanded view.
+Record root counts and ensure no overflow at maximum. No generated/test-only
+scene, component or alternate placement path. Shader finalsource requires full
+visible editor restart, fresh project compiler/log and Sentry checks.
+
+32m control659a87be696d40cd9c1bab379c5e81cb failed frame-tail gates against the
+accepted meadow baseline: moving502.833FPS(-1.54%),p954.2401ms(+18.70%),
+p996.5687ms(+11.03%),GPU1.5523406ms(+1.22%); standing470.7238FPS(+6.19%),
+p952.8521ms(-12.66%),p995.8792ms(+43.52%),GPU1.6615369ms(-5.74%).
+Memory/allocations/exceptions gates pass. Preserve control.json.gz and
+comparison-32m.json; this run alone is not accepted. Await64m and inspect the
+recorded profiler/engine interval before attributing or resolving the tail change.
+
+64m attempt8df7fa44278b4c9e98b51c9b88abc9d6 failed the numerical gates:
+moving322.33286FPS,p956.0631ms,p998.1966ms,GPU2.697306ms; standing255.72603FPS,
+p956.8529ms,p997.9764ms,GPU3.480782ms. Peak GPU memory1944804108/1945000716bytes,
+allocation/frame76233.375/33503.633;0exceptions and4913ready collision,0failures.
+Expanded.json.gz and comparison-64m.json preserve all results. It is NOT a
+comparable range regression: its recorded stationary.profiler.screenWidth/Height
+are4154x2294, versus2769x1529 in both baseline and32m control. The worker's initial
+"matched resolution" report described the requested tool dimensions, not rendered
+pixels. Installed SceneViewWidget.SetForceResolution uses widget units; viewport
+rendering applies Renderer.DpiScale (1.5 in this editor). At10:52, requesting
+1846x1019 produced a verified profiler2769x1529. Correct the setup to attain the
+original physical resolution and repeat64m then32m, without changing the scenario,
+source, route, gates or discarding these attempts. Read back physical dimensions
+before timing, and require input restored after collision-arrival holds.
+
+The cold-start Sentry marker advanced to2026-09-18T14:33:47.771763Z after the
+previous editor reached Source2Shutdown at14:33:43Z and exited; this corrects the
+earlier assumed unchanged marker. Fresh PID62140 began14:34:03Z and has compiled
+successfully with no project shader/managed failures. Track the new marker for
+in-session crashes separately from that shutdown event.
+
+Corrected-resolution64m run0690a6eed3b54bfab9ecfb996ee9e859 rendered2769x1529:
+moving473.22375FPS,p953.8484ms,p996.4748ms,GPU1.7013035ms; standing444.10266FPS,
+p952.7257ms,p995.0142ms,GPU1.7796692ms. Standingp99 still fails the historical
+4.0963ms reference (+22.41%); GPU rises only0.0169968ms. The remaining failure
+must not be hidden by the corrected resolution or average FPS. Standing profiler
+Renderp99 actually decreases3.2161->3.007ms and GPU p992.39205->2.31028ms, while
+Editorp99 increases1.7192->3.1034ms. These partial scopes suggest editor timing
+variation, but do not establish causation by themselves.
+
+Before any further timing, define one contemporaneous accepted-source control:
+temporarily restore only the seven range-task production files to accepted
+c2838be, preserving the identical user terrain-fade source and every other file.
+Use the unchanged GRASS-RANGE-001/v1 physical resolution, world, route and gates,
+visible cold editor, original32m grass, settled preflight/input enabled. Retain
+raw result and compare both historical baseline and both corrected candidates.
+Restore the candidate byte-for-byte afterward, compile shader and cold restart.
+This isolates source contribution to the repeated frame-tail failure; it does
+not redefine workload, relax gates, erase failures or create a test-only path.
+
+Corrected32m controlda7204b8bd9840da9cb52c6eb56973f1 also rendered2769x1529:
+moving500.792FPS,p953.9ms,p996.7983ms,GPU1.5446423ms; standing481.86588FPS,
+p952.5068ms,p994.4019ms,GPU1.6804156ms. Only movingp99 fails the historical
+reference (+14.91%). Both corrected runs pass the other frame/memory/allocation
+gates, have0exceptions,4913ready collision with0pending/failures and settled
+streaming.32m peak process/GPU moving4979953664/1537153793, standing
+4922167296/1587354369bytes; allocations62103.79/29360.162bytes/frame.64m peaks
+4880670720/1537317633 and4758708224/1587796737bytes; allocations
+62193.492/29980.484bytes/frame. Grass32m current2581/peak4526,64m
+current5252/peak7736;0overflow and unchanged2MiB roots per view.
+Raw corrected-32m.json.gz/corrected-64m.json.gz and SHA256 files, corrected
+preflight/final JSON, and both comparison-corrected files preserve these runs.
+The source is unchanged between attempts. Prior editor shutdown advanced Sentry
+at14:50:56.373477Z, before fresh PID59152 started14:51:11Z; neither timed run
+reported an in-session project exception. These are still not historical all-gate
+passes; the contemporaneous source control will determine whether the tail
+change is caused by the range implementation.
+
+Contemporaneous accepted-source control4eb5e903cacd4c81ab5644d85b63826f,source
+c2838be,ran the identical scenario at verified2769x1529. Moving515.5781FPS,
+p953.6988ms,p996.3319ms,GPU1.4971489ms; standing454.0882FPS,p952.9015ms,
+p994.7032ms,GPU1.7345653ms. Its standingp99 is14.82%above the historical accepted
+4.0963ms despite using the accepted grass source byte-for-byte. Therefore the original
+historical tail shift is also reproducible without the range implementation;
+it cannot all be attributed to that change. The observed153.5522ms moving maximum
+is retained in the raw control (maximum is not a declared acceptance gate).
+
+Use this newly measured accepted-source control for the contemporaneous source
+comparison, retaining every historical comparison above. Against it, the32m
+candidate has movingFPS-2.87%,p95+5.44%,p99+7.37%; standingFPS+6.12%,p95-13.60%,
+p99-6.41%,GPU-0.05415ms. The64m candidate has movingFPS-8.21%,p95+4.04%,p99+2.26%;
+standingFPS-2.20%,p95-6.06%,p99+6.61%,GPU+0.04510ms. Both pass all unchanged
+frame/memory/allocation gates against the same-environment accepted source;
+all windows have0exceptions. The stored comparison's baseline must be the
+accepted-source control and candidate the corresponding corrected range run.
+This resolves the source-regression question without relaxing the thresholds or
+changing the physical workload. It does not make the historical failures pass
+or establish performance on other hardware/multiplayer. Visual/UI qualification
+and final source restoration/cold verification remain required before acceptance.
+
+## GRASS-WIND-001/v1 — coherent meadow wind (defined 2026-09-18)
+
+The user requests efficient, coherent sine-like wind with visible gusts crossing
+nearby grass. Keep the completed range implementation and default 64 m. Its
+prior UI/visual acceptance was interrupted by Computer Use cancellation; finish
+relevant range/appearance checks with this wind work and preserve that history.
+
+At11:14:01 the current saved world is f5ce10f3-6d75-428e-b3dd-63dee14891c6,
+revision3991/pages873/checkpoint146. The user world advanced from3991's predecessor
+3989 after the previous tests. Preserve these edits. The older range results are
+context only for this changed world; capture a new no-wind baseline before source
+changes, followed by the wind candidate in exactly the same world/scenario.
+
+Canonical figure-eight: basic_example, one player, seed1337/generator48,
+32cells/16units, gameplay radius8, visual radius128, LOD0..5, extents4/4,
+grass range64m, startXY(-1.6258175,1.2225341),Z340, eyeEuler0, FOV75,
+physical2769x1529, speed2500, distance50000, one loop, clearance393.7008,
+fully settled before timing, automatic drain plus10s standing. Camera is normal
+first person, input enabled, client visible, no screenshots during timed windows.
+After Play is active, the current1.5DPI editor needs request1846x1019; require
+actual profiler2769x1529 readback before timing and in results. Check collision
+4913ready,0pending/failures and no visual/transition/placement work before start.
+Keep user terrain-fade source byte-identical and retain hashes/logs/Sentry.
+
+Gates: no more than10% loss in FPS or increase in p95/p99, peak process/GPU memory
+and allocation/frame; standing GPU increase at most0.3ms. Require zero exceptions,
+grass overflow and collision failures, and settled streaming. Preserve failures
+and actual measurements. The range64 no-wind source is the comparison baseline;
+do not substitute the older3989 world or reduce range/density for acceptance.
+
+Visuals: same fixed meadow camera(0,-250,310),Euler(10,0,0),FOV75,1440x900;
+close(0,-250,267.93129),Euler(25,0,0),FOV75; raised skyline(-775,3919,735),
+Euler(-4,0,0),FOV75. Capture a short timestamped sequence at a fixed camera to
+verify travel/coherence, pinned roots, tip motion and stable silhouette/depth.
+Grass-off0 and bounded128m checks must preserve range behavior/no overflow;
+finish range screenshots from the preceding definition without changing their
+camera parameters. Candidate shaders require successful explicit compilation,
+a visible cold restart, fresh log and unchanged post-shutdown Sentry marker.
+Restore current pre-task position(-1.36459839,1.57163942,246.739304),normalcamera,
+first-person setting and free viewport sizing with enabled input afterward.
+
+Pre-wind baseline27c3142fec5e4c6092e3012d9186ad7b completed on3991/pages873,
+range64m, actual2769x1529 and the fixed route. Moving381.49182FPS,p954.7762ms,
+p9917.2169ms,max438.2186ms,GPU1.65346ms; standing261.9595FPS,p958.6476ms,
+p9944.2012ms,max154.3957ms,GPU1.7204291ms. These substantial CPU/frame tails
+are retained; a later improvement must not be attributed to wind making the game
+faster. Both windows' GPU tails remain near previous measurements. One read-only
+MCP screenshot-tool schema search occurred during the moving interval; no actual
+screenshots were taken during timing. Candidate timing will have no native
+queries from the main agent. Baseline full raw/SHA/preflight/final retained in
+ValidationEvidence/GrassWind. Collision4913ready,0pending/failures; streaming
+settled; user world edits retained. A pre-timing11:15:41 unload error in the
+existing SaveTerrainOnUnload at VoxelManager.Storage.cs:53 reported a null
+reference. It preceded shader edits and timing; preserve it separately from
+timed exception counts. The current world readback remained saved3991/pages873.
+
+Both modified grass shaders explicitly compiled successfully after implementation.
+The compute shader accepts engine g_flTime and the stock f32tof16/f16tof32 packing.
+The draw shader returned a profile-implicitly-upgraded warning for its existing
+pixel entry point capabilities, with Success=true; no parser/error output.
+Next required checks are cold startup, visual motion and the fixed candidate run.
+
+
+Wind candidate14f1601221e14b85b0aefc00d40f6623 completed the unchanged v1 route,
+world3991/pages873, range64 and physical2769x1529. Moving478.9545FPS,
+p953.8222ms,p996.2923ms,GPU1.6916689ms(+0.0382089ms); standing430.3978FPS,
+p953.0551ms,p994.7453ms,GPU1.8853337ms(+0.1649046ms). All fixed comparison gates
+pass. Moving process/GPU peaks4969259008/1588583169bytes (+2.26%/+3.23%);
+standing4896325632/1588419329bytes (+4.63%/+3.18%). Allocations/frame
+62264.008/30028.883bytes; zero timed exceptions,4913ready collision,0pending or
+failures, settled streaming and0grass overflow. The static baseline's large
+CPU/GC outliers remain; candidate FPS/tail improvements are not attributed to
+wind. Comparison.json stores baseline first and candidate second.
+
+Explicit compilation plus visible cold PID61576 startup succeeded,0project
+errors and unchanged post-shutdown Sentry2026-09-18T14:50:56.373477Z. Cold log
+preserves stock resource errors and an11:24:28 pipeline-cache rename warning
+before11:25:54 timing, with no grass shader/parser/dispatch failure. Source hashes
+and final diagnostics are retained in ValidationEvidence/GrassWind.
+
+After timing, fixed meadow/close/skyline cameras each captured24native frames,
+1440x900, spanning9.68/8.51/7.09seconds. Inspected full frames0/8/16 show neighboring
+plants bending together with stronger tip displacement and ground-anchored roots;
+bare terrain and skyline silhouettes remain intact. GIF previews use measured
+capture intervals, shared palette and960x600size; they are sampled evidence,
+not game-FPS videos. Full representative PNGs and timestamp/SHA manifests remain.
+
+
+## GRASS-COLOR-001/v1 — green and straw variation (defined 2026-09-18)
+
+User requests slight variation between greens and yellows. Replace the narrow
+color ramp in the existing grass draw shader; keep roots, wind, density, range,
+geometry, material eligibility and resource ownership unchanged. Color must be
+stable in world space, predominantly green, with restrained olive/straw variation
+and greener/darker bases. No texture, CPU plant updates or extra draws/buffers.
+
+Reuse GRASS-WIND-001/v1 unchanged: saved world3991/pages873, basic_example,
+seed1337/generator48,32cells/16units, gameplay8/visual128,LOD0..5,extents4/4,
+range64, startXY(-1.6258175,1.2225341),Z340,Euler0,FOV75,physical2769x1529,
+speed2500,distance50000,one loop,clearance393.7008,fully settled,automatic drain
+plus10seconds standing, visible normal first-person client with input enabled.
+Use latest accepted wind run14f1601221e14b85b0aefc00d40f6623 as baseline; current
+world readback11:48:33 confirms same3991/pages873 (checkpoint147). Its source
+matches the pre-color production shader. Same gates: <=10%FPS loss or p95/p99,
+process/GPU peak memory and allocation increases; <=0.3ms standing GPU increase,
+zero timed exceptions/collision failures/grass overflow and settled streaming.
+No captures during timing. Cold editor startup and explicit shader compile are
+required. Preserve the unrelated terrain shader hash73e0a4eadb64cadc6c48cc8db176ea8daaea3bc72893c594c5d8dec8c4004edd.
+
+Visuals reuse meadow(0,-250,310),Euler(10,0,0),close(0,-250,267.93129),Euler(25,0,0),
+and skyline(-775,3919,735),Euler(-4,0,0),FOV75,1440x900. Compare prior wind frames
+with final captures; require discernible subtle green/olive/yellow variation,
+no neon/uniform straw field, intact wind and depth silhouettes. These are image
+checks, not an objective claim of photorealism. Save current player state before
+camera/timing changes, restore normal camera and free viewport after validation.
+Previous range-menu click validation remains interrupted; native range0/32/64/128
+images completed in the wind task and are retained, not represented as UI tests.
+
+Before timing, the user rejected the hot-preview palette as too random per plant.
+Preserve preview-meadow.png and this rejection. Revised color is dominated by
+world-space patches with only +/-0.04 maximum combined tuft/leaf variation.
+Use the same v1 workload/gates; no performance result existed for the rejected
+palette. This is appearance refinement, not a changed measurement scenario.
+
+The second hot preview (patch-skyline.png) was also rejected by the user: green
+and yellow contrast was too stark and the warped sine field looked like lines.
+Replace that color field with smooth2D value noise and a closer green/olive-yellow
+palette; wind's travelling field is unchanged. Individual color offsets shrink
+to +/-0.02 combined. This is still the same color v1 workload and gates.
+The first timing start was rejected by the production entry point because not
+all enabled visual LODs were settled; no timed result exists for this attempt.
+Preserve its error, and don't count it as a completed or passing run.
+
+After the rejected start and Play stop, restarting Play in the same editor
+reported missing project types (including VoxelManager/VoxelDebugOverlay) and
+missing terrain_player prefab. The camera setter hit a null reference and the
+capture was blank; failed-play-blank.png preserves it. Do not treat this as
+visual validation. Final revised shader compiled successfully; a fresh visible
+editor restart is required before further preview/timing.
+
+Final smooth-noise skyline was inspected after fresh editor PID91996 startup:
+the broad green/olive-yellow transitions are gentle and the rejected directional
+bands are absent. Final-skyline.png retains this1440x900 fixed-camera view.
+The pre-capture profiler was2769x1529, but after returning from the ejected camera,
+12:04:04 readback was2769x1391. Candidate2 began12:04:15 without correcting that
+mismatch and completed as2adc51fa1b814fe79d473f6ff843ff62 at12:06:35. Preserve it as
+non-comparable, regardless of numerical gate results; do not claim a pass from
+an undersized viewport. Main will reapply the original request and verify actual
+2769x1529 immediately before one corrected run, with unchanged source/world,
+route/gates and no intervening camera captures or mode changes.
+
+The undersized candidate2 measured moving500.78952FPS,p953.7108ms,p996.2674ms,
+GPU1.6241063ms; standing452.89563FPS,p952.7219ms,p994.415ms,GPU1.8928342ms.
+Both recorded profiler windows were2769x1391. It is retained in candidate2.json.gz
+and candidate2-final.json as non-comparable. The worker stopped Play after this
+run; main resumed Play with actual world/player present and reapplied the original
+viewport after restoring normal camera. This replay did not reproduce the prior
+missing-type failure. No production source changed between candidate2 and retry.
+
+Corrected preflight records actual2769x1529,visualPending0,transitionPending0,
+placementPendingfalse,collision4913ready0pending0failures,normalcamera Euler0,
+range64. Main invokes the unchanged canonical route as GRASS-COLOR-001/v1-corrected,
+revisionc2838be-range-wind-color-patches, after the exact start transform. No
+further camera/resolution operations or screenshots occur during timing.
+Final-source.json records all grass/terrain source hashes and Sentry marker.
+
+Corrected run7c435b44f6954e2a88b212a6210e3ca1 rendered2769x1529 but FAILED moving
+FPS/tail gates:363.05136FPS(-24.20%),p957.6395ms(+99.87%),p9918.1847ms(+189.00%).
+Moving GPU1.5631031ms is lower than the wind baseline, so those CPU/frame stalls
+are not established as color GPU cost. GC total396.734ms,max13.116ms does not
+account for the whole difference. Standing419.8251FPS(-2.46%),p952.9092ms(-4.78%),
+p995.1487ms(+8.50%),GPU2.0827317ms(+0.197398ms) passes. Memory/allocations,
+zero exceptions/collisionfailures/overflow and settlement pass. Preserve raw,
+comparison and profiler evidence; the overall result remains FAIL.
+
+The measured +0.1974ms standing GPU cost is within budget but motivates removing
+repeated patch noise evaluation from every forward vertex. Cache it once per
+retained tuft in the existing generation dispatch. Pack16-bit angle fraction and
+half-float color tone into the previous shape.x channel, leaving32-byte records
+and all budgets unchanged. Angle quantization is at most0.0055degrees; wind and
+placement remain unchanged. A shared color include owns the same noise field;
+VS decodes it and adds the same tiny local variation. No appearance retuning or
+scenario/gate change. Compile/cold-start and one new candidate are required.
+This optimization does not by itself explain or dismiss the moving frame failure.
+
+### 2026-09-18 — GRASS-COLOR-001/v1 cached-color qualification
+
+Final run `e0034107aafc4d3ebd1411d4093dfcc4`, task `GRASS-COLOR-001/v1-cached`,
+revision `c2838be-range-wind-color-cached`, completed and saved at 12:26:37 local.
+Source identity is in [optimized source](ValidationEvidence/GrassColor/optimized-source.json).
+The five grass/terrain hashes match the explicit compile and fresh visible
+editor startup (PID 9656, 12:18:05, engine 26.09.15). Sentry remained
+`2026-09-18T14:50:56.373477Z`; eight stock resource warning/error lines occurred
+during startup, with no grass parser/pipeline/dispatch errors or timed exceptions.
+The old shutdown process had reached both Source2 shutdown/logging markers and
+remained in Error for over 25 seconds before termination; the fresh process ran
+the real playable world. The client remained visible with player input enabled.
+
+The v1 workload and gates are unchanged: basic_example, one player, seed 1337,
+generator 48, world revision 3991/pages 873/checkpoint 152, cells 32x16, gameplay
+radius 8, visual radius 128, LOD 0–5, extents 4/4, grass 64 m, FOV 75, start
+(-1.6258175,1.2225341,340), angles 0, speed 2500, distance 50000, one loop,
+clearance 393.7008, full settlement before timing and automatic drain plus
+10 seconds standing. Both recorded windows are physical 2769x1529. The route
+duration is 121.94745 seconds. No camera captures, native editor queries or
+workspace writes occurred during the timed windows. RTX 5090 environment and
+accepted wind baseline `14f1601221e14b85b0aefc00d40f6623` are unchanged.
+
+| Metric | Moving | Standing |
+| --- | ---: | ---: |
+| FPS | 495.1543 (+3.3823%) | 451.71448 (+4.9528%) |
+| p95 frame | 3.6453 ms (-4.6282%) | 2.5929 ms (-15.1288%) |
+| p99 frame | 6.3055 ms (+0.2098%) | 4.1921 ms (-11.6579%) |
+| GPU average | 1.6719146 ms (-0.0197543 ms) | 1.9100541 ms (+0.0247204 ms) |
+| Process peak | 4923490304 B (-0.9210%) | 4832653312 B (-1.3004%) |
+| GPU memory peak | 1538202369 B (-3.1714%) | 1537989377 B (-3.1749%) |
+| Managed allocation/frame | 59548.043 B (-4.3620%) | 29711.979 B (-1.0553%) |
+| Timed exceptions | 0 | 0 |
+
+Final diagnostics: visual pending 0, transition pending 0, placement pending
+false; collision 4913 ready, 0 pending, 0 failures. Grass: 5946 current tufts,
+8038 peak candidates, 0 overflow views, capacity 65536 and 2097152 root bytes.
+Terrain remains saved at revision 3991 with no queued or failed edits.
+All unchanged frame, tail, memory, allocation, standing GPU and correctness
+criteria PASS. [Raw result](ValidationEvidence/GrassColor/optimized.json.gz),
+[comparison](ValidationEvidence/GrassColor/optimized-comparison.json),
+[preflight](ValidationEvidence/GrassColor/optimized-preflight.json),
+[final diagnostics](ValidationEvidence/GrassColor/optimized-final.json) and
+[log](ValidationEvidence/GrassColor/optimized-final.log.gz) preserve evidence.
+
+The prior per-vertex candidate's frame failures remain FAIL and unexplained;
+this passing source revision does not establish their cause or claim that color
+improves CPU performance. The once-per-tuft calculation removes the repeated
+GPU noise work while retaining the same visual field and fixed workload.
+
+After timing, fixed meadow/close/skyline 1440x900 captures were inspected for
+the final packed-color shader: gentle green/olive-yellow areas, soft irregular
+transitions, intact tips and ground attachment, and no rejected directional
+color bands. See `optimized-*.png` in
+[color evidence](ValidationEvidence/GrassColor/README.md). Wind animation is
+unchanged and retains its earlier sequence qualification; stills alone do not
+establish motion. No new multiplayer or other-hardware performance claim.
+
+Normal first-person Game view, free viewport and input/look controls were
+restored. The player returned to the pre-task location (16725.8672,5754.61084,
+0.574342906), settling to (16725.8672,5754.60156,0.530551493). Streaming and
+collision were fully settled; no authored scene was saved. The earlier Q-menu
+typing/clicking checks remain interrupted and its UI file remains uncommitted.
+This acceptance covers the grass range backend, wind and final patch color.

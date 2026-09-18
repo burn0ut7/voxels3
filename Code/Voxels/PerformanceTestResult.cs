@@ -295,6 +295,7 @@ internal sealed class PerformanceWorldContext
 	public int MaximumVisualLod { get; init; }
 	public int Lod0VisualHalfExtent { get; init; }
 	public int LodCacheHalfExtent { get; init; }
+	public float GrassRenderRangeMeters { get; init; }
 	public long VisualConfigurationRevision { get; init; }
 	public string Generator { get; init; }
 	public int WorldSeed { get; init; }

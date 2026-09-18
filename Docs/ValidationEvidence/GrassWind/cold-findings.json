@@ -1,0 +1,22 @@
+{
+  "logPath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\logs\\sbox-dev.log",
+  "sentryAfter": "2026-09-18T14:50:56.373477Z",
+  "matches": {
+    "shader_parser_pipeline_dispatch_exception": [
+      "2026/09/18 11:23:58.5899\t[PackageManager] Install Package (Already Mounted) local.shadergraph#local [local]",
+      "2026/09/18 11:23:58.6826\t[PackageManager] Install Package (Already Mounted) local.shadergraph#local [local]",
+      "2026/09/18 11:24:28.6533\t[engine/RenderSystem] Merging and flushing Vulkan pipeline cache to disk.",
+      "2026/09/18 11:24:28.6758\t[engine/RenderSystem] Writing Vulkan pipeline cache to \"shadercache\\vulkan\\shaders.cache.tmp\" (144480192 bytes)",
+      "2026/09/18 11:24:28.7621\t[engine/Engine] Unable to rename \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\core\\shadercache\\vulkan\\shaders.cache.tmp\" to \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\sbox\\core\\shadercache\\vulkan\\shaders.cache\"!"
+    ],
+    "stock_resource_errors": [
+      "2026/09/18 11:23:53.5692\t[engine/ResourceSystem] Error loading resource \"textures/dev/blue_noise_256.vtex\" (Invalid header version: 8736 != 12)",
+      "2026/09/18 11:24:14.7701\t[engine/ResourceSystem] Error loading resource file \"models/citizen_clothes/hair/hair_looseblonde/hair.loose.brown.clothing_c\" (Error: ERROR_FILEOPEN: File not found) - from models/citizen_clothes/hair/hair_looseblonde/hair.loose.grey.clothing",
+      "2026/09/18 11:24:16.3205\t[engine/ResourceSystem] Error loading resource file \"sounds/tools/sfm/denyundo.vsnd_c\" (Error: ERROR_FILEOPEN: File not found) - from sounds/player_use_fail.sound",
+      "2026/09/18 11:24:16.5089\t[engine/ResourceSystem] Error loading resource file \"particles/break/break.cardboard.vpcf_c\" (Error: ERROR_FILEOPEN: File not found) - from models/citizen_props/balloonregular01.vmdl",
+      "2026/09/18 11:24:16.7080\t[engine/ResourceSystem] Error loading resource file \"models/props/metal_wheely_bin/metal_wheely_bin_compost.vmat_c\" (Error: ERROR_FILEOPEN: File not found) - from models/sbox_props/metal_wheely_bin/metal_wheely_bin_body_gib.vmdl",
+      "2026/09/18 11:24:16.7221\t[engine/ResourceSystem] Error loading resource file \"materials/default/default_mask_tga_3a4f4d17.generated.vtex_c\" (Error: ERROR_FILEOPEN: File not found) - from materials/generic/trash_a.vmat",
+      "2026/09/18 11:24:16.7650\t[engine/ResourceSystem] Error loading resource file \"box_test.vmdl_c\" (Error: ERROR_FILEOPEN: File not found) - from scenes/reward-unbox.scene"
+    ]
+  }
+}

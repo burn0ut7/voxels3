@@ -409,6 +409,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks,
 			key => { MarkWaterPresentationDirty( key ); _predictionReadyRegions.Remove( key ); },
 			key => _predictionReadySeams.Remove( key ) );
+		_gpuMesher.GrassRenderRangeMeters = GrassRenderRangeMeters;
 		_gpuMesher.SetFieldPresentationReady( Networking.IsHost );
 		_collision = new VoxelCollisionWorld( this, RequiredCellsPerAxis, RequiredBaseCellSize );
 		if ( !StagedTerrainSettings.IsValid )
@@ -467,6 +468,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	protected override void OnUpdate()
 	{
 		if ( _terrainField is null ) return;
+		_gpuMesher.GrassRenderRangeMeters = GrassRenderRangeMeters;
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
 			VoxelPerformanceProfiler.ManagerUpdate );
 		TrySaveCompletedPerformanceTest();
@@ -872,6 +874,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 				MaximumVisualLod = _appliedVisualConfiguration.MaximumVisualLod,
 				Lod0VisualHalfExtent = _appliedVisualConfiguration.Lod0VisualHalfExtent,
 				LodCacheHalfExtent = _appliedVisualConfiguration.LodCacheHalfExtent,
+				GrassRenderRangeMeters = GrassRenderRangeMeters,
 				VisualConfigurationRevision = _appliedVisualConfigurationRevision,
 				Generator = "regional-landforms-retained-caves",
 				WorldSeed = _appliedTerrainSettings.WorldSeed,

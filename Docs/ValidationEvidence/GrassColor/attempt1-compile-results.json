@@ -1,0 +1,112 @@
+{
+  "grass": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\r\n  \"Path\": \"shaders/voxels/voxel_grass.shader\",\r\n  \"Success\": true,\r\n  \"Output\": [\r\n    \"warning[E41012]: profile implicitly upgraded\",\r\n    \"  --> shaders/voxels/voxel_grass.shader:83:9\",\r\n    \"   |\",\r\n    \"83 | float4 MainPs( PS_INPUT input, bool frontFace : SV_IsFrontFace ) : SV_Target0\",\r\n    \"   |        ^ entry point 'MainPs' uses additional capabilities that are not part of the specified profile 'spirv_1_5'. The profile setting is automatically updated to include these capabilities: 'SPV_KHR_non_semantic_info + SPV_GOOGLE_user_type + spvDerivativeControl + spvImageQuery + spvImageGatherExtended + spvSparseResidency + spvMinLod + spvFragmentFullyCoveredEXT'\",\r\n    \"---'\"\r\n  ]\r\n}"
+      }
+    ]
+  },
+  "grassCompute": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\r\n  \"Path\": \"shaders/voxels/voxel_grass_cs.shader\",\r\n  \"Success\": true,\r\n  \"Output\": []\r\n}"
+      }
+    ]
+  },
+  "status": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"IsBuilding\":false,\"Compilers\":[{\"Name\":\"local.menu\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"toolbase\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.shadergraph\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.actiongraph\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.moviemaker\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.hammer\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.dooeditor\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.voxels3\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]},{\"Name\":\"local.voxels3.editor\",\"IsBuilding\":false,\"NeedsBuild\":false,\"Success\":true,\"Errors\":0,\"Warnings\":0,\"Diagnostics\":[]}]}"
+      }
+    ],
+    "structuredContent": {
+      "IsBuilding": false,
+      "Compilers": [
+        {
+          "Name": "local.menu",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "toolbase",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.shadergraph",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.actiongraph",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.moviemaker",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.hammer",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.dooeditor",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.voxels3",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        },
+        {
+          "Name": "local.voxels3.editor",
+          "IsBuilding": false,
+          "NeedsBuild": false,
+          "Success": true,
+          "Errors": 0,
+          "Warnings": 0,
+          "Diagnostics": []
+        }
+      ]
+    }
+  }
+}

@@ -54,8 +54,9 @@ internal sealed class TerrainGrassRenderer : IDisposable
 	}
 
 	public void Begin( GpuBuffer<Vector4> bounds,
-		GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source )
+		GpuBuffer<GpuBuffer.IndirectDrawIndexedArguments> source, float rangeMeters )
 	{
+		_generate.Attributes.Set( "GrassRangeMeters", rangeMeters );
 		_generate.Attributes.Set( "GrassRoots", _roots );
 		_generate.Attributes.Set( "GrassArguments", _arguments );
 		_generate.Attributes.Set( "GrassCapacity", Capacity );

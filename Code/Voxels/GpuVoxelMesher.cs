@@ -49,6 +49,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private const double SlowDrawCommandCommitThresholdMilliseconds = 500.0;
 
 	private readonly Scene _scene;
+	public float GrassRenderRangeMeters { get; set; }
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
 	private readonly GpuVoxelMaterials _voxelMaterials = new();
 	private readonly Material _material = Material.Load( "materials/voxels/voxel_terrain.vmat" );
@@ -4478,12 +4479,16 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				if ( arenaCount == 0 ) return;
 				if ( Graphics.LayerType == SceneLayerType.DepthPrepass )
 				{
-					state.Grass.Begin( visibility.Bounds, visibility.SourceArguments );
-					foreach ( var arena in state.DepthArenas )
+					var grassRange = _owner.GrassRenderRangeMeters;
+					state.Grass.Begin( visibility.Bounds, visibility.SourceArguments, grassRange );
+					if ( grassRange > 0f )
 					{
-						if ( (arena.Index + 1) * RegionsPerSlab > visibility.SourceArguments.ElementCount ) break;
-						if ( arena.ActiveResidentCount == 0 ) continue;
-						state.Grass.AddArena( arena.Vertices, arena.Indices, arena.Index * RegionsPerSlab, RegionsPerSlab );
+						foreach ( var arena in state.DepthArenas )
+						{
+							if ( (arena.Index + 1) * RegionsPerSlab > visibility.SourceArguments.ElementCount ) break;
+							if ( arena.ActiveResidentCount == 0 ) continue;
+							state.Grass.AddArena( arena.Vertices, arena.Indices, arena.Index * RegionsPerSlab, RegionsPerSlab );
+						}
 					}
 					state.Grass.EndAndDrawDepth();
 				}

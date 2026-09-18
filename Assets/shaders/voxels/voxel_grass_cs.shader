@@ -1,6 +1,6 @@
 HEADER
 {
-	Description = "Static grass from published terrain triangles";
+	Description = "Grass roots and shared wind from published terrain triangles";
 }
 MODES
 {
@@ -16,6 +16,8 @@ COMMON
 CS
 {
 	#include "common.fxc"
+	#include "shaders/voxels/voxel_grass_wind.hlsl"
+	#include "shaders/voxels/voxel_grass_color.hlsl"
 	#include "shaders/voxels/voxel_terrain_normal.hlsl"
 	#include "shaders/voxels/voxel_frustum.hlsl"
 
@@ -43,6 +45,7 @@ CS
 	uint GrassFirstSlot < Attribute( "GrassFirstSlot" ); >;
 	uint GrassVertexCount < Attribute( "GrassVertexCount" ); >;
 	uint GrassPass < Attribute( "GrassPass" ); >;
+	float GrassRangeMeters < Attribute( "GrassRangeMeters" ); >;
 
 	uint GrassHash( uint value )
 	{
@@ -74,21 +77,23 @@ CS
 			}
 			return;
 		}
-		// Maximum leaf height is 38 * 1.05 inches; lean is at most half its height.
-		const float3 GrassLowerPadding = float3( 22.0, 22.0, 1.0 );
-		const float3 GrassUpperPadding = float3( 22.0, 22.0, 42.0 );
+		// Include the entire wind sweep in both region and triangle culling.
+		// Wind only lowers tips; the existing vertical envelope still contains them.
+		const float horizontalPadding = 22.0 + 38.0 * 1.05 * GRASS_MAX_WIND_BEND;
+		const float3 GrassLowerPadding = float3( horizontalPadding, horizontalPadding, 1.0 );
+		const float3 GrassUpperPadding = float3( horizontalPadding, horizontalPadding, 42.0 );
 		uint slot = GrassFirstSlot + group.x;
 		float4 lower = VisibilityBounds[slot * 2];
 		float3 upper = VisibilityBounds[slot * 2 + 1].xyz;
-		// Only published regular LOD0 geometry. Expand for tuft height and outward lean.
-		if ( lower.w < 1.0 || lower.w > 2.0 )
+		// Active regular terrain at every available LOD; transition filler is tagged >= 100.
+		if ( lower.w < 1.0 || lower.w >= 100.0 || GrassRangeMeters <= 0.0 )
 		{
 			return;
 		}
 		lower.xyz -= GrassLowerPadding;
 		upper += GrassUpperPadding;
 		float3 nearest = clamp( g_vCameraPositionWs, lower.xyz, upper );
-		if ( length( nearest - g_vCameraPositionWs ) * 0.0254 >= 32.0 ||
+		if ( length( nearest - g_vCameraPositionWs ) * 0.0254 >= GrassRangeMeters ||
 			IsDefinitelyOutsideFrustum( lower.xyz, upper ) )
 		{
 			return;
@@ -119,12 +124,16 @@ CS
 			float3 triangleLower = min( p0, min( p1, p2 ) ) - GrassLowerPadding;
 			float3 triangleUpper = max( p0, max( p1, p2 ) ) + GrassUpperPadding;
 			float3 triangleNearest = clamp( g_vCameraPositionWs, triangleLower, triangleUpper );
-			if ( length( triangleNearest - g_vCameraPositionWs ) * 0.0254 >= 32.0 ||
+			if ( length( triangleNearest - g_vCameraPositionWs ) * 0.0254 >= GrassRangeMeters ||
 				IsDefinitelyOutsideFrustum( triangleLower, triangleUpper ) )
 			{
 				continue;
 			}
-			float candidates = min( length( cross( p1 - p0, p2 - p0 ) ) / 72.0, 16.0 );
+			float areaCandidates = length( cross( p1 - p0, p2 - p0 ) ) / 72.0;
+			float candidates = min( areaCandidates, 16.0 );
+			// Coarse triangles cover more ground. Reweight their bounded samples
+			// instead of silently reducing density again at every LOD boundary.
+			float candidateWeight = max( areaCandidates / 16.0, 1.0 );
 			uint seed = GrassHash( a.First.x ^ GrassHash( b.First.y ) ^ GrassHash( c.First.z ) );
 			uint count = (uint)floor( candidates + GrassRandom( seed ) );
 			for ( uint blade = 0; blade < count; blade++ )
@@ -141,8 +150,10 @@ CS
 				float metres = length( root - g_vCameraPositionWs ) * 0.0254;
 				float density = lerp( 1.0, 0.3, smoothstep( 6.0, 12.0, metres ) );
 				density = lerp( density, 0.08, smoothstep( 12.0, 24.0, metres ) );
-				density *= 1.0 - smoothstep( 24.0, 32.0, metres );
-				float scale = saturate( (density - GrassRandom( key + 3 )) * 10.0 );
+				float farDensity = min( 1.0, 1024.0 / max( metres * metres, 1.0 ) );
+				density *= farDensity * (1.0 - smoothstep( GrassRangeMeters * 0.75, GrassRangeMeters, metres ));
+				// Thin the distant population without shrinking every remaining tuft.
+				float scale = saturate( (density - GrassRandom( key + 3 ) / candidateWeight) * 10.0 / farDensity );
 				if ( scale <= 0.0 )
 				{
 					continue;
@@ -151,10 +162,19 @@ CS
 				InterlockedAdd( GrassArguments[1], 1, index );
 				if ( index < GrassCapacity )
 				{
+					// Evaluate the field once per tuft, shared by all 30 vertices in
+					// both passes. Pack variation and wind into the existing record.
+					uint variation = (GrassHash( key + 7 ) >> 8) & 65535u;
+					float wind = EvaluateGrassWind( root.xy, g_flTime );
+					uint packedVariationWind = variation | (f32tof16( wind ) << 16);
+					// Color is shared by all leaves, without adding another root channel.
+					uint angle = (GrassHash( key + 4 ) >> 8) & 65535u;
+					// Bias color to [1,2] so the packed float is never denormal or NaN.
+					uint packedAngleColor = angle | (f32tof16( 1.0 + EvaluateGrassColor( root.xy ) ) << 16);
 					GrassRoots[index * 2] = float4( root - float3( 0.0, 0.0, 0.3 ), scale );
-					GrassRoots[index * 2 + 1] = float4( GrassRandom( key + 4 ) * 6.2831853,
+					GrassRoots[index * 2 + 1] = float4( asfloat( packedAngleColor ),
 						lerp( 22.0, 38.0, GrassRandom( key + 5 ) ), lerp( 0.35, 0.65, GrassRandom( key + 6 ) ),
-						GrassRandom( key + 7 ) );
+						asfloat( packedVariationWind ) );
 				}
 			}
 		}

@@ -1,0 +1,225 @@
+{
+  "baseline": "f06cc54d7a21461ab5f94a05a8a865d2",
+  "candidate": "4eb5e903cacd4c81ab5644d85b63826f",
+  "windows": {
+    "moving": {
+      "averageFps": {
+        "baseline": 510.69592,
+        "candidate": 515.5781,
+        "percent": 0.9559857067195532,
+        "pass": true
+      },
+      "p95Milliseconds": {
+        "baseline": 3.572,
+        "candidate": 3.6988,
+        "percent": 3.5498320268756878,
+        "pass": true
+      },
+      "p99Milliseconds": {
+        "baseline": 5.916,
+        "candidate": 6.3319,
+        "percent": 7.030087897227855,
+        "pass": true
+      },
+      "averageGpuMilliseconds": {
+        "baseline": 1.533606,
+        "candidate": 1.4971489,
+        "percent": -2.377214225818103,
+        "pass": true
+      },
+      "peakProcessBytes": {
+        "baseline": 4870430720,
+        "candidate": 4906930176,
+        "percent": 0.7494092021495868,
+        "pass": true
+      },
+      "peakGpuBytes": {
+        "baseline": 1589779201,
+        "candidate": 1588102721,
+        "percent": -0.10545363777217931,
+        "pass": true
+      },
+      "averageManagedBytesAllocatedPerFrame": {
+        "baseline": 59647.25,
+        "candidate": 58130.008,
+        "percent": -2.543691452665464,
+        "pass": true
+      },
+      "exceptions": {
+        "baseline": 0,
+        "candidate": 0,
+        "percent": null,
+        "pass": true
+      }
+    },
+    "stationary": {
+      "averageFps": {
+        "baseline": 443.28665,
+        "candidate": 454.0882,
+        "percent": 2.4366964355908127,
+        "pass": true
+      },
+      "p95Milliseconds": {
+        "baseline": 3.2656,
+        "candidate": 2.9015,
+        "percent": -11.14955903968643,
+        "pass": true
+      },
+      "p99Milliseconds": {
+        "baseline": 4.0963,
+        "candidate": 4.7032,
+        "percent": 14.815809388960766,
+        "pass": false
+      },
+      "averageGpuMilliseconds": {
+        "baseline": 1.7626724,
+        "candidate": 1.7345653,
+        "percent": -1.5945731038847555,
+        "pass": true
+      },
+      "peakProcessBytes": {
+        "baseline": 4811374592,
+        "candidate": 4810534912,
+        "percent": -0.017451977266458307,
+        "pass": true
+      },
+      "peakGpuBytes": {
+        "baseline": 1539349249,
+        "candidate": 1537754689,
+        "percent": -0.10358662928739992,
+        "pass": true
+      },
+      "averageManagedBytesAllocatedPerFrame": {
+        "baseline": 29877.078,
+        "candidate": 29778.143,
+        "percent": -0.3311401469715425,
+        "pass": true
+      },
+      "exceptions": {
+        "baseline": 0,
+        "candidate": 0,
+        "percent": null,
+        "pass": true
+      }
+    }
+  },
+  "pass": false,
+  "test": [
+    {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94452,
+      "startCenter": {
+        "x": -1.6258175,
+        "y": 1.2225341
+      }
+    },
+    {
+      "name": "player-figure-eight",
+      "completedLoops": 1,
+      "speed": 2500,
+      "distance": 50000,
+      "terrainClearance": 393.7008,
+      "durationSeconds": 121.94758,
+      "startCenter": {
+        "x": -1.6258175,
+        "y": 1.2225341
+      }
+    }
+  ],
+  "world": [
+    {
+      "scene": "basic_example",
+      "cellsPerAxis": 32,
+      "baseCellSize": 16,
+      "gameplayRadius": 8,
+      "visualChunkRadius": 128,
+      "minimumVisualLod": 0,
+      "maximumVisualLod": 5,
+      "lod0VisualHalfExtent": 4,
+      "lodCacheHalfExtent": 4,
+      "visualConfigurationRevision": 2,
+      "generator": "regional-landforms-retained-caves",
+      "worldSeed": 1337,
+      "generatorVersion": 48,
+      "terrainSettings": {
+        "worldSeed": 1337,
+        "landAmount": 0.75,
+        "mountainAmount": 0.3,
+        "plainsAmount": 0.6,
+        "continentalScale": 77724.09,
+        "mountainRegionScale": 18681.756,
+        "localLandformScale": 5232.39,
+        "reliefHeight": 3072,
+        "ruggedness": 0.45,
+        "seaLevel": 0,
+        "isValid": true
+      },
+      "streamingCenter": {
+        "x": -1,
+        "y": 0,
+        "z": 0
+      },
+      "targetPosition": {
+        "x": -1.758292,
+        "y": 1.5184625,
+        "z": 246.88448
+      }
+    },
+    {
+      "scene": "basic_example",
+      "cellsPerAxis": 32,
+      "baseCellSize": 16,
+      "gameplayRadius": 8,
+      "visualChunkRadius": 128,
+      "minimumVisualLod": 0,
+      "maximumVisualLod": 5,
+      "lod0VisualHalfExtent": 4,
+      "lodCacheHalfExtent": 4,
+      "visualConfigurationRevision": 2,
+      "generator": "regional-landforms-retained-caves",
+      "worldSeed": 1337,
+      "generatorVersion": 48,
+      "terrainSettings": {
+        "worldSeed": 1337,
+        "landAmount": 0.75,
+        "mountainAmount": 0.3,
+        "plainsAmount": 0.6,
+        "continentalScale": 77724.09,
+        "mountainRegionScale": 18681.756,
+        "localLandformScale": 5232.39,
+        "reliefHeight": 3072,
+        "ruggedness": 0.45,
+        "seaLevel": 0,
+        "isValid": true
+      },
+      "streamingCenter": {
+        "x": -1,
+        "y": 0,
+        "z": 0
+      },
+      "targetPosition": {
+        "x": -1.758292,
+        "y": 1.5184625,
+        "z": 246.88448
+      }
+    }
+  ],
+  "resolution": [
+    {
+      "screenWidth": 2769,
+      "screenHeight": 1529
+    },
+    {
+      "screenWidth": 2769,
+      "screenHeight": 1529
+    }
+  ],
+  "lodArrivalStatus": [
+    "settled: nearby LOD0 first observed at 1.3s; 7.3s observed",
+    "settled: nearby LOD0 first observed at 1.8s; 6.8s observed"
+  ]
+}
