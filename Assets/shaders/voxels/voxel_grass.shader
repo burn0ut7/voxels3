@@ -1,6 +1,6 @@
 HEADER
 {
-	Description = "Opaque static terrain grass blades";
+	Description = "Opaque curved terrain grass tufts";
 }
 FEATURES
 {
@@ -33,18 +33,28 @@ VS
 	{
 		float4 root = GrassRoots[input.InstanceId * 2];
 		float4 shape = GrassRoots[input.InstanceId * 2 + 1];
-		// One opaque tapered triangle per blade; no alpha-card overdraw.
-		float height = input.VertexId == 2 ? 1.0 : 0.0;
-		float side = input.VertexId == 2 ? 0.0 : (input.VertexId == 0 ? -1.0 : 1.0);
-		float3 widthAxis = float3( cos( shape.x ), sin( shape.x ), 0.0 );
-		float3 bendAxis = float3( -widthAxis.y, widthAxis.x, 0.0 );
-		float3 position = root.xyz + root.w * (widthAxis * side * shape.z * (1.0 - height * 0.65) +
-			float3( 0.0, 0.0, height * shape.y ) + bendAxis * height * height * shape.y * 0.18);
+		// Five leaves share one surface root. Two triangles join a narrow
+		// root, a curved wide middle and a tip, identically in depth and color.
+		uint leaf = input.VertexId / 6;
+		uint corner = input.VertexId % 6;
+		float height = corner == 0 ? 0.0 : (corner == 5 ? 1.0 : 0.4);
+		float side = (corner == 1 || corner == 4) ? -1.0 : ((corner == 2 || corner == 3) ? 1.0 : 0.0);
+		float variation = frac( shape.w * 7.13 + leaf * 0.618034 );
+		float angle = shape.x + leaf * 2.3999632;
+		float3 bendAxis = float3( cos( angle ), sin( angle ), 0.0 );
+		float3 widthAxis = float3( -bendAxis.y, bendAxis.x, 0.0 );
+		float length = shape.y * lerp( 0.55, 1.1, variation );
+		float lean = lerp( 0.3, 0.65, frac( variation * 3.71 ) );
+		float width = shape.z * lerp( 0.75, 1.15, frac( variation * 5.17 ) );
+		float3 position = root.xyz + root.w * (widthAxis * side * width +
+			float3( 0.0, 0.0, height * length ) + bendAxis * height * height * length * lean);
 		PixelInput output = (PixelInput)0;
 		output.vPositionWs = position - g_vHighPrecisionLightingOffsetWs.xyz;
 		output.vPositionPs = Position3WsToPs( position );
-		output.vNormalWs = normalize( bendAxis + float3( 0.0, 0.0, 0.8 ) );
-		output.GrassTint = float2( height, shape.w );
+		// A shared upward lighting bias approximates light scattering through
+		// thin leaves without dark, alternating faces across the whole meadow.
+		output.vNormalWs = normalize( bendAxis * 0.45 + float3( 0.0, 0.0, 1.0 ) );
+		output.GrassTint = float2( height, frac( shape.w + variation * 0.22 ) );
 		return output;
 	}
 }
@@ -60,11 +70,11 @@ PS
 			return DepthNormals::Output( normal, 0.95, 1.0 );
 		#else
 		Material material = Material::Init( input );
-		material.Albedo = lerp( float3( 0.065, 0.095, 0.018 ), float3( 0.15, 0.23, 0.045 ), input.GrassTint.x );
-		material.Albedo *= lerp( 0.8, 1.2, input.GrassTint.y );
+		float3 baseColor = lerp( float3( 0.11, 0.17, 0.032 ), float3( 0.18, 0.245, 0.065 ), input.GrassTint.y );
+		material.Albedo = baseColor * lerp( 0.65, 1.12, input.GrassTint.x );
 		material.Normal = normal;
 		material.Roughness = 0.95;
-		material.AmbientOcclusion = lerp( 0.65, 1.0, input.GrassTint.x );
+		material.AmbientOcclusion = lerp( 0.8, 1.0, input.GrassTint.x );
 		return ShadingModelStandard::Shade( input, material );
 		#endif
 	}

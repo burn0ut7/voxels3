@@ -542,6 +542,13 @@ qualification; shadow-map resolution reduction alone did not provide a useful ga
 
 ## s&box VFX Shader Parser Gotcha
 
+On build26.09.15, the grass compute pass's two global `static const float3`
+padding declarations directly inside its CS block were rejected by the VFX
+reflection parser with Mismatched Token errors. Function-local `const float3`
+declarations inside MainCs compiled successfully. This is evidence for that
+declaration form, not a claim about all constants or included HLSL. The failed
+attempt and corrected-source cold-start checks are recorded in GRASS-NATURAL-001.
+
 s&box 26.08.19 can terminate in native `vfx_vulkan` code while reflecting a
 compute shader instead of reporting an ordinary shader error. The observed
 signature was `EXCEPTION_ACCESS_VIOLATION_READ / 0xffffffffffffffff` through

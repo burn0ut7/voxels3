@@ -31027,3 +31027,182 @@ roots, bounded131072triangle submissions/view at capacity (normally~14620 in
 this route). This replaces the failed full-screen depth-copy approach. Geometry
 is generated once/view. Static blades9..20in tall,1.1..2in wide;densityone/72
 square units,fullthrough6m,30%at12m,8%at24m,zero32m. Capacity65536 remains fixed.
+
+## GRASS-NATURAL-001/v1 — clustered grass (defined 2026-09-18)
+
+User rejects isolated spike-like blades. Capture the current player view before
+changes; replace the one-blade silhouette with compact, varied tufts derived
+from the same published grass triangles. No authoritative terrain, collision,
+network, fog or terrain-texture changes. Existing uncommitted terrain fade work
+is retained identically in before/after source states and excluded from this task.
+
+Performance reuses GRASS-001/v1 fixed route and all gates: basic_example,
+seed1337/gen48, saved revision3984/pages868 (verify), one player,32cells/16units,
+gameplay8,visual128,LOD0..5,extents4/4,startXY(-1.6258175,1.2225341),Z340,
+eyeEuler(0,0,0),FOV75,2769x1529,speed2500,distance50000,one loop,
+clearance393.7008,automatic drain,10s stationary; settled before start.
+Require <=10% regression in moving/stationary FPS,p95/p99,peak process/GPU
+memory and allocations/frame against fresh pre-change control, and compare
+latest accepted silhouette run06722ee9576c47a8902d88d9c59195b6. Additional
+stationary GPU target <=0.3ms over the fresh pre-change control. Preserve every
+failed/invalid run. Zero project exceptions, collision failures and grass
+capacity overflow; settled streaming. No screenshot during measured windows.
+Player input stays enabled; intervening input invalidates a matched run.
+
+Visuals use close camera(0,-250,267.93129),angles(25,0,0),FOV75,1440x900;
+range patch(100,-250),height212.93129 at6/12/24/32m overhead,FOV45,pitch90;
+skyline camera(-775,3919,680),angles(-4,0,0),FOV75 with player nearby.
+Pass: recognizable compact tufts with varied leaf height and lean, softer
+coherent shading, rooted grass with bare dirt/stone, intact skyline tips and
+stable geometry at rest, progressive thinning and no central grass at32m.
+Use matched captures to judge the user's isolated-blade complaint. Fixed root
+storage remains2MiB/view; record actual root/triangle counts and source hashes.
+Shader edits require clean visible editor restart and fresh log/Sentry checks.
+Evidence: ValidationEvidence/NaturalGrass. Initial screenshot before-player.png.
+
+GRASS-NATURAL-001/v1 preflight found saved revision3989/pages873, not the old
+3984/pages868. The user has changed the persistent world since the historical
+scenario. Restoring the old snapshot would discard those changes; do not do so.
+The already-started v1-baseline run is preserved as screening only, not a matched
+acceptance baseline. An attempted EyeAngles component-property write was rejected
+before mutation; fresh Play reset the camera instead. No source shader changed.
+
+## GRASS-NATURAL-001/v2 — current saved world (defined before new baseline)
+
+Substantive migration: the active saved world has user changes that must be
+preserved. Use revision3989/pages873,world f5ce10f3-6d75-428e-b3dd-63dee14891c6,
+checkpoint132. All other v1 fixed route, visual parameters, metrics and gates
+remain unchanged. Establish a fresh v2 baseline, then compare the candidate to
+that baseline. Older accepted runs remain contextual only because their world
+revision differs. Input remains enabled. Do not accept a run with camera/player
+intervention or save-state drift. No source changes until baseline completes.
+
+v1 screening e371eb9ed9be4dc1a20de3fc13407f34 completed: moving509.6166FPS,
+p953.7564ms,p996.5258ms,GPU1.478847ms; stationary485.55057FPS,
+p952.9108ms,p993.9874ms,GPU1.5871867ms. Not an acceptance baseline because
+of the world-version mismatch recorded above. Full screening-result.json.gz.
+
+v2 baseline b518c1394fc248a9b2b20be516760aaf completed with exact startCenter,
+2769x1529,final camera(-1.75829196,1.51846254,310.884552),Euler0,FOV75.
+Moving520.80817FPS,p953.6285ms,p996.1576ms,GPU1.4862281ms;
+stationary486.05847FPS,p952.9101ms,p993.9967ms,GPU1.5496515ms.
+Moving peak process5178613760/GPU1584126721bytes,allocation59793.008B/frame;
+stationary5092876288/1634212609bytes,29591.441B/frame. Collision4913ready,
+0pending/failures; streaming settled,nearLOD0first1.5s/full5.5s;0exceptions.
+Full baseline.json.gz,preflight,final camera and hashes retained. Checkpoint133
+is persistence metadata; unchanged revision3989/pages873 defines the workload.
+
+First tuft candidate source compiled successfully after Play stopped; both
+Forward/Depth and compute passed. Existing profile-upgrade warning only.
+Before-close.png captured at fixed pose after the baseline finished. Candidate
+visual inspection and clean editor startup remain pending.
+
+Sparse tuft preview candidate-close.png compiled and rendered without errors.
+Five curved leaves/root improve shape/shading, but one/144square units leaves
+large gaps. Visual gate failed: still isolated plants. No benchmark acceptance
+claimed. Denser candidate replaces it with one/36square units,5..11in parent
+height,0.22..0.45in half-width; five shorter leaves/root (~215leaves/m² before
+thinning). Same workload/gates/capacity. Preserve the sparse source in evidence.
+
+Denser preview dense-close.png and supporting dense-low.png show shorter,
+curved, overlapping tufts with softer green shading; bare exposed rock/dirt
+remains clear. Low supporting camera(-120,-250,285),Euler(8,0,0),FOV75.
+Cold restart: normal close reached Source2Shutdown but retained the known
+shutdown Error window onPID57820; stopped only that exited-engine process.
+Fresh visible editorPID85168 loaded project, successful C# compile0errors.
+Sentry last_crash remains2026-09-17T21:21:41.634073Z. Startup contains unrelated
+missing stock resource references; shader/parser/pipeline errors checked separately.
+
+Dense15-triangle run b2ea57a731c84269bc9aa32f3f645a31 completed; NOT ACCEPTED.
+Moving513.7214FPS(-1.360%),p953.6162ms(-0.339%),p995.9766ms(-2.939%),
+GPU1.4981323ms. Stationary440.9243FPS(-9.286%),p953.2848ms(+12.876%),
+p994.1262ms(+3.240%),GPU1.7558045ms(+0.206153ms). All mechanical gates
+except stationaryp95 pass. Exact startCenter/return camera/resolution match;
+collision4913ready,0pending/failures;nearLOD0first1.3s/full6.4s. Zero exceptions.
+Full dense.json.gz, dense-comparison.json, source patch and cold evidence retained.
+
+Optimization candidate keeps five leaves and density unchanged, but uses a
+narrow root, wide bent middle and tip in two triangles/leaf (30vertices/tuft).
+This removes one-third of vertex/triangle submissions and some root-area fill
+without reducing tuft/leaf counts. Fixed scenario/gates unchanged. Source
+compilation, matched screenshots and another cold start/route are required.
+
+Dense capacity diagnostic after its route:14678current/14684peak tufts,
+0overflow across102212views,2MiBroots/view. At15triangles and two draws,
+peak440520triangle submissions/view. The optimization keeps the same population
+but reduces this count by one-third. Its matched optimized-close.png retains
+curved tufts rooted on grass, with a narrower leaf root than the dense preview.
+
+The first optimized compile request overlapped project hot reload and rejected
+the temporarily unmounted shader path before compiling; after successful C#
+reload, the same source compiled successfully (profile-upgrade warning only).
+Second cold restart closedPID85168 normally; new visiblePID68240 loaded the
+project and compiled successfully,0errors. Sentry marker unchanged. Optimized
+v2 route started only after settled streaming and exact player/reset resolution.
+
+Two-triangle run017d357230b44c289c9f5f33e71d6fb7 also NOT ACCEPTED:
+moving522.5312FPS,p953.5822ms,p996.0466ms,GPU1.475154ms;stationary
+441.74048FPS,p953.2568ms(+11.91%),p994.2556ms,GPU1.7665385ms.
+All other fixed gates pass;0exceptions/collision failures,4913ready,settled.
+The smaller leaf geometry did not materially reduce whole-frame GPU time.
+Preserved optimized raw/comparison/source and cold evidence; no threshold change.
+
+Next candidate keeps visible density/shape unchanged and adds conservative
+triangle-level range/frustum rejection before root sampling. Existing region
+checks remain the broad pass. The same padding constants bound both levels,
+including all leaf spread. It reuses the canonical guarded frustum function.
+Offscreen root/vertex work can now be avoided inside regions crossing the view.
+Fixed camera screenshots must retain visible roots; verify skyline and viewport
+edges as well as unchanged canonical performance gates. No workload changes.
+
+The initial culling shader declared global static const float3 padding inside
+CS, rejected by the engine's VFX reflection parser (two Mismatched Token errors).
+No runtime acceptance. Moved constants into MainCs, matching the existing local
+constant form; compilation then succeeded. Preserve this failure in history;
+clean-start qualification uses only the corrected source.
+
+### GRASS-NATURAL-001/v2 accepted — 2026-09-18
+
+Final run4e7db047ad1c4c20a8f106204a825306 passes all fixed before/after gates.
+Moving523.2406FPS(+0.467%),p953.5681ms(-1.665%),p996.0565ms(-1.642%),
+GPU1.4686186ms. Stationary466.12674FPS(-4.101%),p953.1323ms(+7.635%),
+p994.0104ms(+0.343%),GPU1.6424398ms(+0.0927883ms). The observed moving
+increase is a run comparison, not a claim that adding geometry speeds rendering.
+Peak process/GPU moving4943695872/1586436865bytes(-4.536%/+0.146%),
+stationary4960149504/1535974145bytes(-2.606%/-6.011%). Allocations/frame
+58440.363moving(-2.262%),29560.064stationary(-0.106%). Both windows0exceptions.
+Collision4913ready,0pending/failures;streaming settled,nearLOD0first1.7s/full5.7s.
+Exact startCenter and2769x1529 matched;final camera
+(-1.75829196,1.51846254,310.884521),Euler0,FOV75. Full culled.json.gz and
+comparison.json retain all measurements/source/world identity.
+
+After the route,2433current/3999peak tufts,0overflow across88461views,
+2097152root bytes/view. Peak79980triangle submissions/view across depth/color.
+Triangle culling avoids offscreen root work inside nearby regions; unchanged
+visible density is checked against the pre-culling optimized close view.
+
+Final cold editorPID66668,successful compile0errors;Sentry marker unchanged
+2026-09-17T21:21:41.634073Z. Full cold log/findings retain stock missing-resource
+messages, with no project shader/parser/dispatch/managed-exception error.
+PID68240 previously reached Source2Shutdown and retained the known shutdown
+Error window; only that shutdown process was stopped before this fresh start.
+
+Final-close.png preserves curved tufts and bare dirt/stone boundaries at the
+fixed pose. Compared with pre-culling optimized-close.png:5576/1296000pixels
+differ,281by>16,mean0.018916/255. The unchanged final-close-still.png comparison
+has5407differing pixels,265by>16,mean0.018322/255. Captures are not pixel-identical;
+small raster/shading variation remains, with no observed tuft movement or lost
+edge silhouettes. Geometry has no time input. Final-skyline.png at the fixed
+low pose preserves complete tips above terrain and across viewport edges.
+
+Range6/12/24/32m overhead screenshots were inspected: clear nearby tufts,
+progressive thinning,24m largely subpixel with sparse tiny marks, and no visible
+central tuft at32m. This does not claim a readable individual leaf at24m.
+No new terrain edit was made. Fresh edit invalidation, separate snow/sand/water
+examples, loaded multiplayer and other hardware remain unqualified.
+
+Acceptance: fuller short tufts replace isolated dark spikes within the unchanged
+10% route gates and0.3ms GPU target. Existing terrain-fade source hash is identical
+in the before/after evidence; that separate user work is excluded from this task.
+Returned player to the original vicinity,ThirdPerson true,normal game camera,
+free viewport sizing and enabled input. All failed previews/runs remain preserved.

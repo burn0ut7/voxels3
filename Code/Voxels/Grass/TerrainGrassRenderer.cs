@@ -5,13 +5,15 @@ using Sandbox.Rendering;
 internal sealed class TerrainGrassRenderer : IDisposable
 {
 	public const int Capacity = 65536;
+	// Five leaves, each with two triangles; shared by both draw modes.
+	private const int VerticesPerTuft = 30;
 	private readonly ComputeShader _generate = new( "shaders/voxels/voxel_grass_cs.shader" );
 	private readonly Material _material = Material.FromShader( "shaders/voxels/voxel_grass.shader" );
 	private readonly GpuBuffer<Vector4> _roots = new( Capacity * 2, GpuBuffer.UsageFlags.Structured, "Terrain Grass Roots" );
 	// Indexed depth and non-indexed forward share count/instance count; all offsets stay zero.
 	private readonly GpuBuffer<uint> _arguments = new( 5,
 		GpuBuffer.UsageFlags.Structured | GpuBuffer.UsageFlags.IndirectDrawArguments, "Terrain Grass Arguments" );
-	private readonly Model _blade;
+	private readonly Model _tuft;
 	public RenderAttributes DrawAttributes { get; } = new();
 	private readonly GpuBuffer<uint> _statistics = new( 4, GpuBuffer.UsageFlags.Structured, "Terrain Grass Statistics" );
 	private bool _readbackRequested;
@@ -23,11 +25,17 @@ internal sealed class TerrainGrassRenderer : IDisposable
 		_statistics.SetData( new uint[4] );
 		_arguments.SetData( new uint[5] );
 		DrawAttributes.Set( "GrassRoots", _roots );
-		// A shared triangle lets the engine select the grass shader's depth mode.
+		_generate.Attributes.Set( "GrassVertexCount", VerticesPerTuft );
+		// A shared topology lets the engine select the grass shader's depth mode.
 		var mesh = new Mesh( _material );
-		mesh.CreateVertexBuffer<TerrainVertex>( 3, new TerrainVertex[3].AsSpan() );
-		mesh.CreateIndexBuffer( 3, new int[] { 0, 1, 2 }.AsSpan() );
-		_blade = Model.Builder.AddMesh( mesh ).Create();
+		mesh.CreateVertexBuffer<TerrainVertex>( VerticesPerTuft, new TerrainVertex[VerticesPerTuft].AsSpan() );
+		var indices = new int[VerticesPerTuft];
+		for ( var i = 0; i < indices.Length; i++ )
+		{
+			indices[i] = i;
+		}
+		mesh.CreateIndexBuffer( VerticesPerTuft, indices.AsSpan() );
+		_tuft = Model.Builder.AddMesh( mesh ).Create();
 	}
 
 	public void RequestStatistics() => _readbackRequested = true;
@@ -41,7 +49,7 @@ internal sealed class TerrainGrassRenderer : IDisposable
 		{
 			_readbackPending = false;
 			if ( _disposed || data.Length < 4 ) return;
-			Log.Info( $"[TerrainGrass] views={data[0]} currentBlades={data[1]} peakCandidates={data[2]} overflowViews={data[3]} capacity={Capacity} rootBytes={Capacity * 32}" );
+			Log.Info( $"[TerrainGrass] views={data[0]} currentTufts={data[1]} peakCandidates={data[2]} overflowViews={data[3]} capacity={Capacity} rootBytes={Capacity * 32}" );
 		}, 0, 4 );
 	}
 
@@ -85,7 +93,7 @@ internal sealed class TerrainGrassRenderer : IDisposable
 		Graphics.UavBarrier( _statistics );
 		Graphics.ResourceBarrierTransition( _arguments, ResourceState.IndirectArgument );
 		Graphics.ResourceBarrierTransition( _roots, ResourceState.GenericRead );
-		Graphics.DrawModelInstancedIndirect( _blade, _arguments, 0, DrawAttributes );
+		Graphics.DrawModelInstancedIndirect( _tuft, _arguments, 0, DrawAttributes );
 	}
 
 	public void Draw( CommandList commands )

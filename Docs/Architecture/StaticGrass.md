@@ -1,6 +1,78 @@
 # Static terrain grass
 
-## First slice (prototype accepted)
+## Current tufts (one-player qualification accepted)
+
+Grass remains derived appearance from published LOD0 terrain triangles and
+canonical interpolated grass weights. The existing GPU mesher and per-camera
+grass renderer own generation, buffers and both draws. Terrain edits, material
+replacement and unloading automatically replace the geometry consumed by grass.
+There is no vegetation simulation, collision, network state or persistent world.
+
+Five curved leaves now share each surface root, replacing isolated triangular
+blades. Each leaf uses two triangles between a narrow root, bent middle and tip.
+Deterministic
+height, width, orientation, outward lean and color variation break up repeated
+silhouettes. Individual leaves span approximately7..31cm height and0.8..2.6cm
+full width. Conservative region bounds include14in horizontal spread,20in height
+and1in below terrain. Every leaf starts at the actual published surface root.
+
+Upward-biased two-sided normals and green-to-olive variation soften the previous
+dark spike shading. This approximates leaf lighting, not physical transmission.
+Standard scene lighting and received shadows remain. There are no alpha cards,
+extra textures, wind or grass shadow pass. Both depth and color use the same
+vertex generation and roots; the canonical depth/fog integration below remains.
+
+Density is one candidate tuft/36square units (~43tufts or215leaves/m²), full
+through6m,30%at12m,8%at24m,zero32m. Stable hash thresholds and short size fades
+retain progressive thinning. Material eligibility, triangle sampling, maximum
+16candidates/triangle, LOD0 restriction and32m range keep their previous owners.
+The compute pass rejects padded source-triangle bounds by range and guarded
+frustum before sampling, so offscreen parts of nearby regions do not generate
+roots. Region and triangle checks share padding constants; visible density and
+the canonical root hash are unchanged by this culling. No CPU placement,
+per-leaf allocations, scene objects or geometry readback.
+
+TerrainGrassRenderer owns30vertices/tuft and passes the count to compute argument
+finalization. The shared depth model has30sequential indices; the forward draw
+is non-indexed. The shader consumes six vertices/leaf. Both modes therefore
+submit10triangles/tuft. Root capacity remains65,536 at32bytes/root (2MiB/view);
+the hard bound is1,310,720triangle submissions/view across both passes. Actual
+counts/cost must be measured. Overflow remains a qualification failure. The
+existing16-byte diagnostic now reports currentTufts rather than currentBlades.
+
+The sparse one-root/144square-unit preview was rejected visually because plants
+remained isolated. Denser shorter tufts are measured under GRASS-NATURAL-001/v2
+in the ledger. Its changed saved world requires a fresh before/after baseline;
+historical figures below are contextual. Existing terrain-texture fade changes
+are held identical and excluded. See [current evidence](../ValidationEvidence/NaturalGrass/README.md).
+
+Alternatives: more isolated triangles retain the spike silhouette; alpha-cutout
+cards add texture/overdraw and depth-cutout work; independent curved leaves
+multiply placement and root storage. Shared-root opaque tufts address shape
+within the existing renderer at a measured increase in vertex work. The previous
+single-blade geometry is replaced, not retained as a second rendering path.
+
+The sections below document the historical single-blade implementation and its
+measurements. Current shape, density, draw counts and qualification are above.
+
+## Current qualification
+
+GRASS-NATURAL-001/v2, run4e7db047ad1c4c20a8f106204a825306, passes the unchanged
+before/after gates on the recorded RTX5090: moving523.24FPS versus520.81,
+stationary466.13FPS versus486.06 (-4.10%), stationaryGPU1.64244ms versus1.54965
+(+0.09279ms). Frame tails, memory, allocations, streaming and collision pass.
+The route peaked at3999generated tufts after triangle culling, zero overflow,
+with2MiBroot storage and at most79980grass triangle submissions/view in that run.
+This is one-player qualification, not a multiplayer or other-hardware claim.
+Close, skyline, bare material boundaries and6/12/24/32m views were inspected.
+Fixed-image comparisons retain small raster/shading variation; no static tuft
+movement or missing edge silhouettes was observed. Fresh edits and individual
+snow/sand/water examples were not re-exercised. Rejected candidates remain in
+[current evidence](../ValidationEvidence/NaturalGrass/README.md) and the ledger.
+
+## Historical single-blade implementation
+
+### First slice (prototype accepted)
 
 Grass is derived appearance, with no simulation, collision, network state or
 persistent vegetation world. The GPU mesher owns it through each render camera's
@@ -18,7 +90,7 @@ replacement may change distribution. Grass is upright, with a fixed slight lean,
 23–51 cm height, 2.8–5.1 cm full width and opaque two-sided single-triangle blades; no alpha cards,
 wind, movement or grass shadow pass. Standard lighting receives scene shadows.
 
-## Ownership and limits
+### Ownership and limits
 
 RenderCameraState owns a fixed 65,536-root GPU buffer (32 bytes/root), counters and
 indirect arguments, disposed after its recorded commands. Compute reads arena
@@ -43,7 +115,7 @@ The production `voxel_grass_info` command requests one 16-byte scalar readback
 of view count, current blades, lifetime peak candidates and overflow views.
 It does not read roots or geometry; callbacks ignore disposed camera resources.
 
-## Alternatives
+### Alternatives
 
 CPU placement duplicates expensive field/material queries and introduces edit
 invalidation and uploads. Per-blade components add unneeded object and draw costs.
@@ -54,7 +126,7 @@ GPU pass over existing geometry is the smallest slice with exact surface roots
 and automatic material/edit integration. Distance uses camera position per view,
 not player state. Terrain texture shading remains independent.
 
-## Skyline depth correction
+### Skyline depth correction
 
 Grass generation runs once per view inside the existing terrain depth object's
 DepthPrepass callback, after publication readiness. Public Graphics barriers,
@@ -77,7 +149,7 @@ candidate copied the full framebuffer depth before fog; it corrected the image
 but failed performance. That implementation was removed, and DistanceFog stays
 on its original canonical path. Exact evidence and rejected runs are in the ledger.
 
-## Qualification
+### Qualification
 
 The taller/wider32 m grass and depth integration pass GRASS-SILHOUETTE-001/v1,
 run06722ee9576c47a8902d88d9c59195b6. Moving567.74FPS,stationary515.23FPS;
