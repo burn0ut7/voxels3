@@ -294,6 +294,15 @@ for adopted/deferred decisions and validation status.
 
 ## Ground Material Shading
 
+The [natural material transition design](Research/TerrainMaterialBlending.md)
+separates discrete cell identity, spatial coverage and close-up relief mixing.
+It records proposals and transfer limits, not an implemented blending change.
+
+| Reference | Use in Voxels3 | Transfer limits |
+| --- | --- | --- |
+| [NPS Indiana Dunes plant succession](https://www.nps.gov/indu/learn/nature/plant-succession.htm) | Coastal grass/sand reference: scattered vegetation, clumps and sand retained around plants. | Coastal ecology and photographs do not establish river/submerged sediment rules, blend widths or a simulation requirement. |
+| [Epic landscape material blending](https://dev.epicgames.com/documentation/unreal-engine/landscape-materials-in-unreal-engine) | Relief-guided layer transitions and explicit prevention of zero-weight/invalid-normal junctions. | Unreal landscape nodes are not s&box APIs. Height blending cannot recover coverage absent from the input data and does not simulate sediment deposition. |
+
 
 
 | Reference | Use in Voxels3 | Transfer limits |
