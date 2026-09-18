@@ -81,9 +81,9 @@ CS
 		{
 			return;
 		}
-		upper.z += 12.0;
+		upper.z += 20.0;
 		float3 nearest = clamp( g_vCameraPositionWs, lower.xyz, upper );
-		if ( length( nearest - g_vCameraPositionWs ) * 0.0254 >= 20.0 ||
+		if ( length( nearest - g_vCameraPositionWs ) * 0.0254 >= 32.0 ||
 			IsDefinitelyOutsideFrustum( lower.xyz, upper ) )
 		{
 			return;
@@ -109,7 +109,7 @@ CS
 			float3 p0 = asfloat( a.First.xyz );
 			float3 p1 = asfloat( b.First.xyz );
 			float3 p2 = asfloat( c.First.xyz );
-			float candidates = min( length( cross( p1 - p0, p2 - p0 ) ) / 72.0, 16.0 );
+			float candidates = min( length( cross( p1 - p0, p2 - p0 ) ) / 144.0, 16.0 );
 			uint seed = GrassHash( a.First.x ^ GrassHash( b.First.y ) ^ GrassHash( c.First.z ) );
 			uint count = (uint)floor( candidates + GrassRandom( seed ) );
 			for ( uint blade = 0; blade < count; blade++ )
@@ -125,8 +125,8 @@ CS
 				float3 root = p0 * barycentric.x + p1 * barycentric.y + p2 * barycentric.z;
 				float metres = length( root - g_vCameraPositionWs ) * 0.0254;
 				float density = lerp( 1.0, 0.3, smoothstep( 6.0, 12.0, metres ) );
-				density = lerp( density, 0.08, smoothstep( 12.0, 16.0, metres ) );
-				density *= 1.0 - smoothstep( 16.0, 20.0, metres );
+				density = lerp( density, 0.08, smoothstep( 12.0, 24.0, metres ) );
+				density *= 1.0 - smoothstep( 24.0, 32.0, metres );
 				float scale = saturate( (density - GrassRandom( key + 3 )) * 10.0 );
 				if ( scale <= 0.0 )
 				{
@@ -138,7 +138,7 @@ CS
 				{
 					GrassRoots[index * 2] = float4( root - float3( 0.0, 0.0, 0.3 ), scale );
 					GrassRoots[index * 2 + 1] = float4( GrassRandom( key + 4 ) * 6.2831853,
-						lerp( 5.0, 12.0, GrassRandom( key + 5 ) ), lerp( 0.35, 0.7, GrassRandom( key + 6 ) ),
+						lerp( 9.0, 20.0, GrassRandom( key + 5 ) ), lerp( 0.55, 1.0, GrassRandom( key + 6 ) ),
 						GrassRandom( key + 7 ) );
 				}
 			}

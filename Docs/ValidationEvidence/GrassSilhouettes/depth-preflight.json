@@ -1,0 +1,395 @@
+{
+  "player": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"Scene\":\"basic_example\",\"Name\":\"terrain_player\",\"Id\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"Enabled\":true,\"ActiveInHierarchy\":true,\"Tags\":[],\"Parent\":null,\"WorldPosition\":\"0,0,696.994507\",\"WorldRotation\":\"-0,0,0\",\"WorldScale\":\"1,1,1\",\"Components\":[{\"Type\":\"AdminFlightMode\",\"Id\":\"a319af4a-e786-87db-b6ad-e2b80fea8ebf\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.AdminFlightMode\",\"__guid\":\"a319af4a-e786-87db-b6ad-e2b80fea8ebf\",\"__enabled\":true,\"Flags\":0,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null}},{\"Type\":\"Rigidbody\",\"Id\":\"e93be770-3b65-4bba-8938-83acf6ee1177\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.Rigidbody\",\"__guid\":\"e93be770-3b65-4bba-8938-83acf6ee1177\",\"__enabled\":true,\"Flags\":1,\"AngularDamping\":1,\"EnableImpactDamage\":true,\"EnhancedCcd\":false,\"Gravity\":true,\"GravityScale\":1,\"ImpactDamage\":0,\"LinearDamping\":0.1,\"Locking\":{\"X\":false,\"Y\":false,\"Z\":false,\"Pitch\":true,\"Yaw\":true,\"Roll\":true},\"MassCenterOverride\":\"0,0,36\",\"MassOverride\":500,\"MinImpactDamageSpeed\":500,\"MotionEnabled\":false,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"OverrideMassCenter\":true,\"RigidbodyFlags\":\"DisableCollisionSounds\",\"SleepThreshold\":2,\"StartAsleep\":false}},{\"Type\":\"MoveModeWalk\",\"Id\":\"37e39e8c-eeb0-42a5-8cff-52d85bb0a278\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.Movement.MoveModeWalk\",\"__guid\":\"37e39e8c-eeb0-42a5-8cff-52d85bb0a278\",\"__enabled\":true,\"Flags\":0,\"GroundAngle\":45,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"Priority\":0,\"StepDownHeight\":18,\"StepUpHeight\":18}},{\"Type\":\"MoveModeSwim\",\"Id\":\"2ce2e733-19ea-4bcc-887d-e781608ea3d4\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.Movement.MoveModeSwim\",\"__guid\":\"2ce2e733-19ea-4bcc-887d-e781608ea3d4\",\"__enabled\":true,\"Flags\":0,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"Priority\":10,\"SwimLevel\":0.7}},{\"Type\":\"MoveModeLadder\",\"Id\":\"d0d53c51-1b94-4730-b6c6-d6949360db42\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.Movement.MoveModeLadder\",\"__guid\":\"d0d53c51-1b94-4730-b6c6-d6949360db42\",\"__enabled\":true,\"Flags\":0,\"ClimbableTags\":\"ladder\",\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"Priority\":5,\"Speed\":1}},{\"Type\":\"Dresser\",\"Id\":\"25b98780-f994-4d29-a86a-bde9aa94145c\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.Dresser\",\"__guid\":\"25b98780-f994-4d29-a86a-bde9aa94145c\",\"__enabled\":true,\"Flags\":0,\"ApplyHeightScale\":true,\"BodyTarget\":{\"_type\":\"component\",\"component_id\":\"d58e083f-d7cd-4588-b6cd-954ce7ad9a3e\",\"go\":\"dcaf9d0e-71e3-4238-a1fd-a9a66448403b\",\"component_type\":\"SkinnedModelRenderer\"},\"Clothing\":[],\"ManualAge\":0.5,\"ManualHeight\":0.5,\"ManualTint\":0.5,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"RemoveUnownedItems\":true,\"Source\":\"OwnerConnection\",\"WorkshopItems\":[]}},{\"Type\":\"PlayerController\",\"Id\":\"8ad26e10-da5f-4d82-8858-e070cf438ca7\",\"Enabled\":true,\"Properties\":{\"__type\":\"Sandbox.PlayerController\",\"__guid\":\"8ad26e10-da5f-4d82-8858-e070cf438ca7\",\"__enabled\":true,\"Flags\":0,\"AccelerationTime\":0,\"AimStrengthBody\":1,\"AimStrengthEyes\":1,\"AimStrengthHead\":1,\"AirFriction\":0.1,\"AltMoveButton\":\"run\",\"Body\":{\"_type\":\"component\",\"component_id\":\"e93be770-3b65-4bba-8938-83acf6ee1177\",\"go\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\",\"component_type\":\"Rigidbody\"},\"BodyCollisionTags\":null,\"BodyHeight\":72,\"BodyMass\":500,\"BodyRadius\":16,\"BrakePower\":1,\"CameraCollisionIgnore\":\"\",\"CameraOffset\":\"256,0,12\",\"ColliderObject\":{\"_type\":\"gameobject\",\"go\":\"071a47d4-6532-43d5-bfe5-d8dfb531c2cc\"},\"DeaccelerationTime\":0,\"DuckedHeight\":36,\"DuckedSpeed\":70,\"EnableFootstepSounds\":true,\"EnablePressing\":true,\"EyeDistanceFromTop\":8,\"FootstepMixer\":{\"Name\":\"unknown\",\"Id\":\"00000000-0000-0000-0000-000000000000\"},\"FootstepVolume\":1,\"HideBodyInFirstPerson\":true,\"JumpSpeed\":300,\"LookSensitivity\":1,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"PitchClamp\":90,\"ReachLength\":130,\"Renderer\":{\"_type\":\"component\",\"component_id\":\"d58e083f-d7cd-4588-b6cd-954ce7ad9a3e\",\"go\":\"dcaf9d0e-71e3-4238-a1fd-a9a66448403b\",\"component_type\":\"SkinnedModelRenderer\"},\"RotateWithGround\":true,\"RotationAngleLimit\":45,\"RotationSpeed\":1,\"RunByDefault\":false,\"RunSpeed\":320,\"ShowColliderComponents\":false,\"ShowRigidbodyComponent\":false,\"ThirdPerson\":false,\"ToggleCameraModeButton\":\"view\",\"UseAnimatorControls\":true,\"UseButton\":\"use\",\"UseCameraControls\":true,\"UseFovFromPreferences\":true,\"UseInputControls\":false,\"UseLookControls\":true,\"WalkSpeed\":110}}],\"Children\":[{\"Id\":\"dcaf9d0e-71e3-4238-a1fd-a9a66448403b\",\"Name\":\"Body\",\"Enabled\":true},{\"Id\":\"071a47d4-6532-43d5-bfe5-d8dfb531c2cc\",\"Name\":\"Colliders\",\"Enabled\":true}]}"
+        }
+      ],
+      "structuredContent": {
+        "Scene": "basic_example",
+        "Name": "terrain_player",
+        "Id": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+        "Enabled": true,
+        "ActiveInHierarchy": true,
+        "Tags": [],
+        "Parent": null,
+        "WorldPosition": "0,0,696.994507",
+        "WorldRotation": "-0,0,0",
+        "WorldScale": "1,1,1",
+        "Components": [
+          {
+            "Type": "AdminFlightMode",
+            "Id": "a319af4a-e786-87db-b6ad-e2b80fea8ebf",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.AdminFlightMode",
+              "__guid": "a319af4a-e786-87db-b6ad-e2b80fea8ebf",
+              "__enabled": true,
+              "Flags": 0,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null
+            }
+          },
+          {
+            "Type": "Rigidbody",
+            "Id": "e93be770-3b65-4bba-8938-83acf6ee1177",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.Rigidbody",
+              "__guid": "e93be770-3b65-4bba-8938-83acf6ee1177",
+              "__enabled": true,
+              "Flags": 1,
+              "AngularDamping": 1,
+              "EnableImpactDamage": true,
+              "EnhancedCcd": false,
+              "Gravity": true,
+              "GravityScale": 1,
+              "ImpactDamage": 0,
+              "LinearDamping": 0.1,
+              "Locking": {
+                "X": false,
+                "Y": false,
+                "Z": false,
+                "Pitch": true,
+                "Yaw": true,
+                "Roll": true
+              },
+              "MassCenterOverride": "0,0,36",
+              "MassOverride": 500,
+              "MinImpactDamageSpeed": 500,
+              "MotionEnabled": false,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "OverrideMassCenter": true,
+              "RigidbodyFlags": "DisableCollisionSounds",
+              "SleepThreshold": 2,
+              "StartAsleep": false
+            }
+          },
+          {
+            "Type": "MoveModeWalk",
+            "Id": "37e39e8c-eeb0-42a5-8cff-52d85bb0a278",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.Movement.MoveModeWalk",
+              "__guid": "37e39e8c-eeb0-42a5-8cff-52d85bb0a278",
+              "__enabled": true,
+              "Flags": 0,
+              "GroundAngle": 45,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "Priority": 0,
+              "StepDownHeight": 18,
+              "StepUpHeight": 18
+            }
+          },
+          {
+            "Type": "MoveModeSwim",
+            "Id": "2ce2e733-19ea-4bcc-887d-e781608ea3d4",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.Movement.MoveModeSwim",
+              "__guid": "2ce2e733-19ea-4bcc-887d-e781608ea3d4",
+              "__enabled": true,
+              "Flags": 0,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "Priority": 10,
+              "SwimLevel": 0.7
+            }
+          },
+          {
+            "Type": "MoveModeLadder",
+            "Id": "d0d53c51-1b94-4730-b6c6-d6949360db42",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.Movement.MoveModeLadder",
+              "__guid": "d0d53c51-1b94-4730-b6c6-d6949360db42",
+              "__enabled": true,
+              "Flags": 0,
+              "ClimbableTags": "ladder",
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "Priority": 5,
+              "Speed": 1
+            }
+          },
+          {
+            "Type": "Dresser",
+            "Id": "25b98780-f994-4d29-a86a-bde9aa94145c",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.Dresser",
+              "__guid": "25b98780-f994-4d29-a86a-bde9aa94145c",
+              "__enabled": true,
+              "Flags": 0,
+              "ApplyHeightScale": true,
+              "BodyTarget": {
+                "_type": "component",
+                "component_id": "d58e083f-d7cd-4588-b6cd-954ce7ad9a3e",
+                "go": "dcaf9d0e-71e3-4238-a1fd-a9a66448403b",
+                "component_type": "SkinnedModelRenderer"
+              },
+              "Clothing": [],
+              "ManualAge": 0.5,
+              "ManualHeight": 0.5,
+              "ManualTint": 0.5,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "RemoveUnownedItems": true,
+              "Source": "OwnerConnection",
+              "WorkshopItems": []
+            }
+          },
+          {
+            "Type": "PlayerController",
+            "Id": "8ad26e10-da5f-4d82-8858-e070cf438ca7",
+            "Enabled": true,
+            "Properties": {
+              "__type": "Sandbox.PlayerController",
+              "__guid": "8ad26e10-da5f-4d82-8858-e070cf438ca7",
+              "__enabled": true,
+              "Flags": 0,
+              "AccelerationTime": 0,
+              "AimStrengthBody": 1,
+              "AimStrengthEyes": 1,
+              "AimStrengthHead": 1,
+              "AirFriction": 0.1,
+              "AltMoveButton": "run",
+              "Body": {
+                "_type": "component",
+                "component_id": "e93be770-3b65-4bba-8938-83acf6ee1177",
+                "go": "fde76e17-1db9-4ccc-a193-897fddbc6239",
+                "component_type": "Rigidbody"
+              },
+              "BodyCollisionTags": null,
+              "BodyHeight": 72,
+              "BodyMass": 500,
+              "BodyRadius": 16,
+              "BrakePower": 1,
+              "CameraCollisionIgnore": "",
+              "CameraOffset": "256,0,12",
+              "ColliderObject": {
+                "_type": "gameobject",
+                "go": "071a47d4-6532-43d5-bfe5-d8dfb531c2cc"
+              },
+              "DeaccelerationTime": 0,
+              "DuckedHeight": 36,
+              "DuckedSpeed": 70,
+              "EnableFootstepSounds": true,
+              "EnablePressing": true,
+              "EyeDistanceFromTop": 8,
+              "FootstepMixer": {
+                "Name": "unknown",
+                "Id": "00000000-0000-0000-0000-000000000000"
+              },
+              "FootstepVolume": 1,
+              "HideBodyInFirstPerson": true,
+              "JumpSpeed": 300,
+              "LookSensitivity": 1,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "PitchClamp": 90,
+              "ReachLength": 130,
+              "Renderer": {
+                "_type": "component",
+                "component_id": "d58e083f-d7cd-4588-b6cd-954ce7ad9a3e",
+                "go": "dcaf9d0e-71e3-4238-a1fd-a9a66448403b",
+                "component_type": "SkinnedModelRenderer"
+              },
+              "RotateWithGround": true,
+              "RotationAngleLimit": 45,
+              "RotationSpeed": 1,
+              "RunByDefault": false,
+              "RunSpeed": 320,
+              "ShowColliderComponents": false,
+              "ShowRigidbodyComponent": false,
+              "ThirdPerson": false,
+              "ToggleCameraModeButton": "view",
+              "UseAnimatorControls": true,
+              "UseButton": "use",
+              "UseCameraControls": true,
+              "UseFovFromPreferences": true,
+              "UseInputControls": false,
+              "UseLookControls": true,
+              "WalkSpeed": 110
+            }
+          }
+        ],
+        "Children": [
+          {
+            "Id": "dcaf9d0e-71e3-4238-a1fd-a9a66448403b",
+            "Name": "Body",
+            "Enabled": true
+          },
+          {
+            "Id": "071a47d4-6532-43d5-bfe5-d8dfb531c2cc",
+            "Name": "Colliders",
+            "Enabled": true
+          }
+        ]
+      }
+    }
+  },
+  "utc": "2026-09-18T04:14:42.7877194Z",
+  "resolution": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"RequestedWidth\": 1846,\r\n  \"RequestedHeight\": 1019\r\n}"
+        }
+      ]
+    }
+  },
+  "hashes": [
+    {
+      "path": "Assets/shaders/voxels/voxel_grass_cs.shader",
+      "sha256": "3168ADE1880CDAB1A47C18BE29D7C3E9ADF70B3B39225393010F553BA0717703"
+    },
+    {
+      "path": "Assets/shaders/voxels/voxel_grass.shader",
+      "sha256": "971C8C18AFB6B9E04A00728EE8989B06A1571B3E058736D944EFC03F1D9A5DB5"
+    },
+    {
+      "path": "Code/Voxels/Grass/TerrainGrassRenderer.cs",
+      "sha256": "804A1FC7B9D04628517C89833D2ADAED84B1AE6B63A74AF7176DB4E4601EE10F"
+    },
+    {
+      "path": "Code/Voxels/GpuVoxelMesher.cs",
+      "sha256": "AF16B2880337996467BE9DDA982207A159CE2295706A3AA16C03070F3087A044"
+    },
+    {
+      "path": "Code/DistanceFog.cs",
+      "sha256": "2197C3AA76BD0372468FEE5622D39B3D5A73C63C930238FC0B3D662AFB27A127"
+    },
+    {
+      "path": "Assets/shaders/distance_fog.shader",
+      "sha256": "13D54F217F397CCC2449DF019889B58702D4EEE1DFA55C664FCF65C1D4C0FC6F"
+    },
+    {
+      "path": "Assets/shaders/voxels/voxel_terrain.shader",
+      "sha256": "73E0A4EADB64CADC6C48CC8DB176EA8DAAEA3BC72893C594C5D8DEC8C4004EDD"
+    }
+  ],
+  "world": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"Scene\":\"basic_example\",\"Name\":\"World\",\"Id\":\"d3b30a99-ed5a-42e2-9229-3888b6c1f191\",\"Enabled\":true,\"ActiveInHierarchy\":true,\"Tags\":[],\"Parent\":null,\"WorldPosition\":\"0,0,0\",\"WorldRotation\":\"-0,0,0\",\"WorldScale\":\"1,1,1\",\"Components\":[{\"Type\":\"VoxelManager\",\"Id\":\"018e6829-f01c-4152-88c1-ee2438b997fb\",\"Enabled\":true,\"Properties\":{\"__type\":\"VoxelManager\",\"__guid\":\"018e6829-f01c-4152-88c1-ee2438b997fb\",\"__enabled\":true,\"Flags\":0,\"AutoSaveTerrain\":true,\"CellSize\":16,\"CellsPerAxis\":32,\"ChunkStatus\":\"4,913 logical regions; 1,331 prepared; 0 preparation pending; 382 GPU residents; 474 regular meshes pending\",\"ContinentalScale\":77724.09,\"FigureEightDistance\":50000,\"FigureEightLoopCount\":1,\"FigureEightSpeed\":2500,\"FramePerformance\":\"Collecting first 10-second window\",\"GameplayRadius\":8,\"GeneratorStatus\":\"Regional landforms and retained caves v48; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }\",\"LandAmount\":0.75,\"LastPerformanceRunId\":\"No saved run\",\"LocalLandformScale\":5232.39,\"Lod0VisualHalfExtent\":4,\"LodArrivalReportPath\":\"No arrival report saved\",\"LodArrivalStatus\":\"Stationary 3.0s: nearby LOD0 27/27; prepared 27; pending meshes 579, seams 1036\",\"LodCacheHalfExtent\":4,\"MaximumVisualLod\":5,\"MinimumVisualLod\":0,\"MountainAmount\":0.3,\"MountainRegionScale\":18681.756,\"OnComponentDestroy\":null,\"OnComponentDisabled\":null,\"OnComponentEnabled\":null,\"OnComponentFixedUpdate\":null,\"OnComponentStart\":null,\"OnComponentUpdate\":null,\"PerformanceResultsLocation\":\"performance/results-v1.jsonl\",\"PerformanceRevision\":\"\",\"PerformanceTask\":\"\",\"PlainsAmount\":0.6,\"ProcessMemoryUsage\":\"Collecting first 10-second window\",\"ReliefHeight\":3072,\"Ruggedness\":0.45,\"SeaLevel\":0,\"StreamingPerformance\":\"Range applied in 12.972 ms; 0 prepared results awaiting integration\",\"StreamingTarget\":{\"_type\":\"gameobject\",\"go\":\"fde76e17-1db9-4ccc-a193-897fddbc6239\"},\"TerrainRecipeStatus\":\"These settings are already active.\",\"TerrainSaveSlot\":\"f5ce10f36d75428eb3dd63dee14891c6\",\"TerrainSaveStatus\":\"Saved\",\"VerboseLogging\":false,\"VisualChunkRadius\":128,\"WaterStatus\":\"264 meshed water chunks; 1,830 vertices; 1,830 uploaded vertices; 384/384 cell chunks; 384 generated; 21,700 refinement samples; 0.4 MiB cells; 1187.2 ms generation; publishMaxMs=1929.461\",\"WorldSeed\":1337}}],\"Children\":[]}"
+        }
+      ],
+      "structuredContent": {
+        "Scene": "basic_example",
+        "Name": "World",
+        "Id": "d3b30a99-ed5a-42e2-9229-3888b6c1f191",
+        "Enabled": true,
+        "ActiveInHierarchy": true,
+        "Tags": [],
+        "Parent": null,
+        "WorldPosition": "0,0,0",
+        "WorldRotation": "-0,0,0",
+        "WorldScale": "1,1,1",
+        "Components": [
+          {
+            "Type": "VoxelManager",
+            "Id": "018e6829-f01c-4152-88c1-ee2438b997fb",
+            "Enabled": true,
+            "Properties": {
+              "__type": "VoxelManager",
+              "__guid": "018e6829-f01c-4152-88c1-ee2438b997fb",
+              "__enabled": true,
+              "Flags": 0,
+              "AutoSaveTerrain": true,
+              "CellSize": 16,
+              "CellsPerAxis": 32,
+              "ChunkStatus": "4,913 logical regions; 1,331 prepared; 0 preparation pending; 382 GPU residents; 474 regular meshes pending",
+              "ContinentalScale": 77724.09,
+              "FigureEightDistance": 50000,
+              "FigureEightLoopCount": 1,
+              "FigureEightSpeed": 2500,
+              "FramePerformance": "Collecting first 10-second window",
+              "GameplayRadius": 8,
+              "GeneratorStatus": "Regional landforms and retained caves v48; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.75, MountainAmount = 0.3, PlainsAmount = 0.6, ContinentalScale = 77724.09, MountainRegionScale = 18681.756, LocalLandformScale = 5232.39, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }",
+              "LandAmount": 0.75,
+              "LastPerformanceRunId": "No saved run",
+              "LocalLandformScale": 5232.39,
+              "Lod0VisualHalfExtent": 4,
+              "LodArrivalReportPath": "No arrival report saved",
+              "LodArrivalStatus": "Stationary 3.0s: nearby LOD0 27/27; prepared 27; pending meshes 579, seams 1036",
+              "LodCacheHalfExtent": 4,
+              "MaximumVisualLod": 5,
+              "MinimumVisualLod": 0,
+              "MountainAmount": 0.3,
+              "MountainRegionScale": 18681.756,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "PerformanceResultsLocation": "performance/results-v1.jsonl",
+              "PerformanceRevision": "",
+              "PerformanceTask": "",
+              "PlainsAmount": 0.6,
+              "ProcessMemoryUsage": "Collecting first 10-second window",
+              "ReliefHeight": 3072,
+              "Ruggedness": 0.45,
+              "SeaLevel": 0,
+              "StreamingPerformance": "Range applied in 12.972 ms; 0 prepared results awaiting integration",
+              "StreamingTarget": {
+                "_type": "gameobject",
+                "go": "fde76e17-1db9-4ccc-a193-897fddbc6239"
+              },
+              "TerrainRecipeStatus": "These settings are already active.",
+              "TerrainSaveSlot": "f5ce10f36d75428eb3dd63dee14891c6",
+              "TerrainSaveStatus": "Saved",
+              "VerboseLogging": false,
+              "VisualChunkRadius": 128,
+              "WaterStatus": "264 meshed water chunks; 1,830 vertices; 1,830 uploaded vertices; 384/384 cell chunks; 384 generated; 21,700 refinement samples; 0.4 MiB cells; 1187.2 ms generation; publishMaxMs=1929.461",
+              "WorldSeed": 1337
+            }
+          }
+        ],
+        "Children": []
+      }
+    }
+  }
+}

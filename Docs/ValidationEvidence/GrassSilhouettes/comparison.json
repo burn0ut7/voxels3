@@ -1,0 +1,402 @@
+[
+  {
+    "path": "candidate-corrected-result.json.gz",
+    "runId": "188a4034fed548a3b9ff58a14341e56f",
+    "sameFixedTest": true,
+    "windows": {
+      "moving": {
+        "averageFps": {
+          "baseline": 562.41455,
+          "candidate": 497.9779,
+          "percentChange": -11.457144912058192,
+          "gatePass": false
+        },
+        "p95Milliseconds": {
+          "baseline": 3.2158,
+          "candidate": 3.5115,
+          "percentChange": 9.195223583556178,
+          "gatePass": true
+        },
+        "p99Milliseconds": {
+          "baseline": 5.4607,
+          "candidate": 5.8592,
+          "percentChange": 7.297599208892636,
+          "gatePass": true
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.4517931,
+          "candidate": 1.6770008,
+          "percentChange": 15.512382583992167,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4883587072,
+          "candidate": 5016784896,
+          "percentChange": 2.727458772337421,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1587332673,
+          "candidate": 1570925897,
+          "percentChange": -1.0336066458577875,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 58052.75,
+          "candidate": 57901.42,
+          "percentChange": -0.2606767121281939,
+          "gatePass": true
+        },
+        "exceptions": 0
+      },
+      "stationary": {
+        "averageFps": {
+          "baseline": 481.4761,
+          "candidate": 418.59827,
+          "percentChange": -13.059387579155013,
+          "gatePass": false
+        },
+        "p95Milliseconds": {
+          "baseline": 2.9292,
+          "candidate": 3.4098,
+          "percentChange": 16.407210159770603,
+          "gatePass": false
+        },
+        "p99Milliseconds": {
+          "baseline": 3.7523,
+          "candidate": 4.5586,
+          "percentChange": 21.488153932254896,
+          "gatePass": false
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.7414695,
+          "candidate": 2.044602,
+          "percentChange": 17.40670738132364,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4770226176,
+          "candidate": 5044678656,
+          "percentChange": 5.753447947202739,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1537066561,
+          "candidate": 1571335497,
+          "percentChange": 2.229502408646833,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 29457.312,
+          "candidate": 28699.16,
+          "percentChange": -2.573731099429577,
+          "gatePass": true
+        },
+        "exceptions": 0
+      }
+    },
+    "gpuDeltaFromNoGrassMilliseconds": 0.5734006999999999,
+    "gpuTargetPass": false,
+    "coreGatesPass": false
+  },
+  {
+    "path": "candidate-drifted-result.json.gz",
+    "runId": "007099f45c8c48bf91cdcc574f73d884",
+    "sameFixedTest": false,
+    "windows": {
+      "moving": {
+        "averageFps": {
+          "baseline": 562.41455,
+          "candidate": 497.38748,
+          "percentChange": -11.562124415166707,
+          "gatePass": false
+        },
+        "p95Milliseconds": {
+          "baseline": 3.2158,
+          "candidate": 3.5244,
+          "percentChange": 9.596367933329187,
+          "gatePass": true
+        },
+        "p99Milliseconds": {
+          "baseline": 5.4607,
+          "candidate": 5.8918,
+          "percentChange": 7.894592268390488,
+          "gatePass": true
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.4517931,
+          "candidate": 1.6779677,
+          "percentChange": 15.578982983181277,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4883587072,
+          "candidate": 4988030976,
+          "percentChange": 2.138671891381394,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1587332673,
+          "candidate": 1621208393,
+          "percentChange": 2.1341285652475284,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 58052.75,
+          "candidate": 60108.656,
+          "percentChange": 3.541444634405777,
+          "gatePass": true
+        },
+        "exceptions": 0
+      },
+      "stationary": {
+        "averageFps": {
+          "baseline": 481.4761,
+          "candidate": 429.96997,
+          "percentChange": -10.69754656565507,
+          "gatePass": false
+        },
+        "p95Milliseconds": {
+          "baseline": 2.9292,
+          "candidate": 3.3015,
+          "percentChange": 12.709954936501443,
+          "gatePass": false
+        },
+        "p99Milliseconds": {
+          "baseline": 3.7523,
+          "candidate": 4.5668,
+          "percentChange": 21.706686565573108,
+          "gatePass": false
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.7414695,
+          "candidate": 1.9840738,
+          "percentChange": 13.931010563205382,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4770226176,
+          "candidate": 4896493568,
+          "percentChange": 2.6469896256759773,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1537066561,
+          "candidate": 1570925897,
+          "percentChange": 2.2028542458155886,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 29457.312,
+          "candidate": 28501.785,
+          "percentChange": -3.2437684741907225,
+          "gatePass": true
+        },
+        "exceptions": 0
+      }
+    },
+    "gpuDeltaFromNoGrassMilliseconds": 0.5128725000000001,
+    "gpuTargetPass": false,
+    "coreGatesPass": false
+  },
+  {
+    "path": "depth-result.json.gz",
+    "runId": "06722ee9576c47a8902d88d9c59195b6",
+    "sameFixedTest": true,
+    "windows": {
+      "moving": {
+        "averageFps": {
+          "baseline": 562.41455,
+          "candidate": 567.7361,
+          "percentChange": 0.9461970711817536,
+          "gatePass": true
+        },
+        "p95Milliseconds": {
+          "baseline": 3.2158,
+          "candidate": 3.2483,
+          "percentChange": 1.0106349897381683,
+          "gatePass": true
+        },
+        "p99Milliseconds": {
+          "baseline": 5.4607,
+          "candidate": 5.7214,
+          "percentChange": 4.774113208929265,
+          "gatePass": true
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.4517931,
+          "candidate": 1.4139457,
+          "percentChange": -2.6069417191747157,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4883587072,
+          "candidate": 4889247744,
+          "percentChange": 0.11591217513977625,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1587332673,
+          "candidate": 1536940801,
+          "percentChange": -3.1746257641607767,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 58052.75,
+          "candidate": 57000.535,
+          "percentChange": -1.812515341650478,
+          "gatePass": true
+        },
+        "exceptions": 0
+      },
+      "stationary": {
+        "averageFps": {
+          "baseline": 481.4761,
+          "candidate": 515.23083,
+          "percentChange": 7.010676127018556,
+          "gatePass": true
+        },
+        "p95Milliseconds": {
+          "baseline": 2.9292,
+          "candidate": 2.4869,
+          "percentChange": -15.099685921070593,
+          "gatePass": true
+        },
+        "p99Milliseconds": {
+          "baseline": 3.7523,
+          "candidate": 3.6885,
+          "percentChange": -1.7002904885003889,
+          "gatePass": true
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.7414695,
+          "candidate": 1.6057177,
+          "percentChange": -7.795244188887606,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4770226176,
+          "candidate": 4812849152,
+          "percentChange": 0.8935210706453534,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1537066561,
+          "candidate": 1537153793,
+          "percentChange": 0.005675225927959104,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 29457.312,
+          "candidate": 29048.781,
+          "percentChange": -1.3868577010692662,
+          "gatePass": true
+        },
+        "exceptions": 0
+      }
+    },
+    "gpuDeltaFromNoGrassMilliseconds": 0.1345164000000001,
+    "gpuTargetPass": true,
+    "coreGatesPass": true
+  },
+  {
+    "path": "reduced-result.json.gz",
+    "runId": "2b7cfb48941b4b539792d444b025f603",
+    "sameFixedTest": true,
+    "windows": {
+      "moving": {
+        "averageFps": {
+          "baseline": 562.41455,
+          "candidate": 508.50024,
+          "percentChange": -9.586222475929883,
+          "gatePass": true
+        },
+        "p95Milliseconds": {
+          "baseline": 3.2158,
+          "candidate": 3.4771,
+          "percentChange": 8.125505317494873,
+          "gatePass": true
+        },
+        "p99Milliseconds": {
+          "baseline": 5.4607,
+          "candidate": 5.7862,
+          "percentChange": 5.960774259710289,
+          "gatePass": true
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.4517931,
+          "candidate": 1.6349664,
+          "percentChange": 12.617038887979293,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4883587072,
+          "candidate": 4866117632,
+          "percentChange": -0.3577173856520566,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1587332673,
+          "candidate": 1572957513,
+          "percentChange": -0.905617344398979,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 58052.75,
+          "candidate": 57251.508,
+          "percentChange": -1.3801964592547233,
+          "gatePass": true
+        },
+        "exceptions": 0
+      },
+      "stationary": {
+        "averageFps": {
+          "baseline": 481.4761,
+          "candidate": 440.0635,
+          "percentChange": -8.601174596205297,
+          "gatePass": true
+        },
+        "p95Milliseconds": {
+          "baseline": 2.9292,
+          "candidate": 3.2868,
+          "percentChange": 12.208111429741919,
+          "gatePass": false
+        },
+        "p99Milliseconds": {
+          "baseline": 3.7523,
+          "candidate": 4.2575,
+          "percentChange": 13.463742238093968,
+          "gatePass": false
+        },
+        "averageGpuMilliseconds": {
+          "baseline": 1.7414695,
+          "candidate": 1.9336394,
+          "percentChange": 11.034927686072017,
+          "gatePass": null
+        },
+        "peakProcessBytes": {
+          "baseline": 4770226176,
+          "candidate": 4805885952,
+          "percentChange": 0.7475489564711113,
+          "gatePass": true
+        },
+        "peakGpuBytes": {
+          "baseline": 1537066561,
+          "candidate": 1573203273,
+          "percentChange": 2.351018031157337,
+          "gatePass": true
+        },
+        "averageManagedBytesAllocatedPerFrame": {
+          "baseline": 29457.312,
+          "candidate": 28328.078,
+          "percentChange": -3.833459074609391,
+          "gatePass": true
+        },
+        "exceptions": 0
+      }
+    },
+    "gpuDeltaFromNoGrassMilliseconds": 0.46243809999999996,
+    "gpuTargetPass": false,
+    "coreGatesPass": false
+  }
+]

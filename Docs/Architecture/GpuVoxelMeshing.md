@@ -1712,7 +1712,9 @@ as a shipping improvement without the recorded performance gates.
 
 [Static grass](StaticGrass.md) consumes active published LOD0 vertex/index and
 material data in the existing camera command list. Each RenderCameraState owns
-its bounded root/argument/statistics buffers, with one opaque indirect draw
-after terrain. It shares terrain publication/readiness and adds no authoritative
+its bounded root/argument/statistics buffers. Roots generate once in the existing
+terrain DepthPrepass callback and a shared triangle model writes grass depth;
+one opaque indirect draw after terrain reuses those roots and the same vertex
+shader. Shadow callbacks skip grass. It shares terrain publication/readiness and adds no authoritative
 field or mesh readback. The grass document owns distance/density budgets and
 GRASS-001/v1 in the ledger owns measured qualification.

@@ -9,6 +9,7 @@ FEATURES
 MODES
 {
 	Forward();
+	Depth( S_MODE_DEPTH );
 }
 COMMON
 {
@@ -18,6 +19,7 @@ struct VertexInput
 {
 	uint VertexId : SV_VertexID;
 	uint InstanceId : SV_InstanceID;
+	float3 Position : POSITION < Semantic( None ); >;
 };
 struct PixelInput
 {
@@ -53,12 +55,17 @@ PS
 	RenderState( DepthWriteEnable, true );
 	float4 MainPs( PixelInput input, bool frontFace : SV_IsFrontFace ) : SV_Target0
 	{
+		float3 normal = normalize( float3( input.vNormalWs.xy * (frontFace ? 1.0 : -1.0), abs( input.vNormalWs.z ) ) );
+		#if S_MODE_DEPTH
+			return DepthNormals::Output( normal, 0.95, 1.0 );
+		#else
 		Material material = Material::Init( input );
 		material.Albedo = lerp( float3( 0.065, 0.095, 0.018 ), float3( 0.15, 0.23, 0.045 ), input.GrassTint.x );
 		material.Albedo *= lerp( 0.8, 1.2, input.GrassTint.y );
-		material.Normal = normalize( float3( input.vNormalWs.xy * (frontFace ? 1.0 : -1.0), abs( input.vNormalWs.z ) ) );
+		material.Normal = normal;
 		material.Roughness = 0.95;
 		material.AmbientOcclusion = lerp( 0.65, 1.0, input.GrassTint.x );
 		return ShadingModelStandard::Shade( input, material );
+		#endif
 	}
 }

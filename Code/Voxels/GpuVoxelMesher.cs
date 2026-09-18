@@ -3496,18 +3496,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 					RegionsPerSlab,
 					IndirectArgumentStride );
 			}
-			var grassStarted = false;
-			foreach ( var arena in _arenas )
-			{
-				if ( arena.ActiveResidentCount == 0 ) continue;
-				if ( !grassStarted )
-				{
-					state.Grass.Begin( commands, visibility.Bounds, visibility.SourceArguments );
-					grassStarted = true;
-				}
-				state.Grass.AddArena( commands, arena.Vertices, arena.Indices, arena.Index * RegionsPerSlab, RegionsPerSlab );
-			}
-			if ( grassStarted ) state.Grass.End( commands );
+			state.Grass.Draw( commands );
 		}
 		state.CommandsDirty = false;
 		var elapsedTicks = Stopwatch.GetTimestamp() - start;
@@ -4487,6 +4476,17 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 				if ( visibility is null || !_owner._fieldPresentationReady ) return;
 				var arenaCount = Math.Min( state.DepthArenas.Length, visibility.DepthArguments.ElementCount );
 				if ( arenaCount == 0 ) return;
+				if ( Graphics.LayerType == SceneLayerType.DepthPrepass )
+				{
+					state.Grass.Begin( visibility.Bounds, visibility.SourceArguments );
+					foreach ( var arena in state.DepthArenas )
+					{
+						if ( (arena.Index + 1) * RegionsPerSlab > visibility.SourceArguments.ElementCount ) break;
+						if ( arena.ActiveResidentCount == 0 ) continue;
+						state.Grass.AddArena( arena.Vertices, arena.Indices, arena.Index * RegionsPerSlab, RegionsPerSlab );
+					}
+					state.Grass.EndAndDrawDepth();
+				}
 				_visibility.Attributes.Set( "VisibilityBounds", visibility.Bounds );
 				_visibility.Attributes.Set( "SourceIndirectArguments", visibility.SourceArguments );
 				_visibility.Attributes.Set( "DepthBlocks", visibility.DepthBlocks );

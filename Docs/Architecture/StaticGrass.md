@@ -4,7 +4,7 @@
 
 Grass is derived appearance, with no simulation, collision, network state or
 persistent vegetation world. The GPU mesher owns it through each render camera's
-existing command list. Inputs are published, active LOD0 terrain vertices,
+state and the existing terrain depth object. Inputs are published, active LOD0 terrain vertices,
 indices, canonical interpolated material weights, and the current view.
 The terrain field remains authoritative. Placement/material replacement and
 unloading automatically change the consumed geometry; unpublished/stale regions
@@ -15,7 +15,7 @@ rejecting non-grass and steep/downward faces. Roots use barycentric positions on
 the actual rendered surface, not a heightfield or independent CPU terrain query.
 Position-derived hashes provide fixed variation with no time input. Topology
 replacement may change distribution. Grass is upright, with a fixed slight lean,
-13–30 cm height and opaque two-sided single-triangle blades; no alpha cards,
+23–51 cm height, 2.8–5.1 cm full width and opaque two-sided single-triangle blades; no alpha cards,
 wind, movement or grass shadow pass. Standard lighting receives scene shadows.
 
 ## Ownership and limits
@@ -26,17 +26,17 @@ buffers only after their normal publication, with explicit barriers between
 clear, compute, argument finalization and draw. No geometry readback, worker,
 CPU mesh generation or per-blade allocation is introduced. Re-evaluation per
 render view is bounded by active nearby LOD0 triangles and 16 candidates/triangle.
-Whole regions beyond 20 m or outside the expanded frustum are rejected before
+Whole regions beyond 32 m or outside the expanded frustum are rejected before
 triangle reads; roots are also distance tested. Other terrain LODs have no grass.
 The normal 4-region LOD0 extent exceeds the grass reach. Detached cameras outside
 loaded LOD0 therefore see terrain without grass until that terrain is available.
 
-Density is one candidate per 36 square world units (~43/m²), full through 6 m,
-reducing to 30% at 12 m and 8% at 16 m, then zero by 20 m. Stable hash thresholds with
+Density is one candidate per 72 square world units (~21.5/m²), full through 6 m,
+reducing to 30% at 12 m and 8% at 24 m, then zero by 32 m. Stable hash thresholds with
 short size fades avoid wholesale ring swaps. A hard global capacity bounds
 memory and drawing; saturation is a qualification failure because atomic
-arrival order could change retained blades. GRASS-001/v1 passes the recorded
-one-player prototype gates; this is not a maximum-throughput or multiplayer-load
+arrival order could change retained blades. GRASS-SILHOUETTE-001/v1 passes the
+recorded one-player prototype gates; this is not a maximum-throughput or multiplayer-load
 claim. Prototype thresholds live in the compute shader;
 capacity and root layout are owned by the C# grass renderer.
 The production `voxel_grass_info` command requests one 16-byte scalar readback
@@ -54,9 +54,42 @@ GPU pass over existing geometry is the smallest slice with exact surface roots
 and automatic material/edit integration. Distance uses camera position per view,
 not player state. Terrain texture shading remains independent.
 
+## Skyline depth correction
+
+Grass generation runs once per view inside the existing terrain depth object's
+DepthPrepass callback, after publication readiness. Public Graphics barriers,
+GpuBuffer.Clear and ComputeShader.Dispatch follow the terrain depth integration.
+A shared three-vertex model submits the same roots to the grass shader's Depth
+mode. The existing AfterOpaque indirect draw consumes those roots for color.
+Both modes share one vertex shader, so silhouettes match exactly. Shadow views
+skip grass. No per-blade scene objects or extra root-generation pass are added.
+
+The five-uint argument buffer supports indexed depth and non-indexed color:
+count3 and instance count are shared; all offsets/base vertex/first instance
+stay zero. It is initialized to zero and cleared before each generation. Depth
+and color each submit at most65,536triangles; total geometry submissions are
+bounded at131,072triangles/view. The roots still occupy2MiB/camera.
+
+The original fog reads the engine depth chain. Previously the chain omitted
+late grass draws, so sky fog erased their tips at the terrain skyline. Including
+grass in the real depth pass fixes fog and other depth-based effects. A first
+candidate copied the full framebuffer depth before fog; it corrected the image
+but failed performance. That implementation was removed, and DistanceFog stays
+on its original canonical path. Exact evidence and rejected runs are in the ledger.
+
 ## Qualification
 
-The accepted single-triangle, ~43 blades/m² version is GRASS-001/v1-reduced
+The taller/wider32 m grass and depth integration pass GRASS-SILHOUETTE-001/v1,
+run06722ee9576c47a8902d88d9c59195b6. Moving567.74FPS,stationary515.23FPS;
+stationary GPU1.6057ms versus1.7415ms for the original grass and1.4712ms for
+no grass. All fixed frame-tail, memory, allocation, correctness and capacity
+gates pass; peak7312roots,0overflow. Skyline, close and24/32m captures were
+inspected after cold start. This remains one-player qualification on the
+recorded hardware. See [follow-up evidence](../ValidationEvidence/GrassSilhouettes/README.md).
+
+The following historical measurements describe the original smaller20 m prototype.
+
+The original accepted single-triangle, ~43 blades/m² version is GRASS-001/v1-reduced
 (run93f6ac8d3ec24cc6b3ca810b30bc481e). The ledger and
 [comparison evidence](../ValidationEvidence/StaticGrass/README.md) retain the
 three-triangle failure and the full-density candidate. Standing still costs

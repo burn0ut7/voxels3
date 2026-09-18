@@ -30878,3 +30878,152 @@ run; existing edited surfaces and published material filtering were inspected.
 This is one-player prototype acceptance, not broad multiplayer/hardware proof.
 The pre-existing uncommitted64..128mterrain-fade work was held constant for both
 control and candidates and is not part of the grass commit.
+
+## GRASS-SILHOUETTE-001/v1 — skyline and larger blades (2026-09-17)
+
+User requested skyline correctness, thicker/taller blades and greater reach.
+Visual reproduction at player(-825.440186,3919.98169,672.601379), detached
+camera(-775,3919,680),angles(-4,0,0),FOV75,1440x900: blade tips terminate
+exactly at terrain skyline. Stored sky-before.png. Initial origin capture was
+outside the player's loaded LOD0 region and was unsuitable. Attempted Enabled
+property mutation was rejected by the tool; camera post-processing toggle did
+not change the detached capture and establishes no isolation. All properties
+restored. No world edit. Hot corrected capture shows full sky silhouettes.
+
+Implementation candidate: fog copies current view depth immediately before its
+BeforePostProcess draw instead of sampling the earlier depth chain. No second
+grass geometry pass. Blades9..20in tall,1.1..2in wide; same near density and
+6/12m start, thinning to3% at24m and zero32m. Same65536root/triangle cap.
+Cold restart required. Fixed visual acceptance: repeat skyline pose above with
+player nearby; full tips over sky, no horizon-shaped cutoff; normal standing
+view shows larger blades; inspect patch(100,-250) from24m and32m overhead,
+FOV45,pitch90,rootheight212.93129: center has blades at24m and none32m.
+
+Performance uses GRASS-001/v1 route inputs and gates unchanged; compare latest
+accepted93f6ac8d3ec24cc6b3ca810b30bc481e for regressions and original no-grass
+753d2673f36a4268a0dacf24ab3277c8 for the additional0.3ms GPU target.
+No screenshot during route; force2769x1529 after visual capture. Full raw run,
+source identities, zero-overflow diagnostic, settled queues/collision and
+cold-start shader/exception/Sentry checks required. No new workload or relaxed
+gate. Evidence folder: ValidationEvidence/GrassSilhouettes.
+
+Cold restart: normal close reached Source2Shutdown then the pre-existing Error
+window on oldPID40096; terminated only that shutdown process. Fresh visible
+PID65856 compiled successfully and entered Play. Sentry last_crash unchanged
+at2026-09-17T21:21:41.634073Z. Initial preflight requested logical2769x1529,
+which Windows150%DPI rendered4154x2294; no route ran at that size. Corrected
+logical request1846x1019 is intended to restore physical2769x1529, verified
+from diagnostics before route. This is a viewport-unit correction, not a
+benchmark workload change. Initial preflight retained for transparency.
+
+Measurement setup correction: the first candidate route began after the grounded
+player had drifted toXY(-1.8277519,1.4522735), rather than the fixed recorded
+center(-1.6258175,1.2225341). Preserve its natural completion and raw output as
+an unmatched diagnostic; do not accept against the canonical baseline. The next
+route will set the fixed player start immediately before the existing trigger,
+after preflight readiness, matching the previous accepted control procedure.
+
+Unmatched diagnostic007099f45c8c48bf91cdcc574f73d884 completed naturally;
+stationary429.96997FPS,p953.3015ms,p994.5668ms,GPU1.9840738ms,0exceptions,
+13799current/13800peak roots,0overflow. It is not comparable acceptance due to
+start-center drift. Corrected route had already started when these results were
+reviewed, so it is allowed to finish unchanged. The initial candidate patch is
+preserved. Larger blades increase raster work; next source candidate will halve
+candidate density toone/72square units (~21.5/m²) while retaining9..20in height
+and1.1..2in width, with8% rather than3% density at24m to keep distant blades
+visibly substantial. Workload and acceptance gates remain unchanged.
+
+Comparable full-density run188a4034fed548a3b9ff58a14341e56f FAILED:
+moving497.9779FPS,p953.5115,p995.8592,GPU1.6770008ms;stationary418.59827FPS,
+p953.4098,p994.5586,GPU2.044602ms. Relative to accepted grass, movingFPS
+-11.46%,stationaryFPS-13.06%,stationaryp95+16.41%,p99+21.49%; additional GPU
++0.5734ms over no-grass control exceeds0.3ms. Correct raw center verified;
+physical2769x1529,finalcamera(-1.7583,1.5185,310.8845),rotation(0,0,0,1).
+Collision4913ready,0pending/failures,0exceptions;13798current/13800peak roots,
+0overflow. Do not accept this candidate. Next density candidate described above
+compiled successfully and is receiving a new cold start before identical route.
+
+Reduced copy-based run2b7cfb48941b4b539792d444b025f603 also FAILED:
+moving508.50024FPS,p953.4771,p995.7862,GPU1.6349664;stationary440.0635FPS,
+p953.2868,p994.2575,GPU1.9336394. Exact center/camera/resolution matched;
+4913collisionready,0failures/exceptions;7310peak roots,0overflow.
+Compared to accepted grass: stationaryp95+12.21%,p99+13.46%; GPU+0.4624ms
+versus no-grass control. Preserve full result and half-density-copy.patch.gz.
+
+Before further implementation, isolate depth-copy cost at this exact settled
+canonical final camera,2769x1529,FOV75,one player,unchanged grass shaders.
+Temporarily restore original DistanceFog.cs/distance_fog.shader (thus skyline
+bug) for one>=10s stationary diagnostic window after successful compile.
+Record production FramePerformance/voxel_collision_info; restore/fix fog before
+acceptance. This is diagnostic-only, not an alternative shipped path, and cannot
+replace the full canonical route. No workload/gate change.
+
+Depth-copy isolation screen: original fog at the same settled final view reports
+487.3FPS,p952.69ms,p993.94ms,GPU1.71ms (no-depth-copy-screen.json), compared with
+1.9336ms in the preceding route's stationary window. This is diagnostic support,
+not a replacement performance pass. Remove the costly copy implementation.
+Next candidate generates roots once in the existing terrain SceneCustomObject's
+DepthPrepass callback, submits a shared three-vertex model in grass Depth mode,
+and reuses those same roots in the existing forward indirect draw. Thus the
+engine depth chain includes grass and original fog remains canonical. No grass
+shadow draw or second generation pass. Depth/forward share one vertex shader.
+CommandList.ExecuteOnRenderThread appeared in XML but was inaccessible to game
+code (CS1061); use installed documented Execute(current graphics context) and
+require successful compilation/live validation. Preserve compiler failures.
+
+After successful compile, a comment-only hot reload overlapped Play startup and
+reported Collection was modified while upgrading TerrainFieldPage.Allocations;
+OnLoad worker stopped yielding and MCP timed out. No runtime acceptance from
+that session. Normal close did not progress; stopped onlyPID72936 and launched
+a fresh visible editor. Preserved depth-hotload-error.log.gz. Sentry marker did
+not advance. Avoid source writes during subsequent Play startup/measurements.
+
+Depth-mode visual preview at fixed skyline pose passes: sky-depth-preview.png
+shows complete blade tips above the skyline using original fog. No project
+Error console entries in this fresh Play. Final source's shared front/back
+normal handling was compiled before this capture. Stop Play and cold-restart
+again after that last shader change before the unchanged final route.
+
+### GRASS-SILHOUETTE-001/v1 accepted — 2026-09-18
+
+Accepted depth-mode run06722ee9576c47a8902d88d9c59195b6. Same fixed raw test
+parameters as93f6ac8d3ec24cc6b3ca810b30bc481e, including exact startCenter;
+physical2769x1529,FOV75,canonical final camera(-1.7583,1.5185,310.8845),
+rotation(0,0,0,1). Source hashes/environment/preflight retained in depth-*.
+
+Moving567.7361FPS(+0.946%),p953.2483ms(+1.011%),p995.7214ms(+4.774%),
+GPU1.4139457ms(-2.607%). Stationary515.23083FPS(+7.011%),p952.4869ms
+(-15.100%),p993.6885ms(-1.700%),GPU1.6057177ms(-7.795%) versus accepted grass.
+GPU stationary delta over original no-grass control is+0.1345164ms, passing
+<=0.3ms target. Moving peak process4889247744bytes(+0.116%),GPU1536940801
+(-3.175%),allocation57000.535bytes/frame(-1.813%). Stationary process+0.894%,
+GPU+0.006%,allocation/frame-1.387%. Both windows0exceptions; collision4913ready,
+0pending/failures;queues settled;LOD0first1.6s/full5.6s.7310current/7312peak
+roots,0overflow across135746observed view executions,2MiBroots/view. All fixed
+core gates pass. Observed FPS gains are run comparisons, not a claim that grass
+necessarily accelerates rendering on other hardware/workloads.
+
+Fresh visible editorPID55516,engine26.09.15,successful compile0errors;
+Sentry last_crash stays2026-09-17T21:21:41.634073Z. Final consoleError query has
+no matches. Grass shader Forward/Depth compilation succeeded; compiler emitted
+only the recorded profile-upgrade warning. Original fog source is byte-equivalent
+under repository line-ending normalization; no depth-copy workaround remains.
+Final production changes onlygrass renderer/depth integration,shape/range/density.
+
+Cold visual checks: sky-final.png repeats the fixed low camera and shows full
+silhouettes across sky. close-final.png roots longer/wider blades on grass.
+range-24m-final.png retains sparse small blades; range-32m-final.png has none
+in the central patch. Exposed dirt/stone remain bare. No animation/time input.
+Two consecutive fixed close images retain geometry;1915of1296000pixels differ,
+mean per-channel difference<0.005/255,only29pixels differ>16. They are not
+pixel-identical; tiny raster/shading variation is retained in evidence rather
+than claimed as identical. No visible blade sway was observed in those images.
+The prior fresh-edit/multiplayer/material-example limitations remain unchanged.
+Returned to the original player's vicinity, normal interactive game camera,
+and free viewport sizing. Player-final.png records the final normal view.
+
+Accepted design uses one depth and one shaded draw of the same single-triangle
+roots, bounded131072triangle submissions/view at capacity (normally~14620 in
+this route). This replaces the failed full-screen depth-copy approach. Geometry
+is generated once/view. Static blades9..20in tall,1.1..2in wide;densityone/72
+square units,fullthrough6m,30%at12m,8%at24m,zero32m. Capacity65536 remains fixed.
