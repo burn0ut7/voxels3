@@ -8,6 +8,32 @@ unclear symptom; they are not required for every bug or code edit.
 
 ## Focus the capture
 
+### Use the native s&box MCP server
+
+When asked to look at the game or take a game screenshot, capture the rendered view
+through the embedded s&box MCP server. Do not use desktop/computer-use capture as a
+substitute: it can return a foreground browser or another game even when targeting
+the s&box window. Do not require the user to foreground s&box for a native capture.
+
+1. Call `editor_status` to confirm the intended project and play/edit state.
+2. Discover the current schema with `search_tools` using `camera_screenshot`.
+3. Call `call_tool` with name `camera_screenshot` and arguments such as
+   `{"width":1600,"height":900,"includeUi":false}`. Omit `camera` for the main
+   scene camera, or use a discovered camera ID when a different view is intended.
+4. Inspect the returned image itself and confirm it depicts the intended game view.
+   A successful tool result alone is not visual evidence.
+
+For the editor scene view, use `editor_camera_screenshot`. If the user is viewing a
+detached runtime camera, discover whether the project supplies an appropriate tool
+such as `ejected_camera_screenshot`; do not assume the main camera matches that view.
+See [native MCP capture tools](mcp.md#screenshots) for view selection.
+
+Screenshot permission authorizes capture of the existing view, not camera movement,
+player teleportation, application activation, starting/stopping play, or terrain edits.
+Respect the user's computer-control restrictions. If native capture is unavailable,
+report the specific blocker and continue file work; do not silently switch to desktop
+capture or claim a different application's image represents the game.
+
 Define what the image should establish: clipping, visibility, alignment, missing material,
 incorrect lighting, or another concrete symptom. Reproduce the relevant state and choose
 the right play/edit mode, camera, panel, resolution and interaction state. Read targeted

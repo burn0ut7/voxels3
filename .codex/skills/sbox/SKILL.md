@@ -18,8 +18,10 @@ description: Build and debug Facepunch s&box C# games and editor tools using ins
 - Integrate with the project's actual components, scenes, references and assets. Verify
   the latest edit through engine diagnostics and relevant runtime behavior when available;
   distinguish completed checks from pending ones.
-- For visual outcomes, inspect targeted MCP screenshots before claiming visual success.
-  Follow [visual verification](references/visuals.md); capture only when it resolves a question.
+- For game screenshots, use the embedded s&box MCP server's camera screenshot tools,
+  not desktop/computer-use capture. Inspect the actual returned game image before
+  claiming visual success. Follow [visual verification](references/visuals.md) for
+  the command sequence and capture scope; capture only when it resolves a question.
 
 ## Visible, interactive clients
 

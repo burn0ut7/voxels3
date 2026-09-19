@@ -5,7 +5,7 @@ commit `9de061bb0fe2dc73ff29a134a0041928f2a47166` on 6 September 2026. This is n
 of a successful live connection. Rediscover capabilities on each relevant session.
 
 The [official MCP page](https://sbox.game/dev/doc/editor/mcp-server/) describes the native
-endpoint, normally `http://127.0.0.1:7269/mcp`. Use **Editor → Preferences → MCP Server →
+endpoint, normally `http://127.0.0.1:7269/mcp`. Use **Editor â†’ Preferences â†’ MCP Server â†’
 Copy Url** for the configured address. Keep the connection local. If the server is not
 available to Codex, do file and documentation work and explain the missing live checks.
 Do not assume a skill installation configures a connector.
@@ -31,6 +31,13 @@ comma-string vector/angle representation rather than inventing a JSON object sha
 
 ## Screenshots
 
+Use these native MCP tools for game screenshots, not desktop/computer-use capture.
+Follow the [capture sequence and scope](visuals.md#use-the-native-sbox-mcp-server).
+Live evidence on engine26.09.15 (2026-09-19): `camera_screenshot` with1600x900 and
+`includeUi:false` returned the running voxels3 main-camera view while desktop capture
+had returned unrelated foreground applications. This verifies that command/view in
+that session, not every camera mode; rediscover schemas and inspect each result.
+
 Installed `Scene.cs` and `Ui.cs` on build `26.09.01c` provide the following image tools.
 Discover their current schemas before use; this source inspection is not a live capture test.
 
@@ -40,7 +47,7 @@ Discover their current schemas before use; this source inspection is not a live 
 | `camera_screenshot` | A scene camera's rendered image; choose a camera ID, width, height and `includeUi` as needed. |
 | `editor_camera_screenshot` | Editor scene camera view; not the player's view or full editor application UI. |
 
-The inspected camera tools default to 1280×720 and accept dimensions from 16 to 4096;
+The inspected camera tools default to 1280Ã—720 and accept dimensions from 16 to 4096;
 choose dimensions for the question, not the maximum. UI probes can return images too:
 set their `screenshot` argument false when only numeric results are needed.
 Use [visual verification](visuals.md) for capture timing, image inspection and context economy.
