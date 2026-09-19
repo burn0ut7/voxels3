@@ -41,6 +41,20 @@ the appropriate architecture or research owner from the [documentation map](READ
 
 ## Biome Generation and Regional Features
 
+### Tree shape generation and reuse
+
+[Tree generation research](Research/TreeGeneration.md) owns the recommendation
+and unmeasured alternatives; none is an implemented tree subsystem.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Runions et al.: space colonization](https://algorithmicbotany.org/papers/colonization.egwnp2007.pdf) | Crown-controlled branching skeletons for generated trees. | Iterative growth and geometry finishing need bounded work; not an s&box benchmark. |
+| [Deussen et al.: plant ecosystems](https://graphics.stanford.edu/papers/ecosys/) | Approximate instancing of generated plants and parts. | Offline image synthesis; no modern frame-time or invisible-repetition guarantee. |
+| [s&box GPU instancing](https://sbox.game/dev/doc/rendering/shaders/gpu-instancing) | Shared model/material batching, transform/tint variation and procedural instances. | Custom branch parameters and generated-mesh integration need verification; batching does not remove leaf/shadow cost. |
+| [Facepunch foliage update](https://sbox.game/news/update-26-01-28) | Existing leaf lighting, distance cutoff and wind features to evaluate. | Feature announcement, not a generated-tree integration or project performance result. |
+
+### Regional generation references
+
 The [biome terrain proposal](Research/BiomeTerrainGeneration.md) records the
 adopt/defer decisions and current source constraints for these references.
 
