@@ -41,6 +41,21 @@ the appropriate architecture or research owner from the [documentation map](READ
 
 ## Biome Generation and Regional Features
 
+### Volumetric clouds and atmosphere
+
+[Cloud rendering research](Research/VolumetricClouds.md) owns the comparison,
+source page references, transfer limits and first-slice proposal. Weather
+orchestration is outside that proposed visual slice.
+
+| Reference | Use | Transfer limits |
+| --- | --- | --- |
+| [Horizon Zero Dawn cloudscapes](https://d3d3g8mu99pzk9.cloudfront.net/AndrewSchneider/The-Real-time-Volumetric-Cloudscapes-of-Horizon-Zero-Dawn.pdf) | Foundational density, lighting and reconstruction design. | SIGGRAPH 2015; reported cost includes reconstruction and is not a Voxels3 timing. |
+| [Nubis Evolved](https://advances.realtimerendering.com/s2022/SIGGRAPH2022-Advances-NubisEvolved-NoVideos.pdf) | Motion, sky/environment distinctions and storm rendering. | SIGGRAPH 2022; context-specific console settings; no reviewed embedded videos. |
+| [Nubis Cubed](https://www.guerrilla-games.com/read/nubis-cubed) | Immersive voxel clouds, accelerated tracing and lighting. | SIGGRAPH 2023; authored-volume pipeline and proprietary compression are not an s&box feature. |
+| [Frostbite atmosphere/cloud notes](https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf) | Scattering integration and atmosphere consistency. | Extended SIGGRAPH 2016 notes distinguish cloud development from already shipped atmosphere systems. |
+| [Epic volumetric clouds](https://dev.epicgames.com/documentation/en-us/unreal-engine/volumetric-cloud-component-in-unreal-engine?application_version=5.6) | Quality, shadows and reconstruction controls. | UE-specific rendering integration and quality modes. |
+| [Unity HDRP cloud source](https://github.com/Unity-Technologies/Graphics/tree/master/Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/VolumetricClouds) | Inspectable tracing and history/edge reconstruction. | Public master observed 2026-09-19; no exact installed-package equivalence or cross-engine performance claim. |
+
 ### Tree shape generation and reuse
 
 [Tree generation research](Research/TreeGeneration.md) owns the recommendation
