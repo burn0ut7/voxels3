@@ -1,117 +1,155 @@
 # Blender Tree Lab
 
-Procedural tree authoring in Blender 5.2.2. The generator creates the structure
-from a seed and growth settings. Editable Bezier guides control individual major
-limbs. This is an authoring system; it does not modify the playable world.
+Procedural tree authoring in Blender 5.2.2. Four species share one seeded
+skeleton-to-mesh pipeline: English oak, common ash, Norway spruce (evergreen)
+and silver birch. Juvenile, Mature and Large stages change branch development,
+proportions, roots and bark maturity; Height remains independently adjustable.
+This tool does not modify the playable world.
+
+[View the species and growth-stage comparison](../../Docs/ValidationEvidence/BlenderTrees/species-final-comparison.png).
+
+## Preserved oak
+
+The accepted original `oak_studies.blend` is retained unchanged. Continue new
+work in `tree_library.blend`. Its four original oak specimens are marked as
+protected references: the generator and guide-rebuild operator refuse to
+replace them. New specimen names include species, stage, habit and seed, so
+an ash cannot overwrite an oak sharing its seed. Original oak materials retain
+their original names; new species/stages have separate materials.
 
 ## Using the installed panel
 
-Open `oak_studies.blend`. In the 3D View sidebar, choose **Tree Lab**.
+Open `tree_library.blend`. In the 3D View sidebar choose **Tree Lab**.
 
-1. Choose Open-grown, Woodland, or Weathered and a seed.
-2. Adjust height, spread, girth, lean, upward growth, droop and branch angle.
-   Crooked Growth varies trunk and limb curvature. First Fork Height controls
-   where the crown begins. Growth Direction and One-sided Crown bias growth
-   toward a chosen horizontal direction.
-   Branch Density and Leaf Density control crown fullness. Root Spread controls
-   lateral reach relative to trunk size; Root Depth is measured in metres.
-3. Select **Generate from Seed**. **Next Seed** generates another specimen.
-   The same seed and settings reproduce the same geometry with the same
-   generator version. A new seed can change branch count, attachment, direction,
-   reach, bend, fine growth and leaf placement.
-4. For deliberate branch shapes, enable **Show Direction Guides**. Select a
-   guide curve and move its controls in Edit Mode. Choose **Rebuild from Edited
-   Guides**; the operator exits Edit Mode for you. The guide controls the main limb;
-   smaller branches, leaves and collision proxies regenerate around it.
-   The limb stays attached to the trunk. Editing the trunk guide also updates
-   primary attachment positions.
+1. Choose Species, Growth Stage, Growth Habit and Seed. These preset selectors
+   load defaults. Then adjust height, girth, spread, growth direction, crooked
+   growth, crown bias, branching/leaf density and root spread/depth.
+2. **Generate from Seed** creates or replaces that species/stage/habit/seed.
+   **Next Seed** creates a different specimen. Other specimens remain stored.
+3. **Saved Specimen** selects an existing tree and restores its controls.
+   **Current tree** focuses it. **All trees** displays the library together.
+   Gallery translations are temporary and are restored before selecting,
+   rebuilding or saving. Local mesh coordinates and guide controls stay intact.
+4. Enable **Show Direction Guides**, move a major limb's Bezier controls in
+   Edit Mode, then **Rebuild from Edited Guides**. Smaller growth, foliage and
+   collision proxies follow that skeleton. The operator exits Edit Mode.
+   Protected references cannot be rebuilt; generate a new oak specimen first.
+5. **Save Tree Library** packs the working file and writes `recipes.json`.
 
-Generating from the seed replaces that specimen's edited guides. Rebuilding
-from guides preserves them and uses the specimen's original seed. Global main
-limb shape controls apply when generating from a seed; fine branching and leaf
-density also apply when rebuilding guides. Save the Blender file to retain
-manual guide edits.
+Generating from seed replaces that specimen's edited guides. Guide rebuilds
+preserve the specimen's seed/species/stage and its edited primary skeleton;
+main scaffold shape controls apply when generating from seed. Save the file to
+retain manual guide edits. Seed identity guarantees repeatability only with
+identical inputs, assets and generator revision.
 
-Each seed grows five to seven main roots and two smaller offshoots per root.
-They emerge at the trunk base and taper below local soil level (Z=0). Changing
-root spread/depth preserves the crown's random stream. This is a local root
-shape; it does not sample or conform to the game's terrain.
+## Species and age
 
-## Meshes and gameplay roles
+| Species | Structure and foliage |
+| --- | --- |
+| Oak | Broad structural limbs; existing lobed leaf artwork |
+| Ash | Opposite branching tendencies; paired leaflets and terminal leaflet on a rachis |
+| Norway spruce | Persistent central leader, layered branches, lateral sprays and individual needle geometry |
+| Silver birch | Slender stem, descending fine tips, small serrated triangular blades, pale mature bark |
+
+Juveniles use fewer primary limbs or whorls, fewer branching generations,
+slender proportions, smaller roots and smoother young bark. Leaves retain
+plausible organ size rather than shrinking with the whole tree. Large specimens
+increase structural development, default height and girth. Stages are art
+controls, not chronological age or a biological growth simulation.
+
+## Ownership and derived parts
+
+The canonical generator is `build_oak_studies.py` (its historical filename is
+retained). `SPECIES` and `preset_settings` own species data and defaults.
+Explicit seed/configuration creates the skeleton; edited Bezier guides become
+the skeleton for a guide rebuild. Wood, fine branches, leaves, roots and all
+proxies derive from it. Crown, leaf and root random streams use explicit seeds;
+no frame time or process-dependent hash enters generation.
+
+Blender owns the stored specimen collections, guide coordinates and metadata.
+The installed `tree_lab_addon.py` panel executes the generator on Blender's main
+thread. Rebuilding invalidates only the named generated specimen and its guides/
+proxies. Materials are scoped by species and stage. This extends the existing
+pipeline rather than maintaining a separate generator per species. Species
+rules are required because recoloring/scaling an oak cannot produce compound
+ash leaves or a conifer's central leader and needle sprays.
 
 | Part | Purpose |
 | --- | --- |
-| Trunk | Visible trunk surface |
-| Branches | Visible welded major limbs |
-| Roots / RootTips | Joined structural roots and continuous fine underground tips |
-| Twigs | Fine branches and narrow living tips |
-| Leaves | Bent, textured leaf geometry with no collision |
-| COL_SOLID_Trunk | Nine simplified convex trunk segments; `blocking=true` |
-| COL_SOFT_Branch | Three convex interaction segments per primary limb; `blocking=false` |
+| Trunk / Branches | Separate visible surfaces of continuously welded structural wood |
+| Roots / RootTips | Structural roots and continuous fine underground tips |
+| Twigs | Fine branches, living tips and ash leaf stalks |
+| Leaves | Oak cards, shaped ash/birch blades or points carrying instanced spruce needles |
+| COL_SOLID_Trunk | Nine simplified closed convex trunk pieces, `blocking=true` |
+| COL_SOFT_Branch | Three interaction pieces per major limb, `blocking=false` |
 
-**Show Collision Proxies** displays the current tree's proxy meshes. Their
-`collision_role` is `solid_trunk` or `branch_interaction`. The latter is intended
-for nonblocking triggers such as player slowdown. These Blender properties
-describe intended roles; the engine must import and implement that behavior.
-Roots are visual geometry; no separate root collision is authored. Branch
-proxies cover primary limbs, not every twig.
+Root geometry is local to soil Z=0 and does not conform to game terrain. The
+smallest juvenile roots may be represented entirely in RootTips. Fine branches
+and needles have no collision. Branch proxies cover main limbs, not every twig;
+juvenile proxy padding scales with tree size. **Show Collision Proxies** displays
+only the current tree's proxies. Player slowdown requires engine implementation.
 
-The hidden Wood and UV_Source objects retain construction and bark projection
-data. They are not additional rendered parts. Primary guides, render meshes and
-collision proxies all derive from the same skeleton.
+Hidden Wood and UV_Source objects retain construction/projection data. Bark
+uses matched color, roughness and normal detail with actual geometric relief on
+welded wood. Fine tips share the species bark with normal shading; birch bark
+color follows local branch thickness on mature/large birches; juvenile birches
+share a consistent young-wood surface. Juvenile wood
+uses a finer welding grid and reduced bark relief. Leaf wind and camera-facing
+representations belong in the engine renderer and are not implemented here.
 
-## Rendering and game integration
+## Validation and limits
 
-Blender generates leaf placement and bent leaf geometry. Wind, camera-dependent
-rotation and distance-based representations belong in the game renderer.
-Near trees should preserve leaf attachment and shape; camera-facing clusters
-can be evaluated for middle distance, with tree billboards for distant trees.
-Camera-facing foliage has not been implemented by this authoring tool.
+Native installed-operator scenarios, source hashes, visual evidence and strict
+independent review verdicts are recorded in `../../Docs/ValidationResults.md`
+and `../../Docs/ValidationEvidence/BlenderTrees`. Reference preservation is
+checked with mesh/UV/guide/material fingerprints. Repeated seed generation,
+next-seed changes, selection, mixed gallery and edited-guide rebuilding are
+checked through the same panel operators used for authoring.
 
-The current full-detail meshes are visual authoring assets. They are not a
-measured game mesh budget, LOD set, runtime seed generator or finished export
-pipeline. No game collision/slowdown behavior or runtime performance is claimed.
+The fixed visual matrix covers juvenile and mature forms of all four species,
+plus Large oak. Large ash, spruce and birch presets are available but are not
+part of that visual acceptance matrix. Reviews cover the recorded views and
+seeds, not every possible combination of controls.
 
-The bark generator uses matched colour, normal, roughness and scanned height.
-Large welded wood receives actual geometric relief before its render parts are
-split, preserving shared boundary positions and normals. Fine twig/root tips
-use normal shading. This authoring detail must be reduced or baked into game
-assets; it is not a runtime parallax shader. Candidate acceptance and failures
-are recorded in the validation ledger.
+Spruce uses native Geometry Nodes with closed, three-dimensional needles.
+Juvenile points instance individual 12-vertex needles. Mature/large points
+instance seeded variants of short, volumetric 64-needle sprays (768 vertices),
+following each fine shoot. Rotation, scale and variant are stored on the points;
+prototypes and node groups belong to that species/stage. Adult previews show
+one spray in 24 to keep Blender interactive; final renders show every spray.
+These points are not an expanded export mesh. Realize instances for a mesh-only
+export, or derive cheaper engine foliage. No export conversion is included.
 
-## Source and local installation
+These are detailed source meshes. Mature ash alone contains about 4.75 million
+foliage vertices; the refined mature birch has about 8.38 million. Spruce point
+counts substantially understate its realized geometry (12 vertices per needle).
+Actual counts/timing are evidence, not a shipping
+budget. Large/dense settings can cost substantially more. No runtime/export/LOD,
+networking, collision behavior, or game performance acceptance is implied.
 
-`build_oak_studies.py` is the canonical generator. `tree_lab_addon.py` provides
-the panel and operator and executes that generator. The installed add-on is
-named `voxels_tree_lab.py` in Blender's user add-ons directory. Its SOURCE value
-points to this workspace's generator; update it when relocating the workspace.
-The generator's ROOT value likewise identifies this workspace's assets.
+`tree_library.blend` and the original oak file are large generated files ignored
+by Git. `recipes.json` schema 2 records species/stage, protected status, seed,
+settings, source hash and full guide controls/handles; it is a manifest, not an
+importer. The installed add-on SOURCE and generator ROOT point to this workspace.
+Update them when relocating it. The existing project's oak leaf atlas remains
+an input for oak regeneration; the packed Blender files contain their images.
 
-The packed local `oak_studies.blend` is ignored by Git because it is a large
-generated working file. Keep the source and seed/settings with the Blender
-file. Source changes may change a seed's result; seed identity alone does not
-promise compatibility across generator revisions.
-`recipes.json` records the saved specimens' seeds, settings, generator SHA256,
-and complete editable guide coordinates/handles. It is a manifest, not an
-automatic importer. The installed panel, the included bark maps and this
-workspace's existing leaf atlas are required to regenerate the packed file.
+## References and assets
 
-Visual evidence and review history are recorded in
-`../../Docs/ValidationEvidence/BlenderTrees` and
-`../../Docs/ValidationResults.md`. Independent visual approval is separate from
-functional control checks and game acceptance.
+Species observations come from Woodland Trust's [oak](https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/english-oak/),
+[ash](https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/ash/),
+[Norway spruce](https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/norway-spruce/)
+and [silver birch](https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/silver-birch/)
+pages. These establish visible leaf/crown/bark traits; juvenile topology and
+stage dimensions are authoring choices, not verified biological age estimates.
 
-Current bark maps are unchanged downloads of Charlotte Baglioni's
-[Japanese Camphor Bark](https://polyhaven.com/a/japanese_camphor_bark), shared by
-Poly Haven under [CC0](https://polyhaven.com/license).
-`Textures/japanese_camphor_bark_source.json` records source URLs, the 1.8m square
-scan dimensions, file sizes, MD5 and SHA256 hashes. Its mostly intact, finely
-fissured surface retains small worn areas without prominent repeated knots.
-Seeded shifted patches vary the mapping; all four maps use matching coordinates.
-The appearance is an art choice, not a verified botanical species identification.
-Earlier rejected Bark Brown 02 and Bark Willow scans retain their provenance in
-`Textures/sources.json` and `Textures/bark_willow_source.json`. Earlier candidates
-also used Jolcham Oak Bark 01.
-The leaf atlas reuses the project's existing original leaf artwork. Its
-provenance is in `../TreeSources/README.md` and
-`../../Assets/textures/trees/README.md`.
+Oak/ash bark uses Charlotte Baglioni's unchanged [Japanese Camphor Bark](https://polyhaven.com/a/japanese_camphor_bark)
+scan as an art material. Spruce uses Dimitrios Savva's unchanged [Pine Bark](https://polyhaven.com/a/pine_bark).
+Both are Poly Haven [CC0](https://polyhaven.com/license). Exact dimensions, URLs,
+bytes and checksums are in the corresponding `Textures/*_source.json` files.
+Birch's pale bark/lenticels and ash/birch leaf surfaces are native Blender
+procedural materials. Ash/birch blades and spruce needles are authored geometry,
+not recolored oak textures. These materials are visual approximations rather
+than botanical specimen scans. Rejected Brown02/Willow candidates retain their
+provenance. Original oak leaf artwork provenance is in `../TreeSources/README.md`
+and `../../Assets/textures/trees/README.md`.
