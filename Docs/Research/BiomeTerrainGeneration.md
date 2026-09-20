@@ -1,5 +1,286 @@
 # Biome terrain generation: research and proposed architecture
 
+## September 20, 2026: biome research and recommended next slice
+
+Status: research and recommendation only. No biome runtime changes or performance
+claims. This review supersedes the older four-environment/temperate-only scope
+below. The user wants about eight initial environments, climate-compatible
+transitions, preservation of the current terrain's character, and small
+biome-specific height changes. Implementation is deferred pending this research.
+
+### Direct answer: what comes first?
+
+Predefine the **biome recipes**, but derive their **locations** from continuous
+environmental fields. Keep the current terrain as the broad foundation. Evaluate
+temperature and moisture alongside it, use stable broad elevation to adjust
+climate, then select compatible biome weights. Apply modest local terrain
+refinements and finally resolve surface cover and population.
+
+This is a hybrid: neither eight independently generated terrain patches nor a
+finished heightmap painted with altitude bands. A desert can have hills; a
+forest can climb mountains; snow can occur on low ground in a cold region.
+Height constrains a biome but does not uniquely determine it.
+
+"First" describes dependencies for a requested coordinate or bounded region.
+It does not require allocating or completing a world-sized heightmap. Seed,
+version and coordinates determine the same result before or after chunks load.
+
+### Evidence from games, engine source and research
+
+These are well-documented reference implementations, not a measured ranking.
+Sources were inspected on September 20, 2026. Developer release notes establish
+behavior; source code establishes the scoped algorithm; research prototypes do
+not establish shipped-game performance. Historical release claims are dated.
+
+| Reference | Verified evidence | Implication for Voxels3 and limits |
+| --- | --- | --- |
+| [Minecraft Java 1.18 release notes](https://feedback.minecraft.net/hc/en-us/articles/4415128577293-Minecraft-Java-Edition-1-18), World Generation | Terrain shape varies independently of biome identity; forests and deserts can occur on hills, and redundant shape variants were merged. | Preserve independent landforms and climate. This is evidence about 1.18 behavior, not proof that every generation stage is independent or a complete account of today's internals. |
+| [Mojang's 2021 experimental generation notes](https://www.minecraft.net/en-us/article/new-world-generation-java-available-testing), snapshots 3-6 | Developers repeatedly adjusted incompatible temperatures, tiny biome fragments and mountain-biome placement; cold regions begin snowy slopes lower than warm regions. | Climate adjacency and fragment size need deliberate rules and inspection. Smooth noise alone is not a documented guarantee. Do not blindly retain the current climate-independent snow caps. |
+| [Factorio FFF-390](https://www.factorio.com/blog/post/fff-390), Noise tools; [FFF-401](https://www.factorio.com/blog/post/fff-401), Investigating missing decoratives | Continuous fields can be visualized directly. Nauvis decorative distribution uses moisture, temperature and terrain-type context plus smaller patch variation; competing placement ranges had suppressed content. | Inspect continuous fields and final populations separately. A defined jungle is useless if priority rules prevent it appearing. These are 2D tile/decorative systems, not SDF cost measurements. |
+| [Luanti biome API](https://api.luanti.org/definition-tables/#biome-definition) and [mg_biome.cpp](https://github.com/luanti-org/luanti/blob/master/src/mapgen/mg_biome.cpp), `getBiomes`, `calcBiomeFromNoise` | Heat/humidity noises and height feed biome selection. Eligible entries compete by squared heat/humidity distance divided by biome weight, with positional restrictions and vertical blending. | Concrete, inspectable climate-space classification. Climate-space Voronoi cells are not geographic Voronoi territories. Nearest-center lookup alone does not enforce our forbidden transitions. Source is a moving master snapshot, not a pinned release. |
+| [Vintage Story spawn-condition source](https://github.com/anegostudios/vsapi/blob/master/Common/Entity/SpawnConditions.cs), `MatchesClimate`, `MatchesForestation`; [worldgen climate API](https://apidocs.vintagestory.at/json-docs/jsondocs/Vintagestory.API.Common.EnumGetClimateMode.html) | Content eligibility checks temperature/rainfall and forest/shrub conditions. The API distinguishes generated climate values, loosely annual averages, from current-date conditions. | Give content habitat requirements and keep persistent climate separate from future weather. This source does not by itself establish the entire terrain-generation order or every plant implementation. |
+| [Guerrilla's Horizon Zero Dawn presentation](https://www.guerrilla-games.com/read/gpu-based-procedural-placement-in-horizon-zero-dawn), GDC 2017, PDF pp. 2-10 | Deterministic, locally stable, density-based runtime placement uses ecotopes to drive assets, distributions, color, weather, effects, sound and wildlife. Streamed 2D world data is generated and paintable; placement data is extensively hand-painted. | A biome is an environment recipe with local variation, not just a color. Borrow bounded realization and coherent content; its authored world maps do not solve our procedural climate placement. |
+| [Iron Gate's Valheim FAQ](https://www.valheimgame.com/faq/), Gameplay questions | Biomes provide different challenges, resources, enemies and secrets; progression is tied to biome content. | Exploration needs reasons to visit and revisit regions. The FAQ is design evidence, not an algorithm: no radial biome-placement formula or terrain-first ordering is inferred from it. |
+| [Hello Games' Continuous World Generation in No Man's Sky](https://www.gdcvault.com/play/1024265/), GDC 2017 overview | Describes a pipeline from voxel terrain through polygonization and texturing to population and simulation. | Separate terrain readiness from population. Only the public overview was verified here; it does not establish within-planet climate adjacency or exact biome selection. |
+| [AutoBiomes, Fischer et al., 2020](https://cgvr.cs.uni-bremen.de/papers/cgi20/AutoBiomes.pdf), sections 3-4, [DOI](https://doi.org/10.1007/s00371-020-01920-7) | Explicit sequence: rough terrain, simplified climate, biome-based terrain refinement, asset placement. Refinement combines procedural terrain and elevation examples. | Direct support for a staged hybrid, not a reason to import its DEM database or climate simulation. Its finite-grid authoring measurements are not a frame-budget result for streamed SDF terrain. |
+| [ProcWorld: Geometry Is Destiny Part 2](https://procworld.blogspot.com/2016/07/geometry-is-destiny-part-2.html), 2016 | Temperature uses map controls and elevation. Mesh-based water transport/precipitation drives moisture; climate is mapped to biome types. | Terrain-aware climate can explain wet/dry geography. Its map-domain simulation and boundaries need a separate streaming design; it is not a cheap independent chunk query. |
+| [Red Blob Games: terrain from noise](https://www.redblobgames.com/maps/terrain-from-noise/), Biomes | Demonstrates elevation plus independent moisture, and discusses temperature and richer environmental inputs. | Good transparent baseline, not a shipped-game ranking. Copying its altitude bands would couple snow to peaks and waste our existing landform variety. |
+
+Horizon slide 9 explicitly maps the same placement field to different density
+curves for forest-edge and forest-interior trees. This is a useful concrete
+pattern for readable transitions. AutoBiomes p. 3, figure 1 shows the four-stage
+dependency order; its different-resolution grids also separate climate from
+terrain detail. Section 4 reports authoring-scale work in seconds, not a streamed
+frame-time guarantee. Both diagrams were rendered and visually inspected.
+
+The Horizon and AutoBiomes PDFs were downloaded and their text inspected because
+web PDF opening failed. Temporary copies live outside the committed report in
+`.codex/biome-research/`. No unseen Minecraft video content or community
+reverse engineering is used to substantiate exact backend claims.
+
+### Comparing the approaches
+
+| Approach | What it buys | Main cost or failure mode | Decision |
+| --- | --- | --- | --- |
+| Select geographic biome territories, then generate their terrain | Strong authored identity, controlled destinations and progression | Needs neighbor-aware blending and shared geographic constraints; can make every desert or mountain region repeat its recipe | Reserve for future authored destinations if needed; do not replace the current generator with it |
+| Finish terrain, classify by height/slope | Simple; faithfully preserves terrain | Height alone cannot distinguish equally high wet forest and dry desert; snow becomes an altitude stripe | Use terrain as an input, never as the only classifier |
+| Shared terrain/climate fields, then bounded biome refinement | Preserves varied landforms, coherent climate, local identity and on-demand evaluation | Needs explicit stage order, eligibility coverage and conservative bounds | Recommended |
+| Simulate geography, wind, rainfall and erosion, then classify | Strong causal geography, rain shadows and drainage relationships | Nonlocal dependencies, boundary conditions, iteration and tuning costs | Later bounded regional feature, only if the extra geography matters |
+| Artist-painted biome and population maps | Direct composition and reliable landmarks | Authoring effort and finite-map dependencies | Learn from Horizon's content controls; procedural fields remain our default |
+
+Geographic Voronoi plus blending is not inherently wrong or inevitably seamed.
+It solves a different problem: explicit territories. Climate-space nearest-biome
+selection likewise is not inherently bad; for eight biomes, explicit compatible
+ranges make missing coverage and forbidden combinations easier to audit.
+
+### Recommended dependency order
+
+```mermaid
+flowchart TD
+    S[Seed and immutable recipe] --> L[Existing broad landforms and natural height]
+    S --> C[Broad temperature and moisture fields]
+    L --> T[Stable elevation adjustment to climate]
+    C --> T
+    L --> B[Compatible biome weights]
+    T --> B
+    L --> R[Existing river planning]
+    B --> D[Small bounded biome relief]
+    L --> D
+    R --> F[Final river-constrained exterior]
+    D --> F
+    F --> V[Caves, cliffs and authoritative player edits]
+    B --> P[Surface materials and population suitability]
+    F --> P
+    R --> P
+    V --> P
+    V --> G[Render and collision geometry]
+    P --> G
+```
+
+This is the proposed dependency graph, not a statement that these new stages
+exist. Preserve the current natural-height function as the climate/drainage
+reference. Add small biome relief downstream of river planning and upstream of
+the final river constraint. Fade refinement out around river corridors and
+shorelines using existing bounded feature descriptors. Do not change drainage
+node heights in this first slice. Confirm the existing valley evaluator can
+consume the refined exterior while retaining the same river footprint; otherwise
+redesign that precise boundary before implementation.
+
+Regional rainfall must not depend on final river geometry if river geometry
+depends on climate/refinement. Keep broad moisture independent; river proximity
+can enrich **local habitat wetness** downstream, allowing a green corridor
+through a desert without reclassifying the entire region as jungle. Existing
+ocean identity and inland river water must remain distinct even when both share
+the current fixed water level. A below-water sample alone is not an ocean test.
+
+The climate reference must be continuous and sufficiently broad. Use an existing
+bounded broad-elevation contribution if possible. Raw steep mountain detail
+cannot silently override the minimum desert/snow separation. No player edit,
+tree placement, clock or load order feeds back into regional biome selection.
+
+### Climate, classification and transitions
+
+Use separate seeded continuous fields for temperature and moisture. In this slice
+they are normalized art controls: moisture means long-term habitat wetness, not
+instantaneous relative humidity. Precipitation, evapotranspiration and soil water
+are distinct physical quantities; two noise fields approximate the desired
+patterns rather than simulating them.
+
+Prefer broad irregular climate regions over strict repeating latitude bands for
+this exploration-focused flat world. Latitude is useful when compass direction
+should predict a journey to colder climates, but that is a gameplay decision,
+not a requirement for plausible biomes. Avoid adding a latitude mode and a
+regional mode before that choice is needed. Defer rain shadows and seasons.
+
+Biome definitions supply eligibility and continuous weights. Normalize only
+eligible weights, with complete climate-domain coverage. A dominant label is
+useful for display and diagnostics; terrain refinement and appearance should
+consume weights, not abruptly switch on that label. Smooth material boundaries
+alone cannot fix discontinuous geometry or incompatible tree placement.
+
+The key rule is **hot desert and persistent snow have disjoint temperature
+supports with an intermediate band**. Dry climates need not be hot, and snow
+does not define every cold habitat, but the first palette can group those
+variants without adding more named biomes. Warm/dry grassland and cool woodland
+can serve as transition variants of existing recipes.
+
+Smooth noise is insufficient to guarantee a useful distance between extremes.
+If the supports have a temperature gap `deltaT`, and the complete temperature
+field has spatial gradient bound `G`, separation is at least `deltaT/G`.
+Elevation, coordinate warping and every small-scale term contribute to `G`.
+Cap or broaden those terms and include the material filter's world-space support
+when selecting a buffer. With `G=0`, both supports cannot occur in one continuous
+domain. A numerical survey can expose failures but cannot replace this bound.
+
+Use the same eligibility for snow materials, desert sand, trees and displayed
+identity. Otherwise the label can pass while the player sees snow meeting sand.
+The current mountain-peak snow rule must be reconciled with climate rather than
+left as an unconditional override. Require an intermediate rocky/cool belt for
+high-altitude snow near warm terrain too; do not invent an exception to the
+user's separation requirement.
+
+Region size, blend width and local patch size are three different controls.
+Broad climate establishes destinations, transitions connect them, and compatible
+small variations create clearings, rocky exposures and forest edges. Noise
+wavelength does not guarantee minimum biome area or proximity to spawn. Observe
+connected fragments and travel distance across fixed seeds, then decide whether
+explicit bounded region planning is justified. Do not add it speculatively.
+
+### Eight initial environments without eight terrain generators
+
+Retain the requested player-facing palette, with forest as the eighth proposal.
+Internally distinguish landform from habitat so labels do not erase combinations.
+
+| Environment | Eligibility/identity | Local character and modest relief direction |
+| --- | --- | --- |
+| Ocean | Existing marine basin/sea context | Seabed, shore transitions; preserve basin and shoreline layout |
+| Plains | Open non-extreme habitat on plain-dominant terrain | Open grassland, dry/cool variants, very shallow undulation |
+| Hills | Open non-extreme habitat on hill-dominant terrain | Rolling grass/scrub, exposed stone, retain current hill structure |
+| Mountains | Rocky/exposed mountain-dominant terrain | Current massifs and saddles, sparse suitable vegetation; climate controls snow |
+| Desert | Hot and dry, excluding marine floor | Sand/stone mosaic, sparse cover, shallow dunes only on suitable gentle terrain |
+| Snow | Persistent cold; broad climate and bounded elevation response | Snow over supported exterior, exposed steep rock, restrained local relief |
+| Forest | Suitable non-extreme climate and sufficient moisture | Tree clusters, glades and understory; woodland can cover hills or mountain flanks |
+| Jungle | Warm and wet, suitable support/slope | Denser layered vegetation and humid ground cover; no requirement for flat terrain |
+
+An implementation should not use eight unrelated weights in one blind priority
+chain. Separate marine eligibility, climatic extremes, vegetation cover and
+open-landform naming. Forests and jungles must appear on a meaningful amount of
+eligible land; mountain masking must not consume every potential forest site.
+Forest and jungle require recognizable vegetation; a grass tint and a new label
+are only classification scaffolding, not complete environments. New species,
+resources, wildlife and weather are separate content scopes, not promised here.
+
+Proposed starting relief envelope: `abs(deltaHeight) <= 0.02 * ReliefHeight`,
+which is 61.44 world units (about 1.56 m) at the source default of 3072. This is a
+conservative authoring proposal, not a measured best value or accepted criterion.
+Fade it to zero on shorelines, river corridors and steep rock. Dunes should not
+flatten mountain massifs. Small amplitude does not guarantee small slopes: bound
+the refinement derivative and choose wavelengths relative to the existing
+16-unit sample spacing. Visual shader relief cannot substitute for geometry when
+the change should affect traversal or collision.
+
+### Current-source integration findings
+
+Inspected working tree: HEAD `0113a5bc89ff750b4c87386c41369ac9e8e5a5d2` plus
+pre-existing edits; this is not a clean-commit behavior claim. Native editor
+reported voxels3, engine 26.09.15, visible play active. No game mutation or runtime
+test was performed for this research.
+
+| Current owner | Observed fact and required integration |
+| --- | --- |
+| [RegionalLandforms](../../Code/Voxels/Generation/RegionalLandforms.cs), `SampleNatural`, `SampleWorld`, `BoundNaturalHeight` | Current natural relief includes erosion; rivers constrain it afterward. Keep this foundation. New relief requires matching local/global conservative bounds, not just a changed height sample. |
+| [ProceduralTerrainSdf](../../Code/Voxels/ProceduralTerrainSdf.cs) | Current generator version is 48. Full field includes cliffs and caves; existing build-local XY reuse remains the place to share column work. A surface-biome query must not turn underground queries into surface material. |
+| [RiverDrainageBasin](../../Code/Voxels/Generation/RiverDrainageBasin.cs) | Drainage nodes directly sample natural height. Inserting climate-dependent relief there can change catchments and river routes even with a small offset. |
+| [ProceduralVoxelMaterials](../../Code/Voxels/Materials/ProceduralVoxelMaterials.cs), [GPU materials](../../Assets/shaders/voxels/voxel_generated_materials.hlsl) | Snow currently depends on mountain/peak weights; sand has its own layer rules. Extend the canonical rules and their GPU mirror together, preserving buried strata and explicit placed materials. |
+| [GPU material binding](../../Code/Voxels/Materials/GpuVoxelMaterials.cs) | Existing material weights are generated with a fixed spatial filter. Climate support must account for that filter; biome blending is not merely changing the draw shader. |
+| [SpawnTreePopulation](../../Code/Voxels/Trees/SpawnTreePopulation.cs) | Population is anchored, bounded to 240 m, and rejects mountain weight above 0.35. It is not yet an exploration-wide climate-aware forest system. Reuse its support/lifecycle work, but do not claim eight populated biomes from it as-is. |
+| [World identity codec](../../Code/Voxels/TerrainFieldCodec.cs) | Seed, settings and generator version participate in saved/network identity. New biome/refinement recipes require a deliberate new identity, no silent reinterpretation of existing edited worlds. |
+
+Keep climate/biome functions pure and their settings immutable. Derived
+render/collision/population work keeps the existing revision and cancellation
+rules. Engine resources remain owned by the existing engine-thread consumers.
+Do not add a second world-state store or generate a dense world climate atlas.
+Measure repeated climate evaluation before adding a shared cache; reuse existing
+column work where its lifetime and responsibility already match.
+
+### What would establish that this is good?
+
+The implementation phase must define immutable scenarios in the validation
+ledger before its first run. The following are proposed evidence requirements,
+not tests executed by this research:
+
+- Preserve terrain: matched-seed height deltas, slope changes, silhouette views,
+  shoreline and river-network checks; confirm refinement envelope and bounds.
+- Prove climate compatibility: support/gradient calculation plus fixed desert-to-
+  snow transects, including mountain slopes and material-filter edges.
+- Inspect distribution: maps of base height, temperature, moisture, final biome,
+  blend weights and refinement; area by biome, connected fragments, transition
+  widths and travel distance. Include fixed multiple seeds and negative axes.
+- Verify recognition on foot: forest/jungle structure, desert sparsity, snowy
+  ground, readable hills/mountains and transitions. A map screenshot is not enough.
+- Verify deterministic agreement: repeated queries, shared boundaries, reloads,
+  CPU/GPU field/material parity and host/client identity; include edits in borders.
+- Measure whole-world cost: unchanged canonical figure-eight against a comparable
+  baseline, including tails, completion/streaming, memory, allocations and
+  correctness. Separately observe a fixed dense forest/jungle traversal if the
+  canonical route lacks that content; it supplements rather than replaces it.
+
+No external timing is a Voxels3 budget. Set exact biome scale, transition width,
+population density and performance acceptance before qualification, preserving
+the project's unchanged figure-eight workload and regression rules. Measure
+generation cost and the ongoing cost of vegetation separately. Classification
+can be cheap while jungle visibility, shadows and collision are expensive.
+
+### Recommended sequence and decisions
+
+1. Add shared climate and biome suitability to the production authoring query
+   and existing terrain survey. Freeze the reference-height and river ordering.
+2. Integrate surface materials and bounded height refinement with CPU/GPU parity,
+   conservative bounds and versioned world identity as one complete terrain slice.
+3. Make population consume the same habitat fields and edited support checks;
+   establish visible differences with a deliberately small suitable asset palette.
+4. Validate scale and exploration in the playable world, then qualify performance.
+
+Adopt shared environmental fields, compatible smooth weights, existing terrain
+as the foundation, bounded local relief, and habitat-aware content. Defer full
+climate simulation, latitude modes, global pre-generation, generic biome graphs,
+tectonics, world-wide ecological simulation and authored progression zoning.
+Revisit those only when a concrete exploration goal requires them.
+
+The unresolved tuning choices are climate/transition scale, the exact eligibility
+curves, forest/jungle assets and densities, and accepted relief magnitude. The
+research supports the architecture, not those unmeasured values. The initial
+eight are an environment palette, not a promise that every finite starting area
+contains all eight or that increasing biome count alone improves exploration.
+
+## Historical September 8-9 landform research
+
+The remaining sections preserve rationale and existing incoming anchors for the
+earlier landform work. Their v5 source snapshot, replace-height instructions,
+four-environment scope, climate deferrals and pending feature lists are historical
+and must not be treated as current instructions. The September 20 review above
+owns the recommended next biome slice. Current code owns implemented behavior.
+
 Date: 2026-09-08. Status: research proposal, not implemented or performance-qualified.
 Latest landform review: source `794b14f`, clean working tree at branch creation.
 Working branch: `codex/terrain-biome-generation`. Earlier research began at
