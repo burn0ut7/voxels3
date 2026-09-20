@@ -32286,3 +32286,17 @@ Final canonical generator SHA256 f089c7b9f036051c9e67e6977176b9effe6f139dfd93398
 ### TREE-BLENDER-SPECIES-001/v1 — evidence formatting check
 
 Final staged whitespace validation passes for source, documentation, recipes and structured evidence. The unedited native species-s11-mature-spruce-crash.txt contains Blender-generated trailing spaces in its module listing; that single raw evidence file is excluded from whitespace lint so the retained crash report stays byte-faithful. The initial whole-index whitespace check reported those native spaces; no source or geometry failure occurred.
+
+### Tree wind research — September20
+
+Read primary Crytek/Crysis, Epic Pivot Painter2, Fortnite Chapter4 and Facepunch
+foliage sources; checked installed26.09.15 bark/foliage/trunk-bending code against
+the actual export. Recommendation lives in Research/TreeGeneration.md#wind-for-the-blender-library-september-20.
+Independent technical review declined a draft that made hierarchical woody-branch
+animation conditional on native detail failure. Corrected: native bark only has
+whole-tree sway; independent wood flex requires an additional shared deformation
+stage. Also recorded required root/calm/wind-space/normal-frame corrections.
+This is research only, with no animation implementation or motion/performance pass.
+Independent re-review APPROVED the corrected wind research recommendation.
+Approval is limited to technical framing and implementation boundaries; it does
+not qualify animation, visual quality or performance. No runtime wind changes.

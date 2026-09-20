@@ -162,3 +162,116 @@ measured incremental cost within the frozen budgets. If the library still
 repeats visibly, first identify whether the issue is shape coverage, neighboring
 selection or insufficient variants. There is currently no defensible trees-per-
 second estimate, FPS claim, or guaranteed invisible-repetition library size.
+
+## Wind for the Blender library, September 20
+
+Research recommendation, not implemented animation. The local Blender import
+candidate replaces the earlier runtime geometry recipes. Its foliage animation is currently
+disabled, exported meshes have no authored wind colors, and wood uses the static
+complex shader. Separate parts alone do not make a tree wind-ready.
+
+Keep leaves in the Blender-generated tree, separated from wood by mesh/material
+section. Export one reusable tree asset with its LODs. A leaf can have its own
+logical attachment and pivot without becoming a separate game object, draw call,
+rigidbody or CPU-updated transform. Seeds and branch guides should generate both
+the visible structure and animation metadata; regenerating a tree regenerates
+both, with no hand-painted dependency on one particular specimen.
+
+### Evidence and transfer limits
+
+- [Crytek's Crysis vegetation chapter](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-16-vegetation-procedural-animation-and-shading-crysis)
+  describes GPU main bending plus leaf detail bending, controlled by wind and
+  vertex colors. It constrains deformation to avoid implausible stretching.
+  Adopt layered frequencies and stiffness. This is a historical shipped-game
+  method, not a claim that every modern game uses the same algorithm.
+- [Epic's Pivot Painter 2 documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/pivot-painter-tool-2.0-in-unreal-engine)
+  stores pivots, directions and parent relationships for shader animation with
+  inherited motion. Logical authoring elements can be combined into a static
+  mesh. Adopt attachment-aware data when independent branch motion is required.
+  Its Max script and Unreal material functions are not s&box integrations; our
+  Blender exporter and shader would implement and validate their own format.
+- [Epic's Fortnite Chapter 4 account](https://www.unrealengine.com/tech-blog/bringing-nanite-to-fortnite-battle-royale-in-chapter-4)
+  describes offline branch simulation encoded into textures, indexed through
+  mesh UVs at runtime, and disabling distant wind evaluation. This is an
+  alternative if hierarchical shader evaluation becomes costly. Its rigid branch
+  animation, Nanite renderer and content-specific performance cannot be assumed
+  appropriate for our forest. Do not copy its mesh budgets or add simulation
+  textures before measuring a concrete need.
+- [Facepunch's foliage update](https://sbox.game/news/update-26-01-28) documents
+  trunk sway and leaf flutter. Installed26.09.15 source gives the exact contract:
+  `core/shaders/foliage.shader:99-102` uses red=edge attenuation,
+  green=branch attenuation, blue=detail phase. These channel meanings differ
+  from the Crysis article. `bark.shader` and `foliage.shader` call the same
+  `common/trunk_bending.hlsl`; neither consumes a branch-parent/pivot hierarchy.
+  The native helper displaces XY from object-space height rather than rotating
+  connected branches around their attachments. Native support is a starting
+  point, not proof of convincing motion for these trees.
+
+Native source also exposes work required before adoption: the shared helper
+squares signed height, including below-origin roots, and its sine term is not
+zeroed by calm wind. Both materials pass engine wind directly into object-space
+deformation and alter positions without corresponding normal/tangent deformation.
+Root anchoring, calm behavior, world-to-local wind conversion and lighting-frame
+updates therefore need implementation; merely enabling material flags does not
+provide them. Native bark has no foliage detail-bending stage, so the leaf
+shader's branch attenuation cannot independently flex the woody branches.
+
+### Recommended implementation boundary
+
+Blender owns rest shape, root origin, branch parent/attachment identity, leaf or
+spray pivot/direction, and stiffness/phase derived from species, thickness and
+seed. Preserve those identities during simplification; do not let interpolation
+turn a discrete branch ID into another branch. Store the minimal validated
+payload in vertex colors/extra UVs, using a compact data texture only where
+attribute capacity requires it. Exact packing and importer precision remain a
+feasibility gate. All pivots use the same inch/axis conversion as rendered wood.
+
+The engine owns time-varying wind and GPU deformation. Start with a fixed root
+and slow, restrained whole-tree sway; add branch-relative flex and faster leaf
+rock/flutter. Mature trunks should move much less than juvenile tops and thin
+twigs. Wood and leaves must evaluate identical ancestor motion before leaves
+apply local movement. Weight attachment vertices to their parent and taper
+additional bending along each branch; disconnected rotations would open joints.
+Normals/tangents and shadow/depth passes must follow the same deformation.
+
+First use native bark/foliage as a reference for shared sway and leaf detail on
+one juvenile and one mature oak, with the corrections above. The requested
+individually moving woody branches require an additional shared, attachment-aware
+deformation stage; native foliage detail displacement cannot satisfy that part. Avoid
+adding arbitrary noise to the whole mesh or treating the native 'branch' slider
+as a skeletal hierarchy. Nearby folded leaves remain oriented to their twigs;
+camera-facing leaves are not a wind technique. Distant cluster cards may be used
+only with matching silhouette, shading and movement.
+
+Use a common world-space wind direction and gust progression across vegetation,
+with seeded local phase variation. Current grass hardcodes direction(0.8,0.6)
+and travelling gusts in `voxel_grass_wind.hlsl`; clouds separately expose wind in
+meters/second; native foliage uses engine wind globals. They are not connected.
+Resolve one environmental input owner before integration, convert world wind
+into each rotated tree's local frame, and clamp roots at/below soil to zero sway.
+Cosmetic wind needs no per-leaf network state; weather inputs can be replicated
+if gameplay/weather synchronization later requires it. Terrain remains unchanged.
+
+Keep ordinary ambient-wind trunk collision static around the stiff lower trunk.
+Leaf flutter needs no physics. Branch slowdown volumes are separate gameplay
+approximations; shader motion does not move their colliders. Large branch motion,
+climbing, breakage or precise contact would need explicit collider updates or a
+different interaction design. Do not promise these from visual wind alone.
+
+Reduce leaf detail before branch motion at distance, then retain only subtle
+whole-tree sway where visible. LODs must share phase and parent motion, with
+animated bounds covering the full permitted excursion. Skeletal trees remain
+an option for a small number of interactive trees, not the first forest-wide
+ambient-wind implementation. This choice is a proposal, not a measured cost claim.
+
+### Acceptance before enabling the forest
+
+Use the real playable population and define fixed conditions in the validation
+ledger before running: calm, steady wind, gust ramp/recovery, opposite directions,
+rotated instances, juvenile/mature forms and all LOD transitions. Require fixed
+roots, attached leaf bases, continuous branch joins, no rubber-like elongation,
+correct shared wind direction, plausible species stiffness, stable shading and
+no animated-bounds disappearance. Review motion recordings independently; still
+images cannot qualify wind. Compare wind off/on through the unchanged canonical
+figure-eight and include depth/shadow, memory, tail latency and allocation costs.
+No wind animation or performance result is claimed by this research update.
