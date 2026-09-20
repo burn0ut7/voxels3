@@ -31984,3 +31984,131 @@ Original F failure is not erased; both source-identical pairs inform acceptance.
 No stable standing-tail regression reproduced. This accepts the blending delta
 only, not unrelated pending water/grass/fade work. Task-only commit/push follows
 source/index review. Gameplay IDs, world generation recipe and collision unchanged.
+
+
+### TREE-BLENDER-001/v1 - independent authoring study
+
+Before first review: author in Tools/BlenderTrees/oak_studies.blend, separate
+from shipping assets and the playable world. Blender5.2.2 LTS, MCP protocol7,
+RTX5090, deterministic seeds1701/2803/3907. The first pass is an open-grown oak;
+subsequent woodland and weathered forms must change scaffold architecture, not
+merely scale/yaw. Fixed review views per form: azimuth-55/35/125/215 degrees,
+full-tree orthographic camera at elevation8 degrees,1600x1600; leafless structure
+and foliated silhouettes. Close review covers lower forks/root flare and outer
+leaf-bearing shoots; a common-scale three-form lineup covers distinctness.
+Criteria: zero visually obvious floating branches/leaves or repeated spoke/rack
+patterns; continuously tapered limbs and blended major forks from all four sides;
+recognizable trunk/primary/secondary/twig hierarchy; crown gaps and leaf masses
+supported by visible fine branches; three materially different silhouettes;
+independent APPROVE required for the Blender design stage. Render quality cannot
+claim game integration, LOD, wind, or performance acceptance. No runtime source,
+shipping asset or s&box controls will change in this authoring study, so in-world
+figure-eight validation is not applicable to this stage. Preserve declined drafts
+and review images. Existing branch/runtime acceptance remains open.
+
+### TREE-BLENDER-001/v1 - A01 through C01 review and procedural controls
+
+2026-09-20. Actual native Blender renders. A01 independent DECLINE: narrow leaf sleeves, bare spikes, repeated feather branching, sharp root fins. B02 independent DECLINE: substantially fuller crown in four views, but zigzag bark seams, assembled forks, uniform canopy detail, residual low pointed tip. C01 analytic branch-frame UV mapping removed most zigzag artifacts; independent DECLINE remains for abrupt major forks, bark scale/flow discontinuity, uniform crown and the low exposed pointed ending. Preserve all A/B/C images in ValidationEvidence/BlenderTrees. No runtime assets changed and no game acceptance claim.
+
+User clarified that the generator must support repeatable seeds, directional control and interesting natural forms, then judged the prior shape decent but generic. D01 adds seeded correlated trunk bends, unequal limb vigor/reach, adjustable first-fork height, directional crown bias and 3D limb crooks. Weathered seed3907 is generated through the installed Tree Lab operator. D01 image alone is not acceptance. E01 tests smoother welded junctions, a blend from parent to branch bark coordinates and native Cycles lighting. Lighting differs from earlier Eevee images; do not attribute shading-only differences to geometry.
+
+### TREE-BLENDER-CONTROLS-001/v1 - definition before functional runs
+
+Scope is Blender authoring only, version5.2.2 LTS, native MCP, installed Tree Lab operator. Fixed samples: Weathered3907 and3908, Open_Grown1701, Woodland2803. Default leaf density1.5. Rendered parts must include distinct trunk, branches, fine twigs and leaves. Proxies:9 convex trunk pieces marked blocking/solid_trunk;3 convex nonblocking branch_interaction pieces per primary limb; leaves have no collision. Geometry roles alone do not implement game triggers or slowdown.
+
+Pass criteria: (1) Repeated Generate from Seed with identical settings produces identical SHA256 of vertex coordinates for every visible tree mesh and guide coordinates. (2) Next Seed changes the primary skeleton and leaf/branch geometry. (3) Directional growth changed by120degrees changes the primary skeleton. (4) Moving the final3 controls of guide01 by(+2,-1,+1)m then Rebuild from Edited Guides changes descendant branch/leaf geometry and that limb's collision geometry while preserving its trunk attachment. (5) Rebuild without changes is stable. (6) All proxy meshes are closed convex solids, trunk pieces overlap continuously, semantic roles remain separate, overlays reveal only the current tree's proxies/guides. (7) Three growth habits/seeds retain materially distinct silhouettes at common scale. Strict independent visual APPROVE is required separately; passing controls is not visual acceptance. Capture results and failures without substituting seeds to obtain a pass.
+Z bake verification passed: shape/erosion unchanged, layoutG/B/A identical to O, layoutR equals old coverage or0 for every pixel. Layout SHA256486889943dd2f3e2772ab51a1b594515a313951038107ed1c7727bf5d05112fa. Density evaluation now returns early for zero local coverage before the shape fetch; bounded shape/profile values guarantee this is the same zero-density result as thresholding.
+
+### TREE-BLENDER-001/v1 - D01 through H01 findings
+
+2026-09-20. D01 independent DECLINE: distinctive leaning/off-center silhouette, but parallel sweeping limbs, dense foliage masses, triangular roots. F01 independent DECLINE overall; reviewer accepted shown natural-character silhouette but rejected blade-like major fork, inconsistent bark scale/flow, and raised cut root base. H01 independent DECLINE: same fork and bark defects; central root contact improved but an outer lip remains raised. E/F/H use native Cycles48 samples with RTX5090 OptiX; earlier candidates used Eevee, so shading comparisons are not geometry-only comparisons.
+
+The user then explicitly rejected H01's trunk as too thick and tapering to a point and the branches as too bendy/unrealistic, while acknowledging interesting character. This overrides the earlier limited silhouette approval; H01 is not visually accepted. I01 reduces trunk diameter, derives trunk cross-section from the branch area remaining above each fork, replaces primary sine bends with restrained growth directions and moderate local turns, and extends sub-voxel narrow tips as separate fine geometry. The edited guides are the canonical skeleton for both initial generation and guide rebuilds.
+
+### TREE-BLENDER-CONTROLS-001/v1 - preliminary results and v2 definition
+
+Native installed-operator runs in controls-repeat.json and controls-seeds.json passed identical-seed geometry hashes. The latter also passed Next Seed3907->3908 changes for every rendered part and the primary guides. This establishes only those controls for generator SHA256cff01fc4c97f39397c56bba9c0d0701c76eada4eba8d21e0b7554a220acbc888; remaining controls were not yet checked. These results are preserved, not transferred to changed geometry.
+
+Version2 retains all v1 control criteria and fixed seeds, but incorporates the user's explicit morphology correction. Weathered defaults are now height14,spread1.1,girth1.15,lean7,upward0.4,droop0.45,branch_angle59,character0.65,fork_height0.17,growth_direction-25,crown_bias0.55,branch_density1,leaf_density1.5. Open_Grown1701 and Woodland2803 retain their documented panel defaults. Direction test uses95degrees and restores-25. Guide01 edit remains(+2,-1,+1)m on the last3 controls. Compare repeatability only within the recorded generator revision. High-detail source geometry remains outside game-performance acceptance.
+
+### TREE-BLENDER-001/v1 - I01/J01 and fuller crown revision
+
+I01 independent APPROVE for visible trunk/branch/fork scope in two directions and a close-up: slimmer trunk, restrained woody bends, compact junctions, preserved individuality. Full acceptance remained pending bare structure, other angles, leaves and other seeds. Parent inspection of I01's subsequent bare structure found an over-prominent central tapered tip. J01 routes99.5percent of scaffold cross-sectional area into major limbs rather than retaining8percent in the central tip, leaving a fine apical continuation. Guide data now removes orphan curve datablocks so regenerated guide names remain stable. The initial guide-edit check failed before editing because its exact object-name lookup encountered an old orphan-derived suffix; the rerun used the guide's stored order and the naming leak was repaired.
+
+J01 control results (controls-v2-guides-collision.json, generator SHA256cdd7b5021272527ab575ae8dbe08865804350be58937e956d429be5d4dd6214a): branch/twig/leaf geometry and the edited limb's proxies changed; trunk attachment error0m; repeated edited-guide rebuild identical; all proxies closed and convex; all8 trunk segment joints contain their shared centerline point in both adjacent solids; only the current tree's overlays visible. No engine collision behavior tested.
+
+The user judged the tree better but insufficiently lush, requesting more branches/foliage. K01 keeps the scaffold proportions and directional model while bringing secondary attachments closer along the limbs and changing default branch_density1->1.35 and leaf_density1.5->1.9. This is the requested fuller-growth default, not a claim that the prior sparse crown passed.
+
+### TREE-BLENDER-CONTROLS-001/v3 - definition
+
+Retain v2 scenarios, fixed seeds and criteria. Change only branch_density to1.35 and leaf_density to1.9 for the three presets, as requested by the user. Weathered direction remains-25degrees, Open_Grown and Woodland0degrees. Revalidate repeatability and altered-guide rebuilds against the final source revision. Keep prior failures/results and exact source hashes. Authoring visuals still require independent acceptance.
+
+### TREE-BLENDER-001/v1 - K01 partial visual approvals
+
+2026-09-20. Weathered3907 K01 has4597 generated woody branches and113812 leaves versus J01's3317/66339, approximately38.6percent and71.6percent increases. These are authoring counts, not runtime budgets. The existing strict reviewer APPROVE covers the shown front/back crown and bare structure: lush supported foliage, fine central continuation, slimmer trunk and restrained limbs. A second fresh independent reviewer, without prior findings, also APPROVE for those same three images, with no visible blocker at their render distances. Both explicitly exclude unshown views, close leaf quality, other seeds/forms and game acceptance. Full review coverage and final control runs remain pending.
+
+### TREE-BLENDER-CONTROLS-001/v4 and ROOTS-001/v1 - definition
+
+2026-09-20. User explicitly requested a simple root system growing into the ground. Replace four short buttresses with seeded5–7 structural roots, two underground offshoots each, welded to the trunk and split into a separate Roots render part. Root random stream is independent of crown generation. This changes the fine-crown random sequence once relative to K01; K01 visual approvals are not transferred. Retain v3 preset densities and all other controls/scenario parameters. Add root_spread1 and root_depth1.2m to each preset. Fixed Weathered3907 comparison: repeat exact geometry/guide hashes; NextSeed3908 changes geometry; direction-25->95 changes guides and restoring-25 reproduces baseline. Edit guide order1's last3controls(+2,-1,+1)m, rebuild directly from Edit Mode, retain zero attachment error and identical repeated edited rebuild. Recheck closed/convex proxies, adjacent trunk joint overlap and current-only overlays. Roots are visual geometry; existing solid trunk and nonblocking coarse branch proxies are unchanged in role.
+
+Root pass criteria: every primary path starts inside trunk base;15–21 total root paths; every tip below local soil z=-0.065m by at least0.2m; terminal quartile of every path below soil; finite nonempty separate Roots mesh. Change spread1->1.5 and depth1.2->2.0; root geometry and extent/depth must change while guides, Twigs and Leaves hashes remain identical. Restore defaults and reproduce baseline. Native images must show natural above-ground contact without exposed cut rods and smoothly tapered branching below soil; strict independent reviewer must approve shown roots and revised full-tree appearance. Complete fixed four-angle Weathered visual coverage, bare structure, root/fork/leaf close-ups and three-form common-scale view. Blender authoring validation only; engine collision, LOD, player slowdown and performance remain unverified.
+
+### TREE-BLENDER-ROOTS-001/v1 - L01 observation
+
+Parent inspected native L01: roots connect to trunk and descend underground; crown remains full. DECLINE below-soil diagnostic: root radii below0.035m voxel resolution break into floating flecks. M01 ends welded root geometry at0.05m radius and completes tips with overlapping continuous swept RootTips geometry, analogous to existing narrow twig tips. Criteria unchanged. Independent L01 review remains recorded separately when returned.
+
+### TREE-BLENDER-001/v1 and ROOTS-001/v1 - M01 root approvals
+
+2026-09-20. Independent strict reviewer declined L01 root-detail acceptance for detached fine-tip slivers/dots, while accepting contact/crown. M01 source13a364e14a42a19a147faa3ddfebb067f65719d656a390dc01e11521d953da2f removes sub-voxel tip breakup with continuous RootTips meshes. Both existing strict and fresh independent reviewers APPROVE M01's shown full Weathered3907 tree, contact close-up and below-soil diagnostic: lush uneven supported crown, plausible trunk/limb proportions, continuous root shoulders entering soil without gaps, substantial roots tapering into secondary offshoots. Simple radial roots and buried trunk termination are consistent with requested scope. Approval excludes unseen angles/specimens, mesh topology, terrain conformity, collision and game/export quality.
+
+### TREE-BLENDER-CONTROLS-001/v4 - roots, repeat and guide results
+
+Actual installed Blender0.4.0 operator, generator13a364e14a42a19a147faa3ddfebb067f65719d656a390dc01e11521d953da2f. controls-v4-roots-repeat.json: identical repeat and restored default hashes for all6 visible mesh parts and guides. Root spread1->1.5/depth1.2->2m changes both root parts; guides/Twigs/Leaves remain byte-identical. Large welded Trunk/Branches are retessellated by global voxel remeshing and their vertex hashes change; the growth skeleton is unchanged. Default21 root paths, shallowest tip-0.624838m, terminal-quartile maximum-0.528885m, maximum reach3.285869m, minimumZ-1.325491m. Changed reach4.904731m/minimumZ-2.219778m. Primary origins inside trunk, both root meshes finite/nonempty. All fixed root criteria PASS.
+
+controls-v4-guides-collision.json: guide order1 last3controls edited(+2,-1,+1)m while in Edit Mode; installed Rebuild completes in Object Mode. Branches/Twigs/Leaves and all3 affected limb proxies change; attachment error0m; repeated edited rebuild identical. All30 proxies closed/convex,16vertices/28triangles each; nine blocking trunk solids and21 nonblocking primary-limb interaction proxies. All8 trunk joints have shared center inside both adjacent solids. Only current guide/collision overlays visible. Restored tree from seed afterward. Functional authoring criteria PASS; physics behavior remains unimplemented/unverified in engine.
+
+### TREE-BLENDER-BARK-001/v1 - user rejection and N01 definition
+
+2026-09-20. User rejects M01 bark despite reviewers' earlier scoped approval: stretching, scattered painted-looking colour and flat relief. Native bpy.ops.screen.screenshot captured the actual Blender window to blender-bark-before-ui.png; it confirms tight-fork grain distortion and pale scan patches. Existing tangent normal is connected at0.5strength; no height map or physical relief was present. Prior root/crown/control passes remain bounded to13a364e source; bark acceptance is withdrawn.
+
+N01 uses unchanged CC0 Bark Brown02 by Rob Tuytel from Poly Haven (1x1m scan),4k diffuse and2k OpenGL normal/roughness/16-bitPNGheight downloaded from official file API with MD5 verification, under Tools/BlenderTrees/Textures; URLs/bytes/SHA256 recorded in sources.json. Material saturation0.55/value0.85; remove UV noise warp. Correct square scan aspect using circumference and integrated tapered-limb arc length; narrow parent projection blend to0.45branchradius. Convert child/parent normal samples separately in their actual tangent frames before normalized blending, strength1. Subdivide welded wood once with SIMPLE, sample matched scanned height and displace shared vertices before splitting parts, maximum fullrange0.045m capped by0.18localradius. This gives real Blender geometry relief, including Material Preview; it is not an engine parallax implementation or runtime mesh budget.
+
+Fixed checks: Weathered3907 existing settings/rootdefaults, unchanged lighting/Cycles48/1600x1600, original fork/root/full-tree views plus bark close (centre around lower trunk,2m frame) at two oblique directions and neutral-clay relief view. Pass requires visible grooves/ridges independent of albedo, restrained coherent bark colour, no obvious stretched streaks/blend bands at forks, no open seams/spikes/disconnected displaced parts; natural full silhouette and roots preserved. Native UI screenshot must show actual updated Blender material/geometry. Strict independent review required; inspect displacement extent/finite geometry and repeat generation at final revision. Retain failed candidates and user feedback.
+N01 static preflight before native execution identified remaining fine-sweep stretch, unfiltered height sampling and sampled-point parent inference. Correct all3 before first run: integrated taper-aware V coordinates on Twigs/RootTips, footprint-filtered height mip pyramid with smooth level interpolation, explicit generating-parent IDs on welded sweeps. Face ownership may still expose fork chart transitions; this is retained as an explicit visual gate. Displacement-before-split preserves shared boundary positions/normals; fine swept tips retain normal shading without added physical displacement. No render has occurred for N01 yet.
+
+### TREE-BLENDER-BARK-001/v1 - N01 rejection and O01 definition
+
+N01 generator109f59ccdcc835ad9d6800c2b1230ac73a2f095d106b3d41d0271c12f8bda732 generated338186 welded vertices. Independent DECLINE: recognisable ring-knot/scar motifs repeat vertically and along limbs; tight forks still have combed narrow grain bands. Reviewer found coherent grey-brown colour and stronger apparent relief. Parent agrees with repetition rejection; neutral clay n01-bark-clay establishes only shallow broad relief, insufficiently resolved bark grooves. Height input native0/1/50/99/100percentiles=0/0.08188/0.24657/0.57366/1.
+
+O01 retains fixed scenarios/criteria. Planned changes: deterministic shifted texture patches with smooth transitions, applied identically to colour/roughness/normal/height to break long repeating knot columns without warping grain; seed-derived starting phase. Relax UV distortion locally at welded collars while pinning unaffected surface coordinates. Increase geometric sampling to two SIMPLE subdivisions and maximum full height range0.075m, capped by0.22localradius, centered at0.3; preserve footprint filtering. Matched normal detail remains separate from true geometric height. Validate actual native close/clay/oblique views before retaining; no game performance or shader-parallax claim.
+
+### TREE-BLENDER-BARK-001/v1 - O01 user rejection and P01 definition
+
+2026-09-20. O01 source0aa280115d5e7151965bb931f85fd7cc4df7c3dfe8dddd7a15ec1ff8123c6833. First native operator failed during UV relaxation with BMElem invalid layer key; corrected by obtaining a fresh edit BMesh/deform layer for each UV chart. Successful generation produced1,350,914 welded vertices/1,350,304 polygons. Native o01 close/fork/oblique/clay images exist; clay shows actual ridges. User says textures improved but rejects excessive blemishes. O01 has no independent visual approval. Changing scar placement did not resolve excessive scars in the scan itself.
+
+P01 replaces the main scan with unchanged Poly Haven Bark Willow matched maps (1m square), a visibly cleaner, low-knot source. No extra scar stamps: retain sparse wear inherent to the source. Saturation0.7/value1; current matched shader/height patch sampling, geometry relief and collar mapping retained. Fixed Weathered3907 parameters, cameras, lighting and bark criteria unchanged. Additional acceptance: intact bark should dominate; no dense recurring ring knots, large white blotches or peppered scars. Preserve minor natural wear and groove relief. Strict independent review of close, oblique, fork and full-tree views remains required. Record source hashes/provenance and actual installed-operator result.
+P01 source height median0.42681 (1/99percentiles0.15937/0.81308); center geometric displacement at0.43 to avoid inflating the trunk. Native source inspection only, before generation.
+
+### TREE-BLENDER-BARK-001/v1 - P01 rejection and Q01 definition
+
+P01 source296f34b5824947df635e5c494253acefce706ba69c2785797c61fd1f367a6e23. Installed Generate operator FINISHED; repeat coordinates and UV hashes identical for all6parts, guides identical, all finite (controls-v5-bark-repeat.json). Both independent reviewers DECLINE rendered bark: prominent knots reduced, but material reads charcoal-dark; broad diagonal source ridges and swollen corrugation overwhelm lengthwise grain; fork has blurred broad bands. Both retain acceptance of lush crown/proportions/root contact in shown views.
+
+Q01 changes to the cleaner, finer lengthwise grain of Japanese Camphor Bark, unchanged matched Poly Haven maps. Use actual1.8m-square source dimension to choose integer circumference repeats; all matching maps and tapered arc mapping share that chart. Saturation0.55/value0.85. Reduce geometric relief fullrange0.075->0.045m, capped by0.15localradius, retaining fine normal detail. No discrete scar overlays. Fixed Weathered3907 controls/cameras/lighting and strict acceptance criteria unchanged; minor organic wear should remain with intact bark dominant. This is an art material choice rather than botanical identification. Record height midpoint after native source inspection before generation.
+
+### TREE-BLENDER-BARK-001/v1 - Q01 visual acceptance
+
+2026-09-20. Generator7cccd76a61d445a1b919bdbe8ac2a199d4918b94949e864c68530062861f4adb; native installed operator FINISHED. Both strict and fresh independent reviewers APPROVE the six q01 Weathered3907 images: fine predominantly lengthwise fissures, restrained gray-brown tone, minor wear with intact bark dominant, no conspicuous recurring scars, blocking seams or smeared bands. Grain follows limbs through collars; neutral clay shows shallow actual relief without P01 swollen corrugation. Lush supported crown, credible proportions and ground-contact roots remain acceptable. Acceptance is limited to these Blender views/specimen. Other presets/seed and final source repeat checks follow; no engine/export/performance acceptance.
+
+M01 controls-v4-direction-seeds.json additionally records direction-25->95 changed guides, restoring-25 reproduced all mesh/guide hashes, NextSeed3907->3908 changed all6parts/guides and set seed3908. Those control results remain tied to13a364e geometry revision. Q01 bark changes require new geometry/UV repeat and variant checks; earlier guide editing/root control logic has not changed.
+
+### TREE-BLENDER-001/v1 - Q01 variants and repeat results
+
+Native installed operators generated Open_Grown1701 (6214finebranches,153494leaves), Woodland2803 (6658finebranches,164934leaves), Weathered3907 (5241finebranches,129844leaves), all final7cccd76 source. Strict reviewer APPROVE Open-grown front/back and four-direction Weathered coverage; lush supported crowns, credible restrained limbs, consistent bark, contact without gaps. Woodland front/back also APPROVE; tall clear stem and compact irregular lush crown. Underground root diagnostic APPROVE within simple buried-root scope: attached tapered branching with no detached flecks. A minor rear-left root collar transition remains visible underground; not approved as hero root close-up naturalism.
+
+Native q01-three-forms at54m-wide framing clipped far-right Weathered tips; preserve as framing failure. Wider62m frame with identical specimens, positions(-17,0,17)m and lighting will replace complete-silhouette coverage. controls-v6-bark-repeat.json: final7cccd76 source, installed Generate FINISHED, all6meshpart coordinate/UV hashes and guides byte-identical, all coordinates/UVs finite. Next-seed check and packed-file save follow.
+
+### TREE-BLENDER-001/v1 - Q01 final saved authoring result
+
+2026-09-20. Strict reviewer APPROVE q01-three-forms-wide.png: all3crowns/bases fully framed with margin, distinct growth habits. APPROVE q01-next-seed.png and q01-next-seed-bark.png:3908 redistributes crown volumes and lower foliage while retaining plausible supported lushness and restrained bends; fine gray-brown fissured bark has sparse wear without conspicuous scars/seams.
+
+controls-v6-next-seed.json: final7cccd76 source, installed NextSeed operator FINISHED,3907->3908 changes coordinate hashes for all6renderparts and guide hash; resulting coordinates/UVs finite. Source and installed addon compile; installed addon byte-identical to repository0.4.0. Final actual Blender window screenshots blender-bark-final-ui.png and blender-tree-final-ui.png show Material Preview with Tree Lab panel. Native save() packed oak_studies.blend (836,907,989bytes) and recipes.json; all four saved collections Open_Grown1701, Woodland2803, Weathered3907/3908 record the same7cccd76 generator. Guides/proxies hidden, Weathered3907 selected as current panel tree, full-tree camera and visible interactive studio restored. Source/material/normal/height changes are in Blender authoring only. No game code/assets were changed; game collision/slowdown, export/LOD and engine performance remain outside acceptance. Historical rejected images and source-map provenance retained. Unused scan previews moved to task scratch rather than shipped assets.
