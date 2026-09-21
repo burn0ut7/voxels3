@@ -97,8 +97,6 @@
 
 	private void ToggleFlight()
 	{
-		if ( !_flight.IsValid() || !_flight.CanAdmin ) return;
-		if ( _flight.Flying && !CanStandAt( _flight.Controller.WorldPosition ) ) return;
 		_flight.Flying = !_flight.Flying;
 		_status = _flight.Flying ? "Noclip enabled. Close the menu to fly." : "Noclip disabled.";
 	}
