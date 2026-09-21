@@ -1,0 +1,120 @@
+{
+  "scenario": "TREE-GROWTH-006/v1",
+  "variants": [
+    {
+      "settings": {
+        "height": 16.0,
+        "spread": 1.0,
+        "girth": 1.0,
+        "lean": 0.0,
+        "upward": 0.550000011920929,
+        "droop": 0.3499999940395355,
+        "branch_density": 1.350000023841858,
+        "leaf_density": 1.899999976158142,
+        "branch_angle": 57.0,
+        "character": 0.44999998807907104,
+        "fork_height": 0.23999999463558197,
+        "growth_direction": 0.0,
+        "crown_bias": 0.25,
+        "root_spread": 1.0,
+        "root_depth": 1.2000000476837158,
+        "age": 18,
+        "competition": 0.0,
+        "light_response": 0.4000000059604645,
+        "resource": 1.0,
+        "species": "Oak",
+        "stage": "Mature",
+        "form": "Open_Grown",
+        "seed": 271828
+      },
+      "status": [
+        "FINISHED"
+      ],
+      "seconds": 0.8430957999953534,
+      "nodes": 2304,
+      "sha256": "cf90da48081d6f68ca1822ed242c59d86a2cb1e1d21e30b40e0482fa0e5eefd6",
+      "geometry_changed": true
+    },
+    {
+      "settings": {
+        "height": 16.0,
+        "spread": 1.0,
+        "girth": 1.0,
+        "lean": 0.0,
+        "upward": 0.550000011920929,
+        "droop": 0.3499999940395355,
+        "branch_density": 1.350000023841858,
+        "leaf_density": 1.899999976158142,
+        "branch_angle": 57.0,
+        "character": 0.44999998807907104,
+        "fork_height": 0.23999999463558197,
+        "growth_direction": 0.0,
+        "crown_bias": 0.25,
+        "root_spread": 1.0,
+        "root_depth": 1.2000000476837158,
+        "age": 18,
+        "competition": 0.6499999761581421,
+        "light_response": 0.4000000059604645,
+        "resource": 1.0,
+        "species": "Oak",
+        "stage": "Mature",
+        "form": "Open_Grown",
+        "seed": 271829
+      },
+      "status": [
+        "FINISHED"
+      ],
+      "seconds": 0.31979920002049766,
+      "nodes": 1104,
+      "sha256": "b0eeeac817e906c7be29f2911a3d6f53dd4d03de8ce9189e0ed09f10eb92f79c",
+      "geometry_changed": true
+    }
+  ],
+  "save": [
+    "FINISHED"
+  ],
+  "load": [
+    "FINISHED"
+  ],
+  "same_hash": true,
+  "corrupt_result": "Error: Growth graph checksum does not match its contents\n",
+  "corrupt_preserved": true,
+  "unsupported_export": "Error: The installed game exporter does not support connected branch surfaces yet; Blender source is preserved\n",
+  "cancel_growth_entry": [
+    "RUNNING_MODAL"
+  ],
+  "source_sha256": {
+    "growth.py": "f66c812bead3bf77413094612c299e02aedaed9b97f9729f1d63677cc3a2d259",
+    "surface.py": "7bf9316919c3fcef585b169ccbcea947438e7830dc0a3bfcde77b408f7867a9f",
+    "tree_lab_addon.py": "b8bf287d27af0992fcbe780b31251a123bbec735ec5e51df8ee2c30912dce79d",
+    "build_oak_studies.py": "31235aa8eb3ef652cb5e2892fd0eca891d8569f39b146b0e2a9ed6ffa9b01e18"
+  },
+  "growth_cancelled": {
+    "busy": false,
+    "message": "Growth cancelled; previous specimen retained",
+    "source_preserved": true
+  },
+  "mesh_cancel_phase": "Simplifying coplanar branch panels",
+  "mesh_cancellation": {
+    "before": {
+      "pointer": 2587769492872,
+      "geometry_sha256": "f6e5a74d160af9d8ce17c558ab86d95586b9b44889c9c5e0269d497fa1316633",
+      "graph_sha256": "b7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43"
+    },
+    "after": {
+      "pointer": 2587769492872,
+      "geometry_sha256": "f6e5a74d160af9d8ce17c558ab86d95586b9b44889c9c5e0269d497fa1316633",
+      "graph_sha256": "b7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43"
+    },
+    "preserved": true,
+    "message": "Mesh build cancelled; previous specimen retained",
+    "pending": {
+      "objects": [],
+      "collections": [],
+      "meshes": [],
+      "curves": [],
+      "materials": [],
+      "node_groups": []
+    }
+  }
+}

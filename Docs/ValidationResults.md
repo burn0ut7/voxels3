@@ -32353,3 +32353,386 @@ Python definitions were loaded in memory only. In-world figure-eight, wind,
 leaves, LODs and visual comparison: NOT RUN, outside this research-only check.
 The existing production forest's pending acceptance is unchanged. See
 [the integration assessment](Research/ModularTreeEvaluation.md) for remaining gates.
+
+## TREE-GROWTH-001/v1 — Shared authoring growth system
+
+Defined 2026-09-21 before the first solver/operator run. Visible Blender 5.2.2
+LTS/Python 3.13.13/Windows x64. This qualifies authoring behavior only: no
+generated game asset installation, renderer change or forest performance claim.
+The existing world and accepted/failed figure-eight history remain unchanged.
+
+Use the actual `tree_lab.grow` operator, seed 271828, Open_Grown profile, all
+species preset growth controls with potential height fixed at 16m, and growth
+ages 6, 18 and 30 seasons for Oak, Ash, Birch and Spruce. Reset the species
+preset before each species; change only age between its runs. Repeat age 18
+once per species. Separately run Oak age 18 with competition 0 (all other
+controls identical), and Oak age 18 seed 271829. Preserve all outcomes.
+
+Pass criteria: all 18 jobs finish without exceptions or partial graph publication;
+each graph has one root, finite positive radii and parent-before-child topology;
+all axes attach to their recorded parent node; no graph exceeds 30,000 nodes;
+same-recipe repeats match graph hashes; the age-6 nodes retain their IDs, parent,
+axis, birth season and positions at 18 and 30, with no shrinking radii; changing
+seed changes geometry; canopy competition changes the grown geometry and yields
+at least one exposure below 0.99 in the normal age-18 oak. Record node/axis
+counts, elapsed time, root radius, height, exposure range and stopped/blocked buds.
+Target at most 10 seconds per complete age-30 preview; this is an authoring
+responsiveness target, not a game frame-time budget.
+
+Save and reload the age-18 oak through `tree_lab.growth_file`; require exact graph
+hash preservation. Reject a changed serialized graph checksum before scene
+publication. Exercise cancellation through the operator's real cancellation
+method after starting its job: no completed graph may replace the prior preview,
+the running flag must clear. Native viewport review: inspect the age-18 oak and
+spruce from two distinct angles; record silhouette findings separately from
+data checks, without claiming botanical or production asset acceptance.
+
+Original Blender source libraries, protected collection geometry and game asset
+files must remain unchanged. Full source-geometry/export compatibility is a
+separate gate; no mesh import/wind/LOD acceptance follows from graph checks.
+
+TREE-GROWTH-002/v1 — Source adapter (defined before first run, 2026-09-21).
+Use the completed TREE-GROWTH-001 age-18 Oak, seed 271828, Open_Grown,
+Mature material stage, all fixed controls unchanged. Invoke
+`tree_lab.generate` once, deriving source geometry from that stored graph.
+Require FINISHED, identical stored graph hash, source_ready, nonempty finite
+wood/twigs/leaves/root geometry, at least two primary guides, and source sweep
+ancestry accepted by the existing TreeMotion consumer. Record duration, counts,
+voxel size and motion identities. Inspect the resulting source in the native
+viewport. Do not install it, overwrite libraries, or infer full export/game
+acceptance. A failure remains in the ledger even if repaired and rerun.
+
+
+TREE-GROWTH-001/v1 results, visible Blender 5.2.2/Python 3.13.13:
+
+- Initial run: the 16 species/age/repeat jobs completed and matched their own
+  repeated hashes and age-6 prefixes. Visual inspection rejected excessive
+  trunk thickening: age-30 oak root radius was 1.690m at 12.011m height. An earlier
+  preview also exposed overlapping hidden construction wood; display filtering
+  was corrected. Preserve [initial measurements](ValidationEvidence/TreeGrowth/matrix-v1.json).
+- Replaced retrospective age-times-canopy thickening with one bounded growth
+  ring per season plus pipe support. Repeated the unchanged matrix: all 16 jobs
+  completed, all four repeated hashes matched, and each age-6 developmental
+  prefix retained position/ancestry/birth season with nonshrinking radii.
+  [Corrected matrix](ValidationEvidence/TreeGrowth/matrix-v1-rings.json).
+- Age-30 durations: oak 5.425s, ash 7.659s, birch 3.862s, spruce 5.269s; all below
+  the 10s preview target. Node/axis counts respectively: 15,914/3,729;
+  16,923/5,242; 10,896/2,373; 12,594/7,917. Root radii were 0.098/0.098/0.072/0.097m.
+  Age-18 previews took 0.250–0.958s on the first corrected runs.
+- Both additional fixed oak variants completed and changed node positions.
+  Removing canopy competition grew 2,304 nodes versus 1,489 normally; the normal
+  oak had minimum exposure 0.04061. Seed 271829 produced 1,369 nodes.
+- Real recipe save/load finished and preserved the graph checksum. Editing a
+  saved radius without updating its checksum was rejected before replacing
+  the preview. Actual INVOKE_DEFAULT growth followed by the Cancel Growth
+  operator exercised the modal cancellation path: the running flag cleared,
+  the cancellation message appeared and the previous graph stayed identical.
+  [Persistence, variants and cancellation](ValidationEvidence/TreeGrowth/roundtrip-v1.json).
+- Native viewport inspection of oak/spruce age 18 used viewing directions
+  (1,-2,0.5) and (-2,1,0.7), with no camera/desktop takeover. Oak has competing
+  upward leaders and an irregular spreading crown; spruce keeps a continuous
+  leader and layered laterals. Internodes remain visibly angular/straight and
+  the spruce contains dense short stopped shoots. This is an initial graph
+  preview, not botanical fidelity or visual superiority acceptance. No leaves
+  were displayed in these branch-only preview checks.
+- The final graph validator also accepted the 12 saved production graphs after
+  adding input, axis coverage and checksum boundary checks. Python syntax checks
+  passed. The matrix ran in the existing dirty authoring workspace; exact source
+  hashes are recorded, and pre-existing bark/leaf/root art changes are not newly
+  qualified by this work.
+- Original library hashes match before/after: tree_library.blend
+  `226C9F55A827D5CAFD1C33A8D19FE944FB9A5E9063D5D377974B254D3309B383`,
+  3,301,980,827 bytes; oak_studies.blend
+  `758CA170E69235B8BF59DFC37857B9ACBC277837C8AC3EF01CBEA6EB1B7FACFA`,
+  836,907,989 bytes. No game assets were installed. The open lightweight scene
+  contained no collections flagged protected_reference, so no nonempty protected
+  collection fingerprint comparison is claimed.
+
+Result: PASS for the 18 fixed graph jobs, determinism, developmental continuity,
+response to light, preview timing and persistence/cancellation criteria. Species
+realism, broad age/seed coverage and full game/export qualification remain open.
+In-world figure-eight: NOT RUN; this changes offline authoring only.
+
+TREE-GROWTH-002/v1 first attempts:
+
+1. Source construction failed after 0.229s: the old root cutoff formula raised
+   a complex-number comparison error for grown sapling dimensions. Clamped the
+   cutoff and kept root tip radius below its parent radius.
+   [Failure](ValidationEvidence/TreeGrowth/source-v1.json).
+2. Retrying the same graph reached detailed wood splitting, but the native
+   authoring connection timed out and Blender was nonresponsive during the
+   large mesh operation. Read-only stack sampling showed split_wood_parts, with
+   corner indices above 67 million and peak observed working set
+   at least 22.00GiB. This attempt is rejected for authoring cost, regardless of
+   eventual geometry completion. It did not change growth data or original
+   libraries. Subsequent code limits welded wood to 250,000 faces before one
+   subdivision step, and routes small graph axes through the existing swept-twig
+   representation instead of expanding all of them into detailed welded wood.
+
+   Subsequent process observation reached Mesh.from_pydata with 57,330,597,888
+   private bytes. The 32GB host had approximately 138MB physical memory free.
+   Restart approval was requested because other unsaved editor work might be
+   lost; no process termination was performed without it.
+   [Timeout and resource evidence](ValidationEvidence/TreeGrowth/source-v1-timeout.json).
+   The bounded mesh revision passes syntax checks but its native rerun is pending
+   recovery of the visible editor. Full source/export qualification: INCOMPLETE.
+
+
+TREE-GROWTH-003/v1 — Complete authoring mesh matrix, defined 2026-09-21 before
+first run. Visible Blender 5.2.2/Python 3.13.13 on the recovered 32GB Windows host.
+Use the exact twelve saved corrected TREE-GROWTH-001 graphs: each of Oak, Ash,
+Birch and Spruce at 6, 18 and 30 seasons, seed 271828, Open_Grown, height16,
+Mature material stage and all recorded species-preset controls unchanged.
+Restore the graph through the production publisher and select it, then invoke
+`tree_lab.generate` through INVOKE_DEFAULT. No game assets are installed.
+
+Require all twelve builds finish, preserve their exact graph checksum, and
+publish finite nonempty wood/fine/root/foliage data with valid face indices and
+UVs. Source wood must be within 250,000 welded faces before one subdivision and
+1,000,000 detailed faces after it; do not exceed 8GiB private process memory.
+Record times; target at most 120s per complete mesh. For >=2 primary axes, the
+existing TreeMotion consumer must resolve every sweep to a primary with finite
+weights. Truly single-axis stems are valid Blender meshes but outside that
+adapter's current limits. Compare native silhouettes for all four species at18
+and ages6/30 for oak from two angles; no botanical calibration claim.
+
+For transactional cancellation, begin a rebuild of the completed oak18 through
+INVOKE_DEFAULT; cancel after temporary source IDs appear, using the actual
+Cancel Build operator. Require the prior source collection pointer and geometry
+counts/hash to remain unchanged, zero temporary Build_ IDs and a cleared busy
+flag. Also exercise changed-growth-control rejection before source mutation.
+Gallery/Current must restore all preview/source object positions exactly.
+Preserve all failures; fixed inputs and budgets cannot be tuned to obtain a pass.
+
+TREE-GROWTH-002/v1 recovered retry: PASS. The same oak18 graph built in
+51.847s with 997,920 detailed wood faces. Graph identity and finite source data
+passed, and the existing motion reader resolved primary IDs 0-4. Observed
+private memory was approximately 3.29GiB. See source-v1-budget.json and
+source-v1-contract.json in ValidationEvidence/TreeGrowth.
+
+TREE-GROWTH-003/v1 initial mesh runs: oak6 passed in 14.0s, 77,658 welded
+faces and 310,632 detailed faces. Native rendered views are oak6-a.png and
+oak6-b.png. The oak30 attempt failed the 250,000 welded-face safety cap and
+cleaned all temporary collections; preserved in mesh-failures-v1.json. This
+exposed resolution planning based only on trunk radius. The repaired adapter
+plans voxel detail from summed branch surface area plus a root reserve before
+allocation; fine axes remain swept geometry and the fixed growth graph is
+unchanged. Safety caps and fixed scenario inputs are unchanged.
+
+TREE-GROWTH-004/v1 boundary workflow, defined before first run: visible
+Blender 5.2.2, Oak, Mature material preset, Open_Grown, seed271828, height16,
+other oak preset controls unchanged. Simulate 1 season through the real growth
+operator and build source geometry; require a finite nonempty single-axis stem,
+foliage and root tips, and a clear rejection from the current wind export guard.
+Then request 80 seasons on the same recipe; the explicit 30,000-node budget
+should reject oversized growth without replacing either completed age1 graph
+or source. Require busy flag clear and a useful budget-error message. Restore
+the completed specimen and its controls afterward. No game assets installed.
+
+TREE-GROWTH-003/v1 visual review protocol: EEVEE native PNG renders at
+1100x1100, azimuths -55 and125 degrees, elevation8, graph-bounds framing.
+Oak6 uses fixed center(0,0,1.5), orthographic scale4.4 in both old and repaired
+mesher views. No image retouching. Spruce uses full rendered needle instances;
+its interactive viewport intentionally shows fewer needles. Each growth graph
+keeps its recorded checksum. Empty welded Roots or Branches subsets are valid
+when their complete geometry is carried in RootTips or swept Twigs; require
+nonempty wood, fine, roots and foliage families as specified above.
+
+TREE-GROWTH-003/v1 final results, same visible Blender5.2.2 host and fixed inputs:
+
+| Species | 6 seasons | 18 seasons | 30 seasons |
+| --- | ---: | ---: | ---: |
+| Oak | 5.789s | 9.169s | 8.119s |
+| Ash | 5.017s | 13.531s | 21.177s |
+| Birch | 7.543s | 10.113s | 24.116s |
+| Spruce | 8.755s | 20.625s | 27.906s |
+
+- PASS: all twelve completed with their original graph checksums; finite mesh
+  coordinates, valid indices and finite UVs. Nonempty wood, fine, root and foliage
+  families were verified. Spruce retains finite needle instance transforms.
+  Maximum welded/detailed wood faces: 117,386/469,544, below 250,000/1,000,000.
+  [Full mesh matrix](ValidationEvidence/TreeGrowth/mesh-matrix-v1.json).
+- PASS: all eleven sources with at least two structural axes resolve through
+  the existing TreeMotion consumer with finite weights and valid primary IDs.
+  The six-season ash has one primary axis and is a valid Blender source outside
+  that motion adapter's current range. This does not validate LOD export or wind.
+- Peak sampled private process memory during TREE-GROWTH-003, ending at the
+  final gallery/cancellation check: 6.630GiB, below8GiB, across
+  893 approximately one-second samples. Shorter peaks may be missed. Builds
+  retired the preceding matrix source; cancellation retained the previous source.
+  [Memory samples](ValidationEvidence/TreeGrowth/mesh-memory-v1.jsonl),
+  [acceptance summary](ValidationEvidence/TreeGrowth/acceptance-v1.json).
+- PASS: final native rebuild cancellation after temporary branch surfaces appeared
+  preserved the previous collection pointer, graph SHA256 and mesh geometry/UV
+  SHA256; no temporary IDs remained and the busy flag cleared. Gallery moved46
+  objects across13 specimens and Current restored every position exactly, without
+  leftover gallery transforms. The earlier cancellation at bark sampling and
+  changed-growth-control rejection are also retained.
+  [Final workflow](ValidationEvidence/TreeGrowth/mesh-final-workflow-v1.json),
+  [earlier transaction](ValidationEvidence/TreeGrowth/mesh-transaction-v1.json).
+- Native two-angle renders were inspected for all four species at18 and oak at6/30.
+  Oak develops an irregular spreading crown, ash has more upward branching with
+  compound foliage, birch has sparse drooping laterals, and spruce retains a
+  leader with repeated lateral branches. The spruce needle close-up confirms
+  full three-dimensional foliage. Long straight internodes, angular joins and
+  sparse foliage remain calibration limits; no botanical-fidelity or comparative
+  superiority acceptance is claimed.
+  [Visual observations and image filenames](ValidationEvidence/TreeGrowth/visual-review-v1.json).
+
+Result: PASS for the implemented Blender growth-to-mesh authoring contract and
+fixed resource/workflow criteria. Species realism and full game/LOD/wind/leaf-view
+qualification remain open. No game assets were installed; canonical figure-eight
+NOT RUN because runtime behavior did not change. Original library hashes remain
+identical to TREE-GROWTH-001. Validation used the existing dirty authoring workspace;
+pre-existing art edits remain separate from this task's commit. Per-run code hashes
+qualify the results. A separate authoring workspace was saved under
+`.codex/tree-growth/authoring-workspace.blend`; original libraries were not saved.
+
+TREE-GROWTH-004/v1: PASS. One-season oak produced two nodes on one axis, then a
+finite source mesh with foliage and root tips in1.688s. The current export guard
+rejected its one-axis motion data before export. The same recipe at80 seasons
+hit the explicit30,000-node cap, cleared the busy flag and reported the reason;
+no age80 preview was published. Both the previous age1 preview checksum and the
+source geometry/UV checksum remained identical. Selecting oak18 restored age18
+controls and a ready status. [Boundary evidence](ValidationEvidence/TreeGrowth/boundary-v1.json).
+
+Later authoring-view observation: after both fixed source and boundary scenarios
+finished, the native1600px material-viewport screenshot raised sampled private
+allocation to 8.300GiB (working set2.281GiB). Thus the full observation
+window does not meet an8GiB whole-editor limit. This was outside the completed
+mesh scenario interval and is preserved separately in acceptance-v1.json.
+No claim that all editor views remain below8GiB is made. The visible editor
+remained responsive. Sampling had a maximum6s gap during native operations.
+
+TREE-GROWTH-005/v1 — Branch continuity and foliage renewal, defined before repair
+runs following the user's close-up report. Reuse the exact saved oak18 graph
+b7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43, seed271828,
+Mature/Open_Grown, and its unchanged controls/leaf density. Preserve the native
+inspection pose recorded in junction-before-v1.json and the -55/125-degree full
+views. The current source has9,412 leaves; its resampled structural tails miss
+60 child attachment centers by up to8.124mm (up to49% of local radius), and use
+an unrelated default taper. Native close-up shows exposed caps and awkward joins.
+
+Require source tails to retain every original graph attachment/control point and
+its radius (within1e-5m, excluding deliberate internal collar geometry), with
+child collars closing inside the parent rather than exposing a cut cap. Require
+at least twice the prior oak foliage at the same density through renewal on
+recent established living shoots, no foliage on dead nodes, and no relocation
+of the fixed graph. Native close-ups/full views must show attached limbs and
+continuous wood-to-twig transitions. Retain finite mesh/UV and existing face/time
+budgets. Changed light/foliage rules also require repeating the original001 fixed
+growth checks and representative source checks with new solver hashes; retain
+all preceding results. Do not change the input controls to obtain a pass.
+
+TREE-GROWTH-005 first repair: same graph and controls produced21,858 leaves
+(2.322x previous), retaining original tail positions and radius profiles. Native
+close-up still showed pinched connections at successor axes. Projection isolated
+node7, axis2, as a stopped parent with a living successor: it ends at a flat
+cap while the successor collar starts there. A rounded terminal wood volume is
+required around the graph node to enclose that collar. This intermediate visual
+result is not accepted; continuing the same fixed case.
+
+TREE-GROWTH-005 reviewer rejection: the rounded-cap repair still reads as inserted
+sockets. Independent reviewer inspected the live viewport and source, identifying
+visible rims, straight spans and a fixed 0.10m collar-smoothing cutoff above most
+current branch sizes. Subsequent acceptance requires original and two oblique
+views, including foliage hidden, showing gradual curvature without socket rims,
+abrupt necks or dark material rings. Preserve the same graph/controls. Curved
+derived spans must pass through graph nodes and carry their foliage; single-child
+successors must continue the parent radius, without a rounded cap at the join.
+
+TREE-GROWTH-005 connected-surface first run: FAIL. Native Skin with dense
+quarter-span supports produced 258,395 faces in34.4s, but visual inspection
+showed separated segments. Readback found44 boundary and148 non-manifold edges.
+This is not accepted. Testing corrected support spacing and loose fork vertices
+on the identical graph, retaining the failure here.
+
+TREE-GROWTH-005 connected-surface second run: FAIL. Wider supports and loose
+forks completed in25.8s with181,723 faces, but342 boundary and514 non-manifold
+edges remained. Native view showed stretched flanges. The next same-graph run
+uses canonical graph spacing without loose forks; neither failure is accepted.
+
+TREE-GROWTH-005 third Skin run: FAIL despite zero boundary/non-manifold edges.
+The934,936-face result took118.9s and contained89 closed disconnected components.
+Skin is rejected for this graph. A convex collar-merging attempt then exceeded
+its128-node local limit and was correctly cancelled before publication.
+
+TREE-GROWTH-006/v1 — Shared collar surface, defined before cross-species runs.
+Retain005 fixed graph/controls, foliage target and reviewer views. Replace
+independent capped branches with shared uncapped port rings and local convex
+collars, with one smooth subdivision. Require exactly one connected wood
+component, zero boundary/non-manifold edges, finite coordinates/UVs and no
+visible socket rims from three angles. Final wood remains below1,000,000 faces
+and source build below120s. The old250,000 voxel-control-face criterion does
+not describe this topology; use predicted post-subdivision faces instead.
+Record limited-clearance ports and any local thickness tradeoff. Foliage must
+attach to the resulting wood, including compound petioles. Preserve graph
+checksum, controls, leaf renewal and transactional cancellation. Re-run001
+growth matrix and representative species/age sources on the final code.
+First shared-port fixed oak:12.862s,132,120 faces,1,489 collars,23 local
+clearance-limited ports. Pre-publication connectivity passed; final readback
+found0 boundary and0 non-manifold edges. Visual review remains in progress.
+
+TREE-GROWTH-006 oak30 first run: source publication correctly refused because
+its predicted smoothed wood exceeded1,000,000 faces. Preserve this failure.
+The repair dissolves only coplanar hull diagonals before subdivision, retaining
+the graph and silhouette; the same workload and face limit are unchanged.
+Spruce full-view inspection also found sparse needle coverage; its viewport
+previously hid23/24 spray instances. Removing that hidden preview thinning
+is part of the foliage correction, subject to visible-editor memory checks.
+
+TREE-GROWTH-006 oak30 coplanar-dissolve retry: FAIL, still over the unchanged
+1,000,000 final-face limit. The next repair removes redundant midpoint rings
+on straight tapered spans, retaining them where a crowded collar narrows locally.
+It does not remove growth nodes, branches, or foliage.
+
+TREE-GROWTH-006 optimized large-source checks: oak30 completed in89.220s
+with810,426 faces, ash30 in90.087s with802,218, and birch30 in76.548s
+with548,392. All retained their graph checksum, one closed component and
+finite geometry/UVs. See connected-matrix-v1.json for exact source hashes.
+Spruce18 rendered455,488 needles across7,117 native instances; disabling
+viewport thinning did not change the sparse full-view silhouette. A native
+close-up confirms attached needles along shoots. Evergreen crown calibration
+remains a profile limitation, not a missing-instance claim.
+The independent source review required rechecking final oak/root captures
+because coplanar dissolution and midpoint removal affect smoothed taper.
+
+TREE-GROWTH-006 memory investigation: full observation reached26.825GiB
+private allocation during large-spruce meshing, above the earlier8GiB target.
+Finer native progress sampling (spruce-phase-v2.jsonl) places the spike in
+Rounding connected branch surface, not needle display or bark projection.
+Blender Subsurf default use_limit_surface=True evaluates infinite-limit
+positions. Disable that optional projection while retaining one finite
+Catmull-Clark subdivision, the same graph, foliage and face count. Recheck
+memory and final visual acceptance; retain the high-memory runs as failures.
+
+TREE-GROWTH-006 finite-surface retry: Spruce30 completed in78.867s,
+942,720 wood faces and1,006,656 needles, one component, zero boundary or
+non-manifold edges, original graph hash, finite coordinates/UVs and3.34um
+maximum measured foliage-anchor error. Full-run sampled private peak was
+14,897,569,792bytes (13.875GiB), working peak6,757,212,160bytes (6.293GiB).
+The8GiB private target remains FAIL/open. The instrumented infinite-limit
+attempt reached29,236,326,400 private bytes (27.228GiB) and was intentionally
+cancelled after the peak stage. These cumulative-session observations are not
+a clean-process baseline. See finite-memory-v1.json for intervals/sample counts.
+
+TREE-GROWTH-006 final oak18 fixed-graph result:8.693s,110,448 faces,
+21,858 leaves (2.322x original9,412), one closed wood component including
+roots, zero boundary/non-manifold edges, maximum measured foliage-anchor
+distance4.31um. Three bare-angle native captures plus foliage/root captures
+were independently reviewed: canopy socket/disconnection repair PASS, no
+actionable canopy regression. Root narrow waists, bark bands and straight
+internodes remain appearance limitations. Complete botanical/resource acceptance
+is not claimed. Source editor restored to the original inspection pose.
+
+Final native workflow: both original001 variation recipes change geometry,
+save/load retains checksum, corrupt checksum is rejected preserving preview,
+and obsolete game exporter is rejected before writing output. Modal growth
+cancellation preserves the source. Mesh cancellation during the new smoothing
+preparation stages preserves the previous geometry/UV checksum and collection
+identity and leaves no temporary objects/collections/meshes/curves/materials/
+node groups. See connected-workflow-v1.json. All twelve shared-collar cases
+passed topology before the finite-mode optimization; final finite-mode reruns
+cover fixed oak18, ash18, birch18 and the largest spruce30. No runtime code or
+installed game assets changed; the figure-eight was not run for this offline
+authoring change. Original blend library hashes remain unchanged.

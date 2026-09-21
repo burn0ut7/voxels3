@@ -1,0 +1,13 @@
+{
+  "scenario": "TREE-GROWTH-002/v1",
+  "attempt": "root cutoff repair before mesh-budget changes",
+  "result": "rejected; native connection timed out; Blender still executing source conversion",
+  "stage_observed": "fuse_wood -> split_wood_parts -> Geometry.object -> Mesh.from_pydata",
+  "largest_observed_corner_index": 67532642,
+  "observed_working_set_gib": 22.0,
+  "observed_private_bytes": 57330597888,
+  "graph_sha256": "b7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43",
+  "parameters_reference": "matrix-v1-rings.json: Oak age18, first run",
+  "restart": "explicit user approval requested; no restart or process termination performed",
+  "subsequent_code": "250000 welded-face cap, one subdivision, structural wood threshold three voxels; not yet natively revalidated"
+}

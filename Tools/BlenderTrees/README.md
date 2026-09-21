@@ -1,138 +1,120 @@
-# Blender Tree Lab
+# s&box Tree Growth
 
-Procedural tree authoring in Blender 5.2.2. Four species share one seeded
-skeleton-to-mesh pipeline: English oak, common ash, Norway spruce (evergreen)
-and silver birch. Juvenile, Mature and Large stages change branch development,
-proportions, roots and bark maturity; Height remains independently adjustable.
-This tool does not modify the playable world.
+The Blender authoring module now grows a persistent branch graph season by
+season. One solver serves the initial oak, ash, birch and spruce profiles.
+Species are parameter data; adding another species should not create another
+growth algorithm. These profiles are an initial visual approximation, not
+calibrated botanical ages or a claim that every tree type is already supported.
 
-[View the species and growth-stage comparison](../../Docs/ValidationEvidence/BlenderTrees/species-final-comparison.png).
+## Authoring workflow
 
-## Preserved oak
+Load `tree_lab_addon.py` from this directory into visible Blender 5.2.2 with its
+sibling files present. The live development session registers it as
+`voxels_tree_lab`. Paths resolve relative to the module; copying the Python
+panel file alone does not install its generator or asset dependencies.
+In the 3D View sidebar choose **Tree Growth**.
 
-The accepted original `oak_studies.blend` is retained unchanged. Continue new
-work in `tree_library.blend`. Its four original oak specimens are marked as
-protected references: the generator and guide-rebuild operator refuse to
-replace them. New specimen names include species, stage, habit and seed, so
-an ash cannot overwrite an oak sharing its seed. Original oak materials retain
-their original names; new species/stages have separate materials.
+1. Choose species, age preset, growth habit and seed, then adjust **Growth
+   Seasons** and the growth/environment controls. Potential height describes
+   growth potential; it does not uniformly scale a completed adult.
+2. **Simulate Growth** advances the seasonal model and publishes a branch-only
+   preview. **Next Seed** changes the seed and runs the same solver. Interactive
+   simulation yields between seasons; **Cancel Build** or Esc keeps the previous
+   completed specimen. The hard limits are 30,000 nodes and 80 seasons; dense or
+   old recipes can exceed the node budget and fail without publishing a partial tree.
+3. **Saved Specimen** restores a completed specimen and its controls. **Current**
+   focuses it; **Gallery** shows stored specimens together.
+4. **Save Recipe** writes a `.tree.json` containing the controls, species profile,
+   complete graph, source revision hash and graph checksum. **Load Recipe** restores
+   that exact graph. Changing growth controls requires another simulation before
+   source geometry can be built. Future solver changes may produce different
+   graphs from the same recipe; loading preserves the saved graph.
+5. When the form is useful, **Build Source Geometry** derives wood, foliage,
+   roots and collision proxies from it. This is the expensive meshing step and
+   stores a separate `_Source` collection. The build yields between stages;
+   **Cancel Build** or Esc preserves the previous completed source. Publication
+   happens only after all stages finish. Source builds do not create undo
+   snapshots; save separate working files to retain past source revisions.
+   Existing full source geometry is not replaced by a growth preview. Very young
+   stems without structural side limbs can be meshed, but are not yet supported
+   by the current motion exporter.
+6. **Prepare for s&box** requires an exporter supporting the source format.
+   The current local legacy exporter does not support the new connected surface
+   and is rejected before writing export output. The graph/preview alone is not
+   a game model. No game assets are installed by the growth workflow.
 
-## Using the installed panel
+The original `tree_library.blend` and `oak_studies.blend` remain reference
+libraries. Use Blender Save As for a separate working file; the former button
+that overwrote the original library is removed. Existing manually edited guide
+specimens remain stored geometry, but edited guides are no longer a second
+source of growth. New guides are derived from the graph.
 
-Open `tree_library.blend`. In the 3D View sidebar choose **Tree Lab**.
+## Ownership and species
 
-1. Choose Species, Growth Stage, Growth Habit and Seed. These preset selectors
-   load defaults. Then adjust height, girth, spread, growth direction, crooked
-   growth, crown bias, branching/leaf density and root spread/depth.
-2. **Generate from Seed** creates or replaces that species/stage/habit/seed.
-   **Next Seed** creates a different specimen. Other specimens remain stored.
-3. **Saved Specimen** selects an existing tree and restores its controls.
-   **Current tree** focuses it. **All trees** displays the library together.
-   Gallery translations are temporary and are restored before selecting,
-   rebuilding or saving. Local mesh coordinates and guide controls stay intact.
-4. Enable **Show Direction Guides**, move a major limb's Bezier controls in
-   Edit Mode, then **Rebuild from Edited Guides**. Smaller growth, foliage and
-   collision proxies follow that skeleton. The operator exits Edit Mode.
-   Protected references cannot be rebuilt; generate a new oak specimen first.
-5. **Save Tree Library** packs the working file and writes `recipes.json`.
+`growth.py` owns the engine-independent recipe, `Species` profiles, stable node
+and axis identities, light competition, bud activation, resource allocation,
+tip extension/loss and incremental radial growth. A larger age runs additional
+seasons with the same seed. Existing node positions and ancestry persist.
 
-Generating from seed replaces that specimen's edited guides. Guide rebuilds
-preserve the specimen's seed/species/stage and its edited primary skeleton;
-main scaffold shape controls apply when generating from seed. Save the file to
-retain manual guide edits. Seed identity guarantees repeatability only with
-identical inputs, assets and generator revision.
+`surface.py` owns connected collars and their shared branch rings.
+`build_oak_studies.py` owns Blender previews and derived geometry. Its historical
+filename remains; prescribed species scaffolds and recursive crown generation
+are removed. Organ geometry/materials still differ by species: oak leaf artwork,
+compound ash blades, birch blades and spruce needles. Roots are artist-directed
+geometry at soil Z=0, not a root/soil growth simulation. Their random stream is
+separate from the canopy. The panel owns main-thread jobs and persistence.
 
-## Species and age
+[Shared growth architecture](../../Docs/Architecture/TreeGrowth.md) records the
+algorithm, alternatives, limits and invalidation contract. Initial species
+traits are hypotheses for calibration: oak's weaker leader, ash's paired buds,
+birch's slender/drooping growth and spruce's stronger leader with retained foliage.
+They are not four separate skeleton generators.
 
-| Species | Structure and foliage |
-| --- | --- |
-| Oak | Broad structural limbs; existing lobed leaf artwork |
-| Ash | Opposite branching tendencies; paired leaflets and terminal leaflet on a rachis |
-| Norway spruce | Persistent central leader, layered branches, lateral sprays and individual needle geometry |
-| Silver birch | Slender stem, descending fine tips, small serrated triangular blades, pale mature bark |
+## Game integration boundary
 
-Juveniles use fewer primary limbs or whorls, fewer branching generations,
-slender proportions, smaller roots and smoother young bark. Leaves retain
-plausible organ size rather than shrinking with the whole tree. Large specimens
-increase structural development, default height and girth. Stages are art
-controls, not chronological age or a biological growth simulation.
+For supported legacy sources, the workspace's optional `export_sbox.py` adapter derives three
+mesh LODs, bark/foliage materials, trunk collision and motion attributes in `.codex/tree-export/<specimen>/`. Source
+ancestry is retained before simplification. Current wind data groups descendants
+by primary limb; finer hierarchical branch wind and camera-facing leaf correction
+remain separate renderer work. They are not implemented by a Blender preview.
 
-## Ownership and derived parts
+In workspaces containing the optional export/install tools, completed exports can be checked with
+`python Tools/BlenderTrees/install_exports.py <specimen_key>` from the project
+root. Its explicit `--install` option copies verified assets into the game.
+Changed installed assets require the canonical figure-eight plus in-world
+wind/LOD/leaf-view validation. The local import contracts are documented in `Docs/Architecture/BlenderTreeImport.md`
+when that downstream subsystem is present. The export button is disabled without
+the adapter; Blender growth and meshing do not depend on it. A connected-surface
+adapter must declare `shared_collars` in `SUPPORTED_SURFACE_METHODS` and consume
+the unified wood without re-exporting hidden construction tubes. That game
+adapter, fine wind and leaf-view correction remain unqualified downstream work.
 
-The canonical generator is `build_oak_studies.py` (its historical filename is
-retained). `SPECIES` and `preset_settings` own species data and defaults.
-Explicit seed/configuration creates the skeleton; edited Bezier guides become
-the skeleton for a guide rebuild. Wood, fine branches, leaves, roots and all
-proxies derive from it. Crown, leaf and root random streams use explicit seeds;
-no frame time or process-dependent hash enters generation.
-
-Blender owns the stored specimen collections, guide coordinates and metadata.
-The installed `tree_lab_addon.py` panel executes the generator on Blender's main
-thread. Rebuilding invalidates only the named generated specimen and its guides/
-proxies. Materials are scoped by species and stage. This extends the existing
-pipeline rather than maintaining a separate generator per species. Species
-rules are required because recoloring/scaling an oak cannot produce compound
-ash leaves or a conifer's central leader and needle sprays.
-
-| Part | Purpose |
-| --- | --- |
-| Trunk / Branches | Separate visible surfaces of continuously welded structural wood |
-| Roots / RootTips | Structural roots and continuous fine underground tips |
-| Twigs | Fine branches, living tips and ash leaf stalks |
-| Leaves | Oak cards, shaped ash/birch blades or points carrying instanced spruce needles |
-| COL_SOLID_Trunk | Nine simplified closed convex trunk pieces, `blocking=true` |
-| COL_SOFT_Branch | Three interaction pieces per major limb, `blocking=false` |
-
-Root geometry is local to soil Z=0 and does not conform to game terrain. The
-smallest juvenile roots may be represented entirely in RootTips. Fine branches
-and needles have no collision. Branch proxies cover main limbs, not every twig;
-juvenile proxy padding scales with tree size. **Show Collision Proxies** displays
-only the current tree's proxies. Player slowdown requires engine implementation.
-
-Hidden Wood and UV_Source objects retain construction/projection data. Bark
-uses matched color, roughness and normal detail with actual geometric relief on
-welded wood. Fine tips share the species bark with normal shading; birch bark
-color follows local branch thickness on mature/large birches; juvenile birches
-share a consistent young-wood surface. Juvenile wood
-uses a finer welding grid and reduced bark relief. Leaf wind and camera-facing
-representations belong in the engine renderer and are not implemented here.
+The existing `recipes.json`, catalog variations and `build_catalog.py` describe
+legacy scaffold-generated sources. Their old controls are not replay-equivalent
+under seasonal growth. Use the panel's explicit simulation/recipe workflow for
+new growth specimens; the old catalog helper has not been migrated or qualified.
+Stored legacy source meshes remain independently exportable.
 
 ## Validation and limits
 
-Native installed-operator scenarios, source hashes, visual evidence and strict
-independent review verdicts are recorded in `../../Docs/ValidationResults.md`
-and `../../Docs/ValidationEvidence/BlenderTrees`. Reference preservation is
-checked with mesh/UV/guide/material fingerprints. Repeated seed generation,
-next-seed changes, selection, mixed gallery and edited-guide rebuilding are
-checked through the same panel operators used for authoring.
+`TREE-GROWTH-001/v1` in [the validation ledger](../../Docs/ValidationResults.md)
+exercises the real Blender operators across four species and ages 6/18/30,
+repeated seeds, competition changes, save/load, corrupted data and cancellation.
+`TREE-GROWTH-002/v1` checks the connection to source geometry.
+`TREE-GROWTH-003/v1` covers all twelve species/age meshes, graph preservation,
+geometry/UV checks, current wind-data compatibility, memory, cancellation and
+native two-angle renders for the earlier voxel mesher. Its mesh times were
+5.0-27.9 seconds. `TREE-GROWTH-006/v1` validates the replacement shared collars,
+closed connectivity, foliage attachment and independent review of the repaired
+oak junctions. Failed attempts remain in the ledger. These authoring checks do not qualify
+the existing production forest or establish botanical realism.
 
-The fixed visual matrix covers juvenile and mature forms of all four species,
-plus Large oak. Large ash, spruce and birch presets are available but are not
-part of that visual acceptance matrix. Reviews cover the recorded views and
-seeds, not every possible combination of controls.
-
-Spruce uses native Geometry Nodes with closed, three-dimensional needles.
-Juvenile points instance individual 12-vertex needles. Mature/large points
-instance seeded variants of short, volumetric 64-needle sprays (768 vertices),
-following each fine shoot. Rotation, scale and variant are stored on the points;
-prototypes and node groups belong to that species/stage. Adult previews show
-one spray in 24 to keep Blender interactive; final renders show every spray.
-These points are not an expanded export mesh. Realize instances for a mesh-only
-export, or derive cheaper engine foliage. No export conversion is included.
-
-These are detailed source meshes. Mature ash alone contains about 4.75 million
-foliage vertices; the refined mature birch has about 8.38 million. Spruce point
-counts substantially understate its realized geometry (12 vertices per needle).
-Actual counts/timing are evidence, not a shipping
-budget. Large/dense settings can cost substantially more. No runtime/export/LOD,
-networking, collision behavior, or game performance acceptance is implied.
-
-`tree_library.blend` and the original oak file are large generated files ignored
-by Git. `recipes.json` schema 2 records species/stage, protected status, seed,
-settings, source hash and full guide controls/handles; it is a manifest, not an
-importer. The installed add-on SOURCE and generator ROOT point to this workspace.
-Update them when relocating it. The existing project's oak leaf atlas remains
-an input for oak regeneration; the packed Blender files contain their images.
+The model approximates canopy light and shoot competition; it does not model
+soil chemistry, physiological carbon balance, disease, fracture, automatic
+branch shedding, or guarantee that expanding mature wood never intersects.
+Dead tips remain in the wood graph. Large populations are not simulated live
+in s&box by this change. Species calibration, wider seed coverage and full
+export validation remain required before replacing the production catalog.
 
 ## References and assets
 

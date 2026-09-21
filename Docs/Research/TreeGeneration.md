@@ -287,3 +287,12 @@ no replacement generator or runtime rendering change is implemented by that
 evaluation. The earlier September 20 wind section above is historical research;
 current implemented motion belongs to [Blender imports](../Architecture/BlenderTreeImport.md)
 and [Spawn trees](../Architecture/SpawnTrees.md).
+
+## Shared growth authoring, September 21
+
+Implementation and ownership have moved to [Shared tree growth](../Architecture/TreeGrowth.md).
+A deterministic seasonal graph replaces the prescribed adult scaffold and recursive
+crown generator. Oak, ash, birch and spruce use shared rules with data profiles.
+This is an authoring foundation; biological calibration, broader species/seed
+coverage and game qualification remain open. The existing primary-limb motion
+payload is retained as an adapter boundary, not evidence of full hierarchical wind.
