@@ -46,7 +46,9 @@ the unfinished result. Never publish a partial graph as a completed specimen.
 Source meshing also yields between bounded stages and polygon batches. It uses
 a temporary collection and replaces the previous source only after completion.
 Esc or Cancel Build removes temporary IDs; it leaves the finished source intact.
-Individual native modifiers remain atomic. Mesh builds omit Blender undo
+Native mesh publication remains atomic; the final large-spruce part stage was
+measured separately, and cancellation after it retained the previous source
+and removed temporary IDs. Mesh builds omit Blender undo
 snapshots to avoid retaining several gigabytes per rebuild; save a separate
 working file for historical source revisions.
 
@@ -55,11 +57,34 @@ is 30,000 nodes and 80 seasons per specimen. The current source adapter predicts
 post-subdivision wood faces and rejects more than 1,000,000 before allocating
 them. `surface.py` constructs convex local collars with open branch ports,
 bridges shared ring vertices, checks a closed connected surface and applies one
-finite Catmull-Clark subdivision (limit-surface projection disabled).
+finite Catmull-Clark subdivision using compact position/topology arrays. The
+closed, uncreased control surface needs no boundary/crease rules or limit-surface
+patch tables. Bark UVs and part attributes are assigned afterward. This replaces
+the native modifier after its large-tree allocation exceeded the editor budget.
+The fixed oak comparison retained all 104,136 vertices and 104,134 faces with a
+maximum position difference below 0.000002m and identical face connectivity.
+The hidden sweep reference shares its original mesh instead of
+copying it, and the intermediate collar mesh is released after rounding.
+Render-part extraction uses compact index arrays and preserves source corner
+positions, both bark UV layers, radii, blending weights and custom normals.
+Source face indices/counts, UVs, material indices and branch IDs are packed
+while generating foliage. This removes temporary Python corner objects without
+reducing leaf detail, count or variation. The native mesh receives those buffers
+directly; positions retain their existing generation order.
+The subdivision weights follow the standard closed-surface rules documented in
+[OpenSubdiv's Catmull-Clark scheme](https://github.com/PixarAnimationStudios/OpenSubdiv/blob/dev/opensubdiv/sdc/catmarkScheme.h).
+This is one finite step, not a general replacement for Blender subdivision.
+[Blender's free normal storage](https://developer.blender.org/docs/release_notes/4.5/modeling/)
+allows exact corner vectors; legacy fan-space encoding introduced measurable
+rounding at part boundaries and is no longer used by this source builder.
 Coplanar panels dissolve before subdivision; straight
 unclipped spans omit redundant midpoint rings. Both affect the rounded taper
-and require visual review after topology checks. Port clearance can narrow a very acute or crowded local
-join. It never removes a graph branch. Derived root nodes retain explicit
+and require visual review after topology checks. Acute junctions extend their
+transition to fit their branch diameters before reducing a port for insufficient
+space. Port clearance can still narrow a very acute or crowded local join.
+It never removes a graph branch. Derived root sampling reserves blending space
+around lateral attachments; a thin child's sampling interval cannot dictate the
+whole parent junction's size. Derived root nodes retain explicit
 ancestry and join the same surface; roots remain artist-directed geometry.
 Sweeps retain original graph samples/radii for bark projection and motion identity.
 They are hidden construction data, not an overlapping second visible crown.
@@ -75,7 +100,7 @@ Seeds use an explicit stable integer mixer keyed by node, season and purpose.
 Traversal is stable, and growth cannot depend on scene order, Blender time or
 Python's process hash. Generator revision and every profile/control accompany
 the graph. Repeatability is qualified for the tested implementation/environment,
-not arbitrary floating-point platforms or future versions. Age presets select 6, 24 and 30 seasons; the wider 1–80 input range does not
+not arbitrary floating-point platforms or future versions. Age presets select 6, 24 and 30 seasons; the wider 1â€“80 input range does not
 guarantee a recipe fits the node budget. A recipe change
 invalidates the graph and all its derived geometry/motion/LOD/bakes.
 
@@ -94,7 +119,7 @@ This slice implements our shared graph directly, keeping its complete ancestry
 and using the existing Blender geometry/export responsibilities. No copied
 Modular Tree addon code or native binary becomes a game dependency.
 
-[Palubicki et al. (2009)](https://algorithmicbotany.org/papers/selforg.sig2009.html)
+[Palubicki et al. (2009)](https://algorithmicbotany.org/papers/selforg.sig 2009.html)
 informs the separation of local bud rules, environmental competition and
 internal resource allocation. We adopt that organization, not a reproduction
 of their solver or their visual/performance results. A crown-envelope-only
@@ -121,7 +146,7 @@ recovered editor completed all twelve fixed species/age sources with the earlier
 voxel mesher in 5.0-27.9 seconds. The existing motion reader resolved every eligible source; a one-axis
 stem can be meshed but is rejected by that adapter's current 2-256-axis guard.
 Cancellation preserves the previous geometry checksum and gallery exit restores
-all object positions. See TREE-GROWTH-003/v1 for source hashes, measurements
+all object positions. See TREE-GROWTH-003/v 1 for source hashes, measurements
 and native two-angle renders. Profiles remain sparse/angular in places,
 especially evergreen foliage. This establishes a working authoring system,
 not botanical fidelity or qualification of a replacement production catalog.
@@ -147,7 +172,7 @@ its branch positions and uses the current derived foliage rule.
 
 ## Connected-junction review
 
-The independent reviewer accepted the fixed oak18 socket/disconnection repair
+The independent reviewer accepted the fixed oak 18 socket/disconnection repair
 from three bare angles, a foliage close-up and an uncovered root view. It found
 minor bark bands and uneven thickening, plus broader realism limits in straight
 internodes, pointed tips and stylized roots. This is narrow visual acceptance,
@@ -155,10 +180,33 @@ not proof of botanical fidelity. TREE-GROWTH-006 records the connected mesher's
 own measurements. Graph positions remain unchanged when rebuilding a saved tree;
 new growth uses the shared foliage-renewal rule in light and radial support.
 
-The large-spruce memory investigation isolated a costly default infinite-limit
+TREE-GROWTH-007 revisited the remaining root waists. Coarser root sampling alone
+did not solve them. Reserving longer lateral transitions and allowing acute
+collars to use available span length substantially reduced the visible waists.
+Independent review passed the exposed-root view and all three canopy angles;
+the narrow root crown, stretched bark and angular internodes remain realism
+limits. The canonical oak graph and 21,858 leaves stayed unchanged.
+
+The earlier large-spruce memory investigation isolated a costly default infinite-limit
 projection in Blender subdivision. The finite subdivision mode reduced its
-measured build from111.4s to78.9s with the same942,720 faces and1,006,656
-needles. The full retry still peaked at13.875GiB private allocation
-(6.293GiB working set) in the cumulative editor session. The earlier8GiB
-private-memory target is not met and remains open; do not label the complete
-resource acceptance as passed. See finite-memory-v1.json and the raw phase logs.
+measured build from 111.4s to 78.9s with the same 942,720 faces and 1,006,656
+needles. The full retry still peaked at 13.875 GiB private allocation
+(6.293 GiB working set) in the cumulative editor session. The earlier 8 GiB
+private-memory target was not met in 006. See finite-memory-v 1.json and the raw
+phase logs; those failures remain part of the history.
+
+In 007 the array subdivision, shared sweep reference and compact part extraction
+reduced the same saved spruce 30 build to 60.406s and a sampled 6.579 GiB private
+peak (3.718 GiB working set), within the unchanged 8 GiB target. The final 936,194
+wood faces include the junction refinement; its graph and 1,006,656 needles are
+unchanged. Every render-part corner position, UV, radius, weight and free normal
+matches the unified wood exactly. This is a cumulative editor-session source
+measurement at one-second intervals, not a fresh-process or all-recipes memory
+guarantee. See compact-memory-summary-v 1.json and part-parity-v 1.json.
+
+The broader matrix then exposed a separate leaf-construction peak in birch 30.
+Packing source buffers reduced that fixed build from a 10.442 GiB observed peak
+to 7.522 GiB, completing in 46.419s. All 59,553 leaves retain their 5,657,535 vertices
+and 4,287,816 faces with the same position hash. Fixed oak 18's complete geometry/
+index/UV checksum and material assignments also remain identical. This source
+detail is authoring geometry; it is not a qualified game LOD or forest budget.

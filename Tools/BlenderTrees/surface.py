@@ -4,6 +4,53 @@ import bmesh
 from mathutils import Vector
 
 
+def round_surface(mesh):
+	"""One finite Catmull-Clark step on our closed, uncreased control mesh.
+
+	Positions and topology use linear-size arrays. No limit-surface patch tables,
+	UV interpolation, creases or open-boundary rules are needed at this stage.
+	Bark projection and part attributes are created on the resulting surface.
+	"""
+	import bpy
+	import numpy as np
+	vertices,edges,faces,corners=len(mesh.vertices),len(mesh.edges),len(mesh.polygons),len(mesh.loops)
+	positions=np.empty((vertices,3),np.float64);mesh.vertices.foreach_get('co',positions.ravel())
+	ends=np.empty((edges,2),np.int32);mesh.edges.foreach_get('vertices',ends.ravel())
+	indices=np.empty(corners,np.int32);mesh.loops.foreach_get('vertex_index',indices)
+	edge_ids=np.empty(corners,np.int32);mesh.loops.foreach_get('edge_index',edge_ids)
+	starts=np.empty(faces,np.int32);mesh.polygons.foreach_get('loop_start',starts)
+	counts=np.empty(faces,np.int32);mesh.polygons.foreach_get('loop_total',counts)
+	if not corners or np.any(np.bincount(edge_ids,minlength=edges)!=2):
+		raise ValueError('Rounding requires a closed branch control surface')
+	face_ids=np.repeat(np.arange(faces,dtype=np.int32),counts)
+	centers=np.add.reduceat(positions[indices],starts)/counts[:,None]
+	edge_points=positions[ends].sum(axis=1)
+	np.add.at(edge_points,edge_ids,centers[face_ids]);edge_points*=.25
+	# Interior vertex rule: (F + 2R + (n-3)P) / n, expressed with
+	# incident face centers and neighboring original vertices.
+	valence=np.bincount(ends.ravel(),minlength=vertices)[:,None]
+	if np.any(valence<2):raise ValueError('Rounding found an isolated branch vertex')
+	sums=np.zeros_like(positions)
+	np.add.at(sums,indices,centers[face_ids])
+	np.add.at(sums,ends[:,0],positions[ends[:,1]])
+	np.add.at(sums,ends[:,1],positions[ends[:,0]])
+	positions=positions*(valence-2)/valence+sums/(valence*valence)
+	previous=np.arange(corners,dtype=np.int32)-1;previous[starts]=starts+counts-1
+	quads=np.column_stack((indices,vertices+edge_ids,vertices+edges+face_ids,vertices+edge_ids[previous])).astype(np.int32)
+	points=np.concatenate((positions,edge_points,centers)).astype(np.float32)
+	result=bpy.data.meshes.new(mesh.name+'_Rounded')
+	try:
+		result.vertices.add(len(points));result.vertices.foreach_set('co',points.ravel())
+		result.loops.add(corners*4);result.loops.foreach_set('vertex_index',quads.ravel())
+		result.polygons.add(corners);result.polygons.foreach_set('loop_start',np.arange(corners,dtype=np.int32)*4)
+		result.polygons.foreach_set('loop_total',np.full(corners,4,np.int32))
+		result.update(calc_edges=True)
+		for material in mesh.materials:result.materials.append(material)
+	except BaseException:
+		bpy.data.meshes.remove(result);raise
+	return result
+
+
 def branch_surface(graph):
 	"""Bridge convex junction collars through shared, uncapped tube rings.
 
@@ -35,12 +82,18 @@ def branch_surface(graph):
 		for e in links:
 			a,b=edges[e];other=b if a==index else a;delta=Vector(nodes[other]['p'])-center
 			directions.append(delta.normalized());lengths.append(delta.length)
-		reach=min(min(lengths)*.42,node['radius']*3.2)
+		clearances=[];radii=[]
+		for slot,e in enumerate(links):
+			cosines=[max(-1,min(1,directions[slot].dot(other))) for j,other in enumerate(directions) if j!=slot]
+			clearances.append(min((math.sqrt(max(1e-10,(1-c)/(1+c+1e-10))) for c in cosines),default=1e6))
+			radii.append(edge_radii[e][0 if edges[e][0]==index else 1])
+		# Acute forks need a longer transition than a right-angle junction.
+		# Use available branch length before reducing the port diameter.
+		required=max((radius/(clearance*.94) for radius,clearance in zip(radii,clearances)),default=0)
+		reach=min(min(lengths)*.42,max(node['radius']*3.2,required))
 		ports=[]
 		for slot,e in enumerate(links):
-			direction=directions[slot];u,v,sides=basis[e];radius=edge_radii[e][0 if edges[e][0]==index else 1]
-			cosines=[max(-1,min(1,direction.dot(other))) for j,other in enumerate(directions) if j!=slot]
-			clearance=min((math.sqrt(max(1e-10,(1-c)/(1+c+1e-10))) for c in cosines),default=1e6)
+			direction=directions[slot];u,v,sides=basis[e];radius=radii[slot];clearance=clearances[slot]
 			limited=min(radius,reach*clearance*.94)
 			if limited<radius*.99:clipped+=1;expanded_edges.add(e)
 			port=ring(center+direction*reach,u,v,limited,sides);ports.append(port);end_ports[index,e]=port

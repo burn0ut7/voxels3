@@ -6,6 +6,7 @@ import json
 import hashlib
 import importlib.util
 import sys
+from array import array
 from pathlib import Path
 from mathutils import Vector, Quaternion
 
@@ -137,14 +138,15 @@ def smooth_path(controls, steps=5):
 
 class Geometry:
 	def __init__(self,tile=BARK_TILE_METRES):
-		self.verts=[]; self.faces=[]; self.uv=[]; self.mats=[];self.part=0
-		self.sweeps=[];self.branch_ids=[];self.active_branch=-1
+		self.verts=[];self.face_vertices=array('i');self.face_sizes=array('i');self.uv=array('f');self.mats=array('i');self.part=0
+		self.sweeps=[];self.branch_ids=array('i');self.active_branch=-1
 		self.tile=tile
 		self.radii=[];self.needle_rotations=[];self.needle_scales=[];self.needle_variants=[]
 		self.attachments=[]
 
 	def face(self, indices, uv, material=0):
-		self.faces.append(indices); self.uv.extend(uv); self.mats.append(material)
+		self.face_vertices.extend(indices);self.face_sizes.append(len(indices))
+		self.uv.extend(value for pair in uv for value in pair);self.mats.append(material)
 		self.branch_ids.append(self.active_branch)
 
 	def branch(self, path, radius, end, rng, sides=10, root=False,profile=None,parent=0,start_blend=0,path_radii=None,graph_axis=-1,attachment_radius=0,round_tip=False):
@@ -230,14 +232,20 @@ class Geometry:
 		self.attachments.append((start,len(self.verts),tuple(base)))
 
 	def object(self,name,collection,materials):
+		import numpy as np
 		mesh=bpy.data.meshes.new(name)
-		mesh.from_pydata(self.verts,[],self.faces); mesh.update()
+		# Broadleaf crowns contain millions of corners. Publish packed buffers
+		# directly instead of flattening nested face and UV tuples into more lists.
+		mesh.vertices.add(len(self.verts));mesh.vertices.foreach_set('co',np.asarray(self.verts,np.float32).ravel())
+		mesh.loops.add(len(self.face_vertices));mesh.loops.foreach_set('vertex_index',self.face_vertices)
+		sizes=np.asarray(self.face_sizes,np.int32);mesh.polygons.add(len(sizes))
+		mesh.polygons.foreach_set('loop_start',np.cumsum(sizes,dtype=np.int32)-sizes)
+		mesh.polygons.foreach_set('loop_total',sizes);mesh.polygons.foreach_set('use_smooth',np.ones(len(sizes),bool))
+		mesh.polygons.foreach_set('material_index',self.mats);mesh.update(calc_edges=True)
 		obj=bpy.data.objects.new(name,mesh); collection.objects.link(obj)
 		for material in materials: mesh.materials.append(material)
 		uv=mesh.uv_layers.new(name="UVMap")
-		uv.data.foreach_set("uv",[v for pair in self.uv for v in pair])
-		for polygon,material in zip(mesh.polygons,self.mats):
-			polygon.use_smooth=True; polygon.material_index=material
+		uv.data.foreach_set("uv",self.uv)
 		if len(self.radii)==len(self.verts):mesh.attributes.new("bark_radius","FLOAT","POINT").data.foreach_set("value",self.radii)
 		if self.sweeps:
 			attribute=mesh.attributes.new("branch_id","INT","FACE")
@@ -600,9 +608,18 @@ def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,g
 		parent_ids,parent_sweep=parent if isinstance(parent,tuple) else ([0],0)
 		attachment=min(parent_ids,key=lambda i:(Vector(surface_nodes[i]['p'])-path[0]).length_squared)
 		wood.branch(path,radius,end,root_rng,sides,True,parent=parent_sweep)
-		length=sum((b-a).length for a,b in zip(path,path[1:]));steps=max(3,math.ceil(length/max(radius*4,.06)))
+		length=sum((b-a).length for a,b in zip(path,path[1:]));steps=max(2,math.ceil(length/max(radius*8,.08)))
 		ids=[attachment];previous=attachment
-		parameters={j/steps for j in range(1,steps+1) if all(abs(j/steps-critical)>.35/steps for critical in (.4,.66))}|{.4,.66,1.0}
+		# Reserve space around real lateral attachments. Crowding them with
+		# redundant curve samples forces the shared collar to pinch the root.
+		attachments=(.4,.66) if not isinstance(parent,tuple) else ()
+		parameters={j/steps for j in range(1,steps+1) if all(abs(j/steps-critical)>.75/steps for critical in attachments)}|set(attachments)|{1.0}
+		if isinstance(parent,tuple):
+			# Leave a transition roughly six parent diameters long before the
+			# first lateral sample; the narrow child's sampling interval must
+			# not dictate the width of the thicker parent junction.
+			first=min(.85,surface_nodes[attachment]['radius']*12/max(length,1e-8))
+			parameters={t for t in parameters if t>first}|{first}
 		for t in sorted(parameters):
 			index=len(surface_nodes);surface_nodes.append({'parent':previous,'axis':root_axis,'p':tuple(point_on(path,t)[0]),'radius':radius_at(radius,end,t)})
 			ids.append(index);previous=index
@@ -720,7 +737,7 @@ def fuse_wood(form="Open_Grown"):
 	if collection.get("protected_reference"):raise ValueError("Preserved reference geometry cannot be rebuilt")
 	obj["bark_asset"]=collection.get("bark_asset","japanese_camphor_bark")
 	obj["bark_relief_factor"]=collection.get("bark_relief_factor",1)
-	source=obj.copy();source.data=obj.data.copy();source.name=name+"_UV_Source"
+	source=obj.copy();source.name=name+"_UV_Source"
 	collection.objects.link(source);source.hide_render=True;source.hide_set(True)
 	for other in bpy.context.selected_objects: other.select_set(False)
 	obj.select_set(True);bpy.context.view_layer.objects.active=obj
@@ -737,12 +754,10 @@ def fuse_wood(form="Open_Grown"):
 	# within the same one-million-face authoring budget before allocating it.
 	if sum(len(p.vertices) for p in mesh.polygons)>1000000:raise ValueError('Connected wood exceeds the 1,000,000-face surface budget')
 	yield 'Rounding connected branch surface'
-	subdivision=obj.modifiers.new('Curved branch transitions','SUBSURF');subdivision.levels=1
-	# One finite Catmull-Clark step supplies the rounded junctions. Blender's
-	# default infinite-limit projection allocates much larger patch tables on
-	# this branching mesh; it is not required for a one-step authoring surface.
-	subdivision.use_limit_surface=False
-	bpy.ops.object.modifier_apply(modifier=subdivision.name)
+	# The reference retains the original sweep mesh; the visible surface owns
+	# only the rounded result. Release the intermediate control mesh promptly.
+	obj.data=surface.round_surface(mesh)
+	bpy.data.meshes.remove(mesh)
 	collection['detailed_faces']=len(obj.data.polygons);collection['surface_method']='shared_collars'
 	yield 'Preparing bark projection'
 	yield from bind_fused_uv(obj,source)
@@ -889,32 +904,34 @@ def split_wood_parts(name,obj,source,collection):
 	uv_values=np.empty(len(mesh.loops)*2,np.float32);mesh.uv_layers.active.data.foreach_get('uv',uv_values);uv_values=uv_values.reshape(-1,2)
 	parent_values=np.empty(len(mesh.loops)*2,np.float32);mesh.uv_layers['BarkParent'].data.foreach_get('uv',parent_values);parent_values=parent_values.reshape(-1,2)
 	weight_values=np.empty(len(mesh.loops),np.float32);mesh.attributes['bark_parent_weight'].data.foreach_get('value',weight_values)
-	groups=[[],[],[]]
-	for polygon in obj.data.polygons:
-		part=obj.data.attributes["wood_part"].data[polygon.index].value
-		groups[part].append(polygon)
-	for part,polygons in enumerate(groups):
-		geo=Geometry();lookup={};normals=[];parent_uv=[];weights=[]
-		for face_index,polygon in enumerate(polygons):
-			if face_index%2048==0:yield f'Finishing wood part {part+1} / 3 ({face_index} / {len(polygons)})'
-			indices=[];uv=[]
-			for loop_index in polygon.loop_indices:
-				index=obj.data.loops[loop_index].vertex_index
-				if index not in lookup:
-					lookup[index]=len(geo.verts);geo.verts.append(tuple(coordinates[index]))
-					geo.radii.append(radii[index])
-				indices.append(lookup[index]);uv.append(tuple(uv_values[loop_index]))
-				normals.append(tuple(normal_values[loop_index]))
-				parent_uv.extend(parent_values[loop_index])
-				weights.append(weight_values[loop_index])
-			geo.face(indices,uv)
-		part_name=("Trunk","Branches","Roots")[part]
-		result=geo.object(name+"_"+part_name,collection,[obj.data.materials[0]])
-		result.location=obj.location;result["render_part"]=part_name.lower()
-		result.data.normals_split_custom_set(normals)
-		result.data.uv_layers.new(name="BarkParent").data.foreach_set("uv",parent_uv)
-		result.data.attributes.new("bark_parent_weight","FLOAT","CORNER").data.foreach_set("value",weights)
-		result.data.uv_layers.active_index=0
+	part_ids=np.empty(len(mesh.polygons),np.int32);mesh.attributes['wood_part'].data.foreach_get('value',part_ids)
+	vertex_ids=np.empty(len(mesh.loops),np.int32);mesh.loops.foreach_get('vertex_index',vertex_ids)
+	starts=np.empty(len(mesh.polygons),np.int32);mesh.polygons.foreach_get('loop_start',starts)
+	counts=np.empty(len(mesh.polygons),np.int32);mesh.polygons.foreach_get('loop_total',counts)
+	for part,part_name in enumerate(('Trunk','Branches','Roots')):
+		yield f'Finishing wood part {part+1} / 3'
+		selected=np.flatnonzero(part_ids==part);sizes=counts[selected]
+		offsets=np.cumsum(sizes,dtype=np.int32)-sizes;total=int(sizes.sum())
+		loops=np.repeat(starts[selected]-offsets,sizes)+np.arange(total,dtype=np.int32)
+		used,indices=np.unique(vertex_ids[loops],return_inverse=True)
+		# Keep one compact index remap instead of millions of Python tuples
+		# for positions, face corners, normals and the two bark UV layers.
+		data=bpy.data.meshes.new(name+'_'+part_name)
+		data.vertices.add(len(used));data.vertices.foreach_set('co',coordinates[used].ravel())
+		data.loops.add(total);data.loops.foreach_set('vertex_index',indices.astype(np.int32))
+		data.polygons.add(len(selected));data.polygons.foreach_set('loop_start',offsets)
+		data.polygons.foreach_set('loop_total',sizes);data.polygons.foreach_set('use_smooth',np.ones(len(selected),bool))
+		data.update(calc_edges=True);data.materials.append(mesh.materials[0])
+		data.uv_layers.new(name='UVMap').data.foreach_set('uv',uv_values[loops].ravel())
+		data.uv_layers.new(name='BarkParent').data.foreach_set('uv',parent_values[loops].ravel())
+		data.attributes.new('bark_radius','FLOAT','POINT').data.foreach_set('value',radii[used])
+		data.attributes.new('bark_parent_weight','FLOAT','CORNER').data.foreach_set('value',weight_values[loops])
+		# Free corner normals preserve the source vectors without the legacy
+		# 16-bit fan-space encoding, including at boundaries between parts.
+		data.attributes.new('custom_normal','FLOAT_VECTOR','CORNER').data.foreach_set('vector',normal_values[loops].ravel())
+		data.uv_layers.active_index=0
+		result=bpy.data.objects.new(name+'_'+part_name,data);collection.objects.link(result)
+		result.location=obj.location;result['render_part']=part_name.lower()
 
 
 def build_proxies(name,paths,scene,offset,trunk_profile,interaction_scale=1):

@@ -32736,3 +32736,113 @@ passed topology before the finite-mode optimization; final finite-mode reruns
 cover fixed oak18, ash18, birch18 and the largest spruce30. No runtime code or
 installed game assets changed; the figure-eight was not run for this offline
 authoring change. Original blend library hashes remain unchanged.
+
+## TREE-GROWTH-007/v1 -- Root taper and crown calibration
+
+Defined before repair runs. Reuse006 fixed saved oak18 graph and controls,
+seed271828, unchanged leaf density/root spread/root depth, plus its final
+canopy and uncovered-root viewpoints. Root-derived sampling may change, but
+canonical canopy graph and leaf count must remain unchanged. Require one
+closed wood component, zero boundary/non-manifold edges, finite mesh/UV,
+source below120s and final wood below1,000,000 faces. Record root port
+clearance ratios before/after. Native root review must find no abrupt waist
+at lateral junctions; repeat three canopy angles to exclude regressions.
+For spruce, retain001 fixed species/age/seed/control scenarios; changes to
+growth rules/profile are implementation changes, never input tuning. Record
+all revised graph hashes, live/dead counts, bounding boxes and foliage counts.
+Require a healthy connected evergreen crown in native views, natural shoot
+length/taper, and repeat determinism/developmental-prefix checks if the solver
+changes. Existing006 memory target remains open and must not be waived.
+
+TREE-GROWTH-007 smoothing/memory acceptance defined before implementation:
+replace the measured native subdivision allocation only if one finite closed-
+surface Catmull-Clark step agrees with Blender on the actual fixed oak control
+mesh within 0.00001m and retains identical vertex/face counts and closed topology.
+Repeat fixed006 Spruce30 with identical graph/controls and a one-second Windows
+private/working-memory sampler; retain the absolute8GiB private-process target
+and120s/1m-face bounds. Record phase timings, source hashes and cumulative-session
+starting memory. Verify cancellation still removes temporary state and preserves
+the previously published source. No new scenario inputs or synthetic meshes.
+
+007 first array-rounding run: fixed Spruce30,77.063s,936194 final wood faces,
+1006656 needles, one closed component/zero bad edges. Peak Windows private
+8756637696 bytes (8.155GiB), working5909667840,93 samples;8GiB target FAIL.
+Phase evidence places the remaining peak in render-part publication. Replace
+per-corner Python tuples there with compact indexed arrays, then repeat the
+same fixed source. Require exact corner positions/UV/part/radius/weight and
+custom-normal agreement against the unified source (normal tolerance0.0001).
+
+007 compact-part run:64.115s,936194 wood faces; peak private6859816960 bytes
+(6.389GiB), working3791785984;119 samples. Geometry, UVs, radii and blend
+weights match the unified source exactly. The normal comparison FAILS the
+0.0001 tolerance (max0.001516 component error). Blender legacy fan-normal
+storage uses16-bit values. Replace that encoding with the supported free
+FLOAT_VECTOR corner-normal attribute, then repeat the original comparison;
+do not relax the tolerance. This has no growth or polygon-count change.
+
+007 additional final-mesher cases all pass topology and exact part attributes:
+Oak30 51.305s/802680 faces;Ash30 52.326s/786720;Birch30 50.828s/535370;
+Ash18 8.823s/121274;Birch18 5.764s/52978. Ash30 audit was accidentally
+appended twice during output retrieval; both entries are retained, one build.
+The combined matrix memory window includes audits and peaks at11211776000
+private bytes (10.442GiB), during the Birch30 build window. Thus the resource
+target is still NOT accepted across species. Birch30 has59553 leaves with
+5657535 vertices/4287816 faces. Replace temporary per-face/per-UV Python
+containers with packed buffers without altering leaf detail/count, then repeat
+fixed Birch30 with phase/memory logging. Require preserved foliage positions
+and face counts, plus complete-mesh/UV fingerprint preservation on fixed oak18.
+
+007 packed-buffer Birch30 retry:46.419s,535370 wood faces,59553 leaves,
+5657535 leaf vertices/4287816 leaf faces with unchanged position hash.
+One closed component/zero bad edges; every render-part corner attribute exact.
+Peak private8075968512 bytes (7.522GiB), working4638199808;101 one-second
+samples. Same fixed graph/controls, cumulative-session initial memory recorded.
+Fixed oak18 full geometry/index/UV checksum also remains identical, including
+the hidden reference and leaves. A native build with the prior builder confirmed
+per-face material indices and slot order are identical after buffer packing.
+
+007 final memory/correctness acceptance: fixed Spruce30 with free corner normals
+completed in 60.406s, 936194 wood faces and 1006656 needles. Peak private
+7064354816 bytes (6.579GiB), working3991834624 bytes (3.718GiB).
+One component, zero boundary/non-manifold edges, graph preserved; all render-part
+positions, UVs, radii, weights and normals match exactly. See
+compact-memory-summary-v1.json, part-parity-v1.json and raw phase/memory logs.
+The array rounding matches native finite Catmull-Clark connectivity/counts with
+maximum coordinate error 0.000001966m on the actual fixed oak control surface.
+Native cancellation after the largest part completed in 2.062s, retained the
+previous collection/geometry/UV/graph and left zero temporary IDs. These are
+cumulative-session sampled peaks, not guarantees for arbitrary library contents.
+
+007 final edge cases: Spruce6 completed in 1.022s with 14366 wood faces,
+37888 needles/592 sprays; finite point-instance rotation and scale attributes.
+Oak1 completed in 0.748s with 8830 wood faces and 30 leaves; its empty Branches
+part remains valid. Both retain their saved graphs, one closed wood component,
+zero bad edges and exact part attributes. Maximum anchor distances are 3.71um
+and 5.34um respectively. Native Blender5.2.2 LTS/Python3.13.13, same visible
+OAK_STUDY_Studio; actual source hashes are in refinement-matrix-v1.json.
+
+007 junction acceptance: root port limits fell from24/354 to16/158; minimum
+radius fraction improved from0.213807 to0.303029. The independent reviewer
+passed the exposed-root view and three canopy angles: no disconnected caps,
+socket rims or abrupt lateral root waists in those views. Remaining limitations
+include narrow root crown, bark stretching/bands and angular internodes.
+See root-clearance-v2.json, root-clearance-v3.json and refinement-review-v1.json.
+Packed buffers preserve fixed oak18's full geometry/index/UV checksum and
+material assignments; they preserve all59553 Birch30 leaves and their positions.
+
+The exact selective-commit builder, excluding unrelated pre-existing art edits,
+was also executed through native Generate on the fixed oak18 graph/controls:
+6.144s,104740 wood faces,21848 leaves, one closed component, finite data,
+graph preserved and maximum foliage-anchor distance5.16um. The leaf-count
+difference from the working-art version is explicitly due to the pre-existing
+art implementation and its RNG consumption, not changed scenario controls.
+Its root and canopy captures independently passed the junction review.
+See staged-refinement-native-v1.json for the actual invoked builder hash; the
+collection's generator metadata reads the canonical working path and is not
+used to identify that selective candidate. The original oak working view was
+restored and saved to .codex/tree-growth/authoring-workspace.blend. Both original
+blend libraries retain their recorded hashes (libraries-refinement-v1.json).
+No installed game assets/runtime changed; figure-eight not run for this offline
+source-meshing change. Root/junction and measured resource criteria pass for the
+listed cases. Spruce crown calibration and the full goal remain OPEN; no solver
+change or game LOD/wind/leaf-perspective qualification is claimed by this step.

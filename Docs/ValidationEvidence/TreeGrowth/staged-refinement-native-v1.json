@@ -1,0 +1,94 @@
+{
+  "scenario": "TREE-GROWTH-007/v1",
+  "runs": [
+    {
+      "species": "Oak",
+      "age": 18,
+      "complete": true,
+      "seconds": 6.14429240001482,
+      "welded_faces": 31846,
+      "detailed_faces": 104740,
+      "primary_count": 5,
+      "graph_sha256": "b7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43",
+      "recorded_at": 1790022343.5901046,
+      "parts": {
+        "Wood": {
+          "vertices": 104742,
+          "faces": 104740,
+          "finite": true,
+          "indices_valid": true,
+          "uv_finite": true,
+          "position_sha256": "676f50da8ef9865c8e23fde0e21585ee1c0b988dc51cffa3a9eb75f38259a6a7"
+        },
+        "Leaves": {
+          "vertices": 196632,
+          "faces": 87392,
+          "finite": true,
+          "indices_valid": true,
+          "uv_finite": true,
+          "position_sha256": "10ac59193ce6a5f3818a93a611421b7253db92290decaaccffdc04605263ecf2"
+        },
+        "UV_Source": {
+          "vertices": 140486,
+          "faces": 136876,
+          "finite": true,
+          "indices_valid": true,
+          "uv_finite": true,
+          "position_sha256": "94c8d6d620a1f64d7dd9ab37cc21216e3a46b33da7f6da2c133acb30b39cb0f4"
+        },
+        "Trunk": {
+          "vertices": 499,
+          "faces": 406,
+          "finite": true,
+          "indices_valid": true,
+          "uv_finite": true,
+          "position_sha256": "18d9fa40a56e3d4aaebc12fbad155df06b5a8bef45361de1f3ac3644c5266977"
+        },
+        "Branches": {
+          "vertices": 98353,
+          "faces": 98281,
+          "finite": true,
+          "indices_valid": true,
+          "uv_finite": true,
+          "position_sha256": "0db0e236b897961d765cf7c07dfa0f26bc4a64be10e8dc686b3d56e63b439ccc"
+        },
+        "Roots": {
+          "vertices": 6074,
+          "faces": 6053,
+          "finite": true,
+          "indices_valid": true,
+          "uv_finite": true,
+          "position_sha256": "4eb094fde920cd072b1c2ff66d340d577ef52ba2d9db6083258103ad15ef24c9"
+        }
+      },
+      "graph_preserved": true,
+      "motion": {
+        "finite": true,
+        "min_id": 0,
+        "max_id": 4
+      },
+      "generator_sha256": "56231b12ed773ac5f3ba50d2d3e4e12ffd52bb3a5f15c3c3318ac6d16da815b2",
+      "primary_radius_threshold": 0.02850000000000001,
+      "leaf_count": 21848,
+      "foliage_attributes": {},
+      "topology": {
+        "components": 1,
+        "boundary": 0,
+        "nonmanifold": 0
+      },
+      "foliage_attachment_max_offset": 0.0452999472618103,
+      "foliage_anchor_max_distance": 5.1577826525317505e-06,
+      "foliage_anchor_count": 21848,
+      "surface_method": "shared_collars",
+      "clearance_limited_ports": 38,
+      "source_sha256": {
+        "growth.py": "f66c812bead3bf77413094612c299e02aedaed9b97f9729f1d63677cc3a2d259",
+        "tree_lab_addon.py": "b8bf287d27af0992fcbe780b31251a123bbec735ec5e51df8ee2c30912dce79d",
+        "build_oak_studies.py": "45ec7e0718a350a803c8714a71d9b3daf343459a1b0da0dae58c246a914596d7",
+        "surface.py": "f31a6033d26a4136b8c9a7ae0d1799564164f7c1c3f7d2d0ec34a75406bbe741"
+      }
+    }
+  ],
+  "qualification": "Native Generate with the exact proposed committed builder, excluding pre-existing user art edits; unchanged fixed saved oak18 graph/settings. Module SOURCE was restored immediately after invoking Generate. Collection generator_sha256 reads the worktree builder, so actual selected builder hash is recorded separately here.",
+  "actual_builder_sha256": "ce3a0b14db59b90b176023f338c20f62995a2d4b920befed53c7b53e9200f94e"
+}
