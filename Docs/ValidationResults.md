@@ -32300,3 +32300,56 @@ This is research only, with no animation implementation or motion/performance pa
 Independent re-review APPROVED the corrected wind research recommendation.
 Approval is limited to technical framing and implementation boundaries; it does
 not qualify animation, visual quality or performance. No runtime wind changes.
+
+## MTREE-FEASIBILITY-001/v1 — Blender module evaluation
+
+Defined 2026-09-21 before generation. This is an authoring-module feasibility
+check, not playable-world, visual-quality or performance acceptance. No game
+assets, installed catalog, source libraries or renderer settings are changed.
+The canonical figure-eight is not required for this research-only change.
+
+Environment: visible Blender 5.2.2 LTS, Python 3.13.13, Windows x64; s&box
+26.09.15 is running the existing world. Upstream release 5.5.2/tag
+`eca242d1b7208ea2b0834a1d8723f5732c43dd2a`; inspected main
+`e1fb8273442655d3bd9cc8ba4474fc26cfbc6f67` has identical core, bindings and
+Python implementation files. Official Windows ZIP SHA256:
+`58aab6e397ae4659f8c4c08e5ac774b249476e681f4023f72a17ea413918897f`.
+Its bundled CPython 3.13 module imported successfully before this generation
+scenario was defined. It is loaded from a research directory, not installed
+as an enabled add-on or a game dependency.
+
+Fixed workload: create fresh native Tree/TrunkFunction objects for every run.
+Use release OAK trunk/branch/sub-branch presets with seeds 1701/1702/1703 for
+the standard generator. Separately use the identical trunk with a native
+GrowthFunction, seed 1702, five iterations and all other release defaults.
+Each path runs twice. Both use ManifoldMesher with radial_n_points=32 and
+smooth_iterations=4, matching the release quick generator. No leaves, LODs,
+materials or geometry-node modifiers are evaluated in this bounded check.
+
+Criteria: both paths finish without exceptions; vertices and exported numeric
+attributes are finite; topology indices are in range; nonzero mesh counts;
+repeat mesh/attribute hashes agree for the same recipe; record actual branch
+IDs/depths and whether an explicit parent ID is exported. Durations are
+observations, not a speed comparison or a shipping budget. Original scene
+object count must remain 59. Visual superiority, manifoldness, biological
+fidelity, full-addon UI compatibility, leaf billboarding, wind and s&box
+integration remain untested by this check. Results follow below.
+
+Run result: PASS for the bounded module criteria. Release OAK produced 118,614
+vertices/110,656 quads, 1,393 branch IDs and maximum depth 12; generation plus meshing
+took 170.105 ms then 71.728 ms. Default five-iteration growth produced 1,198 vertices/
+1,105 quads, 17 branch IDs and maximum depth 2; times 0.915 ms and 0.902 ms. Both repeated
+their own geometry/attribute hash exactly, all returned numeric arrays were
+finite, indices were in range and the scene remained 59 objects. Neither path
+exported `parent_id` or `parent_index`; source inspection confirms no such mesh
+attribute is produced. This is an integration gap, not failure of the defined
+module smoke criteria. Growth output extended to Z=-0.388m, requiring later
+visual/clearance review; no biological or visual quality pass is inferred.
+
+[Raw evidence](ValidationEvidence/ModularTree/module-feasibility-v1.json) records
+hashes, counts, bounds and each timing. No addon was enabled, no objects were
+added and no libraries or game assets were saved. The native module and addon
+Python definitions were loaded in memory only. In-world figure-eight, wind,
+leaves, LODs and visual comparison: NOT RUN, outside this research-only check.
+The existing production forest's pending acceptance is unchanged. See
+[the integration assessment](Research/ModularTreeEvaluation.md) for remaining gates.

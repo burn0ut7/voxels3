@@ -275,3 +275,15 @@ no animated-bounds disappearance. Review motion recordings independently; still
 images cannot qualify wind. Compare wind off/on through the unchanged canonical
 figure-eight and include depth/shadow, memory, tail latency and allocation costs.
 No wind animation or performance result is claimed by this research update.
+
+## Modular Tree evaluation, September 21
+
+[Modular Tree feasibility](ModularTreeEvaluation.md) compares the released
+5.5.2 native generator with the current Tree Lab source. It records a successful
+Blender 5.2.2 module check, the distinction between preset branching and the
+Growth node, missing exported parent identities, and required s&box LOD,
+wind and leaf-view correction work. It proposes offline authoring reuse;
+no replacement generator or runtime rendering change is implemented by that
+evaluation. The earlier September 20 wind section above is historical research;
+current implemented motion belongs to [Blender imports](../Architecture/BlenderTreeImport.md)
+and [Spawn trees](../Architecture/SpawnTrees.md).
