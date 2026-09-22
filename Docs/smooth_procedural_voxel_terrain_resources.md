@@ -70,6 +70,18 @@ and unmeasured alternatives; none is an implemented tree subsystem.
 | [s&box GPU instancing](https://sbox.game/dev/doc/rendering/shaders/gpu-instancing) | Shared model/material batching, transform/tint variation and procedural instances. | Custom branch parameters and generated-mesh integration need verification; batching does not remove leaf/shadow cost. |
 | [Facepunch foliage update](https://sbox.game/news/update-26-01-28) | Existing leaf lighting, distance cutoff and wind features to evaluate. | Feature announcement, not a generated-tree integration or project performance result. |
 
+The [leaf rendering study](Research/LeafRenderingOptimization.md) adds a dense-oak
+source audit, existing GPU measurements and ranked proposals that preserve leaf
+count or visible canopy coverage. It distinguishes the authored grove from the
+older spawn population; no new runtime optimization is claimed.
+
+| Additional leaf-performance source | Use | Transfer limit |
+| --- | --- | --- |
+| [SpeedTree SDK wind performance](https://docs8.speedtree.com/sdk/doku.php?id=legacy_pages%3Aperformance) | Separate full, branch and global motion by visible detail. | Historical middleware controls are not s&box import settings; measure compiled shader work. |
+| [AMD texel shading](https://gpuopen.com/learn/texel-shading/) | Small-triangle shading inefficiency and the costs of decoupled shading. | Research renderer; motivates profiling rather than an engine rewrite or promised speedup. |
+| [NVIDIA hashed alpha testing](https://research.nvidia.com/publication/2017-02_hashed-alpha-testing) | Preserve minified foliage coverage while understanding noise and temporal tradeoffs. | A quality technique, not automatic performance improvement or permission to reintroduce shimmer. |
+| [Unity texture importer](https://docs.unity.cn/2020.1/Documentation/Manual/class-TextureImporter.html) | Explicit alpha-test coverage preservation in generated mipmaps. | Documents Unity's implementation; s&box support and actual canopy coverage must be verified separately. |
+
 ### Regional generation references
 
 The [biome terrain proposal](Research/BiomeTerrainGeneration.md) records the
