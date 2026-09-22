@@ -1,0 +1,311 @@
+--- a/Assets/shaders/trees/tree_impostor.shader
++++ b/Assets/shaders/trees/tree_impostor.shader
+@@ -36,6 +36,7 @@
+ 	#include "common/vertex.hlsl"
+ 	#include "trees/tree_wind.hlsl"
+ 	float3 g_vTreeSourceHalfExtents;
++	float g_flTreeAzimuths < Default( 8.0 ); >;
+ 	PixelInput MainVs( VertexInput i )
+ 	{
+ 		PixelInput o = ProcessVertex( i );
+@@ -56,13 +57,13 @@
+ 			// Shadow projection follows the light, independent of cascade origin.
+ 			view = -float3( dot( g_vCameraDirWs, axisX ), dot( g_vCameraDirWs, axisY ), dot( g_vCameraDirWs, axisZ ) );
+ 		#endif
+-		float azimuth = frac( atan2( view.y, view.x ) / 6.2831853 + 1.0 ) * 8.0;
++		float azimuth = frac( atan2( view.y, view.x ) / 6.2831853 + 1.0 ) * g_flTreeAzimuths;
+ 		float elevation = clamp( (asin( clamp( view.z, -1.0, 1.0 ) ) * 57.2957795 + 15.0) / 30.0, 0.0, 3.0 );
+ 		o.vFrameInfo = float4( floor( azimuth ), min( floor( elevation ), 2.0 ), frac( azimuth ), elevation - min( floor( elevation ), 2.0 ) );
+ 		#if D_TREE_SHADOW
+-			float2 frame = float2( fmod( floor( azimuth + 0.5 ), 8.0 ), floor( elevation + 0.5 ) );
++			float2 frame = float2( fmod( floor( azimuth + 0.5 ), g_flTreeAzimuths ), floor( elevation + 0.5 ) );
+ 			o.vFrameInfo = float4( frame, 0.0, 0.0 );
+-			float yaw = frame.x * 0.785398163;
++			float yaw = frame.x * 6.2831853 / g_flTreeAzimuths;
+ 			float pitch = (frame.y * 30.0 - 15.0) * 0.0174532925;
+ 			view = float3( cos( pitch ) * cos( yaw ), cos( pitch ) * sin( yaw ), sin( pitch ) );
+ 		#endif
+@@ -73,11 +74,31 @@
+ 		}
+ 		right = normalize( right );
+ 		float3 up = normalize( cross( view, right ) );
+-		// Bound raster work to the source box projected into this view. Padding
+-		// retains leaf facing and the bounded root bend at the silhouette.
+ 		float3 halfSize = g_vTreeSourceHalfExtents;
+-		float2 planeSize = 2.0 * float2( dot( abs( right ), halfSize ), dot( abs( up ), halfSize ) ) + 2.0 * TREE_VIEW_PADDING;
+-		float2 planeUv = (i.vTexCoord.xy - 0.5) * planeSize / diameter;
++		#if D_TREE_SHADOW
++			// The directional light uses an orthographic silhouette.
++			float2 planeSize = 2.0 * float2( dot( abs( right ), halfSize ), dot( abs( up ), halfSize ) ) + 2.0 * TREE_VIEW_PADDING;
++			float2 planeUv = (i.vTexCoord.xy - 0.5) * planeSize / diameter;
++		#else
++			// Project the complete padded box onto the billboard's center plane.
++			// Orthographic extents clip branches in front of that plane: perspective
++			// enlarges them before the pixel shader reconstructs their depth.
++			float distance = max( length( camera ), 1.0 );
++			float2 minimum = float2( 1e10, 1e10 );
++			float2 maximum = float2( -1e10, -1e10 );
++			for ( int cornerIndex = 0; cornerIndex < 8; cornerIndex++ )
++			{
++				float3 corner = (halfSize + TREE_VIEW_PADDING) * float3(
++					(cornerIndex & 1) == 0 ? -1.0 : 1.0,
++					(cornerIndex & 2) == 0 ? -1.0 : 1.0,
++					(cornerIndex & 4) == 0 ? -1.0 : 1.0 );
++				float perspective = distance / max( distance - dot( corner, view ), 1.0 );
++				float2 projected = float2( dot( corner, right ), -dot( corner, up ) ) * perspective;
++				minimum = min( minimum, projected );
++				maximum = max( maximum, projected );
++			}
++			float2 planeUv = lerp( minimum, maximum, i.vTexCoord.xy ) / diameter;
++		#endif
+ 		float3 plane = (right * planeUv.x - up * planeUv.y) * diameter;
+ 		o.vTextureCoords.xy = planeUv + 0.5;
+ 		o.vLocalCamera = camera / diameter;
+@@ -134,6 +155,7 @@
+ 	float g_flTreeTilePixels < Default( 512.0 ); >;
+ 	float3 g_vTreeFrameCenter;
+ 	float3 g_vTreeSourceHalfExtents;
++	float g_flTreeAzimuths < Default( 8.0 ); >;
+ 	float g_flTreeDiameter;
+ 	struct TreePixelOutput
+ 	{
+@@ -146,7 +168,7 @@
+ 	void ReadTreeView( float2 frame, float3 camera, float3 plane, float lod, float3 wind, float gust,
+ 		out float4 color, out float2 finalUv, out float3 surface )
+ 	{
+-		float azimuth = frame.x * 0.785398163;
++		float azimuth = frame.x * 6.2831853 / g_flTreeAzimuths;
+ 		float elevation = (frame.y * 30.0 - 15.0) * 0.0174532925;
+ 		float3 direction = float3( cos( elevation ) * cos( azimuth ), cos( elevation ) * sin( azimuth ), sin( elevation ) );
+ 		float3 right = float3( -sin( azimuth ), cos( azimuth ), 0.0 );
+@@ -155,7 +177,7 @@
+ 		float denominator = min( dot( ray, direction ), -0.05 );
+ 		float travel = -dot( camera, direction ) / denominator;
+ 		float2 uv = float2( 0.5, 0.5 );
+-		float2 atlas = float2( 8.0, 4.0 );
++		float2 atlas = float2( g_flTreeAzimuths, 4.0 );
+ 		// Clamp to the coarser trilinear level's texel centers. Tile dimensions
+ 		// are powers of two and lod is capped before mip chains share a texel.
+ 		float border = 0.5 * exp2( ceil( lod ) ) / g_flTreeTilePixels;
+@@ -186,9 +208,9 @@
+ 			float lod = clamp( 0.5 * log2( max( max( dot( dx, dx ), dot( dy, dy ) ), 1.0 ) ),
+ 				0.0, log2( g_flTreeTilePixels ) - 2.0 );
+ 			float border = 0.5 * exp2( ceil( lod ) ) / g_flTreeTilePixels;
+-			float2 uv = (clamp( i.vTextureCoords.xy, border, 1.0 - border ) + i.vFrameInfo.xy) / float2( 8.0, 4.0 );
++			float2 uv = (clamp( i.vTextureCoords.xy, border, 1.0 - border ) + i.vFrameInfo.xy) / float2( g_flTreeAzimuths, 4.0 );
+ 			Material m = Material::Init( i );
+-			m.TextureCoords = i.vTextureCoords.xy / float2( 8.0, 4.0 );
++			m.TextureCoords = i.vTextureCoords.xy / float2( g_flTreeAzimuths, 4.0 );
+ 			m.Opacity = g_tColor.SampleLevel( TreeSampler, uv, lod ).a;
+ 			m.Opacity *= step( 0.0, min( i.vTextureCoords.x, i.vTextureCoords.y ) )
+ 				* step( max( i.vTextureCoords.x, i.vTextureCoords.y ), 1.0 );
+@@ -237,7 +259,7 @@
+ 				{
+ 					continue;
+ 				}
+-				float2 frame = float2( fmod( i.vFrameInfo.x + column, 8.0 ), i.vFrameInfo.y + row );
++				float2 frame = float2( fmod( i.vFrameInfo.x + column, g_flTreeAzimuths ), i.vFrameInfo.y + row );
+ 				float4 sampleColor;
+ 				float2 sampleUv;
+ 				float3 sampleSurface;
+@@ -259,7 +281,7 @@
+ 		float3 world = origin + (axisX * local.x + axisY * local.y + axisZ * local.z) * scale;
+ 		i.vPositionWithOffsetWs = world - g_vHighPrecisionLightingOffsetWs.xyz;
+ 		Material m = Material::Init( i );
+-		m.TextureCoords = i.vTextureCoords.xy / float2( 8.0, 4.0 );
++		m.TextureCoords = i.vTextureCoords.xy / float2( g_flTreeAzimuths, 4.0 );
+ 		m.Opacity = combined.a;
+ 		m.Roughness = 0.85;
+ 		m.Metalness = 0.0;
+--- a/Editor/TreeImpostorBaker.cs
++++ b/Editor/TreeImpostorBaker.cs
+@@ -90,6 +90,7 @@
+ 		var diameter = (maximum - minimum).Length * 1.04f;
+ 		if ( !float.IsFinite( diameter ) || diameter <= 0f ) throw new InvalidOperationException( "Invalid tree bounds." );
+ 		var outputPixels = manifest.RootElement.GetProperty( "stage" ).GetString() == "Juvenile" ? 256 : 1024;
++		var azimuths = modelFiles.Count > 1 ? 16 : 8;
+ 		var directory = Path.Combine( root, ".codex/tree-build/imported-impostors", specimen );
+ 		Directory.CreateDirectory( directory );
+ 		var rowPath = Path.Combine( directory, $"row-{elevationRow}.json" );
+@@ -108,12 +109,19 @@
+ 					var tree = new GameObject( true, "Imported tree asset bake" );
+ 					renderer = tree.Components.Create<ModelRenderer>();
+ 					renderer.Model = model;
+-					renderer.LodOverride = 0;
++					renderer.LodOverride = modelFiles.Count > 1 ? 2 : 0;
+ 					scene.EditorTick( 0f, 0f );
+ 				}
+ 				if ( !renderer.SceneObject.IsValid() ) throw new InvalidOperationException( "Tree renderer was not created." );
+ 				renderer.SceneObject.Flags.CastShadows = false;
+ 				renderer.SceneObject.Attributes.Set( "TreeWind", Vector4.Zero );
++				// Authored multipart trees reach their minimum leaf retention before
++				// the distant handoff. Capture that same production vertex path,
++				// including the coarsest blade shape, instead of restoring every leaf.
++				if ( modelFiles.Count > 1 )
++				{
++					renderer.SceneObject.Attributes.Set( "TreeLeafView", new Vector4( center + Vector3.Up * (diameter + 10000f), 1f ) );
++				}
+ 				var originals = new Material[model.Materials.Length];
+ 				var depths = new Material[originals.Length];
+ 				for ( var index = 0; index < originals.Length; index++ )
+@@ -139,9 +147,9 @@
+ 				BackgroundColor = Color.Transparent, EnablePostProcessing = false, AntiAliasing = true
+ 			};
+ 			var bitmap = new Pixmap( 1024, 1024 );
+-			for ( var view = 0; view < 8; view++ )
++			for ( var view = 0; view < azimuths; view++ )
+ 			{
+-				camera.Rotation = Rotation.From( new Angles( -15f + elevationRow * 30f, view * 45f + 180f, 0f ) );
++				camera.Rotation = Rotation.From( new Angles( -15f + elevationRow * 30f, view * (360f / azimuths) + 180f, 0f ) );
+ 				camera.Position = center - camera.Rotation.Forward * diameter * 2f;
+ 				camera.Attributes.Set( "TreeBakeCenter", center );
+ 				camera.Attributes.Set( "TreeBakeDirection", -camera.Rotation.Forward );
+@@ -164,8 +172,9 @@
+ 				Version = 2, Specimen = specimen, ElevationRow = elevationRow, RenderModels = modelFiles,
+ 				LeafFacing = "source material feature preserved for all passes",
+ 				Center = new[] { center.x, center.y, center.z }, Diameter = diameter,
+-				CapturePixels = 1024, OutputPixels = outputPixels, Azimuths = 8,
+-				Elevations = new[] { -15, 15, 45, 75 }, Lod = 0,
++				CapturePixels = 1024, OutputPixels = outputPixels, Azimuths = azimuths,
++				Elevations = new[] { -15, 15, 45, 75 }, Lod = modelFiles.Count > 1 ? 2 : 0,
++				LeafRetention = modelFiles.Count > 1 ? "runtime minimum" : "full",
+ 				Wind = "disabled on object and material copies", SourceHashes = hashes
+ 			};
+ 			File.WriteAllText( rowPath, JsonSerializer.Serialize( metadata, new JsonSerializerOptions { WriteIndented = true } ) );
+--- a/Tools/pack_tree_impostors.py
++++ b/Tools/pack_tree_impostors.py
+@@ -6,6 +6,7 @@
+ import re
+ import numpy as np
+ from PIL import Image
++from scipy.ndimage import distance_transform_edt
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ SOURCE = ROOT / '.codex/tree-build/imported-impostors'
+@@ -37,6 +38,16 @@
+     # Native NormalMap writes encoded normals directly; the custom depth is
+     # captured through Albedo, which writes sRGB. Decode only that depth pass.
+     height = reduce(linear(depth[:, :, 0]) * alpha) / np.maximum(coverage, 1e-6)
++    # Reprojection starts on the center plane, outside the captured silhouette
++    # for foreground branches. Carry the nearest surface depth through empty
++    # texels so the first correction can reach those branches. Color coverage
++    # remains unchanged; a center-plane depth outside a narrow dilation clips
++    # branch tips as perspective grows near the mesh/impostor handoff.
++    covered = coverage > 1e-5
++    if not np.any(covered):
++        raise ValueError(f'Empty tree capture: {directory}/{row}-{view}')
++    nearest = distance_transform_edt(~covered, return_distances=False, return_indices=True)
++    height = height[tuple(nearest)]
+     # Native AO debug explicitly cancels the target's sRGB encoding, like
+     # NormalMap. Preserve it as linear numeric data, unlike the depth pass.
+     ao = reduce(occlusion[:, :, 0] * alpha) / np.maximum(coverage, 1e-6)
+@@ -50,7 +61,7 @@
+         new = (~valid) & (count > 0)
+         packed[new] = total[new] / count[new, None]
+         valid |= new
+-    packed[~valid, 7] = .5
++    packed[:, :, 7] = height
+     return [np.uint8(np.clip(value * 255 + .5, 0, 255)) for value in
+         (packed[:, :, :3], coverage, packed[:, :, 3:6], packed[:, :, 7], packed[:, :, 6])]
+ 
+@@ -73,8 +84,11 @@
+             metadata = json.loads((directory / f'row-{row}.json').read_text())
+             assert metadata['Version'] == 2 and metadata['Specimen'] == key and metadata['ElevationRow'] == row
+             assert metadata['CapturePixels'] == 1024 and metadata['OutputPixels'] in (256, 1024)
+-            assert metadata['Azimuths'] == 8 and metadata['Elevations'] == [-15, 15, 45, 75]
+-            assert metadata['Wind'] == 'disabled on object and material copies' and metadata['Lod'] == 0
++            assert metadata['Azimuths'] in (8, 16) and metadata['Elevations'] == [-15, 15, 45, 75]
++            assert metadata['Wind'] == 'disabled on object and material copies'
++            multipart = len(metadata['RenderModels']) > 1
++            assert metadata['Lod'] == (2 if multipart else 0)
++            assert metadata['LeafRetention'] == ('runtime minimum' if multipart else 'full')
+             assert metadata['LeafFacing'] == 'source material feature preserved for all passes'
+             source_manifest_path = f'Assets/models/tree_lab/{key}/manifest.json'
+             assert source_manifest_path in metadata['SourceHashes'], 'Missing manifest provenance'
+@@ -85,9 +99,9 @@
+             for path, expected in metadata['SourceHashes'].items():
+                 assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == expected, f'Stale bake {key}/{row}: {path}'
+             if row:
+-                for field in ('Center', 'Diameter', 'SourceHashes', 'OutputPixels', 'RenderModels', 'LeafFacing'):
++                for field in ('Center', 'Diameter', 'SourceHashes', 'OutputPixels', 'Azimuths', 'RenderModels', 'LeafFacing', 'Lod', 'LeafRetention'):
+                     assert metadata[field] == rows[key, 0][field], f'Inconsistent {key}/{row}: {field}'
+-            for view in range(8):
++            for view in range(metadata['Azimuths']):
+                 for mode in ('Albedo', 'NormalMap', 'Depth', 'AmbientOcclusion'):
+                     with Image.open(directory / f'{row}-{view}-{mode}.png') as image:
+                         assert image.size == (1024, 1024) and image.mode == 'RGBA'
+@@ -97,9 +111,9 @@
+     for key in keys:
+         metadata = rows[key, 0]
+         size = metadata['OutputPixels']
+-        textures = [Image.new(mode, (size * 8, size * 4)) for mode in ('RGB', 'L', 'RGB', 'L', 'L')]
++        textures = [Image.new(mode, (size * metadata['Azimuths'], size * 4)) for mode in ('RGB', 'L', 'RGB', 'L', 'L')]
+         for row in range(4):
+-            for view in range(8):
++            for view in range(metadata['Azimuths']):
+                 arrays = reduce_frame(SOURCE / key, row, view, size)
+                 for texture, values in zip(textures, arrays):
+                     texture.paste(Image.fromarray(values), (view * size, row * size))
+@@ -122,13 +136,14 @@
+             + ''.join(f'\tTexture{parameter} "textures/trees/impostors/{key}_{suffix}.png"\n' for parameter,suffix in
+                 (('Color','color'),('Coverage','coverage'),('ObjectNormal','normal'),('Depth','depth'),('Occlusion','occlusion')))
+             + f'\tg_flTreeTilePixels {size}\n\tg_flTreeHeight {height:.9g}\n'
++            + f'\tg_flTreeAzimuths {metadata["Azimuths"]}\n'
+             + f'\tg_vTreeFrameCenter "[{center}]"\n\tg_flTreeDiameter {metadata["Diameter"]:.9g}\n'
+             + '\tg_flAlphaTestReference 0.3\n}\n',newline='\r\n')
+         pending_material.replace(material)
+         result = {**metadata, 'Version':3, 'NormalEncoding':'signed-object-rgb',
+             'PackerSHA256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+             'MaterialSHA256':hashlib.sha256(material.read_bytes()).hexdigest(), 'OutputHashes':hashes,
+-            'Packing':'linear alpha-weighted albedo/depth/AO, signed object normalRGB, separate AO,16px edge dilation'}
++            'Packing':'linear alpha-weighted albedo/depth/AO, signed object normalRGB, separate AO,16px color edge dilation, full nearest-surface depth padding'}
+         pending = manifest_path.with_suffix('.pending.json')
+         pending.write_text(json.dumps(result,indent=2)+'\n')
+         pending.replace(manifest_path)
+--- a/Code/Voxels/Trees/TreeDistantModel.cs
++++ b/Code/Voxels/Trees/TreeDistantModel.cs
+@@ -25,6 +25,7 @@
+ 	private sealed class FarManifest
+ 	{
+ 		public int Version { get; set; }
++		public int Azimuths { get; set; }
+ 		public string NormalEncoding { get; set; }
+ 		public string Specimen { get; set; }
+ 		public float[] Center { get; set; }
+@@ -45,7 +46,7 @@
+ 		var manifest = JsonSerializer.Deserialize<ExportManifest>( sourceText );
+ 		var farManifest = JsonSerializer.Deserialize<FarManifest>( farText );
+ 		if ( farManifest?.Version != 3 || farManifest.NormalEncoding != "signed-object-rgb" ||
+-			farManifest.Specimen != key || farManifest.Center?.Length != 3 ||
++			farManifest.Specimen != key || farManifest.Azimuths is not (8 or 16) || farManifest.Center?.Length != 3 ||
+ 			!float.IsFinite( farManifest.Diameter ) || farManifest.Diameter <= 0f || farManifest.SourceHashes is null || manifest?.Files is null )
+ 			throw new InvalidOperationException( $"Invalid distant tree metadata: {key}" );
+ 		foreach ( var file in manifest.Files )
+@@ -73,11 +74,12 @@
+ 		if ( !float.IsFinite( center.x ) || !float.IsFinite( center.y ) || !float.IsFinite( center.z ) ||
+ 			(center - sourceBounds.Center).Length > 0.05f || Math.Abs( diameter - sourceBounds.Size.Length * 1.04f ) > 0.05f )
+ 			throw new InvalidOperationException( $"Distant tree framing differs from imported model: {key}" );
+-		if ( Cache.TryGetValue( key, out var cached ) && cached.Source == sourceText && cached.Far == farText && cached.LayoutVersion == 3 ) return cached.Model;
++		if ( Cache.TryGetValue( key, out var cached ) && cached.Source == sourceText && cached.Far == farText && cached.LayoutVersion == 4 ) return cached.Model;
+ 		var material = Material.Load( $"materials/trees/impostors/{key}.vmat" );
+ 		if ( material is null ) throw new InvalidOperationException( $"Missing distant tree material: {key}" );
+ 		material = material.CreateCopy();
+ 		material.Set( "g_vTreeSourceHalfExtents", sourceBounds.Size * 0.5f );
++		material.Set( "g_flTreeAzimuths", (float)farManifest.Azimuths );
+ 		material.Set( "g_flTreeLodFade", 0f );
+ 		// Vertical strips retain the root-anchored bend; all views share this mesh.
+ 		const int rows = 16;
+@@ -103,10 +105,10 @@
+ 		mesh.Bounds = bounds;
+ 		// The vertex shader expands coincident centers into a diameter-wide view.
+ 		// Streaming cannot infer its world/UV scale from that collapsed mesh.
+-		// A horizontal atlas tile spans one eighth of the full texture.
+-		mesh.UvDensity = diameter * 8f;
++		// A horizontal atlas tile spans one capture column of the texture.
++		mesh.UvDensity = diameter * farManifest.Azimuths;
+ 		var result = Model.Builder.AddMesh( mesh ).WithViewBounds( bounds ).Create();
+-		Cache[key] = new( sourceText, farText, 3, result );
++		Cache[key] = new( sourceText, farText, 4, result );
+ 		return result;
+ 	}
+ }

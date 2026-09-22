@@ -32884,3 +32884,86 @@ evidence: [046 report](ValidationEvidence/TreePerformance/single-tree046-report.
 Scene/assets remain local because the preexisting tree subsystem is untracked
 and its earlier100tree optimization memory qualification is incomplete. Only
 this task's documentation/evidence is eligible for publication here.
+
+## TREE-LOD-CONTINUITY-045 final acceptance (2026-09-22)
+
+Fixed foreground branch clipping during the authored tree's detailed/distant
+handoff. The visible plane encloses the perspective-projected padded source box;
+packing extends nearest covered depth throughout each tile without changing
+coverage. Multipart bakes match runtime minimum leaf retention and LOD2, with
+16azimuths x4elevations instead of8x4. Metadata owns shader/streaming layout.
+The active dense oak is rebuilt; unused legacy8-view assets remain compatible.
+Source geometry,32-triangle shared far mesh,12/16m hysteresis and0.35s fade remain.
+The separate sprite-leaf task's role/LOD changes are preserved.
+
+Scenarios were declared before execution in this working ledger:045/v1 ground
+views,045/v2 corrected039 poses, isolated six700in/15degree/FOV75 paired views,
+angular boundaries, and450..810in retreat/approach in10in increments. Ground225/
+270 views occluded by terrain were unavailable. Final native single-oak pairs
+repeat the same isolated specimen/transform at0/90/180/225/270/315degrees;
+2000/4000in azimuth180 views confirm visibility at50.8/101.6m. Both temporal legs
+have37frames, complete monotonic complementary fades, and retained major limbs.
+Fine leaf/wind/parallax differences remain; no pixel-identity claim. Final images
+were inspected. No new runtime test hooks, components, scenes or frameworks.
+
+Preserved failures: bounds-only, one-step and zero-step depth candidates did not
+repair the contour; full nearest depth repaired tips but original full-density
+bakes differed from reduced runtime foliage.8-view angular gaps motivated16views.
+Initial component-GUID comparison targeted the wrong scene copy and was invalid.
+A hot-reload8-layout/16-texture mismatch doubled the image; explicit metadata
+binding/cache invalidation and fresh Play resolved setup. Overlapping045/046
+captures are marked invalid. Native collision-settled guards rejected several
+preflight resets; no timed runs started from those attempts. Scene/viewport and
+asset-inventory differences were recorded rather than changing pass thresholds.
+
+Final unchanged TREE-PERFORMANCE-038/v1 matched pair:100enabled authored trees,
+seed1337/generator52, engine26.09.15, RTX5090/9800X3D, physical2769x1529,FOV75,
+player(-1.6258175,1.2225341,340), view0, speed2500,distance50000,one loop,
+clearance393.7008, radius8,LOD0..5,half-extents4/4,cells32/base16,grass64m.
+Production warmup requires4913collision chunks ready and zero pending collision,
+visual/seam/placement work plus water ready; automatic completion/10sstanding.
+Both sessions start cold with the same post-cleanup asset inventory. Control
+restores this task's original four sources and rebuilds the production32-view
+bake; concurrent sprite-leaf implementation stays identical. No source/asset or
+camera changes during timing. Native observations verify100enabled trees and
+use of the game camera. Exact source hashes and raw results are retained.
+
+Control fe21dbbc99254e0c9b799a52dfac1aa2 (19:35:38-19:38:04 local), source
+3e98d54d5b91449694332c624232d611460fa15b7bb77c655d5f5c40809fd231:
+moving395.8469FPS,p954.3312ms,p996.2969ms; standing214.95364FPS,
+p956.1544ms,p997.8512ms. Final f5478226e982419c9d844c15cb3b71a2
+(19:42:22-19:44:49), source
+b27eeb947abad6e8ee8eaeab6530037ecc1df198fc03b12217728581cdb029f0:
+moving393.83917FPS,p954.3226ms,p996.306ms; standing206.66315FPS,
+p956.4332ms,p998.0453ms. Final source/assets unchanged during the run.
+Moving/standing average process13765384024/13797364940B (+2.87/+2.38%);
+GPU4358482588/4366922819B (+6.54/+5.24%); allocations93275.945/60559.254B
+per frame (+3.38/+0.41%). All mean/tail/peak memory and allocation gates pass
+<=10%; both FPS values exceed190. Moving FPS-0.51%,standing-3.86%.
+Zero timed exceptions and collision failures;4913ready0pending after completion.
+NearbyLOD0 first seen1.4s vs control1.6s; arrival observations settled15.4s vs13.7s.
+Post-stop physics settled into adjacent different cells(-1,0,0 vs0,0,0); all
+required terrain fully drained. Route durations121.94753/121.94529s; final total
+synchronous streaming459.23ms vs467.24ms and peak gameplay backlog1042vs1067.
+The firstF run dad328b2ca92498dbfae00584b4262e8 (391/219FPS) remains valid
+measured evidence but its editor started before unused-asset cleanup; its memory
+is not substituted for the matched pair. No historical qualification is waived.
+
+PASS for this LOD change's declared visual/performance gates. Shader/material and
+managed compilation pass; fresh visible startup and playable-world checks pass.
+Sentry last_crash remains2026-09-22T21:11:21.351197Z. Stock editor shutdowns logged
+prefab teardown/resource-library errors; preserved logs distinguish them from
+successful startup and zero timed runtime exceptions.
+
+FinalF11source/asset files and all manifest hashes verified byte-exactly. The
+user's single-oak scene is restored byte-exactly. Native readback confirms exactly
+one enabled tree,12/16thresholds,0.35sfade,free viewport and interactive Play,
+with the camera facing the oak. No temporary100-tree scene or forced detail remains.
+Runtime source/assets stay local because the pre-existing tree subsystem is
+untracked; publication includes only the task's isolated patch and evidence.
+
+[Implementation and result report](ValidationEvidence/TreeLodContinuity/lod045-report.md),
+[task-only patch](ValidationEvidence/TreeLodContinuity/lod045-source.patch),
+[matched metrics](ValidationEvidence/TreePerformance/lod045-matched-comparison.json),
+[six-angle images](ValidationEvidence/TreeLodContinuity/final-six-angles.jpg),
+[temporal images](ValidationEvidence/TreeLodContinuity/temporal-f-contact.jpg).
