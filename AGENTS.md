@@ -1,5 +1,14 @@
 # Voxels3 Agent Instructions
 
+## Editor Interaction
+
+For authorized development, import, debugging, and validation work, launch or
+reopen the relevant project in its target editor (including s&box and Blender)
+when needed. No separate launch permission is required. Check for an existing
+instance first and use it when possible. Keep the editor visible and interactive;
+do not launch headless game clients. This project-specific authorization takes
+precedence over a general instruction requiring separate editor-launch approval.
+
 ## Start Here
 
 - Use the `sbox` skill for s&box work before API research, planning, review, or
