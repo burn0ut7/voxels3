@@ -32846,3 +32846,41 @@ No installed game assets/runtime changed; figure-eight not run for this offline
 source-meshing change. Root/junction and measured resource criteria pass for the
 listed cases. Spruce crown calibration and the full goal remain OPEN; no solver
 change or game LOD/wind/leaf-perspective qualification is claimed by this step.
+
+
+## TREE-SINGLE-SPRITE-046 final result (2026-09-22)
+
+User-requested cleanup replaces100testtree instances with one fresh Sprite Leaf
+Test Oak in the saved basic_example.scene, using existing two-triangle leaf cards
+and wind. Close readback: woodLOD0,four foliageLOD2;544606exported leaves.
+Whole-tree/close rendered views and six fixed-camera wind frames inspected.
+Native ray hits Solid trunk ModelCollider. Zero compile errors. Editor left
+playing, camera facing the new oak, free viewport size. Non-tree scene content
+preserved apart from native regenerated clothing GUIDs.
+
+13unused experimental specimens/838files/10584924600bytes removed from Assets
+into .codex/unused-tree-archive-20260922. Automatic approval rejected permanent
+deletion("blocked by policy"), so this is reversible archival, not reclaimed
+diskspace.18catalog specimens and activeoak retained; all dependencies resolve,
+zero shipping references to removed keys.
+
+New baseline TREE-PERFORMANCE-038/v2-single-tree explicitly changes only authored
+tree workload at user's request; remaining canonical038/v1 inputs preserved:
+seed1337/gen52,26.09.15,2769x1529,FOV75,speed2500,distance50000,one loop,
+start(-1.6258175,1.2225341,340),grass64m,radius8,LOD0..5,4/4,cells32/base16,
+4913ready/zero pending warmup,automatic drain and10sstanding. Existing hoteditor
+after severalPlay sessions. No comparison against100trees or memory-gate waiver.
+Run02dbf9db2e664b4881344906bf4e1dbb completed19:28:24local: moving405.23413FPS,
+p954.0947ms,p996.1022ms;standing326.73407FPS,p954.1594ms,p996.0031ms. Zero
+timedexceptions/collisionfailures,4913ready0pending,settled8.9s;source/assets
+unchanged. Processaverage12299448487/12412217753B,GPU5232101391/5187267055B;
+allocations69243.625/34056.348B/frame. Newbaseline correctness/completion PASS.
+
+Failures retained: firstnative trigger rejected unsettled collision with no run;
+firstvisual failed during concurrent8shader/16atlas mismatch. AllF sources/assets
+restored byte-exactly; restartedPlay before verified captures. Old100tree scene,
+task-only scene patch, inventory, sourceidentity, rawrun and accepted/rejected
+evidence: [046 report](ValidationEvidence/TreePerformance/single-tree046-report.md).
+Scene/assets remain local because the preexisting tree subsystem is untracked
+and its earlier100tree optimization memory qualification is incomplete. Only
+this task's documentation/evidence is eligible for publication here.
