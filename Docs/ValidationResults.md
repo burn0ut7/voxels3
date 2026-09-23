@@ -33736,3 +33736,111 @@ Native camera_screenshot used the main camera FOV; querying ejected-camera
 state in Game mode returned the expected handled tool-mode error,so final
 restoration was checked through Main Camera instead. Final source/atlas
 hashes and unchanged source mesh/controller/baker/scene checks pass.
+
+## TREE-HUNDREDS-051/v1 - population measurements (2026-09-23)
+
+User requests testing hundreds of trees. Source: 2a1cdadc plus current working
+source hashes in TreeHundreds051/before.json; includes accepted baked foliage
+and 050 opaque distant trunk/adaptive far refinement. No runtime source change.
+Engine26.09.15, RTX5090/9800X3D, basic_example, seed1337/gen52, grass64m,
+normal12/16m/.35s detail policy. Preserve saved scene bytes and existing content.
+Use real prefab instances and existing native diagnostics in visible interactive
+Play; no new game component/scene/hook. Test objects are unsaved runtime content.
+
+Wide observations reuse 048/forest-v1 placement artifact unchanged, SHA256
+4784f5bad0cf87fd8ab4ff4d466e379fecd70fdb3caffaeea882b8c3ae3d6eaa,
+unit scale/zero rotation, 240-inch terrain-grounded grid. Run prefixes
+1/64/256 and a new512 prefix. Existing original oak counts as the first tree.
+Camera(-6200,-6200,3600),angles(20,45,0),FOV60,physical2769x1529.
+512 is a new population point; it is not a revised historic1024 workload.
+Current stationary player/terrain interest remains(2822.03247,2047.86267,
+1450.11035), flying enabled, as found at task start. This differs from historical
+sessions; historical results are context, not a strict source-only comparison.
+
+For256 and512 also observe near camera(-2110,-2110,350),angles(-8,45,0),
+then inner-crown camera(-1864,-1864,250.125),angles(-35,45,0),bothFOV60.
+These are additional near-population workloads, not substitutes for wide views.
+At every pose use20s settle then10diagnostics one second apart, GPU overlay on,
+followed by native1600x900capture. Record actual camera/resolution, live named
+GPU scopes, rollingFPS/p95/p99, CPU Update/Render, process/GPU memory, counts,
+representation readbacks and errors. Camera/player interruption stops control;
+<30FPS aborts and removes temporary instances. New errors/missing materials,
+invalid placements or failed source-stability checks prevent qualification.
+Report against exploratory120FPS/p95<=12ms/p99<=20ms near-view targets;
+retain failures without thinning or tuning the population. Existing extra-forest
+budget<=1msGPU/0.5msCPU remains a reported target, not an assumed result.
+
+The optional populated traversal uses the existing figure-eight production
+trigger with512trees and unchanged route speed2500,distance50000,one loop,
+start(-1.6258175,1.2225341,340),view0,0,0,FOV75,physical2769x1529,
+clearance393.7008 and10s standing after full drain. Readiness:4913collision,
+zero pending collision/visual/transition/placement/held bodies,water ready.
+This is TREE-HUNDREDS-051/route-v1, a new workload because population differs;
+it does not replace038/v2-single-tree or establish a source-only regression.
+Record frame/allocation/memory and streaming/correctness, target>=120FPS,
+CPU framep95<=12ms/p99<=20ms,zeroexceptions/failures,full final drain.
+Run only after static stages retain>=30FPS; player input remains enabled.
+
+Retain the test forest in the current Play session if requested or no preference
+arrives; restore one original tree on errors. Do not save it into the scene.
+After automated captures, return normal interactive controls/free viewport.
+
+051 static runs complete with stable source: wide1/64/256/512 last rollingFPS
+408.9/375.8/308.1/241.9; nearby256/512233.8/168.9; inside-crown196.8/164.1.
+All sampled windows pass exploratory120FPS,p95<=12ms,p99<=20ms. Far GPU
+increment at512 is1.7600ms versus one tree; Render/Update elapsed increments
+~1.47ms. The previous near-negligible<=1msGPU/0.5msCPU targets are not met.
+Six or seven of512 trees are detailed in the two near readbacks; all512real
+instances remain after measurements. No source edits or saved-world changes.
+
+051 populated route c216ac02901344319cc69de251319898 completed, source stable:
+376.2193FPS, p95/p99 4.7267/6.7723ms,standing250.29428FPS,5.2741/6.9895ms.
+Zero runtime exceptions; streaming/collision settle. Moving allocations
+185,804.58B/frame and standing154,198.73B/frame are materially above historical
+single-tree values, but those are different sessions/sources. Declare matching
+TREE-HUNDREDS-051/control-v1 before running: same current source and existing
+512 hierarchies, disable only the temporary forest parent (original oak stays
+active), retaining shared loaded assets. Use exact051 route-v1 parameters and
+native entry point. Disabled hierarchies are not a residency/unloading control.
+This is an attribution measurement, not changing an acceptance workload/gate.
+Compare moving/standing allocations and frame metrics; then re-enable the parent
+and restore the user's original player/view with free viewport/interactive Play.
+Preserve both runs even if results disagree. No optimization is being adopted.
+
+051 active-population control f1da81e657bd4c06817481e7a26fe225 completed with
+sourceUnchanged=true and exactmatching source revision/route/ending target.
+Moving415.04205FPS,p95/p993.8632/5.6389ms;standing418.9859FPS,
+3.4155/5.1625ms. Allocations moving68,880.36B/frame,standing33,833.277B/frame.
+Thus active512 versus one control adds116,924.22B/frame moving and120,365.453
+standing. Control zeroexceptions,settledstreaming. This is measured population
+cost, not a new source regression; no acceptance threshold was weakened.
+Disabled hierarchy/loadedassets remain,so this is not an unloading memory test.
+One-time spawning cost and precise allocating call site remain unmeasured.
+Per-tree OnPreRender child enumeration/validation and attribute updates are
+source-observed futureprofiling targets, not an allocation attribution claim.
+
+Populated route memory: moving processmean/peak5,280,282,523/5,483,421,696B,
+GPU4,102,865,315/4,110,382,139B;standingprocess5,558,446,080/5,559,177,216B,
+GPU4,111,021,115B mean/peak. Controlprocessmean/peak5,363,878,962/
+5,490,913,280B moving,5,523,369,984/5,523,922,944B standing;
+GPU4,150,283,969/4,160,648,251B moving,4,161,188,923B standingmean/peak.
+Current processmemory falls from earlier staticreadbacks during this session;
+no memory optimization claim is made. Populated post-loopdrain10234.114ms,
+synchronousstreaming446.41934ms,backlog873;4913collisionready,0pending/failures.
+Both phases' frame targets pass. No blanket near-negligible-cost qualification.
+
+[051 report](ValidationEvidence/TreeHundreds051/report.md),
+[measurement summary](ValidationEvidence/TreeHundreds051/summary.json),
+[populated route](ValidationEvidence/TreeHundreds051/populated-route-summary.json),
+[one-active-tree control](ValidationEvidence/TreeHundreds051/one-tree-control-summary.json).
+
+051 final restoration:512enabled trees retained only in current Play session,
+original oak intact, parentHundreds051 Forest enabled. Player restored to
+(2822.03247,2047.86267,1450.11035), original view reconstructed from captured
+quaternion, normalGamecamera/FOV75, free viewport, inputenabled. Finalstreaming
+settled,waterready,4913collisionready/0pending/failures. Source map matches task
+start exactly; savedscene19500bytes byte-identical. Eight historical stockresource
+errors; no new matching engine errors during051. Sentry marker11:35:06.312941Z.
+Initial final-image attempt selected the wrong screenshot tool and was rejected
+before rendering; corrected main-camera nativecapture succeeded and was inspected.
+No runtime optimization/source/scene asset edit is included in this task.
