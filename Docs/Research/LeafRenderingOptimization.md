@@ -1,5 +1,10 @@
 # Keeping full canopies affordable
 
+The initial audit below predates same-day tasks 046 and 047. For the current
+single-oak scene, two-triangle near leaves, changed shadows and large-world
+recommendations, see [the later scaling audit](#large-world-scaling-follow-up).
+Earlier measurements remain historical evidence for their recorded source state.
+
 Research date: 2026-09-22. This is a source audit and recommendation, not an
 implemented optimization or a new benchmark. The request is to retain the amount
 of leaves while reducing rendering cost. Preserve the authored trees and their
@@ -298,3 +303,160 @@ SHA-256 of decision-critical files at inspection:
 External pages were checked September 22, 2026; historical production dates are
 stated separately. No external engine's public benchmark is used to forecast a
 Voxels3 gain. Existing runtime evidence is linked, not rerun or reclassified.
+
+## Large-world scaling follow-up
+
+Later source inspection on September 22, 2026. Research only: no runtime changes,
+editor control, new benchmark or performance acceptance. The request expands from
+leaf cost to thousands of trees and other objects across a large world.
+
+### Current source corrections
+
+- The saved `basic_example.scene` now references exactly one dense oak, named
+  `Sprite Leaf Test Oak`. Task 046 replaced the earlier 100-tree setup. Existing
+  100-tree runs do not measure this scene or the subsequent shadow candidate.
+- `TreeModelLod.OnPreRender` forces foliage-only pieces to LOD2, including near
+  the player; wood still selects LOD0/1/2 at 3/6 m. There are five detailed
+  renderers: one wood model and four foliage models. The manifest still retains
+  544,606 leaves. Two triangles per leaf means 1,089,212 submitted leaf triangles
+  per complete detailed tree before visibility/retention rejection. The earlier
+  5,300,996 total describes the exported full LOD0 asset, not today's selected
+  mixed wood/foliage levels. Eight-to-four leaf simplification is no longer the
+  next experiment for this path: the cards are already two triangles.
+- The shader still reduces retention from 1.0 to 0.30 over 3-8 m from each leaf
+  pivot. This happens after vertex submission, not by compacting the input mesh.
+  Leaf count in the export is not visible canopy coverage.
+- The 12/16 m detailed/distant hysteresis and 0.35 s transition remain. Current
+  source restores detailed renderers' shadow types and uses the separate proxy
+  only for the distant contribution. Task 047 records an interrupted validation;
+  near shadows must not be described as an accepted all-distance cheap proxy.
+- Even a settled far tree retains its detailed renderer components and model
+  references. Every tree's `OnPreRender` enumerates children, validates renderer
+  membership/transforms, and updates attributes, including hidden detail. This
+  is an observable scaling concern, not a measured CPU bottleneck. Disabling a
+  renderer is not the same as streaming its detailed representation out.
+
+Source owners: [TreeModelLod](../../Code/Voxels/Trees/TreeModelLod.cs),
+[leaf shader](../../Assets/shaders/trees/tree_lab_foliage.shader),
+[dense manifest](../../Assets/models/tree_lab/oak_growth_18_open_grown_271828_dense/manifest.json),
+and [ledger](../ValidationResults.md), tasks 045 final acceptance, 046 and 047.
+
+### Proposed representation and residency policy
+
+Spend detail according to visible size and gameplay relevance. A large logical
+world need not keep every tree loaded as a detailed, updating game object.
+
+| Region or need | Proposed representation | Work to retain |
+| --- | --- | --- |
+| Close inspection | Detailed wood and individual leaves where resolvable | Convincing depth, attachment, light transmission, wind and shadows |
+| Middle distance | Baked spatial branch/leaf groups with simplified wood | Full crown, internal gaps and parallax; much less independent leaf work |
+| Distant individual trees | Existing multi-view impostors using shared assets | Stable silhouette, lighting and bounded shadow cost |
+| Very distant forest | Evaluate regional proxies only if individual impostors become costly | Forest skyline and major canopy structure |
+| Outside relevant cells | Persistent instance records or deterministic baseline | No resident detailed renderers, per-tree callback or unnecessary physics |
+
+These are proposed roles, not new fixed distance settings. Use projected size,
+FOV and canopy bounds to choose transitions: trunk-origin distance alone can
+misjudge a nearby outer branch. Keep hysteresis and visually matched fades;
+overlapping old/new representations temporarily increase work. Nearby quality
+must be judged under and inside overlapping crowns, not only from an exterior.
+
+Middle-distance groups are the strongest structural rendering candidate. Bake
+several leaves together while preserving coverage, depth and lighting. Tight,
+shaped cutouts matter: oversized overlapping rectangles exchange geometry cost
+for empty-pixel and overdraw cost. Keep the source tree unchanged and derive its
+representations offline. Tiny per-leaf geometry throughout an entire canopy is
+not necessary to preserve its perceived fullness.
+
+### Regional population and gameplay ownership
+
+For a future population slice, use one owner of stable tree identities and
+authoritative changes. The inputs would be versioned world seed, placement rules,
+species catalog, terrain support and tree edits; outputs would be regional
+instance records and derived render/collision interests. Exact spatial scale
+and budgets require design and measurement before implementation.
+
+Load nearby detail progressively, retain cheaper far records/instances, and
+release detail references when their regional interest ends. Reuse a bounded
+library of meshes, materials and textures with transform/tint variation. A tree
+record can carry identity, variant, transform and state without owning five
+permanent detailed renderers. Engine asset-cache reclamation must be measured;
+dropping references does not guarantee immediate GPU memory reclamation.
+
+Update region membership and transitions when needed instead of validating every
+static tree hierarchy every frame. Apply bounded creation/upload work on the
+supported engine thread; reject stale background results after region changes.
+Use spatial culling before detailed work, with conservative wind bounds. Do not
+assume custom terrain provides engine occlusion automatically. Batch by compatible
+asset/material within useful spatial groups; one enormous combined forest damages
+culling and makes local changes expensive.
+
+Keep visual, shadow and gameplay ranges independent. Solid trunks must exist
+where players, AI, vehicles or projectiles can interact, including server-side
+interests that have no render camera. Promote a tree to active falling/damage
+behavior when needed and persist its changed state. For multiplayer, deterministic
+placement must share seed/config/version; replicate authoritative relevant tree
+changes with a coherent late-join path, not leaf transforms. Chopping or terrain
+support changes must invalidate the corresponding distant representation too.
+These contracts are proposals, not a claim that tree networking is implemented.
+
+The same residency principles apply to rocks, shrubs and props. Species and
+object types still need their own quality/collision policies. Do not first build
+a universal world-object framework or a replacement rendering engine.
+
+### External evidence and choices
+
+[Epic's World Partition HLOD documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition---hierarchical-level-of-detail-in-unreal-engine)
+describes cell streaming, proxies for unloaded distant cells, and an instancing
+layer suited to tree/foliage impostors. Adopt the separation of logical objects,
+loaded detail and distant visibility as a design direction. Defer regional forest
+proxies until profiling shows they are needed. Unreal's editor assets and runtime
+are not available automatically in s&box, and procedural edits complicate proxy
+invalidation.
+
+[Crysis](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-16-vegetation-procedural-animation-and-shading-crysis)
+documents several leaves on low-polygon planes and GPU main/detail bending.
+[Fortnite's non-Nanite path](https://dev.epicgames.com/documentation/en-us/unreal-engine/impostor-baker-plugin-in-unreal-engine)
+uses distant tree impostors. Its
+[Nanite production account](https://www.unrealengine.com/en-US/tech-blog/bringing-nanite-to-fortnite-battle-royale-in-chapter-4)
+instead explains opaque geometry, preserved canopy area, baked wind and disabling
+distant deformation. Adopt preservation of visible coverage and distance-dependent
+work; do not transfer Nanite's geometry budgets to our conventional model path.
+
+[s&box automatic instancing](https://sbox.game/dev/doc/rendering/shaders/gpu-instancing)
+already batches compatible shared models/materials. Settled far/shadow objects
+permit batching in our source; detailed objects deliberately do not because of
+their dynamic attributes. Verify draws before changing this contract. Instancing
+reduces submission and asset duplication, not the visible geometry, alpha tests,
+wind or shadow work of all instances. Defer a custom GPU-driven renderer until
+measured CPU submission/culling cost justifies it.
+
+### First implementation and acceptance boundary
+
+1. Reproduce the reported slow close view on current source and complete the
+   unresolved shadow attribution. Record CPU/GPU frame milliseconds, detailed
+   versus distant counts and per-pass cost. FPS losses are not additive per tree.
+2. Prototype one coverage-preserving middle representation derived from the
+   existing oak, including a compatible shadow representation. Preserve close
+   appearance and compare geometry, overdraw, motion and transition costs.
+3. Introduce bounded regional residency through the real population owner, then
+   replace permanent detailed objects outside gameplay/visual interests. Measure
+   component work, asset residency, creation spikes and re-entry behavior.
+4. Qualify progressively larger fixed populations in the playable world while
+   keeping the canonical figure-eight scenario unchanged. Declare additional
+   forest workloads before running; do not compare unlike single/100/1000-tree
+   scenes as if they were an optimization of one workload.
+
+Choose target hardware, resolution, view range, forest density and frame budget
+before promising a count. At 120 FPS the entire frame has 8.33 ms; vegetation
+shares that with terrain and everything else. Record frame p95/p99, CPU and GPU
+passes, draws, allocations, process/GPU memory, streaming arrivals and correctness.
+Include close overlapping crowns, a wide forest view, movement/re-entry and
+relevant multiplayer interactions. No current result establishes thousands-tree
+performance or a constant cost per tree.
+
+Follow-up source SHA-256: `TreeModelLod.cs`
+`12c3e4f47f5d83e3fff82eee2622a44c391ca7901f65d9c54a1811fd4cc215cd`;
+leaf shader `aaac72be4e5abcea258e0313c9f5759dba7a9ca8543745e7a1766e1b6a6afd4b`;
+saved scene `e3343843476d7593abe7f716cb60de8c4e81ec4d2290f5710f39be23546a995c`.
+Dense manifest hash is unchanged from the initial audit. Documentation/source
+inspection only; the interrupted runtime task remains unqualified.
