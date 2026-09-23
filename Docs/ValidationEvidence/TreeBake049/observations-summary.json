@@ -1,0 +1,895 @@
+{
+  "note": "Detached-view frame-text GPU average is stale; use live named scopes. Values are smoothed scene-pass observations, not independent frame samples or isolated tree timings. FPS is the median of ten rolling windows; frame text and counters are final samples. The camera API is the render-view size authority.",
+  "gpuScopePaths": [
+    "CSM Cascade 0/DrawDepthOpaque",
+    "CSM Cascade 1/DrawDepthOpaque",
+    "RenderToSwapChain/Depth Normal Prepass (Overlay)",
+    "RenderToSwapChain/Depth Normal Prepass (Large)",
+    "RenderToSwapChain/Depth Normal Prepass (Small)",
+    "RenderToSwapChain/Dynamic Opaque Forward"
+  ],
+  "observations": [
+    {
+      "file": "baseline-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T06:31:32.216098+00:00",
+      "lastRollingFrameText": "153.4 FPS average; p95 7.79 ms; p99 10.17 ms; GPU 2.63 ms average",
+      "medianRollingFps": 153.7,
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.735033672,
+        "CSM Cascade 1/DrawDepthOpaque": 0.27862296,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0149589033,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.98628132,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.000686814207,
+        "RenderToSwapChain/Dynamic Opaque Forward": 1.16868905
+      },
+      "combinedMeanNamedGpuMilliseconds": 5.184272719507,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-near.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T06:44:03.447337+00:00",
+      "lastRollingFrameText": "236.2 FPS average; p95 4.64 ms; p99 7.08 ms; GPU 2.63 ms average",
+      "medianRollingFps": 241.1,
+      "frameCounters": {
+        "TrianglesRendered": 4707754,
+        "DrawCalls": 111,
+        "ObjectsRendered": 32,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.407061212,
+        "CSM Cascade 1/DrawDepthOpaque": 0.237025226,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0128536503,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 1.21113291,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00780713815,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.791479661
+      },
+      "combinedMeanNamedGpuMilliseconds": 2.66735979745,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-far.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T06:46:37.199884+00:00",
+      "lastRollingFrameText": "313.6 FPS average; p95 3.58 ms; p99 6.02 ms; GPU 2.63 ms average",
+      "medianRollingFps": 313.6,
+      "frameCounters": {
+        "TrianglesRendered": 67794,
+        "DrawCalls": 63,
+        "ObjectsRendered": 21,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0569639845,
+        "CSM Cascade 1/DrawDepthOpaque": 0.154672851,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01288354235,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.929168006,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00841029915,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.094775816
+      },
+      "combinedMeanNamedGpuMilliseconds": 1.256874499,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baked-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T06:54:36.312059+00:00",
+      "lastRollingFrameText": "255.2 FPS average; p95 4.33 ms; p99 6.75 ms; GPU 2.15 ms average",
+      "medianRollingFps": 258.4,
+      "frameCounters": {
+        "TrianglesRendered": 3848336,
+        "DrawCalls": 62,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.268495489,
+        "CSM Cascade 1/DrawDepthOpaque": 0.164097775,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0170447265,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 1.8522174900000001,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.001180920193,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.541319614
+      },
+      "combinedMeanNamedGpuMilliseconds": 2.844356014693,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1391
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baked-near.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T06:55:23.472083+00:00",
+      "lastRollingFrameText": "376.4 FPS average; p95 2.75 ms; p99 5.37 ms; GPU 2.15 ms average",
+      "medianRollingFps": 384.3,
+      "frameCounters": {
+        "TrianglesRendered": 400058,
+        "DrawCalls": 79,
+        "ObjectsRendered": 32,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.192716545,
+        "CSM Cascade 1/DrawDepthOpaque": 0.137785785,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01289186535,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.610087979,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00711273751,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.26208875
+      },
+      "combinedMeanNamedGpuMilliseconds": 1.2226836618599999,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1391
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:21:05.393960+00:00",
+      "lastRollingFrameText": "239.0 FPS average; p95 4.68 ms; p99 7.07 ms; GPU 2.29 ms average",
+      "medianRollingFps": 239.0,
+      "frameCounters": {
+        "TrianglesRendered": 3930256,
+        "DrawCalls": 62,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.279965677,
+        "CSM Cascade 1/DrawDepthOpaque": 0.163226125,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01631564085,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.00390681,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0009620687860000001,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.662243792
+      },
+      "combinedMeanNamedGpuMilliseconds": 3.126620113636,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1391
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-near.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:22:12.571873+00:00",
+      "lastRollingFrameText": "344.4 FPS average; p95 3.16 ms; p99 5.54 ms; GPU 2.29 ms average",
+      "medianRollingFps": 344.4,
+      "frameCounters": {
+        "TrianglesRendered": 481978,
+        "DrawCalls": 79,
+        "ObjectsRendered": 32,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.243301833,
+        "CSM Cascade 1/DrawDepthOpaque": 0.143741666,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01292974105,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.771688699,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00865214424,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.34512776700000003
+      },
+      "combinedMeanNamedGpuMilliseconds": 1.52544185029,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1391
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-far.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:24:17.150197+00:00",
+      "lastRollingFrameText": "348.5 FPS average; p95 3.07 ms; p99 5.49 ms; GPU 2.29 ms average",
+      "medianRollingFps": 356.0,
+      "frameCounters": {
+        "TrianglesRendered": 67794,
+        "DrawCalls": 63,
+        "ObjectsRendered": 21,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0452864556,
+        "CSM Cascade 1/DrawDepthOpaque": 0.138508197,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01288273125,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.646376581,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.008295736,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0905456014
+      },
+      "combinedMeanNamedGpuMilliseconds": 0.94189530225,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1391
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:30:01.621880+00:00",
+      "lastRollingFrameText": "436.0 FPS average; p95 2.45 ms; p99 4.45 ms; GPU 2.76 ms average",
+      "medianRollingFps": 436.0,
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0451576484,
+        "CSM Cascade 1/DrawDepthOpaque": 0.147894017,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01288885155,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.433208662,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0133502394,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.037076275
+      },
+      "combinedMeanNamedGpuMilliseconds": 0.68957569335,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:30:01.621880+00:00",
+      "lastRollingFrameText": "405.2 FPS average; p95 2.63 ms; p99 5.11 ms; GPU 2.76 ms average",
+      "medianRollingFps": 405.2,
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0461251254,
+        "CSM Cascade 1/DrawDepthOpaque": 0.158155362,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.012901902600000001,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.432439437,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.084936468,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.166554645
+      },
+      "combinedMeanNamedGpuMilliseconds": 0.90111294,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:30:01.621880+00:00",
+      "lastRollingFrameText": "316.0 FPS average; p95 3.33 ms; p99 5.87 ms; GPU 2.76 ms average",
+      "medianRollingFps": 327.2,
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.046898589500000004,
+        "CSM Cascade 1/DrawDepthOpaque": 0.172258801,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01294853955,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.434023486,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.352359239,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.611551983
+      },
+      "combinedMeanNamedGpuMilliseconds": 1.63004063805,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "file": "final-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "utc": "2026-09-23T07:30:01.621880+00:00",
+      "lastRollingFrameText": "168.6 FPS average; p95 6.50 ms; p99 8.82 ms; GPU 2.76 ms average",
+      "medianRollingFps": 177.0,
+      "frameCounters": {
+        "TrianglesRendered": 165970,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3089,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0473167766,
+        "CSM Cascade 1/DrawDepthOpaque": 0.221233749,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01310100075,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.434744109,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.4081192599999999,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.36413673
+      },
+      "combinedMeanNamedGpuMilliseconds": 4.488651625349999,
+      "cameraDimensions": [
+        [
+          2769,
+          1528.5
+        ]
+      ],
+      "diagnosticDimensions": [
+        [
+          2769,
+          1529
+        ]
+      ],
+      "sourceUnchanged": true
+    }
+  ],
+  "canonicalComparison": {
+    "moving": {
+      "fps": {
+        "baseline": 383.29724,
+        "final": 426.50827,
+        "changePercent": 11.273504082627884,
+        "pass": true
+      },
+      "p95ms": {
+        "baseline": 4.2378,
+        "final": 3.6194,
+        "changePercent": -14.592477228750766,
+        "pass": true
+      },
+      "p99ms": {
+        "baseline": 6.1316,
+        "final": 5.4299,
+        "changePercent": -11.443995042077104,
+        "pass": true
+      },
+      "gpuMeanMs": {
+        "baseline": 2.2814481,
+        "final": 2.1276119,
+        "changePercent": -6.742919113522683,
+        "pass": true
+      },
+      "gpuP95ms": {
+        "baseline": 3.6139488,
+        "final": 3.1251907,
+        "changePercent": -13.524212075168307,
+        "pass": true
+      },
+      "gpuP99ms": {
+        "baseline": 4.90427,
+        "final": 4.1520596,
+        "changePercent": -15.337866797708932,
+        "pass": true
+      },
+      "allocatedBytesPerFrame": {
+        "baseline": 69565.87,
+        "final": 67275.23,
+        "changePercent": -3.292764109756696,
+        "pass": true
+      },
+      "averageProcessBytes": {
+        "baseline": 13198159536,
+        "final": 11760196859,
+        "changePercent": -10.895175748389285,
+        "pass": true
+      },
+      "peakProcessBytes": {
+        "baseline": 13445959680,
+        "final": 12081586176,
+        "changePercent": -10.147089062221548,
+        "pass": true
+      },
+      "averageGpuBytes": {
+        "baseline": 4255169345,
+        "final": 4098359825,
+        "changePercent": -3.6851534518657303,
+        "pass": true
+      },
+      "peakGpuBytes": {
+        "baseline": 4366267459,
+        "final": 4114920507,
+        "changePercent": -5.756563342951182,
+        "pass": true
+      }
+    },
+    "standing": {
+      "fps": {
+        "baseline": 299.04977,
+        "final": 331.5125,
+        "changePercent": 10.855293418215961,
+        "pass": true
+      },
+      "p95ms": {
+        "baseline": 4.53,
+        "final": 3.458,
+        "changePercent": -23.6644591611479,
+        "pass": true
+      },
+      "p99ms": {
+        "baseline": 6.3914,
+        "final": 5.9683,
+        "changePercent": -6.619832900459988,
+        "pass": true
+      },
+      "gpuMeanMs": {
+        "baseline": 2.9715655,
+        "final": 2.738161,
+        "changePercent": -7.854597181182788,
+        "pass": true
+      },
+      "gpuP95ms": {
+        "baseline": 3.4325123,
+        "final": 2.7520657,
+        "changePercent": -19.823573538250685,
+        "pass": true
+      },
+      "gpuP99ms": {
+        "baseline": 3.921032,
+        "final": 3.1254292,
+        "changePercent": -20.290647972268516,
+        "pass": true
+      },
+      "allocatedBytesPerFrame": {
+        "baseline": 34370.938,
+        "final": 35864.117,
+        "changePercent": 4.344306809433007,
+        "pass": true
+      },
+      "averageProcessBytes": {
+        "baseline": 13328174284,
+        "final": 11898900480,
+        "changePercent": -10.723702838398452,
+        "pass": true
+      },
+      "peakProcessBytes": {
+        "baseline": 13329719296,
+        "final": 11899584512,
+        "changePercent": -10.728918983531454,
+        "pass": true
+      },
+      "averageGpuBytes": {
+        "baseline": 4416828483,
+        "final": 4064605243,
+        "changePercent": -7.974573641600024,
+        "pass": true
+      },
+      "peakGpuBytes": {
+        "baseline": 4416828483,
+        "final": 4064605243,
+        "changePercent": -7.974573641600024,
+        "pass": true
+      }
+    },
+    "baselineStreaming": {
+      "throughput": {
+        "scratchLanes": 3,
+        "regionsScheduled": 67253,
+        "regionsCountSubmitted": 59754,
+        "regionsPublished": 59323,
+        "regionsScheduledPerSecond": 551.50006,
+        "regionsCountSubmittedPerSecond": 490.0054,
+        "regionsPublishedPerSecond": 486.47104,
+        "batchesSubmitted": 7749,
+        "batchesCompleted": 7749,
+        "batchesSubmittedPerSecond": 63.54473,
+        "batchesCompletedPerSecond": 63.54473,
+        "averageBatchOccupancy": 7.7111883,
+        "minimumBatchOccupancy": 1,
+        "maximumBatchOccupancy": 8,
+        "batchOccupancyHistogram": [
+          0,
+          105,
+          89,
+          63,
+          75,
+          62,
+          48,
+          72,
+          7235
+        ],
+        "countSubmissionMilliseconds": {
+          "samples": 7749,
+          "truncatedSamples": 0,
+          "average": 0.0021494902,
+          "p50": 0.002,
+          "p95": 0.0027,
+          "p99": 0.0038,
+          "maximum": 0.021
+        },
+        "countReadbackMilliseconds": {
+          "samples": 7749,
+          "truncatedSamples": 0,
+          "average": 6.770214,
+          "p50": 6.7078,
+          "p95": 9.0744,
+          "p99": 10.8297,
+          "maximum": 16.9614
+        },
+        "countCallbackWaitMilliseconds": {
+          "samples": 7749,
+          "truncatedSamples": 0,
+          "average": 7.49028,
+          "p50": 4.9538,
+          "p95": 15.4292,
+          "p99": 54.2253,
+          "maximum": 795.2816
+        },
+        "cpuAllocationMilliseconds": {
+          "samples": 7749,
+          "truncatedSamples": 0,
+          "average": 0.0054613887,
+          "p50": 0.0054,
+          "p95": 0.0092,
+          "p99": 0.012,
+          "maximum": 0.1849
+        },
+        "emitSubmissionMilliseconds": {
+          "samples": 7749,
+          "truncatedSamples": 0,
+          "average": 0.013160447,
+          "p50": 0.0137,
+          "p95": 0.0252,
+          "p99": 0.032,
+          "maximum": 0.2753
+        },
+        "emitToPublicationMilliseconds": {
+          "samples": 7749,
+          "truncatedSamples": 0,
+          "average": 4.9501176,
+          "p50": 4.8315,
+          "p95": 7.4993,
+          "p99": 9.6426,
+          "maximum": 16.4758
+        },
+        "gameplayQueue": {
+          "samples": 46741,
+          "truncatedSamples": 0,
+          "average": 125.98744,
+          "p50": 52,
+          "p95": 552,
+          "p99": 927,
+          "maximum": 1223
+        },
+        "warmQueue": {
+          "samples": 46741,
+          "truncatedSamples": 0,
+          "average": 0.014334311,
+          "p50": 0,
+          "p95": 0,
+          "p99": 1,
+          "maximum": 9
+        },
+        "totalQueue": {
+          "samples": 46741,
+          "truncatedSamples": 0,
+          "average": 126.00178,
+          "p50": 52,
+          "p95": 553,
+          "p99": 927,
+          "maximum": 1223
+        },
+        "playerRouteLagWorldUnits": {
+          "samples": 59447,
+          "truncatedSamples": 0,
+          "average": 1087.8887,
+          "p50": 256.9922,
+          "p95": 4558.547,
+          "p99": 9575.875,
+          "maximum": 17477.742
+        },
+        "playerRouteLagChunks": {
+          "samples": 59447,
+          "truncatedSamples": 0,
+          "average": 2.1247826,
+          "p50": 0.50193787,
+          "p95": 8.903412,
+          "p99": 18.70288,
+          "maximum": 34.136215
+        },
+        "postLoopDrainMilliseconds": 9583.444
+      },
+      "streaming": {
+        "preparationResultsDroppedOnMovement": 308,
+        "preparationResultsRetainedOnMovement": 3080,
+        "preparationIntegrated": 106621,
+        "preparationIntegrationMilliseconds": 69.71559985616477,
+        "placementCacheCoordinatesScanned": 56320,
+        "placementLevelsSkipped": 0,
+        "placementPreparationMilliseconds": 236.35619968175888,
+        "maximumPlacementPreparationMilliseconds": 3.9605,
+        "fullUpdates": 0,
+        "incrementalUpdates": 865,
+        "totalSynchronousMilliseconds": 438.10373,
+        "maximumSynchronousMilliseconds": 10.3903,
+        "totalDesiredUpdateMilliseconds": 22.319191,
+        "totalPrioritizationMilliseconds": 61.14033,
+        "totalDrawCommitMilliseconds": 388.46045,
+        "drawRebuilds": 863,
+        "gameplayCoordinatesTouched": 511938,
+        "renderCoordinatesTouched": 214170,
+        "warmCoordinatesClassified": 106929,
+        "warmRejectedSolid": 16525,
+        "warmRejectedAir": 34000,
+        "warmPotentiallySurfaceContaining": 56404,
+        "warmTransientChunksConstructed": 56404,
+        "peakGameplayMeshBacklog": 1223,
+        "peakWarmMeshBacklog": 9
+      }
+    },
+    "finalStreaming": {
+      "throughput": {
+        "scratchLanes": 3,
+        "regionsScheduled": 67546,
+        "regionsCountSubmitted": 62197,
+        "regionsPublished": 61777,
+        "regionsScheduledPerSecond": 553.90405,
+        "regionsCountSubmittedPerSecond": 510.0401,
+        "regionsPublishedPerSecond": 506.59595,
+        "batchesSubmitted": 8069,
+        "batchesCompleted": 8067,
+        "batchesSubmittedPerSecond": 66.16901,
+        "batchesCompletedPerSecond": 66.1526,
+        "averageBatchOccupancy": 7.7081423,
+        "minimumBatchOccupancy": 1,
+        "maximumBatchOccupancy": 8,
+        "batchOccupancyHistogram": [
+          0,
+          106,
+          98,
+          62,
+          84,
+          64,
+          57,
+          73,
+          7525
+        ],
+        "countSubmissionMilliseconds": {
+          "samples": 8069,
+          "truncatedSamples": 0,
+          "average": 0.0028390384,
+          "p50": 0.0019,
+          "p95": 0.0023,
+          "p99": 0.0036,
+          "maximum": 6.883
+        },
+        "countReadbackMilliseconds": {
+          "samples": 8067,
+          "truncatedSamples": 0,
+          "average": 6.1275744,
+          "p50": 6.1304,
+          "p95": 8.049,
+          "p99": 9.5795,
+          "maximum": 12.9772
+        },
+        "countCallbackWaitMilliseconds": {
+          "samples": 8067,
+          "truncatedSamples": 0,
+          "average": 6.6683774,
+          "p50": 4.706,
+          "p95": 13.2092,
+          "p99": 43.1184,
+          "maximum": 655.4953
+        },
+        "cpuAllocationMilliseconds": {
+          "samples": 8067,
+          "truncatedSamples": 0,
+          "average": 0.0051135863,
+          "p50": 0.005,
+          "p95": 0.0088,
+          "p99": 0.0115,
+          "maximum": 0.1652
+        },
+        "emitSubmissionMilliseconds": {
+          "samples": 8067,
+          "truncatedSamples": 0,
+          "average": 0.01233078,
+          "p50": 0.0136,
+          "p95": 0.0245,
+          "p99": 0.030299999,
+          "maximum": 0.0679
+        },
+        "emitToPublicationMilliseconds": {
+          "samples": 8066,
+          "truncatedSamples": 0,
+          "average": 4.5096684,
+          "p50": 4.4096,
+          "p95": 6.6979,
+          "p99": 8.5757,
+          "maximum": 14.3463
+        },
+        "gameplayQueue": {
+          "samples": 52010,
+          "truncatedSamples": 0,
+          "average": 94.8315,
+          "p50": 39,
+          "p95": 395,
+          "p99": 539,
+          "maximum": 669
+        },
+        "warmQueue": {
+          "samples": 52010,
+          "truncatedSamples": 0,
+          "average": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "maximum": 0
+        },
+        "totalQueue": {
+          "samples": 52010,
+          "truncatedSamples": 0,
+          "average": 94.8315,
+          "p50": 39,
+          "p95": 395,
+          "p99": 539,
+          "maximum": 669
+        },
+        "playerRouteLagWorldUnits": {
+          "samples": 61923,
+          "truncatedSamples": 0,
+          "average": 904.2668,
+          "p50": 240.04688,
+          "p95": 4246.9375,
+          "p99": 7964.7812,
+          "maximum": 18993.79
+        },
+        "playerRouteLagChunks": {
+          "samples": 61923,
+          "truncatedSamples": 0,
+          "average": 1.7661461,
+          "p50": 0.46884155,
+          "p95": 8.2948,
+          "p99": 15.556213,
+          "maximum": 37.097244
+        },
+        "postLoopDrainMilliseconds": 9036.749
+      },
+      "streaming": {
+        "preparationResultsDroppedOnMovement": 297,
+        "preparationResultsRetainedOnMovement": 2970,
+        "preparationIntegrated": 106657,
+        "preparationIntegrationMilliseconds": 66.78769978423952,
+        "placementCacheCoordinatesScanned": 64000,
+        "placementLevelsSkipped": 0,
+        "placementPreparationMilliseconds": 245.46549959480762,
+        "maximumPlacementPreparationMilliseconds": 2.1684,
+        "fullUpdates": 0,
+        "incrementalUpdates": 867,
+        "totalSynchronousMilliseconds": 429.78766,
+        "maximumSynchronousMilliseconds": 9.9161,
+        "totalDesiredUpdateMilliseconds": 19.996288,
+        "totalPrioritizationMilliseconds": 59.120792,
+        "totalDrawCommitMilliseconds": 406.9937,
+        "drawRebuilds": 865,
+        "gameplayCoordinatesTouched": 512006,
+        "renderCoordinatesTouched": 214214,
+        "warmCoordinatesClassified": 106954,
+        "warmRejectedSolid": 16531,
+        "warmRejectedAir": 34004,
+        "warmPotentiallySurfaceContaining": 56419,
+        "warmTransientChunksConstructed": 56419,
+        "peakGameplayMeshBacklog": 669,
+        "peakWarmMeshBacklog": 0
+      }
+    }
+  }
+}

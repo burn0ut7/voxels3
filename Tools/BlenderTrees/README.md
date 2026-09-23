@@ -135,3 +135,22 @@ not recolored oak textures. These materials are visual approximations rather
 than botanical specimen scans. Rejected Brown02/Willow candidates retain their
 provenance. Original oak leaf artwork provenance is in `../TreeSources/README.md`
 and `../../Assets/textures/trees/README.md`.
+
+## Animated baked leaf clusters
+
+For the installed dense oak, run `bake_foliage.py` inside the visible Blender
+session with `runpy.run_path(path)['start']('oak_growth_18_open_grown_271828_dense')`.
+It imports original canopy LOD2 sources, stages4096animated patch cards and64
+shared512px color/normal cluster views under `.codex/tree-foliage-bake/<key>`.
+Cancel Render cancels an active job; a staging `cancel` file requests cancellation
+between stages and must be removed before restarting. The authoring scene is
+restored automatically. No source FBX or source motion texture is overwritten.
+
+After `status.json` reports complete, run
+`python Tools/BlenderTrees/bake_foliage.py <key> --install` outside Blender.
+Installation rejects changed inputs/tools or incomplete outputs. Compile the
+new baked material and four canopy models, run all four native distant-bake
+rows, pack with the existing packer, compile the far material and restart Play.
+Regenerating source requires repeating these steps. See
+[animated baked foliage](../../Docs/Architecture/BakedTreeFoliage.md) for ownership,
+wind behavior, approximation limits and measured qualification.

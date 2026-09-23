@@ -33324,3 +33324,147 @@ unchanged through final checks. No048 runtime candidate accepted or retained.
 [measurements](ValidationEvidence/TreeScale048/observations-summary.json),
 [restoration comparison](ValidationEvidence/TreeScale048/restoration-comparison.json),
 [raw experiment archive](ValidationEvidence/TreeScale048/experiment-evidence.zip).
+
+## TREE-BAKE-049/v1 - animated baked foliage (2026-09-23)
+
+User explicitly authorizes baked leaf groups; continued wind motion is the only
+new hard requirement. Individual source leaves need not move independently.
+Preserve world/wood/trunk collision and one saved oak. Derive branch-local leaf
+patches from the installed source leaves; source FBXs remain authoritative and
+unchanged. Baked cards retain branch identity/pivot, shared gust/main bending and
+finer flutter; no static frozen crown or whole-tree billboard nearby.
+
+Reuse048/v1 close/near/far poses and20s+10one-second observation windows, same
+2769x1529,FOV60,grass64m,seed1337/gen52. Capture a new close baseline before
+activation; previous048restored-cold canonical is an exact-source comparison if
+source hashes still match. Target >=25% lower combined close depth prepasses,
+forward and opaque shadow GPU time, >=90% fewer submitted leaf triangles, visibly
+animated foliage, no missing/material-error surfaces, stable attachment and
+normal12/16m/.35s distant handoff. Images must show actual production rendering;
+record temporal native frames and geometry displacement under live wind, not
+just existence of wind parameters. Inspect close, near, opposing and far views.
+
+Reuse unchanged038/v2-single-tree canonical figure-eight parameters and original
+048 thresholds: >=190FPS, <=5% FPS loss, frame p95/p99, allocations, mean/peak
+process/GPU memory no>10% regression; zero timedexceptions/collisionfailures and
+settled streaming. Memory tails unavailable in existing collector stay unverified.
+Use048/forest-v1 identical immutable1/64/256/1024placements/camera for scale
+checks; target no>10% increase in affected GPU scopes vs original at1024. No
+permanent stress-grid scene. Native shader/material/model compilation, matching
+all-four-row distant rebake, clean visible editor restart/unchanged Sentry marker
+and fresh-log check precede acceptance. No Blender GPU bake during timed runs.
+
+049 preliminary cross-card candidate: native shader/material/models compiled;
+all four distant rows rebuilt; clean editor restart PID36604, Sentry unchanged.
+New close/near observations retained as baked-close/baked-near. Close~255FPS vs
+~154baseline and near~376vs241, but native image inspection rejects acceptance:
+large flattened leaf masses and obvious horizontal card edges soften nearby
+foliage. No canonical acceptance run yet. Replace the crossed planes with4096
+smaller branch-local facing patches, retaining actual branch/root wind and flutter;
+this changes the candidate representation, not the fixed validation workload.
+Keep >=90% leaf geometry reduction and all other049gates. Atlas8192square with
+128px per patch, one subdivided card/patch,32,768triangles. Store patch centers in
+a derived motion texture with the existing numeric encoding/branch table; do not
+modify original leaf FBXs or original motion texture.
+
+049 facing-patch authoring inspection:4096unique128px tiles remove cross-plane
+strips but remain too soft/opaque in close and near native previews. Rejected
+before timing or canonical qualification. Next candidate keeps4096branch-local
+patch placements but reuses64representative512px cluster tiles in one4096square
+atlas. Each template captures at most32spatially spread source blades, restoring
+readable leaf gaps/detail; this is an authored approximation, not exact retention
+of all544606leaves. Shared template geometry still uses32,768leaftriangles and
+original branch/root wind. Texture reuse also bounds memory per specimen. Fixed
+validation poses, timing, geometry and performance gates remain unchanged.
+
+049 final-candidate visual observations, parameters fixed before capture:
+wind at unchanged near pose,12native1600x900frames spaced0.25s plus native-call
+time; camera/angle readback must stay fixed. Track green canopy features with
+forward/back optical-flow agreement<0.5px; >=50features moving>1px supports
+visible wind (image-space displacement, not vertex-buffer readback). Opposing
+view=(-1490,-1490,350),angles=(-8,225,0),FOV60. Handoff radial distances from
+root along southwest atZ350:10,15,17,15,11m,angles=(0,45,0),0.6s settle each;
+expected Detailed,Detailed,Distant,Distant,Detailed with12/16m/.35s unchanged.
+All of these are correctness observations, not altered performance scenarios.
+
+049 cold-start attempt PID27976: startup stopped at ToolsStallMonitor after
+base tool packages loaded; process window title Stall Detected, Sentry unchanged.
+Native editor_status timed out; the premature final-close observer also timed
+out before recording measurements. No accepted performance result. Preserve
+cold-start-stall.log and retry the same visible project/source, without treating
+this as a shader pass or changing the workload.
+
+049 accepted final candidate: 4,096 branch-local facing cards, 64 shared
+512-pixel cluster templates, 4096-square atlases. Leaf geometry 1,089,212 ->
+32,768 triangles (-96.99%). Fixed close/near/far median rolling FPS:
+153.7/241.1/313.6 -> 239.0/344.4/356.0. Mean combined depth-normal prepasses
+(Overlay/Large/Small), dynamic opaque forward and CSM0/1 opaque shadow scopes:
+5.184272719507/2.667359797450/1.256874499000 ->
+3.126620113636/1.525441850290/0.941895302250 ms. Close reduction 39.7% passes
+>=25%; geometry reduction passes >=90%. These are scene-pass observations,
+not isolated tree cost or independent frame samples. Source stable during runs.
+Native camera reports 2769x1528.5 consistently (physical rounded 2769x1529);
+Sandbox.Screen remains 2769x1391 in detached final detail observations, because
+it retains possessed-view dimensions. The actual renderer/DPI size is the
+workload authority (Editor/VoxelMcpTools.cs get_ejected_camera); stale GPU frame
+averages and diagnostic Screen sizes are not used for detached comparisons.
+
+049 wind: 12 fixed-camera frames, 1,462 valid green-canopy tracks, 1,212 with
+>1px displacement (gate >=50), median maximum 2.14768px/p95 4.83064px. This
+establishes rendered motion, not vertex-buffer readback. Branch/root sway and
+small patch ripple/flutter remain. Native close/exterior/opposing/far images
+inspected; readable source leaf shapes, no missing/error surfaces. Handoff
+10/15/17/15/11m produces Detailed/Detailed/Distant/Distant/Detailed; 12/16m
+hysteresis and .35s unchanged. The representation couples leaves within groups;
+64 template shapes repeat. It is not exact source-leaf retention.
+
+049 final canonical run 1d19c0e527da46cf8201270007f7ca3c, unchanged
+TREE-PERFORMANCE-038/v2-single-tree, revision
+6bb489d3b14e76bb225d9e6787ca7b15885a5f4fce5a3e1476dfde6f9e0f3cd0,
+sourceUnchanged=true. Compare original accepted 048 restored-cold run
+c661ec369c254793bd9599576a49b514, same 2769x1529, seed1337/gen52,
+grass64m, speed2500, distance50000, one loop and ten-second standing sample.
+Moving 426.50827 vs383.29724 FPS (+11.27%); p95/p99 3.6194/5.4299 vs
+4.2378/6.1316ms. Standing 331.5125 vs299.04977 (+10.86%); p95/p99
+3.458/5.9683 vs4.53/6.3914ms. Moving allocations 67,275.23 B/frame (-3.29%);
+standing 35,864.117 (+4.34%, within10%). Moving process mean/peak
+11,760,196,859/12,081,586,176 B; GPU mean/peak 4,098,359,825/4,114,920,507 B.
+Standing process 11,898,900,480/11,899,584,512 B; GPU 4,064,605,243 B mean/peak.
+All measured memory mean/peak decrease. Memory tails unavailable, unverified.
+Zero moving/standing exceptions; 4,913 collision ready, zero pending/failures.
+Post-loop drain 9036.749 vs9583.444ms; synchronous streaming429.78766 vs
+438.10373ms; peak gameplay backlog669 vs1223. All declared gates pass.
+
+049 unchanged 048 forest-v1 nested 1/64/256/1024 placements, last rolling FPS
+436.0/405.2/316.0/168.6 vs original323.0/310.2/264.8/135.9. At1024 p95/p99
+6.50/8.82ms; same83draws/165970triangles. Mean six affected GPU scopes
+5.22049026795 ->4.48865162535ms (-14.0%), passes no>10% regression.
+Source stable; no errors/retries; temporary parent and all clones removed.
+This distant elevated workload does not qualify dense nearby forests or a
+population streaming system. Distant shader unchanged; new atlas coverage and
+appearance are part of the measured change.
+
+049 healthy cold startup PID24888, engine26.09.15, managed compilation0errors,
+no new project shader/parser errors; same eight stock-resource startup errors.
+Sentry stays2026-09-23T00:57:44.591285Z. Original12leaf FBXs, motion, wood,
+colliders, prefab and saved scene unchanged. All45 installed manifest files
+match bytes/hashes. Final one enabled oak, no forest parent, settled visuals/
+transitions/placement, water ready, free viewport, near oak camera, interactive
+Play. Acceptance retains this animated baked representation. Source metadata
+and measured-source differences are preserved explicitly in the evidence.
+
+[049 report](ValidationEvidence/TreeBake049/report.md),
+[measurements and comparison](ValidationEvidence/TreeBake049/observations-summary.json),
+[wind](ValidationEvidence/TreeBake049/wind.gif),
+[raw observations](ValidationEvidence/TreeBake049/experiment-evidence.zip).
+
+After qualification, restored an accidentally re-encoded pre-existing exception
+message in the editor baker to its exact task-start bytes. This alters no render
+or runtime behavior. Repeated all four native capture rows and canonical packing
+to refresh provenance: all five atlas PNGs and the material are byte-identical
+to the measured final version. Only the editor error-message bytes and metadata
+hash provenance differ from the measured source snapshot. Native compilation
+still succeeds with zero errors; Play and the near camera remain interactive.
+[Provenance refresh](ValidationEvidence/TreeBake049/provenance-refresh.json).
+No runtime retiming is needed for byte-identical render outputs and this
+unrelated error-message restoration. No shader/runtime source changed.

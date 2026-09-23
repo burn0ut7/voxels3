@@ -1,0 +1,81 @@
+--- a/Editor/TreeImpostorBaker.cs
++++ b/Editor/TreeImpostorBaker.cs
+@@ -36,6 +36,7 @@
+ 		}
+ 		foreach ( var path in new[] { "Editor/TreeImpostorBaker.cs", "Assets/shaders/trees/tree_lab_bark.shader",
+ 			"Assets/shaders/trees/tree_lab_foliage.shader", "Assets/shaders/trees/tree_lab_fine.shader",
++			"Assets/shaders/trees/tree_baked_foliage.shader",
+ 			"Assets/shaders/trees/tree_wind.hlsl", "Assets/shaders/trees/tree_wood_motion.hlsl",
+ 			"Assets/shaders/trees/tree_lod_fade.hlsl", "Assets/shaders/trees/tree_bake_depth.hlsl" } )
+ 			hashes[path] = Convert.ToHexString( SHA256.HashData( File.ReadAllBytes( Path.Combine( root, path ) ) ) ).ToLowerInvariant();
+@@ -64,14 +65,22 @@
+ 			var material = await Material.LoadAsync( $"models/tree_lab/{specimen}/{entry.Name}" );
+ 			if ( material is null ) throw new InvalidOperationException( $"Imported material did not load: {entry.Name}" );
+ 			var expectedMotion = manifest.RootElement.GetProperty( "motion" ).GetProperty( "texture_size" );
++			var bakedMaterial = entry.Name == $"{specimen}_baked.vmat"
++				&& manifest.RootElement.TryGetProperty( "baked_foliage", out _ );
++			var atlasSize = bakedMaterial ? manifest.RootElement.GetProperty( "baked_foliage" ).GetProperty( "atlas_pixels" ) : default;
+ 			var deadline = DateTime.UtcNow.AddSeconds( 30 );
+ 			while ( true )
+ 			{
+ 				var motion = material.GetTexture( "g_tTreeMotion" );
++				var color = bakedMaterial ? material.GetTexture( "g_tColor" ) : null;
++				var normal = bakedMaterial ? material.GetTexture( "g_tNormal" ) : null;
++				var atlasReady = !bakedMaterial || (color is not null && color.IsLoaded
++					&& normal is not null && normal.IsLoaded && color.Width == atlasSize[0].GetInt32()
++					&& color.Height == atlasSize[1].GetInt32() && normal.Width == color.Width && normal.Height == color.Height);
+ 				if ( motion is not null && motion.IsLoaded && motion.Width == expectedMotion[0].GetInt32()
+-					&& motion.Height == expectedMotion[1].GetInt32() ) break;
++					&& motion.Height == expectedMotion[1].GetInt32() && atlasReady ) break;
+ 				if ( DateTime.UtcNow >= deadline )
+-					throw new InvalidOperationException( $"Motion texture is not ready: {entry.Name}" );
++					throw new InvalidOperationException( $"Tree material textures are not ready: {entry.Name}" );
+ 				await Task.Delay( 16 );
+ 			}
+ 		}
+@@ -115,13 +124,6 @@
+ 				if ( !renderer.SceneObject.IsValid() ) throw new InvalidOperationException( "Tree renderer was not created." );
+ 				renderer.SceneObject.Flags.CastShadows = false;
+ 				renderer.SceneObject.Attributes.Set( "TreeWind", Vector4.Zero );
+-				// Authored multipart trees reach their minimum leaf retention before
+-				// the distant handoff. Capture that same production vertex path,
+-				// including the coarsest blade shape, instead of restoring every leaf.
+-				if ( modelFiles.Count > 1 )
+-				{
+-					renderer.SceneObject.Attributes.Set( "TreeLeafView", new Vector4( center + Vector3.Up * (diameter + 10000f), 1f ) );
+-				}
+ 				var originals = new Material[model.Materials.Length];
+ 				var depths = new Material[originals.Length];
+ 				for ( var index = 0; index < originals.Length; index++ )
+@@ -151,6 +153,15 @@
+ 			{
+ 				camera.Rotation = Rotation.From( new Angles( -15f + elevationRow * 30f, view * (360f / azimuths) + 180f, 0f ) );
+ 				camera.Position = center - camera.Rotation.Forward * diameter * 2f;
++				// Camera-facing source leaves and baked patches must use this
++				// capture's frame in every pass. The camera is already beyond the
++				// detailed handoff, so legacy leaf retention reaches its minimum.
++				foreach ( var renderer in renderers )
++				{
++					renderer.SceneObject.Attributes.Set( "TreeLeafView", new Vector4( camera.Position, 1f ) );
++					renderer.SceneObject.Attributes.Set( "TreeLeafViewForward", camera.Rotation.Forward );
++					renderer.SceneObject.Attributes.Set( "TreeLeafViewUp", camera.Rotation.Up );
++				}
+ 				camera.Attributes.Set( "TreeBakeCenter", center );
+ 				camera.Attributes.Set( "TreeBakeDirection", -camera.Rotation.Forward );
+ 				camera.Attributes.Set( "TreeBakeDiameter", diameter );
+--- a/Docs/Architecture/BlenderTreeImport.md
++++ b/Docs/Architecture/BlenderTreeImport.md
+@@ -721,3 +721,13 @@
+ add shadow-pass work; use047's fixed close observation and the unchanged single-
+ tree figure-eight to measure that cost. See TREE-SHADOW-047 in the validation
+ ledger for current qualification and retained failed/interrupted runs.
++
++## Animated baked leaf clusters (049 accepted)
++
++The active dense oak now derives smaller camera-facing leaf clusters through
++`bake_foliage.py`; see [baked foliage](BakedTreeFoliage.md) for its source/derived
++boundary, wind and shared texture ownership. Original FBXs and motion, wood,
++colliders, prefab membership and saved world placement remain unchanged. The
++native distant baker follows each capture camera for leaf-facing materials and
++waits for the new atlas textures before capturing. Runtime acceptance and failed
++representations are recorded under TREE-BAKE-049 in the validation ledger.

@@ -478,3 +478,15 @@ reduced canopy fullness; it was rejected. No 048 runtime optimization is retaine
 This narrows the next substantial near-tree experiment to a coverage-preserving
 representation of groups of leaves, followed by bounded regional residency.
 The existing source leaves, wind, near shadows and saved single-tree scene remain.
+
+### Animated baked foliage adopted, September 23
+
+The user authorized leaf groups that retain wind. The [049 result](../ValidationEvidence/TreeBake049/report.md)
+replaces the dense oak's individual leaf blades with 4,096 animated patches and
+64 shared cluster images. Leaf geometry falls from 1,089,212 to 32,768 triangles;
+close-view combined depth/forward/opaque-shadow time falls 39.7% on the fixed
+workload. Leaves within each group move together, with existing branch/root sway
+and extra card flutter. This deliberately changes the foliage approximation;
+it does not preserve every original blade or prove general forest streaming.
+The distant images were rebaked, and unchanged figure-eight/forest checks passed.
+See [baked foliage ownership](../Architecture/BakedTreeFoliage.md).
