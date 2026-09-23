@@ -32967,3 +32967,360 @@ untracked; publication includes only the task's isolated patch and evidence.
 [matched metrics](ValidationEvidence/TreePerformance/lod045-matched-comparison.json),
 [six-angle images](ValidationEvidence/TreeLodContinuity/final-six-angles.jpg),
 [temporal images](ValidationEvidence/TreeLodContinuity/temporal-f-contact.jpg).
+
+
+## TREE-SCALE-048/v1 - current tree cost and dense population experiments (2026-09-23)
+
+Declared before measurements. User authorizes troubleshooting, experiments and
+larger tree populations while retaining nearby quality. Current source includes
+047 detailed shadows, whose earlier runtime validation was interrupted. A fresh
+baseline measures that exact source; no historical 100-tree result substitutes.
+Native editor/game control is authorized by the new request. Editor26.09.15,
+RTX5090/Ryzen9800X3D; record actual driver, viewport and source per capture.
+Starting saved scene contains one Sprite Leaf Test Oak; preserve its bytes and
+non-tree content. All measurements use the actual basic_example playable world,
+existing native controls and production renderers. No game-side test hooks.
+
+Canonical baseline/regression reuses TREE-PERFORMANCE-038/v2-single-tree exactly:
+seed1337/gen52, physical2769x1529,FOV75,speed2500,distance50000,one loop,
+start(-1.6258175,1.2225341,340),view(0,0,0),grass64m,radius8,LOD0..5,
+halfextents4/4,cells32/base16. Warmup4913collision ready,zero pending collision,
+visual/seam/placement work,water ready; automatic completion/drain and10sstanding.
+Record frame average/p95/p99, process/GPU mean/tail/peak memory, allocations,
+collision failures/exceptions and streaming/LOD arrival. Retention gates: >=190FPS,
+no>5% FPS regression; no>10% tail/memory/allocation regression; no unexplained
+material streaming regression; zero timedexceptions/collisionfailures, fully
+drained. A pre-existing failure stays a failure, never a waived acceptance gate.
+
+Supporting single-oak attribution reuses 047 close pose(-1864,-1864,250.125),
+angles(-35,45,0),FOV60, physical2769x1529; also its near pose(-2110,-2110,350),
+angles(-8,45,0), and far pose(-2500,-2500,470),angles(6.3,45,0).
+Each observation uses20swarmup then10existing diagnostics1sapart; rolling samples
+are not independent. Compare original on, disabled whole tree, restored on;
+additional leaf/shadow disable observations are attribution only. Never accept
+removed leaves/shadows as quality-preserving gains. Record GPU total/pass costs,
+CPU render/update, draws/triangles, memory, actual camera and representation.
+Capture1600x900 at fixed pose/FOV60 before/after; verify full canopy, close leaf
+attachment/motion, shaded interior, ground/trunk shadows, opposing views and
+continuous detail/impostor transition. Abort automation on player interruption.
+
+Population scaling workloads will be declared with exact placements and hashes
+before their first runs. They add coverage, not a replacement for the canonical
+scenario or a comparison of unlike populations. Do not permanently change the
+saved scene until the chosen production population passes validation. Preserve
+failed candidates and raw results. Target is measured small incremental tree cost,
+not a promised zero cost or acceptance based on FPS alone.
+
+048 baseline: first trigger rejected with Game.ActiveScene invalid despite visible
+Play; no timed run began. Exact unchanged retry completed run8b92ba37b765459ea653e2a25263aaec,
+source unchanged: moving377.46826FPS, p95/p99 4.3087/6.2288ms, GPU2.3141956ms;
+standing293.17682FPS, p95/p99 4.6056/6.3366ms, GPU3.0308976ms. Raw and summary:
+ValidationEvidence/TreeShadows/scale048-baseline-retry*. First premature result
+read was rejected by source-identity guard, with no historical result substituted.
+
+048 close attribution original/on, off, restored completed. Source unchanged;
+rendered close images inspected. Last rolling FPS154.0/421.1/155.8; on mean
+GPU depth prepass2.9621ms versus off0.2701ms, forward1.1046ms, firstshadow0.7399ms.
+Detailed on counters8,156,032triangles,94draws; off22,592triangles,42draws.
+GPU average in the readable frame string remained2.67ms across this detached
+camera sequence and is not a valid changing-view GPU total; use current named
+GPU scope observations instead. Overlay profiling overhead applies to all stages.
+Evidence: ValidationEvidence/TreeScale048/baseline-close.json and matched PNGs.
+
+048 candidate A declared before activation: use existing woodLOD1 below6m instead
+of woodLOD0 below3m. Foliage staysLOD2 with identical leaf identity/count, material,
+retention, motion, source geometry and detailed shadows. This changes the closest
+wood submission from944148 to283244triangles. Hypothesis is lower vertex/depth
+cost without perceptible branch loss. Source change is only TreeModelLod's wood
+LOD choice. Run same close/near captures and observations. Require >=10% reduction
+in relevant render/pass cost and preserved wood silhouette, joins and bark detail;
+otherwise revert. Canonical regression required before retaining the candidate.
+
+048 candidate A rejected/reverted: native compile passed; close counters fell
+8,156,032 ->5,512,416triangles with unchanged94draws. Mean depth2.8640ms,
+forward0.9954ms, shadow0/1 0.71985/0.26057ms versus restored control
+2.92569/1.08131/0.73528/0.29099ms. Combined named-pass reduction4.0%, below
+predeclared10% material-gain gate; last rolling154.6FPS. No retained runtime
+change or performance acceptance. Original TreeModelLod restored byte-exactly.
+
+048 diagnostic B declared: repeat original close pose and same observer at
+logical923x510 (approximately half-width/height; record actual physical size),
+then restore1846x1019. This attributes pixel versus geometry cost only; reduced
+resolution cannot pass acceptance or replace the full-resolution workload.
+
+048 diagnostic B completed at physical1384.5x765: close234.5FPS, depth1.66137ms,
+forward0.52521ms, shadows0.74379/0.29157ms with unchanged8,156,032triangles.
+Full viewport restored. This identifies substantial pixel/overdraw work alongside
+geometry cost; reduced resolution is not an optimization candidate.
+
+048 candidate C declared before activation: move instance-constant wind/gust and
+capture-angle sine/cosine calculations from impostor pixels to non-interpolated
+vertex outputs. Keep every capture, blend weight, depth iteration, texture,
+coverage, normal, shadow and wind equation unchanged. Compare fixed far pose with
+original and candidate20s warmup/10observations at full resolution. Require >=10%
+reduction in the affected named GPU passes and visually unchanged representation;
+otherwise revert. This targets shared distant-tree rendering, not near leaves.
+Native shader compile, clean startup and canonical regression precede acceptance.
+
+048 candidate C rejected/reverted: native compilation passed. Far mean depth
+0.98012ms original versus0.98599ms candidate; forward0.10304 versus0.10326ms,
+shadow0/1 unchanged near0.060/0.159ms. No material gain; retain original shader
+byte-exactly and preserve candidate source/evidence. No shader change retained.
+
+TREE-SCALE-048/forest-v1 declared before population measurements: identical
+seed1337/gen52 playable world, grass64m, physical2769x1529,FOV60. Camera
+(-6200,-6200,3600),angles(20,45,0), stationary existing player/terrain interest.
+1024 unit-scale,zero-rotation dense-oak prefab placements on32x32grid at240inch
+spacing, each ray-probed to terrain; original tree occupies grid(8,8). Prefixes
+1/64/256/1024 of placements-v1.json define immutable nested populations, ordered
+by SHA256 of048:i:j after original. Placement artifact SHA256 4784f5bad0cf87fd8ab4ff4d466e379fecd70fdb3caffaeea882b8c3ae3d6eaa.
+Create real prefab instances under a temporary parent in Play; keep existing tree.
+No scene save. Wait20s after each population finishes, then10one-second current
+profiler/diagnostic observations with GPU overlay enabled; capture1600x900FOV60.
+Record source, count, transform/representation, CPU/GPU named passes, frame tails,
+process/GPU memory and errors. Abort below30FPS or on player camera interruption;
+restore temporary population on errors. This is supporting scaling evidence, not
+canonical acceptance. Target extra forest cost <=1msGPU/0.5msCPU, to be measured
+rather than presumed; no count qualifies without visible correctness. A candidate
+must improve affected cost>=10% at unchanged count and retain full nearby source
+quality; canonical single-tree gates remain required before code acceptance.
+
+048 forest original completed prefixes1/64/256:351.8/324.6/265.6FPS;
+62/83/83draws,67762/73810/92242triangles. Native prefab creation then failed after
+400 successful temporary instances with "Couldn't instantiate prefab". No1024
+measurement exists for this attempt. Exception filter returned no engine console
+errors. Finally deleted the temporary parent; native readback confirms exactly
+one original tree and unchanged source. Preserve baseline-forest.json and images.
+Retry same immutable placements/counts after verifying prefab availability; batch
+up to16 sequential native calls per request to reduce transport overhead, with
+camera interruption checks between batches. No workload parameter changes.
+
+048 forest retry uses the same placements and native prefab path. Correction to
+prior creation count:401 temporary instances existed before its failure, not400.
+
+048 candidate D declared before activation: explicitly enable WantsPrePass on the
+visible distant SceneObject. The shader disables forward depth writes; direct
+SceneObject construction does not request the depth prepass in inspected upstream
+source. Existing detailed renderers and separate shadow objects remain unchanged.
+Hypothesis: populate depth before forward shading, preserving real reconstructed
+tree depth and allowing covered distant trees to be rejected. No reduced fidelity,
+wind, views, reconstruction steps, density or shadow range. Compare same forest
+prefixes1/64/256/1024; require >=10% reduction in combined affected depth/forward/
+shadow GPU passes at1024, no holes/overlap defects and canonical retention gates.
+If cost rises or quality breaks, revert. Both authored and seeded visible far
+objects will receive the same flag if the experiment qualifies.
+
+048 candidate D: native managed compilation passed. Prefixes1/64/256 retained
+identical draw/triangle counts and effectively unchanged GPU scopes. Native prefab
+creation failed again after671 temporary instances; the batch returned a text
+failure without isError, which the driver's returned-count guard correctly caught.
+Temporary population removed, source stable.1024 gate was not measured. Reject D
+because no rendered-path change or material gain was established; restore source.
+Native-instantiation retries are permitted only after an explicit completed failure
+and parent-child reconciliation; never retry a timed-out mutation blindly.
+
+048 candidate E declared: skip detailed renderer attribute/LOD/shadow writes while
+a tree is fully distant. Publish visibility and fade changes only when changed;
+resume all detailed settings before it becomes visible. Keep every-frame source/
+hierarchy validation and existing representation, geometry, shadows and hysteresis.
+Compare unchanged forest prefixes; require >=10% lower CPU Render scope at1024,
+unchanged image/counters and full transition correctness. Canonical single-tree
+retention gates remain required. This targets CPU work demonstrated by Render
+rising from1.363ms at1tree to4.909ms at1024 on the completed original run.
+
+048 candidate F prepared offline: spatially repartition the exact existing dense
+leaf geometry into four balanced groups instead of contiguous authoring IDs.
+Keep all leaves, vertex positions, triangle winding, per-corner normals/UVs/colors,
+materials, motion identities and all three source LODs. Same four foliage models
+and prefab objects; no added draw submissions. Deterministic recursive median
+splits along the longest leaf-center axis, with leaf identity as tie breaker.
+Before installation verify canonical per-leaf geometry/payload equality and counts
+across original/derived FBX files. Preserve originals. Native import plus fresh
+far bake/hash validation are required, because partition source files change.
+Compare unchanged close/near/far observations and images. Require >=10% reduction
+in combined affected close depth/forward/shadow GPU passes and preserved leaf
+coverage, motion, attachment, edge visibility and handoff; otherwise restore assets.
+Any padding needed for wind/facing culling must be conservative and documented.
+No source/asset activation during another timed observation. This is an offline
+candidate declaration, not a retained implementation or performance claim.
+
+048 candidate E rejected/reverted:1024 measured136.9FPS versus135.9 baseline;
+Render4.742ms versus4.909ms, only3.4% improvement, below10% gate. One original
+tree lost a shadow after hotload because a newly introduced cached flag defaulted
+false without reinitialization (32fewer triangles/two fewer rendered objects).
+This invalidates visual equivalence. An explicit render-state initialization guard
+was prepared offline but not adopted: no material gain was established. All
+TreeModelLod runtime changes restored byte-exactly; original root re-enabled to
+recreate its rendering state. New1023instances used their normal fresh state.
+
+048 candidate F rejected/reverted: all12FBX outputs passed exact per-triangle and
+per-corner payload comparisons; all4models compiled and all4capture rows rebaked/
+packed successfully. Close8,156,032triangles/94draws unchanged;153.5FPS. Mean
+GPU depth2.8012ms,forward1.1499ms,shadows0.7442/0.3116ms versus original
+2.9257/1.0813/0.7353/0.2910ms. Combined gain0.5%, below10%; no frustum work
+was eliminated at this pose. No edge-culling/animated-bound qualification claimed.
+Restore original FBXs, manifests and distant textures byte-exactly and recompile.
+The canonical exporter was not changed; offline migration and evidence retained.
+
+048 candidate G declared before activation: retain every leaf within3m, preserve
+original3-8m smooth transition and whole-leaf stable IDs/size/motion, but lower
+minimum retention from0.30 to0.08. This deliberately reduces visible leaf density
+beyond3m; it is not literal leaf-count preservation. No enlarged replacement leaves.
+Compare original close and near poses, canopy coverage and lighting, individually
+visible close leaves and shadow attachment. Require >=10% combined relevant GPU
+pass improvement, visibly full canopy and unchanged closest-leaf detail. Revert if
+it looks sparse or gain is small. If retained, rebake all distant views to the same
+minimum density and verify handoff, then clean startup/canonical regression.
+
+048 candidate G has not been activated; defer density reduction while testing H.
+048 candidate H declared before activation: tighten the distant raster strips to
+the perspective-projected padded source box. Keep original billboard plane, view
+selection, fragment reconstruction, coverage, wind, shadows and16strip intervals.
+For each strip endpoint compute conservative left/right extrema over a full strip
+above and below it using all12box edges; adjacent endpoints therefore both enclose
+the entire intervening strip. This avoids clipping corners between sampled rows.
+The mesh owns its normalized row step in its second UV component. Only empty
+rectangle corners are removed; preserve tree surface pixels. Shadow geometry stays
+unchanged. Measure same forest prefixes and single far image. Require >=10% lower
+combined GPU tree passes at1024, no missing surface at opposing/elevated views or
+handoff, and canonical gates. Shader compile and clean-start validation required.
+
+048 candidate H rejected/reverted: native shader and managed compilation passed.
+At1024, forward2.7114ms versus2.6977ms original;122.0FPS versus135.9 original.
+256prefix forward decreased0.8973->0.6396ms, but the required1024case did not
+improve. Extra vertex calculations offset the smaller raster region at scale.
+No runtime H changes retained. Original shader/mesh source restored and compiled.
+Candidate G now activates its declared0.08 minimum/unchanged3-8m transition for
+close/near detail-only measurements. Distant bake remains original during these
+preliminary captures; no handoff/forest quality claim until a matching rebake.
+
+048 candidate G first close run is INVALID for comparison:8,677,608triangles
+versus8,156,032original. Source FBX hashes were restored, but two compiled models
+still contained spatial-partition outputs after the native tool reported success.
+Restoring earlier modification times did not invalidate their cached imports.
+Preserve this failed evidence; do not attribute its156.6FPS to the density change.
+Restore original leaf shader, advance source dependency timestamps without changing
+bytes, reimport and verify original rendered counts before retrying. This also
+limits F's import-provenance claims: file/payload checks and native Success alone
+do not establish which compiled geometry was resident. No F change is retained.
+
+048 candidate G2 declared before activation: minimum retention0.08 at5m instead
+of8m, with every leaf within3m unchanged and the same smoothstep/stable whole-leaf
+shrink. This is a separate stronger density experiment, not an accepted G result.
+Source leaf-center analysis estimates original close retention371653 leaves; the
+first0.08/8m candidate would still retain317296 (only14.6% fewer). G2 aims to
+remove more distant overlap while retaining all39938 source leaf centers within3m.
+All visual and>=10%GPU/canonical criteria remain unchanged. Preliminary detail
+captures only until matching distant rebake. Preserve original art if coverage,
+closest-leaf detail, motion, shadow attachment or transitions fail review.
+
+048 G2 close matched original control159.6FPS versus176.0FPS; combined named
+depth/forward/shadows4.8650->4.3212ms (11.2% reduction). Both8,156,032triangles,
+94draws, source stable. Near217.8->254.2FPS, but inspected matched exterior
+images show materially thinner branch foliage and more exposed interior branches.
+Reject G2 on canopy-fullness quality gate; original leaf shader restored and
+compiled, original distant bake unchanged. No G/G2 runtime change retained.
+
+048 candidate I declared before activation: reduce perspective distant-view depth
+refinement from three to two iterations. Keep all near leaves/wood, source bakes,
+view blending, inverse wind, lighting, shadows and final depth reconstruction.
+Compare unchanged forest-v1 prefixes1/64/256/1024; include BOTH large and small
+depth-prepass scopes plus forward and shadows. The small prepass is substantial
+in the forest and must not be omitted from total affected cost. Require>=10%
+combined GPU improvement at1024, intact crown/overlap/silhouette and no new holes
+or unacceptable motion across near/far, opposing views and handoff. Revert on
+visual failure or insufficient gain. This changes approximation accuracy, not
+source density; do not label it mathematically equivalent. Full clean-start and
+unchanged canonical038/v2 regression gates remain required for adoption.
+
+048 I supporting forest completed at1/64/256/1024:382.6/352.9/273.6/152.6FPS.
+At1024:83draws/165970triangles unchanged, p95/p99 8.32/10.14ms. Mean named
+large/small/overlay depth+forward+opaque shadows5.22049->4.63385ms (11.2%).
+Temporary instances removed, source stable. Wide forest images inspected with
+no broad missing crowns; closer and temporal approximation checks still pending.
+The editor accumulated hotloaded assets; memory here is not a cold comparison.
+
+048 I visual supplement before captures: same one-tree world/physicalviewport;
+source-box center(-1779.083351,-1792.61467,362.14073), center-distance700inches,
+elevation15degrees, azimuths180/203/225/315, FOV75,1600x900. Use normal12/16
+hysteresis and .35sfade; wait.6s at each fixed pose. Compare original three-step
+shader to I with identical parameters; inspect outer branch extent, interior gaps,
+lighting and no new holes. These use the prior045 visual framing, not a revised
+performance workload. If I qualifies, run unchanged native transition path
+retreat450..810inches by10, then approach810..450, camera(Center.x-distance,
+Center.y,250.125), looking at center/FOV75,1280x720. Preserve player position;
+record actual camera and detail fraction; abort if camera changed externally.
+
+048 I not retained globally: four matched external angles keep broad crowns, but
+225-degree closer view loses small foreground leaf/branch patches relative to
+original. Wind timestamps differ, so exact pixel comparison is unavailable; the
+change is insufficiently safe at the existing near/distant handoff. Original
+three-step shader restored. New candidate J before activation: preserve all three
+steps within three source-bounding-sphere diameters; continuously reduce the
+third correction over three-to-four diameters, skip it beyond four. For this oak
+(diameter786.4614inches) this is approximately60-80m at unit scale. Distance is
+normalized in object space so larger instances retain correction farther away.
+Keep the same two first steps, final sample, view blends, coverage, lighting,
+shadows and wind; no lower-detail rendering near player. Same>=10% forest gate,
+visual gate and clean/canonical regression apply. Add matched original/J views
+at center-distances3,3.5,4diameters, azimuth225/elevation15/FOV75/1600x900;
+inspect transition of small silhouettes without changing any timed workload.
+
+048 J fails gain gate:1024 measured142.8FPS, p95/p99 9.45/11.99ms, combined
+passes4.76198ms (8.8% below original5.22049), below predeclared10%. Same83
+draws/165970triangles, cleanup/source stable. J2 before activation: identical
+mathematical distance policy, explicitly unroll the three iterations and guard
+only the third sample instead of breaking a dynamic loop. This changes compiler
+control flow, not approximation or acceptance parameters. Run same forest; if
+it still fails, restore original and conclude this experiment without claiming
+an accepted runtime improvement.
+
+048 J2 fails gain gate:1024 measured149.2FPS, p95/p99 8.66/10.08ms; combined
+passes4.72961ms (9.4% below original5.22049), below10%. No threshold adjustment
+or cherry-picked acceptance. Restore original shader; no048 runtime optimization
+is retained. I/J/J2 approximation remains research only. J/J2 additional visual
+and transition captures were not run after their performance rejection.
+Final restoration checks use fresh visible editor startup and unchanged038/v2
+figure-eight, preserving original scene and all33 backed-up source/artifacts.
+Current Sentry marker before this restart is2026-09-23T00:57:44.591285Z, predating
+current PID44944 startup04:52UTC; earlier047 marker is historical, not current.
+
+048 restoration integrity confirms29runtime/artifact files byte-identical to
+task-start backups (33backups included four documentation files). Normal quit
+after Play stop again left PID44944 in Error following the existing prefab
+teardown assertion/ResourceLibrary null exception and Source2Shutdown. Archived
+shutdown log, terminated only that already-shut-down process and reopened the
+same visible project as PID9576. Marker stayed00:57:44Z through shutdown.
+
+048 restored cold startup: visiblePID9576, engine26.09.15, managed compilation
+succeeded0errors, Sentry marker unchanged00:57:44Z. Fresh log has the same eight
+stock resource errors as original startup, no new project shader/parser/pipeline
+errors. First restored canonical trigger rejected after resetting the player
+crossed a streaming boundary: All enabled visual LOD levels must be settled.
+No timed run started. Preserve scale048-restored-cold-before.json; retry exact
+scenario after settling, without changing workload parameters.
+
+048 final restored canonical run c661ec369c254793bd9599576a49b514 completed;
+source identity exactly matches baseline and sourceUnchanged=true. Moving
+383.29724FPS versus377.46826 (+1.54%); standing299.04977 versus293.17682
+(+2.00%). This is ordinary same-source variation, NOT an optimization gain.
+Moving p95/p99 4.2378/6.1316ms, standing4.53/6.3914ms; all within10% baseline.
+Moving process mean/peak13,198,159,536/13,445,959,680B; GPU mean/peak
+4,255,169,345/4,366,267,459B. Standing process13,328,174,284/13,329,719,296B;
+GPU4,416,828,483B mean/peak. Mean/peak memory no increase; moving allocations
+69,565.87B/frame (+4.11%), standing34,370.938 (-0.24%). Memory p95/p99 are not
+available in the existing collector; no memory-tail acceptance is claimed.
+Zero moving/standing exceptions,4913collision ready/0pending/0failures. Post-loop
+drain9583.444ms versus9961.973; synchronous streaming438.10373ms versus447.11508;
+peak gameplay backlog1223 versus1231. Post-run diagnostics: no pending visuals,
+transitions, placement or held bodies; water ready and player input enabled.
+
+Fresh restored close native image inspected; original8,156,032triangles/94draws/
+30objects confirmed. Saved scene and29backed-up runtime/artifact files byte-exact.
+One enabled original tree, normal12/16m/.35s settings, free viewport, interactive
+Play and camera facing oak restored. No temporary forest remains. Sentry marker
+unchanged through final checks. No048 runtime candidate accepted or retained.
+[Report](ValidationEvidence/TreeScale048/report.md),
+[measurements](ValidationEvidence/TreeScale048/observations-summary.json),
+[restoration comparison](ValidationEvidence/TreeScale048/restoration-comparison.json),
+[raw experiment archive](ValidationEvidence/TreeScale048/experiment-evidence.zip).

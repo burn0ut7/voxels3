@@ -460,3 +460,21 @@ leaf shader `aaac72be4e5abcea258e0313c9f5759dba7a9ca8543745e7a1766e1b6a6afd4b`;
 saved scene `e3343843476d7593abe7f716cb60de8c4e81ec4d2290f5710f39be23546a995c`.
 Dense manifest hash is unchanged from the initial audit. Documentation/source
 inspection only; the interrupted runtime task remains unqualified.
+
+### Measured scaling experiments, September 23
+
+The follow-up [048 experiment report](../ValidationEvidence/TreeScale048/report.md)
+records real playable-world populations of 1, 64, 256 and 1,024 dense oaks.
+The original elevated distant view measured 323.0, 310.2, 264.8 and 135.9 FPS
+at 2769×1529 on RTX 5090/9800X3D. Draw calls stayed at 83 from 64 through 1,024
+trees; increasing distant depth/forward pixel work remains substantial despite
+batching. These are supporting rolling observations, not a portable tree budget
+or ground-level dense-forest acceptance.
+
+Lower wood detail, rearranged leaf groups, hidden-renderer update suppression and
+several distant-shader changes did not meet the predeclared performance and
+appearance gates. Stronger leaf thinning improved close rendering but visibly
+reduced canopy fullness; it was rejected. No 048 runtime optimization is retained.
+This narrows the next substantial near-tree experiment to a coverage-preserving
+representation of groups of leaves, followed by bounded regional residency.
+The existing source leaves, wind, near shadows and saved single-tree scene remain.

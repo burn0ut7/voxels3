@@ -1,0 +1,929 @@
+{
+  "note": "GPU average in lastRollingFrameText is stale for detached views. Named GPU scopes are live smoothed observations, not independent frame-level samples. Sums are scene pass costs, not isolated tree timings.",
+  "observations": [
+    {
+      "file": "baseline-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "154.0 FPS average; p95 7.82 ms; p99 10.17 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.739939582,
+        "CSM Cascade 1/DrawDepthOpaque": 0.289335506,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0159847087,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.96209734,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00170252256,
+        "RenderToSwapChain/Dynamic Opaque Forward": 1.10462391
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-close.json",
+      "stage": "off",
+      "sampleCount": 10,
+      "lastRollingFrameText": "421.1 FPS average; p95 2.89 ms; p99 5.16 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 22592,
+        "DrawCalls": 42,
+        "ObjectsRendered": 15,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.063004919,
+        "CSM Cascade 1/DrawDepthOpaque": 0.148874926,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013134313199999999,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.27011910299999997,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0018588367899999999,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.00209644526
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-close.json",
+      "stage": "restored",
+      "sampleCount": 10,
+      "lastRollingFrameText": "155.8 FPS average; p95 7.67 ms; p99 9.78 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.735277716,
+        "CSM Cascade 1/DrawDepthOpaque": 0.290991095,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01587103785,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.9256911299999997,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00174683571,
+        "RenderToSwapChain/Dynamic Opaque Forward": 1.08131158
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-far.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "260.1 FPS average; p95 4.82 ms; p99 6.72 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67794,
+        "DrawCalls": 63,
+        "ObjectsRendered": 21,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.060340210899999996,
+        "CSM Cascade 1/DrawDepthOpaque": 0.159106243,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0132264553,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.980119079,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0077217535,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.103036323
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "351.8 FPS average; p95 3.46 ms; p99 5.61 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.048901910800000004,
+        "CSM Cascade 1/DrawDepthOpaque": 0.160152692,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013277154250000001,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.475057562,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0158028836,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0379109036
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "324.6 FPS average; p95 3.99 ms; p99 6.08 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0505073764,
+        "CSM Cascade 1/DrawDepthOpaque": 0.172872728,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0136288754,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.460488332,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.088903259,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.170191186
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "265.6 FPS average; p95 4.69 ms; p99 6.66 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.049586907,
+        "CSM Cascade 1/DrawDepthOpaque": 0.175551517,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0130245078,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.455259125,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.355545193,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.867054957
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-retry-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "323.0 FPS average; p95 5.09 ms; p99 6.07 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0496488678,
+        "CSM Cascade 1/DrawDepthOpaque": 0.160633371,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01334170925,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.464165745,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.01544624035,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0389056572
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-retry-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "310.2 FPS average; p95 4.76 ms; p99 6.53 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0506005434,
+        "CSM Cascade 1/DrawDepthOpaque": 0.17178608,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0130822764,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.46490998299999997,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0903923979,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.174350431
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-retry-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "264.8 FPS average; p95 4.68 ms; p99 6.54 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0502777114,
+        "CSM Cascade 1/DrawDepthOpaque": 0.176501851,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0135213488,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.451749706,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.36439874699999997,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.897258435
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "baseline-retry-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "lastRollingFrameText": "135.9 FPS average; p95 9.24 ms; p99 11.53 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 165970,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3089,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0503581502,
+        "CSM Cascade 1/DrawDepthOpaque": 0.233017365,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01338678675,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.464085046,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.76191391,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.6977290099999998
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-a-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "154.6 FPS average; p95 8.08 ms; p99 10.65 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 5512416,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.719849399,
+        "CSM Cascade 1/DrawDepthOpaque": 0.260574458,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0167245685,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.86402233,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0020236126,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.995370685
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-c-far.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "253.9 FPS average; p95 5.30 ms; p99 7.39 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67794,
+        "DrawCalls": 63,
+        "ObjectsRendered": 21,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.060749218,
+        "CSM Cascade 1/DrawDepthOpaque": 0.159179697,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0130161094,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.985990011,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00756886364,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.1032559091
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-d-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "356.1 FPS average; p95 3.37 ms; p99 5.51 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0502577153,
+        "CSM Cascade 1/DrawDepthOpaque": 0.160058373,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01403350885,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.468485757,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.01589181515,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0380983543
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-d-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "327.5 FPS average; p95 3.74 ms; p99 5.82 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0502549253,
+        "CSM Cascade 1/DrawDepthOpaque": 0.17051161,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013184226700000001,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.464146798,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0873192452,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.173665536
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-d-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "265.0 FPS average; p95 4.58 ms; p99 6.56 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0500759604,
+        "CSM Cascade 1/DrawDepthOpaque": 0.179155228,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0129848254,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.454755832,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.363667246,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.926619934
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-e-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "353.0 FPS average; p95 3.46 ms; p99 5.61 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67730,
+        "DrawCalls": 61,
+        "ObjectsRendered": 18,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0505924163,
+        "CSM Cascade 1/DrawDepthOpaque": 0.15809805799999999,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013363684800000001,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.477375897,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.016200170399999998,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.039371391
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-e-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "331.0 FPS average; p95 3.72 ms; p99 5.73 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73778,
+        "DrawCalls": 83,
+        "ObjectsRendered": 207,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0516725881,
+        "CSM Cascade 1/DrawDepthOpaque": 0.17464168,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0133977816,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.478698012,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0908431555,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.174934879
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-e-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "251.6 FPS average; p95 5.06 ms; p99 7.13 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92210,
+        "DrawCalls": 83,
+        "ObjectsRendered": 783,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0505557877,
+        "CSM Cascade 1/DrawDepthOpaque": 0.17813188600000002,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0133472395,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.46458069,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.35664016600000004,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.953949726
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-e-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "lastRollingFrameText": "136.9 FPS average; p95 9.24 ms; p99 11.82 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 165938,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3087,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.052444612700000004,
+        "CSM Cascade 1/DrawDepthOpaque": 0.230360712,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01435824475,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.467433827,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.80351982,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.74765928
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-f-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "153.5 FPS average; p95 7.97 ms; p99 10.74 ms; GPU 3.53 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.744188489,
+        "CSM Cascade 1/DrawDepthOpaque": 0.3115594,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0167980205,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.8012267299999998,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00036755017,
+        "RenderToSwapChain/Dynamic Opaque Forward": 1.14986104
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-g-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "156.6 FPS average; p95 8.00 ms; p99 10.90 ms; GPU 0.57 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8677608,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.694451387,
+        "CSM Cascade 1/DrawDepthOpaque": 0.292228845,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0166045357,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.82209661,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.000368367339,
+        "RenderToSwapChain/Dynamic Opaque Forward": 1.18262353
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-g2-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "176.0 FPS average; p95 7.01 ms; p99 9.11 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.48027654,
+        "CSM Cascade 1/DrawDepthOpaque": 0.254308786,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0155669942,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.58965112,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0014400254499999999,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.996984682
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-g2-near.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "254.2 FPS average; p95 4.83 ms; p99 7.01 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 4707754,
+        "DrawCalls": 111,
+        "ObjectsRendered": 32,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.256587681,
+        "CSM Cascade 1/DrawDepthOpaque": 0.225973298,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0130502493,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.779135573,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00989709235,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.864134441
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-h-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "323.9 FPS average; p95 5.21 ms; p99 7.19 ms; GPU 0.60 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.038108907,
+        "CSM Cascade 1/DrawDepthOpaque": 0.156595124,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01316137805,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.396302429,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0162547307,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.040020118300000004
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-h-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "323.5 FPS average; p95 3.80 ms; p99 6.29 ms; GPU 0.60 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.040601911000000004,
+        "CSM Cascade 1/DrawDepthOpaque": 0.165723163,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0135448976,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.400813959,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0892051452,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.16894304699999999
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-h-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "260.4 FPS average; p95 5.12 ms; p99 6.97 ms; GPU 0.60 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0391932383,
+        "CSM Cascade 1/DrawDepthOpaque": 0.170909279,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013621657,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.390120957,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.33772867900000003,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.639565484
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-h-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "lastRollingFrameText": "122.0 FPS average; p95 11.51 ms; p99 14.45 ms; GPU 0.60 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 165970,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3089,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0393321477,
+        "CSM Cascade 1/DrawDepthOpaque": 0.222921805,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0135870008,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.386403914,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.638755,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.7113764
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-i-far.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "293.6 FPS average; p95 4.27 ms; p99 6.58 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67794,
+        "DrawCalls": 63,
+        "ObjectsRendered": 21,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0471314815,
+        "CSM Cascade 1/DrawDepthOpaque": 0.142008234,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0139261579,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.724380597,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0085630022,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0913948254
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-i-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "382.6 FPS average; p95 3.17 ms; p99 5.58 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0376615027,
+        "CSM Cascade 1/DrawDepthOpaque": 0.142748491,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01307484835,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.405299844,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.015913174,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0378615963
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-i-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "352.9 FPS average; p95 3.53 ms; p99 5.80 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0399333258,
+        "CSM Cascade 1/DrawDepthOpaque": 0.156284382,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0129744869,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.409382427,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.081740592,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.162464928
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-i-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "273.6 FPS average; p95 4.77 ms; p99 6.79 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0389130294,
+        "CSM Cascade 1/DrawDepthOpaque": 0.16197684699999998,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0129630552,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.399133258,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.318557894,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.621049662
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-i-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "lastRollingFrameText": "152.6 FPS average; p95 8.32 ms; p99 10.14 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 165970,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3089,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0392864751,
+        "CSM Cascade 1/DrawDepthOpaque": 0.216094718,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0133922693,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.400664144,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.45650494,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.50791239
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "388.7 FPS average; p95 3.20 ms; p99 5.54 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.039004140799999996,
+        "CSM Cascade 1/DrawDepthOpaque": 0.144220067,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01340633125,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.405811584,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0159510679,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.038278709699999997
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "346.1 FPS average; p95 3.59 ms; p99 6.10 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0404040569,
+        "CSM Cascade 1/DrawDepthOpaque": 0.154138869,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01300212855,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.407719353,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0858863936,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.166772889
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "275.1 FPS average; p95 4.67 ms; p99 6.93 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0387484277,
+        "CSM Cascade 1/DrawDepthOpaque": 0.16376775699999999,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0130523218,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.40218837,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.329248419,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.650310191
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "lastRollingFrameText": "142.8 FPS average; p95 9.45 ms; p99 11.99 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 165970,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3089,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.038570057399999996,
+        "CSM Cascade 1/DrawDepthOpaque": 0.217786526,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0135020259,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.400297691,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.51223328,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.57959055
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j2-forest.json",
+      "stage": 1,
+      "sampleCount": 10,
+      "lastRollingFrameText": "381.2 FPS average; p95 3.24 ms; p99 5.57 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 67762,
+        "DrawCalls": 62,
+        "ObjectsRendered": 20,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0371629054,
+        "CSM Cascade 1/DrawDepthOpaque": 0.143525327,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01343318415,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.404297586,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0158586746,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.0382835947
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j2-forest.json",
+      "stage": 64,
+      "sampleCount": 10,
+      "lastRollingFrameText": "343.8 FPS average; p95 3.61 ms; p99 5.94 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 73810,
+        "DrawCalls": 83,
+        "ObjectsRendered": 209,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0393786081,
+        "CSM Cascade 1/DrawDepthOpaque": 0.154544957,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013131570549999999,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.413756395,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.0822253871,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.164530895
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j2-forest.json",
+      "stage": 256,
+      "sampleCount": 10,
+      "lastRollingFrameText": "287.5 FPS average; p95 4.16 ms; p99 6.60 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 92242,
+        "DrawCalls": 83,
+        "ObjectsRendered": 785,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.039569600499999996,
+        "CSM Cascade 1/DrawDepthOpaque": 0.163996582,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.01306975745,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.404473615,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.321908876,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.632615472
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "candidate-j2-forest.json",
+      "stage": 1024,
+      "sampleCount": 10,
+      "lastRollingFrameText": "149.2 FPS average; p95 8.66 ms; p99 10.08 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 165970,
+        "DrawCalls": 83,
+        "ObjectsRendered": 3089,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.0385286133,
+        "CSM Cascade 1/DrawDepthOpaque": 0.215485872,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.013325233799999999,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 0.4012704,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 1.49859934,
+        "RenderToSwapChain/Dynamic Opaque Forward": 2.56240355
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "diagnostic-b-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "234.5 FPS average; p95 5.20 ms; p99 7.53 ms; GPU 2.67 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.743792213,
+        "CSM Cascade 1/DrawDepthOpaque": 0.291568297,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.00619804866,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 1.661374,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00214007175,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.525210458
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "restored-control-close.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "159.6 FPS average; p95 8.50 ms; p99 10.62 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 8156032,
+        "DrawCalls": 94,
+        "ObjectsRendered": 30,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.736177864,
+        "CSM Cascade 1/DrawDepthOpaque": 0.281169029,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0169772118,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 2.7596589000000002,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00170558922,
+        "RenderToSwapChain/Dynamic Opaque Forward": 1.08803659
+      },
+      "sourceUnchanged": true
+    },
+    {
+      "file": "restored-control-near.json",
+      "stage": "on",
+      "sampleCount": 10,
+      "lastRollingFrameText": "217.8 FPS average; p95 5.77 ms; p99 7.81 ms; GPU 0.58 ms average",
+      "frameCounters": {
+        "TrianglesRendered": 4707754,
+        "DrawCalls": 111,
+        "ObjectsRendered": 32,
+        "SceneViewsRendered": 3
+      },
+      "meanNamedGpuPassMilliseconds": {
+        "CSM Cascade 0/DrawDepthOpaque": 0.397563263,
+        "CSM Cascade 1/DrawDepthOpaque": 0.22728911400000001,
+        "RenderToSwapChain/Depth Normal Prepass (Overlay)": 0.0129590592,
+        "RenderToSwapChain/Depth Normal Prepass (Large)": 1.08928712,
+        "RenderToSwapChain/Depth Normal Prepass (Small)": 0.00923853105,
+        "RenderToSwapChain/Dynamic Opaque Forward": 0.90094634
+      },
+      "sourceUnchanged": true
+    }
+  ]
+}
