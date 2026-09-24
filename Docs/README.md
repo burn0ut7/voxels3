@@ -5,6 +5,7 @@ link to it elsewhere instead of copying its state, settings, or results.
 
 | Question | Owner |
 | --- | --- |
+| What game are we building, and in what order? | [The Dead Wake](TheDeadWake.md): user vision, gameplay structure, open decisions and prototype roadmap; distinguishes intended design from implementation. |
 | How should an agent work in this repository? | [AGENTS.md](../AGENTS.md): project rules and route selection. |
 | What constraints apply to a domain? | [Agent routes](../AGENTS.md#route-map): domain-specific design and validation requirements, not implementation snapshots. |
 | How do host debug flight and teleport work? | [Admin menu](Architecture/AdminMenu.md). |

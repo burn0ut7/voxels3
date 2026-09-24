@@ -42372,3 +42372,52 @@ The two water records are explicitly staged despite their ignored parent folder.
 The local cleanup commit contains only this task's changes. Publishing main is
 held because its pre-existing `004b367c` update is not on remote main (`93552b46`);
 pushing would also publish unrelated work, contrary to the task-only Git policy.
+
+
+## THE-DEAD-WAKE-DIRECTION-001 — September 24, 2026
+
+Documentation/concept checkpoint on `codex/the-dead-wake-prototype`, created from
+clean local `main` at bb52053e931837f6d931995f256bdddcb9a848ae. The user's ongoing
+goal covers the survival game; this checkpoint accepts only its direction and
+implementation structure, not new playable functionality.
+
+Changes: [game direction](TheDeadWake.md), its documentation-map entry, and the
+[saved concept](../Art/References/TheDeadWake/prototype-v1.png) with
+[prompt/provenance brief](../Art/References/TheDeadWake/brief.md). Runtime code,
+authored scenes, project identity, assets and gameplay behavior are unchanged by
+this checkpoint. The generated concept is aspirational and visibly labeled;
+its illustrative objective state and departures are documented in the brief.
+
+Checks and independent review:
+
+- Pass: requested systems represented; implementation versus proposals clearly
+  distinguished; source inventory checked against project, prefab, terrain-edit,
+  storage, replication, materials, water and UI originals.
+- Pass: concept saved outside runtime imports, opened and visually inspected by
+  its creative director, root and a separate general-purpose reviewer. Direction
+  uses the requested Astra Extra High setup. Original reference and exact prompt
+  retained; no runtime appearance or performance claim follows from the concept.
+- Initial review: two P3 findings, conflicting repair order and LF-only line
+  endings in the new document. Both preserved here and corrected: costed repairs
+  belong to Slice 2; new document uses CRLF with final newline.
+- Pass: same independent reviewer rechecked final corrections and concept links;
+  ready, no unresolved findings within the documentation/concept scope.
+- Pass: local Markdown file targets resolve for the three reviewed text files;
+  whitespace check clean, required line endings verified.
+- Not applicable: in-world functionality, motion, multiplayer and figure-eight
+  performance for this documentation/reference-only checkpoint. First playable
+  slice and all new gameplay remain unimplemented and unverified.
+
+Editor preflight for subsequent work: no existing sbox process was present;
+launched the authorized visible interactive editor, PID44092. Native editor_status
+confirmed voxels3, scenes/basic_example.scene, no unsaved scene changes, not
+playing, engine26.09.22, compilation succeeded with0errors. The initial discovery
+request timed out while the editor was opening; later read succeeded. This is
+startup/compiler evidence only. Prior accepted runs used26.09.15; capture a
+same-engine pre-change control before gameplay performance acceptance rather
+than asserting direct comparability. Startup generated untracked asset .meta
+files; they are excluded from this checkpoint. No Play run or scene mutation.
+
+The active goal continues with Slice 1: empty spawn, nearby resource gathering,
+one recipe and a useful crafted tool. Define its owners, fixed functional
+scenarios and performance control before implementation and first runtime run.
