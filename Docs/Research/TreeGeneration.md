@@ -67,13 +67,14 @@ identified the following omissions; their individual contribution was not isolat
 by controlled image comparisons. This table describes the rejected pre-reset
 prototype. Subsequent oak candidates replace some of these paths; see the
 [current implementation status](../Architecture/SpawnTrees.md#crown-volume-oak-replacement).
-The source remains uncommitted, with concurrent unrelated work in the checkout.
+At that research snapshot the prototype was uncommitted. This table records
+historical observations, not the current imported-tree implementation.
 
-| Current evidence | Implication for the redesign |
+| Historical evidence | Implication for the redesign |
 | --- | --- |
 | [Texture baker](../../Tools/bake_tree_textures.py) draws 512-pixel sprays and cloud silhouettes using polygons/lines; bark uses procedural grooves/noise at 256x512. Bark normals are derived from the color image's brightness. | Higher resolution alone will not create plausible folds, wood relief or connected twigs. Replace the art inputs and baking method, not just the palette. Brightness is not a measured height field. |
 | The generated foliage materials have opacity but no authored leaf normal or transmission texture; all tree materials share uniform roughness at 235/255. | Leaves lack authored surface orientation and differentiated response to light. A transmission feature flag cannot supply the missing leaf structure. Bark and leaves need material-specific roughness. |
-| [Geometry generation](../../Code/Voxels/Trees/ProceduralTreeGeometry.cs) places four-vertex rectangles around crown volumes; the normals are biased from the crown shape. | Larger or more numerous rectangles still reveal sheets and arbitrary clumps. Controlled canopy normals can help broad lighting, but do not replace the leaf's own folded surface normals. |
+| The former `ProceduralTreeGeometry.cs` generator placed four-vertex rectangles around crown volumes; the normals are biased from the crown shape. | Larger or more numerous rectangles still reveal sheets and arbitrary clumps. Controlled canopy normals can help broad lighting, but do not replace the leaf's own folded surface normals. |
 | Wood is independent straight tube segments, with eight radial sides at the nearest level, simple root tubes and no branch collars. Its lengthwise texture coordinate uses local Z even on branches. | Coarse contours, joins and poorly aligned bark remain visible nearby. A better bark bitmap cannot repair branch attachment, grain direction or trunk shape. |
 | Distant crowns use separately drawn canopy textures and crossed cards. LODs change at 28/75/180 m with hysteresis; there is no visual crossfade. | Hysteresis prevents rapid toggling but does not hide the swap. The far art does not encode the rendered near tree's actual branch/leaf appearance. Shape and density can change abruptly. |
 | Leaf-card motion weights are uniform across each card; the existing inspection did not establish convincing wind or measured forest cost. | Movement needs anchored, coherent control data and observation in motion. A material compiling or a low triangle count is insufficient acceptance evidence. |

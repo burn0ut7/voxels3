@@ -137,6 +137,6 @@ prototype directly into a shipping world format. A separately versioned cache of
 completed derived geometry could avoid more of the measured work, but its storage,
 invalidation and GPU upload costs need their own bounded experiment.
 
-Method and implementation scope: [prototype plan](../Plans/GeneratedTerrainCachePrototype.md).
+Method and implementation scope: [prototype plan](https://github.com/burn0ut7/voxels3/blob/004b367c1354a4c13bde519383abc315c4d65ffe/Docs/Plans/GeneratedTerrainCachePrototype.md).
 Exact scenarios, failed runs and environment notes: [validation ledger](../ValidationResults.md).
 Raw JSON observations: `Docs/ValidationEvidence/Water/cache-*`.

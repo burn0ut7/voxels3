@@ -24418,7 +24418,7 @@ All four experimental runtime files restored to 533bfd1; experimental source pre
 
 ### DISTANT-REFINEMENT-001/v1 — pre-run definition, 2026-09-12
 
-User authorizes a prototype comparing cheaper distant geometry with closed joins and deterministic region generation. Design: [DistantEdgeRefinementExperiment](Plans/DistantEdgeRefinementExperiment.md). Baseline helper: eight bisections; A: eight for edge lengths <=32 units, four otherwise; B (only if A remains viable): eight/two. Shared regular/transition helper and edge-length rule preserve matching inputs on both faces. No world, topology, collision, batch or scheduling changes.
+User authorizes a prototype comparing cheaper distant geometry with closed joins and deterministic region generation. Design: [DistantEdgeRefinementExperiment](https://github.com/burn0ut7/voxels3/blob/004b367c1354a4c13bde519383abc315c4d65ffe/Docs/Plans/DistantEdgeRefinementExperiment.md). Baseline helper: eight bisections; A: eight for edge lengths <=32 units, four otherwise; B (only if A remains viable): eight/two. Shared regular/transition helper and edge-length rule preserve matching inputs on both faces. No world, topology, collision, batch or scheduling changes.
 
 Reuse HILLS-PLACEMENT-PRIORITY-001/v1 exactly: visible basic_example, engine26.09.08b, RTX5090, viewport2769x1436, one player, seed1337/generator44, land0.75/mountain0.3/plains0.6, scales77724.09/18681.756/5232.39, relief3072/ruggedness0.45/sea0, 32cells/16base spacing, gameplay8/LOD0..5/radius256/near4/cache8. Play reset, originXY0,0, all terrain/collision/water settled then30s warmup; speed2500/distance50000/one loop, clearance393.7008,10s stationary,240s cap. Current world3950b968a6ff411ca8f5923a82f348a1 now revision1585/pages328/epoch1/checkpoint128, saved at preflight10:42:01EDT. Preserve newer user state; revision1584 results are not matched controls. Baseline runtime tracked source533bfd1; pre-existing SurfaceWater.md and ledger edits preserved.
 
@@ -42242,3 +42242,133 @@ errors; no new matching engine errors during051. Sentry marker11:35:06.312941Z.
 Initial final-image attempt selected the wrong screenshot tool and was rejected
 before rendering; corrected main-camera nativecapture succeeded and was inspected.
 No runtime optimization/source/scene asset edit is included in this task.
+
+
+## REPOSITORY-CLEANUP-20260923 - unused repository material
+
+Source before cleanup: `004b367c1354a4c13bde519383abc315c4d65ffe`. Workspace: Windows, September 23, 2026.
+Scope: file-only removal of unused assets, obsolete documents, experiment copies,
+downloaded research caches and generated Python bytecode. No Code, Editor,
+shader, material, model, prefab, scene or project-setting changes are intended.
+The s&box skill's generated lookup cache is removed from version control while
+its local copy remains available.
+
+Criteria fixed before deletion/verification:
+
+- Preserve byte-for-byte all runtime and editor sources, shader/material/model/
+  prefab/scene inputs and project settings. Only the unreferenced Leafy Grass
+  alternative (five maps) and unused Grass004 DirectX normal may leave Assets.
+- Preserve the live eighteen-tree catalog, current dense oak, protected Blender
+  libraries, recipe inputs, authoring tools and staged exports.
+- Preserve all ValidationEvidence files, scenario definitions, measurements and
+  failure decisions. A historical removed-document link may target its original
+  Git revision; append this cleanup entry without rewriting past conclusions.
+- No new broken local Markdown links in retained tracked documents. Preserve
+  the pre-existing broken-link inventory separately from cleanup regressions.
+- Confirm retained compressed terrain experiment runs reproduce the removed
+  uncompressed copies; retain any unmatched run rather than discard evidence.
+- Independent review must find no removed runtime/authoring dependency or other
+  material blocker before committing and pushing.
+
+Historical location statements about removed versioned `.codex` scratch copies
+are superseded by this cleanup. The previous
+archive-only cleanup did not reclaim space; this task requested removal of the
+unused archive. The disposition below distinguishes applied from blocked work.
+Original libraries and staged exports remain. Removed tracked
+plans/source snapshots are recoverable from the source revision above.
+
+Verification results will be appended after the final file checks and review.
+Runtime/editor and figure-eight runs are not invoked for files proven outside
+runtime dependency paths; any unresolved live dependency makes that exemption
+invalid and must be resolved before acceptance. No performance claim is made.
+
+Preservation finding during independent review: the water scratch folder held
+one unique, incomplete shoreline-flicker observation and its source-identity
+file. Both are copied byte-for-byte to
+[shore-flicker-observation.json](ValidationEvidence/WaterShoreFlicker/shore-flicker-observation.json)
+and [fixed-source.json](ValidationEvidence/WaterShoreFlicker/fixed-source.json).
+The observation reports stationary camera-rotation flicker and an interrupted
+comparison; its status remains investigation incomplete. This cleanup neither
+fixes that issue nor establishes runtime acceptance.
+
+### Applied scope and checks
+
+Automatic approval review rejected the initial bulk-deletion command with only
+"blocked by policy" and no detailed reason. That command did not execute. The
+safer, Git-recoverable operation removed 199 old tracked paths (530146250 bytes,
+505.59 MiB), including two water records relocated intact to ValidationEvidence.
+It also untracked 21 generated skill-cache files while keeping all local copies.
+The 909 unversioned candidates (13429361188 bytes, 12.51 GiB) remain untouched;
+explicit confirmation of that exact local-deletion set is pending. This is a
+partial cleanup, not a claim that the retired archive has been removed.
+
+- Pass: 986 non-Markdown retained runtime, editor, asset, settings and authoring
+  files match the pre-change SHA256 inventory. The only non-document protected
+  removals are the six unused texture maps and four generated Python bytecode files.
+- Pass: independent review also checked the 1000 protected files outside those
+  removals and the two edited texture READMEs; their original bytes match.
+- Pass: all 28 removed raw terrain runs match retained compressed evidence;
+  20 base64/embedded image payloads match retained PNGs. Both unique water records
+  are preserved, including their incomplete investigation status.
+- Pass: zero broken local Markdown file links after excluding code examples.
+  Three stale shader links were repaired; the never-committed former tree
+  generator is explicitly historical text rather than a broken source link.
+- Pass: prior ledger content is unchanged except the archived distant-refinement
+  plan link. ValidationEvidence history, scenarios, results and failures remain.
+- Pass: staged and unstaged whitespace checks. The pre-existing mixed line
+  endings in the large ledger are preserved; Git emits its normal CRLF warning.
+- Not applicable: in-world, visual and figure-eight performance runs for this
+  dependency-external cleanup. No rendering or performance improvement is claimed.
+- Pass: final independent review reports the applied scope ready, with no
+  material blockers. It rechecked cumulative changes against `004b367c`.
+- Pending: the deferred local-deletion decision. The full requested cleanup is
+  incomplete until that set is either authorized for deletion or explicitly
+  retained. No further commit or push is performed while that decision is pending.
+
+The temporary detailed manifest/hash/check files are at
+`%TEMP%/voxels3-cleanup-20260923/`. During verification, another actor committed
+the earlier cleanup as `7c395976` (`clean up`). The cumulative diff from
+`004b367c` includes that commit and the staged documentation/evidence follow-up.
+This task issued no commit or push. Remote main was still `93552b46` when checked.
+
+### September 24 - deferred local cleanup authorized and applied
+
+The user explicitly confirmed removal of the reviewed 12.5 GiB unused set.
+A fresh preflight found exactly 909 unversioned files, 13429361188 bytes, with
+unchanged sizes and no new tracked consumers. Every retired tree key still had
+its staged manifest and wood_export.blend; original Blender libraries remained.
+
+Automatic approval review again rejected permanent deletion with only
+"blocked by policy", despite the confirmation. The command did not execute.
+The safer Windows Recycle Bin operation succeeded for the six exact folders:
+`.codex/terrain-textures`, `.codex/tree-build/research`, `.codex/biome-research`,
+`.codex/cloud-research`, `.codex/unused-tree-archive-20260922`, and
+`Tools/BlenderTrees/__pycache__`. Each folder's exact file set and sizes were
+checked against the reviewed manifest, its absolute workspace location verified,
+and reparse-point targets rejected before moving it. All 909 original paths are
+now absent from the project. The Recycle Bin still holds these bytes; this is
+workspace removal with recovery available, not a measured free-space increase.
+
+Post-operation checks pass: all 69 retained Blender-library/staged-export records
+have unchanged sizes and modification times; all 986 protected non-Markdown
+runtime/editor/asset/settings/authoring hashes match the original audit. All 21
+local skill-cache files remain. The former pending-deletion decision is resolved;
+there are no remaining candidates from that reviewed set in the workspace.
+No runtime path changed, so in-world, visual and figure-eight checks remain not
+applicable. No performance claim is made.
+
+The external `7c395976` cleanup commit was subsequently removed from the branch
+by another actor; HEAD returned to `004b367c` with the cleanup files still changed.
+No source edits were reverted by this task. Final review covers the combined
+workspace diff against the original `004b367c` source, not the transient commit.
+Post-operation evidence: `%TEMP%/voxels3-cleanup-20260923/recycle-checks.json`,
+`retained-authoring.json`, and `recycled-directories.txt`.
+
+Final independent recheck: ready for the reviewed cleanup, no material content
+blockers. It verified all 1108 old manifest paths absent, all six recycled folders
+by original location, 1000 retained hashes, 69 authoring records, 21 local caches,
+48 terrain evidence payloads, both preserved water records, links and whitespace.
+The two water records are explicitly staged despite their ignored parent folder.
+The local cleanup commit contains only this task's changes. Publishing main is
+held because its pre-existing `004b367c` update is not on remote main (`93552b46`);
+pushing would also publish unrelated work, contrary to the task-only Git policy.

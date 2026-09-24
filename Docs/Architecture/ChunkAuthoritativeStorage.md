@@ -607,7 +607,7 @@ No cache format or scheduling policy was changed by this investigation.
 
 ### Rejected generated-density cache experiment
 
-The user rejected the [prototype](../Plans/GeneratedTerrainCachePrototype.md)
+The user rejected the [prototype](../Research/GeneratedTerrainCacheExperiment.md)
 after it showed no dependable loading improvement. Its implementation, inspector
 setting and runtime hooks have been removed. Persistence continues to save the
 world recipe and authoritative edited sample pages; untouched generated terrain

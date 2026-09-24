@@ -94,3 +94,33 @@ the relevant scenario family and follow its later runs and decisions:
   owner. Update incoming links when moving or removing one.
 
 - [Collision profile review: September 7, 07:22:47](Research/CollisionProfile20260907.md) - supplied capture, measured opportunities, and candidate14 results.
+
+
+## September 23-24 repository cleanup
+
+Removed unused texture alternatives, declined/superseded plans, experiment source
+copies and duplicate downloads. Active runtime sources, the eighteen-tree catalog,
+current dense oak, Blender source libraries, staged exports, texture bake inputs,
+research findings and validation history remain.
+
+The versioned cleanup removes 199 old tracked paths (505.59 MiB), including two
+unique water records relocated intact into ValidationEvidence. Python bytecode
+is ignored; 21 generated s&box lookup-cache files stay local and are no longer
+versioned. After explicit confirmation on September 24, all 909 remaining unused
+local files (12.51 GiB) were removed from the project via the Windows Recycle Bin.
+They include the retired experimental-tree archive and downloaded research
+caches. Original tree sources and staged exports remain. The Recycle Bin retains
+those bytes until emptied; no disk-space reclamation is claimed for that step.
+Automatic approval review blocked permanent deletion, including the retry after
+confirmation, so the reversible operation was used instead.
+
+Historical ledger entries describe files at the time of each run. Their scratch-
+copy and recovery-archive location statements are superseded by this cleanup.
+Compressed runs, patches and rendered evidence under `ValidationEvidence/` remain.
+Removed tracked plans and source snapshots are available at
+[the pre-cleanup revision](https://github.com/burn0ut7/voxels3/tree/004b367c1354a4c13bde519383abc315c4d65ffe);
+removed-document links in historical notes point to that revision. These records
+are historical context, not current implementation instructions.
+
+The deletion scope, preservation checks and independent review are recorded under
+`REPOSITORY-CLEANUP-20260923` in [the ledger](ValidationResults.md).

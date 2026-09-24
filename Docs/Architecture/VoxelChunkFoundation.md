@@ -157,7 +157,7 @@ rejection uses global exterior support [-.7526,1.0926]*ReliefHeight and retained
 cave depth. The superseded broad-only public classifier has been removed.
 No corner-only emptiness proof or underground heightfield assumption is allowed.
 
-The [GPU mirror](../../Assets/shaders/voxels/voxel_sdf_v22.hlsl) includes separate
+The [GPU mirror](../../Assets/shaders/voxels/voxel_sdf_v30.hlsl) includes separate
 noise, landform and cave modules, with matching hashes, salts and recipes.
 Negative coordinates use floor. Published bounds include numerical padding;
 shared recipes do not establish bitwise CPU/GPU equivalence without measurement.
