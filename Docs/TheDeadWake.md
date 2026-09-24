@@ -33,6 +33,8 @@ content, interfaces, exact schedules or rules.
   resources.
 - Start with nothing and progress through equipment, resource and technology
   tiers.
+- Use a traditional Minecraft/Seven Days to Die style slot inventory and hotbar.
+  Wood comes from standing trees; the Pack-counter and ground-log loop is rejected.
 - Soft RPG progression through use: doing an activity makes the character better
   at that activity.
 - Build on foundations with a coherent node/socket system.
@@ -71,11 +73,12 @@ until frozen for a named experiment in the validation ledger.
 | One defense cycle | Scout, build, stockpile, defend, repair | Construction choices demonstrated under pressure |
 | Many cycles | Specialize, unlock workstations, reach tougher regions, cooperate | New options rather than only larger numbers |
 
-Proposed opening: identify a safe clearing; gather loose stone, fallen wood and
-fiber by hand; craft a crude tool; establish a small foundation; build a defensible
-wall and entrance; face a small announced first attack. Starting empty must not
-mean punching mature trees or needing an unavailable tool to obtain that tool's
-ingredients. Early failure must leave a viable recovery path.
+Revised opening: find standing trees and loose stone. Gather a limited supply of
+branches from a tree by hand to bootstrap an axe, then chop trees for larger wood
+yields. Store materials and tools in a conventional slot inventory/hotbar and craft
+through its visible recipe panel. Next establish a small foundation and defensible
+entrance before the first announced assault. A tool must never require an ingredient
+obtainable only with that same tool. Early failure needs a viable recovery path.
 
 ## Gameplay systems to flesh out
 
@@ -102,7 +105,8 @@ Later candidates: copper, coal, steel inputs, chemicals and electronic salvage.
 Introduce only materials with distinct uses; do not implement this entire list as
 an empty catalog.
 
-Gather loose resources to bootstrap tools. Mine terrain through the existing
+Gather branches from standing trees and loose stone to bootstrap tools. Random
+ground logs are not the wood-progression mechanic. Mine terrain through the existing
 canonical edit path. Credit material only after a successful authoritative change,
 never merely because input was held or an edit was queued. Decide extraction
 quantity and material identity from the removed matter; separate cosmetic debris
@@ -127,6 +131,8 @@ No survival rule should trap a new player in an unrecoverable empty spawn.
 
 ### Inventory, crafting and technology
 
+Use a traditional slot inventory with 27 backpack slots and a nine-slot hotbar as
+the initial layout. Support stack movement, splitting, merging and hotbar selection.
 Use one authoritative inventory with bounded stacks, explicit item definitions
 and transactional transfers. Crafting atomically consumes ingredients and adds the
 result only when capacity and prerequisites allow it. Cancelled, duplicate or
@@ -260,7 +266,8 @@ coverage separately rather than implying it has been tested.
 
 ## Technical foundation and boundaries
 
-Source inventory on September 24, 2026 establishes the following starting point.
+Source inventory at e12bf1f4 on September 24, 2026 establishes the starting point
+below. The later opening-loop candidate is tracked under Current progress.
 Existing code is not the same as complete feature acceptance; historical limits
 remain in the architecture documents and validation ledger.
 
@@ -304,7 +311,7 @@ to build every subsystem at once.
 | Slice | Deliverable | Acceptance evidence |
 | --- | --- | --- |
 | 0 — Direction and isolation | Branch, this document, saved concept, source/acceptance inventory | Independent accuracy/completeness review and clear next slice |
-| 1 — Empty hands to first tool | Empty inventory; nearby loose-resource interactions; one recipe; one useful tool; readable feedback | New spawn can complete the chain without admin grants; misses/retries/capacity cannot duplicate or lose resources |
+| 1 — Empty hands to first tool | Traditional empty inventory/hotbar; branches from standing trees and loose stone; axe recipe; useful tree chopping | New spawn can complete the chain without admin grants; misses/retries/capacity cannot duplicate or lose resources |
 | 2 — A place to defend | Supported foundation, snapped wall/entrance, costs, repair and obstruction | Place, reject, rotate, connect, walk through entrance; terrain/actor intersections and concurrent placement tested |
 | 3 — First wake | Health/stamina, one zombie, combat, announced small recurring assault, death/recovery | Complete preparation/assault/recovery twice; kill, death, unreachable base and no-base cases |
 | 4 — A persistent cooperative loop | Save/load of the established loop, player identities, guest interactions and convergence | Restart, late join, disconnect during transactions, invalid/duplicate requests and recovery |
@@ -369,7 +376,21 @@ goal remains open while roadmap requirements remain outstanding.
 - Vision, system structure, questions and implementation sequence: recorded here.
 - Concept: saved and inspected; illustrative HUD state is documented in its brief.
 - Independent documentation/concept review: ready after repair-order and
-  line-ending corrections. First playable increment: not yet implemented;
-  Slice 1 is next under the active development goal.
-- No new gameplay, simulation or multiplayer acceptance is claimed by this
-  document. Exact outcomes belong in the validation ledger.
+  line-ending corrections.
+- Slice 1 now implements a traditional 27-slot backpack, nine-slot hotbar,
+  stack transfers, crafting, and wood gathering from standing trees. It replaces
+  the rejected Pack counters and ground-log loop. Native automated playtests and
+  independent review cover the replacement's principal interactions and visuals.
+  See [opening-loop ownership](Architecture/DeadWakeSurvival.md).
+- Slice 1 is qualified as an offline opening prototype after independent gameplay,
+  visual, lifecycle and performance review. The final unchanged figure-eight meets
+  the existing gates against the predeclared current-environment control. Identical
+  original-code controls also showed substantial temporal variation; this qualified
+  comparison does not erase earlier failures or establish a feature-caused speedup.
+  The ledger preserves all runs, scope limits and the comparison rationale.
+- Qualification covers the authored one-oak scene, session-only inventory and the
+  measured local player. Forest scale, persistence, co-op, building and defense
+  remain later slices; the overall game is still in development.
+- Editor display title is The Dead Wake; package identity and paths remain voxels3.
+- No acceptance beyond this bounded opening slice is claimed. Exact outcomes
+  belong in the validation ledger.

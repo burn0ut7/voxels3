@@ -1,0 +1,91 @@
+@using Sandbox
+@using Sandbox.UI
+@using System
+@using System.Linq
+@inherits PanelComponent
+@namespace Sandbox
+
+<root class="@(_survivor.IsValid() && _survivor.InventoryOpen ? "inventory-open" : "")">
+	@if ( _survivor.IsValid() && _survivor.Active )
+	{
+		<div class="identity"><div class="title">THE DEAD WAKE</div><div class="subtitle">PROTOTYPE · PROGRESS RESETS ON RESTART</div></div>
+		@if ( _survivor.InventoryOpen )
+		{
+			<div class="inventory-layer">
+				<div class="inventory-window">
+					<div class="window-heading"><div>INVENTORY</div><button id="inventory-close" class="close" onclick=@_survivor.CloseInventory>@($"{Input.GetButtonOrigin( "Inventory" )} · Close  ×")</button></div>
+					<div class="inventory-body">
+						<div class="storage">
+							<div class="section-title">BACKPACK</div>
+							<div class="inventory-grid">
+								@for ( var row = 0; row < 3; row++ )
+								{
+									<div class="slot-row">
+										@for ( var column = 0; column < 9; column++ )
+										{
+											<DeadWakeSlot Owner=@_survivor Index=@(9 + row * 9 + column) />
+										}
+									</div>
+								}
+							</div>
+							<div class="section-title hotbar-title">HOTBAR</div>
+							<div class="slot-row">
+								@for ( var i = 0; i < 9; i++ ) { <DeadWakeSlot Owner=@_survivor Index=@i /> }
+							</div>
+							<div class="hover-name">@_survivor.HoveredItem</div>
+							<div class="instructions">LEFT CLICK · Pick up / place / merge · SHIFT CLICK · Quick move</div>
+							<div class="instructions">RIGHT CLICK · Split stack / place one</div>
+							<div class="instructions">@($"IN WORLD · {Input.GetButtonOrigin( "Drop" )} Drop one · {Input.GetButtonOrigin( "Run" )} + {Input.GetButtonOrigin( "Drop" )} Drop stack")</div>
+						</div>
+						<div class="crafting">
+							<div class="section-title">CRAFTING</div>
+							<div class="recipe"><img src="ui/deadwake/stone-axe.png" /><div>Stone axe</div></div>
+							<img class="recipe-preview" src="ui/deadwake/stone-axe.png" />
+							<div class="recipe-name">Stone axe</div>
+							<div class="ingredient"><img src="ui/deadwake/wood.png" /><div>Wood</div><div class="quantity">@($"4 / {_survivor.Inventory.Count( DeadWakeItem.Wood )}")</div></div>
+							<div class="ingredient"><img src="ui/deadwake/stone.png" /><div>Stone</div><div class="quantity">@($"2 / {_survivor.Inventory.Count( DeadWakeItem.Stone )}")</div></div>
+							<div class="cost-label">Required / available</div>
+							<button id="craft-stone-axe" class="craft @(_survivor.Inventory.HasAxeIngredients && _survivor.Inventory.Cursor.IsEmpty ? "ready" : "unavailable")" onclick=@_survivor.CraftAxe>CRAFT</button>
+							<div class="craft-description">Chop standing trees for wood.</div>
+						</div>
+					</div>
+					<div class="window-status">@_survivor.Status</div>
+				</div>
+			</div>
+			@if ( !_survivor.Inventory.Cursor.IsEmpty )
+			{
+				<div class="cursor-stack" @ref="_cursorPanel"><img src=@_survivor.Inventory.Cursor.Icon /><div>@_survivor.Inventory.Cursor.Quantity</div></div>
+			}
+		}
+		else
+		{
+			<div class="next-step">@_survivor.NextStep</div>
+			<div class="crosshair"><div></div></div>
+			@if ( !string.IsNullOrEmpty( _survivor.TargetHint ) ) { <div class="target">@_survivor.TargetHint</div> }
+			<div class="hotbar-hud">
+				<div class="equipped">@(_survivor.Inventory.Equipped.IsEmpty ? "Empty hands" : _survivor.Inventory.Equipped.Name)</div>
+				<div class="slot-row">@for ( var i = 0; i < 9; i++ ) { <DeadWakeSlot Owner=@_survivor Index=@i /> }</div>
+				<div class="inventory-hint">@($"{Input.GetButtonOrigin( "Inventory" )} · Inventory & crafting")</div>
+			</div>
+			<div class="feedback">@_survivor.Status</div>
+		}
+	}
+</root>
+
+@code
+{
+	private DeadWakeSurvivor _survivor;
+	private Panel _cursorPanel;
+	protected override void OnStart() => _survivor = Scene.GetAllComponents<DeadWakeSurvivor>().FirstOrDefault( player => !player.IsProxy );
+	protected override void OnUpdate()
+	{
+		if ( _cursorPanel.IsValid() && _survivor.IsValid() && _survivor.InventoryOpen )
+		{
+			_cursorPanel.Style.Left = Mouse.Position.x * _cursorPanel.ScaleFromScreen + 12;
+			_cursorPanel.Style.Top = Mouse.Position.y * _cursorPanel.ScaleFromScreen + 12;
+		}
+		base.OnUpdate();
+	}
+	protected override int BuildHash() => !_survivor.IsValid() ? 0 : HashCode.Combine( _survivor.Inventory.Revision,
+		_survivor.Active, _survivor.InventoryOpen, _survivor.Status, _survivor.TargetHint, _survivor.HoveredItem );
+}

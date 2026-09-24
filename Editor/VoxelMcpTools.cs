@@ -4,6 +4,53 @@ using System;
 [McpToolset( "voxels3", "Voxels3 production smoke controls" )]
 public static class VoxelMcpTools
 {
+	/// <summary>Inspect the exact LOD0 model/plane intersection for authoring fitted cut surfaces. Returns local-space segments; does not edit the model or scene.</summary>
+	[McpTool.ReadOnly( "model_plane_section" )]
+	public static object ModelPlaneSection( string path, float height )
+	{
+		if ( !float.IsFinite( height ) ) throw new ArgumentOutOfRangeException( nameof(height) );
+		var model = Model.Load( path );
+		if ( model is null || model.IsError ) throw new ArgumentException( "Provide an imported model.", nameof(path) );
+		var vertices = model.GetVertices();
+		var indices = model.GetIndices();
+		var segments = new System.Collections.Generic.List<Vector3[]>();
+		var mesh = model.MeshInfo.Meshes.First();
+		foreach ( var draw in mesh.DrawCalls )
+		for ( var i = draw.StartIndex; i < draw.StartIndex + draw.Indices; i += 3 )
+		{
+			var a = vertices[checked((int)indices[i] + draw.BaseVertex)].Position;
+			var b = vertices[checked((int)indices[i + 1] + draw.BaseVertex)].Position;
+			var c = vertices[checked((int)indices[i + 2] + draw.BaseVertex)].Position;
+			if ( MathF.Min( a.z, MathF.Min( b.z, c.z ) ) >= height || MathF.Max( a.z, MathF.Max( b.z, c.z ) ) <= height ) continue;
+			var crossings = new System.Collections.Generic.List<Vector3>( 2 );
+			void Edge( Vector3 from, Vector3 to )
+			{
+				if ( (from.z < height) == (to.z < height) ) return;
+				crossings.Add( from + (to - from) * ((height - from.z) / (to.z - from.z)) );
+			}
+			Edge( a, b ); Edge( b, c ); Edge( c, a );
+			if ( crossings.Count == 2 && (crossings[0] - crossings[1]).Length > 0.00001f ) segments.Add( crossings.ToArray() );
+			if ( segments.Count > 8192 ) throw new InvalidOperationException( "Section exceeds the bounded authoring result size." );
+		}
+		return new { Path = path, Height = height, Vertices = vertices.Length, Indices = indices.Length,
+			Draws = mesh.DrawCalls.Select( d => new { d.StartIndex, d.Indices, d.BaseVertex } ).ToArray(), Segments = segments };
+	}
+
+	/// <summary>Sample process-wide managed GC allocation events for a bounded diagnostic window. Approximate type totals; not a frame benchmark.</summary>
+	[McpTool( "sample_managed_allocations" )]
+	public static async System.Threading.Tasks.Task<object> SampleManagedAllocations( int seconds = 5 )
+	{
+		if ( seconds is < 1 or > 15 ) throw new ArgumentOutOfRangeException( nameof(seconds), "Use 1–15 seconds." );
+		var scope = new Sandbox.Diagnostics.Allocations.Scope();
+		var timer = System.Diagnostics.Stopwatch.StartNew();
+		scope.Start();
+		try { await System.Threading.Tasks.Task.Delay( seconds * 1000 ); }
+		finally { scope.Stop(); }
+		return new { ElapsedSeconds = timer.Elapsed.TotalSeconds, Scope = "Approximate process-wide GC allocation events",
+			Entries = scope.Entries.OrderByDescending( entry => entry.TotalBytes ).Take( 32 )
+				.Select( entry => new { entry.Name, entry.Count, entry.TotalBytes } ).ToArray() };
+	}
+
 	/// <summary>Rebuild a mounted source shader, including changes to its HLSL includes.</summary>
 	[McpTool( "compile_source_shader" )]
 	public static async System.Threading.Tasks.Task<object> CompileSourceShader( string path )
@@ -186,10 +233,11 @@ public static class VoxelMcpTools
 		return $"Performance test {result}.";
 	}
 
-	/// <summary>Orient the local player's view without disabling interactive look controls.</summary>
+	/// <summary>Orient or relocate the local player without disabling interactive controls. Runtime only; never changes the authored scene.</summary>
 	/// <param name="angles">View angles as 'pitch,yaw,roll'.</param>
+	/// <param name="position">Optional world position as 'x,y,z'. The normal terrain-readiness protection remains active.</param>
 	[McpTool( "set_player_view" )]
-	public static object SetPlayerView( string angles )
+	public static object SetPlayerView( string angles, string position = null )
 	{
 		if ( !Game.IsPlaying || Game.ActiveScene is null )
 			throw new InvalidOperationException( "Start play mode before setting the player view." );
@@ -201,8 +249,26 @@ public static class VoxelMcpTools
 			player = candidate;
 		}
 		if ( player is null ) throw new InvalidOperationException( "No active local player." );
-		player.EyeAngles = Angles.Parse( angles );
-		return new { player.Id, player.EyeAngles };
+		var view = Angles.Parse( angles );
+		if ( !float.IsFinite( view.pitch ) || !float.IsFinite( view.yaw ) || !float.IsFinite( view.roll ) )
+			throw new ArgumentException( "Use finite view angles.", nameof(angles) );
+		if ( position is not null )
+		{
+			if ( !Networking.IsHost ) throw new InvalidOperationException( "Only the local host may relocate a player." );
+			var destination = Vector3.Parse( position );
+			if ( !float.IsFinite( destination.x ) || !float.IsFinite( destination.y ) || !float.IsFinite( destination.z ) ||
+				MathF.Max( MathF.Abs( destination.x ), MathF.Max( MathF.Abs( destination.y ), MathF.Abs( destination.z ) ) ) > 1000000f )
+				throw new ArgumentException( "Use finite coordinates within one million world units.", nameof(position) );
+			player.WorldPosition = destination;
+			if ( player.Body.IsValid() )
+			{
+				player.Body.Velocity = Vector3.Zero;
+				if ( player.Body.PhysicsBody.IsValid() ) player.Body.PhysicsBody.Sleeping = false;
+			}
+			player.WishVelocity = Vector3.Zero;
+		}
+		player.EyeAngles = view;
+		return new { player.Id, player.EyeAngles, player.WorldPosition };
 	}
 
 	/// <summary>

@@ -1764,3 +1764,16 @@ The generation dispatch also caches a smooth world-space color patch per tuft.
 Its packed color and orientation share an existing root channel; the forward
 shader adds only small local color variation. StaticGrass owns this palette and
 packing contract and links its fixed visual/performance evidence.
+
+### 26.09.22 directional receiver API
+
+The Dead Wake tree-cut work forced shader rebuilds that exposed a stale two-argument
+project override. Installed Light.hlsl and vr_lighting.fxc now supply a geometric
+receiver normal computed before their light loops. The project override accepts
+and consumes that normal; it must not evaluate derivatives inside those potentially
+divergent loops. The pinned offset/filter formula remains unchanged. Direct foliage
+callers compute the normal before clipping and branching. All seven affected tree,
+terrain, depth and water entry compiles pass. Cold scene rendering and the final
+canonical Dead Wake run were independently reviewed; the ledger records the
+qualified current-environment performance comparison and preserves older failures.
+This covers those project entry points, not every engine shader variant.

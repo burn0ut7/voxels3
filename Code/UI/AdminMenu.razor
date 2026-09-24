@@ -68,14 +68,27 @@
 	// Keep the release of a UI click from reaching the terrain brush after closing.
 	private float _closedAt = -1f;
 
-	public static bool CapturesInput( Scene scene ) => VoxelDebugOverlay.CapturesInput( scene ) ||
+	public static bool CapturesInput( Scene scene ) => DeadWakeSurvivor.CapturesInput( scene ) || VoxelDebugOverlay.CapturesInput( scene ) ||
 		(_local.IsValid() && _local.Scene == scene && (_local._open || RealTime.Now <= _local._closedAt + 0.1f));
+
+	public static void SuppressPlayerInput( PlayerController controller )
+	{
+		Input.AnalogMove = Vector3.Zero;
+		Input.AnalogLook = default;
+		Input.Clear( "Attack1" );
+		Input.Clear( "Attack2" );
+		Input.Clear( "Jump" );
+		Input.Clear( "Duck" );
+		Input.Clear( "Use" );
+		Input.Clear( "View" );
+		controller.WishVelocity = Vector3.Zero;
+	}
 
 	protected override void OnUpdate()
 	{
 		if ( Scene != Game.ActiveScene || Scene.IsEditor ) return;
 		_local = this;
-		if ( Input.Pressed( "Menu" ) ) Toggle();
+		if ( Input.Pressed( "Menu" ) && !DeadWakeSurvivor.CapturesInput( Scene ) ) Toggle();
 		if ( _open && Input.EscapePressed )
 		{
 			Input.EscapePressed = false;

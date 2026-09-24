@@ -5,6 +5,18 @@ using System.Threading.Tasks;
 
 public sealed partial class VoxelManager
 {
+	/// <summary>Read the generated reservoir level, including inland rivers, for dry-ground placement.</summary>
+	public bool TryGetSurfaceWaterLevel( Vector3 position, out float level )
+	{
+		level = 0f;
+		if ( _terrainField is null || !float.IsFinite( position.x ) || !float.IsFinite( position.y ) || !float.IsFinite( position.z ) ||
+			MathF.Max( MathF.Abs( position.x ), MathF.Max( MathF.Abs( position.y ), MathF.Abs( position.z ) ) ) > TerrainField.MaximumWorldCoordinate ) return false;
+		var settings = CurrentField.Settings;
+		var landform = RegionalLandforms.SampleNatural( position, settings );
+		level = RiverWorld.For( settings ).GetPatch( RiverNetwork.PatchAt( position ) ).SampleWorld( position, landform.Height, settings.SeaLevel ).WaterHeight;
+		return true;
+	}
+
 	private float _waterVisibilityMeters = 3f;
 	private float _waterFlowSpeed = 32f;
 	private float _waterRippleStrength = 0.16f;

@@ -136,7 +136,7 @@
 	{
 		if ( Scene.IsEditor || Scene != Game.ActiveScene ) return;
 		_local = this;
-		if ( Input.Pressed( "BiomeDebug" ) ) View = View == BiomeDebugView.Off ? BiomeDebugView.Map : BiomeDebugView.Off;
+		if ( Input.Pressed( "BiomeDebug" ) && !DeadWakeSurvivor.CapturesInput( Scene ) ) View = View == BiomeDebugView.Off ? BiomeDebugView.Map : BiomeDebugView.Off;
 		if ( View == BiomeDebugView.Map && Input.EscapePressed )
 		{
 			Input.EscapePressed = false;

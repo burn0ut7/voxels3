@@ -26,6 +26,7 @@ struct VertexInput
 struct PixelInput
 {
 	#include "common/pixelinput.hlsl"
+	float vTreeLocalHeight : TEXCOORD13;
 	float3 vBarkDetail : TEXCOORD12;
 };
 VS
@@ -35,6 +36,7 @@ VS
 	PixelInput MainVs( VertexInput i )
 	{
 		PixelInput o = ProcessVertex( i );
+		o.vTreeLocalHeight = i.vPositionOs.z;
 		TreeWoodMotion( i, o );
 		o.vBarkDetail = float3( i.vTexCoord2, i.vColor.a );
 		return FinalizeVertex( o );
@@ -46,6 +48,7 @@ PS
 	#include "common/utils/Material.CommonInputs.hlsl"
 	#include "common/pixel.hlsl"
 	#include "trees/tree_lod_fade.hlsl"
+	#include "trees/tree_cut.hlsl"
 	#include "trees/tree_bake_depth.hlsl"
 	CreateInputTexture2D( TextureDetailColor, Srgb, 8, "", "_color", "Bark Detail", Default3( 0.5, 0.5, 0.5 ) );
 	CreateInputTexture2D( TextureDetailNormal, Linear, 8, "NormalizeNormals", "_normal", "Bark Detail", Default3( 0.5, 0.5, 1.0 ) );
@@ -57,6 +60,7 @@ PS
 	float4 MainPs( PixelInput i ) : SV_Target0
 	{
 		TreeDetailedFade( i.vPositionSs.xy );
+		TreeCut( i.vTreeLocalHeight );
 		Material m = Material::From( i );
 		// U must retain an integer circumference period at each cylinder seam.
 		float2 uv = i.vBarkDetail.xy * float2( 1.0, 0.5 );

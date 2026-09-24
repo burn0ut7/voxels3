@@ -21,7 +21,8 @@ SOFTWARE.
 */
 
 // Facepunch sbox-public 804420939f467a3fb13c534a5c63a415dd55bd58.
-// Project override: evaluate receiver derivatives before the coverage exit.
+// Project override: keep the pinned offset/filter behavior with the engine's
+// precomputed receiver normal (26.09.22 uniform-control-flow contract).
 // See Docs/ValidationEvidence/ShadowRing/README.md for qualification and removal criteria.
 
 #ifndef DIRECTIONAL_LIGHT_SHADOW_HLSL
@@ -144,18 +145,14 @@ struct DirectionalLightShadow
         return fragPos + zGrad * max( s - posLs.z, 0.0f ) / dot( zGrad, zGrad );
     }
 
-    static float GetVisibility( float3 worldPosition, float4 vPositionSs )
+    // Receiver normal is computed by the caller before divergent light loops.
+    // Do not evaluate position derivatives inside this function.
+    static float GetVisibility( float3 worldPosition, float3 receiverNormalWs, float4 vPositionSs )
     {
         float ssShadow = SampleScreenSpaceShadow( vPositionSs );
 
         if ( g_DirectionalLightCascadeCount == 0 )
             return ssShadow;
-
-		// Evaluate position derivatives before neighboring pixels leave shadow coverage.
-		#if ( PROGRAM == VFX_PROGRAM_PS )
-			float3 positionDx = ddx( worldPosition );
-			float3 positionDy = ddy( worldPosition );
-		#endif
 
 		float3 posLs;
 		int cascade = FindCascade( worldPosition, posLs );
@@ -165,11 +162,10 @@ struct DirectionalLightShadow
 
 		#if ( PROGRAM == VFX_PROGRAM_PS )
 			// Same offset/kernel radius as the pinned ShadowFiltering.hlsl helper,
-			// using the derivatives above so the remaining work stays inside coverage.
+			// using the uniform caller normal; remaining work stays inside coverage.
 			float4x4 worldToShadow = g_DirectionalLightWorldToShadowViewMatrices[cascade];
-			float3 normal = normalize( cross( positionDy, positionDx ) );
 			float radiusTexels = 1.5 * min( UserShadowFilterQuality, 3 ) * rcp( max( g_DirectionalLightCascadeHardness[cascade], 1.0 ) ) + 1.0;
-			worldPosition += normal * ( g_DirectionalLightInverseShadowMapSize / length( worldToShadow[0].xyz ) * radiusTexels );
+			worldPosition += receiverNormalWs * ( g_DirectionalLightInverseShadowMapSize / length( worldToShadow[0].xyz ) * radiusTexels );
 		#endif
 
 		return SampleCascade( cascade, worldPosition, vPositionSs.xy ) * ssShadow;

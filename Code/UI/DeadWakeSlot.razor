@@ -1,0 +1,46 @@
+@using Sandbox
+@using Sandbox.UI
+@using System
+@inherits Panel
+@namespace Sandbox
+
+<root id="@($"inventory-slot-{Index}")" class="@(Owner.IsValid() && Index == Owner.Inventory.Selected ? "selected" : "")">
+	@if ( Owner.IsValid() )
+	{
+		@if ( Index < 9 ) { <div class="slot-number">@(Index + 1)</div> }
+		@if ( !Owner.Inventory[Index].IsEmpty )
+		{
+			<img src=@Owner.Inventory[Index].Icon />
+			@if ( Owner.Inventory[Index].Quantity > 1 ) { <div class="stack-count">@Owner.Inventory[Index].Quantity</div> }
+		}
+	}
+</root>
+
+@code
+{
+	public DeadWakeSurvivor Owner { get; set; }
+	public int Index { get; set; }
+	protected override void OnClick( MousePanelEvent e )
+	{
+		base.OnClick( e );
+		if ( Owner.IsValid() ) Owner.ClickSlot( Index, false, e.HasShift );
+		e.StopPropagation();
+	}
+	protected override void OnRightClick( MousePanelEvent e )
+	{
+		base.OnRightClick( e );
+		if ( Owner.IsValid() ) Owner.ClickSlot( Index, true, e.HasShift );
+		e.StopPropagation();
+	}
+	protected override void OnMouseOver( MousePanelEvent e )
+	{
+		base.OnMouseOver( e );
+		if ( Owner.IsValid() ) Owner.HoveredSlot = Index;
+	}
+	protected override void OnMouseOut( MousePanelEvent e )
+	{
+		base.OnMouseOut( e );
+		if ( Owner.IsValid() ) Owner.HoveredSlot = -1;
+	}
+	protected override int BuildHash() => Owner.IsValid() ? HashCode.Combine( Index, Owner.Inventory.Revision ) : 0;
+}

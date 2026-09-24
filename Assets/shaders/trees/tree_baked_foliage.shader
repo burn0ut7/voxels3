@@ -117,6 +117,7 @@ PS
 	#include "trees/tree_bake_depth.hlsl"
 	float4 MainPs( PixelInput i ) : SV_Target0
 	{
+		float3 shadowReceiverNormal = ComputeShadowReceiverNormal( i.vPositionWithOffsetWs );
 		TreeDetailedFade( i.vPositionSs.xy );
 		Material m = Material::From( i );
 		#if S_ALPHA_TEST
@@ -132,7 +133,7 @@ PS
 			float3 light = -normalize( g_DirectionalLightDirection.xyz );
 			float3 view = normalize( g_vCameraPositionWs - m.WorldPosition );
 			float scatter = pow( saturate( dot( view, -normalize( light + m.Normal * 0.2 ) ) ), 3.0 );
-			float visibility = DirectionalLightShadow::GetVisibility( m.WorldPosition, m.ScreenPosition );
+			float visibility = DirectionalLightShadow::GetVisibility( m.WorldPosition, shadowReceiverNormal, m.ScreenPosition );
 			m.Emission += m.Albedo * g_DirectionalLightColor.rgb * scatter * (0.15 + visibility * 0.85) * 0.22;
 		}
 		TreeCaptureDepth( m );

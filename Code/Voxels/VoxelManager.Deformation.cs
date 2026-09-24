@@ -4,6 +4,9 @@ using System.Threading;
 
 public sealed partial class VoxelManager
 {
+	/// <summary>Enable the uncosted development brush. Survival scenes disable this input path.</summary>
+	[Property] public bool EnableTerrainTool { get; set; } = true;
+
 	private const int MaximumQueuedTerrainEdits = 32;
 	private const float TerrainToolTickSeconds = 0.1f;
 	private const float TerrainToolReach = 2048f;
@@ -206,7 +209,7 @@ public sealed partial class VoxelManager
 
 	private void UpdateTerrainTool()
 	{
-		if ( AdminMenu.CapturesInput( Scene ) ) return;
+		if ( !EnableTerrainTool || AdminMenu.CapturesInput( Scene ) ) return;
 		_terrainToolElapsed = Math.Min( _terrainToolElapsed + RealTime.Delta, TerrainToolTickSeconds );
 		if ( _deformationBenchmark is not null || _playerFigureEightEnabled || _terrainToolElapsed < TerrainToolTickSeconds ) return;
 		var dig = Input.Down( "Attack1" );
@@ -230,6 +233,11 @@ public sealed partial class VoxelManager
 	{
 		using var toolTiming = MeasureDeformation( DeformationStage.Tool );
 		requestId = 0;
+		if ( !EnableTerrainTool )
+		{
+			_terrainToolStatus = "Development brush disabled in this scene";
+			return false;
+		}
 		// Sample the current aim only when it can enter the pipeline, never queue stale tool targets.
 		if ( TerrainToolPublicationPending )
 		{

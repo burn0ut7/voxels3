@@ -26,6 +26,7 @@ struct VertexInput
 struct PixelInput
 {
 	#include "common/pixelinput.hlsl"
+	float vTreeLocalHeight : TEXCOORD13;
 };
 VS
 {
@@ -34,6 +35,7 @@ VS
 	PixelInput MainVs( VertexInput i )
 	{
 		PixelInput o = ProcessVertex( i );
+		o.vTreeLocalHeight = i.vPositionOs.z;
 		TreeWoodMotion( i, o );
 		return FinalizeVertex( o );
 	}
@@ -44,10 +46,12 @@ PS
 	#include "common/utils/Material.CommonInputs.hlsl"
 	#include "common/pixel.hlsl"
 	#include "trees/tree_lod_fade.hlsl"
+	#include "trees/tree_cut.hlsl"
 	#include "trees/tree_bake_depth.hlsl"
 	float4 MainPs( PixelInput i ) : SV_Target0
 	{
 		TreeDetailedFade( i.vPositionSs.xy );
+		TreeCut( i.vTreeLocalHeight );
 		Material m = Material::From( i );
 		m.Metalness = 0.0;
 		m.Transmission = 0.0;

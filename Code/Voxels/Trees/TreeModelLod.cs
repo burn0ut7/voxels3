@@ -143,6 +143,15 @@ public sealed class TreeModelLod : Component
 		}
 	}
 
+	/// <summary>Keep the currently selected detailed meshes while physics takes ownership of the tree pose.</summary>
+	public void StopDistanceTransitions()
+	{
+		var renderers = GetComponentsInChildren<ModelRenderer>( true ).ToArray();
+		var levels = renderers.Select( renderer => renderer.LodOverride ).ToArray();
+		Enabled = false;
+		for ( var i = 0; i < renderers.Length; i++ ) renderers[i].LodOverride = levels[i];
+	}
+
 	private void Restore()
 	{
 		_far?.Delete();

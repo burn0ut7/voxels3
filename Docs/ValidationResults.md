@@ -40647,7 +40647,7 @@ sources remain intact. Archive the actual union and rounded topology through a
 read-only wrapper of the existing modal generator, preserving the original
 failure and seed/settings. Do not skip branches or relax the connectivity guard.
 
-## TREE-OAK-OVERHEAD-044 / v1 � definition before generation
+## TREE-OAK-OVERHEAD-044 / v1 — definition before generation
 
 User requested another batch with light directly above. Default batch12 additional
 oaks (seeds271840..271851), explicit plan Tools/BlenderTrees/oak_overhead_variations.json,
@@ -42421,3 +42421,617 @@ files; they are excluded from this checkpoint. No Play run or scene mutation.
 The active goal continues with Slice 1: empty spawn, nearby resource gathering,
 one recipe and a useful crafted tool. Define its owners, fixed functional
 scenarios and performance control before implementation and first runtime run.
+
+
+## DEAD-WAKE-FOUNDATION-001/v1 — declared September 24, 2026
+
+Pre-change control for upcoming Slice 1 uses the existing canonical
+TREE-PERFORMANCE-038/v2-single-tree workload unchanged. Source e12bf1f4 (runtime
+identical to bb52053e); engine26.09.22 instead of historical26.09.15. Actual
+basic_example world, seed1337/gen52, one existing dense271828 oak, one local host,
+physical2769x1529,FOV75, grass64m,radius8,LOD0..5,halfextents4/4,cells32/base16.
+Player start(-1.6258175,1.2225341,340),view(0,0,0); speed2500,distance50000,one loop.
+Warmup:4913collision ready, zero pending collision/visual/seam/placement work,
+water ready. Existing automatic completion/drain and10s standing. No gameplay
+changes, no terrain editing, no population changes, no save-slot changes in this
+control. Record current hardware/source/environment and actual effective settings.
+
+Preserve canonical gates: >=190FPS, no>5%FPS regression, no>10% tail/memory/
+allocation regression, zero timed exceptions/collision failures, fully drained,
+no unexplained material streaming regression. Engine difference means historical
+results provide context; gameplay candidate must compare to this same-engine
+pre-change control. Missing measurement remains unverified, not an assumed pass.
+Raw evidence is retained under ValidationEvidence/DeadWake/ (force-stage selected
+final evidence because that parent is ignored). Never replace a failed run with
+only a successful retry. Native setup and read-only observations are supporting
+operations; existing figure-eight is the sole automated movement trigger.
+
+
+Foundation control setup observation: initial native Play started correctly with
+zero console errors; early warmup4231/4913collision ready,679pending, water ready,
+313visual/704transition pending. No timed run started. Native26.09.22 object and
+component lookup scans the authored scene before its Play copy; shared GUIDs
+therefore return stale authored properties, not live values. Runtime console
+observation correctly reports grass64m. Closing the clean authored tab also stops
+Play (observed), so it is not a targeting workaround; scene reopened unchanged.
+
+Extend existing editor-only set_player_view with optional finite bounded position
+for normal local-host relocation; no new game component, benchmark or alternate
+streaming path. It resolves the actual Game.ActiveScene player and retains input
+and terrain-readiness protection. This closes the engine-tool targeting gap for
+existing authorized camera/player controls. No engine installation edits. This
+editor-only change precedes the unchanged runtime baseline; its source identity
+will be recorded. Gameplay input simulation is not exposed by the current native
+server, so real Use/craft/attack input validation remains a separate constraint.
+
+
+First timed control87366aeb96a04ef78f77c6f2f54942c9 completed: moving238.63309FPS,
+p95/p994.5472/5.5925ms; standing239.77975FPS,p994.6145ms; zero timed exceptions.
+However profiler.screenHeight=1391, width2769: reopening the authored scene after
+the targeting observation reset the forced viewport. Expected2769x1529. This run
+is NOT an accepted comparable baseline. Preserve before.json.gz and trigger;
+repeat the unchanged scenario with forced resolution reapplied to the reopened
+viewport. No threshold or workload change. Inspect actual render dimensions.
+
+
+Second control preflight established setter semantics: the editor's logical
+resolution must be set on the running game viewport after entering Play. Setting
+2769x1529 logical gave4154x2294 physical at150%DPI. Setting1846x1019 logical on
+that same live viewport yields the required physical2769x1529, confirmed through
+existing runtime profiler diagnostics before trigger. No second timed attempt ran
+at the wrong size. Collision4913ready, zero pending/visual/seam/placement, water
+ready. Existing control restarted as before2 with the identical recorded pose,
+view, route, workload and unchanged runtime sources.
+
+Second control120c520c7ef246e4b9144d4cbe5dd9bc completed at the correct physical
+2769x1529 resolution. Raw before2.json.gz and before2-trigger.json retained.
+Moving238.8384FPS,p95/994.5445/5.514ms,max24.7143ms; standing239.8158FPS,
+p95/994.3013/4.6195ms. Allocated2193503816bytes,total;75313.43bytes/frame;
+peak process5274710016bytes,peak GPU3602370547bytes. Zero timed exceptions,
+zero collision failures,4913/4913collision ready and zero pending mesh/chunk work.
+Drain14268.171ms; regions published416.06192/s; schedule-to-render p99
+6302.9263ms. Same-engine control eligible for candidate comparison; this does not
+accept new gameplay. Runtime unchanged; only editor-only relocation extension.
+
+## DEAD-WAKE-OPENING-001/v1 — declared September 24, 2026
+
+First installed opening-loop behavior/visual scenario, before first gameplay run.
+Actual basic_example, local host offline, seed1337/gen52, unchanged terrain and
+one oak, starting position(-1.6258175,1.2225341,340), view(0,0,0),FOV75,
+physical2769x1529. Use regular player input, no inventory grants or synthetic
+resource paths. Wait for normal terrain grounding and scatter completion.
+
+Fixed action sequence and pass criteria:
+1. Inventory wood0,stone0,no hatchet. Empty craft and Use toward sky reject
+   without inventory/terrain changes. View action retains first-person targeting.
+2. Gather two loose wood piles and one loose stone:4wood/2stone. Craft once:
+   0wood/0stone,one selected hatchet. Repeat craft leaves counts unchanged.
+3. Hands selected: timber attack gives no reward. Select hatchet, land four
+   strikes on one timber, each>=0.7s apart:8wood,4successful strikes,object gone.
+   An early held-input interval and a subsequent miss cannot award an extra hit.
+4. Gather remaining two wood piles:12wood. Chop second timber four times:20wood.
+   Attack third timber with full stack:20wood and that timber retains4strikes.
+5. Reach>128, obstruction by existing terrain/oak, and open admin UI reject
+   actions without changing resource or inventory. Closing UI restores controls.
+6. Revisiting never replenishes pickups. Restart: empty inventory/new bounded
+   scatter. In active network session, all survival mutations refuse; after
+   returning offline, status/target/tool presentation recover with no item grants.
+7. Scatter<=12total placements,<=2attempts/update,24attempts per clearing. If
+   incomplete, moving>=512units to grounded dry terrain permits only the remaining
+   placements. Reject unsupported/steep/wet sites. No per-frame retries when done.
+8. UI reflects actual state and configured bindings at1600x900capture and the
+   canonical viewport, with no overlap/error materials. Ground props supported;
+   held hatchet recognizable and stable; inspect motion for selection/swing,
+   occlusion/clipping and return-to-idle. Compare savedprototype-v1 concept.
+
+Every failed/unavailable check remains explicit. Current native server exposes
+view/position and read-only state but no regular gameplay action input; tests
+requiring Use/Reload/Attack must remain unverified until actual input is available.
+No additional test trigger or alternate mutation path is authorized by this plan.
+Required figure-eight remains DEAD-WAKE-FOUNDATION-001/v1 using accepted control.
+
+DEAD-WAKE-OPENING-001/v1 first installation: native compile passed0errors after
+replacing an obsolete vertex-buffer overload (now0warnings). First screenshot
+opening-first.png FAILED: supplies visible but no HUD. Runtime scene_tree omitted
+DeadWakeSurvivor from the authored prefab instance even though asset_read showed
+it in source and full asset_compile succeeded. Close/reopen scene still used the
+old prefab; a read-only helper found SceneUtility.GetPrefabScene documented as
+cached. Close clean scene and gracefully restart the authorized visible editor
+to clear cached source; no generated files edited. Console also recorded an
+engine GameObject.Clear assertion (5components not deleted) on scene reload,
+retained in opening-warnings.json. No timed candidate performance run yet.
+
+The same render exposed patchwork per-triangle prop UVs and floating contact.
+Replaced side/stone mapping with continuous UVs and smooth normals, cooler stone
+tint, and minimum support-height seating. These candidate fixes need new render
+inspection; no visual pass or functional-input pass asserted. All historical
+startup shader warnings predate the candidate; the raw cursor distinguishes them.
+
+Editor restart recovery: graceful shutdown of PID44092 logged an engine
+PrefabFile.OnDestroy/GameObject.Clear assertion (6components not deleted), then
+Source2Shutdown, leaving an Error window. The scene had been closed cleanly.
+Terminated only that verified shutdown-stalled sbox-dev process and reopened the
+same project visibly as PID52776. Preserve teardown failure; acceptance requires
+rechecking a fresh load/restart, not ignoring this as a successful teardown.
+
+Independent source recheck identified two P2 cases: View while networking could
+leave resumed offline survival in third person, and sampling material8units above
+bed could accept shallow water. Offline resume now forces first-person. Replaced
+the just-added point material query with the generated reservoir-level query in
+VoxelManager.Water; center and support points require16units dry clearance.
+Removed superseded point query. This keeps river/sea ownership in canonical
+terrain generation and covers the prop seating adjustment.
+
+Fresh load after restart correctly loaded Survivor and mapped component IDs;
+opening-second.png has actual empty HUD. The render exposed Razor text-node
+ordering: the crafting key joined the following phrase. Consolidated each key
+instruction into one interpolated label. Blue-tinted test stones rejected;
+reuse a gray-granite patch from existing gray_rocks texture set instead. Fresh
+Play stop/start now underway to validate teardown, final models and HUD.
+
+Independent recheck: both P2 fixes pass source inspection; all15 runtime/editor/
+asset files matched candidate1-source.json. opening-third.png passes limited
+1600x900empty-state visual inspection: legible non-overlapping HUD and ordered
+binding text, real empty inventory, recognizable seated supplies, no error
+materials. Optional polish remains: nearest stones have soft/repeated detail.
+Canonical-resolution, target/crafted/full states, tool/motion and real actions,
+network recovery, retry, performance and full editor teardown remain unverified.
+No new blocker found in reviewed source or empty-state render. Verdict:
+verification incomplete. No acceptance/commit/push of this implementation.
+
+DEAD-WAKE-FOUNDATION-001/v1 candidate1 run b9d2e0ff303747429f7e5776aa34f0fc:
+source hashes candidate1-source.json; engine26.09.22,PID52776, same machine and
+2769x1529 workload. Raw candidate1.json.gz and trigger/readiness retained.
+Moving238.81252FPS,p95/994.5576/5.7353ms,max24.4332ms; standing239.86703FPS,
+p99 4.5856ms. Timed exceptions0,collisionfailures0,4913ready/0pending,
+post-loopdrain14382.48ms. Allocations2319697240bytes,79654.46bytes/frame.
+Peak GPU3555488835bytes; peak process15953240064bytes, ending11437539328.
+
+Compared to before2: FPS-0.01%,movingp99+4.01%,bytes/frame+5.76%,drain+0.80%,
+GPUpeak-1.30%,but processpeak+202.45%. Result FAIL on process memory; unexplained
+regression cannot be accepted. Editor had retained hotload state after removing
+a method:01:22:49 hotload reported Unable to resolve method definition for old
+TryGetWorldMaterial via InteropSystem._lastScene.objectsInIndex._warmGenerationTask.
+No runtime error in timed interval. Investigate this environment/state difference;
+preserve failure, do not weaken thresholds. Repeat unchanged candidate source
+in a fresh editor without intervening code hotloads to test retained-editor-state
+hypothesis; a new run alone cannot establish source of a remaining regression.
+
+Candidate2 preflight,PID33532, unchanged candidate1 source and no intervening
+hotload: fully ready4913/4913,zeroqueues,2769x1529, process16,472.5MiB average.
+No timed candidate2 run started. A fresh process alone did not remove the excess,
+so the hotload-only hypothesis is not established. Investigate comparable startup
+state with a fresh-launch unchanged-runtime control under the same declared
+workload. This is an environment-matched control, not a change to scenario inputs
+or thresholds. Keep before2 and failedcandidate1. Temporarily preserve candidate
+files outside runtime folders, restore exact e12bf1f4 runtime/scene/project files,
+retain the same editor relocation tool used by before2, and use a fresh visible
+editor/first Play. Then restore the byte-identical candidate for its matched run.
+The stopped preflight and all file/source identities remain documented.
+
+Fresh unchanged-runtime control079d57db1bb640ec8810595b0313f457 completed:
+sourcee12bf1f4,PID6196,first Play, sameengine/viewport/scenario. Rawcold-before.
+Moving238.84697FPS,p95/994.5587/5.7546ms,standing239.7291FPS,p994.7672ms.
+Moving75875.69bytes/frame,standing32831.938bytes/frame;0timedexceptions.
+Peak process16469229568bytes,ending16471810048;peakGPU3554210875bytes.
+The unchanged runtime also occupies~16.5GB in this startup state, establishing
+that candidate1's +202% against warm before2 does not isolate gameplay cost.
+Preserve that failed comparison; use this fresh-start control for the next fresh
+candidate run, unchanged declared inputs/criteria. Full geometry/queue comparison
+and independent review still required. No performance acceptance yet.
+
+Fresh baseline editor teardown also logged the same PrefabFile.OnDestroy /
+GameObject.Clear assertion, now5components versus6with the additional survivor.
+This reproduces the shutdown defect without any prototype runtime source.
+It is an engine/editor integration limitation, not a passing teardown check.
+Gameplay Playstop/restart worked; full editorexit still needs recovery. No engine
+installation modification was made. Exactcandidate14runtimefiles restored and
+SHA256matched candidate1-source.json. Editor relocation now wakes a sleeping
+PhysicsBody after setting position; installed XML documents Sleeping for wakeup.
+Next source identity includes this editor-only correction; gameplay unchanged.
+
+Cold matched candidate fd68d167f28a4fd68d181d9c2807ee0e completed, PID30904,
+first Play on engine26.09.22; frozen cold-candidate-source.json. Raw
+cold-candidate.json.gz, readiness and trigger retained. Moving238.35245FPS,
+p95/99 4.5944/6.2111ms, maximum32.2509ms; standing240.00926FPS,p99 4.6742ms.
+Moving79707.16bytes/frame, standing36349.85bytes/frame; timedexceptions0.
+Peakprocess17338728448bytes (+5.28% coldcontrol), GPUpeak3555456067bytes.
+Independent review: FAIL/unaccepted. Standingallocation+10.7149% coldcontrol
+(+10.7964% warm), render-schedulingp99 9719.536ms vs6210.067ms cold (+56.51%)
+and6302.9263ms warm (+54.21%). Movingp99+7.93% cold but+12.64% warm;
+maxframe+21.34% cold. Finalrestingpositions differ from coldcontrol, so stationary
+comparison has a view caveat; no threshold is relaxed. High baseline process
+memory explains the earlier mismatch, not these remaining regressions.
+Canonical opening-canonical.png independently passes limited empty-HUD legibility;
+it shows11/12placed. Remaining-only placement retry and real actions unverified.
+
+Autonomous playtesting instruction, September24: user explicitly requires the
+agent to control and test gameplay, with no manual test input from the user.
+Native tools lack gameplay actions. Add an editor-only bounded action control
+through public Input.SetAction/SetLastAction and Scene.AddHook update/fixed stages,
+with expiry, cancellation and human-input interruption; never invoke survival
+action methods or grant inventory. Exercise DEAD-WAKE-OPENING-001/v1 through the
+actual Input handlers. Control tool acceptance: discoverable; unknown actions,
+nonfinite/out-of-range duration and concurrent request rejected; Pressed once,
+Down held, Released once per context; no input after expiry/cancel/Playstop;
+ordinary gameplay input remains enabled. No runtime-only test component or scene.
+
+DEAD-WAKE-OPENING-001/v1 live input run, engine26.09.22/PID30904:
+raw input-playtest.jsonl records native action requests and actual runtime object
+snapshots. Real Forward walking, normal Use/Reload/Attack/Slot/Menu/View handlers:
+empty Reload rejected; sky Use unchanged; View remains first-person. Gather two
+wood piles and one stone =>4wood/2stone; Reload =>0/0 and selected owned hatchet;
+repeat Reload unchanged. Hands attack timber =>0wood,remaining4. Four spaced axe
+swings =>8wood/4strikes, depleted object destroyed; miss unchanged. Two remaining
+wood piles =>12; held Attack1 for2.3s on second log =>20wood/8strikes; full-stack
+attack on third log leavesremaining4. Distant Use fails; menu-open Use/Reload/
+Attack1 leaves inventory and target unchanged, closing menu allows +2stone.
+Remaining-only placement recovers from11to12 after ordinary walking beyond512.
+Private network hosting refuses all requested mutations; disconnect resumes
+20wood/2stone/8strikes and hatchet. No inventory grants or action-method calls.
+Input controls .12s produce1press/1release per update/fixed context; invalidname,
+0/4second durations and concurrent request rejected. Initial input compilation
+had Editor.Input/Sandbox.Input ambiguity; explicit alias fixed it. Independent
+review found cancellation dropped release, short commands could expire before
+first tick, and retained scene reference after cleanup. Fixes: cancellation
+release phase, per-context first-tick timer, release scene ownership on disposal.
+Recheck cancellation def39cf3... has1press/1release in both contexts; shortest
+.05s View also has1/1. Paused/stopped contexts cannot consume release and must
+terminate explicitly without replay; physical same-action input keeps priority.
+opening-crafted.png is actual crafted state: FAIL tool presentation, oversized
+head and peg-like bindings. Reuse saved prototype-v1 concept for correction.
+Obstruction, pause/restart, corrected tool motion and full performance remain open.
+
+Diagnostic allocation attribution (not acceptance benchmark): actual current
+scene, same fixed resting pose/view, settled streaming, offline1player, canonical
+viewport; five-second managed allocation Scope sample, top32type totals. This
+engine GC event sampler spans the process and is approximate; not a replacement
+for canonical per-frame allocation metrics. Compare normal HUD against temporary
+HUD-disabled inspector state only to attribute costs, then restore it before any
+acceptance run. No threshold/workload change to DEAD-WAKE-FOUNDATION-001/v1.
+
+Autonomous opening rechecks, same fixed gameplay rules, PID30904/engine26.09.22:
+raw input-playtest.jsonl preserves actions and readback. Pause during Forward
+d2fd1548... terminates without replay on resume; Play stop during Forward
+c22a63c5... terminates and restart starts empty with no old input. Obstruction
+9509b7a2...: crouched actual eye near163.252,-14.668,290.591, looking toward
+loose wood232.083,80.014,315.932; first solid ray is World at69.10044 units,
+StartedSolid=false. Duck held1.5s then Use0.12s leaves wood0/resource remaining1.
+Standing at the same location clears the ridge: same resource first hit99.95424
+units; real Use yields2wood. Earlier obstruction attempt8ba5... did not create
+an obstruction and collected stone; retained, excluded from blocked-ray proof.
+Cooldown recheck: Attack1+Attack2 on timber yields nothing; Attack1 gives2wood/
+one strike; an immediate second0.12s pulse before0.7s gives no additional yield,
+and later readback remains wood10/strikes5. No inventory injection used.
+
+Visual revisions retained: crafted original oversized oval/peg binding FAIL;
+v2/v3 patchwork/blotchy stone FAIL; v4 HUD encoding artifact FAIL. UTF8 repair,
+smaller chipped wedge, closed cord, original generated flint and fewer HUD text
+labels appear in opening-crafted-v5.png and motion-v5 frames00-11 (~1.188s).
+These show idle, swing and recovery but not the subsequent edge-UV correction.
+Motion-v4 is mixed after partial overwrite; capture-note states the evidence gap.
+Final source rendering and independent fitness review remain pending.
+
+Allocation diagnostic: first allocations-hud-on.json sample included startup
+river generation and is not a settled comparison. Later settled5.003/5.002s
+HUD on/off samples are in input-playtest.jsonl, HUD restored enabled. RichText
+TextLine25/~2.665MB and FontRun14/~1.49MB sampler buckets appear with HUD and
+not in top32 with HUD disabled. Process-wide GC allocation events are approximate
+~106.6KB buckets, not precise per-type object costs or canonical allocation rates.
+This supports reducing label draw work, not a performance pass. Candidate now
+combines pack/slot labels and uses CSS crosshair bars; canonical impact pending.
+
+Input reviewer P2 lead-window finding: a delayed frame could skip the entire
+primary-action window yet report Completed. Track whether primary press was
+supplied per context; expiry without one reports Expired before primary input,
+releases held modifiers and never claims completion. Source recheck pending;
+artificial long-stall and physical human interruption are not runtime verified.
+
+Next frozen candidate run: same DEAD-WAKE-FOUNDATION-001/v1 parameters/criteria,
+fresh visible editor first Play as cold-before, final HUD/tool/input source hashes
+in cold-candidate3-source.json. No captures, edits or diagnostic samplers during
+the timed figure-eight. Cold/warm controls and every failure remain preserved.
+Qualitative opening acceptance rubric reaffirmed before final review: independently
+usable next-action/cost/ownership feedback, legible consistent HUD; recognizable
+supported natural wood/stone/cord with no disruptive UV/material errors; central
+aim clear, visible ready/swing/recovery with action-consistent feedback. Evaluate
+against saved concept and actual views, no invented numeric quality scores.
+
+DEAD-WAKE-FOUNDATION-001/v1 cold-candidate3 runad355b3f9b224f79b986968a0e52c4f4,
+fresh visiblePID44324,engine26.09.22,firstPlay, unchanged scenario. Raw
+cold-candidate3.json.gz + readiness/trigger/source. Moving238.9836FPS,p995.4715ms,
+max26.4147ms; allocationmoving82744.99/standing35824.01bytes/frame (under10%
+controls);peakprocess10891005952bytes;0timedexceptions/collisionfailures;4913ready,
+queuesdrained. StillFAIL: schedule-to-renderablep9911951.755ms vs6210.067cold
+control. L0p991931.2352 vs1907.0682;L1p9913303.283 vs13247.381. Aggregate tail
+also changes with sample mix: L0published44979vs46983,L1published4004vs3536;
+L1p9512503.695vs10003.29, gameplayqueuep991147vs903, publication400.25174vs
+412.75473regions/s. These observations do not excuse remaining delay/backlog.
+A native input request later stopped on physical input during independent review.
+No further automated gameplay commands were issued over the player's movement.
+Independent reviewer reproduces empty craft rejection and cancel/release, but
+finds retrytimber106a9f00...at138.307,-78.775,240.077 covering loosewood9f0469b9...
+at139.933,-80.043,239.852. RealUsehitslogandrejects. P2, notaccepted. Evidence
+review-playtest.jsonl/review-loose-target.png. Frozenhash17/18match;editorrewrote
+voxels3.sbproj formatting fromF03E27...to2698FDF...,gitdiff stillTitleonly. Preserve
+manifest as runidentity, do not silently replace it. Fullteardownagainhit known
+Errorwindowafterclose; verifiedPID30904wasterminatedbeforefreshlaunch.
+
+User design correction September24: explicitly replace Packcounters with a real
+Minecraft/SevenDaysToDie-style inventory and obtain wood from standing trees,
+not chopped ground logs. Old openingcandidate is superseded and remainsunaccepted.
+No old behavior/visual pass qualifies the replacement. Newarchitecture and saved
+inventory/motion references guide implementation. Branch and broadgamegoal persist.
+
+## DEAD-WAKE-INVENTORY-002/v1 — declared before first replacement run
+
+Parameters: actual `basic_example`, one offline host, seed 1337 / generator 52,
+one authored oak, canonical 2769 × 1529 viewport, FOV 75, spawn
+(-1.6258175, 1.2225341, 340). Inventory: 36 slots (9 hotbar + 27 storage),
+resource stacks 64, axe stacks 1. Axe recipe: 4 wood + 2 stone. Reach: 128 units.
+Use normal input and real rendered UI events; no grants, test scenes or direct
+gameplay-method calls. Formatting clarified after the run; parameters and criteria
+below are unchanged.
+
+1. Empty spawn, inventory grid and nine hotbar slots. Open/close through Tab,
+   Escape and button. Movement and world actions blocked while open, restored
+   after close. No hidden Pack counters.
+2. Walk to standing oak, gather 4 wood as branches from that tree and 2 loose
+   stone. Open inventory, craft axe; exact ingredients removed and one item added.
+   Equip by hotbar. No dropped-log grind.
+3. Left pick/place/merge/swap; right split ceil-half/place-one; shift transfer
+   both ways; number/wheel selection. Item totals conserved and stack limits
+   respected. Close with cursor returns items; reopen proves state. Craft while
+   holding a cursor stack refuses without loss.
+4. Full capacity refuses the whole world yield. Craft without result space
+   preserves ingredients. Repeated paid recipes are legitimate; unpaid/repeated
+   invalid requests cannot duplicate value. Reach states through ordinary
+   gathering/crafting/transfers/drop/recovery, without admin items.
+5. Axe chopping awards wood once at visible contact, faster than manual branches.
+   Miss, reach, obstruction, cooldown, unequip, menu and network rejection do not
+   consume world resources. Tree is finite, falls away with ground contact and
+   leaves a stump. Fallen visual cannot reward again.
+6. Loose stones and drops are supported, dry and separate. Retries cannot bury
+   existing pickups or refill consumed ones. Active networking refuses
+   unsynchronized actions; disconnect resumes current inventory without grants.
+   Play restart gives empty inventory and new finite world state.
+7. Review actual closed/open/partial/full/cursor/crafting renders against
+   `inventory-v1` and icons: legible quantities, selection, hover and controls;
+   unclipped slots. Inspect successful chop/fall motion against saved storyboards
+   and raw timing.
+8. Run the unchanged canonical figure-eight; preserve prior failures. No lower
+   threshold, new baseline choice or workload reduction to obtain a pass.
+   Independent reviewer reproduces consequential steps and assesses a usable,
+   finished loop, beyond counter changes.
+
+DEAD-WAKE-INVENTORY-002/v1 pre-harvest constants: each authored standing tree has 6 reachable branches, 12 axe contacts and 4 wood per contact; branch cooldown 0.8 s, axe contact 0.2 s after start, swing interval 0.7 s, recovery 0.48 s. World drops capped at 128 owned live stacks, 8 placement candidates; resources stack to 64, axes to 1. These values are fixed before first replacement harvest run.
+
+DEAD-WAKE-INVENTORY-002/v1 initial replacement runtime: clean restart reset 36 slots and cursor; actual UI craft click rejected missing ingredients. FAIL: inventory-open Forward for 0.5 s moved player 57.297 units (threshold <0.1), journal Inventory/input-playtest.jsonl. Actual runtime player lacks AdminFlightMode despite authored prefab; inventory capture now directly participates in PlayerController.PreInput and calls shared suppression with existing admin owner. Biome map toggle also guarded. Recheck pending; failure retained.
+
+Input capture recheck still FAIL: PreInput-only suppression allowed 64.887 units movement under the fixed context. Official PlayerController.DefaultControls.cs calls PreInput in OnUpdate but InputMove separately in OnFixedUpdate. Inventory now holds/restores Controller.UseInputControls and clears WishVelocity during capture, preserving gravity and restoration on disable/destroy. Recheck pending.
+
+DEAD-WAKE-INVENTORY-002/v1 runtime opening and transactions: ordinary walking reached starter stone then actual oak; Use collected 2 stone and 4 branches, UI Craft consumed exactly 4 wood + 2 stone into one axe. Split 4 wood into 2+cursor2; place-one, swap with axe, held-stack craft refusal, shift transfers both directions, merge and close-held return conserved all items. Branch depletion stopped at zero without extra reward. Contact readbacks: wood6 at ~0.093s after press, wood10 at ~0.328s; no early reward. Actual camera clip axe-contact-v1.mp4 captured55 frames (~27.86 FPS), full timings alongside; H264 obsolete warning led recorder to VP9/WebM. Visual FAIL: contact below crosshair and head oversized compared to motion reference; revised held scale/positions, recheck pending. All evidence Inventory/input-playtest.jsonl and Inventory/axe-contact-v1*. Inventory capture fixed check had0 movement; source subsequently expands it to all modal UI and excludes disabled owners.
+
+DEAD-WAKE-INVENTORY-002/v1 capacity/network/drop runtime: 46 wood + 4 stone + axe earned through production gathering, arranged through UI into all36 occupied slots (wood13 slot0, stone4 slot1, axe slot2, wood1 slots3..35). Paid-craft output rejection kept exact original36slot records. Right-split wood7 then swap withaxe left axe oncursor/all36occupied; normal close refused; private hosting kept window/cursor visible and refused mutation; offline resumed sameinventory and cursor recovered. Droppedaxe produced realworld object9735a903-5a40-4431-8334-489965c9aaeb, fillingvacatedslot withwood then Use rejected pickup and object remained; mergingwood freedslot and Use recoveredexactlyoneaxe. Journals/screenshots in Inventory/.
+Pending-strike cancellation: openingInventory or switchingtoWood at~0.075s afterattack preventedaward, wood14unchanged; subsequent8 validcontacts reachedwood46/chops1. One native inputrequest refused transiently as Playunavailable; rawfailure retained, readback reconciled6completedcontacts/wood38/chops3 before onlyremaining2 executed. No blindretry.
+Independent reviewer reproduced inventoryandmodal capture, transfers and disabled-owner recovery; raw Inventory/Review/input-playtest.jsonl. V2recording visualfinding: old+4feedbackpersisted throughnextswing; newrevisionclearsfeedbackatwindup and reportsfreshresultatcontact. Recheckpending.
+
+Cut-surface shader validation initially FAILED: forced rebuild of tree_lab_bark/fine reports installed common Light.hlsl and vr_lighting.fxc now call GetVisibility(worldPosition, receiverNormal, screenPosition), while the project-pinned DirectionalLightShadow override accepts two arguments. Raw compiler diagnostics: .codex/deadwake-work/cut-shaders-compile.json (to preserve in evidence). The project override signature and its two foliage callers are updated together to the installed three-argument contract; the qualified derivative-based shadow offset remains unchanged. No engine installation file is changed. Recompile and final rendering/performance checks remain required.
+
+DEAD-WAKE-INVENTORY-002/v1 final presentation recheck, visible PID 44324,
+engine 26.09.22: stopped/restarted Play, verified 36 empty slots and fresh oak.
+Normal walking reached two stone pickups (4 stone total) and the standing oak.
+Four Use presses gathered 4 branches; rendered Craft consumed 4 wood + 2 stone
+and produced one axe. Twelve normal, spaced Attack1 contacts yielded exactly
+48 wood; tree ended with branches 0 / chops 0. No inventory grants. One read-only
+snapshot transiently refused with "Start Play first"; subsequent state proved
+wood 44 / chops 1 before the remaining contact, without replaying actions.
+Evidence: Inventory/input-playtest.jsonl, crafted-inventory-v2.png,
+axe-contact-v3.webm (43 decoded frames), tree-final-fall-v2.webm (230 frames,
+8 seconds), timestamp sidecars, stump-inspection-v2.png, fallen-tree-cut-v2.png.
+Axe shaft now extends out of the frame through sampled windup/contact. The stump
+and fallen trunk display end-grain caps; cut clipping removes the original roots.
+Independent final visual/ground-contact judgment remains pending.
+
+Whole-stack drop/recovery: at the starter clearing, Run+Drop removed all 48 wood;
+actual world stack quantity was 48, and Use restored exactly 48. Dropping the
+extended-shaft axe created one item with the revised 36 × 10 × 12 collider;
+Use recovered one axe. Both actual ground renders are saved as
+Inventory/dropped-wood-stack-v1.png and dropped-axe-v3.png. Player positioning
+for this placement inspection was native editor control; inventory was earned.
+
+Shader recompile recheck: all four tree shaders and voxel terrain/depth/water
+entry shaders compile successfully after adapting the project shadow signature.
+Raw failure and successes are preserved in Inventory/cut-shaders-compile.json,
+cut-shaders-compile2.json and voxel_*-compile.json. The first cap-local-transform
+edit failed C# compilation because Component.Transform shadowed the type name;
+explicit local position/rotation/scale fixed it. Final runtime/editor C# compilers
+reported zero errors and warnings. Cold-start rendering/performance remain pending.
+
+Independent final visual recheck: prior detached shaft and whole-root issues pass
+in axe-contact-v3 and tree-final-fall-v2, but close fallen-tree-contact-side-v2
+FAILS cut closure: crescent gap and bark overhang around a radius-10 circle.
+The reviewer withdrew closure acceptance based on the closer evidence. A fitted
+mesh-section contour replaces the circle. Pending fresh runtime proof.
+
+Dropped-axe-v3 FAILS natural seating: parallel shaft sits about 6.35 units above
+flat support, balanced on blade edge. V4 rotates onto the broad face, offset Z2,
+collider36 × 10 × 4; actual drop/recovery conserves one axe. Independent recheck
+passes this pose. Repeated v2 tree transforms at journal594/637/638 are identical
+over six minutes; settling passes, full branch-ground contact is still unverified.
+
+Shadow signature-only fix FAILS source review: installed engine callers supply
+receiver normals before divergent light loops; the initial adapter discarded it.
+Final override consumes it without ddx/ddy, while direct foliage callers compute
+it before clipping/branching. Offset/filter formula retained. Reviewer source
+recheck and seven *-normal-compile.json entries pass. Baked/clustered variants
+are source/compile checked, not represented as separately rendered workflows.
+
+DEAD-WAKE-FOUNDATION-001/v1 next run: cold-inventory1, unchanged canonical
+parameters and all prior thresholds. Final source/assets frozen in
+Inventory/cold-inventory1-source.json. Fresh visible editor first Play; no capture,
+edits or sampler during timed figure-eight. Fitted cap and retained canopy LOD2
+are included; the canonical scene begins with the one standing tree as before.
+Post-felling rendering is separately reviewed and is not represented as covered
+by this standing-tree route.
+
+Fitted-cut final visual evidence: tree-final-fall-v3.webm captures final contact
+and fall; Inventory/stump-inspection-v3.png plus fallen-cut-fitted-v1.png and
+fallen-cut-fitted-oblique-v1.png show a continuous bark/end-grain boundary.
+Reviewer passes the seam correction. TreeModelLod.StopDistanceTransitions retains
+selected detail before disabling its distance owner; only wood is fixed at LOD0.
+Actual canopy1–4 readbacks are LOD2, resolving the forced-foliage-detail finding.
+Tree transform repeats identically at journal757/762/771 (about48seconds);
+wood44→48 / chops1→0 exactly once. Reviewer passes observed main-trunk rest against
+the sloped bed; hidden branch/bed interfaces remain unverified, without claiming
+physical collision for every leaf/branch. fallen-trunk-contact-v3.png is an invalid
+under-terrain diagnostic camera view and excluded from contact proof.
+
+Cold-inventory1 editor setup: previous PID44324 stopped Play and closed its clean
+scene; normal editor close again reached the known PrefabFile.OnDestroy/GameObject
+teardown error also present in controls. Verified exact executable/PID/Error window,
+then ended that process and launched visible PID58788. Old log preserved as
+Inventory/pre-cold-editor-log.txt.gz. No installed engine source was edited.
+
+DEAD-WAKE-FOUNDATION-001/v1 cold-inventory1 run136adc793af341a49417f4d9f82a8cff,
+visible PID58788 first Play, engine26.09.22, fixed route/world/physical2769×1529.
+Raw Inventory/cold-inventory1.json.gz, trigger, readiness-final and comparison JSON.
+Measured445.8618FPS, p99 5.3282ms, maximum29.6696ms; moving allocation65645.73 and
+standing32425.879bytes/frame; process peak15214559232bytes; schedule-to-renderable
+p99 2595.696ms, post-loop drain8682.765ms. Zero timed exceptions/collision failures;
+4913collision regions ready, all mesh/collision queues drained. Comparability remains
+UNVERIFIED: current fps_max reads1000 and idle/moving FPS are much higher than old
+~239FPS controls, whose effective cap was not recorded. No cap was changed to run
+this candidate. Preserve all old failures; these improvements do not establish that
+gameplay changes resolved them. Worst frame exceeds cold-before26.5781ms by11.63%,
+so tail acceptance also remains open. Supplemental source identity records omitted
+Input.config; reviewer's during-run SHA256 matched BF8F86BB...A72E26. The original
+40-entry frozen manifest remains unchanged and all its hashes still match.
+
+### DEAD-WAKE-INVENTORY-002/v1 — remaining native-input coverage (2026-09-24)
+
+Before running: retain the existing scenario and thresholds. Extend only the editor input adapter with bounded public `Input.MouseWheel` and `Input.EscapePressed` pulses, restoring state after each scene stage and cancelling on physical input. Source evidence: Facepunch/sbox-public `ce63eb30a883e9ca076b00f227ade52cd8971ddb`, engine/Sandbox.Engine/Systems/Input/Input.cs and Input.Actions.cs (public setters); installed compile and runtime checks still required. No player actions or inventory state are invoked directly.
+
+Remaining checks: Escape closes the open inventory and conserves a held stack; one wheel notch selects exactly one hotbar slot, both directions and wrap; a second axe costs another 4 wood/2 stone; sub-0.7-second attack repeat and Attack2 suppression do not award extra wood; out-of-reach and first-solid terrain obstruction do not harvest the standing tree; network-active Use/Attack/Drop cannot change inventory or tree counts. Use the fresh cold-inventory1 world with 6 branches/12 chops and empty inventory, gather/craft normally. Record before/after quantities and traces. Stack64 boundary stays source-verified only because this finite scenario supplies at most54wood/24stone; do not grant items or claim a runtime boundary pass.
+
+Remaining-input results (same fresh cold-inventory1 session): normal walking collected two stone piles (4stone), four branch presses (4wood), then the first paid axe left2stone. Held4stone returned to its slot when Escape closed inventory; wheel moved selected0→8→0→1, exactly one slot per notch. First axe selected: two rapid .05s Attack1 requests yielded4wood and chops12→11 once; .9s Attack1+Attack2 left counts unchanged. Second craft paid4wood/2stone, leaving two separate axes and no resources (`second-paid-axe-v1.png`). Active private hosting: Use, Attack1 .9s and Drop changed neither inventory nor tree2branches/11chops; disconnect preserved inventory.
+
+Native-control review found unconditional Escape restoration could replay physical Escape consumed during cancellation. Fixed with per-stage injection-ownership flags for wheel and Escape; source recheck passed. Final-code runtime repeat returned a held axe through Escape and closed inventory; wheel1→0→1 passed; installed runtime/editor compilers report success. Reach check from normal backward movement: trace128 missed, extended512 hit standing trunk at180.145units; Use/Attack gave no reward or decrement. Terrain-obstruction check from grounded player(-1869.899,-1800.115,194.084): eye258.084 aimed toward(-1800,-1800,176), first solid World hit(-1810.94,-1800.018,188.847),90.94units (not StartedSolid); Use/Attack preserved two axes and tree2branches/11chops. Raising aim toZ236 hit trunk65.137units away and the ordinary attack awarded4wood/chops11→10. Raw inputs/traces/before-after readbacks are appended to Inventory/input-playtest.jsonl; `terrain-blocks-trunk-v1.png` records the obstructed view.
+
+Cold shader visual follow-up: final receiver-normal shaders in fresh PID58788, after performance and gameplay checks, captured actual detached Play camera at the historical corrected ring pose(-2558.938,-1639.612,6735.962),angles(38.375264,-139.469453,0),FOV60,1920×1080. `cold-normal-ring-view-v1.png` has no broken contour visible. Current generator52 differs from historical47; this is a regression observation, not a repeated original-source A/B ring proof. Near oak view(-1400,-2100,480),angles(23,145,0),FOV75,1600×900 in `cold-normal-tree-shadow-v1.png` shows cast shadow on the grass with intact terrain/water rendering. Returned to game camera. Independent final render review pending; shader/source compatibility scope is the seven successfully compiled project entries, not every engine shader variant.
+
+### DEAD-WAKE-FOUNDATION-001/v1 — supplemental matched cold pair (declared before runs)
+
+Prior cold controls' effective limiter was not recorded. Pinned engine FrameRateLimit source takes the tightest active fps_max/menu/inactive/vsync limit; old control profiler Idle averaged2.0074615ms versus current .007915ms in their200-frame windows. This supports an environment difference, not a known old cap or a gameplay speedup. The accepted history and failed gates remain unchanged.
+
+Run one supplemental cold control followed by one restored cold candidate, exact unchanged canonical workload/readiness/resolution/FOV/seed/scene/player/loop/duration/gates. Query fps_max, fps_max_menu and fps_max_inactive without setting them; record process/build and source manifests. Each run uses a fresh visible editor's first Play. No capture/input/sampler or source edits during timed runs. Control source is e12bf1f4 runtime/scene/prefab/Input plus the reviewed receiver-normal compatibility change in DirectionalLightShadow.hlsl and two foliage callers, common to both; the old two-argument override demonstrably fails26.09.22 forced compilation, so a common compatibility patch is necessary for a valid control. Current native editor instrumentation is identical. Restore candidate bytes from the22-file hash-guarded backup; force compile changed bark/fine entries before Play. This supplements the earlier comparison and isolates survival changes under the observed current environment; it does not replace an accepted baseline or waive prior unexplained failures. Record both results before any verdict; retain any failure.
+
+Supplemental control1 completed: `72ef28fdd354439b9c5bc994491d3539`, visible PID52604, caps1000/120/10000, physical2769×1529. It measured456.3141FPS, p99 5.2667ms, maximum25.6622ms, moving61679.22B/frame, stationary28870.508B/frame, peak14672408576B and schedule-to-renderable p99 2672.5173ms. Zero timed exceptions/collision failures; all queues drained. Full result: `Inventory/paired-control1.json.gz`. Source remained frozen through the run; final player has no Survivor component.
+
+Before timing, invoking collision diagnostics immediately after Play caused an existing CurrentField null exception. Preserve `paired-control1-warnings.json`. A later read confirmed4913 ready and zero queues before the trigger. No such exception occurred during measurement.
+
+The restoration guard caught engine-normalized CRLF in voxels3.sbproj: the only byte difference from Git LF; decoded text and JSON were identical. Preserved the normalized copy, verified newline-only equivalence, then restored all22 candidate files byte-for-byte. A dependent PowerShell launch erroneously continued after the first guard failed; PID14976 never entered Play or ran a benchmark. Closed its stale scene without writing and shut it down. The candidate used a new process. No result was discarded and no gameplay or save data changed.
+
+### Supplemental pair result and input-cost repair (2026-09-24)
+
+Candidate `3e391ca72e7746cb8655252ed1a08d80` used visible PID11864, first Play, the same caps1000/120/10000 and2769×1529 physical viewport. It measured443.3368FPS (control456.3141), p99 5.3587ms, maximum21.5943ms, moving allocation66469.516B/frame, stationary32644.373B/frame and peak15093821440B. Zero timed exceptions/collision failures; all queues drained. Raw `Inventory/paired-candidate1.json.gz` and frozen source manifest retained.
+
+FAIL: stationary FPS392.88544→360.05185 (−8.36% against5% limit); stationary p95 2.8397→3.1423ms (+10.66% against10% limit); stationary allocation28870.508→32644.373B/frame (+13.07%); stationary GPU p99 2.6266575→2.9206276ms (+11.19%). Streaming regression remains unexplained: schedule p95+19.60%,p99+12.55%,max3283.8335→6872.768ms (+109.29%). The independent reviewer confirmed these failures; no acceptance. Later reviewer continuation failed because the account usage limit was reached, so final independent recheck is unavailable at present.
+
+After timing, a5-second process-wide allocation sample was saved (`paired-candidate1-allocation-sample.json`). This approximate type-only sample includes closures and UI rendering allocations; it cannot attribute all excess to one caller. Installed26.09.22 DLL decompilation independently confirms Input.GetActionIndex(string) allocates a captured FindIndex predicate, and Pressed queries previous and current indices on an idle action (`installed-input-lookup-evidence.txt`). Repair only the survivor's existing input predicates: Down guards reject idle actions before Pressed, cooldowns reject before action queries, and empty-hand Drop skips its no-op query. These are logically equivalent conditions; retain every binding, wheel behavior, canonical handler and polling frequency. No renderer change or claimed explanation for all GPU/streaming regressions. Before next acceptance run, repeat actual gather/craft/slots/wheel/drop and modal close through native controls. Then rerun the unchanged canonical cold candidate against the same supplemental control, retain every result, and measure all previous failed gates.
+
+Input-cost repair functional repeat: installed compilers succeeded. Through normal native input, gathered2stone, selected each hotbar slot1–9, opened inventory, heldstone and closed with Escape, scrolled0→8→0, ran to the standing oak, gathered4branches, paid4wood/2stone for the axe, equipped, made two rapid .05s attacks (one4wood reward/chops12→11), selectedwood and droppedone (4→3). All assertions passed; raw Inventory/input-playtest.jsonl appended. No visual asset/layout changes. Independent review of this repair remains pending owing to reviewer usage exhaustion; do not infer acceptance from these checks.
+
+### Input-cost candidate1: invalid gameplay starting state
+
+Visible PID56412 was created at09:43:04 local. Before the timed trigger, the readiness snapshot reported player(-1327.75989,-1560.03674,51.8070412), despite a new first Play and no movement requested by root. The script checked readiness/viewport but omitted empty-inventory and undepleted-tree preconditions, then triggered the figure-eight. Follow-up actual-scene readback found selectedslot2,34wood/6stone/1axe and tree0branches/4chops. These actions were not part of root's setup. Their origin is not established; do not infer an automation or engine bug. This run is INVALID for canonical comparison, regardless of its measurements.
+
+Root sent bounded Forward input through the normal performance-interruption path and returned the player to the recorded pre-trigger position. Inventory and tree counts were preserved. Any completed raw result is retained as `input-cost-candidate1-invalid-start.json.gz`; no threshold or scenario change. Asked whether the live session is being used before any reset, and suspended further shared controls pending that answer. For the next valid cold candidate, additionally verify empty inventory/cursor, UI closed, selectedslot0, oak6branches/12chops, native input idle and player still at settled initial spawn immediately before the canonical pose+trigger. These checks enforce the existing cold scenario; they do not change its workload.
+
+User confirmed: continue autonomous testing and resetting is fine. Resume the fixed cold candidate after a fresh editor restart; no manual testing requested. The invalid-start attempt was interrupted before saving a completed result (last saved result remains paired-candidate1). Preserve its full editor log as `input-cost-candidate1-invalid-editor-log.txt.gz`.
+
+### Input-cost candidate2: valid start, performance fails retained
+
+Run `0ac50031740c419fb7e4e76c2c864789` completed at13:52:59UTC in visible PID55664, first Play. Verified empty inventory/cursor, selectedslot0, closed UI, oak6branches/12chops, initial settled player position, native input Idle,4913 collision ready, all queues clear, water ready, physical2769×1529 and unchanged caps1000/120/10000 before the fixed pose/trigger. Source manifest remained unchanged. Raw result: `input-cost-candidate2.json.gz`; exact metric comparisons: `input-cost-candidate2-comparison.json`.
+
+Measured414.24677FPS, frame p99 5.8323ms, maximum22.331ms; moving allocation64903.023B/frame, stationary33381.555B/frame; stationary318.54633FPS, p95 4.2355ms, p99 5.4136ms, GPU p99 3.8695335ms; process peak11679920128B. Schedule-to-renderable p99 3460.0095ms, maximum6769.9414ms; zero timed exceptions/collision failures and fully drained. Moving allocation fell against the preceding candidate, but this does not prove all gains are caused by the guard change. Required FPS, stationary allocation, frame/GPU tails and streaming gates still FAIL against the supplemental control. No acceptance or commit.
+
+GPU before/after snapshots record RTX5090, driver616.64, P0, approximately2902–2910MHz,63–64C. Earlier paired-control1/candidate1 ran about five hours earlier; no matching clock/load snapshots were captured then. This uncertainty is not evidence that background applications caused a failure. Before another code change, run one same-source supplemental control in the current environment, with the unchanged workload and common compatibility/tool files, then restore the candidate bytes. This is an explicitly retained diagnostic control for the observed time gap, not permission to replace the accepted baseline or choose favorable results. Preserve all failed results and require independent assessment when available.
+
+
+### Supplemental control2 and restored candidate (2026-09-24)
+
+Run `236beaf7145c40bf91afca15c53c00fa` completed at14:01:35UTC in visible PID26980, first Play, source identical to supplemental control1. Unchanged canonical workload; readiness, viewport2769x1529, caps1000/120/10000, FOV75 and no Survivor verified. Measured410.177FPS, p95 4.2838ms, p99 6.1186ms, max26.0728ms; allocation64863.71 moving/29541.197 stationary B/frame; stationary352.18073FPS and GPU2.463416ms average; peak15332388864B. Zero timed exceptions/collision failures, all queues drained. Raw `Inventory/paired-control2.json.gz`, frozen source/readiness/caps/GPU observations and `paired-control2-editor-log.txt.gz` retained. Verified all22 candidate files restored byte-for-byte after preserving the engine's newline-only project-file normalization. Recompiled restored bark/fine shaders successfully and reopened the visible candidate.
+
+Candidate2 versus this contemporaneous control: movingFPS+0.99%, allocation+0.061%, frame p99-4.68%; stationaryFPS-9.55%, allocation+13.00%, GPUaverage+13.66%, GPU p99+7.14%. Full exact comparisons, including distinct meshing and outer-work schedule metrics: `Inventory/input-cost-candidate2-vs-control2.json`. Required stationary FPS/allocation gates still FAIL. The same-source control slowed from456.3141 to410.177FPS across the five-hour interval, confirming environment drift; this does not explain away the remaining feature cost, replace the accepted baseline, or waive prior failures. Independent final recheck remains unavailable due reviewer usage exhaustion. No acceptance/commit.
+
+### DEAD-WAKE-HUD-DIAGNOSTIC-001/v1 (declared before sampling)
+
+Purpose: isolate whether the closed survival HUD materially contributes to the standing cost. Diagnostic only; altered HUD workload cannot replace the canonical figure-eight acceptance. Restored candidate, fresh visible first Play, basic_example/gen52/seed1337/offlineone, initial spawn at(-1.6258175,1.2225341,340) allowed to settle on ground, view(0,0,0), FOV75, physical2769x1529, same caps. Inventory empty/closed, selected0, oak6branches/12chops. Require4913 collision-ready, zero visual/seam/collision/placement queues and water-ready. Freeze source, camera and all other components. Sequence A1 HUD enabled, B HUD component disabled, A2 restored enabled. Use existing runtime component control; no direct inventory mutation, capture or allocation sampler during samples. For each state wait20seconds, capture ordinary10-second frame overview/profiler, wait11seconds and capture second; preserve both, no selection of favorable samples. Verify fixed pose/viewport/readiness and unaltered inventory/tree before/after. Abort diagnostic on unexpected player interaction/state. Restoration in finally. Compare observed FPS/GPU means and engine UI scope timing; rounded rolling summaries and200-frame profiler windows are diagnostic observations, not precise attribution of allocation or canonical acceptance. A repeatable direction across both A conditions supports narrowing investigation; overlapping/drifting results remain inconclusive.
+
+HUD diagnostic1 is INCOMPLETE: A1 sampled396.5/402.2FPS and GPU2.22/2.19ms; B sampled413.0/416.5FPS and GPU2.13/2.11ms, UI scope about0.109/0.108ms enabled versus0.032/0.032ms disabled. After B2, inspect_play_object returned "Start Play first" at14:13:42UTC although subsequent HUD restoration succeeded and editor_status reported running Play. The origin of this transient tool precondition failure is not established. A2 was not reached; preserve all partial observations without calling a repeatable A/B/A result. HUD restoration returned Enabled=true. Repeat the same diagnostic with a new evidence prefix, unchanged parameters/state/source and no runtime implementation edits; fail rather than ignore any further state/readback problem.
+
+HUD diagnostic2 completed the unchanged A/B/A sequence. A1:402.1/403.8FPS, GPU2.20/2.19ms; B:416.0/415.7FPS, GPU2.11/2.12ms; A2:405.1/405.6FPS, GPU2.17/2.17ms. UI scope timings are retained in `hud-isolation2-summary.json` with every raw snapshot. Camera/player pose, viewport/readiness, empty inventory/untouched oak and runtime source hashes stayed fixed; HUD was restored enabled. The consistent direction supports a modest closed-HUD rendering cost (~3% FPS at this view), not sole attribution of the larger canonical difference. Allocation was not measured in this diagnostic. No acceptance claim. Cached public UI sources and installed metadata show BuildHash controls Razor-tree rebuilds, while draw command lists regenerate each UI update; MarkRenderDirty is a no-op. No verified public static draw-command cache was found. Manual RootPanel rendering still prepares command lists and is not such a cache.
+
+
+### Fixed-tick action polling repair (declared before implementation)
+
+Installed Input.Context.Flip and Scene.InternalFixedUpdate confirm a separate accumulated fixed input context: brief press/release and wheel events are retained until the tick consumes them (`installed-fixed-input-evidence.txt`). Move the survivor's hotbar selection, gather, attack-start and drop polling into its production OnFixedUpdate; retain UI toggle/Escape, movement capture, contact/recovery animation and hint presentation in OnUpdate. No custom input cache or engine edit. Fixed actions must reject networking, proxy/editor/invalid controller, suppressed or modal input, and the inventory-toggle key before mutation, preserving open/close safety. Same bindings, transaction methods, cooldowns, reach and yields. Default upstream physics frequency50Hz; installed runtime event counts must substantiate actual frequency. This targets measured allocating string lookups at render frequency, not the HUD GPU cost. Saved exact pre-change source.
+
+Before performance, repeat the real opening and all1-9 slots, wheel both directions/wrap, Escape-held-item conservation, paid crafting, contact/cooldown/Attack2, drops and modal action suppression; repeat interruption/disabled-owner recovery where affected. Record native fixed/update supplied edges separately from observed gameplay outcomes. Native adapter's minimum .05s pulse does not independently test sub-tick physical taps; installed accumulated-context source provides that evidence, not a fabricated runtime claim. Then use unchanged DEAD-WAKE-FOUNDATION-001/v1 cold candidate, all readiness checks/gates, no hidden HUD or modified workload. Preserve every previous failed result. Independent final review remains required and currently unavailable.
+
+Fixed-input functional attempt1 reached successful slots1-9, wheel/next/previous wrap, normal stone pickup, Escape-held-stack return, walking to oak, and simultaneous Inventory+Use suppression. The orchestration then requested five action names, exceeding the native tool's four-action limit; it was rejected before input. No gameplay failure inferred. Continue from the verified open inventory with four modal actions and a separate Slot3 pulse, retaining the failed call in the raw journal. Do not alter the engine adapter to accommodate this test-script mistake.
+
+Fixed-input functional continuation passed: modal Forward/Use/Attack/Drop and Slot3 had no effect; Inventory+Use closing also left the tree unchanged. Four ordinary branch presses then yielded4wood, paid crafting consumed4wood/2stone for one axe, two rapid.05s attacks yielded exactly4wood/chops12->11, and.9s Attack1+Attack2 produced no extra reward. Drop removed1wood then Run+Drop removedremaining3. Disabling the inventory-open owner restored UseInputControls; reenabling and Escape closed normally. All previous hotbar/wheel/gather/held-cursor checks in the same unchanged-source session remain valid. `fixed-input-functional1.json` and raw journal record outcomes. Native .12s input produced7 fixed-stage callbacks versus31 frame callbacks, consistent with50Hz plus release stage; no sub-tick physical-input claim. Compile passed. Preserved session log. Next run is the declared unchanged cold figure-eight, with a new process and original readiness checks.
+
+
+### Fixed-input candidate1 canonical result (2026-09-24)
+
+Run `7c8f4cae9d51403e9c802e74787d2bee` completed14:25:38UTC, visible PID51316 first Play. Empty inventory/cursor, closed UI, selected0, oak6branches/12chops, initial settled XY, native Idle,4913 collision-ready/zero queues/water-ready verified immediately before exact canonical pose+trigger. Physical2769x1529/FOV75/caps1000/120/10000 unchanged;41 source hashes frozen and verified, only Survivor differs from input-cost-candidate2. No captures/samplers/edits during timing. Raw `fixed-input-candidate1.json.gz`, source/start/readiness/input-state and GPU snapshots retained.
+
+Measured441.40488FPS, p95 3.804ms, p99 5.4264ms, maximum22.0409ms; moving allocation65022.3B/frame; stationary354.28192FPS, p95 3.871ms, p99 5.0286ms, maximum10.738ms, allocation32130.266B/frame, GPUaverage2.526339ms/p99 3.6203861ms. Peak11676655616B; meshing schedule p95 1478.9215ms/p99 3142.3064ms/max4564.62ms. Zero moving/stationary exceptions and collision failures; visual/seam/placement/collision queues drained.
+
+Against contemporaneous control2: movingFPS+7.61%, standingFPS+0.60%, standingallocation+8.76%, standingGPU p99+0.24%, frame tails lower, peakmemory lower, all listed streaming schedule metrics lower. These measured comparisons meet the corresponding numerical gates; they are not independent acceptance. The fixed-tick repair reduced standing allocation from33381.555 to32130.266B/frame (-3.75%) versus the preceding candidate. Do not attribute all FPS/environment changes to this repair.
+
+Earlier control1 remains an unresolved comparison: stationaryFPS392.88544->354.28192 (-9.83%) and allocation28870.508->32130.266 (+11.29%); meshing schedule p99 2672.5173->3142.3064 (+17.58%) and maximum3283.8335->4564.62 (+39.00%). Preserve this failure and documented same-source environmental drift; no baseline replacement or waived thresholds. Exact multirun comparisons: `fixed-input-candidate1-all-comparisons.json`; detailed current comparison: `fixed-input-candidate1-vs-control2.json`. Final independent review is unavailable and performance acceptance remains incomplete. No commit/push.
+
+
+Final fixed-input integration found a blocking modal-opening ordering defect. Cold installed functional repeat passed the original inventory checks (`fixed-input-cold-functional2.json`), then simultaneous Menu+Use while aimed at the oak consumed one branch before the frame-owned settings menu opened (branches2->1, wood0->1). `fixed-menu-simultaneous1.json` and raw journal reproduce it. FixedUpdate precedes menu OnUpdate, so only guarding already-open menus plus Inventory is insufficient. Extend the fixed input guard to the Menu and BiomeDebug toggle actions as well; retain the input while all modal toggle keys are held. Repeat simultaneous open/close and action blocking for Inventory/Menu/BiomeDebug; confirm action resumes after release. Preserve this failure and the superseded performance result. Because two fixed-tick queries are added, rerun the canonical cold candidate after final functional checks; unchanged thresholds/workload.
+
+Latest modal guard installed compile passed. `fixed-modal-guards2.json`: Inventory, Menu and BiomeDebug simultaneous open+Use each conserved resources; open modal Forward/Use/Attack/Drop held position exactly, then simultaneous close+Use conserved resources and restored controller input. Normal Use after all close consumed the final available branch once. `fixed-network-guard1.json`: private network-active Use/Attack/Drop/Slot3 left inventory/selection/tree unchanged; disconnect preserved state. Final motion check `fixed-axe-contact-v1.webm` completed45frames over1.6s; matching states record wood2->6/chops11->10. Saved reference and actual six-frame contact sheet inspected: ready at0.331s, preparation0.401/0.471, contact/reward0.575, recovery0.720 and ready0.895; shaft remains connected to lower frame edge and no premature reward visible. This is root's focused regression observation, not independent acceptance. Raw video/timestamps remain available. Independent reviewer has now resumed source/evidence work; root retains controls for one final canonical post-guard run.
+
+
+### Final modal-guard canonical result, pending independent assessment
+
+Run `ab51b09d93524c74b609eee17dcbca94`, visible PID58688 first Play, completed14:37:16UTC. Same fixed scenario/readiness/resolution/FOV/caps;41 source hashes frozen through the run, only Survivor changed since candidate1 (Menu/BiomeDebug fixed guard queries). Verified final empty inventory/cursor, selected0, closed UI and oak6branches/12chops. Raw `fixed-input-candidate2.json.gz`, all-comparisons/source/readiness/state/caps/FOV/GPU files retained.
+
+Moving445.05423FPS, p95 3.756ms,p99 5.3481ms,max26.5612ms; allocation64055.203B/frame. Stationary367.6986FPS,p95 3.7901ms,p99 4.9364ms,max10.085ms; allocation32144.246B/frame; GPUaverage2.424304ms,p99 3.5927296ms. Peak11542532096B. Schedule p95 1580.02ms,p99 2963.0342ms,max7274.885ms. Zero moving/stationary exceptions/collision failures; all queues drained.
+
+Compared control2: moving/standingFPS+8.50%/+4.41%, movingallocation-1.25%,standingallocation+8.81%, worstmovingframe+1.87%, stationaryGPU p99-0.53%; schedule p95+2.43%,p99-12.81%,max-7.68%. Listed numerical comparisons meet their corresponding gates. Earlier control1 comparison still fails standingFPS(-6.41%),allocation(+11.34%),schedulep95(+13.96%)/p99(+10.87%)/max(+121.54%); do not replace baseline or waive failures. Independent performance assessment remains open.
+
+Protocol observation: the first result-poll script found completion still pending, but PowerShell continued to the intended post-run external nvidia-smi status query. This was a single read-only GPU status query, not a game capture or managed allocation sampler, and occurred during the run. Renamed that output `fixed-input-candidate2-gpu-during-completion.csv` and captured a separate true-after file after verifying the result. Preserve its file timestamp and this deviation for reviewer assessment; do not describe the run as having only before/after GPU observations. No game/editor input, scene capture or source edits occurred while timing.
+
+Documentation correction: independent review identified exactly one invalid UTF-8 byte: the CP1252 em dash in the TREE-OAK-OVERHEAD-044 heading. Replaced that verified punctuation byte with the UTF-8 encoding of the same em dash; strict UTF-8 now succeeds. No historical wording/result changed and no whole-file text normalization was performed.
+
+
+Independent review reproduced P2 pending-swing lifetime defect: disable Survivor about0.063s after Attack1, before0.2s contact; no reward while disabled, but a frozen axe stays rendered. Re-enable after0.25s without new input awarded4wood/tree12->11. Raw ReviewFixed/input-playtest.jsonl and review-disabled-pending-swing-v1.png preserve failure. Menu/BiomeDebug opening at0.18s during held Attack cancelled correctly. Reviewer returned exclusive controls explicitly. Repair OnDisabled to cancel pending strike, reset animation age to resting sentinel, release movement capture and hide existing tool view. Recheck the exact disabled/re-enabled pending swing and a fresh deliberate attack with the same reviewer. No input binding, normal polling, inventory or art change. Final cold run will also remove the prior external GPU-query timing deviation; retain that candidate2 result and all prior failures, without treating repeat as a favorable-sample selection.
+
+Lifecycle repair independent recheck PASS on SurvivorSHA99595934640c7404ad0b73829b484457c8d7e70bac9b168a57fd079d52a62c07. At0.078s after attack, disabled before contact: wood4/tree11 remained unchanged while disabled and after re-enable. Actual screenshot hides the axe completely; ready pose restored onenable. A fresh attack alone then producedwood4->8/tree11->10. `Inventory/ReviewFixed/lifecycle-recheck-v2.json`, v2 screenshots and journal record exact state/timing/hash; original v1 failure preserved. One read-only inspection transiently reported StartPlayfirst before action; reviewer checked playing/unpaused and unchanged state before retry, retaining that failure. Reviewer returned controls. No remaining confirmed functional/visual blocker; clean final-source performance qualification and comparison assessment remain required.
+
+
+### Clean lifecycle-repair canonical result (2026-09-24)
+
+Run `04e7d9c0627f42b4878dfbefebaa4d76` completed14:50:52UTC in fresh visible PID59904 first Play, final SurvivorSHA99595934640c7404ad0b73829b484457c8d7e70bac9b168a57fd079d52a62c07. All original scene/world/route/viewport/FOV/caps and cold-state readiness enforced.41 source paths frozen and unchanged; final inventory empty/cursor empty/selected0/UIclosed and oak6branches/12chops. No engine inputs, captures, source edits, GPU status query or managed sampler during timing. The new external orchestration polls only the persisted result file, requires a matching completed revision, verifies source/state, then obtains the true post-run GPU observation. Raw `fixed-input-candidate3.json.gz`, manifest/readiness/trigger/state/caps/FOV/GPU and all-comparisons files retained.
+
+Moving447.88016FPS,p95 3.722ms,p99 5.238ms,max24.9758ms; allocation64247.855B/frame. Standing362.15326FPS,p95 3.8208ms,p99 5.0419ms,max9.9219ms; allocation32045.922B/frame; GPUaverage2.461786ms,p99 3.5481453ms. Peak11705057280B. Meshing schedulep95 1495.2465ms,p99 2755.4558ms,max7087.963ms. Zero moving/standing exceptions or collision failures; all mesh/seam/placement/collision queues drained.
+
+Versus current control2: moving/standingFPS+9.19%/+2.83%, standingallocation+8.48%, standingGPU p99-1.76%; movingp99-14.39%,maximum-4.21%, peakmemory-23.66%; meshing schedulep95-3.06%,p99-18.91%,max-10.05%. These listed numerical comparisons meet their corresponding gates. Older-control1 failures and identical-control temporal variation remain preserved in the full comparison and ledger; this result alone does not authorize replacing an accepted baseline or waiving a regression. Independent final assessment requested on raw global/per-level data, final hashes, functional/visual rechecks and documentation.
+
+
+### Independent bounded-slice acceptance: final source and current environment
+
+The same independent reviewer judged the offline opening slice READY after the final lifecycle recheck and clean candidate3 assessment. All41 frozen runtime/editor/asset hashes match; correctness/streaming drain and every global frame/GPU-tail/memory/allocation plus L0-L5 schedule p95/p99/max comparison meet the original gates against control2. Functional, visual and lifecycle findings are resolved, including late menu cancellation, disabled pending-swing cancellation, tool hiding/return and a fresh-attack positive control. No further runtime change was made after the clean final run.
+
+Comparison rationale is explicit, not a threshold waiver: control2 was declared before its run to investigate the five-hour gap, used byte-identical original-code/control1 sources and unchanged scenario inputs, and was measured before the fixed-tick repair. The earlier input-cost candidate still failed against it. Therefore it was not selected after a final candidate to obtain a passing result. Identical original controls independently reproduced larger historical FPS/GPU/streaming deterioration without the survival feature. Final candidate3 passes every existing gate against that contemporaneous control under a clean measurement protocol. This supports a qualified current-environment acceptance; it does not establish historical performance equivalence, erase earlier failed observations, or attribute FPS gains to the feature. Retain all exact old/current comparisons, uncertainty about environmental cause and the earlier in-window GPU-query deviation.
+
+Scope: traditional27+9 inventory, actual standing-tree opening, paid axe, transaction/capacity controls, modal/network refusal, supported drops, fitted one-oak felling and final lifecycle behavior in the authored offline scene. Sub-tick physical taps have installed-source accumulation evidence, not a native pulse runtime test; the finite scene cannot reach a64-resource stack, so that boundary remains source-reviewed only. No persistence/co-op/forest-scale/building/combat/wave/NPC acceptance is implied. Current contracts/reference pointers updated for the final documentation recheck. All historical ledger content is retained, apart from the separately documented equivalent UTF-8 punctuation correction.

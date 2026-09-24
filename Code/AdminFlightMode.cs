@@ -59,14 +59,6 @@ public sealed class AdminFlightMode : MoveMode, PlayerController.IEvents
 	void PlayerController.IEvents.PreInput()
 	{
 		if ( IsProxy || !AdminMenu.CapturesInput( Scene ) ) return;
-		Input.AnalogMove = Vector3.Zero;
-		Input.AnalogLook = default;
-		Input.Clear( "Attack1" );
-		Input.Clear( "Attack2" );
-		Input.Clear( "Jump" );
-		Input.Clear( "Duck" );
-		Input.Clear( "Use" );
-		Input.Clear( "View" );
-		Controller.WishVelocity = Vector3.Zero;
+		AdminMenu.SuppressPlayerInput( Controller );
 	}
 }
