@@ -1,0 +1,22 @@
+Layer0
+{
+    shader "shaders/foliage.shader"
+    F_ALPHA_TEST 1
+    F_RENDER_BACKFACES 1
+    F_FOLIAGE_ANIMATION 1
+    F_TRANSMISSIVE 1
+    TextureColor "textures/trees/pine_needle_tuft_atlas.png"
+    TextureTranslucency "textures/trees/pine_needle_tuft_opacity.png"
+    TextureMetalness "textures/trees/metalness.png"
+    g_flTintColor "[0.95 1.0 0.92 0]"
+    g_flMinRoughness 0.65
+    g_flAlphaTestReference 0.4
+    g_flSwayStrength 3.0
+    g_flSwaySpeed 0.55
+    g_flEdgeAmplitude 0.22
+    g_flBranchAmplitude 0.0
+    g_flTransmissionScale 0.2
+    g_flWrapStrength 0.15
+    g_flAmbientBoost 0.0
+    g_flNormalVariation 0.02
+}

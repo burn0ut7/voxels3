@@ -22,7 +22,7 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	public const int MaximumDispatchesPerUpdate = MaximumRegionsPerBatch;
 	public const int ScratchLaneCount = 3;
 	public const int RegionsPerSlab = 512;
-	public const int TerrainVertexBytes = 28;
+	public const int TerrainVertexBytes = 32;
 	private const int VertexArenaBytes = 32 * 1024 * 1024;
 	private const int IndexArenaBytes = 16 * 1024 * 1024;
 	private const int VertexArenaCapacity = VertexArenaBytes / TerrainVertexBytes;
@@ -49,6 +49,30 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 	private const double SlowDrawCommandCommitThresholdMilliseconds = 500.0;
 
 	private readonly Scene _scene;
+	private int _biomeSeed;
+	private float _biomeSeaLevel;
+	private Texture _biomeDebugTexture;
+	private Vector4 _biomeDebugBounds;
+	private bool _biomeDebugSmooth;
+
+	public void SetBiomeDebugMap( Texture texture, Vector4 bounds, bool smooth )
+	{
+		lock ( _renderCameraLock )
+		{
+			if ( _biomeDebugTexture == texture && _biomeDebugBounds == bounds && _biomeDebugSmooth == smooth ) return;
+			_biomeDebugTexture = texture;
+			_biomeDebugBounds = bounds;
+			_biomeDebugSmooth = smooth;
+			// Recorded draws retain attributes. Drop their old resource references
+			// before the panel can dispose a replaced map texture.
+			foreach ( var state in _renderCameraStates.Values )
+			{
+				state.Commands.Reset();
+				state.DrawAttributes.Clear();
+				state.CommandsDirty = true;
+			}
+		}
+	}
 	public float GrassRenderRangeMeters { get; set; }
 	private readonly ComputeShader _visibilityShader = new( "shaders/voxels/voxel_chunk_visibility_cs.shader" );
 	private readonly GpuVoxelMaterials _voxelMaterials = new();
@@ -1689,9 +1713,11 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 		MarkDrawCommandsDirty();
 	}
 
-	public void Reset( int cellsPerAxis )
+	public void Reset( int cellsPerAxis, int worldSeed, float seaLevel )
 	{
 		Clear();
+		_biomeSeed = worldSeed;
+		_biomeSeaLevel = seaLevel;
 		DisposeScratchLanes();
 		_scratchLanes = CreateScratchLanes( cellsPerAxis );
 		// Clear removes in-flight ownership. Both lane types must discard their
@@ -3484,6 +3510,12 @@ internal sealed partial class GpuVoxelMesher : IDisposable
 					state.DrawAttributes.Add( arena.Index, drawAttributes );
 				}
 				_voxelMaterials.Bind( drawAttributes );
+				drawAttributes.Set( "VoxelBiomeSeed", (float)_biomeSeed );
+				drawAttributes.Set( "VoxelBiomeSeaLevel", _biomeSeaLevel );
+				drawAttributes.Set( "BiomeDebugEnabled", _biomeDebugTexture is null ? 0 : 1 );
+				drawAttributes.Set( "BiomeDebugSmooth", _biomeDebugSmooth ? 1 : 0 );
+				drawAttributes.Set( "BiomeDebugBounds", _biomeDebugBounds );
+				if ( _biomeDebugTexture is not null ) drawAttributes.Set( "BiomeDebugMap", _biomeDebugTexture );
 				commands.ResourceBarrierTransition( arena.Vertices, ResourceState.VertexOrIndexBuffer );
 				commands.ResourceBarrierTransition( arena.Indices, ResourceState.VertexOrIndexBuffer );
 				commands.DrawIndexedInstancedIndirect(

@@ -12,10 +12,13 @@ internal sealed class GpuVoxelMaterials : IDisposable
 	{
 		attributes.Set( "VoxelMaterialBlendSpacing", BlendSpacing );
 		attributes.Set( "VoxelGeneratedLayers", new Vector2( ProceduralVoxelMaterials.LayerSize, ProceduralVoxelMaterials.SoilDepth ) );
-		attributes.Set( "VoxelGeneratedMountain", new Vector4( ProceduralVoxelMaterials.SnowPeakFraction,
-			ProceduralVoxelMaterials.SnowMountainWeight, ProceduralVoxelMaterials.MountainStoneWeight,
+		attributes.Set( "VoxelSnowLayer", ProceduralVoxelMaterials.Snow );
+		attributes.Set( "VoxelGeneratedMountain", new Vector2( ProceduralVoxelMaterials.MountainStoneWeight,
 			ProceduralVoxelMaterials.MountainGrassMaxSlopeSquared ) );
+		attributes.Set( "VoxelCoastBand", TerrainBiomes.CoastBand );
+		attributes.Set( "VoxelCoastProximity", new Vector2( TerrainBiomes.CoastReach, TerrainBiomes.CoastCrossingFade ) );
 		attributes.Set( "VoxelSandOcean", ProceduralSand.Ocean );
+		attributes.Set( "VoxelSandDesert", ProceduralSand.Desert );
 		attributes.Set( "VoxelSandRiver", ProceduralSand.River );
 		attributes.Set( "VoxelSandWater", new Vector3( ProceduralSand.MinimumRiverHeight, ProceduralSand.RiverNaturalHeight,
 			ProceduralSand.RiverBlendHeight ) );

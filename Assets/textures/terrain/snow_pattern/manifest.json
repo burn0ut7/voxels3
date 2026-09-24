@@ -1,0 +1,47 @@
+{
+  "patchRotation": "continuous deterministic",
+  "combinedHeightGaussianSigmaTexels": 8,
+  "tileMetres": 1.0,
+  "amplitudeMetres": 0.06,
+  "minimumHeightLod": 2,
+  "normalRecipe": "quantized height box mip2, lattice chain rule, GL encoding; fine residual sigma8 cap1 gain0.5",
+  "size": 2048,
+  "period": 2,
+  "blendExponent": 4,
+  "blendCutoff": 0.001,
+  "cutoffExponent": 4,
+  "numpy": "2.3.5",
+  "pillow": "12.3.0",
+  "generatorSha256": "161c9408b60c15315c7f2cb1b25de8e6a114ed630f8447d58aff3e1d0ffdf8ec",
+  "publisherSha256": "fda398f721d24cd09910825f0698cd99053a0a444a604966d1e53652abace6e7",
+  "source": {
+    "color": {
+      "path": "Assets/textures/terrain/snow007a/Snow007A_2K-PNG_Color.png",
+      "sha256": "17e4e3da5a06bbddab42282ea3c0279ea998fcbdf83691753c230c11ac373018"
+    },
+    "normal": {
+      "path": "Assets/textures/terrain/snow007a/Snow007A_2K-PNG_NormalGL.png",
+      "sha256": "c4cea0041b4f16fdffa68d3ab39e739bdffb1fc078212c310c5458736658c523"
+    },
+    "roughness": {
+      "path": "Assets/textures/terrain/snow007a/Snow007A_2K-PNG_Roughness.png",
+      "sha256": "8c05310fc2023742f3308b64db4e2e77e59b1eeaf33ab60858fe9b42a07bb23d"
+    },
+    "ao": {
+      "path": "Assets/textures/terrain/snow007a/Snow007A_2K-PNG_AmbientOcclusion.png",
+      "sha256": "d6eac42b0c023588b4f406fe1b1070f5d319a79e97b7dd294124f55cfe0490bc"
+    },
+    "height": {
+      "path": "Assets/textures/terrain/snow007a/Snow007A_2K-PNG_Displacement.png",
+      "sha256": "d0cdeacd1fe9c2f3dba359b67660452865a46d57ce1c5f16f7d08749574aff50"
+    }
+  },
+  "output": {
+    "snow_ao.png": "066402e7fcf335564dd2c9eeed8ee443b969f2509231d0f412c174a39f243a1b",
+    "snow_color.png": "b92168345a0f38329852c652b68d4966f01c7d123263bb23faaa260a4d53bd82",
+    "snow_height.png": "c7073df2ecefc64deb4207bc33fee033b296827e6e0bffc0eb99a0598cb15f4a",
+    "snow_normal.png": "5547813893656b8735f3d8a69fafc66208c3a3422541cc34df1c6590adfc95e0",
+    "snow_roughness.png": "0b0dea7fc3e0a6f63c379429efd9db03537fa3334e9669b55e8661e87c5d56a8"
+  },
+  "shaderIncludeSha256": "a7f010b219928b6b3f846eec64c37738869c9cce530b45f40b7d454f4cf3483c"
+}

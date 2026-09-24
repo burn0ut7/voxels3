@@ -19,8 +19,19 @@
 		{
 			<div class="menu-backdrop">
 				<div class="admin-window">
-					<div class="heading">ADMIN / DEBUG</div>
-					<div class="hint">Host tools · @Input.GetButtonOrigin( "Menu" ) to close</div>
+					<div class="heading">SETTINGS / ADMIN</div>
+					<div class="hint">@Input.GetButtonOrigin( "Menu" ) to close</div>
+					@if ( _terrain.IsValid() )
+					{
+						<div class="section">GRAPHICS</div>
+						<div class="field-row">
+							<label>Grass distance (m)</label>
+							<TextEntry Value:bind="@_grassRangeText" />
+							<button onclick=@ApplyGrassRange>Apply</button>
+						</div>
+						<div class="hint">0–@VoxelManager.MaximumGrassRenderRangeMeters m · 0 turns grass off. Higher values draw grass farther away.</div>
+						<div class="hint">Saved for you. Longer distances can reduce performance.</div>
+					}
 					@if ( _flight.IsValid() && _flight.CanAdmin )
 					{
 						<div class="section">MOVEMENT</div>
@@ -52,12 +63,13 @@
 	private AdminFlightMode _flight;
 	private VoxelManager _terrain;
 	private string _speedText = "1000";
+	private string _grassRangeText = "";
 	private string _status = "";
 	// Keep the release of a UI click from reaching the terrain brush after closing.
 	private float _closedAt = -1f;
 
-	public static bool CapturesInput( Scene scene ) => _local.IsValid() && _local.Scene == scene &&
-		(_local._open || RealTime.Now <= _local._closedAt + 0.1f);
+	public static bool CapturesInput( Scene scene ) => VoxelDebugOverlay.CapturesInput( scene ) ||
+		(_local.IsValid() && _local.Scene == scene && (_local._open || RealTime.Now <= _local._closedAt + 0.1f));
 
 	protected override void OnUpdate()
 	{
@@ -84,6 +96,7 @@
 		_flight = Scene.GetAllComponents<AdminFlightMode>().FirstOrDefault( mode => mode.CanAdmin );
 		_terrain = Scene.GetAllComponents<VoxelManager>().FirstOrDefault( terrain => terrain.Enabled );
 		_speedText = _flight.IsValid() ? _flight.Speed.ToString( CultureInfo.InvariantCulture ) : "1000";
+		_grassRangeText = _terrain.IsValid() ? _terrain.GrassRenderRangeMeters.ToString( CultureInfo.InvariantCulture ) : "";
 		_status = _flight.IsValid() ? "Ready." : "Admin tools are available to the local host only.";
 		_open = true;
 	}
@@ -112,6 +125,20 @@
 		}
 		_flight.Speed = speed;
 		_status = $"Flight speed set to {speed:0.##}.";
+	}
+
+	private void ApplyGrassRange()
+	{
+		if ( !_terrain.IsValid() ) return;
+		if ( !float.TryParse( _grassRangeText, NumberStyles.Float, CultureInfo.InvariantCulture, out var range ) ||
+			!float.IsFinite( range ) || range < 0f || range > VoxelManager.MaximumGrassRenderRangeMeters )
+		{
+			_status = $"Enter a grass range between 0 and {VoxelManager.MaximumGrassRenderRangeMeters:0} metres.";
+			return;
+		}
+		_terrain.SaveGrassRenderRangePreference( range );
+		_grassRangeText = _terrain.GrassRenderRangeMeters.ToString( CultureInfo.InvariantCulture );
+		_status = range == 0f ? "Grass turned off." : $"Grass distance saved: {range:0.##} m.";
 	}
 
 	private void BeginTargeting()

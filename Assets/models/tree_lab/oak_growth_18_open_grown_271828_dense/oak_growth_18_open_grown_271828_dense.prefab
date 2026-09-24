@@ -1,0 +1,162 @@
+{
+  "RootObject": {
+    "__guid": "c4ff0663-a9df-5268-872d-620ea3bb6321",
+    "__version": 2,
+    "Flags": 0,
+    "Name": "Oak - Mature",
+    "Position": "0,0,0",
+    "Rotation": "0,0,0,1",
+    "Scale": "1,1,1",
+    "Tags": "tree",
+    "Enabled": true,
+    "NetworkMode": 0,
+    "Components": [
+      {
+        "__type": "Sandbox.ModelRenderer",
+        "__guid": "5b33615f-f4f3-5b50-b924-d91d5698702a",
+        "__enabled": true,
+        "Flags": 0,
+        "Model": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense.vmdl",
+        "LodOverride": null,
+        "CreateAttachments": false
+      },
+      {
+        "__type": "TreeModelLod",
+        "__guid": "75b0af01-f780-563f-81e3-bd4ef7eb28e1",
+        "__enabled": true,
+        "Flags": 0,
+        "Specimen": "oak_growth_18_open_grown_271828_dense",
+        "DetailReturnMeters": 12,
+        "DetailExitMeters": 16,
+        "TransitionSeconds": 0.35
+      }
+    ],
+    "Children": [
+      {
+        "__guid": "b13c45aa-7bb0-5060-a73d-3d5fadb08b75",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Solid trunk",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "tree_trunk",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelCollider",
+            "__guid": "c5c058f9-c6b1-58b5-add8-9d84cc4b3f7b",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense.vmdl",
+            "IsTrigger": false,
+            "Static": true
+          }
+        ],
+        "Children": []
+      },
+      {
+        "__guid": "e0097295-ba83-55de-b350-87b261f0b30c",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Canopy 1",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelRenderer",
+            "__guid": "5688a6b3-23a9-516d-a1db-f9a55cf762d1",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense_canopy00.vmdl",
+            "LodOverride": null,
+            "CreateAttachments": false
+          }
+        ],
+        "Children": []
+      },
+      {
+        "__guid": "14d3cb67-078f-596f-b473-fe8883512d41",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Canopy 2",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelRenderer",
+            "__guid": "366d75f2-328e-5c6e-b010-7b62e4df5f68",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense_canopy01.vmdl",
+            "LodOverride": null,
+            "CreateAttachments": false
+          }
+        ],
+        "Children": []
+      },
+      {
+        "__guid": "c08132d6-fca1-5a1e-81b1-637b2559760d",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Canopy 3",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelRenderer",
+            "__guid": "e20779bc-32ec-532f-b06e-1e63bfd89cc4",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense_canopy02.vmdl",
+            "LodOverride": null,
+            "CreateAttachments": false
+          }
+        ],
+        "Children": []
+      },
+      {
+        "__guid": "8968a034-2043-528d-91e4-a15a65942600",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Canopy 4",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelRenderer",
+            "__guid": "f314915a-cbb2-51cd-b98a-a0f8c81f20d9",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense_canopy03.vmdl",
+            "LodOverride": null,
+            "CreateAttachments": false
+          }
+        ],
+        "Children": []
+      }
+    ]
+  },
+  "ResourceVersion": 2,
+  "ShowInMenu": false,
+  "DontBreakAsTemplate": false,
+  "__references": [],
+  "__version": 2
+}

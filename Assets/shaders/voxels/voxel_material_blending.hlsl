@@ -20,13 +20,15 @@ float VoxelMaterialNoise( float3 position )
 	return value * 2.0 - 1.0;
 }
 
-float4 BlendVoxelMaterials( float4 weights, float3 position, float footprint )
+float4 BlendVoxelMaterials( float4 weights, inout float gravel, float3 position, float footprint )
 {
 	weights = max( weights, 0.0 );
-	float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) );
+	gravel = max( gravel, 0.0 );
+	float total = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ) + gravel;
 	float sand = saturate( 1.0 - total );
 	weights /= max( total, 1.0 );
-	float largest = max( sand, max( max( weights.x, weights.y ), max( weights.z, weights.w ) ) );
+	gravel /= max( total, 1.0 );
+	float largest = max( max( sand, gravel ), max( max( weights.x, weights.y ), max( weights.z, weights.w ) ) );
 	[branch]
 	if ( largest >= 0.99999 )
 	{
@@ -46,8 +48,12 @@ float4 BlendVoxelMaterials( float4 weights, float3 position, float footprint )
 		}
 		// Positive multipliers cannot invent an absent material or an empty junction.
 		weights *= exp2( variation * float4( -1.5, -0.75, 0.75, 1.5 ) );
+		gravel *= exp2( variation * 0.375 );
 	}
 	weights = weights * weights;
 	sand = sand * sand;
-	return weights / (dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ) + sand);
+	gravel *= gravel;
+	float sum = dot( weights, float4( 1.0, 1.0, 1.0, 1.0 ) ) + sand + gravel;
+	gravel /= sum;
+	return weights / sum;
 }

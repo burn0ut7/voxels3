@@ -1,5 +1,83 @@
 # Voxel Materials
 
+## Independent clay surface candidate (2026-09-20)
+
+`materials/voxels/clay.vmat` is a separate clay material asset with its own
+original gray-blue color and height maps under `textures/terrain/clay`.
+It selects the terrain shader's `F_CLAY_SURFACE` static variant. The existing
+world material keeps that feature disabled; no dirt, gravel or other source
+texture is replaced. No Clay voxel ID or automatic deposit rule is assigned in
+this asset-only slice. The asset expects the existing custom terrain vertex
+layout; it is not a general model material or an editor preview mesh material.
+
+The terrain shader owns a0.5m tile,0.008m full height interval,1254 source texels
+and minimum height mip2. Clay uses the existing bounded triplanar relief search
+and its8–16m/grazing/subpixel fades. Its normals derive from the same filtered
+height at the ray hit, using the shared height-surface sampler also used by
+gravel. Gravel retains its own maps and all its previous physical/surface inputs.
+Clay roughness is0.88 with subtle cavity shading (floor0.92). Collision, geometry,
+world generation, saved state and network material assignments are unchanged.
+
+The separate static variant reuses the canonical ray and surface sampling
+instead of copying a clay-only parallax implementation. It does not add a world
+draw or change vertex stride. Actual compiled cost/resource elimination must
+still be verified; no performance claim follows from the static variant alone.
+The [asset manifest](../../Assets/textures/terrain/clay/manifest.json) preserves
+both image-generation prompts and source hashes. Rendered seams/registration,
+shader compilation, clean-start and figure-eight acceptance remain pending in
+CLAY-SURFACE-001/v1; the editor was unavailable during preparation.
+
+
+
+## Gravel candidate (2026-09-20)
+
+Material ID7 is separate Gravel. The user rejected scattered natural patches;
+CPU/GPU gravel placement rules and their bindings are removed. The generator
+emits zero gravel weight, leaving existing material assignment intact. Its
+texture, parallax and six-weight rendering support remain available, but gravel
+is not currently placed by generation or a gameplay tool. See
+[gravel design](../Plans/GravelTerrain.md) for the current scope and budgets.
+Protocol7 reserves gravel material support; density/save formats are unchanged.
+Managed build passes; shader/cold-start, in-world appearance and unchanged
+figure-eight acceptance are pending. Historical five-weight results below do
+not qualify this candidate.
+
+## Marsh candidate (2026-09-20)
+
+Generator50/protocol6 adds Marsh soil ahead of the climate/shoreline rules below:
+the canonical marsh weight must exceed the same seeded coverage threshold.
+Its first144units use Dirt, with Grass only on exposed tops above sea+12units.
+Air/water and explicit placed materials keep precedence. CPU/HLSL match this
+priority; the existing five material weights and vertex stride are unchanged.
+Terrain presentation adds damp soil tint/roughness and olive grass tint from
+climate and surface altitude. See [marsh design](../Plans/MarshFirstSlice.md).
+Managed builds and independent source review pass; rendered quality, cold shader
+load, production correctness and performance remain unverified.
+
+## Climate layers (2026-09-20 candidate)
+
+Snow and desert sand now occupy real procedural material layers extending5–10
+base cells (80–160units) below the canonical exterior. Thickness varies smoothly
+in XY using2048-unit seeded noise and `160-80*noise^3`, biased toward10cells.
+ProceduralVoxelMaterials owns the shared CPU depth formula and snow salt62119;
+ProceduralSand owns the desert recipe with independent salt57191. The GPU adapter
+binds those recipes to the matching shared generation formula. Snow requires dry
+cold-climate coverage; desert sand requires nonmarine desert coverage. Snow takes
+priority, followed by desert sand and the independent existing shoreline/deposit
+rules. Normal dirt/stone resumes below. Air, water and explicit placed material
+retain precedence, and excavation exposes the same interior material.
+
+These climate rules replace the historical pointed-peak snow rule below. Neither
+layer changes height, density, collision or saved edits. Protocol5 requires matching
+procedural material behavior between peers. GPU reconstruction retains its existing
+48-unit XY filtering and16-unit vertical interpolation, so rendered boundaries are
+softened relative to discrete material queries. No new vertex channels or draws.
+Production distribution/boundary and placed-dirt precedence checks pass. Independent
+review accepts the local snow/sand excavation appearance. The first paired run
+passes frame/pacing/allocation gates but fails process memory; full biome visuals,
+clean-start and performance acceptance remain tracked in BIOME-SNOW-DEPTH-001/v2 and
+BIOME-DESERT-SAND-001/v1 in the validation ledger.
+
 The [sand recipe and seeded material regions](ProceduralSand.md) describe the
 current sand slice, its five-weight rendering contract, and pending qualification.
 
@@ -59,9 +137,10 @@ patchy beaches and sparse river sand among the normal grassy banks.
 Negative/zero density is solid. Depth is measured vertically from the canonical
 unedited landform height. Non-mountain columns have one16-unit grass layer,
 eight dirt layers, then stone. Mountain-dominant columns assign Stone3 to solid
-nodes beneath that surface, with exposed gentle-top nodes Grass1 and eligible tip nodes Snow5.
+nodes beneath that surface, with exposed gentle-top nodes Grass1. The climate layers
+above override those strata with Snow5 or Sand6 where eligible.
 Added solid above the original surface defaults to dirt. Covered grass becomes
-dirt; covered mountain snow exposes the stone body. Caves below the soil strata
+dirt; snow retains its climate-layer identity below a covered surface. Caves below the soil strata
 are stone. Surface angle does not reclassify nodes; canonical mountain membership
 selects rock. See the mountain stone contract below.
 
@@ -123,7 +202,7 @@ membership and surface-relative depth; rendered normals do not classify material
 Coarse interpolation is still approximate and must be visually qualified. The
 logical material query and existing procedural rules remain the canonical source.
 
-## Mountain snow
+## Historical mountain snow (superseded by climate layers)
 
 SNOW-TIPS-001/v1 corrects the continuous-ridge generator's coverage rule.
 MountainMasses exposes PeakFraction as `height * (1 - blend) * ridges`, the
@@ -429,11 +508,11 @@ stored 1/255 material precision), including floating-point sand remainders.
 Runtime shading is owned by voxel_terrain.shader. Inputs are camera/world
 position, canonical interpolated material weights, geometric normal and the
 existing textures. No new state, buffers, world data, networking, geometry or
-passes. Full detail through 32 m fades smoothly to each source texture's coarsest
-mip by 64 m. Beyond 64 m two SampleLevel reads per contributing material retain mean
+passes. Full detail through 64 m fades smoothly to each source texture's coarsest
+mip by 128 m. Beyond 128 m two SampleLevel reads per contributing material retain mean
 color and roughness/AO, with the geometric normal. The fade band samples both
-representations; explicit branches avoid near-only work beyond 64 m and far-only
-reads within 32 m. Existing per-material color/roughness tuning still applies.
+representations; explicit branches avoid near-only work beyond 128 m and far-only
+reads within 64 m. Existing per-material color/roughness tuning still applies.
 
 Distance thresholds belong only to this shared shader, independent of clipbox
 LOD boundaries. This avoids material changes at mesh swaps. Using source mip
@@ -457,38 +536,105 @@ improved moving FPS 8.6%, with unchanged stationary FPS and lower peak process/G
 memory. The optimized shader, source material, referenced images and material-loading
 line are integrated together. Unrelated generation/water work remains separate.
 
-## Baked grass pattern (2026-09-17)
+## Baked terrain patterns and relief prototype (2026-09-19)
 
-Grass now samples an offline periodic pattern instead of evaluating three
-stochastic patches per pixel. The shared sampler takes a compile-time pattern
-period for baked grass and zero for the other materials, which retain stochastic
-sampling. Projection weights, triplanar normal reconstruction, 16x filtering,
-material weights, physical 1.4 m grass tile scale and 32-64 m distance fade remain.
-Grass needs two map reads per contributing projection instead of up to six.
-No runtime texture cache, additional terrain draw or field representation exists.
+Current source uses one camera-relative height ray across dirt, stone, grass,
+sand and snow. This is an unaccepted prototype: the engine has not compiled or
+qualified the latest source, and the final in-world stone appearance remains unverified.
+The validation ledger owns results; file hashes do not prove rendered behavior.
+No geometry, collision, world state, persistence or blade ownership changes.
 
-`Tools/bake_grass_pattern.py` owns the two-cell lattice period and 2048 source
-texels per physical tile. Run it with NumPy 2.3.5 and Pillow 12.3.0 to regenerate
-the four 4096-square PNGs and manifest in `Assets/textures/terrain/grass_pattern`,
-plus `voxel_grass_pattern.hlsl`. The generated scalar include keeps shader UVs
-consistent with the bake. Original Grass004 maps remain the authoritative art.
-The manifest records source, generator, output and include hashes. Source-art or
-bake changes require regeneration, shader and full material compilation, then
-visual/runtime qualification; world edits do not invalidate these material maps.
+`Tools/bake_terrain_patterns.py --material grass|sand|snow` owns the periodic
+triangular lattice and those materials' physical settings. It replaces the
+former grass-only baker. Grass stays4096px with1.4m chart tiles and20mm height
+interval; sand uses4096px over8 lattice cells and snow2048px over2 cells,
+with1m chart tiles and120/60mm intervals respectively. These are
+art settings, not measured scan depths. The generated `voxel_terrain_pattern.hlsl`
+is consumed by both ray and shading coordinates. Original source maps remain
+authoritative art inputs; generated PNGs/manifests live in each material's
+`Assets/textures/terrain/*_pattern` directory. Grass initially preserved the pre-height color, roughness and AO bytes.
+CH subsequently sharpens grass overlap weights after the exponent4 support
+cutoff, changing all channels coherently to reduce hazy overlaps. The cutoff
+is applied before the extra square to retain support at triangle centers. Sand/snow now use periodic
+bakes instead of the former unbounded stochastic shader lookups; their pattern
+and effective source detail therefore change and need visual qualification.
 
-The baker blends color in linear space, uses the same fourth-power patch weights
-and cutoff, and wraps vertex hashes and relative UVs for a continuous periodic
-pattern. It preserves blended normal-vector length; the grass texture input must
-not normalize the already blended vectors again. The material compiler packs
-the same color/roughness and normal/AO BC7 pairs, including ordinary mipmaps.
-The pair uses about 42.67 MiB, replacing about 10.67 MiB: a 32 MiB increase.
+Each bake samples color, normal detail, roughness and AO at the same patch
+coordinates and weights. Grass/snow also sample source16-bit height there;
+sand replaces the rejected scan height with the authored ripple field below.
+Color blends in linear space. Macro normals
+derive from the final quantized height at box mip2, with periodic differences
+and the lattice chain rule. For texture T=(U-.577350269V,1.154700538V)/(tile*period),
+physical gradients are dH/dU=H_Tx/(tile*period) and
+ dH/dV=(-.577350269H_Tx+1.154700538H_Ty)/(tile*period).
+GL normals encode(-amplitude*dH/dU,+amplitude*dH/dV,1), with bounded fine normal
+residual added before normalization. Runtime flips GL green and projects the
+resulting slopes onto the terrain tangent plane. Height LOD uses the same
+lattice derivative transform as color; all participating materials share the
+ray hit. Height-based triplanar weights agree between ray and final sampling.
 
-This rearranges the grass pattern and introduces a finite two-cell repeat; it is
-not pixel-identical to the former unbounded hash pattern. Nearby density and all
-surface channels remain. Close grass, mixed cut faces and character shadows are
-compared in TERRAIN-STANDSTILL-OPT-001; its ledger owns the performance acceptance
-and any remaining limitations. The larger 8192/four-cell prototype is superseded
-and is not a runtime option.
+Sand mapping3 uses TerrainSandPatternPeriod for ray, shading and derivatives;
+mapping1 retains TerrainPatternPeriod for grass/snow, and mapping2 remains direct
+UVs for dirt/stone. Sand has a separate base height LOD for its larger field.
+The generated constants also own amplitude and minimum height mip. Material
+compiler output remains two BC7 color/roughness and normal/AO maps, plus R16F
+height. Estimated added height mip memory is42.7MiB each for grass/sand and10.7MiB
+for snow. Stone now preserves the continuous RockFace scan coordinates at2048px/3m,
+with120mm authored interval and height mip2. Its baker subdues broad scan
+undulation to45% and adds35% crevice depth from the source AO; normals derive
+from the resulting field. This is authored bedrock relief, not measured depth.
+Its earlier rubble patch composition has been removed. Stone metadata is generated;
+dirt's approved2048px/3m/120mm/mip2 inputs remain unchanged. Actual memory and
+frame timing are unmeasured. Relief fades8-16m; ordinary texture detail still
+fades64-128m. Shadows, silhouettes and depth output remain geometric.
+
+Sand CS extends user-approved CR with local phase bends and a smooth amplitude
+mask that tapers selected ridge segments into calm sand. This interrupts long
+rows without changing color/grain or the authored height interval. CS is baked
+but still awaiting a rendered beach comparison and independent visual review.
+
+Sand CR replaces CK's rejected blurry pit pattern with18 connected curved ridges
+per8-cell periodic field. Smooth phase modulation varies spacing and direction;
+a slowly varying height envelope creates quieter stretches. Source grain,
+color, roughness and near-white AO remain scan-derived across64 vertex hashes;
+fine-normal residual gain is0.18 and there is no height Gaussian blur. Macro
+normals derive from this exact authored height, not the original scan displacement.
+This is authored art, not measured scan depth. CL's initial uniform-ripple version
+passed independent sand identity review but was criticized for combed regularity
+and dark continuous troughs. CM reduces those defects; CN adds bounded variation
+between neighboring ridges to reduce synchronized bends. CO removes local-spacing
+height modulation after native review identified pinched dark knuckles; crest height
+now varies only through the broad envelope. CP reduces that envelope's strength
+by15% after CO's native view showed stronger dark ribbons. CQ halves ridge count
+to12 to broaden the remaining narrow striped banks, with envelope strength0.95
+instead of0.85 to retain height while reducing slope. CQ looked too soft in its
+native view, so CR uses18 bands and boosts only fine scanned albedo grain in linear
+space (Gaussian sigma2.5 highpass gain1.5). Broad albedo variation is not amplified.
+Finite repetition remains;
+no claim of aperiodicity, motion parallax or final rendered acceptance follows.
+
+Snow CJ filters its combined height with a periodic Gaussian of8 cache texels
+before normal derivation; the fine source-normal residual remains separate.
+Both canonical bakers share Tools/terrain_bake_output.py, which encodes all PNGs
+and stages changed outputs before publishing them in a short burst. This avoids
+long encoding gaps between live input updates; it does not provide multi-file
+atomicity or establish engine load success. Unchanged outputs are not rewritten.
+
+Source changes require regeneration, dependent shader and material compilation,
+cold-start validation, matched in-world motion evidence, and canonical performance
+qualification. These live checks are pending explicit user direction for computer
+control. Preserve all user terrain edits when qualifying the candidate.
+
+## Extended texture reach (2026-09-17)
+
+TERRAIN-FADE-EXTEND-001 extends the shared fade from 32-64 m to 64-128 m.
+The previous fade visibly flattened nearby mountain surfaces. This doubles both
+full-detail reach and transition width, using the same textures and sampling
+branches. More pixels execute detailed sampling; it is not free GPU work.
+Fixed-view screening passes; canonical route qualification is pending because
+the candidate return view changed during measurement. Distant surfaces
+still become average material color beyond 128 m; this does not eliminate all
+distant flatness or change geometry streaming/LOD.
 
 
 ## Material transition prototype (2026-09-18)
@@ -551,3 +697,47 @@ Final near/far/near fixed-camera review retained coherent broad deposits with no
 visible material cracks. Small details changed at the coarser placement, as
 authorized. This is not a guarantee of patch preservation across every LOD or
 proof of temporal smoothness from still images. See the [evidence index](../ValidationEvidence/MaterialBlending/README.md).
+
+### Dirt tread removal (2026-09-20)
+
+The five active Dry Mud Field001 maps now remove the scanned tractor chevrons
+using Tools/remove_dirt_tracks.py. Shared clean-soil donor coordinates and weights
+keep color, roughness, AO, height and fine normal detail aligned. Broad height is
+continued from unmasked soil; macro normals are rebaked from the final16-bit height
+at the existing mip2/3m/120mm scale. Runtime shader, bindings and sampling budgets
+are unchanged. The original nor_gl file remains an offline source only. Exact
+recipe and hashes live beside the maps; DIRT-TRACKS-001/v1 in the validation ledger
+records native visual checks and the unavailable canonical performance baseline.
+
+## Shared stone breakup candidate (2026-09-20)
+
+Stone3 remains one material for exposed terrain, cliff edges and underground
+walls. Tools/bake_stone_relief.py now samples the existing RockFace scan through
+one continuous periodic coordinate warp. A4096px/12m field contains four source
+repeats per axis with varied spacing; it replaces the exact2048px/3m repetitions.
+Color, authored height, AO and roughness share those coordinates. Fine normal
+slopes receive the mapping Jacobian; macro normals derive from the final16-bit
+height at box mip1. No patch blending or runtime coordinate/noise path is added.
+Broad source color contrast is reduced35% at96-source-texel Gaussian scale,
+with broad mineral variation added to the larger field. Fine scan color remains.
+The authored height interval increases120to180mm; broad height coefficient
+increases.45to.65 and AO crevice contribution.35to.45. These are art settings,
+not measured scan depths. Runtime POM still uses the shared ray and8–16m fade.
+Generated metadata owns stone scale, height interval, resolution and minimum mip.
+The height footprint remains170.7texels/metre; color sampling falls from682.7
+to341.3texels/metre. Estimated compiled stone mip memory increases64MiB to85.3MiB.
+
+Continuous warp was chosen to retain connected bedrock instead of cutting and
+blending unrelated slabs. Increasing the source tile alone would enlarge the
+same repeated features; per-ray stochastic patch sampling would add texture work.
+The bake remains periodic at12m and cannot promise no recognizable features.
+No geometry, collision, material IDs, assignment, persistence or networking change.
+Native shader/material compilation and close/side/return visual checks succeeded;
+exact return capture is identical. This is still a candidate: matched historical
+performance and cold editor restart checks remain unqualified. See
+STONE-BREAKUP-001/v1 in the validation ledger and its evidence directory.
+
+The2026-09-20 shared stone breakup candidate above was REJECTED by the user as
+unnatural. Its12m coordinate warp and180mm relief are reverted to the exact prior
+3m/120mm continuous RockFace bake. The paragraph above describes a failed trial,
+not current behavior. An independent rendered visual review is now required.

@@ -5,6 +5,36 @@ using System.Threading.Tasks;
 
 public sealed partial class VoxelManager
 {
+	private float _waterVisibilityMeters = 3f;
+	private float _waterFlowSpeed = 32f;
+	private float _waterRippleStrength = 0.16f;
+
+	/// <summary>Distance through water at which half the bed remains visible; smaller values are cloudier.</summary>
+	[Property, Category( "Water" ), Range( 0.05f, 30f )]
+	public float WaterVisibilityMeters
+	{
+		get => _waterVisibilityMeters;
+		set => _waterVisibilityMeters = float.IsFinite( value ) ? Math.Clamp( value, 0.05f, 30f ) : 3f;
+	}
+
+	[Property, Category( "Water" )]
+	public Color WaterTint { get; set; } = new( 0.12f, 0.4f, 0.34f );
+
+	/// <summary>Shading advection in world units/second; does not change the generated water volume.</summary>
+	[Property, Category( "Water" ), Range( 0f, 160f )]
+	public float WaterFlowSpeed
+	{
+		get => _waterFlowSpeed;
+		set => _waterFlowSpeed = float.IsFinite( value ) ? Math.Clamp( value, 0f, 160f ) : 32f;
+	}
+
+	[Property, Category( "Water" ), Range( 0f, 0.5f )]
+	public float WaterRippleStrength
+	{
+		get => _waterRippleStrength;
+		set => _waterRippleStrength = float.IsFinite( value ) ? Math.Clamp( value, 0f, 0.5f ) : 0.16f;
+	}
+
 	private SurfaceWaterRenderer _waterRenderer;
 	private readonly Dictionary<GpuSdfDescriptor, SurfaceWaterGeometry.Chunk> _waterCells = new();
 	private readonly Dictionary<GpuSdfDescriptor, SdfWorldAabb> _waterCellRequests = new();
@@ -29,6 +59,7 @@ public sealed partial class VoxelManager
 	public string WaterStatus => _waterRenderer is null ? "Waiting for terrain" :
 		$"{_waterRenderer.ChunkCount:N0} meshed water chunks; {_waterRenderer.VertexCount:N0} vertices; " +
 		$"{_waterRenderer.UploadedVertices:N0} uploaded vertices; " +
+		$"{_waterRenderer.BatchCount} draw batches; {_waterRenderer.FlowTextureBytes / 1048576.0:F1} MiB flow textures; " +
 		$"{_waterCells.Count}/{_waterCellRequests.Count} cell chunks; {_waterCellsGenerated} generated; " +
 		$"{_waterCells.Values.Sum( item => (long)item.Cells.RefinementSamples ):N0} refinement samples; " +
 		$"{_waterCells.Values.Sum( item => item.Cells.Bytes ) / 1048576.0:F1} MiB cells; {_waterCellGenerationMilliseconds:F1} ms generation; publishMaxMs={_waterMaximumPublishDelayMilliseconds:F3}";
@@ -118,6 +149,8 @@ public sealed partial class VoxelManager
 
 	private void UpdateWaterCellGeneration()
 	{
+		_waterRenderer?.SetAppearance( WaterTint, WaterVisibilityMeters, WaterFlowSpeed, WaterRippleStrength,
+			Scene.Camera.IsValid() ? Scene.Camera.BackgroundColor : Color.Black );
 		if ( !_clipboxPlacementTargetAvailable ) return;
 		RefreshWaterCellRequests();
 		if ( _waterCellPreparation is not null )
@@ -281,10 +314,24 @@ public sealed partial class VoxelManager
 			if ( area == 0f ) degenerateTriangles++;
 			if ( area < 0f ) reversedTriangles++;
 		}
+		var flowSamples = chunk.Cells.Flow;
+		var flowing = 0;
+		var invalidFlow = 0;
+		if ( flowSamples is not null )
+		{
+			for ( var index = 0; index + 3 < flowSamples.Length; index += 4 )
+			{
+				var flow = new Vector2( (flowSamples[index] - 128) / 127f, (flowSamples[index + 1] - 128) / 127f );
+				if ( flow != Vector2.Zero ) flowing++;
+				// Each signed component rounds by at most 1/254; the decoded unit
+				// vector can therefore have squared length up to 1.01117.
+				if ( flowSamples[index] == 0 || flowSamples[index + 1] == 0 || flow.LengthSquared > 1.012f ) invalidFlow++;
+			}
+		}
 		Log.Info( $"[VoxelWorld] water.inspect level={level} coordinate={x},{y},{z} ready=True " +
 			$"requested={manager._waterCellRequests.ContainsKey( descriptor )} vertices={chunk.Vertices.Length} digest={digest:X16} " +
 			$"invalidVertices={invalidVertices} degenerateTriangles={degenerateTriangles} reversedTriangles={reversedTriangles} " +
-			$"generationMs={chunk.Milliseconds:F3}" );
+			$"generationMs={chunk.Milliseconds:F3} flowSamples={(flowSamples?.Length ?? 0) / 4} flowingSamples={flowing} invalidFlow={invalidFlow}" );
 	}
 
 	private void ResetSurfaceWater()

@@ -1,5 +1,5 @@
 {
-  "Version": 3,
+  "Version": 4,
   "Specimen": "oak_growth_18_open_grown_271828_dense",
   "ElevationRow": 0,
   "RenderModels": [
@@ -81,17 +81,40 @@
     "Assets/shaders/trees/tree_baked_foliage.shader": "cb3adf3b0445b7622c200ba5a6197c243fcdb1fb96e8cf0666d2f0ee3b3c363a",
     "Assets/shaders/trees/tree_wind.hlsl": "d1820bc48a5b5b0f84c6b82d8631b3332832b1a2247d1511649cfed43158b57d",
     "Assets/shaders/trees/tree_wood_motion.hlsl": "3318e3f87596d187667ea42a2fd42958360434ed6f85eb54647dbd5d445f001d",
-    "Assets/shaders/trees/tree_lod_fade.hlsl": "4d896b50fcb58d6393af17b8a05a65e8650722668cc43c1bff2e5c1cf60d87bd",
+    "Assets/shaders/trees/tree_lod_fade.hlsl": "6b9c0cdb0ebff6078b1d8b695bab842edf34c272aa2e415dc8a1f0929739acab",
     "Assets/shaders/trees/tree_bake_depth.hlsl": "12c0ebd494b24ba0fddbdbb2eab23e4a0a3054c40bebd0465b87f59184b00b11",
     "Assets/models/tree_lab/oak_growth_18_open_grown_271828_dense/manifest.json": "048ba997aad5b90c2cdd734bc8745fd848ec8655b4b94087a605e7a1eb9f2229"
   },
+  "DistantWood": {
+    "Version": 1,
+    "Specimen": "oak_growth_18_open_grown_271828_dense",
+    "SourceFile": "lod2.fbx",
+    "SourceSHA256": "35e22cc9c5d8114fbfda40334a801410540fa95d68849d149d872210021e6588",
+    "ToolSHA256": "ae86d64c9ac4f2a1d5374fb24a84c54ac73e997a22ec03bc56bf53c63bd78554",
+    "TriangleBudgets": {
+      "Trunk": 160
+    },
+    "Triangles": {
+      "Trunk": 158
+    },
+    "OmittedParts": [
+      "Roots",
+      "Branches",
+      "RootTips",
+      "Twigs"
+    ],
+    "Outputs": {
+      "distant_wood.fbx": "21066fe545e29dfbbec9e495b98ae5bcbd78c3009fe867bea1a8d5ea211b616e",
+      "distant_wood.vmdl": "cf526bf3216c0a049515eb27ed337f0632fb078328a5d64085021371d8eb2a13"
+    }
+  },
   "NormalEncoding": "signed-object-rgb",
-  "PackerSHA256": "d2221711c8838c11cd2c2f9d1eb574bdac4035d8021f8d0991317d9ac369febc",
+  "PackerSHA256": "f40e8d29becfbddeb208f2e217c47b3a16aa6f5257cbb2acb799e11faeb662d7",
   "MaterialSHA256": "af47d1dcc6567eb6a6530e5d41ceb7ac82138fa9526f21c327c57ab475518c84",
   "OutputHashes": {
-    "oak_growth_18_open_grown_271828_dense_color.png": "5a38dae107b041f0932c947c8f64f73409739765ced43679747311560c781d96",
+    "oak_growth_18_open_grown_271828_dense_color.png": "dc0b6d65def1bbbe1c0e052ba2f3ad2a41160b9689a4244dd090bfc46f86e92f",
     "oak_growth_18_open_grown_271828_dense_coverage.png": "f240cbfa7b008a6dc14d5960354b0ec0ad7eb6e62ec9d6abc381f087e6dbf9a1",
-    "oak_growth_18_open_grown_271828_dense_normal.png": "8e2f3640e5771ddaaa65aca0d37e83cdb9050845519045c51f87c9624636adae",
+    "oak_growth_18_open_grown_271828_dense_normal.png": "97252e9f672cdda028ab56cda01e6dc31b9c66db2ba308b3a8c6bf5e74c713ac",
     "oak_growth_18_open_grown_271828_dense_depth.png": "653c69c7ce2f648b90dbad833ff7f2402d4709f31bf24fe0e730fc24ef311599",
     "oak_growth_18_open_grown_271828_dense_occlusion.png": "8008f95c3403597dc27da9aa41cfe23cb410e5d67761de8edb86ae43e4a1ddb1"
   },

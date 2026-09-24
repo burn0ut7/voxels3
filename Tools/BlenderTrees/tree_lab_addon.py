@@ -44,6 +44,7 @@ def select_tree(self,context):
 	self.loading=True
 	try:
 		self.species=collection.get('species','Oak');self.stage=collection.get('stage','Mature');self.form=collection['form'];self.seed=collection['seed']
+		self.overhead_light=False
 		for key,value in json.loads(collection['settings']).items():
 			if hasattr(self,key):setattr(self,key,value)
 		self.active_tree=self.selected_tree;self.show_guides=False;self.show_collision=False
@@ -87,9 +88,10 @@ class TREE_LAB_Settings(bpy.types.PropertyGroup):
 	character:FloatProperty(name="Crooked Growth",default=.45,min=0,max=1)
 	fork_height:FloatProperty(name="Branch Onset",description="Delay before main-stem lateral buds can activate",default=.24,min=.06,max=.65)
 	growth_direction:FloatProperty(name="Light Azimuth (degrees)",default=0,min=-180,max=180)
+	overhead_light:BoolProperty(name="Overhead Growth Light",description="Grow toward light directly above; azimuth still sets the direction of authored trunk lean",default=False)
 	crown_bias:FloatProperty(name="Directional Light Bias",default=.25,min=0,max=1)
 	branch_density:FloatProperty(name="Branch Density",default=1.35,min=.55,max=1.8)
-	leaf_density:FloatProperty(name="Leaf Density",default=1.9,min=.2,max=2.4)
+	leaf_density:FloatProperty(name="Leaf Density",description="Foliage abundance on living shoots; rebuild foliage to retain the existing wood",default=generator()['SPECIES']['Oak']['leaf_density'],min=.2,max=64)
 	root_spread:FloatProperty(name="Root Spread",default=1,min=.5,max=2)
 	root_depth:FloatProperty(name="Root Depth",default=1.2,min=.2,max=3,subtype="DISTANCE")
 	age:IntProperty(name="Growth Seasons",description="Simulated seasons, not calibrated chronological years",default=24,min=1,max=80)
@@ -176,20 +178,20 @@ class TREE_LAB_OT_CancelGrowth(bpy.types.Operator):
 
 class TREE_LAB_OT_Generate(bpy.types.Operator):
 	bl_idname='tree_lab.generate';bl_label='Build Source Geometry';bl_options={'REGISTER'}
+	foliage_only:BoolProperty(default=False,options={'HIDDEN'})
 	_timer=None
 
 	def retire(self,label):
 		prefix=PREFIX+label
 		collection=bpy.data.collections.get(prefix)
 		if collection and collection.get('protected_reference'):raise ValueError('Cannot replace a preserved source')
-		for obj in list(bpy.data.objects):
-			if obj.name.startswith(prefix+'_'):bpy.data.objects.remove(obj,do_unlink=True)
-		for suffix in ('','_Guides','_Collision'):
-			collection=bpy.data.collections.get(prefix+suffix)
-			if collection:bpy.data.collections.remove(collection)
+		objects=[obj for obj in bpy.data.objects if obj.name.startswith(prefix+'_')]
+		collections=[bpy.data.collections.get(prefix+suffix) for suffix in ('','_Guides','_Collision')]
+		bpy.data.batch_remove(ids=[*objects,*(item for item in collections if item is not None)])
+		# Re-evaluate users after each dependency class; meshes can own materials.
 		for database in (bpy.data.meshes,bpy.data.curves,bpy.data.node_groups,bpy.data.materials):
-			for item in list(database):
-				if item.name.startswith(prefix+'_') and item.users==0:database.remove(item)
+			orphans=[item for item in database if item.name.startswith(prefix+'_') and item.users==0]
+			if orphans:bpy.data.batch_remove(ids=orphans)
 
 	def begin(self,context):
 		import uuid
@@ -200,18 +202,32 @@ class TREE_LAB_OT_Generate(bpy.types.Operator):
 		if collection.get('protected_reference'):raise ValueError('This is a preserved source specimen')
 		self.settings={key:getattr(p,key) for key in (*self.ns['TREE_SETTINGS'],'species','stage','form','seed')}
 		self.graph=json.loads(collection['growth_graph']);module,recipe=self.ns['growth_recipe'](self.settings);module.validate(self.graph)
-		if self.graph['recipe']!=module.asdict(recipe):raise ValueError('Growth controls changed; simulate again before meshing')
+		if module.Recipe(**self.graph['recipe'])!=recipe:raise ValueError('Growth controls changed; simulate again before meshing')
+		if self.foliage_only and not collection.get('source_ready'):raise ValueError('Build the wood before adjusting foliage')
 		self.label=p.active_tree.removesuffix('_Source')+'_Source'
 		old=bpy.data.collections.get(PREFIX+self.label)
 		if old and (old.get('protected_reference') or not old.get('growth_graph')):raise ValueError('Cannot replace this stored specimen')
 		self.growth_revision=collection.get('growth_generator_sha256',collection['generator_sha256'])
 		self.pending='Build_'+uuid.uuid4().hex[:12];self.scene=context.scene;self.started=time.perf_counter()
-		self.ns['end_gallery']();self.job=self.work(context)
+		# Keep the previous wood visible while avoiding repeated redraws of its
+		# potentially millions of foliage instances during the source transaction.
+		self.ns['show_forms']((p.active_tree,),False);self.job=self.work(context)
 		p.cancel_requested=False;p.growing=True;p.progress='Preparing source geometry'
 
 	def work(self,context):
 		if context.mode!='OBJECT':bpy.ops.object.mode_set(mode='OBJECT')
-		yield from self.ns['build_tree'](**self.settings,label=self.pending,graph=self.graph)
+		if self.foliage_only:
+			yield from self.ns['rebuild_foliage'](self.label,self.settings['leaf_density'],self.pending)
+			collection=bpy.data.collections[PREFIX+self.label]
+			collection['foliage_seconds']=time.perf_counter()-self.started
+			p=self.scene.tree_lab;p.growing=False;p.selected_tree=self.label
+			p.progress=f"Foliage updated in {collection['foliage_seconds']:.1f}s"
+			return
+		collection=yield from self.ns['build_tree'](**self.settings,label=self.pending,graph=self.graph)
+		# Publish visibility with the completed source. Updating millions of
+		# unfinished bark corners must not repeatedly redraw the pending canopy.
+		for obj in collection.objects:
+			obj.hide_render=True;obj.hide_set(True)
 		yield from self.ns['fuse_wood'](self.pending)
 		yield 'Publishing completed source geometry'
 		self.retire(self.label)
@@ -280,9 +296,9 @@ class TREE_LAB_OT_GrowthFile(bpy.types.Operator):
 				if not payload.get('graph',{}).get('sha256'):raise ValueError('Growth recipe is missing its graph checksum')
 				module.validate(payload['graph'])
 				_,recipe=ns['growth_recipe'](payload['settings'])
-				if module.asdict(recipe)!=payload['graph']['recipe']:raise ValueError('Recipe and stored growth graph disagree')
+				if recipe!=module.Recipe(**payload['graph']['recipe']):raise ValueError('Recipe and stored growth graph disagree')
 				settings=payload['settings'];ns['preset_settings'](settings['species'],settings['stage'],settings['form'])
-				for key,low,high in (('leaf_density',.2,2.4),('root_spread',.5,2),('root_depth',.2,3)):
+				for key,low,high in (('leaf_density',.2,64),('root_spread',.5,2),('root_depth',.2,3)):
 					if not low-1e-6<=settings[key]<=high+1e-6:raise ValueError(f'Invalid source geometry control: {key}')
 				label=f"Growth_{settings['species']}_{settings['age']}_{settings['form']}_{settings['seed']}"
 				ns['publish_growth'](payload['graph'],label,settings,payload['generator_sha256']);context.scene.tree_lab.selected_tree=label
@@ -324,13 +340,17 @@ class TREE_LAB_OT_Export(bpy.types.Operator):
 		collection=bpy.data.collections.get(PREFIX+p.active_tree)
 		if collection is None or collection.get('growth_preview') or (collection.get('growth_graph') and not collection.get('source_ready')):
 			self.report({'ERROR'},'Build source geometry from the growth graph before exporting models');return {'CANCELLED'}
-		if collection.get('growth_graph') and not 1<collection.get('primary_count',0)<=256:
-			self.report({'ERROR'},'Source mesh is complete; the current game wind adapter requires 2 to 256 structural axes');return {'CANCELLED'}
+		if collection.get('growth_graph') and not 1<=collection.get('primary_count',0)<=256:
+			self.report({'ERROR'},'Source mesh is complete; the current game wind adapter requires 1 to 256 structural axes');return {'CANCELLED'}
 		try:
 			export=runpy.run_path(str(SOURCE.with_name('export_sbox.py')))
-			if collection.get('surface_method')=='shared_collars' and 'shared_collars' not in export.get('SUPPORTED_SURFACE_METHODS',()):
+			if collection.get('growth_graph') and collection.get('surface_method') not in export.get('SUPPORTED_SURFACE_METHODS',()):
 				raise ValueError('The installed game exporter does not support connected branch surfaces yet; Blender source is preserved')
-			export['export_specimen'](p.active_tree,2048 if collection.get('stage')=='Juvenile' else 4096)
+			options={}
+			if collection.get('growth_graph'):
+				settings=json.loads(collection['settings'])
+				options={'asset_key':f"{collection['species']}_Growth_{settings['age']}_{collection['form']}_{collection['seed']}".lower(),'catalog_eligible':False}
+			export['export_specimen'](p.active_tree,2048 if collection.get('stage')=='Juvenile' else 4096,**options)
 		except Exception as error:
 			self.report({'ERROR'},str(error));return {'CANCELLED'}
 		self.report({'INFO'},'Prepared three detail levels and trunk collision; export is ready to install in s&box')
@@ -347,7 +367,7 @@ class TREE_LAB_PT_Panel(bpy.types.Panel):
 		controls=l.column();controls.enabled=not p.growing
 		for key in ('species','stage','age','form','seed'):controls.prop(p,key)
 		box=controls.box();box.label(text='Growth and environment')
-		for key in ('height','resource','competition','light_response','growth_direction','crown_bias'):box.prop(p,key)
+		for key in ('height','resource','competition','light_response','overhead_light','growth_direction','crown_bias'):box.prop(p,key)
 		box=controls.box();box.label(text='Branch architecture')
 		for key in ('spread','girth','lean','upward','droop','branch_angle','character','fork_height','branch_density'):box.prop(p,key)
 		row=controls.row(align=True);row.operator('tree_lab.grow',text='Simulate Growth');row.operator('tree_lab.grow',text='Next Seed').new_seed=True
@@ -356,7 +376,9 @@ class TREE_LAB_PT_Panel(bpy.types.Panel):
 		row=controls.row(align=True);row.operator('tree_lab.growth_file',text='Save Recipe');row.operator('tree_lab.growth_file',text='Load Recipe').load=True
 		box=controls.box();box.label(text='Derived source and game export')
 		for key in ('leaf_density','root_spread','root_depth'):box.prop(p,key)
-		box.operator('tree_lab.generate');box.operator('tree_lab.export_sbox',icon='EXPORT')
+		box.operator('tree_lab.generate')
+		box.operator('tree_lab.generate',text='Update Foliage Only').foliage_only=True
+		box.operator('tree_lab.export_sbox',icon='EXPORT')
 		box.label(text='Preview first; geometry and baking are separate')
 
 

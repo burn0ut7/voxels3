@@ -7,8 +7,8 @@ using System.Text;
 /// <summary>Regional host page identities; density payloads use TerrainFieldCodec unchanged.</summary>
 internal sealed class TerrainReplicationManifest
 {
-	// Version4 requires the sand material recipe; density/page save format is unchanged.
-	public const int ProtocolVersion = 4;
+	// Version8 adds coast strata and retains separate gravel material support; density/page save format is unchanged.
+	public const int ProtocolVersion = 8;
 	public const int MaximumBytes = 65536;
 	public Guid WorldId;
 	public int Revision;

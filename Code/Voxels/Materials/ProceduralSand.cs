@@ -1,8 +1,20 @@
 using System;
 
-/// <summary>Patchy beaches and sparse river sediment over the canonical landform.</summary>
+/// <summary>Desert layers, patchy beaches and river sediment over the canonical landform.</summary>
 internal static class ProceduralSand
 {
+	// Minimum/maximum thickness, XY noise lattice, salt. Depth is in base cells,
+	// independent of mesh LOD. Bound to the generation shader by GpuVoxelMaterials.
+	public static readonly Vector4 Desert = new( 5f * ProceduralVoxelMaterials.LayerSize,
+		10f * ProceduralVoxelMaterials.LayerSize, 2048f, 57191f );
+
+	public static float SampleDesertLayerDepth( Vector3 position, float naturalHeight,
+		float desertCoverage, float cover, ProceduralTerrainSettings settings )
+	{
+		if ( naturalHeight < settings.SeaLevel || desertCoverage <= cover ) return 0f;
+		return ProceduralVoxelMaterials.SampleBiomeLayerDepth( position, settings, Desert );
+	}
+
 	// Wavelength, coverage cutoff, maximum dry-bank height, maximum layer depth.
 	public static readonly Vector4 Ocean = new( 2048f, -0.10f, 48f, 96f );
 	public static readonly Vector4 River = new( 512f, 0.40f, 12f, 64f );
@@ -10,7 +22,7 @@ internal static class ProceduralSand
 	public const float MinimumRiverHeight = -256f;
 	public const float RiverNaturalHeight = 32f;
 	public const float RiverBlendHeight = 128f;
-	public const float OceanReach = 640f;
+	public const float OceanReach = TerrainBiomes.CoastReach;
 	public const float RiverReach = 48f;
 	public const uint CoverageSalt = 17011u;
 	public const uint DetailSalt = 41333u;
@@ -18,8 +30,16 @@ internal static class ProceduralSand
 	public const float BuriedMaximumDepth = 256f;
 	public static readonly MaterialSpawnRegion BuriedDeposits = new( new Vector3( 768f, 768f, 384f ), 0.15f, 29137u, false );
 
-	public static float SampleLayerDepth( Vector3 position, float height, float naturalHeight, ProceduralTerrainSettings settings )
+	public static float SampleLayerDepth( Vector3 position, float height, float naturalHeight, ProceduralTerrainSettings settings,
+		float mountains, float marshWeight, float cover )
 	{
+		if ( 1f - marshWeight > cover )
+		{
+			var coast = (1f - marshWeight) * TerrainBiomes.SampleCoastline( position, settings, naturalHeight );
+			if ( coast > cover )
+				return mountains >= ProceduralVoxelMaterials.MountainStoneWeight ? 0f :
+					MinimumLayerDepth + (Ocean.w - MinimumLayerDepth) * coast;
+		}
 		var relativeHeight = height - settings.SeaLevel;
 		if ( relativeHeight > Ocean.z || (relativeHeight < MinimumRiverHeight && naturalHeight > settings.SeaLevel) ) return 0f;
 		var river = Math.Clamp( (naturalHeight - settings.SeaLevel - RiverNaturalHeight) / RiverBlendHeight, 0f, 1f );
@@ -57,10 +77,11 @@ internal static class ProceduralSand
 		return MinimumLayerDepth + (recipe.w - MinimumLayerDepth) * strength;
 	}
 
-	public static bool Contains( Vector3 position, float depth, float height, float naturalHeight, ProceduralTerrainSettings settings )
+	public static bool Contains( Vector3 position, float depth, float height, float naturalHeight, ProceduralTerrainSettings settings,
+		float mountains, float marshWeight, float cover )
 	{
 		if ( depth < 0f || depth > BuriedMaximumDepth ) return false;
-		var layerDepth = SampleLayerDepth( position, height, naturalHeight, settings );
+		var layerDepth = SampleLayerDepth( position, height, naturalHeight, settings, mountains, marshWeight, cover );
 		if ( layerDepth <= 0f ) return false;
 		return depth < layerDepth || (depth >= BuriedMinimumDepth && BuriedDeposits.Contains( position, settings.WorldSeed ));
 	}

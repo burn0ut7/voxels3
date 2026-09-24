@@ -30,7 +30,7 @@ struct AllocationDescriptor
 struct TerrainVertexWords
 {
 	uint4 First;
-	uint3 Second;
+	uint4 Second;
 };
 
 StructuredBuffer<TerrainRequest> Requests < Attribute( "Requests" ); >;
@@ -162,7 +162,7 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID )
 		asuint( outputPosition.y ),
 		asuint( outputPosition.z ),
 		encodedRecordIdentity );
-	output.Second = uint3( asuint( encodedNormal.x ), asuint( encodedNormal.y ),
-		EdgeFlags[totalEdgeSlots + index] );
+	output.Second = uint4( asuint( encodedNormal.x ), asuint( encodedNormal.y ),
+		EdgeFlags[totalEdgeSlots + index], EdgeFlags[2u * totalEdgeSlots + index] );
 	OutputVertices[allocation.VertexOffset + localVertex] = output;
 }

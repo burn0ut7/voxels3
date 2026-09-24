@@ -31,7 +31,7 @@ VS
 	struct TerrainVertex
 	{
 		uint4 First;
-		uint3 Second;
+		uint4 Second;
 	};
 	StructuredBuffer<TerrainVertex> DepthVertices < Attribute( "DepthVertices" ); >;
 	StructuredBuffer<uint> DepthIndices < Attribute( "DepthIndices" ); >;

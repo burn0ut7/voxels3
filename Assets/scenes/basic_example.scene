@@ -44,7 +44,7 @@
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
           "ZFar": 100000,
-          "ZNear": 10
+          "ZNear": 1
         },
         {
           "__type": "Sandbox.DistanceFog",
@@ -60,6 +60,41 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "StartFraction": 0.08
+        },
+        {
+          "__type": "Sandbox.VolumetricClouds",
+          "__guid": "0fb98348-a40c-4670-ab65-186512dfdf16",
+          "__enabled": true,
+          "Flags": 0,
+          "BaseHeightMeters": 1000,
+          "BaseHeightVariationMeters": 250,
+          "Coverage": 0.32,
+          "Density": 0.08,
+          "Erosion": 0.22,
+          "Fog": {
+            "_type": "component",
+            "component_id": "4cd2378c-2f15-4855-bcb7-db3fa905fe47",
+            "go": "633fa436-df01-42a2-8a30-6edbc7d3371b",
+            "component_type": "DistanceFog"
+          },
+          "MaximumDistanceMeters": 24000,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "ResolutionDivisor": 4,
+          "ShapeScaleMeters": 2400,
+          "Sun": {
+            "_type": "component",
+            "component_id": "49c48e2d-e341-48f8-ac05-03d9f74bfe67",
+            "go": "1b22c1a8-cca4-40c6-95bf-c6ba5588fc51",
+            "component_type": "DirectionalLight"
+          },
+          "ThicknessMeters": 900,
+          "ViewSteps": 64,
+          "Wind": "8,3"
         }
       ],
       "Children": []
@@ -129,7 +164,7 @@
           {
             "Id": {
               "Type": "GameObject",
-              "IdValue": "707cfd2f-f74d-478e-9251-8f1e980b62d6"
+              "IdValue": "49763fb8-b937-4977-b178-7f06e54feb5e"
             },
             "Parent": {
               "Type": "GameObject",
@@ -139,7 +174,7 @@
             "ContainerProperty": "Children",
             "IsContainerArray": true,
             "Data": {
-              "__guid": "707cfd2f-f74d-478e-9251-8f1e980b62d6",
+              "__guid": "49763fb8-b937-4977-b178-7f06e54feb5e",
               "__version": 2,
               "Flags": 0,
               "Name": "Clothing - y_front_pants_white",
@@ -160,18 +195,18 @@
           {
             "Id": {
               "Type": "Component",
-              "IdValue": "ca6844fc-dfdd-4101-ba8f-27c2e80ad315"
+              "IdValue": "c17ee607-c2cc-4732-b091-889fe38266d5"
             },
             "Parent": {
               "Type": "GameObject",
-              "IdValue": "707cfd2f-f74d-478e-9251-8f1e980b62d6"
+              "IdValue": "49763fb8-b937-4977-b178-7f06e54feb5e"
             },
             "PreviousElement": null,
             "ContainerProperty": "Components",
             "IsContainerArray": true,
             "Data": {
               "__type": "Sandbox.SkinnedModelRenderer",
-              "__guid": "ca6844fc-dfdd-4101-ba8f-27c2e80ad315",
+              "__guid": "c17ee607-c2cc-4732-b091-889fe38266d5",
               "__enabled": true,
               "Flags": 0,
               "AnimationGraph": null,
@@ -297,7 +332,8 @@
           "FigureEightSpeed": 2500,
           "FramePerformance": "Collecting first 10-second window",
           "GameplayRadius": 8,
-          "GeneratorStatus": "Regional landforms and retained caves v48; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.6, MountainAmount = 0.35, PlainsAmount = 0.6, ContinentalScale = 131072, MountainRegionScale = 32768, LocalLandformScale = 8192, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }",
+          "GeneratorStatus": "Regional landforms and retained caves v52; seed 1337; ProceduralTerrainSettings { WorldSeed = 1337, LandAmount = 0.6, MountainAmount = 0.35, PlainsAmount = 0.6, ContinentalScale = 131072, MountainRegionScale = 32768, LocalLandformScale = 8192, ReliefHeight = 3072, Ruggedness = 0.45, SeaLevel = 0, IsValid = True }",
+          "GrassRenderRangeMeters": 96,
           "LandAmount": 0.75,
           "LastPerformanceRunId": "No saved run",
           "LocalLandformScale": 5232.39,
@@ -323,6 +359,8 @@
           "ReliefHeight": 3072,
           "Ruggedness": 0.45,
           "SeaLevel": 0,
+          "SpawnTreeCenter": "0,0,0",
+          "SpawnTreesEnabled": false,
           "StreamingPerformance": "Range applied in 0.000 ms; 0 prepared results awaiting integration",
           "StreamingTarget": {
             "_type": "gameobject",
@@ -333,7 +371,11 @@
           "TerrainSaveStatus": "Loading world...",
           "VerboseLogging": false,
           "VisualChunkRadius": 128,
+          "WaterFlowSpeed": 32,
+          "WaterRippleStrength": 0.16,
           "WaterStatus": "Waiting for terrain",
+          "WaterTint": "0.12,0.4,0.34,1",
+          "WaterVisibilityMeters": 3,
           "WorldSeed": 1337
         }
       ],
@@ -391,15 +433,64 @@
           "__guid": "ef0e15ea-fdbd-4982-885d-42f901981523",
           "__enabled": true,
           "Flags": 0,
+          "Layer": "Biomes",
+          "MapCenter": "0,0",
+          "MapSpan": 524288,
+          "MapStatus": "Open map to sample this world.",
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
           "OnComponentEnabled": null,
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
-          "OnComponentUpdate": null
+          "OnComponentUpdate": null,
+          "OverlayTerrain": false,
+          "View": "Off"
         }
       ],
       "Children": []
+    },
+    {
+      "__guid": "8ecd0810-19a7-4b29-be95-792f0de4145f",
+      "__version": 2,
+      "__Prefab": "models/tree_lab/oak_growth_18_open_grown_271828_dense/oak_growth_18_open_grown_271828_dense.prefab",
+      "__PrefabInstancePatch": {
+        "AddedObjects": [],
+        "RemovedObjects": [],
+        "PropertyOverrides": [
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "c4ff0663-a9df-5268-872d-620ea3bb6321"
+            },
+            "Property": "Name",
+            "Value": "Sprite Leaf Test Oak"
+          },
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "c4ff0663-a9df-5268-872d-620ea3bb6321"
+            },
+            "Property": "Position",
+            "Value": "-1800,-1800,186.125"
+          }
+        ],
+        "MovedObjects": []
+      },
+      "__PrefabIdToInstanceId": {
+        "c4ff0663-a9df-5268-872d-620ea3bb6321": "8ecd0810-19a7-4b29-be95-792f0de4145f",
+        "b13c45aa-7bb0-5060-a73d-3d5fadb08b75": "4f69dd11-9bca-4f80-9be6-c2e8935e7936",
+        "e0097295-ba83-55de-b350-87b261f0b30c": "40914685-b7ca-41b0-b6e1-254e146cb775",
+        "14d3cb67-078f-596f-b473-fe8883512d41": "330c6865-2bfe-436c-9d9d-23b89f454b6d",
+        "c08132d6-fca1-5a1e-81b1-637b2559760d": "1af88be1-5982-48d9-94b4-c44d4e91dbad",
+        "8968a034-2043-528d-91e4-a15a65942600": "10f60bca-b8ae-47d1-8bbc-cd18c259b9b9",
+        "5b33615f-f4f3-5b50-b924-d91d5698702a": "bc5d0721-250c-40ce-87c1-ba5960dadea4",
+        "75b0af01-f780-563f-81e3-bd4ef7eb28e1": "992fe66e-7eba-4e8c-8abc-36263d7ea191",
+        "c5c058f9-c6b1-58b5-add8-9d84cc4b3f7b": "e3b77a72-7d9d-49dd-8490-c6b7f044a4d4",
+        "5688a6b3-23a9-516d-a1db-f9a55cf762d1": "dcfdc6ba-b6bb-42dc-8941-54e1c328ae60",
+        "366d75f2-328e-5c6e-b010-7b62e4df5f68": "046d3ec0-0730-490e-8dff-5a33631058ff",
+        "e20779bc-32ec-532f-b06e-1e63bfd89cc4": "e49602c1-7c5e-4294-b65d-905f9dc9a171",
+        "f314915a-cbb2-51cd-b98a-a0f8c81f20d9": "15f8c5d9-ca44-4a31-b73f-eb88fb9bd7a6"
+      }
     }
   ],
   "SceneProperties": {

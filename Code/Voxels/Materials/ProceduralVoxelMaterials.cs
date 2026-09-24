@@ -4,13 +4,20 @@ internal static class ProceduralVoxelMaterials
 	public const int DirtLayers = 8;
 	public const float LayerSize = TerrainField.SampleSpacing;
 	public const float SoilDepth = (1 + DirtLayers) * LayerSize;
-	// Require a strong pointed-ridge contribution in mountain-dominant terrain.
-	public const float SnowPeakFraction = 0.76f;
-	public const float SnowMountainWeight = 0.75f;
+	// Minimum/maximum depth, XY wavelength, independent seed salt.
+	public static readonly Vector4 Snow = new( 5f * LayerSize, 10f * LayerSize, 2048f, 62119f );
 	// Mountain bodies are stone nodes, including the shallow interior below snow.
 	public const float MountainStoneWeight = 0.75f;
 	// tan(45 degrees)^2. Sample slope on the fixed base lattice, not render triangles.
 	public const float MountainGrassMaxSlopeSquared = 1f;
+
+	/// <summary>Coherent biome strata, biased toward the maximum depth; mirrored in generation HLSL.</summary>
+	public static float SampleBiomeLayerDepth( Vector3 position, ProceduralTerrainSettings settings, Vector4 recipe )
+	{
+		var noise = RegionalLandforms.Noise( position, recipe.z,
+			unchecked((uint)settings.WorldSeed) ^ (uint)recipe.w, out _ );
+		return recipe.y - (recipe.y - recipe.x) * noise * noise * noise;
+	}
 
 	public static bool TrySample( TerrainFieldSnapshot field, Vector3 position, out float density, out ushort materialId )
 	{
@@ -22,7 +29,7 @@ internal static class ProceduralVoxelMaterials
 		var landform = RegionalLandforms.SampleNatural( position, field.Settings );
 		var river = RiverWorld.For( field.Settings ).GetPatch( RiverNetwork.PatchAt( position ) )
 			.SampleWorld( position, landform.Height, field.Settings.SeaLevel );
-		var height = river.Height;
+		var height = TerrainBiomes.RefineHeight( position, field.Settings, landform.Height, river.Height, landform.Mountains );
 		var medium = SurfaceWater.Resolve( position.z, height, density, river.WaterHeight );
 		if ( medium != WorldMedium.Solid )
 		{
@@ -38,7 +45,26 @@ internal static class ProceduralVoxelMaterials
 			return true;
 		}
 		var depth = height - position.z;
-		if ( ProceduralSand.Contains( position, depth, height, landform.Height, field.Settings ) )
+		var habitat = TerrainBiomes.SampleWorld( position, field.Settings, landform.Mountains );
+		var cover = TerrainBiomes.CoverThreshold( position, field.Settings );
+		var above = depth < LayerSize ? reader.SampleWorld( position + Vector3.Up * LayerSize ) : -1f;
+		var exposed = depth >= 0f && depth < LayerSize && above > 0f && height >= river.WaterHeight;
+		if ( depth >= 0f && depth < SoilDepth &&
+			habitat.MarshWeight( landform.Height, landform.Mountains, field.Settings.SeaLevel ) > cover )
+		{
+			materialId = exposed && height > river.WaterHeight + 12f ? VoxelMaterials.Grass : VoxelMaterials.Dirt;
+			return true;
+		}
+		if ( depth >= 0f && height >= river.WaterHeight && habitat.Snow > cover &&
+			depth < SampleBiomeLayerDepth( position, field.Settings, Snow ) )
+		{
+			materialId = VoxelMaterials.Snow;
+			return true;
+		}
+		var desertDepth = ProceduralSand.SampleDesertLayerDepth( position, landform.Height, habitat.Desert, cover, field.Settings );
+		if ( (depth >= 0f && depth < desertDepth) ||
+			ProceduralSand.Contains( position, depth, height, landform.Height, field.Settings, landform.Mountains,
+				habitat.MarshWeight( landform.Height, landform.Mountains, field.Settings.SeaLevel ), cover ) )
 		{
 			materialId = VoxelMaterials.Sand;
 			return true;
@@ -48,8 +74,7 @@ internal static class ProceduralVoxelMaterials
 			materialId = VoxelMaterials.Stone;
 			return true;
 		}
-		var above = reader.SampleWorld( position + Vector3.Up * LayerSize );
-		materialId = SelectSolid( depth, landform, above <= 0f || height < river.WaterHeight, position, height, field.Settings );
+		materialId = SelectSolid( depth, landform, !exposed, position, height, field.Settings );
 		return true;
 	}
 
@@ -59,7 +84,6 @@ internal static class ProceduralVoxelMaterials
 	{
 		if ( depth >= SoilDepth ) return VoxelMaterials.Stone;
 		if ( depth < 0f ) return VoxelMaterials.Dirt;
-		if ( depth < LayerSize && !covered && landform.Mountains >= SnowMountainWeight && landform.PeakFraction >= SnowPeakFraction ) return VoxelMaterials.Snow;
 		if ( depth < LayerSize && !covered )
 		{
 			if ( landform.Mountains >= MountainStoneWeight )

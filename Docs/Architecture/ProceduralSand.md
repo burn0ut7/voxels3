@@ -1,4 +1,20 @@
-## Sand and seeded material regions (2026-09-15, qualification pending)
+## Desert sand (2026-09-20, qualification pending)
+
+Desert climate coverage adds a continuous vertical surface layer, independent of
+the shoreline recipe below. Its thickness varies from5 to10 base cells (80–160
+world units), biased toward the deeper end by `10 - 5 * noise^3` cells. The seeded
+XY value noise uses a2048-unit lattice and salt57191. ProceduralSand owns the
+parameters and CPU formula; GpuVoxelMaterials binds them to generation-only HLSL.
+One additional noise sample per desert column, with no new buffers/vertex channels
+or draw-time sampling. Below the sand, existing dirt/stone rules resume. Water,
+air, placed-material precedence and terrain heights are unchanged. Desert sand
+does not activate the independently selected buried shoreline deposits.
+
+The material recipe uses transfer protocol5. Save density identity remains49;
+existing explicit edits persist and remeshing derives the new material layer.
+Validation is BIOME-DESERT-SAND-001/v1, plus the paired biome figure-eight.
+
+## Shoreline sand and seeded material regions (2026-09-15, qualification pending)
 
 Sand is stable catalog ID6, with warm pale-yellow checker colors. Generation
 selects actual material nodes; water/air and explicit placed dirt keep priority.

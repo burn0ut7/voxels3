@@ -1,0 +1,140 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:modeldoc30:version{8c2d7a91-9c42-4bf0-883a-5a3b1762d4f1} -->
+{
+rootNode = {
+_class = "RootNode"
+children = [ {
+_class = "RenderMeshList"
+children = [ {
+_class = "RenderMeshFile"
+name = "LOD0"
+filename = "models/tree_lab/oak_mature_weathered_1714/lod0.fbx"
+import_scale = 0.01
+import_rotation = [ 0.0, -90.0, 0.0 ]
+}, {
+_class = "RenderMeshFile"
+name = "LOD1"
+filename = "models/tree_lab/oak_mature_weathered_1714/lod1.fbx"
+import_scale = 0.01
+import_rotation = [ 0.0, -90.0, 0.0 ]
+}, {
+_class = "RenderMeshFile"
+name = "LOD2"
+filename = "models/tree_lab/oak_mature_weathered_1714/lod2.fbx"
+import_scale = 0.01
+import_rotation = [ 0.0, -90.0, 0.0 ]
+} ]
+}, {
+_class = "LODGroupList"
+children = [ {
+_class = "LODGroup"
+switch_threshold = 0.0
+meshes = [ "LOD0" ]
+}, {
+_class = "LODGroup"
+switch_threshold = 20.0
+meshes = [ "LOD1" ]
+}, {
+_class = "LODGroup"
+switch_threshold = 65.0
+meshes = [ "LOD2" ]
+} ]
+}, {
+_class = "PhysicsShapeList"
+children = [ {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_00"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 21.92770991584516
+point0 = [ -0.30822318604611976, 0.14479176735314797, -20.44951117883517 ]
+point1 = [ 6.177584956011434, -2.901992635933433, 24.54807673852275 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_01"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 19.35618703721297
+point0 = [ 5.799382925033569, -2.3540767921706824, 20.283319818691947 ]
+point1 = [ 7.26930973098034, -10.821877971408874, 64.9483185114823 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_02"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 17.196531936528782
+point0 = [ 7.24116882939977, -10.07674951252975, 60.68420691752997 ]
+point1 = [ 6.362176316929615, -17.26207418704596, 105.59742844949557 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_03"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 14.393815148275593
+point0 = [ 6.358816515742324, -16.729260288824246, 101.30320008345477 ]
+point1 = [ 7.308415305896069, -20.738114991525965, 146.6096292330524 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_04"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 11.71601637313358
+point0 = [ 6.968018811518752, -20.029706748451773, 142.37141045998402 ]
+point1 = [ 13.177426546577394, -30.917180335427833, 186.16039921918255 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_05"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 8.701642812171821
+point0 = [ 12.728725596675723, -29.90498552172203, 181.9761156097172 ]
+point1 = [ 15.958277728613906, -40.31087939194807, 226.2113413472814 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_06"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 5.6275472213234385
+point0 = [ 15.441426845986074, -39.20368087573314, 222.06398445790208 ]
+point1 = [ 23.076022703816573, -52.07547052638737, 265.0301662955697 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_07"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 2.724277666663475
+point0 = [ 22.08664426653404, -50.8562270111925, 261.0031638558455 ]
+point1 = [ 35.25171223587877, -63.613737662007495, 302.68644723366566 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Mature_Weathered_1714_COL_SOLID_Trunk_08"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 0.8656844060860829
+point0 = [ 33.872578087754135, -62.600224036870046, 298.71531358854037 ]
+point1 = [ 49.721063591363865, -71.16229515376054, 340.5716663270485 ]
+} ]
+}, {
+_class = "MaterialGroupList"
+children = [ {
+_class = "DefaultMaterialGroup"
+remaps = [ {
+from = "oak_mature_weathered_1714_bark.vmat"
+to = "models/tree_lab/oak_mature_weathered_1714/oak_mature_weathered_1714_bark.vmat"
+}, {
+from = "oak_mature_weathered_1714_fine.vmat"
+to = "models/tree_lab/oak_mature_weathered_1714/oak_mature_weathered_1714_fine.vmat"
+}, {
+from = "oak_mature_weathered_1714_leaf0.vmat"
+to = "models/tree_lab/oak_mature_weathered_1714/oak_mature_weathered_1714_leaf0.vmat"
+}, {
+from = "oak_mature_weathered_1714_leaf1.vmat"
+to = "models/tree_lab/oak_mature_weathered_1714/oak_mature_weathered_1714_leaf1.vmat"
+}, {
+from = "oak_mature_weathered_1714_leaf2.vmat"
+to = "models/tree_lab/oak_mature_weathered_1714/oak_mature_weathered_1714_leaf2.vmat"
+} ]
+use_global_default = false
+} ]
+} ]
+}
+}

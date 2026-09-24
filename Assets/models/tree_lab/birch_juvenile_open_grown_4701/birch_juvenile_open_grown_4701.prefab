@@ -1,0 +1,236 @@
+{
+  "RootObject": {
+    "__guid": "68c66fe9-0d0d-5c04-a818-7f2613bf1ce7",
+    "__version": 2,
+    "Flags": 0,
+    "Name": "Birch_Juvenile_Open_Grown_4701",
+    "Position": "0,0,0",
+    "Rotation": "0,0,0,1",
+    "Scale": "1,1,1",
+    "Tags": "tree",
+    "Enabled": true,
+    "NetworkMode": 0,
+    "Components": [
+      {
+        "__type": "Sandbox.ModelRenderer",
+        "__guid": "77de4353-3ea1-59c3-a0ef-ff1398e4ed4e",
+        "__enabled": true,
+        "Flags": 0,
+        "Model": "models/tree_lab/birch_juvenile_open_grown_4701/birch_juvenile_open_grown_4701.vmdl",
+        "LodOverride": null,
+        "CreateAttachments": false
+      }
+    ],
+    "Children": [
+      {
+        "__guid": "f9c5be38-0e04-57ce-aa8c-2d00edd9271c",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Solid trunk",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "tree_trunk",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelCollider",
+            "__guid": "274d0965-cd89-5f7f-a2bc-38f319acca5f",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/birch_juvenile_open_grown_4701/birch_juvenile_open_grown_4701.vmdl",
+            "IsTrigger": false,
+            "Static": true
+          }
+        ],
+        "Children": []
+      },
+      {
+        "__guid": "e00f014e-1f1a-5eaa-8a61-12063d08d28b",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Nonblocking branch interaction",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "tree_branch",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "fdafa57d-b3aa-5251-bae4-bcb162107bae",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "0.2831124,-0.6074135,27.10675",
+            "End": "-6.058172,4.614075,47.4618",
+            "Radius": 7.390015413038446,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "0c4ed146-6dcd-506d-85de-e52ffc8e9063",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-5.446162,4.187764,45.90309",
+            "End": "-14.62162,9.774248,65.06403",
+            "Radius": 7.048182561658009,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "f4990344-c92e-5cb3-aa1b-30c2a5905dc8",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-13.77214,8.989625,63.86823",
+            "End": "-24.62241,21.5453,73.66399",
+            "Radius": 6.706348141892502,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "3e0a0b66-491d-5463-9ee6-65469c856e87",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-0.2966164,-0.2602025,50.69915",
+            "End": "0.3656834,-7.238036,67.90961",
+            "Radius": 7.273234707074861,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "9902f9a4-6036-5cdd-9dfc-7fe6119ab5c1",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "0.2238979,-6.502522,66.35275",
+            "End": "2.605648,-15.31267,82.55868",
+            "Radius": 6.97811371186368,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "e0549439-c0cc-581a-b937-e8d8c4f7f9d6",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "2.444707,-14.134,81.40739",
+            "End": "3.394339,-28.72042,88.93592",
+            "Radius": 6.682993838726425,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "1c73de5e-1722-5ead-b1ae-13869e69fd03",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-1.008754,-0.6082766,74.30206",
+            "End": "2.785329,4.801888,88.51875",
+            "Radius": 7.205356231918021,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "82393495-3976-5edf-b787-aa3da9014e31",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "2.363574,4.092639,87.00064",
+            "End": "6.207108,11.52731,100.2752",
+            "Radius": 6.937386344952158,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "adbe3391-4091-5da8-b9b0-2511168eb6a7",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "5.404915,10.54058,99.27829",
+            "End": "14.9707,19.88474,103.562",
+            "Radius": 6.669414718344018,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "a3b2c704-259f-5059-ab42-f842f90fe843",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-1.019321,0.5396172,97.88109",
+            "End": "-5.799315,-0.6368424,108.1502",
+            "Radius": 7.071020383826035,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "25e113a0-7bf5-5148-8757-686e56228a5d",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-4.986526,-0.3871428,106.6462",
+            "End": "-10.89835,-2.495609,116.1606",
+            "Radius": 6.8567874825439405,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "e066c0d4-1aa3-5158-89c7-2a1c5500eb1f",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-9.663514,-2.190748,115.1027",
+            "End": "-18.78819,-3.870723,118.9918",
+            "Radius": 6.642547791453961,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "a0d3744c-336a-5e56-98de-cefd17f41263",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-2.145224,1.586262,121.4616",
+            "End": "1.156329,0.117089,128.5289",
+            "Radius": 6.9144404373013995,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "62a1141e-beec-55ac-9a8f-f90b67b12096",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "0.3535265,0.4816447,127.0418",
+            "End": "4.412353,-1.39158,133.6085",
+            "Radius": 6.762837402321989,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "6240a1ef-7c32-5653-bc2e-a2d8f9528d54",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "3.18092,-0.8820263,132.7064",
+            "End": "9.849096,-3.462707,134.2797",
+            "Radius": 6.611230625229737,
+            "IsTrigger": true,
+            "Static": true
+          }
+        ],
+        "Children": []
+      }
+    ]
+  },
+  "ResourceVersion": 2,
+  "ShowInMenu": false,
+  "DontBreakAsTemplate": false,
+  "__references": [],
+  "__version": 2
+}

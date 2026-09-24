@@ -30508,7 +30508,7 @@ as baseline only. Live shader remains the byte-identical restored original;
 controlled comparisons remain pending the user's readiness response.
 
 
-### TERRAIN-STANDSTILL-OPT-001/v2 � interrupted-view recovery
+### TERRAIN-STANDSTILL-OPT-001/v2 � interrupted-view recovery
 
 2026-09-17 before new timed runs. v1's eye orientation was altered during the
 first diagnostic; its invalid comparison is preserved. The verified public
@@ -30731,6 +30731,59 @@ Full-resolution final v3 images inspected: close cut-face dirt/stone detail, gra
 Candidate fresh editor PID65240remains visible/alive/interactive; compile succeeded,0managedcompileerrors, no gameplayerror-consoleentries. Last_crash is unchanged2026-09-17T14:07:52.703737Z. Fresh original and candidate logs both contain stock blue_noise_256 header and six missing stock-content errors; neither fresh log contains project shader/include/parser/pipeline failures or managed exceptions. Failed pre-cold include compile is preserved separately. Editor shutdown Error dialog occurred in original-only and long-hotload sessions and is unresolved; normal editor exit is not declared fixed. Candidate startup/rendering qualification passes independently of that existing teardown limitation.
 
 Final source hashes match production-source-hashes.json; generated4096images match screened outputs byte-for-byte. Final2769x1529physicalpixels,first-personEuler0,FOV75,4,913collisionready,queues0,CSMresolution4096,distance20000,overlay_gpu0 verified. Savedworldrevision3894/pages854 preserved; checkpoints advanced only through normal saves on Play stop. Removed the four unreferenced prototype PNG sources, retaining the production grass_pattern assets and research evidence. No experimental runtime switches, diagnostic shader removals, duplicate draws or test hooks remain.
+
+### TERRAIN-FADE-EXTEND-001/v1 (2026-09-17, declared before runs)
+
+User requests less visible texture fade with little cost. Source a3dceac,
+engine26.09.15, existing visible interactive basic_example, RTX5090/9800X3D,
+seed1337/gen48, gameplay8/visual128/LOD0..5/halfextents4. Screening retains
+current player view, FOV75 and live resolution; capture exact camera and world
+properties before each phase. Baseline32..64m; candidate64..128m; fallback48..96m
+only if doubling fails the cost gate. These are shader candidate variables,
+not workload changes. No texture, geometry, shadow or fog changes.
+For each static phase warm>=30seconds then3x10second production FramePerformance
+windows12seconds apart. Record camera per sample and invalidate mismatched views.
+Screening gate: mean FPS loss<=5%, GPU increase<=0.15ms, p95/p99<=10% increase,
+queues settled; inspect same1920x1080mountain screenshot for farther retained
+detail and smooth transition. Source hash and observations accompany each phase.
+Do not claim figure-eight acceptance from idle samples. Reuse canonical
+STANDSTILL-OPT-001/v3 route unchanged and its accepted candidate baseline where
+world/environment match; otherwise capture a fresh comparable baseline before
+change. Required route gates remain<=10% FPS/tail/memory/allocation regression,
+no exceptions/collision failures, settled streaming. Cold-start parser checks
+remain required before committing. Preserve interrupted/failed trials.
+
+Screening v1 exact eye(-342284.656,-217949.953,2449.87354),Euler(4.30792284,115.51503,0). Baseline578.5meanFPS,GPU1.36ms;64..128m555.833meanFPS,GPU1.42333ms: -3.918%FPS,+0.06333GPUms. Meanp952.3633->2.46ms(+4.09%),p993.7567->3.83ms(+1.95%). Static screen gate passes. All6camera readbacks match. Screenshots inspected: left slope retains detail farther uphill; remote mountains remain averaged. No claim that all distant mountain blur disappears. Raw screening.json retains hotload memory spike; no memory acceptance based on hotload windows.
+
+### TERRAIN-FADE-EXTEND-001/v2 route comparability (before runs)
+
+Current saved world revision3984/pages868/checkpoint116 differs from prior
+STANDSTILL-OPT-001/v3 revision3894/pages854; old performance cannot be a matched
+baseline. User gameplay changes make that prior world state unavailable as the
+current production workload. Preserve all old results. Establish fresh original
+and64..128m baselines in current saved world3984/pages868, keeping every v3 route
+input unchanged: basic_example,seed1337/gen48,one player,XY(-1.6258175,1.2225341),
+Z340,speed2500,distance50000,one loop,clearance393.7008,automatic drain and10s
+stationary,eyeEuler0,FOV75,physical2769x1529. Each phase starts a fresh visible
+editor; queues0/collision4913ready before run. Same unchanged<=10%route gates;
+static v1<=5%FPS and<=0.15GPUms gates passed independently. Save/checkpoint
+increments without world edits are metadata. No source changes besides fade.
+v2 preflight: current process DPI1 means requested1846x1019 produced1846x1019 physical pixels. No route started. Set2769x1529 and verify. Original shutdown returned Error window after Play stopped/saved; exact original PID65240 terminated, fresh visible PID47000 started. This repeats the pre-existing teardown limitation; no fix claimed.
+v2 baseline run02ad9b758b074744a1d4d70157b03716 completed at2769x1529,121.95029s,startXYexact:554.0798FPS,p953.4621ms,p995.9014ms,GPU1.3650976ms,max214.1785ms. Raw baseline.json.gz preserves full runtime/streaming/memory metrics. Peak process4923543552bytes,GPU1535100481bytes;LODsettled1.6/4.6s. No result omitted. Candidate run follows from a fresh process.
+v2 candidate cold startup: visiblePID45612,engine26.09.15,compileSucceeded=true,world3984/pages868/checkpoint118,queues0/collision4913ready,2769x1529. Sentry last_crash remains2026-09-17T14:07:52.703737Z. Both fresh logs preserve the same seven stock resource errors; no project shader/parser/pipeline or managed exception failure. Baseline process47000 again stopped at Error window on normal close after save, then was terminated. Candidate runtime remains visible and interactive.
+
+v2 candidate b2094f5a2c794f35b66574c34466d068 is INVALID as a matched
+performance comparison: return window reports Moving; arrival timer starts
+when movement stops,collision4661ready/249pending; after-run main camera is
+(-3538.19824,5615.2832,728.714478),Euler(18.7214661,-70.6674728,~0), rather
+than fixed origin/Euler0. Recorded route509.67404FPS,p953.6836ms,p996.1172ms,
+max239.1377ms,GPU1.4451892ms;stationary451.2378FPS,p953.5662ms,p995.2708ms.
+Raw candidate.json.gz and comparison.json preserve all outcomes. No frame,
+streaming or memory acceptance, and no shader-regression attribution from this
+changed view. Fixed-view screening and cold-start checks passed independently.
+64..128m remains a live preview; commit/push gated on comparable route. Asked
+for an uninterrupted3minute control interval; input remains available.
+Final preview check: current live third-person screenshot shows near grass, cut-face detail and character shadow intact; distant mountain surfaces still flatten beyond128m. User has resumed movement and changed camera mode, so do not return to the stale saved location or start another controlled run without coordination. Candidate remains uncommitted pending comparable figure-eight validation. No source other than the fade thresholds and accompanying documentation/evidence changed.
 
 ## GRASS-001/v1 — static grass prototype (defined before runs)
 
@@ -31672,6 +31725,831 @@ collision were fully settled; no authored scene was saved. The earlier Q-menu
 typing/clicking checks remain interrupted and its UI file remains uncommitted.
 This acceptance covers the grass range backend, wind and final patch color.
 
+
+## WATER-SHADING-001/v1 — downstream motion and visibility (defined 2026-09-18)
+
+Replace opaque water checkers with flat, translucent, depth-tinted water and
+downstream ripple normals. Use the latest accepted, source-matching canonical run as baseline, or capture
+a fresh unchanged-source baseline before applying the four water files; the grass-color task is using the shared editor initially,
+so source application and native water checks wait for that task to release it.
+Its final source is held constant across the water comparison. Preserve unrelated
+terrain, grass, UI and saved-world changes.
+
+Reuse the canonical GRASS-WIND-001/v1 physical workload unchanged: basic_example,
+one visible interactive first-person client, seed1337/generator48, saved
+worldf5ce10f36d75428eb3dd63dee14891c6/revision3991/pages873,32cells/16units,
+gameplay8/visual128,LOD0..5,extents4/4,grass64m,startXY(-1.6258175,1.2225341),
+Z340,Euler0,FOV75,physical2769x1529,speed2500,distance50000,one loop,
+terrain clearance393.7008,fully settled,automatic drain plus10s standing.
+Verify actual physical resolution in profiler readback and each result. No
+screenshots or native queries during timing; retain player input/interruptibility.
+Capture source hashes, engine/build, world revision and environment before each
+run; a world or unrelated source change makes a pair noncomparable.
+
+Fixed gates: <=10% FPS loss, p95/p99 increase, peak process/GPU memory increase,
+and allocated bytes/frame increase in both windows; standing average GPU increase
+<=0.3ms. Require zero exceptions, collision failures, grass overflow and settled
+streaming. Existing collision4913ready,0pending/failures at start and finish.
+Preserve every run/failure. Do not infer FPS improvements from changed CPU tails.
+
+Candidate defaults: WaterVisibilityMeters3, WaterTint(0.12,0.4,0.34,1),
+WaterFlowSpeed32, WaterRippleStrength0.16. Observe water bytes, generated chunks,
+submitted/uploaded vertices and flow validity via existing water diagnostics.
+No additional terrain generation calls in drawing; static geometry counts and
+coverage must match the control at the same settled view. Flow generation adds
+at most8712bytes per retained river cell chunk plus one8712-byte GPU image per
+nonempty retained river draw (excluding driver overhead). Dry/ocean-only owners
+allocate neither. No per-frame uploads or geometry generation while settled.
+
+Visuals use native camera images1280x720: bank(-1800,-1700,800),Euler(35,47,0),
+FOV60; wide(-1800,-1700,8000),Euler(65,47,0),FOV60. Record and reuse additional
+fixed river and ocean close cameras before their first capture if those views
+do not expose motion/depth adequately. A timestamped sequence spanning at least
+one6s phase cycle must show continuous downstream travel, no phase reset, fixed
+shoreline, and no exposed chunk cracks/checker pattern. Compare canonical sampled
+directions with visible travel at the same reach. Compare visibility12m/default
+tint with visibility0.25m/tint(0.25,0.29,0.12,1) at the exact same bank camera;
+the former must retain substantially more bed detail. Check a confluence, a
+chunk/LOD boundary, open ocean, and camera below the surface. Zero speed must
+freeze ripple shading; zero ripple strength must leave a flat normal.
+
+Explicit shader compile, code diagnostics, and a clean visible editor restart
+with unchanged post-shutdown Sentry marker and no new water/HLSL/parser/pipeline
+errors are required. Restore pre-water player transform, normal camera, original
+FOV and free viewport sizing after validation. Document all limits, including
+local-only appearance controls and untested multiplayer/biome-specific appearance.
+
+Baseline selection: the final accepted grass-color run e0034107aafc4d3ebd1411d4093dfcc4
+(GRASS-COLOR-001/v1-cached) is the pre-water control, provided source/world readback
+still matches at application. Raw data: ValidationEvidence/GrassColor/optimized.json.gz;
+source and environment evidence: optimized-preflight.json, optimized-final.json
+and optimized-cold.json. Moving495.1543FPS,p953.6453ms,p996.3055ms,GPU1.6719146ms;
+standing451.71448FPS,p952.5929ms,p994.1921ms,GPU1.9100541ms,2769x1529 in both
+windows, unchanged world3991/pages873/checkpoint152. The water task made no live
+source/editor changes during this run.
+
+Water compilation: code compilers succeeded (one existing SB2000 metadata warning);
+voxel_water explicitly compiled two combos with only profile-implicitly-upgraded
+warning. The first apply utility stopped on a text-encoding error before touching
+source; the corrected application succeeded. The unchanged control bank capture
+shows the old opaque checker; control chunk LOD0(-3,-2,-1) has18vertices,
+digest8CB83D94B137F6FD and0invalid/degenerate/reversed triangles. Current column
+(-1033.237,-882.579) has bed-50.981613 and downstream(0.651330173,-0.758794427).
+After Play stopped and quit was requested, editor PID9656 completed Source2
+shutdown but retained an Error window following ResourceLibrary.GetAll in
+EditorMainWindow.GetUnsavedResources. Preserved compile-and-shutdown.log.gz;
+closed the residual process and launched visible cold PID92260. Sentry before
+launch remains2026-09-18T14:50:56.373477Z. This shutdown failure is not a shader
+compile failure; cold/runtime qualification remains pending.
+
+
+### 2026-09-18 — Water visual revision and combined scope
+
+The first translucent preview was rejected by the user as artificial. The
+native default-bank and clear-flat-bank images retain that failure: coarse
+surface shading, weak reflections and prominent exposed bed patches. It is
+not an accepted visual result and no timed candidate run was made.
+
+The revised candidate uses filtered capillary ripple normals, guarded scene
+color refraction and the installed bounded screen-space reflection trace
+(24 traversal steps) with sky fallback. The initial revised screenshot has a
+missing framebuffer texture checker: the custom draw must also set the verified
+SceneObject flag WantsFrameBufferCopy. Preserve reflection-bank-v2.png as a
+failed binding attempt. Shader compilation succeeded; this is a runtime binding
+failure, not an accepted screenshot.
+
+The requested grass-height work now joins the source candidate. The original
+isolated water comparison remains not run. Qualification compares the combined
+water+height source to accepted e0034107aafc4d3ebd1411d4093dfcc4, using exactly
+the same v1 workload, water property values, performance gates and hardware.
+Only the intended water and grass-height files may differ; terrain/other source
+and saved world must still match. No measured delta is attributable to either
+feature alone. This changes candidate scope, not workload or acceptance gates.
+
+
+### 2026-09-18 — GRASS-HEIGHT-001/v1 definition
+
+The user requested slight taller, shorter and unchanged-height variation while
+retaining the long meadow. The existing root generator already randomizes tuft
+length from 22 to 38 units. This candidate narrows local variation to 25–35 units
+and reuses the existing smooth color patch for a 1.15–0.85 height multiplier.
+Green patches tend taller, warm patches shorter, and middle tones keep the same
+30-unit mean. No second noise sample, root channel, dispatch or draw is added.
+The existing per-leaf shape variation remains. Maximum tuft length is 40.25
+units and maximum leaf length 42.2625 units before wind lowers the tip. Culling
+bounds include this maximum, lean, wind and leaf half-width.
+
+Reuse the exact canonical color/water workload: basic_example, one player,
+seed 1337/generator 48, saved world revision 3991/pages 873, cells 32x16,
+gameplay radius 8, visual radius 128, LOD 0–5, extents 4/4, grass 64 m,
+FOV 75, physical 2769x1529, start (-1.6258175,1.2225341,340), angles 0,
+speed 2500, distance 50000, one loop, clearance 393.7008, full visual,
+transition, placement and collision settlement, automatic drain and 10 seconds
+standing. Input stays enabled and the client visible. No captures, native
+queries or workspace writes during timed windows. The water and height tasks coordinate one combined-source comparison against
+accepted pre-water/pre-height run e0034107aafc4d3ebd1411d4093dfcc4 at commit
+8970d34 (GrassColor/optimized.json.gz and optimized-source.json). Record final
+water and grass source hashes and settings before timing. The source candidate
+contains both requested changes; measured deltas cannot be attributed to either
+feature alone. The workload and gates are unchanged. An isolated water or height
+comparison is not claimed. The water task owns the shared ledger append and run.
+
+Unchanged gates: at most 10% FPS loss; at most 10% increase in p95/p99 frame
+time, peak process/GPU memory and allocation/frame; at most +0.3 ms standing
+GPU time; zero timed exceptions, collision failures and grass overflows;
+fully settled streaming. Shader compile and fresh visible editor startup are
+required before qualification. Preserve every run and failure.
+
+Visuals: fixed meadow (0,-250,310), angles (10,0,0); close
+(0,-250,267.93129), angles (25,0,0); skyline (-775,3919,735), angles (-4,0,0),
+all at FOV 75 and 1440x900. Inspect soft changes in canopy height, mixed leaf
+tips within each patch, intact long coverage, unchanged palette, attached roots
+and no clipped taller tips. Still images qualify appearance, not animation.
+The unchanged wind path retains its earlier motion evidence. Restore normal
+first-person view, free viewport and the saved player location afterward.
+Do not save an authored scene. The water task authorizes this grass compute edit before its revised preview
+and final cold start. No further production writes are allowed during timing.
+
+Additional fixed water camera before first capture: river-close position
+(-1150,-950,90), Euler(10,-49.36,0), FOV60, native1280x720. This looks
+along the sampled downstream direction near(-1033.237,-882.579).
+
+Water revision evidence: automatic framebuffer-copy flags produced a bound but
+black input in this custom draw path (v3/v4). The final path captures the actual
+opaque scene once per rendering view with Graphics.GrabFrameTexture and shares
+it across frustum-culled chunks. The renderer is now one translucent scene
+object; hulls, publication and per-chunk resources are unchanged. Changing the
+old ChunkDraw base class during hotload reported two invalid casts in engine
+handle/shadow collections; Play restarted, and cold validation is still required.
+V5 confirms scene color/bed transmission; its regular wave bands were revised
+to warped multi-scale ripple gradients in v6. Final reflection samples mip1 of
+a bounded two-mip scene copy for softer highlights.
+
+Native set_component by component GUID resolved the authored copy while the
+game-object/type route resolves the runtime object. Earlier clear/flat v1-v3
+captures lacked runtime readback and do not qualify those settings. Defaults
+were restored on the authored component without saving a scene. All remaining
+parameter checks use game-object/type plus runtime readback.
+
+Final source compile: water succeeded with the standard profile-upgrade warning;
+grass compute succeeded without warnings (final-*-compile.json). Quit again
+completed engine shutdown but retained ResourceLibrary.GetAll/unsaved-resource
+Error window; PID92260 was closed after shutdown markers. Fresh visible
+PID87372 started12:52:24, engine26.09.15, unchanged Sentry marker. An immediate
+column request arrived before terrain load and was rejected; it made no change.
+A camera setter during startup also returned a null camera error; visual
+checks wait for scene readiness and use repaired native ejected view.
+
+Combined preflight: final source differs from before-water only in four water
+files and grass compute. PID87372, engine26.09.15, Sentry unchanged. Runtime
+defaults3m/teal/32/0.16; frame profiler2769x1529; first-person camera at
+(-1.6258,1.2225,404), identity rotation, playerZ340, input enabled. Fully
+settled visual/transition/placement; collision4913ready/0pending/0failures.
+World remains3991/pages873; checkpoint156 reflects intervening lifecycle saves
+without terrain mutations (savedRevision3991, committed/rejected edits0).
+Control water owner retains18vertices/digest8CB83D94B137F6FD; flow1089samples,
+716nonzero,0invalid. Grass peak9092/overflow0 before timing.
+
+### 2026-09-18 — combined candidate first run: FAIL
+
+Run9bfe340e3a304f4da713fde305a1b357 completed the unchanged route in121.954124s;
+both windows2769x1529, source8970d34-water3420e553-height34fde4e. Moving
+473.37735FPS(-4.398%),p953.8348ms(+5.198%),p996.4708ms(+2.622%),GPU1.7477493ms
+(+0.0758347ms); peak process5307465728B(+7.799%),GPU1581034713B(+2.785%),
+allocation64519.242B/frame(+8.348%). All moving gates pass. Standing
+408.6179FPS(-9.541%),p953.1352ms(+20.915%),p995.2171ms(+24.451%),
+GPU2.0538855ms(+0.1438314ms),process5341335552B(+10.526%),GPU1580861393B
+(+2.788%),allocation31917.994B/frame(+7.425%). Standing p95/p99 and process
+peak FAIL; GPU budget passes. Both windows0exceptions. No acceptance/commit.
+Raw result/comparison and combined-final snapshot preserve this failed run.
+
+Profiler evidence: standing Render average rose1.7967654to1.98255ms and p99
+2.005to2.7576ms; Editor average0.1179625to0.14460249ms. Preflight process
+peak4461.4MiB versus control4307.6MiB follows many native1280x720 visual
+captures in this candidate process. A fresh-process comparison without
+pre-timing camera captures will isolate that environmental difference; the
+source/workload/gates remain unchanged. Capture retention is a hypothesis,
+not an established explanation for either memory or frame-tail failures.
+
+Additional fixed visual checks before capture: centered overhead river view
+(-1033,-883,6000),Euler(90,0,0),FOV60; underside(-1033,-883,-20),
+Euler(-20,-49.36,0),FOV60. Open ocean uses canonical sampled column(0,65536),
+player(0,65536,80), camera(0,65536,160),Euler(8,0,0),FOV60; wait for normal
+streaming settlement. All images1280x720, default water appearance. These
+visual excursions happen after first timing and before the next cold startup.
+
+Final-ocean native capture reveals broad blocky reflection transitions with
+the24-step hierarchical trace; this is a visual failure requiring a correction
+before acceptance. The next candidate raises the traversal bound to the
+installed engine helper's default64 steps. It retains the same opacity,
+ripples, flow, scene-copy path and fixed workload/gates. Since this source
+change accompanies the no-pre-timing-capture procedure, the next run will not
+isolate capture retention as the only changed condition. Both differences
+will remain explicit; previous performance/visual failures remain preserved.
+
+SSR64 compile succeeded in PID91156, but that fresh process contained the
+explicit shader compiler invocation after launch. Fully settled preflight
+process peak4977.2MiB exceeded the earlier capture-process peak despite zero
+captures, contradicting capture retention as a sufficient explanation. No
+timed run was triggered. Restart again after successful compilation, matching
+the required compile-then-cold procedure and accepted control (no compilation
+or screenshots between final startup and timing). Preserve ssr64-readiness
+and ssr64-compile-startup.log.gz; no claim that this establishes memory cause.
+
+
+### GRASS-HEIGHT-001/v1 — source-isolated qualification
+
+The combined run 9bfe340e3a304f4da713fde305a1b357 remains an overall FAIL.
+A subsequent clean combined attempt was refused before timing because the
+player was moving and collision was not settled; it produced no timed result.
+The water task now includes a user-requested junction seam correction. To
+qualify the completed height change independently, temporarily checkpoint all
+four water files byte-for-byte and restore their accepted pre-water versions
+from 8970d34. Retain all failed/refused history and checkpoint/source hashes.
+The height compute source stays at SHA256
+34fde4e624b41e714e8405046e2d74bc015aa042459a2b8d9520a095eb0bf363.
+
+Compare the height-only candidate with accepted color run
+e0034107aafc4d3ebd1411d4093dfcc4 using the exact existing v1 workload, world,
+physical 2769x1529 resolution, starting pose, range, timing windows and gates.
+This changes candidate source scope, not workload or thresholds. Compile
+before a fresh visible editor startup; no screenshots or shader compilation
+after that startup before timing, matching the accepted baseline procedure.
+No workspace writes, captures or native diagnostic queries during timing.
+Keep input enabled so the user can interrupt. Set the starting pose first,
+then verify readiness on a later frame before invoking the real figure-eight.
+If the saved world revision has changed, do not claim an e0034107 comparison.
+
+The existing inspected cold-start grass screenshots remain appearance evidence
+for the identical grass source. After qualification, restore the exact saved
+water checkpoint bytes, preserve the user's latest saved position/view, and
+release editor ownership to the water task. Do not apply its newer staging
+draft or commit its files. The water task owns the shared ledger append.
+
+## WATER-JOIN-001/v1 — river junction continuity (defined 2026-09-18)
+
+The user accepts the current water appearance but reports a visible seam where
+rivers meet. This additional visual scenario preserves WATER-SHADING-001/v1 and
+its failed history. Performance uses the identical fixed route and gates against
+the now accepted height-only run2d29e7277e1b40ab86bc4ff2778154f0; grass source remains
+unchanged. No workload or threshold changes.
+
+World basic_example, seed1337/generator48/river14, saved revision3991/pages873,
+engine26.09.15, same local hardware. Record source hashes and native evidence.
+Use the saved user junction camera(-190.860229,-3003.90479,65.3757172),
+Euler(21.0905724,-5.48897362,0), horizontalFOV75,1280x720 native capture.
+Default visibility3m,tint(0.12,0.4,0.34),flow32in/s,ripple0.16. Compare this
+view and the existing bank(-1800,-1700,800),Euler(35,47,0),FOV60.
+Control captures use ripple0 (isolates moving normals) and speed0 (holds flow
+advection). Restore defaults after each control; read runtime object/type values.
+
+Pass: no hard shading line attributable to the branch switch in matched junction
+views; visible continuous downstream motion at the join without geometry gaps,
+double surfaces or a phase-reset flash; adjacent bank retains the accepted look.
+Geometry digest/invalid triangles and canonical carved heights must be unchanged.
+Native visual evidence is mandatory; a compile or a numeric flow bound alone is
+insufficient. Preserve rejected candidates and unresolved artifacts. Final source
+requires compile, cold-start crash/log checks, and unchanged figure-eight gates.
+
+
+### 2026-09-18 — GRASS-HEIGHT-001/v1 isolated PASS
+
+One source-isolated run, `2d29e7277e1b40ab86bc4ff2778154f0`, task
+`GRASS-HEIGHT-001/v1-isolated`, revision `8970d34-height-only`, completed the
+unchanged canonical route in 121.94523 seconds. The four water files matched
+their accepted original hashes; the sole grass source delta from accepted
+color baseline `e0034107aafc4d3ebd1411d4093dfcc4` was the height compute shader.
+The unrelated terrain shader stayed at SHA256
+73e0a4eadb64cadc6c48cc8db176ea8daaea3bc72893c594c5d8dec8c4004edd.
+
+Both shaders compiled before visible cold startup. PID 89600 started at
+13:19:23 on engine 26.09.15; compile status succeeded with zero errors. Sentry
+remained 2026-09-18T14:50:56.373477Z. Eight stock resource warnings/errors are
+preserved in the fresh log; no grass parser/pipeline/dispatch failure occurred.
+No screenshot or shader compile happened after startup before timing. There
+were no workspace writes, native diagnostics or captures during the run.
+
+Later-frame preflight confirmed physical 2769x1529, FOV 75, identity rotation,
+normal first-person camera, input/look enabled, exact start
+(-1.6258175,1.2225341,340), fully settled visual/transition/placement work and
+4913 ready collision regions with 0 pending/failures. Saved world remained
+3991/pages 873 (checkpoint 159, lifecycle save only). All remaining v1 values
+were unchanged: seed 1337/gen 48, cells 32x16, gameplay 8, visual 128, LOD 0–5,
+extents 4/4, grass 64 m, speed 2500, distance 50000, one loop, clearance
+393.7008, automatic drain plus 10 seconds standing. Both profiler windows
+record 2769x1529. The recorded single-player RTX 5090 environment is unchanged.
+
+| Metric | Moving | Standing |
+| --- | ---: | ---: |
+| FPS | 475.64355 (-3.9403%) | 457.0723 (+1.1861%) |
+| p95 frame | 3.772 ms (+3.4757%) | 2.7128 ms (+4.6242%) |
+| p99 frame | 6.1758 ms (-2.0569%) | 4.36 ms (+4.0052%) |
+| GPU average | 1.7375209 ms (+0.0656063 ms) | 1.7803125 ms (-0.1297416 ms) |
+| Process peak | 4916719616 B (-0.1375%) | 4856786944 B (+0.4994%) |
+| GPU memory peak | 1536034369 B (-0.1409%) | 1586366017 B (+3.1454%) |
+| Managed allocation/frame | 63286.258 B (+6.2776%) | 29579.559 B (-0.4457%) |
+| Timed exceptions | 0 | 0 |
+
+Final diagnostics: visual/transition pending 0, placement pending false;
+collision 4913 ready, 0 pending, 0 failures; grass current 6006, peak candidates
+8075, overflow views 0, capacity 65536, root storage 2097152 bytes. Camera
+rotation remained identity and saved terrain revision stayed 3991 with no
+queued edits/failures. All fixed frame, tail, memory/allocation, standing GPU
+and correctness gates PASS. This is one fixed workload, not a speedup claim
+or qualification of other hardware/multiplayer or the separate water changes.
+
+[Raw result](ValidationEvidence/GrassHeight/isolated.json.gz),
+[comparison](ValidationEvidence/GrassHeight/isolated-comparison.json),
+[cold startup](ValidationEvidence/GrassHeight/isolated-cold.json),
+[preflight](ValidationEvidence/GrassHeight/isolated-preflight.json),
+[final diagnostics](ValidationEvidence/GrassHeight/isolated-final.json),
+[source identity](ValidationEvidence/GrassHeight/isolated-source.json) and
+[final log](ValidationEvidence/GrassHeight/isolated-final.log.gz) retain evidence.
+The existing three inspected final grass views use the identical compute hash
+34fde4e624b41e714e8405046e2d74bc015aa042459a2b8d9520a095eb0bf363 and show gentle
+height changes with full long coverage, attached roots and intact tips.
+
+After saving results/diagnostics, Play stopped and all four exact water
+checkpoint files were restored with SHA256 verification. No other water draft
+was applied. Editor ownership returned immediately to the water task, which
+explicitly requested ownership of its next restart and user-pose restoration
+from before-height-isolation.json. See
+[restoration record](ValidationEvidence/GrassHeight/water-restored.json).
+The earlier combined failure remains FAIL and is not explained away by this
+isolated success. The water task continues its own qualification separately.
+
+### 2026-09-18 — WATER-JOIN-001/v1 blended-flow visual result
+
+Cold control PID48592 started13:28:10 with SSR64 and the exact user-accepted
+water checkpoint. Water shader compiled successfully before launch; compiler
+status was successful with0errors and Sentry stayed2026-09-18T14:50:56.373477Z.
+The first junction capture placed the detached camera inside the player model;
+retain junction-before.png as occluded, not acceptance evidence. Player moved
+200units west/400south to(-390.860229,-3403.90479,100), then grounded normally;
+the recorded camera position/angles and fieldOfView argument75 remained fixed.
+The scenario's 'horizontal' label is not established for the detached camera;
+the actual set_ejected_camera argument is75, consistently for these captures.
+
+junction-moving-before.png reproduces a sharp, winding ribbon through the
+middle of the water. junction-flat-before.png with ripple strength0 removes
+that ribbon. Source shows nearest-normalized-distance reach selection switching
+the direction abruptly. Bilinear interpolation of those samples stretched the
+advected ripple field through that switch. Both rivers already share SeaLevel0;
+no height or mesh gap was found for this reproduction.
+
+The candidate makes only water generation request a compact weighted blend of
+all wet segment directions during its existing river traversal. Default queries,
+terrain heights, wetness, coverage, geometry and save identity remain unchanged.
+Code compiled with0errors. Play restarted to rebuild all generated flow textures.
+junction-blended.png and32native frames spanning7.75s show the ribbon removed;
+five retained frames span more than one complete6second flow cycle. Inspected
+frames show continuous surface detail with motion and no reset seam. This is
+visual evidence for this junction, not a fluid-conservation measurement.
+
+The first bank-after capture was interrupted by user camera navigation; later
+get_ejected_camera read(19800.4004,9277.00488,1034.20569),Euler(37.2001038,99.80056,0).
+Retain junction-bank-after.png as an unmatched view. The camera was reset and
+junction-bank-matched.png inspected against the fixed earlier bank view; nearby
+surface appearance is retained. The user returned the viewport to normal Game
+immediately after that capture, so further automated camera work was deferred.
+The broader blue/clear variation in the bank view also exists with speed0 and
+is not attributed to the removed moving-flow streak.
+
+Control ownerLOD0(-3,-2,-1):18vertices,digest8CB83D94B137F6FD,0invalid vertices,
+0degenerate/reversed triangles,1089flow samples,716nonzero,0invalid flows.
+The first read at the other player location was not resident and returned readyFalse;
+the later canonical-start read was readyTrue. inspect_terrain_column at the fixed
+reach(-1033.237,-882.579) still returns carved height-50.981613,natural479.721,
+water0,direction(0.651330173,-0.758794427),worldrevision3991.
+
+Evidence: [control snapshot](ValidationEvidence/WaterShading/junction-control.json),
+[candidate snapshot](ValidationEvidence/WaterShading/junction-result.json),
+[before](ValidationEvidence/WaterShading/junction-moving-before.png),
+[after](ValidationEvidence/WaterShading/junction-blended.png),
+[motion](ValidationEvidence/WaterShading/junction-blended-motion.gif).
+Performance/cold-start qualification of the final blended source remains pending.
+
+## WATER-PERF-001/v1 — preserve accepted water appearance (defined 2026-09-18)
+
+The user explicitly accepted the blended-junction water appearance and requested
+performance improvement without losing visuals/features. Preserve downstream
+flow, confluence blending, all appearance controls, refraction, reflections,
+shoreline fade, flat surface and current coverage/distances. No quality setting,
+trace-step reduction or workload reduction is authorized by this optimization.
+
+Use the exact WATER-SHADING-001/v1 canonical figure-eight workload, camera,
+2769x1529 physical resolution, world3991/pages873, seed1337/gen48/river14,
+32x16cells, gameplay8, visual128, LOD0..5, extents4/4,grass64m, normal first-person
+FOV75/identity rotation, startXY(-1.6258175,1.2225341),Z340,speed2500,distance50000,
+one loop,clearance393.7008,automatic drain plus10seconds standing. Record source
+hashes and complete raw results. Keep grass at accepted8389f299/height34fde4e.
+Fresh visible interactive editor per timed source; compile before cold startup,
+no screenshots/recompiles after startup before timing. Set pose, then confirm
+readiness on a later frame. No native queries/captures or workspace writes during
+timing. User input remains enabled. If input interrupts, preserve the result and
+report it as interrupted rather than changing the workload or disabling controls.
+
+First measure the accepted water source plus a persistent WaterRender profiler
+scope, exposed through the existing canonical profiler snapshot. Instrumentation
+must remain identical for optimization comparisons. This scope measures managed
+water draw submission including the shared scene grab; GPU frame timing remains
+whole-scene, and empty engine GPU scope output is unavailable, not zero water cost.
+
+Optimize only measured bottlenecks. Acceptance requires a measured reduction in
+the targeted water cost, with a10% target for its CPU draw-submission scope or
+whole-scene GPU time. Report smaller gains accurately, not as meeting that target.
+Both whole-route and standing windows must retain all existing<=10% FPS/tail,
+memory and allocation gates,standingGPUdelta<=0.3ms,0exceptions/collision failures,
+settled4913collisionregions and0grassoverflows. Compare against both the current
+water control and accepted height-only2d29e727; preserve earlier failures.
+Native visual comparisons must retain accepted features and junction continuity.
+
+### WATER-PERF-001/v1 control and first candidate preparation � 2026-09-18
+
+Accepted blended-water control a8e52b77a51b4d3ebd0f8f727e030e17 used the exact
+recorded workload on fresh visible editor PID78540 (13:39:32 local startup),
+with WaterRender instrumentation. Timing began about13:41:55 and completed
+about13:44:15. No captures, shader recompiles, workspace writes or native
+queries occurred during timing; no captures/recompiles followed cold startup.
+Physical resolution2769x1529; revision3991/pages873; all readiness checks passed.
+
+Moving:471.85953FPS,p95 3.325ms,p99 4.881ms,GPU1.8237325ms,
+processpeak4797370368B,GPUpeak1582899637B,allocation61564.332B/frame.
+Standing:410.05075FPS,p95 2.9678ms,p99 4.6128ms,GPU2.089983ms,
+processpeak4773396480B,GPUpeak1631472609B,allocation30299.68B/frame.
+No exceptions; final collision4913/0/0 and water settled. Compared with accepted
+height-only2d29e727, moving gates pass; standingFPS -10.28755% and GPUdelta
++0.3096705ms narrowly FAIL the existing10% and0.3ms gates. Other gates pass.
+This control is the user-accepted visual source, not performance acceptance.
+Trailing200-frame WaterRender scope: moving mean0.114633ms,p95 0.1471,p99 0.2729;
+standing mean0.1649015ms,p95 0.2521,p99 0.2744. These are terminal profiler
+windows, not whole-route water averages. Raw and comparisons: accepted-water.json.gz,
+accepted-water-vs-height.json, accepted-water-cold.json and accepted-water-final.json
+under ValidationEvidence/WaterShading.
+
+A cached CommandList experiment did not compile: Graphics.AttributeScope is
+inaccessible and CommandList has no public Execute/ExecuteOnRenderThread.
+No runtime result exists for that experiment. Renderer restored byte-for-byte
+from the control (SHA256237f4056554e0db18d45d5bd46a39db28c53133565968f4fcbf0626512b20f2a).
+Compiler errors preserved in cached-command-inaccessible.json and accepted-water-editor.log.
+
+The first executable candidate skips ripple bands only at zero band weight,
+all ripple evaluation only at zero detail/strength, and transmitted-scene work
+only at exact absorption1. Derivative footprints remain unconditional. Trace
+steps, scales, weights, blend phases, scene capture and all feature settings
+are unchanged. Shader compiled before cold timing startup. At fixed flow0,
+matched bank/close1280x720 captures retain appearance. Mean absolute8-bit RGB
+ROI differences: bank(0.127924,0.147672,0.130435), close(0.000954,0.007452,0.018937).
+These observations do not establish pixel identity or a performance gain.
+Evidence: perf-control-bank/close.png,perf-skip-bank/close.png and
+perf-skip-pixel-comparison.json. Candidate timing remains pending.
+
+### WATER-PERF-001/v1 first shader candidate � 2026-09-18
+
+Run9c2fe96b3de547f6aeca1a0865a28ea0,taskWATER-PERF-001/v1-skip,
+revision8389f299-water-zero-contribution,visible PID58180 started13:57:51 local.
+Shader SHA256c05a69e8fcffd2873beffa10db387b0f2e16b2d6097e93c8b28515f54ade8f77;
+all8source hashes/copies retained in .codex/water-shading/performance-skip-frozen,
+and all111source hashes in skip-cold.json. Exact canonical preflight passed,
+including later-frame collision4913/0/0,zero motion and camera/resolution.
+Timing started13:59:20; route121.94595s,one loop; no editor calls or workspace
+writes during timing. The other task confirmed it also remained idle.
+
+Moving:459.1997FPS,p95 3.5131ms,p99 5.2153ms,GPU1.8407032ms,
+processpeak4924817408B,GPUpeak1584619957B,allocation63639.184B/frame,0exceptions.
+Compared with control:FPS -2.68%,GPU +0.93%; no measured improvement. All moving
+gates passed against control and height-only. Standing:408.91562FPS,p95 3.5371ms,
+p99 5.4037ms,GPU2.0977943ms,processpeak4893302784B,GPUpeak1679363041B,
+allocation32244.275B/frame,0exceptions. Numerical gates FAIL standing tails
+against control and FPS/tails/GPU against height-only.
+
+Standing comparison is also NOT COMPARABLE: log records movement-resumed at
+14:01:29; final runtime readback shows player(42.306324,-1341.50635,8.60602283),
+camera(42.306324,-1341.50635,72.6060257),Euler(13.8098202,-141.104782,0),
+instead of canonical start/identity. Input remained enabled. The terminal
+WaterRender scope0.1073265ms cannot establish a gain with this changed view.
+Final snapshot had33pending meshes and changed2664watervertices; do not claim
+settled correctness. Raw result says completed; this does not override the
+observed camera/movement mismatch. Candidate NOT ACCEPTED; failed/interrupted
+history retained. Editor/source slot released to grass immediately after saving.
+
+Evidence: skip.json.gz,skip-summary.json,skip-preflight.json,skip-cold.json,
+skip-final.json,skip-vs-control.json,skip-vs-height.json under
+ValidationEvidence/WaterShading. No performance improvement is claimed.
+
+### GRASS-COVERAGE-001/v1 — visible distance and saved preference
+
+Defined before runtime checks. Extend the local range default from 64 to 96 m
+and maximum from 128 to 256 m. The player-facing Q menu applies and saves the
+value with Game.Cookies; VoxelManager loads it once when the playable scene
+loads. Inspector/native property assignments remain session overrides and do
+not overwrite the player preference. Zero disables grass. Values must be
+finite and clamped to the supported range. No Sync/RPC or terrain rebuild.
+
+Correct the distant size fade: the previous density of 0.08 permitted only
+0..0.8 scale (mean 0.4 for uncapped, uniformly sampled eligible triangles),
+even before the range-end fade. Normalize its fade width smoothly from 1 at
+12 m to 0.08 at 24 m. Surviving distant plants then retain full meadow height
+except the last 10% of density ranks and the final range fade. Population
+thresholds, sample cap, geometry, root capacity, culling envelope, wind and
+color stay unchanged. Larger visible plants can increase pixel cost and
+must be measured, not inferred free from unchanged root count.
+
+Use the canonical basic_example figure-eight: one player, seed 1337/gen 48,
+saved world 3991/pages 873, cells 32x16, gameplay 8, visual 128, LOD 0–5,
+extents 4/4, FOV 75, physical 2769x1529, start
+(-1.6258175,1.2225341,340), identity eyes/camera, speed 2500, distance 50000,
+one loop, clearance 393.7008. Settle all visual/transition/placement and
+collision work before timing. Automatic drain and 10 seconds standing.
+Visible client with input enabled; no captures, native queries or workspace
+writes during timing. Compile shaders before a cold editor start; no captures
+or shader compiles after startup before timing.
+
+First qualify the source change at unchanged 64 m against the latest accepted
+comparable water result with grass frozen at 8389f29. If no such accepted water
+result exists, record and use a contemporaneous source-isolated control with
+the exact same water bytes. Do not compare differing water implementations as
+a grass-only result. Then qualify the requested 96 m default with the same
+control and all other parameters unchanged; this range variant is predefined.
+Maximum 256 m receives visual/capacity checks, not a blanket performance claim.
+
+Fixed gates: <=10% FPS loss; <=10% increase in p95/p99, peak process/GPU memory
+and managed allocations/frame; standing GPU <=+0.3 ms; zero timed exceptions,
+collision failures and grass overflows; settled streaming. Retain failures.
+Do not change scenario values to obtain a pass.
+
+Visual checks: fixed meadow (0,-250,310), angles (10,0,0), skyline
+(-775,3919,735), angles (-4,0,0), FOV75, 1440x900, at 64/96 m. Compare matching
+accepted/candidate views for visibly longer coverage, attached roots, soft
+edge fade and intact tips. Check 0/256 m and an overhead 80 m camera at
+(0,0,3149.6063), angles(90,0,0) for increased reach. Inspect images, not just
+capture success. Check 256 m capacity at meadow and overhead views.
+
+UI: open Q, type/apply 0,96,256, invalid -1,257 and nonnumeric text; verify
+range and status after each. Close/reopen retains value. Stop/start Play
+restores saved96 m; native temporary64 m does not overwrite that preference.
+Restore the user's position, first-person camera, free viewport and saved96 m
+after checks. Do not save the authored scene. If user interrupts UI automation,
+stop that automation and retain incomplete checks rather than claim success.
+
+### GRASS-COVERAGE-001/v1 — first preview incomplete
+
+Four candidate files applied after the water task released editor/source ownership.
+C# hotload succeeds with zero errors. Stock asset_compile cannot rebuild the mounted
+shader; production compile_source_shader succeeds with no diagnostics. Water's
+frozen eight-file manifest matches unchanged. Preview-source.json records hashes.
+The first 96 m preview from the historical origin is INVALID for appearance:
+the user had moved to (78388,-30478,20.6), outside that camera's streamed region.
+Normal game camera restored immediately; no player teleport. Awaiting user
+coordination before further camera control. The water skip standing result is
+noncomparable due movement and will not be used as a grass acceptance baseline.
+Fresh exact-source control, final visuals, UI/persistence, cold startup and
+figure-eight gates remain pending. Evidence: ValidationEvidence/GrassCoverage/README.md.
+
+### WATER-PERF-001/v1 batched candidate setup — 2026-09-18
+
+The first shader skip candidate is superseded, with its failure retained above.
+The next candidate restores the accepted shading math and batches original
+convex hulls using33x33tiles in16x16 RG32F pages; exact coverage clip planes and
+world-pixel flow lookup remain. See SurfaceWater architecture for ownership,
+reuse, bounds and upload tradeoff. Existing scenario/gates and fixed visual
+cameras remain unchanged. Added diagnostics report batches and flow texture bytes.
+
+Grass temporarily advanced to an unqualified coverage candidate in the shared
+workspace. With its owner's explicit permission, its exact four current files
+were checkpointed, and exact pre-candidate bytes restored for water qualification.
+The grass shader is again accepted34fde4e, and runtime range remains64m for this
+run. No preference cookie is changed. Restore exact grass checkpoint hashes and
+96m after water checks; preserve latest user pose/view. This is source isolation,
+not a changed workload. Checkpoint manifest:.codex/water-shading/grass-coverage-checkpoint/manifest.json.
+Water batching C# and shader compiled with0errors. A shader compile attempted
+immediately after Play returned mounted-source-not-ready; the later-frame retry
+succeeded. First native visual/lifecycle and cold benchmark checks are pending.
+
+### WATER-OCEAN-SEAM-001/v1 — 2026-09-18 user reproduction
+
+User reported ocean chunk lines during batching validation and requested a
+screenshot. Capture current normal game camera1846x1019, no reposition first.
+Recorded player(-107839.312,60319.4297,139.306107),cameraZ203.306107,
+Euler(25.8613091,-179.646378,0),normal perspective FOV75. Defaults visibility3m,
+tint(.12,.4,.34),speed32,ripple0.16; world3991; current batching source hashes
+in ocean-chunk-lines-state.json. Ocean-chunk-lines.png visibly contains straight
+and diagonal shading boundaries. Camera is normal Game; attempted detached
+camera tool returned GameEjected-required, so normal camera capture was used.
+
+Diagnostic ripple strength0 removes the boundaries in ocean-lines-flat.png;
+strength immediately restored0.16. This establishes a shading dependency, not
+proof of a specific cause. Validate the repair at this exact pose, same settings,
+then bank/close/junction cameras and motion. Pass: no geometry-aligned ripple
+jumps in native images, unchanged coverage and retained moving detail. Preserve
+all before/after source hashes and images. No quality reduction is authorized.
+
+The ray/plane reconstruction candidate compiled but ocean-lines-ray-plane.png
+still showed the same boundaries at the matched camera. Rejected and restored
+the prior shader byte-for-byte; no position-interpolation fix is claimed.
+Flow speed0 also retains the boundaries (ocean-lines-still.png); speed restored32.
+A transient set_component failure immediately following compile was retried on
+a later frame and succeeded. No user input or camera setting was disabled.
+Next source correction evaluates continuous second derivatives in the procedural
+noise: current cubic value-noise has only first-derivative continuity, while its
+analytic slopes feed normal shading and geometric specular filtering.
+
+Continuous-curvature noise also retains visible boundaries in ocean-lines-curvature.png. Rejected; original cubic noise restored. Next compare exact accepted per-chunk renderer/shader at the same saved ocean pose to isolate batching. No performance gain or seam repair claimed.
+
+Original-renderer first normal-camera capture was invalid: after Play restart,
+the player's flight state had reset and gravity moved the camera to the seabed;
+eye rotation also reset. Native serialized setters do not expose Flying or
+EyeAngles, and the attempts returned no-writable-property without changes.
+The interactive detached camera was then set to the saved ocean position/angles,
+FOV argument75. ocean-lines-original-matched.png reproduces the same seam pattern
+on the accepted per-chunk renderer; detached FOV framing differs from the normal
+camera, so this is reproduction evidence, not a pixel-equal comparison.
+
+A further candidate rejected below-water SSR hits. ocean-lines-reflection-filter.png
+removed beige false reflections but retained the lines; it is not a seam fix.
+That candidate was checkpointed and reverted. Current production water source
+is the accepted-performance-control eight-file snapshot, with no batching or
+failed shader experiments left live. Batching remains staged under.codex only;
+performance qualification is incomplete. No commit/push made.
+
+All four grass coverage files were restored and exact checkpoint SHA256 verified;
+live range96 restored; no cookie modified. User's ocean view is retained through
+the visible interactive detached camera. The actual player is on the seabed after
+restart; flight/eye state has not been restored. No controls are disabled.
+Screenshot request is fulfilled by ocean-chunk-lines.png; diagnosis remains open.
+
+### WATER-OCEAN-SEAM-001/v1 continued isolation — 2026-09-18
+
+User explicitly requested continued troubleshooting. Same saved ocean camera
+position/angles; current detached-camera readback FOV60 (the earlier setter75
+was not retained). Runtime shadows/contact shadows temporarily disabled:
+ocean-no-shadow.png retains seams. Restored both true. Disabled directional/
+ambient light GameObject for ocean-no-light.png: seams persist strongly in
+remaining reflected/emissive shading. Restored object enabled. These checks
+rule out shadow-only/direct-light-only explanations for this reproduction.
+
+Next correction replaces the floating-point lattice hash with an integer hash.
+Each neighboring noise cell must obtain exactly the same value for a shared
+corner. Inlined floating multiply/add/frac hashing is vulnerable to reassociation
+and rounding differences between corner expressions at large coordinates;
+integer lattice hashing supplies one exact corner identity. Keep cubic weights,
+analytic slopes, all spatial scales, flow phases and material/reflection settings.
+Pass requires the same ocean view to lose the grid-aligned jumps with full
+ripple strength, then verify nearby river appearance and motion. This is a
+candidate until native images establish the result.
+
+Integer lattice hash candidate removes the reported straight/diagonal ripple
+boundaries in ocean-integer-hash.png at full0.16strength/32speed. This supports
+shared-corner hashing as the defect; it does not establish which exact compiler
+reassociation produced the earlier mismatch.32native frames span7.75seconds,
+covering the6second phase cycle; retained ocean-integer008/024 images inspected
+without the old grid-aligned jumps. The random ripple realization changes,
+while scales, cubic interpolation, analytic slopes, strengths, flow and all
+material/reflection features remain unchanged. No generator/world recipe changes.
+The fixed bank/close views retain river appearance and transparent bed detail.
+
+Next qualification combines this fix with the already compiled bounded draw
+batching candidate. WATER-PERF-001/v1 settings/gates remain unchanged. Restore
+original accepted grass source temporarily with exact candidate checkpoint
+restoration afterward, as previously authorized by its owner. No grass cookie
+writes. Test task WATER-PERF-001/v1-batch-integer. Native visual checks before
+cold restart; no captures/recompiles after cold startup before timing.
+
+Batched integer-hash source compiled and passed native river checks: close view
+retains reflected banks and bed detail;32junction frames span7.75seconds, with
+008/024 inspected and no old confluence ribbon. Bank visibility12m versus0.25m
+olive tint visibly changes bed transmission as intended (batch-clear/cloudy.png).
+Defaults3m/teal/32speed/0.16strength restored. Control owner(-3,-2,-1),LOD0:
+18vertices,digest8CB83D94B137F6FD,1089flow samples,716nonzero,0invalid flows,
+0invalid/degenerate/reversed triangles. Native grass and water shader compiles
+succeeded before cold restart. User input remains enabled.
+
+### WATER-PERF-001/v1-batch-integer result — 2026-09-18
+
+Run8ab4079c31ba4a00adb39243aada9135 completed the unchanged canonical route.
+Fresh visible PID91424, engine26.09.15, source8389f299 plus water245aaf79 batch;
+accepted grass64m, physical2769x1529, all preflight gates passed. Raw/summary,
+source snapshots and both comparisons: WaterShading/batch-integer*. Final
+camera matches accepted control to floating tolerance: (-1.6364,1.3975,326.9084),
+identity rotation,FOV75. Collision4913/4913,0failures,0exceptions,meshes settled.
+Moving452.57062FPS,p95/p99 3.6945/5.4977ms,GPU1.8231196ms; standing390.8286FPS,
+p95/p99 3.3194/5.5045ms,GPU2.1640143ms. Against water control, moving tails
++11.11/+12.63%,standing tails+11.85/+19.33% FAIL. Against height baseline,
+standing FPS-14.49%,tails+22.36/+26.25%,GPU+.3837ms FAIL. Memory/alloc pass.
+Terminal200-frame WaterRender means improve moving.114633->.0486935ms and
+standing.1649015->.0453585ms (57.5%/72.5%). Whole-world acceptance still FAIL:
+this scope gain does not override tails. Standing Editor scope mean.1439915->
+.2341975ms,p95.1486->.5761ms; Render mean2.039164->2.016363ms. Environment
+variation remains a possible contributor, not a demonstrated explanation.
+Exact four-file grass checkpoint and live96m restored afterward, no cookies.
+
+## WATER-REFLECTION-001/v1 — grazing distant shoreline
+
+User reported reflection strips looking near-horizontal. Native reproduction
+camera(20356.2598,102694.789,417.369293),angles(3.61036968,-77.5189514,0),
+detachedFOV60,1846x1019,seed1337/current saved world,default water3m/teal/32/.16,
+grass candidate96m. distant-reflections-current.png visibly shows vertical
+striped reflections along the distant shore and bright nearby speckles.
+Source/world snapshot distant-reflections-state.json. Pass: continuous distant
+shore reflections without vertical combs, retained local reflection/refraction,
+no loss of flow/clarity controls. Inspect same pose plus nearby bank and ocean.
+Installed ScreenSpaceTrace.hlsl computes direction by projecting origin+one-inch
+vector then subtracting projected origin. Test an algebraically equivalent
+homogeneous difference to avoid cancellation at large view distances; reuse
+engine HierarchicalRaymarch traversal/64steps/confidence. Do not edit engine
+files or lower reflection budget. Candidate until native matched image passes.
+
+The stable-projection shader compiled. User requested an angled capture;
+normal camera(20494.0703,102692.141,425.457031),angles(12.307724,-106.201591,0),
+FOV75 produced distant-reflections-angled.png with continuous distant reflections.
+This also has the new shader, so angle and implementation are confounded; it is
+not proof of a fix. Original-pose comparison follows. An ejected screenshot
+attempt returned wrong-camera-mode before using the normal camera; no image
+was accepted from that failed call.
+
+Stable projection removes the near-left comb but distant central strips remain
+in distant-reflections-stable.png. Not accepted. Next test normalizes the
+projected direction and bounds near-zero screen axes to avoid huge reciprocals
+in the installed traversal; same64steps. This is still an unaccepted candidate.
+
+Normalized projection still retains central strips (normalized.png). Temporary
+256-step diagnostic distinguishes iteration exhaustion; not a shipping budget.
+
+256steps did not resolve strips; restored64. Test direct reverse-Z depth
+linearization in final hit validation instead of 1-depth conversion; preserves
+distant precision and uses symmetric hit distance error plus existing vignette.
+
+Direct depth validation with engine traversal makes further striping (depth.png),
+so it is rejected. Next candidate replaces only water SSR traversal: same opaque
+depth chain,64iteration budget, full-resolution terminal hit, hierarchical
+empty-cell skips, stable homogeneous direction, subtract-before-divide boundary
+steps, direct reverse-Z validation, and rejection of submerged-bed hits. No
+engine source edit, alternate render path, probe/render target, or hidden client.
+Pass still requires both fixed views plus bank/nearby appearance and performance.
+
+The64step water-owned traversal compiles and distant-reflections-traversal.png
+removes the vertical shoreline comb at the exact original pose. Open-water
+bright bed-reflection flecks also disappear; reflected shore/ripples remain.
+Native matched image inspected. Further angle/motion/cold/performance checks
+remain; this image alone does not qualify the full change.
+
+Angled32frames/7.76seconds (008/024 inspected) retain continuous reflections and
+animated ripple detail. Hoisted depth-pyramid dimensions outside the loop; mip
+dimensions derived by integer shift, same actual texture-cell bounds. Native
+compile passed. Next cold run WATER-PERF-001/v1-reflection uses unchanged
+canonical parameters/control64m grass and both existing comparator gates.
+Candidate grass checkpoint exact hashes reverified before temporary control
+restore; restore candidate96m immediately after timing. No cookies touched.
+
+Cold attempt PID55624 at14:51:33local exited before MCP ready. Last log entry
+ToolsStallMonitor at14:51:47; Windows AppHangB1 at14:51:58. Sentry marker stayed
+2026-09-18T14:50:56.373477Z. No shader/parser error or native crash marker
+establishes cause. Preserved reflection-cold-failed.log; no timing started.
+One unchanged-source restart will distinguish transient startup from repeatable
+source failure before changing shader logic.
+
+### Benchmark identity correction and timing hold
+
+Unchanged-source cold retry PID88468 started14:53:08, MCP ready/compile0errors;
+Play entered14:54:06, Sentry unchanged. First AppHang is preserved, cause unknown.
+Before timing, terrain readback revealed revision4007/pages4. Earlier accepted-
+water-editor.log at13:41:38 establishes control4005/pages0, not the3991/pages873
+identity repeated in later ledger prose. ocean-diagnosis-editor.log records
+4007/pages4 written14:09:26 and batch cold log starts4007. Therefore the prior
+batch-vs-control comparison is not source-isolated: saved terrain differs. Its
+metrics/failures remain, but attribution and acceptance are invalid. This entry
+supersedes stale identity claims; it does not erase prior results. No current
+reflection timing started. User approval requested for a new matched control
+and candidate on current4007 terrain with identical route/settings/gates.
+Exact grass checkpoint and96m restored while waiting; no saved terrain altered.
+Added required braces to the single-line reflection loop exit, no math change.
+
+Further identity evidence: GrassHeight/isolated-preflight.json13:21:59 and
+isolated-final.json13:27:12 establish3991/pages873 for accepted height run
+2d29e727. Its final targetZ246.88448 differs from water-control262.9084. Thus
+water-vs-height standing GPU/FPS differences were also confounded by terrain
+and resulting camera height, not an established water regression. Preserve all
+comparisons as historical measurements, exclude them from acceptance decisions.
+
+Final shader35d7aba0 at the original ocean pose passes native ocean-final-
+reflections.png: no old lattice/chunk-like lines and no reflected bed flecks.
+Runtime console has no errors. Final brace-only source gets one fresh startup
+check; performance remains on hold for workload approval.
+
+Final shader35d7aba0410035ba2d4aa1a6c39b5a95f4c613d6ac0280f8ca2eb19d375f3519
+cold startup PID87896 at14:58:34 succeeded, MCP ready, compile0errors, Play
+entered normally; Sentry unchanged2026-09-18T14:50:56.373477Z. Task source
+diff whitespace check passed. Grass candidate hashes verified restored, live96m,
+player restored to saved shoreline20424.998,102454.414,295.163452 and third-person
+true; detached shoreline view restored separately because runtime eye/flight
+state is not writable through serialized setters. Input remains enabled.
+Full performance qualification/commit/push remain pending workload approval.
+
+Post-cold distant-reflections-final.png at the fixed head-on pose inspected:
+continuous shore reflections, no prior comb, visible ripples; console0errors.
+reflection-final-state.json retains source/world readback. No timed run,
+commit or push followed the workload-approval request.
+
 ## MATERIAL-TRANSITION-001/v1 — local blending prototype (2026-09-18)
 
 User authorizes prototyping smoother transitions and explicitly accepts loss of
@@ -31986,6 +32864,3627 @@ only, not unrelated pending water/grass/fade work. Task-only commit/push follows
 source/index review. Gameplay IDs, world generation recipe and collision unchanged.
 
 
+## TERRAIN-RELIEF-001/v1 — visible dirt/rock prototype (2026-09-19)
+
+Declared before candidate implementation/run. User requests iterative visual proof,
+not merely changed pixels. Current visible basic_example, engine26.09.15, RTX5090,
+world f5ce10f3-6d75-428e-b3dd-63dee14891c6, seed1337/gen48, observed revision4274.
+This differs from historical4007; prior results do not qualify this source/world.
+Current runtime source snapshot preserved before edits; existing water/grass and
+material-blending changes remain. Terrain configuration gameplay8,visual128,
+LOD0..5,extents4/4,32x16cells,grass64m; water3m/tint(.12,.4,.34)/speed32/ripple.16.
+Existing sun rotation(49.9999733,45.000042,0), ambient(.23721,.23721,.23721).
+No terrain mutations. Real player moved to(-342800,-216600,1750) for normal
+streaming and allowed to settle; detached camera exercises production renderer.
+
+Fixed rock views: A(-342760,-216600,1730), B(-342744,-216600,1730),
+C(-342776,-216600,1730); all pitch15/yaw-90/roll0,FOV60,1280x800 captures.
+Capture A,B,C after at least2s at each pose; return A for restoration comparison.
+Camera displacement16units=40.64cm. Inspect corresponding rock ridges/cracks,
+foreground grass contact, projection/material blend and movement between views.
+Baseline is existing shader without relief. Candidate A uses specification values:
+dirt33mm/2m tile,rock40mm/2.38m,16..32steps,4bisections+linear refinement,
+8..16m fade,grazing.05...15,mip2..4 fade,4x height/16x final sampling.
+Self-shadowing/depth writes off until view intersection is visually qualified.
+Pass requires identifiable view-dependent ridge overlap/recess occlusion, not
+uniform image shifting, stronger lighting or image-difference percentages.
+Reject swimming, striping, black seams and obviously floating contacts. If depth
+is too subtle at the registered amplitudes, record that failure before defining
+a separately labelled candidate. Do not describe shader activity as visual success.
+Full scope also needs dirt and motion/fade views; these rock stills alone cannot
+qualify dirt, temporal stability, self-shadowing, depth or engine equivalence.
+
+Preparation observations: original source images show aligned major dirt pebbles
+and white height peaks. Both height maps are2048-square16bit; dirt range1961..64897,
+P1/P50/P99=14828/26736/41484;rock32..65007,P1/P50/P99=11770/34762/55342.
+Normalized source values do not establish physical relief. Initial ejected camera
+placement before enabling GameEjected mode failed; enabling existing detach control
+resolved it. These are preparation observations, not candidate validation.
+
+Candidate A compiled after replacing two unsupported global initialized float2
+values with preprocessor constants; initial VFX parser failure preserved in logs.
+Full material compile succeeded. Inspected control-a and candidate-a-a and saved
+A/B/C/return images. Outcome: FAIL convincing-depth gate; slight coordinate changes
+are visible but strong ridge overlap/recess depth is not established. Grass wind
+changes between captures; do not include blades in image-difference conclusions.
+Candidate B declared before run: rock amplitude0.120m (three times A), dirt remains
+0.033m, all other controls unchanged. Same registered views. This is an authored
+strong-relief screening candidate, not calibrated physical displacement.
+Additional oblique view D(-342660,-216620,1740),angles(15,-145,0),FOV60,1280x800
+is supplementary and requires its own control capture. It does not replace v1.
+
+Candidate B initial inspection: stronger texture deformation at120mm rock depth,
+but no convincing depth acceptance yet. Register supplementary lighting/view
+scenario TERRAIN-RELIEF-LIGHT-001/v1: same world/source/control comparison,
+camera(-342660,-216635,1690),angles(5,-166,0),FOV60,1280x800; sun rotation
+(25,225,0),remaining light properties unchanged. Compare control and B at same
+lighting and camera; this does not erase failure under original lighting.
+
+TERRAIN-RELIEF-LIGHT-001/v1 additional grazing pose E declared before A/B:
+(-342900,-216600,1720),angles(16,-23,0),FOV60,1280x800,same sun(25,225,0).
+Purpose: inspect ridge occlusion along the rock slope rather than facing it.
+
+Independent visual critique: A and B FAIL convincing 3D. No demonstrated lip/recess occlusion; grazing E still reads as smooth textured slope. No performance acceptance. A second clean editor restart restored custom tools (86 versus 71); missing-editor-tools.log preserves failed-session shutdown.
+Temporary diagnostic screening declared before run: same v1 camera A and world; directly display the production blended rock height in grayscale, then effective rock amplitude normalized by 0.120. Purpose: check live texture binding and fade, not visual acceptance. Restore normal shader after captures.
+
+Diagnostic height capture confirms spatially varying height bound in actual terrain; amplitude A is near full across foreground rock. Grazing E loses relief farther across slope through filtering/fade. Candidate C declared: rock0.240m; dirt0.033m; same tiling/ray/fades. Return hit depth and derive visible surface normal from hit-world-position screen derivatives; retain 35% authored normal perturbation on relieved material, full authored normal elsewhere. This screens consistency between displaced relief and lighting. No self-shadow/depth output. Same original v1 cameras/light.
+
+Candidate C FAIL: clear high-frequency speckling in actual capture; no acceptance. Candidate D: same0.240m rock, replace hit-position screen derivative normal with central-difference height-field normal in two orthonormal surface directions, step max(10mm, screen footprint); same35% source normal perturbation. Fixed source amplitude/material/projection during normal evaluation.
+
+Independent D critique: FAIL visual quality; embossed streaks in frontal view, mild pits at grazing but no established disocclusion. Light view more natural, less convincing depth. Keep failure. Candidate E screening restores supplied normal maps (removes D normal correction) and retains0.240m rock intersection. Motion scenario will compare identical shading with ray displacement on/off.
+
+TERRAIN-RELIEF-MOTION-001/v1 declared before captures: existing world4274, player(-342800,-216600,1750) settles, sun(25,225,0), all other v1 config. Native scene trace found exposed rock target(-342739.438,-216676.75,1684.12744). Orbit target at radius91.74786 units, pitch30 degrees, yaw -105..-45 degrees in17 equally spaced poses; FOV60,1280x800, hold0.3s minimum per frame. Compare control with no relief and candidate E0.240m/full authored normals, same pose sequence. Rendered frame sequence is camera-motion evidence, not a real-time FPS video. Pass: near ridge hides/reveals a recognizable part of its recess compared with flat control; no detached/swimming features.
+
+Candidate E motion independent FAIL: identifiable view-dependent deformation, but no unambiguous hidden/revealed recess detail. More natural than D; oblique stretching remains. Candidate F declared before run: E intersection plus8-step directional sun visibility through the same height field. Plan ordering revised for joint view/light screening because unshadowed cues remain ambiguous; this does not retroactively pass E. No albedo/AO multiplication. Stock sun diffuse/specular contribution alone is attenuated through a narrow wrapper around standard lighting. Engine UI pixel shader establishes mutable static per-invocation shader state; native compile/restart still required.
+
+Candidate F screening FAIL: sparse hard-shadow black pixels, no material depth improvement in motion08. Candidate G bounded strong-height diagnostic: rock0.600m/2.38m tile, original supplied normals, no sun shadow,32..64steps; dirt unchanged. Purpose: establish whether input feature scale can produce obvious geometric overlap before choosing a plausible final strength. Not accepted physical calibration. Same MOTIONv1 and LIGHTv1 views.
+
+G screening: exaggerated0.600m causes obvious pulled moss and oblique stretched rock; reject as material quality. Supplemental close scout(-342787.734,-216656.25,1699.82),angles16,-23,0 was exploratory, not a pass comparison. Candidate H: rock0.180m and height contrast3 centered0.5, clamped0..1; dirt unmodified,32..64steps, original normal maps/no shadows. Intent is stronger narrow height transitions without0.600m broad swelling. Same MOTIONv1.
+
+H contrast screening remains visually weak at motion08; no acceptance. Candidate I material experiment declared: Poly Haven cliff_side matched2k PNG Diffuse/nor_gl/Rough/AO/Displacement,1.83m tile,0.180m authored amplitude, original linear height range (no H contrast),32..64steps,no shadows. CC0 provider metadata and exact MD5 verified; originals unchanged. Same real-world MOTIONv1 camera/light; new asset also needs its own zero-relief control so asset improvement is not mistaken for parallax.
+
+I independent FAIL: scan itself improves rock, no identifiable occluded detail; left oblique striations. Candidate J: same I asset/height, projection exponent16 instead4 to reduce double-exposed rock forms; derivatives from camera-relative input before adding large world offset. This is a quality experiment, not a silent dominant-axis performance approximation. Full continuous projection blend remains. MOTIONv1 unchanged and a J no-relief control will be captured.
+
+J first capture withdrawn from acceptance: code review found exponent16 plus absolute0.001 fringe could zero all projections at three-way diagonal normals. J2 normalizes abs(normal) by its largest component before exponent/fringe, ensuring one projection always has weight1. Rerun before judging.
+
+Candidate K declared: J2 mapping, cliff0.300m,32..64viewsteps;16-step softened directional visibility through same heightfield, bias1%/0.1mm, transition penetration10% interval. Original scanned normals retained. Compare same MOTIONv1 against cliff-sharp-control; sunlight only. This extends the joint view/light screen, not a claim of physical calibrated scale.
+
+K remains unaccepted, softened sunlight does not establish strong 3D in motion08. Candidate L declared: J2 projection/relative derivatives, cliff0.300m,32..64viewsteps,no sunshadow. Replace averaged stochastic patch weights for relief-enabled dirt/rock with continuous height-aware weights: score=sourceheight+baseweight, retain scores within0.15 of maximum, multiply by baseweight and normalize. Evaluate this same rule during ray marching and final color/normal/surface sampling. Grass/sand/snow keep existing mapping. Intent is to preserve stone shapes across stochastic patch mixing; no asset edits. Same MOTIONv1 plus matched L flat control.
+
+TERRAIN-RELIEF-GRAZING-MOTION-001/v1 declared: same source/world/light/target as MOTIONv1, radius70units,pitch16,yaw-45..-25 in17steps,1280x800,FOV60,hold0.3s. Main orbit is near-normal incidence (trace normal~.28,.65,.70); this supplementary orbit tests occlusion at normal-view cosine roughly0.44..0.21 without entering the grazing-angle amplitude fade. Control L flat and L relief use identical poses. It cannot replace original orbit quality requirements.
+
+Candidate L independent verdict: visible raised layered rock, changing sidewall/recess exposure, but FAIL quality: repeated stair bands, stretched crack trenches, moss curtains dominate grazing16. Fully identifiable tiny hidden/revealed detail still incomplete. No performance acceptance.
+Candidate M declared before run: L shared height-aware mapping, rock0.150m instead0.300m; fade relief by smoothstep(0.7,0.95,dirt+rock coverage), holding this coverage at original surface sample. This suppresses displaced grass/snow/sand interfaces lacking matching height. Existing distance/angle/mip fade and32..64steps unchanged. Same MOTIONv1 and GRAZINGv1 with height-blend-control comparisons.
+
+Candidate N diagnostic declared: M with minimum height input precision16 and documented material output format RGBA16161616F instead BC7. Tests compressed/quantized height contribution to visible bands; memory/performance unqualified. Same registered cameras. Format documentation establishes token, native material compilation must establish support.
+
+N format compiled/material rebuilt, grazing16 inspection still shows swirled interface; precision alone does not solve visible defect. M independent quality FAIL confirms boundary bands despite reduced depth. Candidate O declared: retain N precision; evaluate non-relief grass/sand/snow maps at original P, fade relief to zero below95% combined dirt/rock coverage, full above99.5%. This deliberately flattens mixed unsupported-material regions; dirt/rock retain one coherent relief hit. Same registered views.
+
+O FAIL: original grass lookup fixes green boundary stretching, but narrow coverage fade introduces large contour-like rock swirls. Candidate P removes extra coverage smoothstep; retains amplitude multiplied by original material weights and original lookup for non-relief materials. Hypothesis: abrupt amplitude changes across macro transition created false contours. Same registered cameras.
+
+TERRAIN-RELIEF-PERF-001/v1 declared before timing. Current saved world4274 replaces historical4007; fresh control required because saved-world revision/source changed. Same canonical workload: basic_example,worldf5ce10f3-6d75-428e-b3dd-63dee14891c6,seed1337/gen48/river14,32x16cells,gameplay8,visual128,LOD0..5,extents4/4,grass64m,water3m/tint(.12,.4,.34)/speed32/ripple.16; first-person FOV75 identity, setup(-1.6258175,1.2225341,340),speed2500,distance50000,one loop,clearance393.7008,auto drain+10s standing,2769x1529,RTX5090/engine26.09.15. Route derives starting altitude from regional terrain and uses XY as center; record actual settled preflight pose and preserve same XY center. Fresh visible editor per control/candidate, full compile before coldstart, no captures/recompiles/native queries/source writes during timing; input enabled. Require settled visuals/transitions/placement/water,4913ready collision/0pending/failures, unchanged crash marker during coldstart. Control is P same asset/mapping/format with view ray call removed; candidate P enables view ray. This isolates POM cost; total original-shader delta still unqualified. Gates unchanged from MATERIAL-TRANSITION-PERFv1: moving/standing FPS decline<=10%,p95/p99 increase<=10%,process/GPUpeak and allocations/frame increase<=10%,standing GPU delta<=0.3ms,0exceptions/collisionfailures/grassoverflows,complete/settled. Preserve every run and unmatched conditions.
+
+Control P PERFv1 completed run8031cbf9e0eb43768a75aba8db04c59a: moving393.2864FPS,p954.4535ms,p996.2831ms,GPUavg2.200727ms; standing339.58188FPS,p954.3293ms,p995.797ms,GPUavg2.5471246ms.0exceptions,source hashes unchanged,physical2769x1529. Later-frame preflight exact340 pose passes. Cold marker unchanged2026-09-19T04:41:56.626406Z. Comparison pending.
+TERRAIN-RELIEF-CLOSE-PERF-001/v1 declared: after canonical run in same fresh session, real player(-342800,-216600,1750),grass64m, sun(25,225,0), ejected camera(-342760,-216600,1730.00134),angles(30,-75,0),FOV60,physical2769x1529; same world/config as PERFv1. Settle30s, then three completed automatic10-second overview windows read12s apart. Existing voxel_collision_info frame/memory values; no new hooks or screenshots during timing. Source records average GPU from engine PerformanceStats.GpuFrametime each update; raw scopes may be unavailable. Report average-GPU delta and CPU tails; proposed close median/p95 terrain-pass budget cannot be certified by these whole-frame averages. Screening average GPUdelta<=0.5ms,framep95/p99<=10% regression,repeat spread>5% flagged. This supplementary close test does not replace canonical route.
+
+P independent visual review: PASS restrained shallow-relief prototype quality at sampled main/grazing views; prior green curtains absent. Localized fine striations/softening remain. Intermediate frames02/06/10/14 grazing and04/12 main still do NOT establish identifiable hidden/revealed recess detail. Full convincing-occlusion acceptance remains incomplete. Comparison GIF is sampled poses, not realtime video.
+CLOSE-PERFv1 control windows:393.4/390.2/389.5FPS,p953.80/3.84/3.87ms,p994.71/5.06/5.18ms,GPUavg2.41/2.41/2.41ms; settled queues, player settled(-342679.844,-216338.328,1306.31519). Control p99 range~10% is flagged variability; do not suppress individual values.
+
+P performance FAIL: run c1d75b4a606a467b8838836b50456db1. Moving398.93936FPS(+1.44%),p954.448ms(-0.12%),p996.3322ms(+0.78%); standing296.40237FPS(-12.72%),p954.9227ms(+13.71%),p996.2684ms(+8.13%),GPUavg2.9637234ms(delta+0.416599). Moving processpeak+1.70%,GPUpeak-0.06%,allocation/frame+3.57%; standing processpeak-1.10%,GPUpeak-3.00%,allocation/frame+2.74%. All collision4913ready/0failures,0exceptions,source unchanged,cold marker unchanged. Standing FPS/p95/GPU gates fail.
+P close windows233.3/232.7/232.7FPS,p955.94/6.04/6.06ms,p997.70/7.46/7.41ms,GPUavg2.54ms all. Frame pacing regression is material, despite reported whole-frame GPU average rising only0.13ms; no terrain-pass GPU-time conclusion. Registry metadata search occurred during close collection; repeat after optimization with no extra queries.0visual/transition backlog. Preserve failure.
+Candidate Q format probe: try documented runtime ImageFormat.R16F as material output string, native compile/material validation required; no assertion of support based only on enum. Aim is single-channel high precision before matched periodic bake, not reducing height precision. No visual/performance acceptance from format compile.
+
+Q R16F shader/material native compile succeeds, no new compiler error in fresh log. Preserve minimum input16. Candidate R declared before implementation: matched periodic bake of dirt+cliff color/normal/roughness/AO/height, triangular lattice period2,4096-square outputs retaining2048 texels per source tile; same height-priority rule as P. Height16-bit PNG ->R16F; final maps BC7. Runtime one cache sample per active projection per height step instead up to3 hashed patch samples and repeated blend arithmetic. Source normals preserved in blended vectors; no new shadow/normal algorithm. Periodic pattern changes exact rock features and introduces finite repetition, requiring fresh zero-relief visual control. Authored amplitudes remain33/150mm, all ray steps/fades unchanged; source manifests retain hashes. Asset memory and distant repetition must be measured/reviewed. Bake is derived art data, no runtime/world-state ownership change. Original source maps remain inputs.
+
+R preparation correction before visual qualification: first bake used Pillow convert(L) on16-bit scalar AO/roughness, which clamps instead of scaling. Tiny constant output files exposed this. Replace with dtype-aware normalization by255/65535 and regenerate both materials; initial bake is invalid, no visual pass attributed to it.
+
+Candidate S declared: R baked field, retain camera-relative pixel positions throughout ray march and cached final lookups; add only fractional lattice coordinates of engine world anchor at sample time. Height/final maps use identical anchor scaling order. Noncached sand/snow retain original absolute mapping; macro material weights remain at P. This addresses sub-millimetre texture quantization at the8.7km-away test site without changing ray steps/amplitudes. Engine anchor selection unavailable in public source; test motion/rebasing visually. Same registered captures, new matching S flat control if differences are visible. No performance acceptance yet.
+
+R independent verdict: acceptable shallow-relief prototype; still no identifiable hidden/revealed detail, localized grazing striation. S camera-relative screen retains same broad appearance. Candidate T declared: S with rock0.300m, no other ray/filter change, to reassess stronger relief after fixing green boundary and baking coherent maps. Same MOTION/GRAZINGv1, matching cached flat control required. No calibrated source-height claim.
+
+T grazing16 FAIL pronounced stair/stripe walls at0.300m. Candidate U bounded diagnostic: T with128..256steps, same4refinements; test whether coarse first-crossing misses cause the stripe walls. Same grazing16 pose, no claim of acceptable cost. Do not reduce the effect or change view to hide artifacts.
+
+U grazing16 does not remove dominant stretched sidewalls despite4x march steps; reject extra work. Restore S150mm/32..64steps for measured prototype. Stronger300mm is beyond this scan's acceptable wall-texture appearance. Run hot CLOSE-PERFv1 screening control-S/S with same camera/light/resolution/30s warmup/3windows12s apart; this screens bake cost only and cannot replace fresh-process canonical acceptance.
+
+Hot S screen: flat410.2/408.7/410.7FPS,p953.69/3.67/3.68,p994.64/4.72/4.95; S323.5/322.4/322.8FPS,p954.78/4.85/4.89,p996.28/6.16/6.09. Material frame regression remains ~21%, FAIL close screen. Whole-frame GPU reading stays2.54ms in BOTH settings, unlike frame-time cost; cannot qualify ejected-camera GPU pass timing from this value. Bake reduces prior cost but does not establish performance acceptance.
+Candidate V declared: S at original plan16..32 angle-dependent steps with4refinements, unchanged150mm amplitude/texture resolution/filter/fades. Must compare same fixed views for missed ridges/bands; no acceptance based on reduced workload alone. Same close-screen method. A later cold canonical run remains required.
+
+Candidate W: V plus explicit HLSL branch attribute on inactive height-projection early return. Without it the compiler may flatten this small conditional and execute unused plane texture samples. This preserves the exact mathematical field and V search budget; no claim about emitted instructions without disassembly. Same close screen, paired precise controls.
+
+V independent sampled views: no perceptible loss/new bands versus S; temporal equivalence unqualified. W hot close347.1/348.7/345.9FPS,p954.37/4.30/4.35,p995.64/5.58/5.62: still exceeds flat close-tail gates. Candidate X declared: W height anisotropy2 instead4 (final color/normal16 unchanged), plus defer initial-depth read using proven g(0)<=0 and evaluate exact g(0) before interpolation only when refined low endpoint remains0. All brackets/refinement count/ray amplitudes preserved. Same visual cameras and close screen; lower height filtering requires visual review, no automatic quality assumption.
+
+X main capture interrupted after09 by transient SetEjectedCamera null rendererScene atEditor/VoxelMcpTools.cs:320; remaining10..16 resumed exact poses/source, no world change. X independent sampled quality no perceptible regression versusS/V. Hot X351.6/350.6/352.5FPS,p954.31/4.28/4.29,p995.63/5.74/5.78, still FAIL close tails. Candidate Y: X angle budget8..32 rather than16..32; near-normal views get fewer steps while oblique rays retain up to32. Same amplitude, resolution,2xheight/16xfinal,4refinements. Same fixed views and close screen. Explicit search-quality experiment, no assumed equivalence.
+
+Y independent sampled quality unchanged. Hot Y362.5/360.8/362.9FPS,p954.17/4.16/4.15,p995.49/5.38/5.59 still exceeds close gates. Candidate Z declared: precompute each projection/material isotropic height LOD from original pixel gradients and actual cache transform once; ray uses SampleLevel plus TRILINEAR sampler. Final material16x sampling, ray8..32/refinement4, amplitudes/fades unchanged. Installed Material.CommonInputs.hlsl establishes TRILINEAR token. This changes height filtering from2x anisotropy to isotropic mip filtering and must be visually checked, particularly grazing blur/aliasing. No passing performance assumption.
+
+Z independent sampled quality equivalent toY/S. Hot Z375.4/374.6/374.1FPS,p954.01/4.00/3.97,p995.28/5.14/5.42. Medianp95+8.70% versusflat3.68passes; medianp99+11.86% versus4.72fails narrowly; no acceptance. Control p99 range4.64..4.95 andZ5.14..5.42 preserve variability. Fresh matched Z pair required; do not reinterpret this screen as pass. EjectedGPU2.54ms unchanged is not treated as responsive GPU cost measurement.
+TERRAIN-RELIEF-CROSS-VIEW-001/v1 declared: same world4274/config/light/capture1280x800 as MOTIONv1, target(-342739.438,-216676.75,1684.12744), normalized traced normal(.28355,.64760,.70726), U=normalize(cross(N,worldUp)), camera=target+70*(N*cos(theta)+U*sin(theta)), theta=-65..65degrees in17equalsteps. Camera aims at target,FOV60,hold>=0.3s. This sweeps opposite sides through normal incidence to expose both sides of identical rock features. Compare Z and identical flat cached control. Pass evidence requires identifiable recess features hidden/revealed across edges, without new stretching or unstable placement. Supplement does not replace original fixed views.
+
+Fresh Z/control-Z PERFv1 and CLOSE-PERFv1 pair declared before execution, same workload/criteria. This is the first cold pair for the baked/precise/explicit-LOD implementation, not a repeat of failed P or acceptance of hot borderline Z. Preserve hot failure. Add source material and baked manifests to cold/after hashes. Remove unused experimental sunlight wrapper; shadow experiment remains in candidate-F backup and ledger.
+
+Z pair preparation aborted before timing: helper tried JSON-decoding plain-text console quit response. Quit had already executed. Shader/material compile succeeded; no performance result. Correct runner response unpacking and resume from verified terminal editor, preserving existing control source; no scenario changes.
+
+
+### Terrain relief Z: second preparation interruption
+
+The resumed fresh control-Z editor started successfully, but the preflight evidence helper raised `KeyError: hashes` before timing. An accidentally duplicated snapshot-only hash loop was removed from preflight. No benchmark or close-performance window was accepted from either preparation interruption. Resume uses the already fresh control editor and preserved cold source snapshot/crash marker; it must pass the unchanged preflight before timing.
+
+The planned candidate-Z canonical measurement will also be compared against the exact pre-task shader/material snapshots (`.codex/terrain-relief/control.shader` and `control.vmat`) in a subsequent fresh session under TERRAIN-RELIEF-PERF-001/v1 unchanged. This additional whole-change comparison includes material, baking and projection changes; the flat-Z pair isolates the relief search. Neither comparison substitutes for the other.
+
+
+### Terrain relief Z fresh paired performance: route pass, close-view fail
+
+
+TERRAIN-RELIEF-PERF-001/v1 unchanged; control run 7f603d4a233741d5a8e6eccbda166fe4, candidate 074f24688c8d4330a8a0b1c8c384b1c3. Native compile, fresh visible editor, all preflights passed. RTX 5090 / engine 26.09.15 / physical 2769x1529 / source snapshots control-z-cold and candidate-z-cold. The runner checked all captured source hashes unchanged through each route.
+
+
+Moving: averageFps 393.54840 -> 393.22180 (-0.08%), p95Milliseconds 4.46070 -> 4.43370 (-0.61%), p99Milliseconds 6.33450 -> 6.26490 (-1.10%), averageGpuMilliseconds 2.19134 -> 2.18699 (-0.20%).
+
+Peak process/GPU/alloc-per-frame deltas: -2.45%, +5.30%, -1.20%.
+
+Standing: averageFps 328.66617 -> 338.59198 (+3.02%), p95Milliseconds 4.52830 -> 4.45960 (-1.52%), p99Milliseconds 5.83470 -> 6.03790 (+3.48%), averageGpuMilliseconds 2.64757 -> 2.55070 (-3.66%).
+
+Peak process/GPU/alloc-per-frame deltas: -3.50%, +5.35%, -0.77%.
+
+Both settled, collision 4913 ready / 0 pending / 0 failures, no exceptions, grass overflowViews=0. Canonical relative gates PASS. Whole-change original-material comparison remains unrun.
+
+TERRAIN-RELIEF-CLOSE-PERF-001/v1: flat windows FPS 426.0/423.4/424.4, p95 3.48/3.49/3.56, p99 4.46/4.87/4.75 ms; Z 380.6/377.6/378.4, p95 3.89/3.90/3.91, p99 4.98/5.35/5.10 ms. Median p95 +11.75% FAIL (10% limit); p99 +7.37% PASS. p99 control spread exceeds 5%, flagged. Ejected GPU readings remained fixed within each session (2.06 versus 0.60 ms) and are not accepted as responsive terrain timings. Overall performance acceptance remains FAIL.
+
+Independent critic rejects Z for final visual acceptance: localized shallow relief, overall texture-on-slope appearance, oblique stretching/softness, no identifiable hidden/revealed recess feature. Previous prototype-quality passes were not final visual acceptance.
+
+
+### Candidate AA: directional relief visibility experiment, before run
+
+
+Retain Z amplitudes, mapping, search and material appearance. Add eight evenly spaced height-field samples toward the directional sun, bias max(0.1 mm, 1% effective interval), hard visibility. Apply only to direct directional diffuse/specular using the previously compiled narrow lighting wrapper; ambient and other lights stay unchanged. Reuse MOTION/v1 and GRAZING/v1. This revisits candidate F lighting against the now coherent baked/precision-corrected field, not a claim that F passed. Keep Z comparison images. Must show coherent ridge/recess shadows without black speckle, unrelated darkening, or worse stretching. Visual improvement alone cannot waive the close-performance failure.
+
+Additional TERRAIN-RELIEF-RAKING-001/v1: same real rock/player/target and motion camera poses 00/08/16, FOV60, 1280x800, 0.3s hold; light angles5,315,0, ambient unchanged. Capture both Z and AA. This supplemental lighting diagnostic does not replace the original-light tests or performance gates.
+
+
+### Candidate AA and AB visual experiments
+
+AA compiled natively and was captured hot under MOTION/v1, GRAZING/v1 and RAKING/v1. Parent inspection sees dark isolated marks near material boundaries, and broad dark cutouts in raking light; not accepted. Clean start/performance were not run for this screening candidate. Independent critique pending.
+
+AB removes AA directional visibility and replaces the active relief material normal with the derivative of the same combined height field at the resolved hit. Central differences along the geometric tangent basis use step max(3 mm, world pixel footprint). Amplitudes, Z view search and appearance maps stay fixed. Blend strength is material coverage times distance/grazing/footprint fade, so disabled relief retains source normals. This explicitly tests shape/lighting consistency; it may lose source micro-normal detail. Reuse the same fixed MOTION/GRAZING/RAKING scenarios and control Z images. No acceptance without visual review and later performance.
+
+
+AA independent verdict: FAIL, worse than Z overall; isolated black flecks ordinary light and abrupt dark cutouts in raking light. Some plausible edge shadows do not compensate. AB close-performance screening will reuse CLOSE-PERF/v1 unchanged in the current hot session; compare descriptive timings to fresh Z but do not treat cross-session differences as acceptance.
+
+
+AB independent verdict: FAIL final visual acceptance. More coherent than AA but cracks become etched/outlined and fine source detail is lost. Z remains preferred for material naturalness. Hot close windows 366.1/365.5/365.2 FPS, p95 4.09/4.10/4.11 ms, p99 5.31/5.21/5.22 ms; ejected GPU stale0.60ms. AB rejected and Z shader restored.
+
+### Candidate AC: Gray Rocks source-art experiment, before run
+
+Replace cliff slab source art with Poly Haven Gray Rocks (Dimitrios Savva, CC0, documented tile width1.8m). Retain Z search, original matched source normals, height-aware five-channel period2 bake, rock authored amplitude0.15m, dirt0.033m; use 1.80m rock tile matching asset metadata. Physical displacement is authored, not scan-calibrated. Source asset https://polyhaven.com/a/gray_rocks provides small discrete rock features and rougher faces, testing whether the cliff scan is a poor fit for height-only relief. No geometry, lighting, scenario or performance-budget changes. Bake through the canonical Tools/bake_terrain_relief.py, now accepts selected material names to avoid unnecessary dirt re-bakes. Compare new flat control-AC against candidate-AC in MOTION/v1 and GRAZING/v1; asset changes alone are not proof of parallax. Preserve prior failures.
+
+
+AC preparation: first bake stopped before outputs because Gray Rocks roughness uses identical RGB scalar channels rather than a one-channel PNG. Baker now accepts RGB only after asserting all three channels identical, then takes one channel and retains correct dtype normalization. AO and height remain original16bit. This is an asset format adaptation, not altered scalar content.
+
+
+### Candidate AD: direct matched tile, before run
+
+AC parent inspection finds obvious stretched bands in the grazing view. AD removes randomized patch blending for dirt/rock and directly repeats their original matched five source channels (2K). Grass keeps its existing baked pattern; sand/snow keep their existing stochastic mapping. Height search and final surface use the same direct UV plus camera-relative anchor; explicit height LOD uses unskewed per-plane derivatives. Tile widths2.0/1.8m and authored amplitudes0.033/0.15m remain. This tests whether patch crossfades create false height ramps, and reduces texture residency. No changes to scenarios/gates. Repetition is a new visual risk to inspect. Capture matched flat control-AD and candidate-AD MOTION/GRAZING/v1.
+
+
+AC independent verdict FAIL: more obvious apparent volume, but severe smeared curtains/ribbons and rubble art mismatch. AD compiled/material rebuild succeeded after one transient native compile-tool response began ArgumentException (client JSON parser rejected it); the next explicit compile succeeded. AD parent motion08 still shows ribbons, so randomized patch blending is not established as the cause. AE diagnostic retains direct AD mapping/asset and raises view sampling to128..256 with4refinements, checking whether missed narrow peaks explain the defect. Fixed motion/grazing poses00/08/16 only; no performance acceptance intended for this high-cost diagnostic.
+
+
+AD/AE independent verdict FAIL: direct mapping and128..256 samples retain elongated smeared walls and connecting ribbons. Neither establishes the cause. AF restores AD8..32 samples and reduces authored Gray Rocks amplitude from0.15m to0.05m, leaving dirt0.033m and direct mapping. The source official MaterialX has displacement scale0.01 without explicit world units, so it does not establish a physical scan depth; AF remains authored. Same fixed MOTION/GRAZING/v1 and flat AD control. It must retain perceptible relief while removing the overly tall wall appearance; no lowered visual/performance acceptance.
+
+
+Coordinate audit: installed common.fxc/Decals.hlsl confirms absolute camera minus absolute world position and subtractive tangent UV march; Material::Init and shadingmodel reconstruct world from relative pixel position plus high-precision offset. This supports the current coordinate/sign convention; it does not independently verify every rendered hit. AG diagnostic keeps AF0.05m amplitude and direct mapping, raises minimum stone height LOD to3 (8 source texels, about7mm at1.8m tile). Dirt unchanged. This filters steep sub-centimetre scan transitions to test whether a smoother height surface reduces wall smearing without erasing visible relief. Same motion/grazing00/08/16; all earlier failed comparisons retained.
+
+
+AH diagnostic: retain AF authored depth/direct maps and restore unmodified AD height LOD (AG filtering not visibly transformative in parent inspection). Compute ddx/ddy of the resolved texture position after the relief function returns and use these for final dirt/stone maps, retaining original derivatives for grass/sand/snow and height search. This tests final-surface filtering under strong UV magnification; discontinuity blur is a risk. Fixed motion/grazing00/08/16.
+
+
+### AI: source normal orientation defect, before run
+
+Source-map audit (original PNGs, NumPy central height differences over +/-2texels, mask normalZ>0.3 and abs gradients<0.05): correlation normalX versus increasing texture-U height derivative is -0.44047 Gray Rocks / -0.52014 Cliff Side / -0.68498 Dirt; normalY versus increasing texture-V derivative is +0.44531 / +0.50926 / +0.68542. The shader projects increasing texture V onto increasing world-axis coordinates but added positive OpenGL normalY along that axis. A physical surface normal requires minus height gradient; therefore green must be negated in this custom projection. This identifies a source-normal/projection convention mismatch, not a reversed height or view-ray sign. AI restores AF final gradients and height LOD, preserves authored0.05m rock depth, and decodes the normal maps with float3(1,-1,1) in the canonical projection sampler (all terrain materials use GL source maps). Capture same MOTION/GRAZING/v1 and a normal-corrected flat AI control to isolate parallax from this shading correction. No visual acceptance inferred from numerical correlation. AH final-gradient experiment did not visibly resolve the parent-observed wall distortion; kept in evidence, not retained.
+
+
+AI motion capture stopped at pose15 after native set_ejected_camera NullReferenceException at Editor/VoxelMcpTools.cs320 while constructing return-state diagnostics (poses00..14 saved). Subsequent grazing calls succeeded; complete motion15/16 using identical source/parameters. No claim of runtime exception-free validation from this hot capture.
+
+
+### AJ: angle-conditioned relief, before run
+
+AI retains the raw height side-wall magnification at the most oblique views. AJ is a visual treatment: rock amplitude0.08m at useful viewing angles, smooth normal-view fade0.15..0.40 instead0.05..0.15. This bounds visibly magnified near-tangent walls, intentionally fading relief for views70..81degrees from the local normal. It is not a revised performance scenario, weaker gate, or acceptance based on reduced work; existing performance criteria still apply. Original distance8..16m and footprint fades unchanged. All fixed normal/grazing/cross camera parameters remain unchanged, with corrected-normal flat AI as control. Must preserve a convincing view-dependent effect at ordinary angles and avoid a visible fade pop. Normal decode fix retained.
+
+
+AJ cold-runtime reconciliation: hot images still show substantial walls at the grazing pose. Before drawing further conclusions from angle tuning, explicitly compile shader/material and clean-restart AJ, checking crash marker/log, then recapture fixed MOTION/GRAZING/CROSS/v1. This verifies the bound runtime source rather than assuming every hot include change is active. Cold captures use distinct candidate-aj-cold labels; original hot evidence retained.
+
+
+AJ cold result: independent critic FAIL; clear apparent thickness but corrugated/stretched side faces in grazing08/16, motion16 and cross00/16. Cold and hot grazing16 camera readbacks match exactly yet surface appearance differs materially. Cause not established; hot-only candidate comparisons cannot establish retained cold behavior. Builtin World-Space Normals mode inspected and restored to Lit; this displays shading normals, not an independent geometric-normal measurement. Fresh startup log has stock missing assets plus Vulkan cache rename warning, no observed new shader/parser failure. Before further tuning, cold control-AJ sets only both relief amplitudes to zero, retains AJ normal correction/material/maps/fades, compiles and restarts, captures unchanged MOTION/GRAZING/CROSS/v1. This is the source-matched cold visual baseline; no timing acceptance from these captures.
+
+Control-AJ cold preparation stopped at native set_component ApplyComponentProperties NullReferenceException before captures. Subsequent readback confirms active world, GrassRenderRangeMeters64 and settled state. Resume the same already-restarted control session; record this preparation failure, not an exception-free runtime pass. Add a5second post-play setup wait for future cold runs.
+
+Control-AJ cold resume completed all51 images with source and crash-marker assertions passing. Flat grazing16 removes the tall corrugated sides, establishing that they are caused by relief in this cold pair. AK retains AJ direct maps/normal correction/fades/search but lowers stone authored interval0.08m to0.02m (dirt0.033m unchanged). This cold-only comparison asks whether smaller realistic surface relief retains useful view-dependent depth without visibly extruded walls; no acceptance based on small pixel differences. Same fixed MOTION/GRAZING/CROSS/v1, matched control-AJ flat.
+
+Whole-change baseline, before run: baseline-original-20260919 restores pre-prototype shader/material backups, including the preexisting64..128m detail fade. Relief include remains on disk but original shader does not reference it. Execute unchanged TERRAIN-RELIEF-PERF-001/v1 and CLOSE-PERF/v1 with cold startup, original rock_face maps and no relief. This is the required whole-change comparison baseline, separate from flat controls sharing candidate art. Preserve all earlier measured failures; no acceptance gates change. AK cold51captures completed without capture errors and unchanged crash marker; independent visual judgment pending.
+
+Whole-change baseline first preparation stopped before timing: compile_source_shader rejected the existing mounted path immediately after play_stop. Same transient path error occurred earlier for AD. Add5s after stop for editor mount transition before explicit compile; retry unchanged source/scenario. No measurements discarded.
+
+AK independent verdict: cleaner than AJ, visible shallow relief but final visual FAIL. Narrow ribbed strips remain beneath grazing foreground stones; ordinary views remain close to flat control and specific hide/reveal feature unproven. User real3Dfeel goal remains incomplete.
+
+### AL: steep-side shading, before run
+
+Retain AJ mapping/search/fades/normal orientation, rock authored interval0.04m. Return hit depth from the canonical search; derive apparent hit Q=U-N*d and screen-derivative normal outside divergent branches. Keep original source normals on broad stone faces. Steep virtual faces blend to the Q normal with independently projected fine grain from the existing rock maps (0.25m tile, normal strength0.12), preventing the original top-face normal texture from stretching across sides. Dominant-axis grain uses Q and explicit gradients; luminance high-pass strength0.5, bounded0.7..1.3. Reject derivative discontinuities whose footprint stretches2..4times the original. No new source textures, geometry, depth output or CPU state. This differs from rejected AB full normal replacement: source face detail remains, only sides get corrected lighting and grain. Cost: derivatives plus three extra texture reads only on active steep rock sides; unchanged performance gates. Same cold MOTION/GRAZING/CROSS/v1 against cold flat control-AJ and AK/AJ. Require natural-looking sides, convincing volume and no stipple/edge instability.
+
+Original whole-change baseline completed: run1b36a84bc5514b04a4d6634efe0fe3e2, source prototype-4274-baseline-original-20260919, engine26.09.15/RTX5090, canonical2769x1529. All preflight checks passed; source hashes unchanged. Moving385.695FPS, p954.4896/p996.4344ms, averageGPU2.2448592ms; standing321.41373FPS,p954.6556/p995.8717ms,GPU2.6992333ms. Moving/standing peak process4712443904/4671737856bytes; peakGPU1583910985/1585369161bytes; allocations/frame67312.54/31727.107bytes; exceptions0/0, collision4913ready0pending0failures. Close windows402.1/399.3/400.1FPS,p953.70/3.76/3.80ms,p994.81/4.78/4.93ms; medianp953.76,p994.81ms; both spreads<5%. CloseGPUcounter remains fixed0.61ms and is not accepted as responsive terrain timing. This establishes a baseline only; no current candidate comparison or acceptance yet. Raw/summary files use baseline-original-20260919 prefix.
+
+AL cold compile/restart/51captures completed. Parent sees stronger side lighting but new black stipple and abrupt dark edge patches, not acceptable. AM retains AL and raises stone search minimumLOD to3 (8source texels,7mm), filtering scan microheight before ray intersection and derived side lighting. Dirt remains unchanged. This tests whether unresolved fine height is driving unstable side normals; original full-resolution face maps remain. Earlier AG filtering was hot-only and cannot establish this cold side-shading result. Same cold fixed scenarios and controls; no changed acceptance criteria.
+
+AL independent FAIL: nearly black side bands, broad-face jagged patches and residual striations. AM cold51captures complete with marker/source assertions passing; parent sees substantially reduced black stipple and softer sides, independent review pending. AN retains AM height filtering and side shading while restoring8cm stone interval, directly testing whether the smoothing permits convincing depth at the same amplitude that failed in AJ. All other shader/material/scenario values unchanged; same cold fixed views and controls. No acceptance from isolated stills; temporal and performance gates remain.
+
+AM independent verdict: improved overAL, localized shallow relief but finalFAIL; soft/scalloped exposed sides and weak near-frontal depth, no tracked hide/reveal proof. AN cold51captures completed; parent sees more depth but more rounded/stretched side contours, not accepted.
+
+### TERRAIN-RELIEF-DIRT-002/v1, before first view
+
+Current saved4274 world/basic_example, seed1337/gen48 and standard relief world settings. Revisit the dirt exposure documented in old DIRT-RELIEF-001/v4; old engine/version results are not comparisons. Player teleport(2200,1450,1200),20s settle; light25,225,0; ejectedcamera A(2264,1555,800),B(2280,1555,800),C(2248,1555,800),returnA; angles36.4028816,-11.2596598,0,FOV60,1280x800,0.3s hold. Pass requires readable exposed dirt, natural clod/pebble depth and view-dependent reveal without tearing, stipple or plastic shading; compare source-matched cold flat control before acceptance. If this old location is now buried/occluded/not dirt, preserve failed views and record invalidity before choosing a new version. Initial read-only canonical column survey at2328,1543,z700..940 step16,count16 checks current exposure; it does not substitute rendered validation.
+
+AN independent FAIL: more obvious depth but thick soft/smeared/scalloped sides repeat across stones; source suitability is a visual concern, not proven root cause. DIRT-002/v1 first survey found surface height697.38965 and Air at all700..940 samples; four fixed captures show dense grass, no readable dirt. Scenario is invalid at this current world revision; old dirt exposure is gone. No dirt visual pass is claimed and no world edits were made.
+
+Next source-art experiment selection: Poly Haven Rock04, Rob Tuytel, CC0, documented1.5m tile (https://polyhaven.com/a/rock_04; https://polyhaven.com/license), description rough/bumpy continuous weathered rock rather than packed flat stone slabs. Acquire original matched2K color/GLnormal/roughness/AO/height; verify API sizes/MD5 and inspect maps before shader changes. RockyTerrain02 was rejected before download because its documented90m aerial tile is inappropriate to this fine-relief experiment. New source needs its own cold flat control; changing artwork cannot by itself prove parallax.
+
+### AO: continuous rock source, before run
+
+Five Rock04 maps verified against API sizes/MD5; originals retained. PNG header confirms displacement16-bit grayscale+alpha despite Pillow RGBA8 preview. Approximate preview-derived4texel central-difference normal slope fit52/54mm (U/V), correlations-0.5665/+0.5937 confirms same GL green convention, not physical calibration. Retain AN8cm authored stone interval, heightLOD3 and side shading; change only matched rock maps and documented tile1.50m. New zero-amplitude control-AO followed by candidate-AO, each cold compile/restart, unchanged MOTION/GRAZING/CROSS/v1. No GrayRocks flat comparison substitutes this source-matched control. Must look like rough continuous stone with visible recess depth, not a warped flat pattern; no acceptance without independent visual and performance checks.
+
+
+AO cold paired capture completed: 51 control and 51 candidate images, source/crash assertions passed. Parent inspection finds continuous rough surface without prior slab skirts, but still weak perceived volume; independent verdict pending, no acceptance.
+
+### AP: physical-footprint fade, before run
+
+Retain AO material, amplitude, side shading and search. Replace mip2..4 amplitude fade with authored interval / maximum original surface pixel footprint: smoothstep0.5..2pixels. Explicit height mip filtering and8..16m distance /0.15..0.40 angle fades remain. The previous mip fade could remove an8cm interval when the pixel footprint was only1.17cm (16texels at1.5m/2048), despite multiple-pixel potential relief. This is a conservative interval-size proxy, not exact projected occlusion coverage. Must preserve natural volume without distant aliasing; performance may increase and needs measurement. Same cold fixed MOTION/GRAZING/CROSS/v1, source-matched flat control-AO and AO comparison; no gate change.
+
+AO independent verdict FAIL: matched motion08/grazing16/cross00/16 show mainly pattern displacement on a smooth mottled slope. No concrete hidden/revealed feature established; cleaner material alone does not meet the relief goal.
+
+
+AP completed51coldcaptures and3existing RAKING/v1 poses, no runtime capture errors. Parent inspection remains weak relief; no visual acceptance.
+
+### AQ: filtered directional visibility, before run
+
+Retain AP intersection/art/fades. Add12 uniformly spaced height samples from resolved hit toward directional sun, same combined height and LOD. Compare ray depth against surface with bias max0.1mm/1% effective interval; smoothstep comparison over max(original pixel footprint,2% rise). This is an antialiased blocker estimate, not a physically calibrated soft sun. Reuse narrow engine direct-light wrapper validated in AA: subtract only sun diffuse/specular blocked fraction, leave indirect/baked AO/local lights unchanged. Installed vr_lighting.fxc407/459 confirms current direct sun ownership. Baked/probe modes excluded. This tests missing lighting cues separately from amplitude/art; it deliberately diagnoses shadows before unshadowed final acceptance, without claiming that earlier gate passed. Earlier hard AA failure retained. Same cold MOTION/GRAZING/CROSS/v1 and RAKING/v1 against AP; reject black stipple, cutouts, detached shadows and persistent flatness. Additional12heightreads and duplicate sun evaluation require separate performance measurement before acceptance.
+
+AP independentFAIL: no material depth improvement. AQ completed51cold+3raking captures; parent sees no compelling volume improvement. Height distribution audit: Rock04 originalPNG16bit grayscale+alpha, Pillow8bitpreviewP5/P95=.176471/.788235; GrayRocks16bitP5/P95=.207370/.598749. Both use substantial range; Rock04 mostly broad smooth variation, not a tiny overall encoded range. +/-8texel height differenceP95 Rock04~.02745 vsGrayRocks~.12949/.13198. No physical calibration inferred.
+
+### AR: coherent macro normal plus original fine detail, before run
+
+Return exactly to AM source maps/tile1.8m/stone0.04m, mip fade2..4, minimum heightLOD3, no suntrace. Replace AM steep-side-only normal/grain substitution with actual hit-surface normal plus source normal high-frequency residual: sample low normal at same isotropic minimumLOD3, map through canonical normal projection, subtract normalized tangent slopes from original full normal, project residual onto hit tangent plane and bound length1. Blend to result with actual relief fade and derivative-discontinuity rejection2..4. No independent side grain/color modulation remains. This tests whether mismatched apparent shape/source macro shading causes artificial sides while preserving scanned microtexture (AB lost fine detail). Low normal adds at most3texture reads near active rock; old side3reads removed. Same cold MOTION/GRAZING/CROSS/v1 and RAKING/v1. Compare AM and flat control-AJ; no acceptance unless natural relief/occlusion improves without broadface patches or edge noise. AQ visibility experiment is not retained in AR; no performance gates changed.
+
+AQ independentFAIL: no discernible recess-shadow structure or convincing addedvolume; cleanframesalone notpass. AR completed51cold+3raking, source/crashassertions passed. Parent sees identifiable stonefaces/sides but residualfine streaks; independentreviewpending.
+
+### AS: structured stone plus filtered sunlight, before run
+
+Retain AR exactly and add AQ12sample filtered direct-sun visibility. This isolates local shadow contribution on a source with sharper height structure; AQ already failed to improve the smoother Rock04 surface. Same fixed cold MOTION/GRAZING/CROSS/v1 plus RAKING/v1 compared directlyAR. Need coherent recessed shadows, natural sides and preservedfine detail; no acceptance from merely darker edges. Cost/budgets unchanged fromregisteredcriteria and require whole-change comparison.
+
+AR independentFAIL: shallowdepthpresent but lower-right ragged patches, scallopedrims and etched raking seams remain. AS completed51cold+3raking; parent sees darkercoherentrecesses in raking but noresolutionofsideart. Independenttrackingpending.
+
+### AT: original bedrock material with corrected shading, before run
+
+Keep AS algorithm and restore original matched RockFace maps, tile2.38m; authored stone interval0.08m. Sourceaudit original16bitheightP5/P95=.299474/.757824; GLnormal correlationdx-.69854/dy+.67465 and leastsquaresinterval71.44/70.91mm at2.38m tile. This approximates map correspondence, not measuredphysical calibration. OriginalRockFace is continuous fracturedbedrock rather than loose flat slabtops; its earlier4cm implementation predates currentnormalorientation/intersection/lighting. New cold flatcontrol-AT withbothamplitudes0 and candidate-AT rununchanged51view+3raking each. Sourceartalone cannotestablishrelief; require convincingstructuraldepth overowncontrol and naturalrecess/sides. AR/AS failuresnotdiscarded. If visuallyplausible, measurewhole-changecanonical/closeagainst baseline-original-20260919 withoutchanginggates.
+
+AS independentFAIL: modestrecessdarkening doesnotresolve face-to-sideartifacts. Trackednotchfleck grazing06/08/10/12/16 remainsvisible; nohide/reveal established. AT pairedcold108capturescompleted withsource/markerassertions; parent seesweakfracturedepth, nofinalacceptance. GrayRocks normalizedheight-to-normal4texelfit23.52mm(U/V), correlation-.321/+.324; theseweaker correlations and shallowfit contrastwithRockFace71mm/.7, butdonotprovefailurecause.
+
+### AU: surface-gradient normal composition, before run
+
+Retain AT originalRockFace maps,8cmrock/3.3cmdirt, heightsearch/fades/filtered12samplesun. Replace whiteout-style vector blend with negativeheightgradients derivedfrom normalXY/max(normalZ,.1), GLgreenflip retained. Blend slopes acrossstochasticpatches, triplanarprojections and materialcoverage; projectontogeometrictangentplane and normalizeonce atfinalmaterial.Normal. Near-backfacing scan-normal slope denominator.1 isabounded approximation; heightfieldcannotrepresentoverhangs. Remove allAR derivativehitnormal/low-normal residualsamples and prior sidegrain paths. This followsMikkelsen2020 surface-gradientprinciple(sections4.3-4.4, linkedresearchlibrary) and testsconsistentlighting forcombinedheight; neitherpapernorcompileprovesquality. Removesupto3low-normalreads; noextraheightreads. Flatcontrol-AU haszeroamplitudesbutidenticalnewnormalcomposition. Bothcold51+3raking, unchangedscenarios/gates. Broadergrass/sand/snow normalshadingalsouses canonicalcomposition andneedsvisual/performancecoverage beforeacceptance.
+
+AT independent visual FAIL: mostly flat bedrock with modest crack displacement; raking contrast largely exists in its own control.
+
+AU performance screening, before timing: after its paired visual capture, cold restart exact candidate-au source as candidate-au-perf1 and execute unchanged TERRAIN-RELIEF-PERF-001/v1 plus CLOSE-PERF/v1 against baseline-original-20260919. Unrelated Code/Editor/shader hashes match the original baseline. This measures the simplified normal composition and filtered sun trace even if visual judgment remains a failure; it does not establish visual acceptance. Record all moving/standing timing, memory, allocation and correctness gates unchanged. Preserve visual-startup evidence under its original AU label; performance uses a distinct label. No source edits, screenshots or unscheduled native observations during timing.
+
+AU control completed51cold+3raking. Candidate cold startup failed before play/capture: native editor_status HTTP timeout; freshprocess90548 displays Opening s&box Editor and Stall Detected (Unknown Cause,160.5s). Startup log stops atToolsStallMonitor and reports blue_noise_256 invalidheader8736!=12; crash marker unchanged2026-09-19T04:41:56.626406Z. No candidate captures/performance measured. Preserve startup log, terminate only this freshly started stuck editor (no opened scene/unsaved session), restart identical source once and retain failure; no engine assets changed.
+
+
+### AV: restore useful grazing relief, before run
+
+Prepared source snapshots only while AU validation remains active. AV retains AU exactly except angle fade: restore smoothstep(0.05,0.15,nV) from the original prototype instead of AJ's(0.15,0.40). Using the previously traced target normal(.284684,.647235,.707136), fixed grazing yaw-45/-35/-25 atpitch16 gives approximate nV .441344/.327605/.209834 and AU amplitude fractions1/.796996/.144425. This local-normal calculation is not a per-pixel measurement, but shows the fade can suppress most depth as the view becomes oblique, hindering the intended occlusion. Retest natural sides with original RockFace and slope-based normals rather than assuming earlier GrayRocks failures transfer. Same cold51+3raking views and flatcontrol-AU; no camera/light/gate changes. Reject renewed smearing, stipple, missed peaks or disappearing relief. Performance must be remeasured if retained; AU timing does not qualify AV.
+
+AU recovered candidate51+3views complete after identical-source visible restart. IndependentvisualFAIL: cleanbutweakdepth, no concretehide/reveal. Performance run93a45c100ce342e994ee201b6176a390 completed47066samples moving385.96097FPS,p954.5371,p996.6932ms,GPU2.2418613; standing335.94333FPS,p954.4689,p996.415ms,GPU2.5727158. Bothphases0exceptions, collision4913ready0pending0failures; preflightpassed andsourcehashesunchanged. Closewindows354.8/354.6/353.5FPS,p954.11/4.23/4.30,p995.82/6.22/6.23ms. Medianp954.23vsbaseline3.76(+12.50%FAIL),p996.22vs4.81(+29.314%FAIL); p99windowspread6.59%flag. EjectedGPU2.84msfixedall3windows remainsunresponsive; do not compare againstbaselinefixed.61asvalidGPUcost. OverallAUfailsvisualandcloseperformance; noacceptance. AV nowdeployedforregisteredfixedvisuals; performancecostnotqualifiedbyAU.
+
+### AW: remove unproductive sun tracing, before run
+
+AV completed the unchanged 51 cold views and three raking views. Parent inspection still finds weak relief; independent review is pending. AW retains AV's original RockFace maps, 8 cm rock interval, 3.3 cm dirt interval, surface-gradient normal composition, search and fades. Remove only the 12-sample directional visibility trace and its direct-light wrapper, restoring the engine's standard pixel lighting include. AU's close-view timing failed and the visibility treatment has not demonstrated enough visual benefit to justify its cost. Compare AW with AV and the zero-amplitude control-AU using the same cold MOTION/GRAZING/CROSS/v1 and RAKING/v1 scenarios. No camera, light, performance budget or visual criteria change. If retained, run the unchanged canonical and close performance scenarios; earlier candidate timing does not qualify AW.
+
+AV independent visual verdict: FAIL. The central rock region in motion-08 remains a low-contrast texture on a smooth slope; the small pale fleck and adjoining crack tracked across grazing-08/09/10 do not show clear coverage or reveal. Grazing-16's ridge remains flattened. The critic found no dominant new black-band or skirt defect, but insufficient structural depth. Raking contrast largely exists in control-AU. Sampled frames do not establish temporal stability.
+
+### AX: preserve physically resolved height, before run
+
+Prepared snapshots while AW is being captured. Retain AW exactly except replace its mip2..4 amplitude fade with smoothstep(0.5,2.0, authored interval / maximum world pixel footprint). Explicit per-projection height mip filtering, stone minimumLOD3, 8..16 m distance fade and 0.05..0.15 angle fade remain. The mip fade can reduce the authored 8 cm interval to zero at a pixel footprint of only 1.86 cm for RockFace's 2.38 m/2048 tile. This repeats AP's isolated fade principle on the original RockFace and current slope composition; AP's unsuccessful Rock04 result remains recorded. It does not prove depth will become convincing. Run unchanged cold51+3 views against AW and control-AU; reject aliasing, stretched faces and persistent flatness. Additional active rays may cost time and require fresh timing if retained. No acceptance gates change.
+
+AW completed 51 cold views and three raking views without capture/source/crash assertion failures. Parent grazing-16 inspection finds no meaningful lost structural depth after removing sun tracing; rock remains too flat. Independent review pending. AX deployed for its previously registered fade-only comparison.
+
+### AY: deeper bedrock with matching slope strength, before run
+
+Prepared only, not active during AX capture. Keep AX's original RockFace maps, 2.38 m tiling, physical-footprint fade, stock lighting and surface-gradient composition. Increase the authored full stone height interval from 8 to 24 cm and multiply its projected normal slopes by 3 to preserve approximate height/normal correspondence. The source's P5..P95 range makes the central 90% interval about 11 cm; this is an artistic scale experiment, not a claim of real scan calibration. Dirt remains unchanged. Increase oblique coarse-search limit from 32 to 64 (frontal minimum stays 8, four bisections remain) because the longer ray can cross more height features. This is deliberately a bounded depth-and-corresponding-search experiment; larger depth alone is not success and earlier exaggerated GrayRocks skirts remain failures.
+
+Capture new zero-amplitude control-AY with identical 3x normal slopes, then candidate-AY, each using unchanged cold MOTION/GRAZING/CROSS/v1 and RAKING/v1. Comparison must establish view-dependent overlap beyond stronger bump lighting. Reject thick smeared sides, scalloped rims, missed intersections and material separation. If visually worthwhile, run unchanged whole-change canonical/close benchmarks against baseline-original-20260919; cost and temporal stability remain unqualified until measured. Do not change scenarios or budgets.
+
+AW independent FAIL: removing the trace lightens some raking cracks (raking08 near1010,410 and1190,660; raking16 near920,490), but neither version establishes strong layered volume. No new conspicuous artifact. AW raking files are candidate-aw-00/08/16.png with candidate-aw-light.json; shorter labels identify the same registered poses.
+
+AX completed 51 cold views and three raking views; source/crash assertions passed. Parent motion08/grazing16 inspections remain too flat; independent review pending. Proceed with already registered AY matched flat control and candidate. No prior run is accepted.
+
+AU whole-change resource comparison (same recorded canonical run):
+
+| Metric | Original moving | AU moving | Original standing | AU standing |
+| --- | ---: | ---: | ---: | ---: |
+| Peak process bytes | 4,712,443,904 | 4,760,313,856 (+1.02%) | 4,671,737,856 | 4,812,922,880 (+3.02%) |
+| Peak GPU bytes | 1,583,910,985 | 1,605,477,789 (+1.36%) | 1,585,369,161 | 1,656,694,173 (+4.50%) |
+| Allocated bytes/frame | 67,312.540 | 67,597.164 (+0.42%) | 31,727.107 | 31,384.861 (-1.08%) |
+
+All listed resource gates pass. Moving collision summary is 4913/4913 ready, no pending work or failures. Clarification: the separate stationary collision summary is null, so it does not independently establish a second collision measurement; the earlier wording must not imply it does. Both phase runtime records report zero exceptions. This does not change AU's visual and close-performance failure.
+
+AX independent verdict FAIL: motion08 remains a smooth-looking sheet, grazing16's ridge is flattened, and the fleck/crack tracked through grazing08/09/10 has no established coverage or reveal. No conspicuous new stretching or dark-band artifact was found. AY paired capture is in progress; no acceptance is implied.
+
+AY paired cold capture completed: 54 control and 54 candidate images, exact snapshot assertions and all commands successful. Parent grazing16 inspection now finds clear raised edges, including a prominent right-hand ledge, but exposed sides may be stretched; main08 also has greater structural relief. This is not acceptance; independent matched-control review is pending.
+
+AY performance screening, before timing: cold restart exact AY snapshots as candidate-ay-perf1; execute unchanged TERRAIN-RELIEF-PERF-001/v1 and CLOSE-PERF/v1 against baseline-original-20260919. Record source/environment identity, all canonical gates and three close windows. Do not capture views, change source or issue unscheduled runtime calls during timing. This cost measurement is useful even if the visual verdict is a failure and does not imply acceptance. Preserve prior visual startup evidence using the distinct performance label.
+
+### AZ: preserve fine grain while deepening macro shape, before run
+
+Scratch snapshots prepared while AY performance uses frozen active source. AY's raking view shows harsh, dark fine-grain shading as well as deeper structural relief. AZ keeps AY's 24 cm interval and 8..64 search unchanged, but replaces the blanket 3x stone-normal slope multiplier with full-resolution slope plus 2x low-pass slope. The low-pass normal uses the same isotropic footprint and minimumLOD3 as the stone height search; projection and final material blending remain canonical. This is an approximate separation using matched scan normals, not an exact height derivative. It adds at most three normal-map reads for visible stone; all other material shading is unchanged from AY.
+
+A new zero-height control-AZ retains the same macro/fine normal composition. Both states use unchanged cold MOTION/GRAZING/CROSS/v1 and RAKING/v1. Compare AY to isolate harsh fine-shading reduction, and compare control-AZ to establish actual relief. Stretched sides and insufficient overlap still fail. No automatic deployment until the AY performance run finishes; no source edits or runtime interference during that timing. New performance measurement is required if AZ is retained.
+
+AY independent verdict FAIL, with a narrower improvement: grazing08's raised slab (x970..1120,y440..560) and cross16's raised patches show more apparent relief than the matched control. Their sides remain ribbed, smeared or melted; grazing16 retains the defect near875..965,540. Both candidate and control have coarse dark raking shading, so this cannot be attributed entirely to parallax. No particular recess mark was unequivocally observed disappearing behind a nearer edge. This is progress, not final visual acceptance.
+
+AY performance run ac4a0795eb2740b5803a744cbf230d43 completed 47,544 samples, source stability checks passed and all three close windows completed. Full gate comparison is pending extraction. AZ matched flat control deployed only after timing completed; run its already registered pair next.
+
+AY performance comparison (run ac4a0795eb2740b5803a744cbf230d43, unchanged PERF/v1 and CLOSE-PERF/v1, RTX5090, engine26.09.15, 2769x1529):
+
+| Metric | Original moving | AY moving | Original standing | AY standing |
+| --- | ---: | ---: | ---: | ---: |
+| FPS | 385.695 | 389.87903 (+1.09%) | 321.41373 | 311.3703 (-3.13%) |
+| p95 ms | 4.4896 | 4.5114 (+0.49%) | 4.6556 | 4.7271 (+1.54%) |
+| p99 ms | 6.4344 | 6.4420 (+0.12%) | 5.8717 | 6.2597 (+6.61%) |
+| Average GPU ms | 2.2448592 | 2.217758 | 2.6992333 | 2.800097 (+0.1008637 ms) |
+| Peak process bytes | 4,712,443,904 | 4,790,255,616 (+1.65%) | 4,671,737,856 | 4,821,815,296 (+3.21%) |
+| Peak GPU bytes | 1,583,910,985 | 1,606,264,221 (+1.41%) | 1,585,369,161 | 1,607,345,565 (+1.39%) |
+| Allocated bytes/frame | 67,312.540 | 70,152.150 (+4.22%) | 31,727.107 | 31,928.300 (+0.63%) |
+
+All canonical numeric gates pass. Moving collision desired/ready4913/4913, zero failures; separate standing collision field is null. Both phase runtime summaries report zero exceptions; grass overflowViews=0. Preflight, settled completion and cold crash/source assertions passed. Direct original-cold versus AY-cold hash comparison found no missing or different Code/Editor/unrelated shader keys; within-run hashes also match.
+
+AY close windows FPS390.1/388.7/388.9, p95=3.69/3.93/3.84 ms, p99=4.55/4.82/4.88 ms. Median p95=3.84 versus3.76 (+2.13%), p99=4.82 versus4.81 (+0.21%): both frame-time gates pass. Window spreads p95=6.25%, p99=6.85% exceed the5% variability flag and are retained. Ejected GPU reports fixed2.23 ms in all windows, versus fixed0.61 in the original run: unresponsive counter, not a valid GPU-cost comparison. Close GPU gate therefore remains unqualified. AY remains a visual failure and these timings do not qualify AZ or any later change. Evidence prefix: candidate-ay-perf1.
+
+AZ paired capture completed: 54 control and 54 candidate views, exact deployment and cold assertions passed. Parent sees less harsh fine shading under raking light, but the prominent grazing ledge still looks stretched. Independent review pending.
+
+### BA: moderate structural depth, before run
+
+Keep AZ's macro/fine normal separation, original RockFace maps, fades and 8..64 search. Reduce authored stone interval24 to16 cm and corresponding macro-normal strength3 to2; dirt unchanged. This is an artistic midpoint between AX's weak8 cm relief and AY/AZ's visibly stretched24 cm sides. No camera or acceptance changes. New zero-height control-BA retains 2x macro-normal strength; capture both states with unchanged cold51+3 views. A less objectionable flat result is still a failure. Fresh performance and broader coverage remain required if retained.
+
+AZ independent verdict FAIL: less harsh than AY, but grazing08/16's prominent slab still has a soft streaked skirt and cross16 remains smeared. The outline beneath the slab changes across grazing00/04/08/12/16, supporting apparent relief, but no recess landmark was unequivocally hidden/revealed. Do not accept improved harshness as finished material quality.
+
+### BB: normals derived from the filtered height field, before run
+
+Prepared only while BA runs. Keep BA's 16 cm rock interval, 2.38 m tile, height source, search and fades. Replace its runtime low-pass source-normal boosting with one numerically baked normal map: macro slope from periodic central differences of the original height's box mip3, plus original full-resolution normal slope minus its mip3 slope. Bilinear upsampling preserves wrap; clamp the fine residual length to1 to bound unrepresentable scan detail (0.8104% of texels affected). Encode OpenGL RGB8, retain shader GL-green conversion and canonical surface-gradient composition. This approximates the filtered height shape; source mip reconstruction is not asserted identical to the engine. The texture/manifest/README live under textures/terrain/rock_face_relief_normals; original maps remain untouched. Parent inspected the generated normal image. Output SHA256=3a9228069f3ac1d3398d072dc22c02fa75aa6f8fd9c62ca8e690a04c7dc40428.
+
+This tests whether normal/height shape disagreement contributes to artificial side shading while preserving fine detail lost in AB. It uses neither AR's screen-space derivative hit normal nor an independent side texture. It removes AZ's up-to-three extra normal samples and normal-strength helper, but no performance benefit is claimed before measurement. New flatcontrol-BB uses identical baked normals with zero ray amplitudes. Run unchanged cold51+3 views per state after BA completes; compare BA for appearance and control-BB for actual relief. Stretched color detail, insufficient overlap, or loss of natural stone character still fail. No camera, light or budget changes.
+
+BA paired cold54+54 completed with exact source assertions and no capture errors. Parent grazing16 inspection finds smaller but still stretched exposed sides; independent judgment pending. BB's already registered normal-bake pair is next. Evidence snapshot helper now also fingerprints the new derived normal PNG and manifest; these task-only keys were absent from historical snapshots, so do not classify them as unrelated-source differences. Active terrain source/material deployment occurred only after BA captures finished.
+
+Preparation correction: the first attempt to extend the evidence helper stopped at a text-match assertion before any file writes or deployment; the prior paragraph described the intended next state prematurely. The corrected bounded edit and exact BA-to-control-BB deployment then succeeded. No runtime attempt occurred between these steps. BA independent verdict FAIL: cleaner and less extruded than AZ, but a soft/scalloped underside remains and overall depth becomes weaker; no unequivocal landmark hide/reveal. BB pair remains unrun at this entry.
+
+BB completed54+54 cold views with exact deployment and no reported capture errors. Independent verdict FAIL: ordinary-light side quality is materially similar to BA, with a soft vertically smeared skirt. Stronger raking contours also occur in its flat control. Changing apparent side exposure is present, but no identifiable recess feature hide/reveal is established.
+
+### BC: fine detail mapped onto apparent side surfaces, design before implementation
+
+Keep BB's height, baked macro normal, 16 cm interval and ray search. The remaining defect is visibly stretched side detail; normal-map correspondence alone did not cure it. Extend the existing fragment path to return hit depth as well as tangent lookup U, reconstruct apparent surface Q=U-N*depth, and compute its derivatives before branches. This is derived visual data only: no world/SDF/collision state, mesh ownership or networking change.
+
+Bake a small-detail surface texture from the original RockFace inputs: linear-luminance high-pass ratio around an8-texel box low-pass, plus the same bounded fine normal-slope residual used in BB. RGB channels store centered luminance variation and two GL slope components. Near steep macro faces, replace stretched fine color/normal/AO detail with a low-pass base and triplanar fine detail evaluated at Q with its explicit derivatives and the macro surface normal. Macro material color remains from the original relief lookup; no unrelated stone pattern or random side color is introduced. Base material shading and distance behavior are preserved outside the near treatment. The steep-face blend begins at normal alignment0.95 and is full by0.65; near treatment fades8..16 m. Fine slopes use restrained strength0.25 times macro/geometric normal alignment to avoid turning the apparent surface backward.
+
+Ownership: the terrain shader owns apparent hit reconstruction, texture inputs, blending and per-pixel evaluation; the numerical asset bake owns derived fine texture data. No runtime CPU state or allocation is introduced. Added cost is at most three low-pass normal reads for near rock, plus three low-pass color and three fine-detail reads on contributing steep pixels. Sparse projection branches remain. This cost requires measurement; no improvement is assumed. This replaces the existing fine detail locally and is not a second terrain implementation. Earlier AL/AM side treatments used different scan art and screen-derived surface normals and remain failed evidence; BC must independently establish quality.
+
+New zero-ray control-BC uses the same normal/detail treatment. Run unchanged cold51+3 views per state, compare BB and own control, reject material seams, floating/swimming grain, soft skirts and persistent lack of depth. A sampled-pose result does not establish real-time temporal stability. No visual or performance criteria change; canonical/close remeasurement and broader coverage remain required before acceptance.
+
+BC control capture stopped after motion00..16 and grazing00..07: set_ejected_camera threw NullReferenceException in SetEjectedCamera readback at VoxelMcpTools.cs:320. No candidate deployment or raking occurred. Subsequent editor_status reports voxels3/basic_example playing, unpaused, successful compilation; get_ejected_camera reports the requested grazing08 position(-342794.562,-216638.156,1703.422), angles16,-35.0000038, FOV60. Thus placement occurred before the readback failure; this is not evidence of a shader failure or a completed view.
+
+Fix the existing editor tool's metadata readback: cache Game.ActiveScene and use a nullable Camera read, guard game-scene identity comparisons when that context is absent. Position/rotation/FOV setters and rendering remain unchanged. This task-related Editor/VoxelMcpTools.cs change is outside timing and affects no per-frame runtime path; record it as a source difference from historical captures/baselines. Preserve partial images and resume only missing registered poses after compiler/source/crash checks. Do not silently overwrite completed evidence.
+
+BC completed54 control plus54 candidate views. Control resumed only missing poses after the editor metadata guard; all commands completed and candidate cold compile/start assertions passed. Parent sees little improvement over BB in ordinary-light main08/grazing08. Independent verdict pending. Read-only coordinate audit found snow/sand passed absolute position into SampleTerrain, which already adds the high-precision origin; this double offset was introduced during this prototype and must be corrected to the same relative flatPosition used by grass. Rock/dirt are already relative. No saved world mutation is needed.
+
+### BD: rounded scan with matched height normals, before implementation/run
+
+Return to BB's simpler single-map shading path, removing BC's extra fine-surface input and side resampling. Test the already downloaded CC0 Rock04 scan at its published1.5 m tile with a16 cm authored interval, current8..64 search, physical-footprint fade and .05..15 angle fade. Earlier AO/AP/AQ used8 cm and older grazing fade/shading; their failure remains evidence, not a qualification of this revision. Rock04's broad continuous height shapes test whether convincing stone volume can avoid the long skirts of RockFace's thin fractures. This is an experimental art replacement, not an approved final texture.
+
+Derive a GL normal from Rock04's full16-bit height using the same mip3 periodic central-difference method and bounded original fine-slope residual as BB. Keep original color/roughness/AO. A new task-derived normal and manifest own this recipe; original source maps stay unchanged. No extra runtime sampling or state over BB. Both candidate and zero-height control correct snow/sand sampling to relative flatPosition. This bug fix is independent of the art comparison and needs broader material coverage before acceptance.
+
+Run unchanged cold MOTION/GRAZING/CROSS/v1 and RAKING/v1,54 views per state. Inspect against its own flat control for convincing volume and coverage, reject soft extrusion, smearing and flattened texture. No camera/light/budget changes. Full performance and broader visual coverage remain required if retained. Do not deploy during BC capture/review; prepare snapshots first.
+
+BC independent verdict FAIL: less black/ribbed underlip, but smoother blurred sides do not convincingly continue fractured stone; main and cross remain predominantly flat or smeared. No identifiable mark hide/reveal established. The extra sampling has not earned retention. Proceed with registered BD art/height correspondence experiment after exact source assertion.
+
+BD bake first stopped before outputs because original PNG alpha is not exactly65535: observed range65533..65535. PNG unassociated grayscale remains height; shader reads R only. Corrected the unnecessary opacity assertion to the observed range, retained grayscale16 without alpha premultiplication. This is input metadata handling, not a runtime or height change.
+
+### RELIEF-GPU-COUNTER-SURVEY/v1, before run
+
+Purpose: diagnose unavailable close-view GPU measurements without claiming a new performance pass. After BD visual capture, retain same visible session/source/world and move to existing main08 camera(-342760,-216600,1730.00134), angles30,-75, FOV60, physical2769x1529, player at registered rock position, grass64, light25,225. Read baseline overview, enable stock engine overlay_gpu1, warm30 seconds and collect three existing voxel_collision_info overview/profiler records12 seconds apart, then restore overlay_gpu0. No screenshots or source changes during the windows. Preserve errors/empty scopes and exact toggle response. This is a counter availability survey, not comparable timing against overlay-off baselines. Stock official source DebugOverlay.cs sets GpuProfilerStats.Enabled from overlay_gpu and existing VoxelPerformanceProfiler.Capture already exports every available GPU scope. No new code hook is needed. If the GPU counter/scopes respond, register a separate matched baseline/candidate measurement before using them for acceptance; historical close GPU values remain unqualified.
+
+BD completed54+54 cold views, all compile/start/capture checks passed. Independent visual verdict FAIL: long corrugated strip beneath grass in grazing08/16, mottled sheet elsewhere; raking grooves are largely present in control. No identifiable recess mark coverage established.
+
+GPU survey attempt1 failed after baseline snapshot: console_command returned non-JSON content, while helper native() tried to parse JSON. Both enable and finally-restore commands were issued but response handling failed; no timed window was completed. Preserve attempt1-before; retry with new label and raw structured MCP result handling. This does not establish a GPU timing result.
+
+### BE: center the height interval on the mesh, before implementation/run
+
+Keep BD's Rock04 assets,16 cm range, normals, search, fades and corrected relative sand/snow coordinates. Change only the ray reference plane: place H=0.5 on the mesh instead of H=1. The ray starts half the weighted interval above the mesh and traverses the same full interval; return signed offset hitDepth-halfInterval. This reduces the common inward texture shift and the offset mismatch where relief meets flat grass, without reducing peak-to-trough texture relief. This tests an identified possible contributor to the boundary curtain, not an assertion that it fixes it. Material weights remain locally frozen; their variation is still an approximation.
+
+The near virtual surface may lie above or below the mesh; as before, this is only shading/UV relief and writes neither geometry nor pixel depth. Contact/silhouette limitations remain. No extra texture reads or loops are added. Owner is the existing relief function; no CPU/world state changes.
+
+Run unchanged cold51+3 views. Reuse the already captured control-BD: identical shader/material/assets and camera/light scenarios; zero amplitudes return before the only modified ray-origin/hit-offset code. Its actual executed flat shading path is unchanged. Compare BE with BD to isolate centering and with control-BD to assess actual relief; require natural stone volume and reject boundary ridges/weak depth. Timing and broader coverage remain unqualified.
+
+GPU survey retry1 completed three windows. Headline GPU remains fixed0.60 ms, but enabling stock overlay_gpu yields45 pass scopes. Exact terrain scope RenderToSwapChain/Managed: AfterOpaque/Voxel Terrain Indexed Indirect Draws is responsive: smoothed0.79618347/0.78458697/0.790251 ms; maxima2.173437/2.247166/2.2394125 ms. FPS344.1/344.0/343.1, p954.23/4.14/4.20, p995.47/5.65/5.55. These are survey observations only; no overlay-matched original baseline yet. Per-pass timings overlap: do not sum scopes into whole-frame GPU time. Existing headline GPU cost remains unqualified. Restore command was issued; its raw result is preserved. This establishes a usable terrain-pass measurement route for a separately registered paired run.
+
+BE completed54 cold views with successful source/compile/start assertions. Independent verdict FAIL, with real boundary improvement: grazing16's scalloped curtain is substantially reduced, but soft stretched band remains. Main08 is still dominated by mottled color detail; no identifiable recess mark coverage established. Centering alone does not qualify material quality.
+
+Next asset inspection: Poly Haven Rocks Ground02, Rob Tuytel, CC0, published2 m tile (https://polyhaven.com/a/rocks_ground_02). Original5matched2Kmaps and API info/files metadata are being retrieved for bounded prototype evaluation. This ground scan contains separate stones and gaps, unlike the broadly smooth Rock04 scan. No asset replacement or new runtime candidate is accepted by acquisition. Record full16-bit input properties and normal/height scale correspondence before selecting amplitude. API urllib retrieval returned403; ordinary PowerShell REST retrieval succeeded; no source map was altered.
+
+### BF: distinct stones at a plausible source depth, before implementation/run
+
+Five Rocks Ground02 maps passed published byte-count/MD5 checks; color/normalRGB8, AO/roughness8-bit gray, height16-bit gray, all2048-square. Parent inspected original color and height. Approximate height/source-normal fit at8-texel central differences,2 m tile, normalZ>.6 and gradient magnitude>.1 yields112.16/122.65 mm full interval on U/V, correlations.407/.450. This is approximate scale evidence, not physical calibration. HeightP5=.183383, P50=.355749, P95=.672084.
+
+BF uses this source at2 m, authored120 mm full interval, centered H=.5 using BE's search. It keeps original color/roughness/AO and derives macro normal from height plus bounded original fine residual. Use height minimumLOD2 and a matching box mip2 normal bake to retain the source's smaller distinct stones; current per-pixel LOD still applies. The bake recipe changes its grid to512�/4-texel boxes; no extra runtime textures or sampling path. Dirt remains unchanged. Relative sand/snow coordinate fix retained.
+
+This is a new experimental stone art treatment, not a final palette decision. Inputs/ownership remain the same shared fragment/material path; no CPU or world-state effects. New zero-height control-BF retains identical new art/normals. Run unchanged cold51+3 per state, judge natural rock/soil volume, recognizable stone/gap coverage, material transitions and artifacts. Original performance budgets and all broader/temporal checks remain required. A better-looking normal/albedo map alone is not proof of parallax.
+
+Coordinate audit correction: parent inspected SampleTerrainProjection's full branch body. The earlier report that SampleTerrain always adds the anchor was false: mapping0 (snow/sand) uses uv+patchOffset and never adds anchor; only mapping1/2 uses the high-precision anchor. Original absolute worldPosition for snow/sand was correct. Therefore BD's relative-coordinate edit introduced a sand/snow mapping defect and must be reverted; do not credit it as a fix. Current fixed rock views contain no snow/sand, so the rock comparison remains evidence, but BD/BE/BF cannot qualify those materials. Preserve completed/in-progress snapshots and revert in the next source revision after BF captures. No acceptance has occurred.
+
+BF completed54+54 cold views without errors. Parent sees distinct stones, less artificial boundary extrusion, but most of the structure is already in its flat art control. Fresh independent critic is reviewing the exact pair; no acceptance. BG changes only the erroneous snow/sand coordinate edit back to the original absolute worldPosition (mapping0); BF's rock path/assets/ray are unchanged. No other material coordinate changes. Capture BG's54 fixed views in the same cold session after timing with source unchanged. BF control may support the rock comparison only; it does not qualify snow/sand. Broader validation must use corrected BG source.
+
+BG cost screening before run: source snapshots candidate-bg-perf1; unchanged TERRAIN-RELIEF-PERF-001/v1 and CLOSE-PERF/v1, fresh visible editor, original baseline1b36a84bc5514b04a4d6634efe0fe3e2. Record all existing frame/resource/correctness gates and source/environment differences, including task-only Editor metadata guard. Run even if BF receives a visual failure: cost evidence is useful but not visual acceptance. No source changes or unscheduled native calls during timing.
+
+### TERRAIN-RELIEF-GPU-PASS-001/v1, before measured run
+
+Supplement the invalid frozen close headline GPU counter with the existing responsive terrain pass. Same world/settings/close camera and physical2769x1529 as CLOSE-PERF/v1, after canonical and close timing in the same fresh session. Enable stock overlay_gpu1, warm30 seconds; collect three completed overview windows12 seconds apart, then restore overlay_gpu0. Snapshot exact source before/after. Select only RenderToSwapChain/Managed: AfterOpaque/Voxel Terrain Indexed Indirect Draws; report median smoothed GPU ms and max, and (max-min)/median variability across windows. Flag>5% spread; missing/zero/unresponsive scopes are unqualified. Never sum nested passes. A matched original-source run with identical instrumentation is required before a cost claim. Additional terrain-pass budget: median increase<=0.5 ms. Existing canonical and close frame-time gates remain unchanged. This measures the terrain draw, not total GPU frame time; the frozen headline counter remains explicitly unavailable. BG runs first, original matched pass baseline remains pending; no comparison/acceptance before both.
+
+BG preparation error: ambiguous dispatch wording was interpreted as candidate-bf3 snapshot names, which do not exist. PowerShell emitted non-terminating read errors and proceeded to deploy the authorized BG snapshots before the worker stopped. No timing/capture ran. Parent readback now confirms all three active files exactly match candidate-bg-perf1. The pre-deployment BF assertion was not completed and is not claimed; prior completed BF capture/source history is retained. Resume from verified BG bytes; use terminating errors for further shell preflights.
+
+BF fresh independent critic verdict FAIL: modest thicker edges at grazing08 around660,350 and730,750, but main08 still predominantly texture-driven; central rock's left/lower edge smears in grazing16 x645..705,y305..390. Cross16 x860..1050,y460..620 has elongated raised detail. No identified pebble/gap definitely hides/reappears. Natural side structure remains the key failure. BG keeps the same rock appearance and is cost screening, not visual acceptance.
+
+### BH: direct height-gradient side orientation, design before implementation
+
+Keep BF/BG's Rocks Ground02 source,120 mm centered ray,2 m tile, mip2 height and8..64 search. BC's side treatment used a low-pass RGB normal bake as the macro-face direction; this undergoes derivative smoothing, normal encoding, then additional mip filtering, so it need not match the filtered height's local side direction. BH calculates that direction directly from four finite-difference height reads per contributing projection at the actual tangent lookup U, explicit same heightLOD, quarter-mip-texel offsets. Sum negative world gradients and project off geometricN via the existing surface-gradient composition. This is a shading derivative of the same height input; it does not introduce geometry or an alternate terrain field.
+
+Use this direction for the near steep-face blend and triplanar fine detail at actual apparent point Q=U-N*signedDepth. Retain BF/BG base shading elsewhere. On steep faces, low-pass original color/roughness/AO at minimum mip4 removes stretched small gravel detail; replace fine color/normal with the already derived original RockFace stone-grain texture at its2.38 m tile and its own world anchor. Fine slope strength0.25 times macro/geometric alignment; blend full by alignment.65, starts.95; fades8..16 m. The RockFace high-pass grain is a detail material for the exposed stone side, not a new large-scale height source. Inspect natural continuity and reject blurred sidewalls, seams, moving grain or unconvincing overlap.
+
+Separate authored amplitude from ray enable: one authored120 mm constant owns both ray scale and height-gradient normal scale; zero-ray control disables only the view-ray offset and retains identical height-gradient/detail shading. This avoids falsely attributing changed normals to parallax. No CPU allocation/state or world mutation. Cost: four height reads per contributing near-rock projection, plus low-pass color/AO and fine detail on steep pixels; direct gradient replaces BC's always-on low-pass normal estimate. This is potentially expensive and requires its own timings if retained; BG performance cannot qualify it.
+
+Prepare scratch snapshots while BG timing freezes active code/assets. After timing/captures complete, run unchanged cold51+3 candidate/control pair; no camera, lighting or budget changes. Preserve failures, all earlier normal bake/side treatment evidence and current mixed-material approximation. Broad material/temporal acceptance remains open.
+
+### TERRAIN-RELIEF-CLEAR-CROSS-001/v1, additional visibility case before run
+
+Existing CROSS/v1 remains unchanged and required for artifacts. It repeatedly leaves the useful stone boundaries obstructed by foreground grass, so it has not established feature occlusion. Add an unobstructed-target case rather than treating obstruction as a pass. Choose the exposed rock below the center of the existing main08 view, with no acceptance-based camera search: project35 engine units down the local surface from the existing target, then physics-trace along its normal. First trace hits World/VoxelManager at(-342740.844,-216651.062,1660.41479), normal(.279488772,.670184851,.687559605), startedSolid=false, distance150.55048. Preserve this exact target/normal.
+
+Same saved4274 world/seed/settings/player, FOV60,1280x800, light25,225,0, grass64. Normalize recordedN; U=normalize(cross(N,up)); camera=target+70*(N*cos(theta)+U*sin(theta)), theta=-65..65 in17 equally spaced poses; look at target; hold0.3s then screenshot. Identical construction/parameters to CROSS/v1 except the independently justified exposed-rock target/normal. Record named stone/gap visibility and natural sides; obscured landmarks remain unqualified. This adds coverage and does not replace earlier failures, lighten existing gates, or prove continuous temporal stability. First BG sequence is an exposure/feature survey; BH control/candidate must both capture the same17 views for comparison.
+
+Matched original GPU baseline preparation: baseline-original-gpu-20260919 copies original baseline shader/material/include bytes exactly. Run unchanged canonical and CLOSE-PERF/v1 before the registered GPU-PASS/v1 to preserve session order/context. Keep original1b36a84bc5514b04a4d6634efe0fe3e2 as primary canonical comparison; this additional original run provides a newly instrumented GPU-pass baseline and reports its own timing variation without cherry-picking a replacement. No source changes/unscheduled native calls during timing. Task Editor camera metadata guard remains the documented source difference; runtime Code is unchanged.
+
+BG performance run8391d888ce55430c871a01966cc2f81c,48039 moving/3151 standing samples, unchanged PERF/v1 and CLOSE-PERF/v1,2769x1529,RTX5090,engine26.09.15:
+
+| Metric | Original moving | BG moving | Original standing | BG standing |
+| --- | ---: | ---: | ---: | ---: |
+| FPS | 385.695 | 393.93274 (+2.14%) | 321.41373 | 315.06042 (-1.98%) |
+| p95 ms | 4.4896 | 4.4808 (-0.20%) | 4.6556 | 4.6523 (-0.07%) |
+| p99 ms | 6.4344 | 6.315 (-1.86%) | 5.8717 | 5.9811 (+1.86%) |
+| GPU mean ms | 2.2448592 | 2.194057 (-2.26%) | 2.6992333 | 2.769763 (+2.61%) |
+| Peak process bytes | 4712443904 | 4841287680 (+2.73%) | 4671737856 | 4821413888 (+3.20%) |
+| Peak GPU bytes | 1583910985 | 1605412253 (+1.36%) | 1585369161 | 1606346141 (+1.32%) |
+| Allocated bytes/frame | 67312.54 | 67643.32 (+0.49%) | 31727.107 | 31850.186 (+0.39%) |
+
+All canonical numeric gates pass; standing GPU mean delta+0.0705297 ms. Moving collision4913/4913 ready, no pending/failures; stationary collision remains null. Both runtime phases report zero exceptions. Cold/after source hashes match; versus original there are no runtime Code or unrelated shader changes, only task terrain/material/assets and Editor camera readback guard. This is performance evidence, not visual acceptance.
+
+Close windows: 381.4 FPS average; p95 3.90 ms; p99 5.14 ms; GPU 0.58 ms average; 379.6 FPS average; p95 3.93 ms; p99 5.23 ms; GPU 0.58 ms average; 380.1 FPS average; p95 3.96 ms; p99 5.44 ms; GPU 0.58 ms average. Median p95=3.93 versus3.76 ms (+4.52%), p99=5.23 versus4.81 (+8.73%): both gates pass. Spreads p95=1.53%, p99=5.74%; p99 exceeds5% variability flag. Headline GPU fixed0.58 ms remains unqualified.
+
+GPU-PASS/v1 candidate BG terrain scope smoothed0.7971443/0.80277/0.7899529 ms; median0.7971443, spread1.61%; maxima2.1117887/2.246834/2.0046847 ms.45 scopes each window. Matched original pass baseline pending; no delta/acceptance yet.54 corrected-source views completed in the same cold session after timing; no source edits.
+
+BG grass inspect also reports overflowViews=0.
+
+### BI: height-aware triplanar stone blend, design before implementation/run
+
+New source-level finding takes priority over prepared BH (BH remains unrun). At CLEAR-CROSS's physics normal, the current pow16 geometric projection weights are approximately(0,.398906,.601094). Offline asset inspection at its original flat point, using box mip2 and wrapped bilinear lookup, finds X/Y/Z projection heights(.263464,.928990,.327469): a high rock from Y is averaged with low ground from Z intoH=.567419. The visible color/normal also average unrelated directional images. These are source/asset calculations, not an engine oracle or rendered-pixel measurement, but they identify a concrete correspondence/art limitation worth testing.
+
+Keep BG's source,120 mm centered ray,2 m tile,mip2 normal bake, fades/search and correct absolute snow/sand mapping. Replace only stone's linear triplanar height average with normalized log-sum-exp: H=log2(sum(p_i*2^(8*H_i)))/8. It is bounded between component heights, preserves constant heights, continuous as geometric weights reach zero, and its derivative weights are q_i=p_i*2^(8*H_i)/sum(...). Use those same q_i at the final tangent hit U for stone color, normal slopes, AO and roughness. This gives high rock features precedence over unrelated low ground while keeping one canonical combined dirt/stone intersection; dirt remains linear. At the inspected point, the source calculation givesH=.772678 and q=(0,.949094,.050906), illustrating the intended difference, not acceptance.
+
+The log-sum-exp derivative is exactly the q-weighted sum of component height gradients, so the existing surface-gradient normal composition remains the corresponding approximation with its baked component normals. Share projection-height sampling and explicit LOD calculations so ray and final shading use the same inputs. New authored projection sharpness8 is shader-owned. No side detail texture or BH finite-gradient cost in BI; return to BG's single normal/material input path. Added work is exp2/log2 arithmetic per ray sample and up to three final height reads for detailed visible stone. No CPU/world/collision/network changes. This is an adopted prototype experiment, not a claimed result from Mikkelsen's paper.
+
+New flat control-BI uses zero ray amplitudes but retains identical height-aware shading. Run unchanged cold MOTION/GRAZING/CROSS/RAKING plus CLEAR-CROSS/v1:71 views per state. Judge natural feature continuity, coverage and side quality, including existing difficult views; reject ghosting, projection boundaries, inflated or smeared faces. No camera/budget changes. Both visual and performance qualification remain necessary; BG's results do not qualify BI.
+
+
+### Matched original GPU-pass baseline and BG comparison
+
+Original run296b4a68541547b994c3c31ab6705ccb completed unchanged PERF/v1 then CLOSE-PERF/v1 then GPU-PASS/v1, label baseline-original-gpu-20260919.47308 moving/3201 standing samples,2769x1529 RTX5090 engine26.09.15. Moving FPS387.9513,p954.5081,p996.3923,GPU2.2307596 ms; standing FPS319.99704,p954.6208,p995.8089,GPU2.7165844 ms. Moving/standing peak process4945154048/4847902720 bytes, GPU1575778977/1576712865 bytes, managed allocation/frame67403.73/31748.127. Zero exceptions both phases; moving collision4913 desired/ready,0 pending/failures; standing collision null. Source hashes unchanged within run. Original1b36a84bc5514b04a4d6634efe0fe3e2 remains primary canonical baseline; no substitution.
+
+Original close windows FPS396.3/395.3/395.2,p953.83/3.84/3.87,p994.85/4.89/4.90 ms. Headline GPU fixed2.98 ms is unqualified. GPU-PASS exact RenderToSwapChain/Managed: AfterOpaque/Voxel Terrain Indexed Indirect Draws smoothed0.80146784/0.76168823/0.7233439 ms, median0.76168823; maxima2.0754352/2.0534582/2.2225652 ms. Spread10.26% exceeds5% variability flag. Each window45 scopes; overlay restored0. BG matched scope median0.7971443 gives +0.03545607 ms: numeric0.5 ms terrain-pass budget passes, with original variability qualification. This is not whole-frame GPU cost and does not remove BG's visual failure or qualify BI. Raw evidence: Docs/ValidationEvidence/TerrainRelief/{baseline-original-gpu-20260919,candidate-bg-perf1}-gpu-pass-{0,1,2}.json and corresponding canonical summary/cold/after/close files.
+
+Retrieval correction: an initial reader report accidentally attributed primary baseline1b36... values to the new original-GPU summary filename. Parent inspected the exact JSON; corrected report and figures above use actual296b... run. No runtime result was overwritten.
+
+BI snapshots prepared from BG with shared projection-height reads and explicit LOD, log-sum-exp stone height and matching final map weights; control disables only ray amplitudes. Active original baseline asserted before deployment;71-view cold control/candidate capture dispatched. No performance acceptance yet.
+
+
+BI completed71 control and71 candidate views; all explicit compile/clean-start/source assertions passed. Parent inspected main08,grazing16,CLEAR-CROSS00/16 and matched clear16 control. Height-aware blending reduces mixed directional imagery and creates more legible raised pebble boundaries, but side strips remain stretched/soft. Independent main-view provisional verdict FAIL: subtle relief, no convincing named chip hide/reveal. Full independent orbit verdict pending. No BI timing run or acceptance.
+
+### BJ: height-aware blend with height-derived side grain, before implementation/run
+
+Combine BI's shared log-sum-exp height/shading weights with the previously prepared, unrun BH side treatment. BI reveals definite raised boundaries in clear-cross16 but exposes striped top-texture extrusion at steep pebble edges; adding height-priority alone does not supply side texture. Keep the2 m/120 mm RocksGround02 source and mip2 ray, centered interval, all fades/search parameters. Derive macro negative height gradients with four symmetric height samples per contributing projection at quarter-mip-texel offsets and the same explicit LOD; compose using BI's q weights. Use dot(geometricNormal,macroNormal) to select steep sides (smooth interval.95 to.65), fade8..16 m. On those sides only, replace fine top-color detail with mip>=4 macro color/AO/roughness plus existing RockFace fine-grain residual sampled triplanarly on physical hit Q=U-N*signedDepth, with macro-normal-based projection and Q derivatives. Fine normal strength.25*alignment as in BH. Convert normal back to the canonical unnormalized gradient representation before material blending. This is a side-detail approximation, not a reconstruction of missing scan side photographs.
+
+Ray function returns its signed hit depth; shader owns authored amplitude separate from control ray strength, so zero-ray control retains identical side shading and height-priority selection. No CPU/geometry/collision/world changes or new asset. Added cost: up to12 height reads for side orientation, plus conditional macro/fine samples. Preserve source hashes and measure if retained; no BG/BI performance inheritance. BJ supersedes BH's pending experiment without running BH separately, retaining BH snapshots/history.
+
+Run unchanged71-view paired cold control/candidate set: MOTION/GRAZING/CROSS/RAKING/CLEAR-CROSS. Reject blur replacing extrusion, noisy seams, plastic smooth sides, projection ghosts, weak depth or absent identifiable coverage; fixed budget and cameras unchanged. Independent critic sees images without implementation claims.
+
+
+BI final independent verdict FAIL. Positive: clear-cross00 pebbles around(860,445) and(435,700) gain substantial edge thickness; clear-cross16 central slab lower edge x610..820,y445..550 gains volume. Defect: repeated dark side streaks at x430..450,y672..728 and x866..890,y411..483 resemble extruded texture; clear16 x820..1020,y395..630 becomes a stretched knobbly strip. Grazing16 main-rock band x652..695,y312..383 remains smeared. The named right-side pebble remains visible across clear00/08/16, without a confidently demonstrated neighboring mark hidden/revealed. No obvious hard seam/duplicated image; raking depth largely survives control. Added relief yes; natural exposed sides and demonstrated occlusion insufficient. Temporal stability unassessed. This supports BJ's targeted side treatment experiment, not acceptance of BI.
+
+
+BJ control completed71 views and unchanged-source assertion. Candidate-BJ first capture attempt stopped before screenshots/restart at compile_source_shader: mounted-file existence check returned false (ArgumentException), although active shader existed on disk and matched candidate snapshots. Parent read editor status: voxels3/basic_example, stopped,86 tools, no compile errors; no crash observed. Retrying the same explicit shader compile after status succeeded with only stock profile/non-uniform-sampler warnings. No source fix was needed; cause of the transient mounted lookup failure is unconfirmed. Preserve failure; candidate capture resumes under new candidate-bj-retry1 label with identical source, full clean-start sequence, no scenario change.
+
+
+Candidate-BJ-retry1 stopped before compile/screenshots because the capture helper unconditionally called play_stop on the already stopped editor; engine correctly returned Not playing. No output views or source mutation. Parent corrected the existing helper's lifecycle precondition to read IsPlaying and stop/wait only when playing, matching run_cold_single.py. This does not change camera/render/scenario parameters. Retry2 starts from the same stopped editor/source using a new label. Both failures remain recorded; neither was shader visual evidence.
+
+
+BJ retry2 completed71 candidate views with successful explicit compile, clean start, crash-marker and unchanged-source assertions; control71 from first run remains matched. Parent inspected main08 and clear-cross00: repeated dark side stripes reduced compared with BI, but exposed strips remain soft. Independent full verdict pending.
+
+### BK: bound ray sample spacing by sampled height footprint, before implementation/run
+
+Numerical quality finding: the angle-only8..64 step policy does not account for lateral traversal in height-map texels. At65-degree incidence,120 mm interval,2 m tile and minimumLOD2, the full tangent ray spans about65.9 mip texels;40 steps advance about1.65 texels per step before refinement. Bisection only refines the first *detected* crossing and cannot recover a missed earlier small feature. Actual pixel LOD can reduce that span, so this is a bound from authored inputs, not a measurement of any screenshot pixel or a claim that this causes all stretching.
+
+Keep BJ art, shading, blend, amplitudes, refinement and fades. Compute each contributing projection's ray length in its actual explicit-LOD texels; use max(existing angle steps,ceil(2*maximumRayTexels)), capped256. Dirt and stone both participate when their weighted amplitudes are positive; projections with zero support do not contribute. No new texture reads per ray step, one bounded ray remains. This targets at most half a sampled mip texel per step where uncapped; at the cap this is not a mathematical intersection guarantee. Extra steps may increase cost, so fresh full performance qualification required if retained; existing budgets unchanged.
+
+Use the exact BJ flat control, whose zero amplitudes exit before step selection and whose executed shading is unchanged. Run unchanged71 candidate views; compare both BJ and flat control for recovered feature coverage, edge continuity and natural sides. This is a targeted numerical quality experiment, not grounds to relax visual criteria. No world/collision/geometry changes.
+
+
+BJ independent verdict FAIL, with local added-volume pass: clear-cross00 stones(860,445)/(435,700) have visible side faces and thickness, and BI's ladder-like streaks are reduced. Remaining sides are soft/elongated (x870..889,y420..481); clear16 ridge(805,380)..(1020,620) still swollen/stretched; grazing16 main-rock edge x653..700,y310..385 smeared. No confidently demonstrated neighboring mark coverage across orbit. Near-normal subtlety is not itself the failure. No hard seam/duplicated imagery observed. These remain quality failures, not absence of all parallax.
+
+BK source prepared and dispatched as registered. After fixed visuals, run unchanged PERF/v1, CLOSE-PERF/v1 and GPU-PASS/v1 under new candidate-bk-perf1 label to measure the accumulated height-aware blend, side shading and denser trace. This is performance characterization even if visual acceptance fails; do not commit/push based on numeric gates. Same original primary canonical baseline1b36... and matched GPU-pass baseline296b..., all budgets unchanged. No unscheduled engine calls/screenshots or source edits during timing.
+
+
+BK completed71 views with successful compile/cold-start/source assertions. Parent and independent critic see no meaningful resolution of BJ's soft stretched faces at clear00(860,445), clear16 ridge(805,380)..(1020,620), grazing16 x653..700,y310..385. Numerical sampling change does not establish visual improvement; coverage and temporal stability remain unqualified. Canonical/close/GPU measurement is running unchanged.
+
+### BL: narrower height blending, before implementation/run
+
+BI/BK contrast8 gives only2^(8*.05)=1.3195 height-preference ratio for two surfaces separated by5% of the120 mm interval (6 mm); these near-height details remain heavily mixed even though the surveyed large high-rock/low-ground pair became dominant. Thus the current smooth maximum can still merge separate small features into soft combined shapes. Test the same formulation with shader-owned contrast32: a5% separation gives3.0314 preference, while a10% separation gives9.1896. This narrows the transition continuously, preserves equal-height/constant-height behavior and keeps final color/normal/AO/roughness weights exactly matched to the height derivative. It is not a hard axis switch or a guarantee of natural sides.
+
+Keep BK's assets,120 mm depth, mip2, side grain and footprint-aware step bound unchanged. No additional runtime samples, loops, state or geometry; only authored stone projection contrast changes8 to32. exp2 values remain bounded by2^32 for normalized heights, within float range. New zero-ray control-BL retains contrast32 and all shading; requires its own full71-view cold set. Candidate71 same unchanged cameras/lights. Reject sharp projection/color seams as well as existing stretched/soft side defects. Do not deploy until BK timing completes, and do not inherit performance acceptance without qualification of final selected source.
+
+
+### BM: keep side color inside the raised rock, before implementation/run
+
+A4x nearest-neighbor analysis crop of existing BK/control-BJ clear-cross00, native rectangle(820,380)..(930,540), shows the raised pebble's side is a dark smooth ramp from its bright top into the surrounding soil. Crop is derived solely from original captures, not a new engine capture or altered scene. BJ's mip4 side color still samples the exact height-edge UV, averaging top-rock and ground color/AO; reprojection of high-pass grain cannot repair that low-frequency color ramp. This is a concrete remaining side-material defect. Prioritize this over prepared BL (BL remains unrun).
+
+Keep BK's contrast8, height, trace, normals and geometry. For the existing steep-side branch, derive the uphill tangent from the filtered macro normal: N - macroNormal/max(dot(N,macroNormal),.05). Offset only the side macro-color/AO/roughness lookup20 mm uphill, using the same stone projection weights, so it samples inside the raised rock instead of the rock/soil edge. The side mask starts at18-degree tilt, so this vector is nonzero when evaluated; normalize with a small denominator guard. This is bounded artistic color extension, not a displaced-height change or recovery of photographed side surfaces. The physical hit Q and height intersection remain unchanged. Keep the original top appearance outside the side branch. Increase the existing physical-surface fine-normal gain from.25*alignment to1.0 to retain the source's bounded fine-grain slope on steep faces; no color gain or extra texture reads.
+
+Reuse the existing macro/fine samplers; no new assets/loops/CPU state. New zero-ray control-BM uses identical side-color extension/grain, and candidate uses the same actual height as BK. Run unchanged71 paired views, including old difficult views; reject white fringes, noisy grain, incorrect material bleed, smooth plastic sides and unresolved stretching. Performance of the final selected source still needs its own run. Prepare scratch snapshots only while BK timing runs; never deploy during timing. BL remains a documented unrun alternative.
+
+
+### BK measured performance: canonical passes, close frame-time gates FAIL
+
+candidate-bk-perf1 runbaf301f1a7c64a92bc929923a9e3768e completed unchanged PERF/v1 then CLOSE-PERF/v1 then GPU-PASS/v1.46521 moving/3345 standing samples,2769x1529 RTX5090 engine26.09.15. Moving FPS381.48468(-1.09%),p954.5519 ms(+1.39%),p996.3911(-0.67%),GPU mean2.2769918(+1.43%). Standing FPS334.47156(+4.06%),p954.4849(-3.67%),p995.9227(+0.87%),GPU2.5917988(-0.1074345 ms). Moving/standing peak process4979441664(+5.67%)/4756795392(+1.82%) bytes, peakGPU1607525701(+1.49%)/1658119493(+4.59%), allocation/frame66988.336(-0.48%)/31437.25(-0.91%). All canonical numeric gates pass against original1b36...; zero exceptions both phases, moving collision4913 ready/desired,0 pending/failures, standing collision null, grass overflowViews0. Before/after source hashes identical.
+
+Close3 windows FPS343.2/341.9/345.0,p954.47/4.50/4.39,p995.61/5.62/5.57 ms; headlineGPU2.02 fixed and unqualified. Medianp954.47 versus original3.76 is+18.88%: FAIL10% gate. Medianp995.61 versus4.81 is+16.63%: FAIL10% gate. Spreads2.46%/0.89%, below5%flag. The accumulated side-shading/height-priority/denser-ray changes have a material close-view regression; no performance acceptance, commit or push. Root will isolate/reduce cost before accepting any descendant; BM's color changes do not waive this.
+
+GPU helper uses its label literally. This invocation was candidate-bk-perf1, so its three GPU-PASS files are candidate-bk-perf1-{0,1,2}.json (no gpu-pass infix), plus -before/-enable/-restore. The initial reader's missing-file report concerned the incorrectly requested filenames; do not treat it as a failed runtime measurement. Exact scope extraction follows.
+
+
+BK GPU-PASS/v1 exact terrain scope (candidate-bk-perf1-{0,1,2}.json): smoothed1.0098802/1.062728/1.0235472 ms, median1.0235472, spread5.16% (flagged). Maxima2.239548/2.385665/2.3320007 ms,45 scopes per window. Matched original median0.76168823 gives+0.26185897 ms: numeric0.5 ms component budget passes, but CLOSE-PERF frame-time gates still FAIL and are not waived. Both toggle replies report command ran with no isError; headline GPU fixed2.02 remains unqualified.
+
+Control-BM first attempt: shader/material compile succeeded and fresh editor launched, but editor_status timed out before any views. Saved control-bm-stalled-startup.log. Windows inspection showed Opening s&box Editor at Creating filesystem, with Stall Detected (Unknown Cause), beyond180 seconds. Crash marker remained2026-09-19T04:41:56.626406Z. No shader error was reported in this fresh startup log, which stopped after package mounts and ToolsStallMonitor. Cause unconfirmed; do not label it a shader crash. An Alt+F4 attempt did not close the startup window. Parent verified fresh process95676 executable, command line for this exact voxels3.sbproj and10:30:29 creation, then terminated only that stalled attempt and visibly relaunched PID27016. No saved scene/world edits existed in this startup. New control-bm-retry1 snapshots and original crash marker preserve source identity; recovery qualification pending. First attempt0 images is retained as failed startup.
+
+
+Control-BM recovery: fresh PID27016 opened visible basic_example/voxels3 normally,86 tools, compiler success, no unsaved scene changes. Parent inspected live status and startup log; the previous Creating filesystem stall did not recur on this launch. Worker will validate original unchanged crash marker, start play and use existing --resume-open capture path under control-bm-retry1, then a full clean start for candidate-BM. No failed images are overwritten.
+
+### BN: remove the unhelpful denser trace, before implementation/run
+
+Prepare an ablation from BM that restores BJ's8..64 angle-based view-ray step count, removing BK's footprint-based increase. Keep BM side-color/grain treatment, identical assets, heights, projection blending, mip/filtering, refinement, fades and lighting. BK did not resolve the fixed visual defects and the accumulated version fails close frame-time limits; this isolates the added trace work without claiming it alone caused the regression. No alternative runtime path remains in BN. The earlier numerical missed-crossing limitation is acknowledged; fixed orbit quality must not degrade relative to BM.
+
+Reuse BM's zero-ray control because it exits before the changed step selection. If BM compiles/captures normally, test BN through fresh unchanged PERF/v1, CLOSE-PERF/v1 and GPU-PASS/v1, then71 fixed visual views in that same clean session after all timings. This both characterizes cost and checks retained visible benefit; all criteria and primary baselines unchanged. Numerical passes alone cannot accept soft/stretched side quality. Snapshots only while BM capture runs; deploy after its source-equality completion.
+
+
+BM completed71 control-retry1 and71 candidate views. Control recovered via validated fresh visible editor and unchanged crash marker, then resume-open capture; candidate used full successful shader/material compile and clean start. Both source equality assertions passed. Parent sees more visible grain on clear-cross00 exposed pebbles, with less smooth dark side ramp, but full independent verdict pending. This is not acceptance; known BK close-performance failure still applies until reduced-cost descendant is measured. BN dispatched for unchanged canonical/close/GPU then71 visual checks in that same fresh session, with no source edits or unscheduled engine calls during timing.
+
+
+BM independent verdict FAIL overall. Clear00 stones(860,445)/(435,700) gain rougher more detailed side faces versus BK and clear thickness versus control. But side x869..890,y422..481 remains mottled/directionally stretched rather than coherent pale stone; clear16 ridge x820..1010,y395..620 still merges small rocks into swollen strips, central slab edge x625..805,y455..545 resembles a soft lip. Grazing16 x653..700,y310..385 remains elongated; small stones(948,228) have conspicuous pale edges, not conclusively halos. No broad bright fringe/green bleed established. Named neighbor(850,505) stays readable; coverage and temporal stability unverified. Local grain improvement does not qualify BM or its ray-cost ablation BN.
+
+### BO: analytic virtual-surface detail footprint, before implementation/run
+
+Primary-source recheck: Mikkelsen2020 section3.7 explicitly identifies raw post-POM ddx/ddy as unreliable across different ray intersections in a pixel quad, and describes analytic surface derivatives; section4.6 applies fine detail after resolving the virtual surface (https://jcgt.org/published/0009/03/04/paper-lowres.pdf). Our current BJ/BM code computes ddx/ddy of physicalHit globally, then uses those to filter reprojected fine grain. That can overblur detail at relief discontinuities. This is a concrete filtering mismatch worth correcting; it is not proof that every observed smear has that cause.
+
+Use BN as base (BM material treatment, original8..64 trace). Remove raw derivatives of physicalHit. In the existing side-detail branch, derive the pixel footprint by intersecting the original pixel ray with the local plane through physicalHit and macroNormal. Let R=flatPosition-cameraRelative, dRdx=original gradientX, D=dot(M,R), t=dot(M,physicalHit-cameraRelative)/D; then dQdx=t*(dRdx-R*dot(M,dRdx)/D), likewiseY. Guard D at1e-5*length(R) with its sign. This is an independently expressed local-plane quotient derivative using already available shader inputs, not a new camera API or copied listing. Use these derivatives only for physical-hit fine-grain sampling; height tracing, macro-color and original map footprints remain unchanged. No new samples/assets/loops/CPU state; a few ALU operations replace potentially discontinuous fine-detail derivatives.
+
+New flat control-BO uses identical analytic fine filtering with zero ray strength;71 views each under unchanged scenarios. Reject aliasing/noisy discontinuities, side-material mismatch and remaining stretched geometry; temporal stability remains separately required. No source deployment during BN timing/capture; prepare snapshots only. BL remains unrun. The separate question of smooth density normals versus face normals is not changed here.
+
+
+### BN measured results: numeric performance gates pass, visual acceptance pending
+
+candidate-bn-perf1 run52a6d7824f614ec0aa52cd96be16cc89 completed unchanged PERF/v1, CLOSE-PERF/v1 and GPU-PASS/v1, then71 fixed visual views. Explicit shader/material compile and visible clean start succeeded. Moving47465 samples,389.23233 FPS,p954.5303 ms,p996.4923 ms,GPU mean2.2180796 ms; standing3219 samples,321.86142 FPS,p954.5855,p995.9456,GPU2.7012281. Against original1b36..., all canonical numeric gates pass; standing GPU delta+0.0019948 ms. Moving/standing peak process4901924864/4766875648 bytes, peakGPU1609642733/1612069613, allocation/frame67105.69/31779.393. Zero exceptions, moving collision4913 desired/ready,356 bodies,0 pending/failures; standing collision unavailable(null). Grass overflowViews0. All126 before/after source hash entries identical.
+
+Close FPS373.6/371.0/369.5; p953.95/3.95/3.95, median3.95(+5.05%); p995.03/5.14/5.13, median5.13(+6.65%). Both10% gates PASS. Spreads0% and2.14%, below5% flag. Fixed headlineGPU0.60 ms remains unqualified. This recovers BK's failed close frame-time gates, without proving every cost difference originates in the trace.
+
+GPU terrain scope smoothed0.8843871/0.8691243/0.90499383 ms, median0.8843871, spread4.06%; maxima2.3730128/2.2985013/2.2785492. Each200-frame window contains45 scope entries. Delta versus matched original0.76168823 median is+0.12269887 ms, within0.5 ms component budget. Original baseline variability flag still applies. These are component timings, not a replacement for total GPU frame timing.
+
+Parent inspected clear-cross16: local rock edge thickness remains visible, but oblique ridges still look elongated. Independent BN critique pending; performance PASS does not constitute visual acceptance. BO matched cold visual pair begins only after all BN timing and captures finished.
+
+
+BN independent verdict FAIL for consistent natural relief; visually equivalent to BM with no clear regression from fewer ray steps. Clear00 stones(860,445)/(435,700) have visibly thicker boundaries than control: local added volume passes. Right face x869..890,y422..481 remains mottled/directionally stretched, clear16 x820..1010,y395..620 merges stones into elongated strips, central slab x625..805,y455..545 keeps a soft lip; grazing16 x653..700,y310..385 remains smeared. Named neighbor near(850,505) stays readable; hide/reveal and temporal stability remain unverified. Near-normal subtlety is not the failure. No new hard seam/doubled terrain image observed. Numeric performance PASS, overall visual FAIL.
+
+
+### BP: isolate narrower projection blending on the affordable trace, before implementation/run
+
+The independent BN review still sees neighboring stones merge into elongated raised strips; extra trace samples in BK did not fix this. The pending BL hypothesis concerns overlapping projected height fields, but BL also carries BK's rejected expensive trace. Prepare BP from BO, changing only stone height/shading projection contrast8 to32 as already derived for BL. This tests whether stronger dominance of the higher surface reduces mixed rock shapes, while retaining BN's affordable8..64 search and BO's analytic fine footprint. No added texture reads, loops, assets or CPU changes. BO filtering must first be visually checked; do not silently carry a demonstrated regression into BP. BL remains unrun, and its costly version need not be deployed to test this distinct variable.
+
+Use new exact zero-ray control-BP with contrast32 and identical shading. Full unchanged71-view cold pair and independent visual critique required; reject projection seams, popping/aliasing, unnatural sides or remaining merged strips. No performance inheritance from BN: any retained final source requires fresh canonical/close/GPU qualification. Prepare scratch snapshots only until BO completes. No changes to scenario inputs, acceptance criteria or source assets.
+
+
+BO completed71 matched control and71 candidate views, explicit shader/material compile and clean visible starts successful, source snapshots unchanged. Parent inspected clear00/16 and grazing16: grain is present but the elongated rock bands and soft lip remain. No obvious broad new seam in these inspected views. Independent regression/quality assessment pending. No BO performance qualification or acceptance.
+
+
+BO independent verdict: no visible terrain regression versus BN in clear00/08/16 and grazing16; overall natural-side quality FAIL. Same local added thickness at(860,445)/(435,700), same mottled side x869..890,y422..481, elongated strips x820..1010,y395..620 and soft slab lip x625..805,y455..545. No obvious new seam, doubled image, coarse aliasing or broad fringe. Analytic filtering is visually equivalent at1280x800, not established as a perceptual improvement. Temporal stability still unverified. BP may proceed with this mathematically motivated filtering retained provisionally; no acceptance inferred.
+
+
+BP completed71 control and71 candidate captures with successful explicit compile/clean-start and exact final source equality. Parent inspected clear00/16: stronger definition/separation around some small stones and the central slab; oblique elongated bands remain. Independent critique pending. No performance qualification or acceptance yet.
+
+
+BP independent overall FAIL, with meaningful angular shape/separation improvement over BO. Clear00 stones(860,445)/(775,555) and fractured slab edge(775,355) read more naturally, but much sharper definition also appears in BP control and cannot be credited solely to parallax. Candidate still adds right-face thickness x870..890,y415..480 and foreground relief(435,700). Clear16 diagonal bands x820..1010,y395..620 remain elongated/fused, slab lower face x650..790,y470..540 broad/smooth. Possible local regression: clear00 cluster x890..945,y405..460 looks jagged/heavily outlined. Grazing16 remains smeared. Named pebble stays visible in candidate/control; coverage/temporal claims unqualified.
+
+### BQ: broader rock detail on the physical exposed face, before implementation/run
+
+BP's remaining smooth side band cannot be resolved merely by higher projection contrast, which already risks heavy outlines. Existing side grain is a high-pass residual against box mip3 of the2.38 m/2048 RockFace source, removing structure above roughly9.3 mm. Test a wider side-detail band against mip5 (about37.2 mm texel spacing) to retain intermediate stone texture on faces several centimetres wide. Keep the same source color/GL normal, periodic box filter plus bilinear upsampling, linear-luminance ratio clipped[-.5,.5], and GL slope residual vector capped1. Packing and shader interpretation unchanged. This is local surface-detail shading, not new ray geometry or a guarantee that elongated contours disappear.
+
+Bake separate rock_face_side_surface_mip5.png plus manifest without altering source or old bake. BQ uses exact BP shader/include and changes only StoneFineSurface material binding. No additional shader reads/loops/buffers or higher texture resolution; new cold material qualification and exact hashes required. Same physical Q, analytic footprint, normal-based side projection, side tint,120 mm depth, contrast32 and8..64 search. New identical-shading zero-ray control-BQ and unchanged71-view paired candidate. Reject noisy or fake wrinkled faces, added jagged edges, material discontinuity and remaining unnatural bands; all acceptance and performance criteria unchanged. Final retained source still requires fresh performance measurements. No acceptance from BP's local improvement.
+
+
+### BR: derivative-aware relief chart, before implementation/run
+
+Source recheck distinguishes two constructions: the existing world-volume height extension sampled in the smoothed-normal tangent plane, and a height chart attached to actual triangle position derivatives but rendered on the smoothed tangent plane. They coincide when face and shading normals agree. Mikkelsen2020 section4.3 Listings11/12 uses screen derivatives to transfer between texture coordinates and the smooth surface; this motivates testing the second construction, not declaring the existing volumetric approach universally invalid or the proven cause of the screenshot defects.
+
+Prepare BR independently from BP (not BQ) to isolate chart mapping. Let N be the smooth base normal, G=cross(dPdx,dPdy), C=G/dot(G,N). Define F(t)=t-N*dot(C,t), mapping a smooth tangent displacement into the triangle's coordinate plane. Existing tangent ray T=V/dot(N,V)-N remains the physical tangent ray, but height/final map lookups use F(T); the physical hit stays P-(T+N)*signedDepth. This keeps the physical hit on the viewing ray instead of incorrectly treating chart coordinates as physical coordinates. When face and smooth normals agree, F(T)=T. Degenerate/near-orthogonal charts(abs determinant<=0.1*area) use C=N to retain the bounded existing mapping; no new geometry or derivative test hook.
+
+Keep shading consistent by transforming the combined negative height gradient s to s-C*dot(N,s) for dirt/stone; this is F-transpose applied to a gradient, already perpendicular to N. Non-relief materials retain their prior surface-gradient mapping. Apply F to the existing uphill side-color offset too. The physical side-detail normal/footprint uses the physical hit and is not transformed again. Smooth N/projection weights remain frozen within a pixel's ray as before; curvature derivatives remain an acknowledged approximation.
+
+Same BP assets,120 mm height,contrast32,8..64 search, sampling/fades and old mip3 side detail. New shader-only chart math; no texture reads/loops/assets/CPU work added. New control-BR retains the same chart-aware shading with zero ray. Unchanged71-view matched cold pair required. Reject triangle seams, discontinuous features, swimming, distorted scale, side-material defects or lost relief. This is a targeted alternative parameterization experiment; no acceptance or performance claim until new evidence. Prepare snapshots only while BQ completes; do not deploy prematurely.
+
+
+BQ baked side-mip5 SHA256416c032a3366f2a9780b80e804d09e2beff9f37957a2f15ddeaf3a3eaa99224c;71 control and71 candidate views completed, explicit compile/visible clean starts and source equality passed. Independent and parent verdict FAIL: larger side bands remain dark/mottled/stretched, broad slab face smooth, diagonal strips partly fused. No meaningful improvement over BP, no clear new broad noise/fringe/seam regression. Near-normal coherent; raking modeling largely survives in control. Coverage/temporal unqualified. BR uses BP's old side asset, so BQ's extra derived asset is not carried forward without benefit. No BQ timing or acceptance.
+
+BR prepared with consistent lookup/physical-hit separation and gradient transform as registered, then dispatched only after BQ capture/source checks completed. Initial scratch preparation assertion rejected an unmatched function-signature string before writing any BR snapshot; corrected against the exact source signature. This was no engine run or shader failure. Shader/material/source validation remains pending for BR.
+
+
+Dirt exposure source audit (read-only): ProceduralVoxelMaterials.cs40..74 tests sand first, then Stone below SoilDepth; exposed shallow nonnegative-depth surface chooses Grass/Snow/mountain Stone, with no explicit Dirt branch. Dirt occurs for negative-depth fallback or underlying non-mountain layers; generated-material helper mirrors top/base layering and blending cannot invent absent dirt. This supports the prior DIRT002/v1 grass-covered invalidity, not a claim that no natural cut can ever expose dirt. No world/material mutation or replacement scenario was performed in this audit; dirt remains unqualified.
+
+
+BR completed71 control and71 candidate views with explicit compile/visible clean-start and exact source equality. Parent inspected clear00/16: no obvious meaningful improvement over BP and no major new triangle seam in these two views. Independent critique pending; do not describe chart alternative as a successful distortion fix. No BR timing/acceptance.
+
+### BS: reduce authored stone height with matching normals, before implementation/run
+
+Use BP as base to isolate physical relief scale, excluding BQ's visually unhelpful broader side detail and BR's as-yet-unproven chart alternative. The remaining broad, stretched side bands persist after sampling density, projection separation and side-filter/detail changes. Test80 mm rather than120 mm authored stone interval, retaining the source's2 m tile and filtered mip2 shape. This should shorten exposed bands while retaining measurable relative depth, but it can also fail by becoming too flat. The earlier normal-fit estimate was explicitly not a physical calibration; this is an artistic scale experiment, not a claim that the source scan is80 mm high.
+
+Bake a separate80 mm matched normal using the exact existing periodic box-mip2 height derivative plus unchanged fine-normal residual/cap. Ray amplitude and runtime side macro gradient both use80 mm; do not merely flatten the ray while keeping120 mm normals. Material height source/color/AO/roughness, contrast32,8..64 ray count, analytic fine footprint, side treatment and all fades remain unchanged. New normal texture has identical resolution/format; no added runtime texture count or algorithmic branch.
+
+New control-BS uses80 mm matched shading and zero ray; candidateBS uses80 mm ray. Run full unchanged71-view cold pair, no camera/light/scenario tuning. Reject lost local depth/coverage as well as stretched bands or side material mismatch. All original visual criteria and performance budgets remain in force. Any retained result requires fresh canonical/close/GPU qualification. Old120 mm bake and all failed evidence remain intact.
+
+
+BR independent verdict FAIL, visually equivalent to BP at supplied resolution with no clear new regression. Local thickness around clear00(860,445)/(435,700) retained versus control; same mottled upright face x870..890,y415..480, smooth slab band x650..790,y470..540, elongated/fused ridges x820..1010,y395..620 and grazing16 smear x653..700,y310..385. No obvious hard seam/doubled feature/fringe; coverage/temporal unverified. Therefore BR's alternative chart is not carried into BS without demonstrated visual benefit. No performance run or acceptance for BR.
+
+
+BS completed71 control and71 candidate views, explicit compile/clean-start/source assertions passed.80 mm normal SHA256ccd7f5d60886672394c831e6926d19ea58957bc7abf930e6ecc3f230273ee8c3. Independent verdict overall FAIL but modest favorable improvement over BP: clear00 stones(860,445)/(435,700) less extruded with retained thickness beyond own control; clear16 bands x820..1010,y395..620 less swollen/fused, but elongated; slab x650..790,y470..540 still smooth lip. Grazing16 smear x653..700,y310..385 reduced, foreground(600,755) sits more naturally. No new seam/fringe/grain defect; full near-normal subtlety accepted. Named hide/reveal remains unverified; independent reviewer now inspecting all17 matched CLEAR-CROSS views for specific coverage rather than assuming the previous pebble is a valid witness. This does not replace naturalness or real-time temporal requirements.
+
+### BT: 60 mm interval comparison, before implementation/run
+
+BS's lower80 mm interval improves naturalness while retaining local visible depth; compare60 mm on the same2 m Rocks Ground02 tile, with matching newly baked macro normals and identical source fine residual. Keep exact BS/BP mapping, contrast32, side treatment, analytic fine footprint, step count, source height/LOD and fades. Candidate/control both use60 mm shading; only candidate ray is enabled. Same bake recipe as80/120 mm with amplitude.06, separate06cm PNG/manifest, no source or prior bake replacement. This is a further physical scale comparison, not increased effect or a changed quality bar.
+
+Run unchanged full71-view cold pair. Reject becoming merely flat/normal mapped, unresolved side bands, or new defects. All fixed cameras/lighting, original visual acceptance requirements and performance budgets unchanged. Full final-source performance qualification remains required; BS has no timing acceptance inherited from BN.
+
+
+### TERRAIN-RELIEF-TEMPORAL-001 / v1 (before first run)
+
+Purpose: observe actual rendered motion, since the17 settled stills cannot establish frame-to-frame stability. This adds a distinct temporal scenario; it does not change or replace any prior orbit or performance scenario. Use the same real playable world, grass64, sun25/225, ejected FOV60 and2769x1529 game rendering as CLEAR-CROSS001/v1. Same target(-342740.844,-216651.062,1660.41479), normalized normal(.279488772,.670184851,.687559605), radius70 units, horizontal cross-normal tangent. Start theta-65 degrees; hold2 seconds, move linearly to+65 over20 seconds at600 requested camera updates(30 Hz), hold2, return over20 seconds/600 updates, hold2. No screenshots are requested during motion. Record the visible editor game viewport through an installed application's normal recording UI, not a substituted render or recreated image sequence. Preserve original video and actual command timestamps.
+
+Use existing get/set_ejected_camera APIs through external capture automation only; no engine component, test-only runtime hook or scene is added. Before each update/hold poll, compare current camera against last returned pose and abort on user movement greater than0.1 engine units or0.05 degrees, allowing the user to take control. Source snapshots unchanged throughout. Catch-up bursts are disallowed: schedule the next request no sooner than one target interval after the prior request when delayed. Log actual intervals and command durations. Camera-command cadence qualification: p95 interval<=50 ms and maximum<=100 ms; failure means temporal evidence is cadence-limited, not an automatic shader failure, and is preserved. These are command timing measurements, not GPU/frame-time claims.
+
+Visual criteria: stable tracked features through both directions, no sudden texture jumps, projection seam flashes, persistent crawling/flicker or inconsistent forward/reverse coverage; assess against the matching zero-ray control recorded identically. Video must include the actual viewport and be inspected before any temporal pass. Recording application presence disqualifies these runs as canonical performance evidence; final performance remains a separate clean run without recording/preview workload. If video capture or cadence cannot be qualified, report temporal validation incomplete. No acceptance thresholds from earlier scenarios are waived.
+
+
+## 2026-09-19 - BT cold visual pair and BS feature-coverage audit
+
+- Scenarios: unchanged TERRAIN-RELIEF-MOTION/GRAZING/CROSS/RAKING/CLEAR-CROSS v1 parameters, the same playable basic_example world, grass64, 2m tile, sun25/225 except the recorded raking light. BT changes only the BS stone interval80mm to60mm and uses matching06cm normals; authored dirt33mm unchanged. Flat control retains matching shading with ray strength0.
+- Evidence: Docs/ValidationEvidence/TerrainRelief/{control,candidate}-bt-cold-{motion,grazing,cross}-*.png (17 each), cold-raking (3 each), clear-cross (17 each):71 control+71 candidate. Both *-visual-cold.json report IsPlaying=true, IsCompiling=false, LastCompileSucceeded=true, LastCompileErrors=0. Explicit shader/material compile and clean startup completed; crash marker unchanged2026-09-19T04:41:56.626406Z; editor26.09.15. Previous shutdown logs contain terminal shutdown markers.
+- Snapshot SHA256 control shader2c8929b5baec1ed4fc587f70efbc62c9697d52331b683546e11b36bf637a3bb7; candidate shader4903943181ab975b71d42d2337d30bcd510598d72dcb3061f6f94a21a6da75ef. Shared include f79f3c6834b56c77d14ad406a5eb676acb43909aaf46f1ee1aadc3d7ee217919; material09156342e8734074b369caec5400d0c8600eb7e3214f0d5f3a16c5ee63cffc69.
+- Independent visual critic: BT visually equivalent to BS; added local thickness remains, but smeared/directional exposed sides are not meaningfully improved. Overall visualFAIL, no new visual defect identified. No BT performance run; BN timings do not qualify BT.
+- Supplemental BS audit inspected all17 candidate and17 matched control CLEAR-CROSS frames. No convincingly identified feature hide/reveal was established. The bright chip beside a round pebble under the slab remains visible at(598,507)frame09,(612,512)10,(629,514)11 in both; the split pale pair near the upright stone remains visible at(914,428)00,(960,454)01,(1000,469)02. Tiny fleck below the slab at(670,507)14,(683,500)15,(692,490)16 remains identifiable but apparent partial coverage versus distortion is ambiguous. These observations do not prove absence of occlusion; coverage qualification remains unverified.
+
+## 2026-09-19 - Temporal recording setup and candidate-BT command cadence
+
+- Preregistered TERRAIN-RELIEF-TEMPORAL-001/v1 run completed1260 observations including1200 moving camera commands, elapsed47.7149253s. Moving request interval p95=41.16337495ms, max57.7758ms: cadence qualificationPASS against<=50/100ms; error=null, before/after source hashes preserved in candidate-bt-temporal-motion.json. This is command cadence, not renderer frame time or visual acceptance.
+- Native OBS32.2.2 recording used a new Voxels3 Parallax Review scene collection, window capture bound to sbox-dev/basic_example, Windows10 capture method. Scripts list empty; existing uploader was unloaded by collection switch before recording. No audio sources. Original profile settings unchanged:3840x2160,60fps,NVENC AV1,CQP18,hybridMP4. Actual viewport occupies a subset of this canvas; original preserved as candidate-bt-temporal.mp4,122.683333s. Matching control and visual review pending. Recorder workload excludes this session from comparable performance timing.
+- Setup failures preserved: temporal helper initial syntax error occurred before any engine call and was corrected before successful prepare; Snipping Tool input failed with unavailable geometry/unusable window, no recording started there. OBS launch initially returned no targetable window, but subsequent inventory found its main window. Two OBS accessibility input attempts reported unavailable cached elements; fresh screenshot-based inputs completed setup. Initial automatic window capture omitted the rendered viewport; selecting Windows10 capture corrected this before recording.
+
+
+## 2026-09-19 - BT performance preregistration
+
+Candidate-BT will run unchanged TERRAIN-RELIEF-PERF/CLOSE-PERF/GPU-PASS-001/v1 with label candidate-bt-perf1, comparing original canonical run1b36a84bc5514b04a4d6634efe0fe3e2 and matched original terrain GPU median0.76168823ms. Existing parameters and gates remain unchanged. OBS is closed and recording files are relocated into project evidence before timing. No imagery decoding/viewing, source changes, or unscheduled engine calls during timed sections. Visual acceptance remains open; the higher-resolution independent review revised earlier blanket material rejection to provisional pending control comparison, not a pass.
+
+
+## 2026-09-19 - Matched BT recording and independent higher-resolution review
+
+Control TERRAIN-RELIEF-TEMPORAL-001/v1 completed1260 observations,1200 moving updates in47.6519170s; moving cadence p95=41.21040002ms/max44.9488ms, error=null and unchanged recorded source hashes. Both control and candidate pass command-cadence qualification only. Original control video5681 frames,94.683333s; candidate7362frames,122.683333s, each3840x2160/60fps. OBS reported5694/7374 total drawn frames respectively, with no lag/skipped-frame message in the recording log excerpt; these counts alone do not prove every engine frame was recorded. OBS closed before performance. Task recordings were hash-verified and relocated from Videos into TerrainRelief evidence while upload script remained unloaded.
+
+Review derivatives: {control,candidate}-bt-video-matched/manifest.json records18 selected frames each (phase1/3,steps1/75/150/225/300/375/450/525/600), cropped from original canvas x459,y150,width1953,height915. Frame alignment is approximate, derived from motion-JSON file completion timestamp minus logged elapsed time and OBS start timestamp; it includes unmeasured presentation latency. Not suitable for pixel-exact displacement measurements. Review MP4s crop1952x914,trim47.65s at those estimated motion-start offsets,encode2859 actual source frames at60fps,H264 CRF18,veryfast. No synthesized/interpolated frames. motion-review.html displays the synchronized local pair; original recordings remain preserved.
+
+Independent critic inspected all36 recorded crops and explicitly revised earlier blanket material rejection. Scoped verdict: modest local relief beyond control shading; broadly convincing rock appearance, no decisive material-quality blocker demonstrated. At phase1-step001 the upright stone near(1320,520) has a wider right-side transition x1340..1360,y480..575 in the candidate; the corresponding reverse endpoint reproduces it. At phase1-step600/reverse-step001 the diagonal chain x1320..1530,y655..890 looks thicker and more individually raised. Adjacent gravel provides context against uniform pose shift. The large slab lower face near(1070,660) atstep450 already exists in the control, so neither its volume nor its soft grain is exclusively a parallax effect.
+
+No unambiguous named candidate-only disappearance/emergence was identified. The selected chip, split pair and square neighbor remain visible; tiny gravel changes are ambiguous due to sampling/pose mismatch. Sparse frames cannot establish shimmer absence or full smoothness. Preserve both earlier failures and this revised scoped material judgment; overall acceptance remains incomplete. No thresholds are waived.
+
+
+## 2026-09-19 BT performance and close-workload correction
+
+BT canonical PERF-001/v1 run dc2c52e635d94faeb4662971a80dabaa completed: moving47305 samples,387.92273 FPS,p95=4.4898ms,p99=6.2582ms,GPU=2.2256742ms,peak process4870320128B/GPU1612577517B,allocation67743.16B/frame,zero exceptions,collision4913/4913ready/zero failures; standing3293samples,329.2206FPS,p95=4.4938ms,p99=5.6419ms,GPU=2.623812ms,peak process4712722432B/GPU1663449837B,allocation31576.953B/frame,zero exceptions. Canonical numeric gates PASS against original1b36a84bc5514b04a4d6634efe0fe3e2. Hashes stable; compile passed; grass overflow0; crash marker unchanged.
+
+BT close v1 recorded571.5/571.3/570.5FPS,p95=2.65/2.67/2.65ms,p99=3.45/3.48/3.56ms. GPU draw scope approximately.317/.314/.333ms. These unexpectedly fast results are INVALID for fixed-resolution acceptance: installed SceneViewportWidget.Game.cs OnEject calls SetDefaultSize; SceneViewportWidget.cs sets camera.CustomSize from actual Renderer.Size*DpiScale. The profiler instead reads Sandbox.Screen, which retains the possessed game dimensions. UI after the run shows1302x610 logical viewport (1953x915physical), despite reported2769x1529. Earlier CLOSEPERF-001/v1 and GPUPASS-001/v1 results lack actual ejected render-size evidence: preserve all values/history, but withdraw their fixed-resolution acceptance claims. Their relative comparability cannot be established from Screen fields alone. Main possessed canonical PERF-001 is unaffected.
+
+Existing get_ejected_camera now reports actual RenderWidth/RenderHeight from Renderer.Size*DpiScale. Hotcompile succeeded. Verified maximized viewport3022.5x1525.5physical; explicitly applying1846x1019 logical AFTER eject gives2769x1528.5physical (rounds2769x1529). No shader changes.
+
+### Preregister TERRAIN-RELIEF-CLOSEPERF-001/v2 and GPUPASS-001/v2
+
+Substantive version reason: v1 failed to constrain/verify the actual ejected workload. Retain all v1 parameters, limits, camera main08, grass64,sun25/225,world4274,engine26.09.15,RTX5090,warmup30s,3x10s windows12s apart,scope and <=10%p95/p99 and <=.5ms draw delta budgets. Maximize visible viewport, explicitly set1846x1019 logical AFTER eject, record actual camera RenderWidth/Height before/after close and GPU observations, require2769x1529 within0.51physical pixel for DPI half-pixel rounding. No recording/image decoding/viewing during timing. Baseline baseline-original-close-v2 uses exact original snapshot; candidate-bt-close-v2 exact BT snapshot; each compiles shader/material and restarts visibly, with canonical PERF-001/v1 before close. Compare ONLY these v2 close baselines; do not join v1 timing series. Hash snapshots, crash markers, logs retained.
+
+
+## 2026-09-19 consecutive recording-frame critique
+
+Evidence bt-consecutive-review/manifest.json and18JPEG sheets contain360 actual decoded source frames: control/candidate x three1-second intervals centered phase1 steps075/300/525 x60consecutive60fps frames. Crop native550x440 at viewport720,410; no interpolation or synthetic rendering. Critic inspected every sheet; root also inspected candidate-step300-page1.
+
+Independent verdict: scoped PASS for absence of obvious local temporal defects; no abrupt popping, duplicated contours, detached material sliding, or decisive new seam in these crops. Step075 ovalgravel/chip(~400,320/~345,345),step300 speckledpebble/brightneighbor(~125,180/~175,205),step525 longshard/pebble(~140,285/~260,215) remain coherent. Control also coherent. Finegrain variation cannot be confidently separated from compression/subpixel sampling. This is consecutive-frame inspection, NOT real-time playback, only3seconds per recording and one crop. No entire47second temporal pass or named coverage proof. The scoped oblique-view added-relief finding stands; overall prototype still unaccepted.
+
+### Preregister TERRAIN-RELIEF-OCCLUSION-001/v1
+
+Additional severe oblique edge-case observation, not a replacement or reparameterization of CLEARCROSS-001. Same real-world4274,seed1337,grass64,sun25/225,FOV60,1280x800 explicit screenshots, target(-342740.844,-216651.062,1660.41479), N=normalize(.279488772,.670184851,.687559605), U=normalize(cross(N,up)),radius70.17poses at theta=-80+10*i for i0..16,position=target+70*(N*cos(theta)+U*sin(theta)),look at target,hold.3seconds. This samples near the unfaded grazing limit, including both directions. Capture exact matched flat-BT control and BT candidate after clean compile/restart; preserve all frames. Evaluate identifiable stone edges against adjacent recess features for visibility/coverage changes and stable identity; reject stretches/duplicated borders/seams. Failure or no identifiable hide/reveal remains a failure of coverage proof, not a waived gate. No performance claims from screenshot runs.
+
+
+## 2026-09-19 user visual rejection
+
+User reports stone still looks flat and dirt movement does not read as raised clumps. Current visual goal remains FAIL; scoped image-review passes do not override this. At feedback time the active source was the original material temporarily restored for the v2 performance baseline; assistant disclosed that live-view state. Nonetheless BT's modest qualitative relief is not sufficient grounds for acceptance. Further work must show clear raised clumps and recessed ground, not merely changed pixels or texture motion. Preserve all fixed scenarios and prior results. No commit/push.
+
+
+### Preregister TERRAIN-RELIEF-DIRT-BUILD-001/v1
+
+Purpose: expose readable Dirt2 through existing real-world terrain build gameplay, after DIRT-002 was grass-covered. No new scene, component, debug material, or alternate terrain path. Start savedworld f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision4274,seed1337,grass64,sun25/225. Before mutation, require idle and saved original slot f5ce10f36d75428eb3dd63dee14891c6; retain filesystem backup/page hashes; save to NEW slot parallax-dirt-20260919 and verify checkpoint/active saveSlot switches before any edit. Original slot must remain unchanged throughout exposure.
+
+Player(1800,1450,1000), away from build volume; existing console canonical command voxel_terrain_edit2200 1450 700 128 -256 (actual command has a space after name), exactly once. Source survey bt-dirt-column-survey.json reports height691.11273 and unmodified column. Wait bounded60s for committed+no edit render/collision pending, no failure; inspect column/material through existing controls. Do not repeat brush if rejected/unexpected.
+
+Fixed views target(2200,1450,785),r70,elevation30deg,azimuth a=-30+3.75*i,i0..16: camera=target+70*(cos30*sin(a),-cos30*cos(a),sin30), angles(30,90+a,0),FOV60,1280x800,.3s hold. Compare same-scene matched ray-disabled control and candidate, all other art/shading shared; clean shader/material compile and restart for each revision. Three recognizable clods must read as raised, with stable relative movement/visibility and no stretched smears, floating outlines, or displaced neighboring material. Unreadable exposure is INVALID, not PASS. No performance claim from visual captures.
+
+After visual comparison, move player clear, load original slot through existing command, verify restored canonical field/pages and no pending derivative work, then save original slot so last-world selection is restored. Do not reset/clear world or use inverse edits as restoration. Keep task slot/backup separate, untracked. Any restore rejection is a blocker requiring diagnosis, never deletion of user data.
+
+### BU prepared source/art hypothesis (not run)
+
+Texture tile1m for dirt/stone; full authored height intervals80mm dirt/120mm stone. Bake macro normals from each same source height boxmip2 at its exact tile/amplitude, preserve source fine-normal residual capped1. Extend the same normalized smooth-maximum projection field/derivative weights to dirt (contrast32) rather than averaging unrelated projected clods. Dirt height uses mip2 floor matching the bake. Existing rock surface mapping and bounded8..64ray retained. All changes are artist/prototype scale choices, not recovered physical calibration. Same fixed rock/dirt/raking/motion scenarios and matched ray-disabled controls required; neither larger numbers nor image differences establish visual success. Active source stays BT until corrected measurements complete.
+
+BU pre-run art refinement: source dirt height p5=.28223088,p95=.54927903 gives only8.81mm central90-percent range at33mm amplitude. p1=.22626078,p99=.63300526. Remap dirt source through clamped p1/p99 linear window then smoothstep, write16-bit derived height and bake matching normal from that exact quantized output. This intentionally authored clod shape is not physical calibration. Source scan retained. Rock height remains unchanged (p5=.18338293,p95=.67208362). No BU runtime run yet.
+
+
+## 2026-09-19 corrected CLOSEPERF/GPUPASS v2 results
+
+Original aad6aabd13d44866afa54776a7a72aa4: moving51678,423.78867FPS,p95=4.0586ms,p99=5.9485ms,GPU=1.989613ms,peakCPU4645466112B/GPU1579598213B,alloc62033.676B/frame,exceptions0. BT55084b0364804fbbaeeeeca4139a83c9: moving53324,437.28043FPS,p95=3.8992ms,p99=5.7594ms,GPU=1.9398426ms,peakCPU4892495872B/GPU1610562285B,alloc63134.14B/frame,exceptions0. Full standing metrics preserved close-v2-comparison.json.
+
+Original close p95=2.57/2.43/2.43 median2.43ms;p99=4.13/3.58/3.45 median3.58ms. BT close p95=2.71/2.58/2.57 median2.58ms(+6.17%,PASS);p99=4.12/4.39/3.64 median4.12ms(+15.08%,FAIL). Window spreads(original p955.76%/p9918.99%;BT p955.43%/p9918.20%) all flagged>5%; variability does not waive failure. BT not accepted. Actual ejected size2769x1528.5 before/after close+GPU, matching2769x1529 with specified half-pixel allowance. UI maximized.
+
+Terrain draw scope original.46335417/.46358854/.4571804ms median.46335417. BT approximately.580/.574/.577ms median.577,delta approximately+.114ms within.5mscomponent budget. Headline ejected GPU counter fixed per run(.91/.56ms) remains unqualified. This component pass does not waive tail latency/visual failure.
+
+Shutdown complication: first v2 sequence advanced last_crash from2026-09-19T04:41:56.626406Z to2026-09-19T16:30:38.248911Z during previous-editor teardown. Previous-shutdown log12:30:31: prefabs/terrain_player.prefab Assert AreEqual5components weren't deleted;12:30:33 Sandbox.ResourceLibrary.GetAll -> EditorMainWindow.GetUnsavedResources/ShowCloseDialog NullReference; then Source2Shutdown/ShutdownSource2Logging. The next original-editor teardown repeats these managed errors at12:36:35/38 but marker remains unchanged. Cold startup itself retained its captured marker and compile succeeded; no claim of clean shutdown or identified root cause. Preserve logs; this is not hidden as a parser pass or blamed on POM without evidence.
+
+
+## DIRT-BUILD-001/v1 setup result and correction
+
+Original slot backup contains97files and is byte-identical after save-as. New task slot saved successfully. Its revision is4308, NOT preregistered4274: live saved-world edits changed since the earlier survey; setup lacked a revision assertion and v1 is INVALID for qualification. Do not revert newer user state to4274. Exactly one requested build was accepted (id1),2146samples,revision4309,95pages,zero rejection/failure,all render/collision publication settled. Existing material query confirms Dirt2; postbuild center column crosses atapproximately781units; original natural height691.11273. Backup world-before-dirt-20260919 preserves4308 and its manifest has exact97file hashes. No original-slot files changed during save-as.
+
+### Preregister TERRAIN-RELIEF-DIRT-BUILD-001/v2
+
+Substantive reason: saved playable world advanced to4308 through intervening live activity; restoring4274 would discard newer user state. Preserve failed v1 setup, use already-created task-slot snapshot4309/95pages (one real build) as immutable visual baseline; issue no further brushes. All v1 camera17poses/target/radius/FOV/sun/grass/output-size/material criteria remain unchanged. Controls/candidates must verify this world revision before captures; any newer edits invalidate comparison rather than being silently overwritten. Restore original slot4308 through canonical load/save after review, keeping task slot and backup. This version changes source identity only; it does not weaken visual criteria or retroactively pass v1.
+
+DIRT-BUILD001/v2 first capture attempt candidate-bt-dirt-v2 stopped before any image: existing set_editor_camera_ejected returns plain text, helper wrongly tried JSON parsing after successful mode command. Fixed orchestration response handling, retry distinct label candidate-bt-dirt-v2-retry; no extra brush.
+
+
+### V2 performance source-identity correction
+
+Later startup-log audit found BOTH v2 runs loaded actual saved revision4308 (baseline log12:31:18,candidate12:37:24), despite helper/source labels saying4274. User/live edits advanced the world before these restarts. Preflight did not assert canonical world revision. Therefore v2 runs are INVALID against their preregistered4274 source, even though their actual4308 sources match each other and viewport sizes were correctly constrained. Preserve all observed values, including the observed BT p99 failure; do not grant acceptance or retroactively relabel the runs. Earlier BT-perf1 loaded4274 and direct12:22:50 inspection still reported4274. Dirt backup correctly preserved latest4308, not an older world. Future qualification must explicitly preregister actual4308 source and assert canonical revision before/after timed phases; do not overwrite newer user edits to restore4274. No further performance run is scheduled until a visually credible candidate exists.
+
+BU dirt v2 captured17frames at4309 before/after, cold compile passed, marker16:30:38unchanged throughstartup. Root finds strongly extruded jagged gritty ridges rather than convincing soil; visualFAIL, independent review pending. No performance run.
+
+Preregister CLEARCROSS-001/v2 and OCCLUSION-001/v2: retain every camera/light/grass/output/hold parameter from respectivev1, source now task-slot world4309/95pages (preserving original4308) instead of4274. Reason prior source advanced through user edits and the real dirt exposure; no deletion of newer state to recoveroldsource. Compare currentcandidate/control at identical4309 only; no cross-version regression conclusion from prior4274frames. Check canonical revision before captures.
+
+BU independent soil verdictFAIL: obvious relief but jagged/fluted pillar faces, miniature eroded-mountain appearance, smooth outer silhouette mismatch. Detailed landmarks08(~725,500..625) and16(~505,450..590), no matched controlproof. BU also captured34rock(clear/occlusion)v2images at4309, unreviewed atthisentry.
+
+BV next art revision (before first run): retain BU shader/stone; dirt height now periodic Gaussian sigma32texels BEFORE p1/p99 clamped linear remap, removing smoothstep amplification. At1m tiling this sigma15.625mm; derived central90-percent height53.12mm, gradientp95=.654/p99=.903 (approx33/42degrees) versus narrow cliff faces. Source fine normals retain residual against sameGaussian32, capped slope1. Asset-design slope measurements do not qualify visual behavior. Same DIRT-BUILD001/v2 exact4309/cameras/criteria; no further terrain brush.
+
+
+## 2026-09-19 Dirt continuation: BV rejection and BX preregistration
+
+BV cold start passed, but its first DIRT-BUILD-001/v2 capture attempt returned
+GameEjected mode error after warmup and produced zero images. User reported
+better depth but unrealistic random bumps. It remains FAIL for realism.
+The unchanged scenario retry candidate-bv-retry captured all 17 images with
+canonical revision4309 before/after. Root inspected image08: pointed hummocks
+and smooth broad swells instead of recognizable clods, agreeing with feedback.
+BU stone independent critique also FAIL: swollen/ribbed faces, plus black
+pinholes near frame corners of the severe grazing sweep; cause unproven.
+BW rock filtering recipe remains prepared/unrun.
+
+BX uses Brown Mud03 by Rob Tuytel (Poly Haven CC0) at documented1.3m tile,
+100mm normalized height interval (central90%44.19mm). Exact EXR height is
+quantized to16-bit without remapping or smoothing. All five channels now
+describe the same scan. Macro normals derive from height at mip2; source
+normal residual removes Gaussian8 low frequencies and caps slope magnitude1.
+This amplitude is an art hypothesis, not a measured physical scan depth.
+Shader otherwise BU/BV, stone unchanged. Source manifest in
+Assets/textures/terrain/brown_mud_03/manifest.json; snapshots candidate-bx.*.
+Run DIRT-BUILD-001/v2 unchanged on task slot revision4309 with before/after
+assertions. Criteria remain three recognizable raised clods, realistic mixed
+soil surface, no smeared walls/floating edges, stable feature movement and
+ray-on/off coverage proof. Compile plus cold start first; independent critic
+checks native rendered views. No performance or visual acceptance implied.
+User requests dirt first, then stone, sand, snow and grass; each remains open.
+
+
+## 2026-09-19 BX dirt FAIL; BY preregistration
+
+BX compiled/cold-started with zero compile errors and unchanged crash marker
+2026-09-19T16:30:38.248911Z. DIRT-BUILD-001/v2 produced17views, source4309
+before/after. Root inspected00/08/16; independent critic inspected00/04/08/12/16
+and BV08. Verdict FAIL: coherent detail improved, but crust-like corrugated
+plates and grooved faces (BX08 x590-890 y510-680; BX16 x590-800 y605-790).
+Root also finds excessive dark/crinkled character. No ray-off attribution or
+full temporal pass. Evidence candidate-bx-dirt-build-* and visual-cold.json.
+
+BY keeps Brown Mud03 and1.3m tiling, filters height with periodic Gaussian8
+(5.08mm sigma), reduces interval100->80mm, and reduces fine normal residual
+gain1->0.25. Height and normals remain matched. Removes old color correction
+(0.55,0.65,0.60), which was authored for the previous dirt source. No new
+shade/noise pattern is invented. Central90% height now34.60mm.
+Run same DIRT-BUILD-001/v2 unchanged, same strict criteria, compile/cold-start
+and canonical4309 before/after. Stone unchanged; no performance claim.
+
+
+### BY ray-off comparator preregistration
+
+BY cold compile/start and17 DIRT-BUILD-001/v2 views complete, source4309 before
+and after, marker unchanged2026-09-19T16:30:38.248911Z, zero compile errors.
+Root inspected04: harsh grain reduced, but the broad compacted patches still
+read as wet/caked material. Independent critique pending.
+Control-BY changes only TerrainReliefRayStrength1->0, retaining authored normal
+scale, tint, all textures and camera/scenario parameters. Compile/cold-start,
+same17views, same4309 source checks. This comparator tests whether raised
+coverage is caused by the ray, not whether the current soil art is acceptable.
+
+
+## 2026-09-19 BY FAIL and control; BZ preregistration
+
+Independent critic inspected BY00/04/08/12/16: FAIL raised crumbly dirt; brown
+soil color improved but broad smooth sheets and cavities read as compacted mud.
+Control-BY cold/start/capture passed,17images/source4309 before/after/zero
+compile errors/unchanged crash marker. Root compared matched08: ray visibly
+raises the right-hand dark-rimmed feature around1090,560 and changes material
+coverage under its edge; normal-only control lies flatter. Detailed independent
+coverage assessment pending. Art failure remains regardless of ray difference.
+
+BZ changes dirt source to Poly Haven Dry Mud Field001 (Rob Tuytel photography,
+Rico Cilliers processing, CC0). Root inspected actual source color/height:
+numerous separate aggregates of different sizes, fewer smeared broad plates.
+Use documented3m tile; authored120mm height interval, central90%48.55mm.
+Exact EXR ->periodic Gaussian2 (2.93mm sigma)->16-bit height; matched mip2
+macro normal +Gaussian8-removed source fine slope capped1 then gain0.5.
+No percentile remap, no color adjustment. Source originals/manifest kept in
+Assets/textures/terrain/dry_mud_field_001. Shader ray and stone unchanged.
+Same DIRT-BUILD-001/v2 scenario/criteria, source4309 before/after, compile and
+cold start mandatory. No acceptance inferred from scan appearance.
+
+
+### BY matched comparator interpretation
+
+Independent critic compared all five00/04/08/12/16 pairs. Ray-on visibly adds
+thickness to oval crest00 around780,330 and right ledge08 x1040-1130 y540-600;
+material FAIL remains. Critic could not name a specific pebble/crack patch
+hidden then revealed. Root's earlier coverage observation is therefore
+limited to changed boundary/face extent, not accepted named occlusion proof.
+No full temporal pass.
+
+
+## 2026-09-19 User approves dirt appearance; CA stone preregistration
+
+User: dirt looking pretty good; move on to stone/grass/sand/snow. User explicitly
+requests a goal applying the same technique. Preserve BZ dirt appearance; this
+approval does not establish unrun motion/performance checks. BZ independent
+still-view material PASS: three raised natural clods at00 (332,552),(370,759),
+(762,710).17views/4309before/after/zero compile errors. Its marker changed during
+old-editor teardown: shutdown13:32:05, marker17:32:11UTC, next startup13:32:26
+local. New-start marker stable, but full teardown lifecycle is not clean.
+
+CA preserves all BZ dirt inputs and physical scales. Stone now uses the same
+matched height/normal approach: RocksGround02 at1m/120mm, periodic Gaussian8
+height without range remap, matching mip2 macro normal plus capped source fine
+residual at0.5 gain. Remove the unsuccessful separate stone side-shading/fine
+texture path; stone uses canonical SampleTerrain like dirt. Asset manifest
+rocks_ground_02_relief_normals/ca-manifest.json; candidate-ca snapshots.
+Run CLEARCROSS-001/v2 and OCCLUSION-001/v2 unchanged, world4309 before/after,
+FOV60 1280x800 light25/225 grass64, fixed17poses per scenario, compile/cold
+start. Criteria: readable distinct raised rock, no ribbed/stretched faces,
+no holes/unstable coverage. Independent visual review mandatory. No performance
+claim until canonical figure-eight plus corrected close measurements.
+
+
+## 2026-09-19 CA preflight stop; user control prohibition; stone repetition
+
+CA preflight returned canonical revision4438 instead of4309. No compile/cold
+start or scenario captures ran. Current task slot contains newer user edits:
+never restore older4308/4309. Last marker before attempted run remains
+2026-09-19T17:32:11.387691Z.
+User reports stone has depth but ugly tiling. Root inspected the current live
+view using native UI before the subsequent prohibition: obvious diagonal rows
+of repeated pale rock clusters across a broad edited slope. This is qualitative
+feedback, not a controlled comparison or a claim about loaded CA resources.
+
+User now prohibits computer/live-app control absent explicit direction; global
+AGENTS.md updated and all agents notified. No more camera/player/play/restart
+automation. Continue file work only; runtime criteria are not waived.
+New offline stone pattern is a proposed fix, not a validated result.
+
+
+## Terrain relief CB offline stone preparation (2026-09-19)
+
+Scope: file-only bake and source integration; no live application control.
+Baker: Tools/bake_stone_relief.py. Outputs: stone_pattern4096px,4m repeat,
+120mm interval, height mip1; all material channels use the same patches.
+Normalized mean absolute wrap-column/wrap-row differences versus interior
+adjacent-column/row differences: color .055091/.057883 vs .055595/.055629;
+height .001586/.001755 vs .001535/.001550; normal .036809/.034058 vs
+.034013/.034253. All manifest PNG hashes matched at this check.
+These aggregate asset measurements do not establish invisible seams, visual
+quality, parallax motion, or performance. Shader/material source now uses
+the coherent stone maps with per-material height LOD metadata. Dirt inputs
+and numerical settings are unchanged. Compile, cold-start, current-world
+visual comparison and canonical performance acceptance: NOT RUN, pending
+explicit direction for computer control. No runtime pass or acceptance.
+
+### CB first asset visual critique: FAIL (offline only)
+
+Independent critic inspected stone_color.png: repeated pale triangular slabs
+near25%/8%,39%/7%,64%/8%; cloudy translucent-looking blends around48-60%
+across/32-42% down. Local scan detail plausible, assembled pattern rejected.
+Previous wrap measurements refer to this first bake, not subsequent revisions.
+Revision CB2 changes four right-angle rotations to continuous deterministic
+angles and height blend contrast16 to32. All channels still share placement
+and weights. This is an attempted correction, not evidence of improvement.
+No rendered validation, performance result or acceptance is claimed.
+
+### CB2 offline result: still visually unaccepted
+
+Baker exited0; all five manifest PNG hashes matched. Generated metadata
+verified4096px/4m/.120m/minimum mip1. All five dirt bindings exactly match
+CA snapshot. Python syntax and shader brace checks passed; neither is engine
+compilation. Independent critic: more varied layout, but recognizable slabs
+remain near37%/24%,38%/40%,56%/41%; cloudy boundaries at44-51%/18-23%.
+Verdict: not a pass for unobtrusive repetition or consistently natural blending.
+Root likewise observes soft patch boundaries. No in-world check performed.
+Remaining work includes stone boundary/source variation, sand/snow/grass
+relief integration, visual motion proof and runtime performance acceptance.
+
+
+## Terrain relief CC: offline all-material integration (2026-09-19)
+
+Source identity: ValidationEvidence/TerrainRelief/candidate-cc-source.json.
+No runtime run occurred. Source now traces one weighted height field across
+dirt, stone, grass, sand and snow. All color/normal lookups share its hit.
+Tools/bake_terrain_patterns.py replaces the grass-only baker and generates
+coherent grass/sand/snow channels plus shader metadata. Grass4096px/1.4m
+chart tile/.020m interval; sand2048px/1m/.020m; snow2048px/1m/.060m.
+All use period2 and height mip2. Macro normals derive from quantized height
+with the lattice chain rule; fine residual is bounded. Sand/snow now have
+periodic placement instead of unbounded stochastic sampling, requiring review.
+All three bake commands exited0. Every manifest output hash matched. Grass
+color/roughness/AO match pre-height bytes. Dirt bindings match CA exactly.
+All bound PNGs exist. Source delimiter and whitespace checks passed; these
+are not shader compilation or renderer verification. Height5/50/95 percentiles:
+grass .153994/.329412/.576623 (central90%8.453mm); sand .162478/.332158/
+.561288 (7.976mm); snow .215900/.401572/.612772 (23.812mm).
+Independent offline grass reviewer: visible color/height correspondence,
+but conspicuous soft/sharp patchiness; no rendered-depth pass.
+Compile, cold start, matched in-world motion, figure-eight performance and
+current4438-world qualification: NOT RUN. Computer control remains prohibited
+without explicit direction. No terrain save/edit operations performed.
+
+### CC sand/snow initial offline critique and preview limitation
+
+Independent reviewer found plausible fine sand and restrained snow color,
+without obvious hard seams/ghosted patch edges. Their16-bit height previews
+appeared white, so correspondence was unverified. Numeric readback contradicts
+a constant texture: sand normalized min/max .003311/.992203; snow .004395/
+.996628. Root viewed structured snow height directly. Normalized8-bit diagnostic
+previews (round(raw16/65535*255), no contrast stretch) were supplied for follow-up.
+The initial white preview is retained as a display limitation, not a data failure.
+
+### CC normalized-preview follow-up
+
+Independent critic confirms both height maps contain structure. Sand broad
+features correspond to color mottling, including17%/4%, with no obvious hard
+joins or doubled boundaries; structure reads as uneven sand rather than wind
+ripples. Snow broad band8-25%/32-38% aligns, but similar scalloped formations
+repeat at10-40%/55-65% and15-45%/87-96%. Snow repetition remains a concern.
+These are offline correspondence observations only. No material received
+rendered-depth, motion, amplitude or performance acceptance.
+
+
+## Terrain relief CC completion audit: incomplete, awaiting live evidence (2026-09-19)
+
+Revalidated all sourceHashes in candidate-cc-source.json: zero mismatches.
+Revalidated all four generated-pattern manifests: zero output mismatches.
+Dirt bindings still match candidate-ca.vmat. No live application was queried
+or controlled and no world/save operation occurred.
+
+| Requirement | Evidence and remaining gap |
+| --- | --- |
+| Preserve approved dirt | Maps/settings preserved in source; rendered regression unverified. |
+| Extend stone, grass, sand, snow | All participate in shared source ray; engine compile and loaded identity unverified. |
+| Matching material structure | Coherent bakes and offline correspondence; stone blending/repetition, grass patchiness and snow repetition unresolved. |
+| Actual in-world parallax | No CC matched motion/ray-off evidence. Not proven. |
+| Independent visual acceptance | Offline critics supplied candid findings; no CC rendered pass. |
+| Performance | No comparable CC figure-eight or close-view measurements. Not proven. |
+| Preserve user edits | No file-work changes to terrain saves; latest previously observed4438 must not be replaced by older saves. |
+| Commit/push completed task | Not eligible: runtime acceptance remains incomplete. |
+
+The live-evidence blocker has persisted across the preceding offline iterations.
+Current source is held for real renderer feedback before further art tuning.
+Required next evidence: engine compilation and cold-start result, loaded CC
+identity, matched in-world motion and wide-view repetition review for every
+material, then comparable canonical performance measurements. Any live control
+requires explicit user direction under global AGENTS.md. User-provided live
+captures/logs can support review without granting control. No completion claimed.
+
+
+## User direction and stone CD preparation (2026-09-19)
+
+User explicitly defers performance checks and requests continued development.
+Performance is not a blocker to current visual iteration; eventual checks remain
+separate. No computer control was authorized. Stone CD changes offline patch
+contrast32 to96 and per-patch source scale to0.8-1.2 with matched fine slopes.
+Targets: previous cloudy transitions and identical-size landmarks. All five
+channels remain coherently placed. Visual quality not yet established.
+
+### CD offline results
+
+Stone baker exited0; all five output hashes match. Height normalized range
+.089372-.995407; physical metadata unchanged4m/.120m/mip1. Independent
+critic: clearer, more solid boundaries and less dominant haze, but recognizable
+slabs repeat near39%/24%,35%/39%,55%/38%. Remaining cloudy fragments at
+43-48%/14-21% and29-34%/58-63%; not accepted for unobtrusive repetition.
+Grass rebuild first failed with WinError5 replacing unchanged grass_color.png.
+Baker now preserves identical output files; retry of grass, sand and snow all
+exited0. Every manifest matched; all five grass and all five sand PNG hashes
+are unchanged. Snow now uses coherent deterministic patch rotation. No editor
+control or restart was used to resolve the file error. Source identity is in
+ValidationEvidence/TerrainRelief/candidate-cd-source.json. Performance deferred
+by user direction; no rendered parallax acceptance claimed.
+
+
+## CE material direction: underground bedrock (2026-09-19)
+
+User rejects loose large-rock/rubble look; asks for smooth continuous stone
+with sharp jagged edges. CE replaces all stone source channels with existing
+RockFace. Bake scale6m repeat/4 patches;120mm interval; height sigma2; fine
+normal gain0.25.16-bit roughness/AO are normalized correctly. No runtime
+change to dirt, other materials, world edits or ray algorithm. Outcome pending.
+CD snow critic found less regimented repetition, broad map correspondence,
+no obvious rectangular seams/doubled edges; some scalloped profiles remain.
+
+### CE offline bake verification
+
+Bedrock bake exited0; all five output hashes match manifest. Metadata4096px,
+period4,6m repeat,.120m interval,mip1. Height normalized .236713-.988632;
+roughness .776471-.854902; AO .407843-1.0. These ranges confirm the16-bit
+surface maps were not clipped white by8-bit conversion. Dirt bindings remain
+unchanged from CA. Source identity: candidate-ce-source.json in this evidence
+directory. Root inspected base-color preview with exact existing shader15%
+mineral-color mix applied in linear space. This is an unlit material preview,
+not an in-game capture or proof of parallax. Independent critique pending.
+
+### CE critique and CF correction
+
+Independent critic: color closer to continuous bedrock, but height has repeated
+cap shapes and too many short overlapping ledges, possible straight patch joins.
+CF removes stone patch compositing entirely to preserve the connected original
+RockFace field. Native2048px,3m repeat,.120m interval,mip2; sigma2/fine0.25.
+Finite3m repetition is an explicit remaining risk, not claimed solved. The
+priority is now the user-requested solid bedrock identity and broad faces.
+
+### CF result and CG fracture authoring
+
+CF bake exited0, all hashes matched,2048/3m/.120m/mip2 metadata; color pixels
+exactly match source. Mean wrap X/Y versus interior X/Y: color .013400/.016100
+vs .014668/.016178; height .001585/.001485 vs .001836/.001787; normal
+.009686/.010173 vs .010273/.010546. These do not prove in-world seamlessness.
+Independent CF critique: convincing continuous bedrock identity, no obvious
+patch joins, but some rounded bowl-like height depressions remain.
+CG reduces scan-height undulation to45% and adds35% crevice depth from
+1-AO (AO sigma0.75 texel), centered atH0.5 and clamped. This authored height
+uses matching source crevices; it is not a claim of physical scan recovery.
+
+### CG offline result
+
+Bake exited0; all five output hashes match. Height P5/P50/P95=.392340/
+.504616/.607538 (central90%25.824mm at120mm authored interval). Color pixels
+exactly match RockFace. Independent map critique: broad bowls less dominant,
+clearer localized fracture steps, coherent broad faces retained, no pervasive
+new grain pits. Rounded pocket at70-76%/48-60% and scalloped/flaking outlines
+at30-45%/60-75% remain potential issues. No rendered quality or motion pass.
+Current source identity: ValidationEvidence/TerrainRelief/candidate-cg-source.json.
+Performance deferred. Computer/live editor not controlled; terrain saves untouched.
+
+
+## CH grass overlap refinement (2026-09-19)
+
+Target: independent critic observed alternating hazy and sharp grass patches.
+CH squares the grass fourth-power weights after support cutoff, before final
+normalization. The cutoff remains applied at exponent4; applying it directly
+at exponent8 would erase all support at some triangle centers. All channels
+share the new weights; final height still owns macro normals. Sand/snow weights,
+CG bedrock and approved dirt are unchanged. Color/height/manifest baseline
+retained in .codex/terrain-relief/ch-grass-before. No rendered result claimed.
+
+### CH offline result
+
+Initial bake failed WinError5 replacing grass_color.png. Baker now attempts
+ordinary file writing if replacement is denied, without manipulating any
+application or handle. Retry exited0 with no warnings; all manifest hashes
+match. Height raw range924-65447; weights exponent8 with cutoff at exponent4.
+Sand/snow rebuilds exited0 and all ten PNGs remain byte-identical. Dirt bindings
+match CA. CG stone inputs and outputs were not edited. Independent color-map
+review: modest clarity improvement around25-35%/25-35% and65-75%/40-50%;
+broad haze remains at15-23%/8-20%,27-36%/30-40%,62-72%/60-73%. No obvious
+new straight seams; dense flattened-ground-cover look persists. Retain modest
+improvement for in-world review; no rendered or motion pass. Performance
+deferred. Source identity: candidate-ch-source.json in evidence directory.
+
+
+## CI material publication and snow shaping (2026-09-19)
+
+Read-only engine log inspection found earlier material rebuild abandonment
+at14:22:52 and14:31:03 after1270ms waiting for quiet inputs, while bakers
+encoded/published channels sequentially.14:07 also reported absent SandHeightMap
+and SnowHeightMap during shader/material transition; no loaded-current-state
+conclusion follows. No application control or performance testing was performed.
+Tools/terrain_bake_output.py now encodes/stages complete PNG sets before a short
+publication burst; unchanged files are preserved. This is not multi-file atomicity
+and is not yet proven against live engine loading. Both canonical bakers use it.
+CI snow filters combined height periodically with sigma4 cache texels before
+quantization/normal derivation to reduce the critic-observed crisp lips around
+cloudy interiors. Source color/roughness/AO and fine normal detail remain.
+Before snow height/normal/manifest retained under ci-snow-before in task scratch.
+
+### CI bake and file checks
+
+Snow, sand, grass and stone bakes all exited0 through the shared publisher.
+Every manifest output hash matched. All grass/sand/stone PNGs are byte-identical
+to pre-run captures; snow color/roughness/AO are byte-identical. Snow height
+and normal DO change versus ci-snow-before; normalized height mean absolute
+difference .004793193. Worker initially summarized changed channels as none;
+root corrected this against saved pre-change files, preserving the discrepancy.
+Read-only log tail shows one material on-demand rebuild request at14:54:50
+after snow_normal changed. It does not confirm load completion or current
+rendered identity. Historical import failures retained in ci-import-observations.log.
+No game/editor control or performance tests. Current source identity is
+ValidationEvidence/TerrainRelief/candidate-ci-source.json.
+
+### CI independent snow review
+
+Reviewer sees modestly softer rims at12-16%/20-32%,35-50%/36-48%,
+and8-25%/72-82%, with broad basins/ridges preserved and no obvious new
+seams, isolated pits or displaced features. Reduced edge definition remains
+a tradeoff; scalloped contours/diffuse interiors persist. Retain this modest
+map-level improvement for rendered review; believable in-world snow remains
+unverified. Performance testing stays deferred.
+
+### CI follow-up source coherence audit (2026-09-19)
+
+Read-only file audit: all 25 material-bound PNG paths exist; height maps are
+16-bit, with grass at 4096 squared and other materials at 2048 squared.
+All 40 input/output hashes across stone, grass, sand and snow match their
+current manifests. The first hash command assumed one manifest schema and
+failed with KeyError 'output'; corrected for stone's inputs/outputs schema,
+the completed comparison reported zero mismatches.
+Source inspection finds matching direct UV/anchor transforms for dirt/stone
+and matching triangular transforms for grass/sand/snow in ray and shading
+sampling. Source grass/sand/snow AO and roughness are 8-bit L; their height
+inputs are I;16, consistent with the baker's normalization. Generated scales
+match material bake metadata. These checks do not execute the renderer or
+prove perceived parallax, compiled-resource identity, or final visual quality.
+No material changes were justified by this audit. Next visual acceptance needs
+current in-world views, including camera motion, and independent review.
+No computer control, terrain/save changes, or performance testing performed.
+
+## Grass blade shape variation (2026-09-19, runtime pending)
+
+User requested subtle natural blade differences and more height variance.
+Parent length is now 22-38 (previously 25-35), leaf multiplier 0.55-1.15
+(previously 0.65-1.05), middle height 0.38-0.52, heading jitter +/-0.18
+radians, lean 0.16-0.5 and width multiplier 0.65-1.15. Existing patch
+height/color, wind, root placement, density, geometry count and storage remain.
+Compute culling derives a 50.255-unit maximum leaf length, 51.005-unit
+horizontal padding and 51.255-unit upward padding; downward padding stays 1.
+
+File-only inspection confirms shared depth/forward shape and stable seed input.
+This is not shader compilation, rendered verification or performance evidence.
+Cold startup, close/skyline/moving views and the canonical figure-eight have not
+run: AGENTS.md requires explicit direction before live application control.
+For qualification, reuse GRASS-COVERAGE-001/v1 parameters and gates unchanged;
+its existing pending control/qualification must be resolved before acceptance.
+No performance claim, acceptance, commit or push is made for this refinement.
+
+### CJ sand/snow visual iteration (2026-09-19; performance deferred)
+
+User reports sand looks flat and explicitly requests screen inspection and
+independent reviews against approved dirt. Root's initial capture shows a pale,
+shallow-looking exposed sand strip; Start menu obscures near foreground.
+A later independent review capture requested sbox-dev but returned an unrelated
+game image. No terrain verdict follows from that capture; no input/activation
+or camera motion was performed. Snow is not available in a current world view.
+
+Candidate settings: sand interval20->60mm, unchanged height/color placement,
+normal regenerated from the same height. Snow interval stays60mm; periodic
+combined-height Gaussian sigma4->8 cache texels, preserving broad accumulation
+while targeting reviewer-observed crease networks. Fine-normal gain stays0.5:
+source audit finds snow macro slope RMS0.3254 versus residual0.0356, so merely
+turning down fine normal detail would not address the dominant form.
+
+Pre-run visual criteria for current-camera inspection: exposed sand must show
+readable raised/recessed forms without gravel-like lumps, sharp spikes, obvious
+repeating bands or texture sliding. Snow must show rounded coherent accumulation
+without a busy crust-like crease network. Both need two independent reviews
+against BZ dirt's form readability; stills cannot pass motion parallax. Preserve
+dirt and all terrain saves. Matched camera/distance/light comparisons remain
+pending user positioning; no automatic camera movement is authorized.
+The existing BZ dirt still is a qualitative benchmark, not a matched scenario.
+Offline checks must show unchanged sand color/height/roughness/AO, unchanged
+snow color/roughness/AO, and normals derived from each candidate's exact height.
+Offline evidence alone cannot meet the in-world criteria. No performance runs.
+### CJ bake checks and two independent reviews
+
+Sand and snow bakes exited0. All ten current output hashes matched manifests.
+Sand retains byte-identical height/color/roughness/AO; matching normal changes.
+Its central90% physical span is23.92859mm, previously7.97620mm.
+Snow retains color/roughness/AO; height/normal change. Its central90% span is
+22.30350mm. Actual dry_mud_field_001, stone_pattern and grass_pattern PNG hashes
+were captured and unchanged. An initial worker inventory omitted dirt because
+it searched *_pattern; the second run explicitly checked dry_mud_field_001.
+A mistyped stone roughness comparison hash was corrected; exact checks passed.
+Baker line endings were normalized toCRLF after baking, and sand/snow manifest
+generator identities refreshed for that whitespace-only change; PNGs unchanged.
+Source identities: ValidationEvidence/TerrainRelief/candidate-cj-source.json.
+Targeted git diff --check passed.
+
+Both independent reviewers find modestly softer snow normal-map creases with
+broad forms retained; thin crease traces and repeated scallops remain. One
+reviewer's raw16-bit height viewer displayed white, so that reviewer did not
+claim an independent height-image verdict. The other reviewed height and normal.
+Both see stronger coherent sand forms but more prominent repeated diagonal
+bands and hooked/pointed ridges. Neither grants rendered realism or parallax
+acceptance. Approved dirt still candidate-bz-dirt-build-08.png retains stronger
+multi-scale irregular aggregate structure, but differing view/scale/lighting
+prevents a fair rendered quality ranking against these texture-map previews.
+
+Root retains CJ for in-world review, with explicit risks of chunky sand and
+crust-like snow; does not claim either is finished. Latest passive disk log
+shows a material rebuild request after sand_normal at15:19:13, not proof that
+the changed shader include or current material is loaded. No engine compile,
+restart, camera movement, terrain edits or performance tests were performed.
+Requested user positioning near snow remains pending.
+
+### Grass blade posture follow-up (2026-09-19, runtime pending)
+
+User requested actual blade-angle/shape differences, including sideways leaves.
+Replaces uniform vertical growth plus tip lean with stable basal tilt 0.06-0.75,
+vertical rise sqrt(1-tilt squared), independent tip curl 0.12-0.45, side bend
++/-0.12 and downward bend 0.04-0.44. Squared posture variation retains upright
+shoots while adding low, splayed and drooping leaves. Heading jitter is now
++/-0.45 radians. Height ranges, root placement, color, wind, five leaves and
+two triangles per leaf remain. Lighting bias varies with posture.
+
+Shared voxel_grass_shape.hlsl limits are consumed by vertex shape and compute
+culling. Maximum horizontal padding is now 50.255 * (0.75+0.45+0.12+0.5)
++ 0.75 = 92.2141 units; vertical padding remains 51.255 above and 1 below.
+Even maximal static droop plus bounded wind leaves tip elevation positive
+before the existing 0.3-unit root burial. All displacement vanishes at roots.
+These are source bounds, not measurements from a renderer.
+
+File checks only; no live application control. Cold startup, close/skyline and
+motion inspection, and unchanged GRASS-COVERAGE-001/v1 figure-eight qualification
+remain pending as above. Larger horizontal coverage may increase pixel work.
+No runtime acceptance, commit or push.
+
+### CK sand: smoother flowing forms and taller peaks (2026-09-19)
+
+User explicitly requests smoother sand with taller peaks and clearly readable
+height differences. Candidate: sand interval60->120mm; combined-height periodic
+Gaussian sigma16 cache texels; fine-normal gain0.5->0.25. Normal derives from
+exact filtered quantized height. Color/roughness/AO remain unchanged.
+Before maps/manifest retained in .codex/terrain-relief/ck-sand-before.
+Offline criteria: broader smoother ridge transitions than CJ, central90%
+physical height range greater than CJ23.93mm, no new placements/seams, other
+material PNG bytes unchanged. Independent map reviewers must report remaining
+sharp features/repetition and cannot grant in-world acceptance from maps.
+Rendered criteria remain CJ's readable raised/recessed fine-sand forms without
+chunky gravel-like lumps or sliding. Runtime comparison pending; no camera or
+terrain changes, no performance testing authorized for this iteration.
+### CK bake and independent map verdicts
+
+Bake exited0; five output hashes match. Sand color/roughness/AO are byte-identical
+to CJ; height and normal change. Central90% physical span increases23.92859mm
+->39.92493mm. Protected dirt, stone, grass and snow PNG bytes are unchanged.
+Two independent reviewers find clearly broader/smoother transitions, less fine
+scratchiness and preserved broad rises. Both still see repeated short hooks and
+rounded lobes; these may look swollen/lumpy rather than continuous flowing sand.
+Neither grants a rendered height/parallax pass. Root retains CK as a smoother,
+taller candidate for user/world review, with those explicit unresolved risks.
+No new rectangular seams were observed by the second reviewer. No performance
+runs, world/save edits or computer control. Targeted diff check passed.
+Exact source identity: ValidationEvidence/TerrainRelief/candidate-ck-source.json.
+### CK native in-world sand inspection (2026-09-19)
+
+User corrected capture method: use embedded s&box MCP, not desktop capture.
+editor_status reports voxels3/basic_example, playing, engine26.09.15.
+camera_screenshot(width1600,height900,includeUi=false) succeeds and returns
+actual beach sand at the existing main-camera view. No camera movement, input,
+focus change, terrain mutation or performance testing. Capture is present in
+conversation tool output. Attempt to archive its base64 through node_repl was
+rejected by the tool's64000-byte execution limit; no archive file is claimed.
+Root observes pervasive dense rounded ridges and dark depressions, with little
+broad quiet surface. This fails the requested realistic flowing-sand appearance;
+increased relief has emphasized the existing fragmented pattern. A still does
+not prove temporal parallax or current compiled shader identity. Latest console
+contains material rebuild request at15:26:12, not explicit shader-load proof.
+Native MCP camera_screenshot is the correct capture route for subsequent views.
+Independent native screenshot verdict: sand has visible relief cues but fails
+convincing flowing-sand appearance. Repeated crescent pockets near(745,820),
+(1080,845),(1530,825); broad blurred crests with comparatively abrupt dark
+recess boundaries create a soft molded appearance. Beach is uniformly busy,
+without quiet stretches between pronounced ridges. BZ dirt has more convincing
+multi-scale structure; camera/light differences prevent controlled ranking.
+No motion-parallax or exact loaded-build conclusion. Root and reviewer agree
+that relief visibility alone is insufficient and current sand needs shape work.
+### CL sand structural replacement (2026-09-19)
+
+User again rejects repetitive, black-pocketed, blurry sand. Native camera baseline
+1600x900 includeUi=false shows dense isolated lobes and dark pits across foreground.
+Replace sand's composed scan displacement with one periodic authored field of
+connected curved ridges:24 bands across8 lattice cells, slowly warped phase,
+variable height envelope for quieter stretches. Retain scanned grain/color,
+roughness and near-white AO. This is authored sand, not measured scan displacement.
+Sand bake expands2048/period2 ->4096/period8, keeps1m chart tile and120mm authored
+interval; removes sigma16 blur; fine residual gain0.25->0.12. Runtime mapping3
+uses its own generated period for ray, projection weights, shading UVs/derivatives
+and height LOD. Grass/snow mapping1 and dirt/stone mapping2 remain unchanged.
+This replaces the rejected sand height responsibility; no second runtime ray.
+World/save/terrain and grass blades untouched. All protected material PNG hashes
+match before. Sand output hashes match manifest. Central90% height span now43.54mm
+versus39.92mm; slope P95 falls0.762->0.633, P99 0.973->0.761.
+
+Pre-capture criteria: visible connected flowing forms, fewer isolated dark pockets,
+less conspicuous short-period repetition, clearer fine-sand identity; no seam/grid,
+no loss of approved dirt. Independent critics must inspect native runtime view,
+report remaining unnatural regularity/blur, and compare BZ dirt with view limitations.
+Do not claim temporal parallax or cold-start correctness from stills. No camera
+movement, terrain edits or performance tests. Source shader edit triggers engine's
+ordinary asset watching; no explicit live compile/restart command issued.
+An agent inventory raced the bake and returned mixed old/new metadata; use completed
+post-bake root checks (4096px,period8,matching hashes) for candidate identity.
+### CL native review and CM refinement
+
+Two independent native-camera reviewers confirm substantial improvement to
+recognizable flowing sand with clear relief and foreground grain. They still
+reject uniform parallel spacing/profile, synchronized bends, and dark continuous
+trough ribbons; one notes uneven near/far clarity. BZ dirt has more irregular
+multi-scale structure. Neither grants motion or cold-start validation.
+CM retains period8/resolution4096 and120mm interval. Adds bounded phase modulation
+for varying spacing, multi-frequency smooth envelope for quieter stretches,
+and inversely scales local height with spacing frequency; broader ridges may
+rise higher, narrower ridges remain gentler. Reduces second profile harmonic
+0.18->0.10 for softer flanks. This changes sand height/normals only from CL.
+Before CM map set saved as .codex/terrain-relief/cm-sand-before.
+Next native review uses1600x900/main camera/includeUi=false, no camera movement.
+Criteria: reduce combed uniformity and long dark stripes while retaining coherent
+sand ridges/clear height; no new pits, seams or obvious repeating isolated motifs.
+Performance remains deferred; no play/restart/terrain/save actions.
+### CM native result and CN neighboring-ridge variation
+
+Both native reviewers find CM more natural than CL: lighter, less sharply bounded
+troughs and quieter foreground; flowing sand and relief remain visible. Both still
+flag synchronized parallel banks, especially upper/right, and soft/airbrushed
+patches. CM central90% span33.426mm (CL43.538mm); slope P95 0.4345 (CL0.6329),
+P99 0.5514 (CL0.7613). Color/roughness/AO unchanged CL->CM. All protected PNG hashes
+and current sand output/generator hashes pass. Shader watcher reports successful
+2-combo compile15:47:35 with profile-upgrade warning E41012; no cold restart.
+CN adds two bounded phase terms with19 and11 cross-ridge cycles to vary neighboring
+crests, updates spacing derivative consistently, and raises fine-normal gain
+0.12->0.18 for fine grain. Phase remains monotone in its main direction: sum of
+absolute derivative modulation amplitudes is3.74*2pi<24, preventing closed pit cells.
+CN criteria unchanged: less combed rhythm without isolated pits or excessive dark
+ribbons; retain connected flow and grain. Before maps retained cn-sand-before.
+No performance tests or camera/terrain controls. Review native existing view only.
+### CN review and CO correction
+
+Both native reviewers find CN a modest mixed improvement: neighboring ridges vary
+more, but dark knuckles/kinks appear around(950,490),(1080,485),(1190,415).
+Fine-grain improvement is subtle/unproven, and parallel distant banks and soft
+foreground persist. Central90% height span33.126mm, P95 slope0.4303, P99 0.5457.
+All protected texture hashes/current sand output+generator hashes pass; no new
+console warnings/errors after prior compile. Root does not accept new knuckles.
+CO removes the local-spacing inverse height factor responsible for rapid crest
+amplitude modulation. Height now varies through broad smooth envelope only;
+neighbor-to-neighbor phase variation and fine residual0.18 retained.
+Before maps saved co-sand-before. Recheck native view for reduced pinching,
+continued flowing form, and no return to pervasive dark pocket pattern.
+No performance tests, camera movement or terrain/save edits.
+### CO native observation and CP shading balance
+
+Root's native CO screenshot shows stronger dark trough ribbons after removing
+inverse-spacing height modulation. Do not accept that as a correction merely
+because the source is simpler. CP retains the broad-only height envelope and
+multiscale phase variation, reducing envelope amplitude15% to soften those
+shaded walls. Normals derive from the reduced exact height. All other material
+settings remain unchanged. Recheck at native1600x900, existing main camera;
+criteria: preserve flowing forms and grain, reduce dark ribbons and avoid
+localized knuckles, no return to the dense pitted CK pattern. Performance deferred.
+### CP review and CQ wider ridge forms
+
+Both independent CP native reviewers retain a qualified flowing-sand verdict,
+confirm original crater/pocket appearance is gone and small knuckles are reduced,
+but still criticize long dark ribbons, narrow parallel banks and foreground
+softness. Root does not describe those concerns as resolved. CP central90% span
+27.748mm; slope P95/P99 0.4009/0.5294. Protected PNG, sand output/generator/include
+hashes pass. A later console read reports unrelated local.voxels3 compile failure:
+SceneObject.LodOverride absent at SpawnTreePopulation.cs lines188,195,197,372;
+that tree source was not modified by this sand work. No overall C# build pass claimed.
+CQ broadens waves by halving phase (12 bands per8-cell field instead of24),
+retaining envelope shape and raising envelope strength0.85->0.95 to preserve
+height with wider slopes. All source color/roughness/AO and grain settings stay.
+Before files saved cq-sand-before. Native criteria remain natural flowing forms,
+reduced dark ribbons/striping, visible relief and no pitted/rocky return.
+Performance and cold restart deferred; no camera/world manipulation.
+### CQ native observation and CR grain/width balance
+
+Root's native CQ capture removes much of the dark striping but reads too soft and
+weakly structured in foreground. CR chooses18 bands per8-cell field, between CQ12
+and CP24, keeping envelope strength0.95. It boosts only high-frequency scanned
+albedo grain by1.5 in linear space with periodic Gaussian sigma2.5 separation;
+this does not amplify the broad color mottling. No invented grain pattern.
+Criteria remain coherent flowing relief with reduced dark stripes and obvious
+repetition, without soft featureless foreground or return to the old pitted field.
+Native review1600x900/main/includeUi=false; no camera or world controls.
+### CR final current-view review and validation
+
+Both independent native1600x900 reviewers find CR substantially better than the
+initial pitted sand and modestly better than CP: dense black pockets absent,
+broader less crowded ridges, softer dark ribbons and clearer foreground grain.
+Both retain concerns about regular parallel banks on the right and soft/smudged
+ridge segments; no claim those are solved. One explicitly grants qualified
+current-view appearance pass; the other calls CR the more convincing CP/CR version.
+Root retains CR as the current candidate, not an overall prototype acceptance.
+Exact native images are in conversation tool outputs; no local screenshot archive
+is claimed for these captures. No camera movement or play/world/save mutations.
+CR central90% physical span31.024mm, slope P95/P99 0.3392/0.4466. All protected dirt,
+stone, grass and snow PNGs unchanged. Sand output, generator and shader-include
+hashes match; targeted git diff --check passes. Identity recorded in
+ValidationEvidence/TerrainRelief/candidate-cr-source.json. Native shader watcher
+success previously recorded; unrelated tree-code compile errors remain outside
+this task. Temporal parallax, other angles and cold restart remain unverified.
+Performance testing is explicitly deferred. No overall goal completion claimed.
+## TREES-SPAWN-001/v1 — preparation and acceptance gate (2026-09-19)
+
+Status: implementation prepared; independent visual/performance acceptance pending.
+This entry does not claim a controlled runtime validation run. The user requires
+independent acceptance of both visuals and performance. Their computer-control
+rule requires explicit direction before operating the editor/game, moving a
+camera/player, starting/stopping play or running the figure-eight. None of those
+controls was used for this preparation.
+
+### Fixed tree workload and measurable gates
+
+Tree recipe1: three species (pine/oak/ash), eight variants each, 96 shared LOD
+models; anchor XY(0,0), radius240m, spacing18m, jitter0.6cell, acceptance0.72,
+clearing14m, maximum512 objects. LOD thresholds28/75/180m, hysteresis10%,
+selection10Hz, shadow cutoff65m, rendering cutoff900m. Grass-only support,
+mountain weight<=0.35, surface above sea level+32units, gradient.z>=0.9,
+four root support probes, two candidate integrations and one mesh upload/update.
+Use the existing playable basic_example scene. No separate test scene/component.
+
+Retain the canonical GRASS-COVERAGE-001/v1 figure-eight parameters unchanged,
+including resolution2769x1529/FOV75, seed1337/gen48, radius8, visual128, LOD0-5,
+extents4/4, speed2500, distance50000, one loop, clearance393.7008, recorded
+start and standing window. Its historical world revision3991/pages873 and
+baseline source differ from the currently active dirty checkout/world5329.
+Do not claim those are comparable. Before any controlled run, freeze the exact
+source hashes, world snapshot/settings/revision, hardware/driver/engine, grass
+and material settings, camera and rendering configuration. Restore the unchanged
+recorded workload if available; if impossible, record the substantive reason and
+obtain required approval before issuing another scenario version. Do not silently
+substitute the active world. This run-definition gate is currently incomplete.
+
+Once comparable source/environment are fixed, capture a matched tree-disabled
+control using the shipping SpawnTreesEnabled property, then the tree-enabled
+candidate under the same conditions. Use the canonical baseline additionally
+where genuinely comparable. Require <=10% FPS loss, <=10% p95/p99 and peak
+process/GPU-memory regression, <=10% managed allocation/frame regression,
+<=0.3ms standing GPU increase, settled streaming, and zero timed exceptions or
+collision failures. Record cold tree preparation and revisits separately from
+steady state. Report tree resource counts, update timings and batch/draw evidence;
+triangle counts alone do not establish GPU cost. Require far LOD<=350 triangles
+per tree and total population<=512. Preserve every failed run.
+
+Visual acceptance additionally requires an independent reviewer to inspect all
+three species at close range and a forest-wide view, at least two variants of
+each species, ground contact, leaf alpha/backlighting, wind, repeat recognition,
+LOD crossings in both directions at28/75/180m, and distant cards at300/600m.
+Freeze exact camera transforms/tree IDs before those captures and retain them for
+rechecks; none have been captured or chosen through live control yet. No missing
+materials, detached branches, floating trunks or edge-on disappearing crowns are
+acceptable. Test component disable/re-enable, revisit, late join after host
+movement and continued placement during repeated edits. Independent review must
+explicitly accept the resulting evidence; code review cannot replace this gate.
+
+### Preparation checks and preserved failures
+
+- Ordinary .NET build succeeded with two pre-existing SB3006 host-migration
+  warnings in VoxelManager and VoxelManager.Networking. Output was redirected to
+  .codex/tree-build rather than the editor output directory.
+- Initial SceneObject.LodOverride compile failure was fixed by public Model
+  switching. Installed XML presence did not imply game accessibility.
+- Passive editor disk-log inspection found Marshal.SizeOf<T> blocked by the
+  whitelist; it was removed in favor of vertex/index counts.
+- Two standalone resourcecompiler attempts failed to resolve project/core mounts
+  (unknown mod, then missing assettypes.txt). Neither is a material build pass.
+- The already-running editor automatically picked up authorized file changes.
+  Passive sbox-dev.log entries at16:06:21-26 show24 variants and298 placements at
+  revision5329 after page retries. Pine triangle counts3504/1500/524/340;
+  oak2248/790/314/214; ash2496/870/344/232. Library vertices185232/indices321024.
+  These are incidental hotload observations, not a preregistered test or visual,
+  performance, multiplayer or cold-start acceptance. No FPS result is claimed.
+- Independent static review found late-join anchor drift, edit-induced sweep
+  starvation and oak trunk/branch detachment; the subsequent review confirms
+  all three addressed and identifies no further static blocker. It explicitly
+  withholds visual and measured performance acceptance.
+
+No commit/push acceptance yet. Pending explicit direction for live qualification.
+Architecture and evidence limits: [Spawn trees](Architecture/SpawnTrees.md).
+
+## Terrain relief CS: broken sand ridges (2026-09-19)
+
+User accepted CR sand appearance and requested less continuous horizontal rows. CS keeps grain, color, relief amplitude and sampling unchanged; adds local bends and smoothly tapered ridge breaks. Before visual capture: use the current playable beach view, native camera_screenshot at1600x900 without UI; compare ridge continuity, grain clarity and dark pockets to CR. Pass requires visibly interrupted/curving crests without renewed pits, black bands or loss of sand identity. Independent visual review required. Performance testing remains deferred by explicit user instruction. Camera movement is authorized through scoped native game/editor operations by current AGENTS instructions; preserve terrain and restore view after any angle checks.
+
+CS check outcome: native main-camera capture1600x900 showed the avatar on grassy spawn, and detached-camera capture showed the same forest area from above; neither contains reviewable sand. No camera/player/world mutation was performed. Beach comparison and independent rendered review remain pending; location requested from user. Editor reports play mode active, compilation succeeded, zero compile errors; this alone does not prove texture appearance. Independent read-only audit passed8/8 manifest hashes and21/21 protected map hashes. Only sand_height.png and sand_normal.png changed against CR backup; color, roughness and AO are byte-identical. Source identity: candidate-cs-source.json. No performance tests, commit or push acceptance.
+
+### TREES-SPAWN-001/v1 — authorized visual qualification setup
+
+The user clarified native game camera movement and validation are permitted;
+AGENTS.md (project and global) now explicitly separates these operations from
+prohibited desktop takeover. This supersedes the preparation permission blocker.
+No desktop, keyboard, browser or unrelated application control was used.
+
+Discovery captures used the current basic_example play session, seed1337/gen48,
+worldrevision5329, slot parallax-dirt-20260919, grass64m, engine26.09.15. The
+original wide view (-1800,-1800,1600), angles(20,45,0), FOV75,1600x900 showed
+298 trees. Independent reviewer withheld acceptance: repeated distant puff
+clusters and skeletal straight broadleaf forks. First close development view
+(-160,-800,570), angles(-10,39,0), FOV65 exposed large fern-like sprays. Changes
+increase irregular branch bends/crown overlap, retain distant supporting limbs,
+reduce leaf scale, add finer twig fans and vary card orientation. These are
+preserved development failures, not performance or final visual passes.
+
+Native set_component by component GUID selected the authored scene copy rather
+than its play-mode twin. Readback exposed ineffective toggles; switching to the
+active game-object GUID plus component type addresses the playable component.
+Authored tree enable and player camera settings were restored to true. No scene
+was saved. The playable player's camera controls are temporarily disconnected
+while input remains enabled; both main camera (the shipping LOD distance source)
+and detached inspection camera use matching transforms. Restore normal camera
+controls after captures. Native oak/ash material recompilation returned success.
+
+Freeze these candidate identities and close inspection views for subsequent
+rechecks (positions in engine units;1600x900,FOV75,includeUi=false):
+
+| Species / candidate / variant | Camera XYZ | Angles |
+| --- | --- | --- |
+| Pine391/2 | -1200,801,530 | -8,0,0 |
+| Pine366/3 | 500,-142,650 | -8,0,0 |
+| Oak365/8 | -100,-14,530 | -8,0,0 |
+| Oak339/12 | 350,-517,540 | -8,0,0 |
+| Ash338/20 | -400,-892,250 | -10,0,0 |
+| Ash363/21 | -1780,37,240 | -10,0,0 |
+
+Wide view remains (-1800,-1800,1600),angles(20,45,0). Capture ground contact,
+branch attachment, smaller foliage, silhouettes and repetition. Use matching
+main/detached positions and read actual published LOD diagnostics. Wind requires
+two captures of the same camera at least2s apart. No FPS claims from screenshots.
+Store raw images and source hashes in ValidationEvidence/SpawnTrees. Performance
+workload remains unchanged pending recovery of canonical saved revision3991;
+current world5329 has not been substituted for a comparable performance run.
+
+### Proposed TREES-SPAWN-001/v2 performance workload (approval pending)
+
+The historical world cannot be opened through the current canonical storage
+contract: its original slot now contains revision4308/pages93, checkpoints264/265.
+Read-only inventory decoded129 current-format indexes and found no revision3991/
+pages873 match;215 older-format indexes fail the current identity contract.
+This is a missing historical input, not a performance failure or relaxed budget.
+
+Proposed replacement fixes the current saved playable snapshot: slot
+parallax-dirt-20260919, checkpoint19, world f5ce10f3-6d75-428e-b3dd-63dee14891c6,
+revision5329/pages222, indexSHA256
+3183273F0B426F4F5A95A433C981477385B700D1DDEAAECB26ACEC076BC44D10.
+All route parameters and gates remain as v1: basic_example, one player,
+seed1337/gen48, cells32x16, gameplay8, visual128, LOD0-5, extents4/4,
+start(-1.6258175,1.2225341,340), identity eyes, FOV75,2769x1529,
+speed2500,distance50000,one loop,clearance393.7008,grass64m,10s standing.
+Use the existing visible editor on engine26.09.15/RTX5090. Freeze runtime/editor/
+shader/material source hashes and driver identity before timing; compare identical
+bytes with only the shipping SpawnTreesEnabled value changed. Current-source
+comparison only; no continuous comparison against old historical figures.
+
+Warm-session qualification: after asset compilation and full initial settlement,
+run one complete untimed warmup figure-eight for each state before its measured
+run, preserving all four raw results. Order: disabled warmup, disabled measured,
+enabled warmup, enabled measured. Restore start XY and identity eyes each time.
+Settle terrain/water/collision/tree placement before starting. No captures,
+engine queries, compilation or workspace writes during timed runs. A source
+change or user interruption invalidates that run and stays in the ledger.
+This qualifies warm runtime rendering/streaming; it does not qualify a cold
+editor launch. Cold tree construction is measured separately after disabling
+then enabling the shipping population in the same visible session.
+
+Gates remain <=10% FPS loss and p95/p99/peak CPU+GPU memory/allocation regression;
+standing GPU increase<=0.3ms; zero timed errors/collision failures; streaming
+settled; far trees<=350triangles; population<=512. Source/workload differences
+cannot be used to accept a failing comparison. No v2 run has started. Explicit
+approval is required by AGENTS.md before substituting this missing-world workload.
+
+Visual-C close captures: Pine391, Oak365 and Ash338 clipped their crown tops;
+Pine366 and Ash363 sight lines were occluded by neighboring trees. Oak339 gave
+an unobstructed whole-tree view. Preserve these as failed framing evidence.
+For the next captures use pitch-15 for Pine391, pitch-13 for Oak365 and Ash338;
+Pine366 camera(2070,-792,700),angles(-15,135,0); Ash363 camera(70,37,240),
+angles(-15,180,0). FOV75 and all other visual inputs unchanged. These changes
+resolve invalid framing/occlusion, not performance workloads. Development-D
+also joins trunk segments on shared horizontal rings to remove fine daylight
+cracks at bends visible in the occluded Ash363 close-up. No performance run yet.
+
+Final framing correction before recapture: Ash363 east view was below the terrain
+at its camera position; lift it to(70,37,600),angles(8,180,0). Pine366 elevated
+view at(2350,-142,1200) showed the tree but clipped its top; use pitch15,yaw180.
+The untouched raw failed frames stay archived. LOD diagnostic now accepts a
+candidate ID so distant inspection reports that actual published tree directly.
+
+Distance sequence for Oak365: root(818.2667,-14.2809,423.8538), camera height
+root+250units; camera X=root.x-d/0.0254, Y=root.y, yaw0. Distances d in metres:
+24,27,32,76,84,181,200,600,300,160,66,24. These fixed points cross each10%
+hysteresis boundary both ways. Pitch0,FOV75,1600x900. No forced LOD override;
+record actual runtime LOD via voxel_trees_info365. Near snapshots supplement
+close visual views; remote terrain/neighbor obstruction is retained if present.
+Also inspect the forest from(-12000,0,2200),angles(6,0,0), about300m fromspawn,
+and(-24000,0,3500),angles(6,0,0), about600m. Both render cameras match. The
+player remains atspawn to keep the canonical nearterrain loaded; trees use the
+actual main camera for distance choice. These are visual checks, not streaming
+or performance substitutes. Wind pair: wide view,2s separation, same camera.
+
+### 2026-09-19 tree visual rejection and research reset
+
+TREES-SPAWN-001 remains unaccepted. The user rejected the development trees'
+bark, trunks and leaves, requested a higher visual standard, and then redirected
+this phase to deep production research. Any earlier independent acceptance of
+an initial stylized slice is superseded. The preserved C/D development images
+remain historical evidence; they are not final visual passes.
+
+The subsequent planned wind pair and corrected Ash363/Pine366 captures failed
+because the native screenshot operation required GameEjected mode, which was no
+longer active. Those four requested images were not produced. Camera operations
+stopped and the playable PlayerController.UseCameraControls value was restored
+to true. The player's subsequent movement was not overridden. The distance and
+wind sequences above were not completed; do not infer a pass from their plans.
+
+No figure-eight tree comparison ran, no v2 workload approval was received, and
+there are no new tree GPU/frame-time, allocation or residency measurements.
+The research phase did not manipulate the editor/game or change runtime assets.
+It updated [tree production research](Research/TreeGeneration.md), its source
+index and implementation-status documentation. Primary source review covered
+Guerrilla/DICE production PDFs, Epic's shipped and experimental render paths,
+historical leaf-shading references and installed s&box shader inputs.
+
+An independent reviewer accepted the research as guidance for a staged redesign,
+with explicit feasibility gates for native versus hierarchical wind and for
+s&box impostor capture/rendering. This accepts the research direction only.
+The next implementation must first demonstrate an approved source tree and its
+LOD chain through the real population before multiplying variants. Existing
+visual/performance acceptance requirements and the active overall goal remain.
+
+### TREE-OAK-ART-002/v1 preparation (2026-09-19)
+
+Purpose: first source-tree visual gate after the production research reset.
+This is a development visual scenario, not a replacement performance baseline.
+Engine26.09.15, playable basic_example, one player, seed1337/gen48, current
+parallax-dirt-20260919 world revision5329. SpawnTreeCenter0, population cap512,
+18m spacing, radius240m, existing LOD distances28/75/180m and render900m.
+Recipe2 replaces the oak's wood/near leaves; pine/ash and the oak's distant
+canopy art are not qualified by this stage. Preserve previous rejected images.
+
+Oak365/variant8 root(818.2667,-14.2809,423.8538), scale1.0813 is the fixed subject.
+Capture1600x900,FOV75,includeUi=false, with matching main/inspection cameras:
+full view(-100,-14,530),angles(-13,0,0); reverse side(818,-933,530),angles(-13,90,0);
+trunk close(685,-14,488),angles(0,0,0); crown(500,-14,710),angles(-8,0,0).
+If terrain/neighbors invalidate a view, record that failure before revising it.
+Retain existing directional lighting and exposure. Two full-view frames at least
+2s apart inspect native motion; no FPS estimate is inferred from screenshots.
+
+Pass criteria: independently acceptable bark scale/grain and trunk contour,
+attached limbs without daylight gaps, individually shaped supported foliage,
+no visible broad rectangular leaf sheets at normal play distance, believable
+front/side/back lighting, and no detached leaf bases or gross wind deformation.
+Four views and the motion check must be reviewed; a texture preview or build
+success is insufficient. Check current errors, geometry counts, worker/upload
+bounds and <=512 placements. Oak far geometry remains capped at350 triangles,
+but its placeholder appearance and missing blended LOD transition remain open.
+Full performance/other species/entire LOD acceptance still use the original goal
+and figure-eight rules; the proposed performance v2 remains unapproved.
+
+Controls: scoped native camera changes only, keep player input enabled. Restore
+normal camera following after the captures. Stop moving cameras if the user
+changes view mode or takes over during inspection. Do not save the scene.
+
+### TREE-OAK-ART-002/v1 oak E result (2026-09-19)
+
+Actual playable population: 298 trees, oak365 variant8 at the recorded root and
+scale, recipe2. Near/mid/low/far oak counts35328/9552/834/300 triangles; shared
+library539504 vertices/1342368 indices. Peak observed population update2.803ms
+is incidental initialization telemetry, not a frame-time or GPU benchmark.
+Native compile and ordinary build passed (two existing host-migration warnings).
+The first1254x1254 leaf import failed the engine alpha-weighted-mip power-of-two
+requirement. Import was corrected to1024x1024 and both oak materials compiled.
+Evidence: SpawnTrees/oak-e-{full,side,trunk,crown}.png and oak-e-source.json.
+
+Independent visual review REJECTED oak E: crown too sparse, ascending limbs too
+regular, visible tube intersections, shallow/smeared bark relief, regular leaf
+spacing. Individual oak leaves, attached twigs and curved tapered wood improved.
+Full/side views cropped the base, so whole silhouette/root attachment are not
+validated. Wind pair was not captured; LOD/performance were not exercised.
+Normal player camera following was restored after capture; input stayed enabled.
+
+### TREE-OAK-ART-002/v2 corrected framing preparation (2026-09-19)
+
+The v1 full/side views cannot establish the required root-to-crown silhouette
+because their upward framing crops the base. Preserve v1 failure. v2 changes
+only visual camera framing: full(-150,-14,590),angles(-3,0,0);
+side(818,-983,590),angles(-3,90,0); root close(660,-14,470),angles(14,0,0);
+crown(500,-14,710),angles(-8,0,0). All other v1 parameters and criteria unchanged.
+This is not a performance workload substitution or approval of performance v2.
+
+Candidate F uses three codominant stems and six scaffold branches, with denser,
+smaller leaves in spiral orientations. It retains the same art/materials and
+unaccepted distant canopy placeholders. Build passed with two existing warnings.
+Source hashes and actual geometry/population telemetry will accompany captures.
+
+### TREE-OAK-ART-002/v2 oak F result and projection defect (2026-09-19)
+
+OakF actual geometry106992/14244/884/312 triangles; library1232680 vertices,
+3176400 indices;298 placements at revision5329. Peak population update1.707ms
+is incidental telemetry, not performance acceptance. No new warnings/errors
+in console since cursor1114. Native and ordinary C# compiles passed.
+Evidence: SpawnTrees/oak-f-{full,full-motion,side,root,crown}.png, oak-f-source.json.
+Independent review REJECTED: central crown opening, long uniform limbs and blunt
+wooden stubs remain primary blockers. Leaf shape/attachment improved. Dense grass
+obscures root contact. No motion/LOD/performance acceptance from these stills.
+
+Projection defect: set_ejected_camera returned75, but later readback was60.
+Installed SceneViewportWidget.cs lines287-310 reset the active camera's FOV each
+frame from EditorPreferences.CameraFieldOfView. v1/v2 captures therefore cannot
+claim the requested fixed75-degree projection; individual frame projection was
+not instrumented. Preserve evidence, but do not compare image scale numerically.
+Camera controls were restored after capture; player input stayed enabled.
+
+### TREE-OAK-ART-002/v3 projection correction preparation (2026-09-19)
+
+v3 retains v2 positions, angles, dimensions, lighting, population and criteria.
+The existing native ejected screenshot control now accepts an explicit FOV and
+applies75 during its synchronous RenderToBitmap call, restoring the previous
+camera projection in finally. It does not modify editor preferences. This fixes
+an invalid visual scenario parameter; it changes no performance workload.
+
+CandidateG carries foliage along upper leaders and middle lateral branches,
+tapers terminal wood to twigs, and distributes branches across the crown.
+Near leaves remain individual folded atlas meshes; low/far art still placeholders.
+Expected far cap350, same real population entry point. Preserve rejected E/F.
+
+### TREE-OAK-ART-002/v3 oak G development observations (2026-09-19)
+
+This is not a conforming fixed-world acceptance run: the active terrain revision
+advanced from5329 to5330 before capture while the player remained interactive.
+The subject's root/scale and population remained unchanged. Preserve the images
+as development evidence; no controlled performance or image-scale comparison
+with earlier candidates is valid. No terrain edit was issued by the tree task.
+
+Evidence: SpawnTrees/oak-g-{full,side,crown}.png and oak-g-source.json. The native
+capture applied75 FOV synchronously and restored the prior viewport FOV60;
+1600x900, recorded v3 transforms, current playable basic_example. Native compile
+succeeded, no new warnings/errors since cursor1142. The ordinary runtime build
+passed with two existing host-migration warnings. An editor build initially
+reported two new missing XML parameter tags; both were added and the next editor
+build passed with zero warnings/errors. No scene save or input disable occurred.
+Camera following and normal game view were restored after the short capture batch.
+Player movement/world changes were not overridden. Root/wind recapture was not run.
+
+Actual oak geometry90720/13056/1226/300 triangles. Complete mixed library1060816
+vertices/2765280 indices. Actual298 placements, zero stale batches. Peak population
+update1.513ms is incidental initialization telemetry; it does not establish frame
+rate, GPU cost, allocation/retained memory, batching or figure-eight performance.
+The far triangle cap350 and population cap512 are met by these reported counts.
+
+Independent reviewer accepted the crown-distribution change as progress: connected
+irregular volume and intermediate branches resolve F's large hole and visible
+blunt stubs. Complete near-oak approval WITHHELD: abrupt wood contours/junctions,
+repeated nearby leaf outlines, and unresolved bark relief/root contact. G does
+not establish wind, low/far appearance, transitions, or performance acceptance.
+Pine/ash remain earlier rejected assets. Overall goal remains active; no commit
+or push of the unaccepted implementation was made.
+
+### TREE-PINE-ART-003/v1 preparation (2026-09-19)
+
+User feedback accepts the rebuilt oak's general appearance as useful and asks
+for the remaining evergreen and large broadleaf trees to lose incorrect bark
+and visibly flat foliage. Prioritize those replacements; detailed independent
+acceptance of the oak and the complete forest remains open.
+
+Conifer candidateH uses curved trunk/primary/secondary branches, small bent
+needle-twig patches around secondary growth, and matched CC0 needle and bark
+maps. LOD0/1/2 use the needle atlas; LOD3 still uses provisional canopy art.
+Existing512cap,240m radius,18m grid,14m clearing,24variants and28/75/180m thresholds
+remain. No performance workload or pass criteria have been changed.
+
+Visual subject Pine391/variant2 root(-197.3091,801.6707,414.5332),scale1.1644;
+engine26.09.15, playable basic_example, seed1337/gen48, live revision5330.
+1600x900 explicit synchronous captureFOV75; same main/inspection camera transforms:
+full(-1097,802,765),angles(-3,0,0); side(-197,-100,765),angles(-3,90,0);
+root(-350,802,480),angles(15,0,0); needles(-620,802,690),angles(-8,0,0).
+Keep current lighting/exposure and player position/input. Restore camera follow
+and game view after the short capture batch. Preserve obstructed/clipped views.
+
+Criteria: believable evergreen silhouette, supported needle-bearing branchlets,
+no large visible rectangular sheets at ordinary play distance, plausible bark
+scale/relief and root attachment. Independent review of actual images required.
+Build/asset compile success, counts and bounded work are supplementary only.
+No frame-time/GPU/memory claim from images; wind and whole LOD chain still pending.
+If the interactive world changes again, label captures development observations
+rather than a conforming fixed-world run. No scene save or terrain mutation.
+
+### TREE-PINE-ART-003/v1 candidate H result (2026-09-19)
+
+Native materials and runtime compilation succeeded; ordinary build passed with
+two existing host-migration warnings. Actual population298 at revision5330,
+library1757112 vertices/4977600 indices. Pine geometry73760/14256/9756/276 triangles.
+Incidental peak population update14.233ms is a material open concern, not an
+accepted performance comparison; source of that peak has not been isolated.
+No frame/GPU/allocations benchmark was run. Do not dismiss the peak as harmless.
+
+Evidence: pine-h-{full,side,root,needles}.png and pine-h-source.json. Near camera
+transforms were applied, but the log before capture was at the player's earlier
+48.34m/LOD1 position. Do not treat that pre-capture log as proof of capture LOD.
+Full/side frames clip top/base and fail the whole-silhouette check. Root and
+needles give useful close development evidence. Camera follow/game view restored.
+
+User and independent reviewer both reject H's sparse coverage, regular branch
+layers and muddy brown/olive needle color. The reviewer confirms large-sheet
+appearance improved, but repeated upright tufts still look artificial. Bark
+breakup is improved; grounding remains partly obscured by grass. No complete
+visual, motion, LOD or performance pass.
+
+### TREE-PINE-ART-003/v2 framing correction and candidate I preparation
+
+v1 full/side framing cannot show the complete silhouette. Preserve those failed
+images. v2 changes full/side camera height to835 and their synchronous capture
+FOV to90; retain X/Y/yaw and pitch-3. Root/needle views and their FOV75 unchanged.
+Other v1 world/population/material-lighting parameters and criteria are unchanged.
+This is a visual framing correction, not a changed performance workload.
+
+CandidateI uses72 primary branches staggered in height/angle, less hooked branch
+curves, more overlapping secondary growth, varied needle orientation and a green
+material tint. Mid/low meshes reduce patch subdivisions, and low uses a seeded
+subset of larger patches. Far remains provisional, with expected cap350triangles.
+Inspect crown continuity and color in the same real population before approval.
+
+### TREE-PINE-ART-003/v2 candidate I result and J material correction
+
+I captures pine-i-{needles,full,side}.png use the prescribed v2 transforms,
+1600x900 and explicit capture FOV75/90/90. Near LOD0 is observed after camera
+settling for each view: distances12.82/25.22/25.27m; needles was captured first
+to enter LOD0 before full/side hysteresis. Camera follow and Game view restored.
+The crown is fuller than H, but the brown/olive needle color remains rejected.
+I's tint string omitted vector brackets. Installed material templates and
+native shader inputs establish bracketed vector serialization; candidateJ
+corrects that material string only, retaining I geometry and scenario inputs.
+Compare actual needles/full/side renders before inferring color success.
+No performance run or independent acceptance of I/J yet.
+### TREE-PINE-ART-003/v2 candidate J result and K preparation
+
+J pine-j-{needles,full,side}.png and source manifest preserve matched v2 views.
+Tint bracket correction visibly changes brown needles to green. Actual capture
+LOD0 confirmed for all three views at12.82/25.22/25.27m. User rejects continued
+transparency and floating needles. Preserve that rejection; no visual pass.
+Incidental I/J telemetry peakUpdate3.34ms is not a benchmark. Two renderer
+warnings at18:31:33 report delayed present and a GPU fence wait over250ms before
+the successful18:32 capture batch; attribution remains unknown.
+
+K addresses the reported attachment defect at intermediate LODs: current LOD1/2
+omit the secondary wood carrying needle patches. Retain simplified secondary
+wood wherever its foliage survives. Increase overlapping needle shoots/planes,
+reduce per-patch subdivision to control triangles, and extend opaque atlas stems
+into their supporting branch. Use the same scenario v2 close/full/side views,
+plus a new supplementary LOD1 view at(-1730,802,835),angles(-2,0,0),FOV60,
+1600x900, same subject and environment. This view is45m from the root; actual
+LOD must be read after settling. Supplement verifies continuity at mid distance,
+not performance or a changed benchmark. No detached needle clumps or broad
+unbroken sky lanes through the central crown at ordinary play distance.
+K development result: close/full views show increased coverage, still rejected
+for large central sky gaps and isolated triangular fragments at foliage edges.
+The proposed mid view is obstructed by a nearer tree; preserve pine-k-mid.png
+as failed framing, not target mid-LOD acceptance. Root distance was40.37m, not
+the approximate45m stated above. K library2521336vertices/6118800indices;
+incidental peak4.979ms, no benchmark. Camera follow/Game restored.
+
+Atlas inspection identifies another concrete defect: current top UV corners
+sample adjacent opaque cone/branch regions (alpha253 at u.237,v.037), producing
+floating fragments unrelated to the target twig. CandidateL uses a tight polygon
+around the source twig's connected alpha component, preserving original maps.
+Increase vertical branch overlap with24 tiers,4 branches each and9 secondaries;
+use6 near shoots/two planes, fewer larger shoots downstream. Keep supporting
+wood in retained intermediate clusters. Far retains72 selected crown positions
+for its unchanged350triangle cap. Same v2 views; include side. Skip the blocked
+supplemental mid position until an unobstructed view is specified separately.
+L result: pine-l-{needles,full,side}.png and source manifest preserve v2 views;
+LOD0 confirmed at12.82/25.22/25.27m. Atlas-edge triangular debris is no longer
+apparent in these frames. Crown is fuller; independent acceptance pending.
+Actual L pine near/mid114224/64152 triangles; low22428-24156 by variant;
+far324. Mixed library2686488vertices/7473984indices; population298/revision5330.
+Incidental peakUpdate1.779ms does not replace measurement of the materially
+higher submitted geometry (2.25-2.48million triangles before frustum culling).
+Ordinary build succeeds with the two existing SB3006 host-migration warnings;
+native compile succeeds with0errors. Camera follow and game view restored.
+
+Supplementary L mid-LOD attachment view preparation: use the side azimuth to
+avoid the foreground tree blocking the previous attempt. Camera and main scene
+camera(-197,-770,835),angles(-2,90,0),captureFOV60,1600x900. Same Pine391,
+world5330/seed1337/gen48, existing lights/materials, no player/terrain mutation.
+Read actual LOD/distance after250ms, capture then restore. Purpose: verify that
+supporting twigs remain visible and no isolated atlas fragments appear in LOD1;
+retain the image as failed framing if again obstructed. Not a timing run.
+L side mid-LOD view pine-l-mid-side.png is unobstructed; actualLOD1/41.32m.
+Supporting twigs and continuous green clusters are visible; no obvious isolated
+triangular atlas debris. Independent review accepts L's visible near foliage
+and coverage as believable evergreen, while retaining limitations: rounded
+upper tuft, repeated tip sprays, cropped roots, untested wind/LOD transitions
+and performance. This bounded approval is not overall completion.
+
+### TREE-PINE-ART-003/v3 full-height framing preparation
+
+v2 full/side framing cropped the lowest trunk/root. This is a substantive
+framing defect. Preserve v2 results; v3 lowers full/side camera Z from835 to765,
+retaining X/Y, pitch-3, yaw0/90, captureFOV90,1600x900. The crown and base should
+both fit. Needle/root views retain their v1 transforms and FOV75. World and all
+other scenario inputs/criteria unchanged. Same candidateL; no geometry edits.
+Capture full/side, root and two needle views separated by one second to inspect
+visible attachment across animation states. This does not establish full motion
+quality or performance. Restore follow/Game after the brief batch.
+### TREE-PINE-ART-003/v3 L development observations and review
+
+Evidence pine-l-{full-v3,side-v3,root,wind-a,wind-b}.png; same source manifest
+pine-l-source.json. Actual LOD0 at12.82/12.82/24.52/24.57/4.22m for needle pair,
+full, side and root. Camera follow/Game restored, player input retained.
+Live unrelated terrain edits/checkpoint advanced revision5330 to5427 during
+this batch; these are DEVELOPMENT OBSERVATIONS, not a conforming fixed-world
+run. Tree391 root/scale remained unchanged. No terrain edit/save was requested
+by this tree work. No new Warn/Error entries in the post-L source/capture window.
+
+The complete silhouette fits v3 full/side images. Root contact remains obscured
+by grass and low branches. The two needle states do not establish meaningful
+motion; no Wind component was found in the active scene. Do not claim successful
+wind/attachment-motion validation from these stills.
+
+Independent reviewer accepts visible near/mid coverage, color, silhouette and
+branch support. LOD1 at41.32m retains coverage without an identifiable floating
+cluster. Close bark shows plausible coloration, with angular branch sections
+and shallow relief still visible at very short distance. No new blocking
+near/mid visual defect identified. Remaining upper-tuft shape/repeated sprays
+are minor within this bounded approval. Ground contact, wind, transitions,
+distant art and measured performance remain unaccepted. Overall tree goal is
+ACTIVE; no commit/push and no performance acceptance.
+
+## CLOUD-VISUAL-001/v1 - initial volumetric sky integration (2026-09-19)
+
+Defined before first cloud rendering run. Scope: the production VolumetricClouds
+component on basic_example's main camera in the existing visible playable world.
+One local player; no terrain edits. Engine26.09.15, RTX5090 driver32.0.16.1664,
+Ryzen7 9800X3D. Source base0113a5b plus the dirty working tree (unrelated terrain,
+water, grass and tree work retained). Save slotparallax-dirt-20260919;
+last observed worldrevision5330, seed1337/generator48. Record actual source hashes
+and world readback per run; changes invalidate comparisons rather than disappearing.
+
+Use native ejected game-camera capture with inherited postprocess command lists,
+1600x900, explicit capture FOV75, no desktop control. Fix position to
+(1402.91565,399.2453,699.074036); views (pitch,yaw,roll):
+mixed(-18,135,0), sky(-70,135,0), horizon(-3,135,0), sunward(-20,225,0).
+Use an additional enclosed view at(1402.91565,399.2453,-500),(-10,135,0)
+to check sky leakage. Restore attached player view after inspection.
+
+Candidate A inputs: coverage0.55, base600m, thickness420m, scale4800m,
+density0.018/m, erosion0.22, maximumDistance24000m, viewSteps64,
+resolutionDivisor4, scene directional light and DistanceFog references.
+Wind(0,0) freezes the density for comparisons. The separate motion observation
+uses wind(8,3)m/s for10s at the mixed view, then restores the authored default.
+Wait2s after each view/property change before capturing; do not treat screenshots
+or incidental profiler values as a timed performance test.
+
+Criteria: readable white billows with shaded bases, blue gaps, no missing-material
+fallback, no coarse slice bands, no foreground/cloud overlap or edge halos;
+coherent world-space translation and wind drift; no sky leaks in enclosed view;
+zero runtime exceptions. Coverage0 removes the effect, coverage0.85 remains
+bounded, and disable/re-enable restores the cloud image with wind0. Dense and
+zero coverage checks return to candidate inputs. Quality failures remain recorded;
+changing implementation is allowed, changing this observation workload is not.
+Flight inside clouds, transparency without depth writes and reflections remain
+unqualified. Any new visual parameter set is explicitly labeled as a candidate,
+not a favorable redefinition of the same fixed appearance.
+
+### CLOUD-VISUAL-001/v1 preparation
+
+Noise bake produced128-cubed/32-cubed linear single-channel payloads totaling
+2,129,920bytes. Initial C# build failed because installed XML's
+CommandList.PushRenderTarget/PopRenderTarget are internal. Replaced that path
+with public ClearRenderTarget; subsequent ordinary build passed with two existing
+host-migration warnings. Both native cloud shaders compiled successfully.
+No cloud component has been attached or visually accepted at this entry.
+
+### CLOUD-FIGURE8-001/v1 proposed baseline definition - pending workload approval
+
+Retain canonical GRASS-COVERAGE-001/v1 movement/view/terrain settings unchanged:
+basic_example, one visible first-person player, seed1337/gen48,32x16cells,
+gameplay8, visual128, LOD0-5, extents4/4, grass64m,
+start(-1.6258175,1.2225341,340), identity eye rotation,FOV75,
+physical2769x1529,speed2500,distance50000,one loop,clearance393.7008,
+fully settled before start, automatic drain plus10s standing, input enabled,
+no screenshots during timing. Keep current water/material/tree settings identical
+between control and candidate. Freeze source hashes and exact save revision first.
+
+The historical control used worldf5ce10f36d75428eb3dd63dee14891c6 at revision3991,
+873pages/checkpoint152. Current checkpoint listing contains264/265 and current
+world observation is5330. That historical snapshot has not been recovered.
+The proposed new baseline uses the current saved world without restoring or
+altering the user's terrain. Preserve historical runs; no comparison across
+world revisions. This concrete workload substitution awaits required approval
+under AGENTS.md Figure-Eight Performance Acceptance before running.
+
+Once approved, capture control with VolumetricClouds disabled, then candidate
+with final documented cloud settings. Record FPS, p95/p99 CPU/GPU frame times,
+streaming completion/queues, allocations, process/GPU memory and correctness.
+Existing gates remain <=5% FPS loss, <=10% tail latency, allocation and memory
+regression, no new completion/streaming/correctness defects. Proposed additional
+cloud-only 1080p GPU goals do not override these relative acceptance gates.
+
+### TREE-ASH-ART-004/v1 preparation (2026-09-19)
+
+Replace old near/mid ash cards and striped bark with the shared curved broadleaf
+branch construction, a taller ash crown, opposite compound-leaf pairs bearing
+nine individual folded leaflets, supported rachises, generated ash leaflet atlas
+and matched CC0 Tree Bark03 maps. Keep oak recipe parameters and pine geometry;
+remove the superseded ash generator/straight-branch writer. No placement, terrain,
+biome, persistence or population-budget changes. Far art remains provisional.
+
+Fixed visual subject Ash419,variant22 root(838.3442,1433.107,569.4597),scale1.0619.
+Playable basic_example,engine26.09.15,seed1337/gen48,live terrain revision5502.
+Capture1600x900; main/ejected cameras match. Full(-62,1433,880),angles(0,0,0),FOV90;
+side(838,533,880),angles(0,90,0),FOV90; crown(420,1433,1090),angles(0,0,0),FOV75;
+root(645,1433,642),angles(15,0,0),FOV75. Capture crown first to enterLOD0, then
+full/side/root. Read actualLOD after250ms settling; restore follow/Game afterward.
+No player teleport, scene save, lighting change or terrain mutation. If ongoing
+user work changes the terrain, retain captures as development observations.
+
+Pass criteria: naturally rounded taller ash crown distinct from oak, overlapping
+individual leaflets without obvious large sheets or detached clusters, supported
+branch hierarchy, credible bark mapping/scale. Inspect actual rendered images
+and independent review. Counts/build alone do not establish visuals. Record
+clipped/obstructed frames as failures. No motion/LOD-transition/performance claim
+from these stills; figure-eight and measured acceptance remain outstanding.
+### CLOUD-VISUAL-001/v1 candidate A observation
+
+Mixed-view capture rendered correctly behind opaque/cutout trees, but broad nearly
+continuous cloud coverage read as a blurred sheet rather than defined billows.
+Appearance criterion failed. No runtime exception observed. Candidate B reduces
+coverage to0.4 and shape scale to2400m, increases extinction to0.025/m; all other
+scenario settings remain fixed. User approved the current-world matched benchmark
+in this conversation; the old-world results remain incomparable.
+
+### CLOUD-VISUAL-001/v1 candidates B/C observations
+
+B remained too sheet-like. C(coverage0.3,scale3200m,extinction0.035/m,
+height600m,thickness700m) opened sky gaps but lacked small billows.
+D uses coverage0.4,scale2400m,extinction0.065/m,erosion0.38,height1000m,
+thickness900m and divisor2 to distinguish reconstruction blur from density softness.
+Other fixed scenario settings remain unchanged. Ejected captures occasionally
+show tree LOD/visibility changes while the cloud view pose stays unchanged;
+this is existing concurrent tree-work context, not claimed cloud behavior.
+
+### CLOUD-VISUAL-001/v1 candidate D observation and E definition
+
+D retained broad flat grey bases even at half resolution. Geometry masking remained
+correct. It did not meet the appearance criterion. Candidate E applies the vertical
+profile before coverage thresholding so individual lobes determine cloud-top height;
+coarse light density now includes mean erosion instead of shadowing the uneroded
+volume. E inputs: coverage0.42,height1000m,thickness900m,scale2400m,
+extinction0.035/m,erosion0.3,64steps,divisor4,wind0. Same fixed observation poses.
+Cloud coverage temporarily set to0 while awaiting coordination with the live tree
+task; no performance run started. Set-component Enabled was rejected by the native
+serialized-property tool; this did not disable or mutate the component.
+
+### TREE-ASH-ART-004/v1 candidate A result and v2 framing preparation
+
+Build succeeds with two existing SB3006 warnings; native compile0errors and both
+ash materials compile. Initial tree-enable tool failed during a temporary
+TypeLibrary lookup failure for VoxelManager. Readback found trees disabled;
+subsequent same-target enable succeeded, without restarting play or the editor.
+Population298 at revision5502; library5167240vertices/12945312indices. Ash
+171360/59136/1226/300 near/mid/low/far triangles; pine and oak counts unchanged.
+Incidental peakUpdate2.281ms is not frame/GPU/memory acceptance.
+
+Evidence ash-a-{crown,full,side,root}.png and ash-a-source.json; actualLOD0 at
+16.96/24.19/24.19/5.25m. Full view is blocked by another tree and FAILS framing.
+Independent reviewer accepts visible near foliage, materials and structure in
+crown/side/root: individual supported leaflets, coherent crown, credible pale
+bark. Retains unqualified whole silhouette, soil contact, motion, LOD chain and
+performance. Similar leaflet spacing and straight fine twigs are nonblocking
+observations. Current sky includes clouds; no lighting/weather change was made
+by this work. Camera follow and Game restored.
+
+v2 changes only the blocked full view to the opposite azimuth:
+full(1738,1433,880),angles(0,180,0),FOV90. Preserve all other v1 parameters and
+criteria. Supplementary mid view(2438,1433,880),angles(0,180,0),FOV60,1600x900,
+actualLOD/distance read after250ms. Assess silhouette and retained foliage/support
+at middle distance. Retain any obstruction as a failed frame. No timing claim.
+### CLOUD-VISUAL-001/v1 authored integration preparation
+
+Persisted candidate E in the authored basic_example Main Camera with scene sun/fog
+references; only the new cloud component block was added, without saving the live
+editor scene. Code defaults match E; authored wind remains(8,3). Added explicit
+textures/clouds/*.bin packaging inclusion after verifying publisher loose-file
+rules. Ordinary C# build passed,0errors/two existing SB3006 warnings. The tree task
+is still active in the shared editor and its ledger now reports world5502, so no
+matched cloud performance source/world snapshot has been frozen or run.
+Candidate E visual acceptance and actual packaged execution remain pending.
+
+### TREE-ASH-ART-004/v2 — candidate A clear silhouette and LOD1, 2026-09-19
+
+Same candidate A and live terrain revision5502 as v1; source identity is
+`ValidationEvidence/SpawnTrees/ash-a-source.json`. Corrected full view uses
+(1738,1433,880), angles(0,180,0), FOV90; supplementary mid view uses
+(2438,1433,880), angles(0,180,0), FOV60. Both1600x900, native rendered play view,
+main/ejected cameras matched. Native diagnostic confirmed Ash419 variant22 at
+LOD0/24.17m and LOD1/41.39m respectively. Camera follow and Game view restored.
+
+Evidence: `ash-a-full-v2.png`, `ash-a-mid.png` in ValidationEvidence/SpawnTrees.
+Independent reviewer accepts the demonstrated whole silhouette and stationary
+LOD1 appearance: coherent irregular crown, supported branches and no clearly
+detached foliage or broad rectangular sheets. Fine foliage repetition remains.
+The earlier obstructed v1 view remains preserved. Near visual criteria pass for
+the demonstrated views only. Motion, root/soil contact, LOD transitions, distant
+quality and measured performance are not established. No runtime source change
+between these frames; this is not a canonical figure-eight or performance pass.
+### CLOUD-VISUAL-001/v1 shared-editor blocker (2026-09-19)
+
+Across three consecutive cloud goal turns, the app's live task status confirms
+Research procedural tree generation remains active against this same project and
+editor. Its latest visual ledger entry is TREE-ASH-ART-004/v2 at world5502.
+Cloud coverage remains0 in the current game; authored scene settings remain the
+unaccepted candidate E. No cloud timed run has started and no timing claim is
+made. Continuing camera/property changes would mix two visual workloads; source
+and saved-world changes also prevent a frozen matched benchmark.
+
+The user approved a fresh current-world cloud-off/cloud-on baseline. The separate
+request to coordinate editor use with the tree task has no answer yet. Remaining
+cloud work requires a released/coordinated editor window: E appearance and edge
+checks, drift/translation, lifecycle/zero/dense checks, matched figure-eight and
+sky-heavy measurement, then acceptance and task-only commit/push. Goal blocked
+pending that external condition; implementation is not marked complete.
+
+## TREE-GROWTH-005/v1 — oak stature and branching, defined 2026-09-19 before run
+
+Source: candidate growth A in ProceduralTreeGeometry; eight explicit oak forms
+with authored heights8.5/11/14/20/24/22/30/27m, existing placement scale0.78-1.22.
+World: visible basic_example, engine26.09.15, seed1337/gen48, current edited
+world f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision5535, one local player, same
+298-tree placement population. LOD28/75/180m plus10% hysteresis, range900m,
+shadows65m, all other scene/material settings preserved. User work has set
+cloud coverage0. No terrain edits or player movement by this check.
+
+Rebuild via existing SpawnTreesEnabled false/true, wait for all24 shared variants
+and placement completion. Capture1600x900 native game views, matched main and
+ejected cameras with250ms settle; leave input enabled and restore Game view and
+camera follow after each short batch. Views (position; pitch,yaw,roll; FOV):
+- Young365: (118,-14,620); (0,0,0);75.
+- Tall woodland339: (1273,-2117,960); (0,90,0);90.
+- Giant423 front: (1727,1460,1400); (0,0,0);90.
+- Giant423 side: (3527,-340,1400); (0,90,0);90.
+- Broad giant316: (6105,-1295,900); (0,180,0);75.
+- Giant423 lower limbs: (2827,1460,1100); (-17,0,0);90.
+
+Pass criteria: actual library/count diagnostics show all24 variants, <=512
+placements and <=350far triangles; visible young/tall/broad forms differ in
+trunk proportions and branch architecture, the giant forms read as substantial
+trees with supported foliage and coherent crowns, no new missing materials or
+runtime errors. Record obstruction/LOD limitations and obtain independent
+visual review. This scenario does not approve measured performance or distant
+placeholder art; canonical figure-eight baseline issue remains open.
+
+Preparation failure history: initial editor-baker code failed compilation over
+SceneCamera APIs/Pixmap disposal; corrected current source builds. A stale
+TaskAwaiter<ProceduralTreeGeometry.Shape> type-load failure temporarily removed
+project MCP tools. After runtime source also hotloaded,87 tools rediscovered
+without editor restart; no new warning after cursor1482 through1496. No asset
+bake executed yet. No user world state was reloaded or discarded.
+## CLOUD-VISUAL-001/v2 - native main-camera capture fallback
+
+The project ejected-camera tools disappeared from the native registry after reload
+(stock71 tools remain), even though editor compilation reports success. Timestamp
+refresh and a temporary comment/revert in the existing editor extension did not
+restore registration; neither left a source change. Version2 retains every v1
+camera transform, FOV75,1600x900 dimensions, appearance candidate, observation wait
+and visual criterion. The only capture-path substitution is the real Main Camera:
+suspend its PlayerController.UseCameraControls, leave UseInputControls enabled,
+set that camera's pose, wait2s, use native camera_screenshot, and restore camera
+follow and prior cloud coverage immediately. No new scene/test component or renderer
+is introduced. Current live terrain was most recently saved at revision5535;
+foreground comparisons with older captures are not accepted as matched evidence.
+
+User explicitly instructed continued work with waiting for shared editor use,
+then continuing. Short visual captures resume after waiting; timed performance
+still requires fixed source/world and no conflicting editor activity. Candidate E
+is tested first with the previously recorded inputs. Goal work has resumed; the
+previous blocker entry is historical, not a completed acceptance decision.
+
+### CLOUD-VISUAL-001/v2 rejected capture path
+
+candidate-e-mixed.png shows the player-follow view rather than the prescribed
+mixed pose. UseCameraControls=false did not freeze the rendered camera transform;
+this frame fails the camera-pose criterion and is not acceptance evidence.
+Camera controls and coverage0 were restored in the same operation. The project
+custom toolset has now returned(87tools), so resume the original v1 ejected-camera
+path with pose readback. No further v2 captures are planned.
+
+### TREE-GROWTH-005/v1 — candidate A result
+
+All24 variants and298 placements rebuilt at revision5535. Oak near triangles
+by variant8-15:90720,90720,117360,196416,184176,301296,453576,453576;
+mid19968,19968,25440,42032,39420,63840,95340,95340; far140each.
+Pine/ash triangle counts unchanged. Library6793843vertices/17338482indices;
+incidental peak tree update9.819ms, not a controlled performance measurement.
+Evidence growth-a-young/tall/giant/giant-side/broad/limbs.png plus source JSON.
+Confirmed LOD0 young18.47m, LOD1 tall42.78m, giant48.27m and side48.26m,
+broad47.67m; giant limbs LOD0 at19.44m. Side view is obstructed by foreground
+pine. Follow camera/Game view restored after both batches; input remained on.
+
+Independent review accepts juvenile/tall differentiation but rejects mature
+giant appearance: upright crown, excessive transparency and underfilled long
+lateral limbs. Main-agent inspection of broad/limb views corroborates sparse
+canopy and concentrated upright scaffold. Criteria fail on mature crown quality;
+counts/caps pass. No performance acceptance. Preserve candidate A evidence.
+
+Candidate B uses identical scenario parameters. It spreads mature/old upper
+leaders outward, lowers their crown profile and doubles individual leaf count
+on spreading forms while halving leaf triangles. Near retains folded leaves;
+mid uses small individual two-triangle leaves. This preserves triangle count,
+not vertex memory or alpha shading cost. All require observed validation.
+### CLOUD-VISUAL-001/v1 candidate E result / F definition
+
+The valid E ejected mixed capture remains too broadly connected and grey; lit
+edges are washed out. Pose readback matched the prescribed position/angles; FOV75
+was provided explicitly to the capture. E fails appearance, despite correct
+foreground masking. F expands the useful stored Perlin-Worley range(0.35..0.95)
+before thresholding, centers broad coverage modulation at0.7 with amplitude0.7,
+and reduces the direct/scattered sun multiplier from1.1 to0.7.
+F inputs: coverage0.46,extinction0.05/m,erosion0.16. All other E inputs unchanged.
+Same v1 poses and criteria; cloud coverage returns0 after each short capture.
+
+### CLOUD-VISUAL-001/v1 candidate F observation / reconstruction comparison
+
+F opens distinct gaps and several cloud bodies, but the image remains excessively
+soft with nearly uniform grey bases. Before changing density again, compare F at
+divisor2 against its divisor4 capture with every other cloud input and camera
+pose unchanged. This is a declared reconstruction diagnostic, not a timed result.
+
+### CLOUD-VISUAL-001/v1 reconstruction finding / candidate G
+
+Matched F half-resolution view retains the same broad softness and reveals more
+horizon jitter. Increasing pixel count did not resolve the density/lighting issue;
+retain divisor4. Candidate G uses coverage0.32,extinction0.08/m,erosion0.22, other
+F settings unchanged. Lighting gives the approximate multiple-scattering term
+longer attenuation(0.08 instead of0.25), with lower direct gain and ambient, to
+retain density-dependent light in cloud bases without clipping large white areas.
+This is an artistic approximation, not a physically validated scattering model.
+
+### CLOUD-VISUAL-001/v1 candidate G mixed observation
+
+G separates cloud bodies, exposes blue gaps and preserves shaded bases with
+unclipped bright tops in the mixed view. Foreground leaf/terrain masking remains
+correct. The mixed image is a substantial appearance improvement; other angles,
+motion, lifecycle and timing remain unqualified. Continue fixed sky, horizon and
+sunward poses with G inputs before deciding overall visual acceptance.
+
+### TREE-GROWTH-005/v1 — candidate B result and C preparation
+
+Candidate B rebuilt298 trees at revision5535, same triangle/index counts as A,
+7312403vertices (more leaves with fewer facets). Actual matched captures:
+growth-b-giant.png and growth-b-broad.png at LOD1/48.27m and47.67m;
+growth-b-limbs.png at LOD0/19.44m. Native compile clean; no new warnings through
+cursor1573. Incidental peak tree update30.09ms remains unexplained and cannot
+be accepted as a performance result. Independent review accepts mature-form
+variety and improved coverage, withholds close wood acceptance: blunt stub
+left of central stem and crowded sharp branch bases. Main-agent image inspection
+agrees. Camera follow/Game view restored, user input retained.
+
+Candidate C retains the scenario and counts: one oak leader continues the trunk
+at its tip; other leaders start at separate lower heights. No new tree types
+or placement changes. Add peak library-upload duration and variant/mesh identity
+to existing tree diagnostics to distinguish upload cost from overall update
+spikes; this instrumentation does not replace fixed-workload performance checks.
+
+Separate asset-workflow observation: native bake_tree_impostor(variant2,row0)
+completed eight1024px orthographic albedo/normal view pairs in the visible
+editor, using the canonical LOD0 model. Original0-0PNG outputs inspected:
+matching full pine silhouette, transparent RGBA alpha0-255 and normal output.
+No runtime impostor integration or performance/visual acceptance follows from
+these offscreen asset bakes. Editor world/camera unchanged by the bake.
+### CLOUD-VISUAL-001/v1 G other angles / candidate H
+
+G sky/horizon/sunward images preserve geometry edges, but the sunward view has
+broad clipped-white outlines and the upward view lacks fine edge structure. G is
+not final visual acceptance. H keeps G scalar settings, raises detail frequency
+from6 to18 times base coordinates, includes erosion on the first two sun samples,
+and bounds the angular lighting response as phase/(1+phase). The scene has no
+filmic exposure pass; this artistic response avoids clipping a large bright rim.
+Inspect the same mixed and sunward poses first; all fixed camera inputs remain.
+
+### CLOUD-VISUAL-001/v1 candidate H mixed/sunward observation
+
+H removes the broad clipped sunward rim and adds fine cloud-edge variation while
+retaining separate billows and shaded bases. Mixed and sunward stills now meet the
+appearance criterion for this initial sky layer. Continue remaining fixed views
+and motion before final visual acceptance.
+
+Additional translation observation, declared before capture: same mixed angles,
+wind0, camera x5339.92352 (100m +X from reference), y399.2453,z699.074036.
+Inspect coherent world-space parallax, then return to the reference camera.
+For drift, restore wind(8,3), wait2s before the first frame and10s between frames.
+Use the same camera and all H settings. Final controls return to camera follow.
+
+### CLOUD-VISUAL-001/v1 H sky/horizon/parallax and invalid enclosure
+
+Sky and horizon retain coherent cloud shapes, clean silhouettes and no missing
+material or coarse layer slices. A100m camera translation changes cloud alignment
+coherently instead of pinning the pattern to the screen. The prescribed enclosure
+pose is invalid: canonical column inspection atx1402.91565,y399.2453 found every
+32-unit sample fromz-4096 to0 solid(world5535), including aroundz-500. The image
+looks out through culled terrain backfaces. Preserve it as a failed fixture, not
+an enclosed-cloud pass or evidence of a cloud depth-mask defect. Real front-facing
+terrain/tree occlusion is demonstrated in the above-ground views; a valid fully
+occluded view remains to be captured.
+
+### TREE-GROWTH-005/v1 — candidate C result / D preparation
+
+C preserved298 trees and7312403vertices/17338482indices at world5535.
+Giant/broad/limbs views retain fixed poses and LOD1/1/0 respectively. Additional
+fixed young365 and woodland339 images are growth-c-young.png (LOD0,18.47m)
+and growth-c-woodland.png (LOD1,42.78m). Camera follow and Game view restored.
+Independent review accepts mature-form direction, coverage and better separation
+of major limbs, but rejects the central upright bark seam in growth-c-limbs.png.
+Foliage partly obscures the old stump location. No wind/transition/performance pass.
+Incidental peak update13.603ms/upload13.601ms identifies variant14 mesh1 upload
+and model publication as a real main-thread cost; it is not a controlled baseline
+or evidence of improvement over B's30.09ms. Native compile clean.
+
+D keeps the exact scenario inputs. Continue the oak trunk and primary leader as
+one swept surface with shared rings, transported frame and continuous bark UVs;
+remove the separate primary-leader sweep at near/mid/low. Other branches and all
+foliage remain unchanged. Recheck the fixed close junction and mature silhouettes.
+### CLOUD-VISUAL-001/v1 H controls and drift
+
+Wind(8,3) frames were captured at23:18:08 and23:18:19UTC with a10s inter-capture
+wait. Billows drift coherently while fixed tree/terrain silhouettes stay in place.
+These two frames establish drift, not an exhaustive temporal-artifact measurement.
+Coverage0 yields the original clear sky; coverage0.85 produces an overcast layer
+without painting over leaves or terrain. No missing material observed. H values
+are now the authored scene/component defaults; timing remains pending.
+
+### CLOUD-LIFECYCLE-001/v1 definition
+
+The native component-property tool cannot toggle inherited Enabled; no standalone
+component-enable tool exists. Exercise the ordinary destroy/recreate lifecycle
+through remove_component/add_component on the shipping Main Camera, preserving
+all H inputs and wind0. Removal dispatches component deactivation and releases
+owned textures; re-add creates fresh resources through the normal Render path.
+Require the same static sky at the v1 mixed pose, exactly one cloud component,
+valid sun/fog references, no new runtime errors, and camera-follow restoration.
+This covers destruction/recreation and OnDisabled cleanup; a direct Enabled=false/
+true editor toggle remains distinct and is not falsely reported as executed.
+No new test hook, component, scene or alternate renderer is added.
+
+### CLOUD-LIFECYCLE-001/v1 result
+
+Removed the live cloud component and re-added H inputs through the normal camera
+component path. Readback found exactly one cloud component, with valid sun/fog
+references. The recreated mixed view's top220rows (unoccluded sky) match the prior
+H mixed capture exactly: mean and maximum RGB byte difference0. Native Error-level
+console scan aftercursor1496 returned no new errors throughcursor1647. This proves
+recreation/render consistency, not a measured GPU-memory reclamation time. The
+authored scene now uses the recreated component GUID. Camera follow and coverage0
+were restored; wind0 remains the comparison state until final defaults restored.
+
+### TREE-GROWTH-005/v1 — D observations and shadow diagnostic
+
+D rebuilt298 trees at5535 with7314267vertices/17350290indices; largest oaks
+453912/95496/3300/140triangles. Fixed limbs/broad captures preserve near/mid
+appearance. Incidental peak upload7.359ms, variant14 mesh1; not a performance pass.
+Reviewer retains mature-form approval but cannot distinguish a remaining dark
+boundary at image(855,465) from a cast shadow. The earlier tube-join diagnosis
+is explicitly uncertain. To identify the cause, capture the exact limbs pose
+once with DirectionalLight.Shadows and ContactShadows disabled, then restore
+both original properties immediately. This diagnostic is not the normal-lighting
+acceptance view and does not replace the original failure evidence.
+### TREE-GROWTH-005/v1 — shadow diagnostic result / E preparation
+
+The reported central-stem boundary persists with directional/contact shadows
+both disabled. Both properties were restored true. This does not establish its
+cause. Source inspection finds side leaders following the trunk axis for a long
+initial span, creating nested, overlapping tubes before divergence. E moves
+side leaders outward earlier while retaining the continuous trunk/primary-leader
+sweep. Same fixed close/broad poses, counts and foliage. This is a candidate
+geometric correction, not a confirmed diagnosis until the rendered result.
+Distant asset integration remains deferred while near geometry changes; the
+shipping far-card path remains in place. Bake framing is now shared with the
+canonical generator and per-row source/material/texture hashes are recorded.
+### TREE-GROWTH-005/v1 — E result / F preparation
+
+E fixed views retain the mature silhouette but expose additional open-looking
+branch starts in the close frame; the central dark boundary persists. Same
+298trees/7314267vertices/17350290indices; incidental update8.307/upload8.305ms
+(variant15mesh1). E is not close-wood accepted. Inspection identifies a concrete
+radius defect: lateral bases estimated parent taper with0.85, then multiplied by
+0.80 and a flare, allowing high lateral bases to exceed the actual parent radius.
+F uses the parent's actual interpolated radius at attachment, multiplied by0.65,
+so the branch's flared starting ring fits within its parent. Applies to the
+shared oak/ash lateral recipe; unchanged foliage, counts, main leaders and poses.
+### CLOUD-OCCLUSION-001/v1 - replacement for invalid solid-interior fixture
+
+The original enclosed pose was inside solid terrain and saw culled backfaces.
+Use an existing front-facing opaque trunk instead, without editing the world:
+live saved world5535, oak candidate423 root(3527.377,1460.189,791.6777),
+ejected camera(3427.377,1460.189,950), angles(-15,0,0), FOV30,1600x900.
+Wait2s, capture coverage0, then H coverage0.32 with wind0, wait2s and capture.
+Require a fully opaque rendered view with no sky/cloud leaks and identical
+cloud-off/on wood pixels. Read back camera pose immediately before each image;
+reject interference or an obstructed/invalid fixture. Restore Game view and
+coverage0 after the short batch. This is a visual occlusion check, not a change
+to the approved figure-eight workload or a performance measurement.
+
+### CLOUD-OCCLUSION-001/v1 result
+
+Both native pose readbacks match(3427.37695,1460.18896,950),(-15.0000019,0,0).
+The explicit capture projection is30 degrees,1600x900. The cloud-on image is
+fully opaque bark with no sky/cloud leaks; visual occlusion passes. Exact pixel
+identity fails: maximum byte difference10, mean0.0853,324224 pixels changed.
+The live tree/shadow scene is time-dependent, so these frames do not isolate the
+cause of that small difference. Do not report a bitwise mask proof. Existing
+mixed-sky silhouette captures independently establish clean foreground masking.
+Camera follow/Game view and coverage0 restored immediately after the6.8s batch.
+
+### CLOUD-FIGURE8-001/v1 approved setup status
+
+User approval received: "Use the current world for both runs." Only the saved
+world substitution is approved; all recorded route/view parameters and gates
+remain fixed. Source inspection confirms the route inherits EyeAngles. Changing
+player GameObject rotation alone does not reset that property after startup.
+The ordinary player OnEnabled lifecycle initializes eyes from authored rotation;
+a normal play restart from the saved world can restore the canonical identity
+view, after shared-editor work releases the scene. No test-only setter or input
+lock is added. Neither timed cloud run has started.
+
+F retains the close surface boundary despite corrected parent-radius sizing.
+Before further geometry edits, inspect the same actual-world limbs pose with
+native Albedo and NormalMap render modes. Existing editor screenshot tool gains
+an optional native debugMode parameter with immediate finally restoration, like
+its FOV override; this is a general viewport inspection control, not a substitute
+renderer or runtime tree test hook. No lighting/source art changes for these
+captures. Restore normal game camera/input after the bounded batch.
+### TREE-GROWTH-005/v1 — user realism rejection / G preparation
+
+User explicitly rejects the current sparse, unrealistic trees. Independent
+review withdraws earlier fullness approval: broad and woodland crowns read as
+decorated branch arms, with excessive interior gaps, long traceable straight
+runs and a procedural fan. New visible bar: substantial overlapping crown
+volumes, unequal curved supported smaller branches, localized light gaps,
+shaded interior depth, and matched front/side/underside views. Juveniles remain
+lighter. No numeric opacity threshold is invented from botanical references.
+
+F Albedo/NormalMap diagnostic images use the real playable tree. Albedo has no
+corresponding strong horizontal color break; the normal view shows abrupt
+normal/surface boundaries. This narrows the issue beyond cast shadows; exact
+cause remains unresolved. Normal capture controls restore immediately. Two
+attempts to use stock set_component DebugMode failed because it is not exposed
+as a writable serialized property; neither changed camera state.
+
+G adds one supported branchlet to young oak shoots and three to adult shoots,
+with variable directions/lengths and curved secondary growth. Each of these
+shoots carries16 individual twisted two-triangle leaves. Adult near foliage
+still uses128triangles per original shoot, but branch wood, vertex count, alpha
+coverage and mid cost increase. Crown fullness is not presumed free. Native
+shared population, seed, materials, heights and thresholds remain unchanged.
+Use all fixed v1 growth poses; capture front/broad/side/close and woodland.
+No far-bake integration until source shapes meet the new visual bar.
+### TREE-GROWTH-005/v1 — G first observations / additional view
+
+G rebuilt298trees at5535:9036123vertices/19283586indices. Fixed broad316,
+giant423 and woodland339 captures show increased volume/coverage; independent
+realism review remains pending. Incidental peak update39.938ms/upload39.936ms,
+variant14 mesh1: significant construction hitch, not accepted performance.
+This observed upload bottleneck must be addressed rather than hidden by LOD.
+
+The previous giant side pose is obstructed by a pine, so add a declared side
+view of the same unobstructed broad oak316: camera(4305,-3095,900),angles(0,90,0),
+FOV75,1600x900. Keep the original blocked view as failed framing evidence. Also
+repeat fixed giant underside and young views to check volume and age contrast.
+### TREE-GROWTH-005/v1 — G review / H preparation
+
+Independent review: G materially improves fullness but fails the user's realism
+bar. Broad/giant upper silhouettes retain elongated fingers and deep notches;
+woodland coverage improves but main forks are similarly straight and ascending.
+Additional G side/underside/young frames are archived; foreground ash obscures
+part of broad316's lower stem. No acceptance follows from obscured geometry.
+
+H changes directional structure at unchanged branch/leaf counts: the spreading
+form's central leader rises above lower outward leaders; secondary branches are
+shorter with more lateral/downward growth; their shoots fan sideways/backward
+and supported branchlets reach further across the branch axis. Main leader bends
+and lateral yaw vary more. This targets overlapping rounded terminal masses
+rather than elongating existing sprays. Repeat fixed broad/giant/woodland views
+and the declared broad side view, then independent review. Materials/LOD/population
+remain unchanged; memory/triangle counts are expected unchanged, not performance.
+Upload diagnostics now also separate peak buffer creation/upload from peak model
+publication, through the existing shipping tree-info command. These peak values
+may come from different updates and must not be added as one measured frame.
+Use the next real library rebuild to identify the responsible phase; no fixed
+figure-eight acceptance or cross-candidate speed claim is implied.
+### TREE-GROWTH-005/v1 candidate H rejection and next design, 2026-09-19
+
+Independent review rejects H's mature crowns. Broad candidate316 reduces some
+upward fingers but opens a large central window; giant423 and woodland339 retain
+separate elongated foliage groups and traceable scaffolds. G's young365 has
+acceptable visible fullness, but this does not qualify the mature forms. H's
+front views are archived as growth-h-broad/giant/woodland.png with source hashes
+in growth-h-source.json. Side, underside, transitions and performance remain open.
+
+The next candidate replaces the oak scaffold/fan recipe with deterministic,
+bounded crown-volume attraction and branch growth. Existing TREE-GROWTH-005/v1
+subjects, positions, FOVs and criteria remain fixed. Inspect young365, woodland339,
+giant423, broad316, broad316 side and giant423 underside through the real playable
+population. Require connected irregular foliage volumes, localized gaps, shaded
+depth and unequal supporting branches. This is a development visual run, not a
+replacement performance scenario. Do not claim a pass from geometry counts.
+### TREE-GROWTH-005/v1 candidate I, 2026-09-19 19:45
+
+World5535, 298 placements; fixed broad316/giant423/woodland339 poses and FOVs,
+all LOD1, native 1600x900 captures growth-i-*.png. Independent review rejects
+healthy summer-oak realism: coherent rounded envelopes improve over H, but
+thick exposed branching dominates the outer crown. Numerous hooked limbs have
+insufficient fine taper. No close, side, young, motion or performance pass.
+
+Runtime geometry: oak variants8..15 near triangles 80148,87776,110548,273216,
+176768,480452,614076,794716; mid26748,29302,36786,90668,58466,159094,202460,
+262144. Far176 each. Mixed library9439815 vertices/21250404 indices. Incidental
+peakUpdate15.509ms/peakUpload15.508ms, variant15 mesh1; peakBuffer15.467ms,
+peakModel0.209ms. Uncontrolled diagnostic observations, not frame benchmarks.
+.NET build passes with two existing SB3006 warnings. Intermediate incomplete
+partial-file edits caused two editor compile failures; final editor status is
+successful, and all24 production variants rebuilt. Preserve the failures.
+
+Candidate J keeps I's envelope, changes pipe-radius exponent to2 (square-root
+support area), tapers terminal ends to4.5mm maximum, and changes24 leaves per
+supported shoot from16. Mid retains every fourth leaf. Same scenario and
+criteria; additional geometry/alpha cost requires measurement.
+### TREE-GROWTH-005/v1 candidate J visual review, 2026-09-19 19:47
+
+Same world5535/298 placements and fixed 1600x900 poses. J broad316 front/side
+and giant423 front are LOD1; giant423 limbs is LOD0. Files growth-j-broad.png,
+growth-j-broad-side.png, growth-j-giant.png, growth-j-limbs.png. Independent
+review now accepts visible crown fullness and mature form in these views:
+connected foliage, depth and localized openings from both broad directions;
+less dominant terminal wood on giant; no definite detached leaves in underside.
+High-quality near asset remains rejected for abrupt congested fork intersections,
+angular branch runs and soft/stretched-looking bark in the close wide view.
+Do not increase foliage for those remaining defects. Young and woodland J,
+root contact, wind, LOD transitions and measured performance remain unqualified.
+
+J oak8..15 near triangles101508,108536,135088,334444,220084,591500,766448,980640;
+mid31996,34334,42710,105176,68942,185570,239216,306784; far176 each.
+Library11125225 vertices/23446596 indices. Incidental peakUpdate20.486ms,
+peakUpload20.485ms variant15 mesh1, peakBuffer20.442ms, peakModel0.110ms.
+These are uncontrolled construction diagnostics, not a frame-cost pass.
+
+Supplementary material diagnostic pose declared before capture: giant423 trunk,
+position3287,1460,920; angles0,0,0; FOV75; 1600x900 native capture, followed by
+NormalMap pass at identical pose. It resolves bark definition at closer range;
+it does not replace the fixed wide fork image or alter acceptance criteria.
+### TREE-GROWTH-005/v1 J bark diagnostic and K preparation
+
+The independent reviewer withdraws the earlier missing-fine-definition diagnosis
+after inspecting growth-j-trunk-Normal.png and growth-j-trunk-NormalMap.png.
+Close detail and continuous normal response pass those images. Larger-scale
+bark fissuring remains a character concern, not an established blocking defect.
+Fork construction remains the independent visual blocker.
+
+Candidate K changes oak side-branch collar geometry and surface normals only.
+A flared collar emerges inside the parent and blends toward its surface normal
+at the intersection. This is still overlapping tube geometry, not welded wood;
+review must determine whether the visible joins improve. Leaf count, crown
+points, branch topology, positions, thresholds and acceptance criteria unchanged.
+### TREE-UPLOAD-006/v1 scenario definition, 2026-09-19
+
+Purpose: diagnose and bound main-thread construction of the actual shared tree
+library through VoxelManager.SpawnTreesEnabled. This is supplementary to the
+mandatory figure-eight, not a frame-rate or world-workload substitute.
+Environment: running visible editor/game, engine26.09.15, world5535, current
+K oak geometry and unchanged pineL/ashA,24 variants/four LODs,298 placements.
+Perform three sequential enabled=false/250ms/enabled=true rebuilds. Wait for
+production Ready and inspect voxel_trees_info after each. Keep geometry/materials,
+LOD distances and placement unchanged between before/after source variants.
+Do not query while uploads are executing. Record peak upload/buffer/model/update,
+exact vertex/index totals, errors and readiness; observations are warm-engine
+library rebuilds, not cold engine startup. User retains control; camera position
+is incidental to this isolated upload diagnostic and cannot support frame-cost
+claims. Target per-update upload <=3ms with identical published geometry totals,
+all24 models and298 placements ready, no partial model publication or exceptions.
+This target may fail; preserve every result. Baseline uses whole-mesh uploads;
+proposed change separates allocation and bounded vertex/index updates.
+### TREE-UPLOAD-006/v1 baseline, 2026-09-19 19:51
+
+Three whole-mesh upload rebuilds, K geometry, unchanged world5535 and material
+set. All finished Ready with24 variants,298 placements,11125225 vertices and
+23446596 indices; identical counts and no reported stale batches. Runtime source
+SpawnTreePopulation hash is the pre-staging file in growth-j-source.json;
+geometry is K with collars. Player remained11.32m from423. No camera controls,
+scene edits, builds or other engine queries occurred during uploads.
+
+| Run | Peak update ms | Peak upload ms | Peak buffer ms | Peak model ms | Upload variant/mesh |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 1 | 23.978 | 23.976 | 23.926 | 0.239 | 15/1 |
+| 2 | 24.239 | 24.237 | 24.188 | 2.057 | 15/1 |
+| 3 | 24.499 | 24.497 | 24.451 | 0.079 | 15/1 |
+
+All three fail the declared3ms upload target. Component stages can peak in
+different frames; do not add them. Mean upload peak24.237ms. Console cursor1981.
+The replacement allocates vertex/index buffers separately, then uploads32768
+vertices or131072 indices per update before publishing the complete mesh pair.
+No geometry or material change is part of this comparison. Code builds with the
+two existing SB3006 warnings. Allocation cost is not assumed eliminated.
+
+### TREE-GROWTH-005/v1 candidate K review
+
+The independent reviewer finds no material resolution of the junction blocker
+in growth-k-limbs.png at the fixed underside pose. Collar changes are subtle;
+congested branching and abrupt bark/contour changes remain. Crown coverage and
+close bark definition verdicts are unchanged. The goal is not accepted.
+### TREE-UPLOAD-006/v1 staged upload attempt, 2026-09-19 19:53-19:55
+
+Luna executed prescribed native toggles with30s unobstructed waits, same K
+geometry. Runs1/2 reached Ready with identical298 placements,11125225 vertices
+and23446596 indices. Run1 peakUpdate19.789ms/upload19.787ms/buffer19.787ms/
+model0.105ms (15/1); run2 update14.296ms/upload14.295ms/buffer14.295ms/
+model0.061ms (14/1). Both fail3ms; the staged full-buffer approach is not accepted.
+Run3 enable failed with native NullReferenceException in Scene.cs:916; console
+reported TypeLibrary could not find VoxelManager and trees disabled (cursor2055).
+This is an interrupted/invalid run, not a performance result. Later inspection
+confirmed the editor still playing and compilation successful; repeating only
+the enable operation restored the intended tree setting. Do not conceal failure.
+
+Next bounded diagnostic adds peak upload operation name to distinguish full
+buffer allocation from partial data writes before selecting the replacement.
+It does not change geometry or upload work. One rebuild through the same entry
+point and timing rule; retain3ms criterion. This diagnostic cannot complete the
+three-run acceptance set or replace the figure-eight.
+### TREE-UPLOAD-006/v1 operation diagnostic
+
+The supplementary staged rebuild reached Ready with unchanged totals. Peak
+update13.387ms/upload13.381ms/buffer13.381ms/model0.199ms, variant15 mesh1,
+operation=vertex-allocation. No warnings/errors were returned. Cursor2108.
+Thus bounded data writes leave an oversized allocation; target still fails.
+Next candidate replaces staging with32768-vertex mesh chunks, split at existing
+independent primitive boundaries on the worker. No vertices or indices are
+added/removed; local indices are rebased. Same geometry and scenario criteria.
+All chunks are published together within the existing shared LOD model. Verify
+unchanged totals and actual image before interpreting timings. More mesh parts
+may increase draw cost; figure-eight acceptance remains open.
+### TREE-UPLOAD-006/v1 bounded mesh result, 2026-09-19
+
+Source manifest upload-chunked-k-source.json; unchanged K geometry/materials,
+world5535,298 placements. Three rebuilds reached Ready with exactly11125225
+vertices/23446596 indices, now472 shared mesh chunks across96 LOD models.
+
+| Run | Peak update ms | Peak upload ms | Peak buffer ms | Peak model ms | Upload variant/part |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 1 | 7.642 | 1.378 | 1.375 | 0.133 | 23/0 |
+| 2 | 3.032 | 0.940 | 0.939 | 0.209 | 7/1 |
+| 3 | 1.176 | 1.174 | 1.173 | 0.087 | 11/1 |
+
+Each upload peak passes3ms, versus23.976-24.497ms baseline. Full update peaks
+are broader than upload and are not all below3ms; no frame-time acceptance is
+inferred. No warnings/errors returned; final trees enabled. Cursor2192.
+The actual fixed underside view upload-chunked-k-limbs.png confirms complete
+wood/leaves after partitioning, with no visible missing chunk/triangle defect.
+Counts are exactly preserved. Draw submissions, retained memory, frame pacing
+and figure-eight remain unaccepted; shared-mesh count increases from192 to472.
+### TREE-GROWTH-005/v1 candidate L preparation
+
+Implement surface-projected collars on large near/mid oak branches, using the
+canonical parent triangle skin and interpolated UV/normal/tangent attributes.
+Fixed K/J crown envelope, points, branch skeleton, leaves and triangle totals.
+Replace the rejected K normal-only join blend. Validate at fixed giant423 limbs,
+broad316 front, plus an opposing unobstructed fork diagnostic declared here:
+camera4227,1460,1100, angles-17,180,0,FOV90,1600x900. No gameplay/terrain mutation.
+Pass criteria remain continuous believable joins without UV streaks, detached
+geometry or lost coverage. Failed projection retains a visible unresolved join;
+it must not be treated as successfully fused wood. No performance acceptance.
+### Correction: upload comparison environment and L visual run
+
+Original population logs show all three chunked upload rebuilds at revision5550,
+not the declared5535. The previous entry's world5535 statement is incorrect.
+The user's world changed while work continued. Counts remained identical, but
+these are nonconforming TREE-UPLOAD-006/v1 development observations, not formal
+scenario acceptance. Preserve the measured0.940-1.378ms results and their limited
+warm-upload meaning; the independent reviewer was sent this correction. Its
+initial acceptance covered the isolated claim only and relied on the incorrect
+ledger environment statement. No whole-frame acceptance was ever established.
+
+L captures also occur at revision5550 and are nonconforming visual development
+observations. Candidate423 and316 roots/scales remain identical to the declared
+subjects. L surface collars visibly attach to the trunk but cause conspicuous
+concentric bark streaks at some joins, most evident in growth-l-limbs-opposite.png.
+Main review rejects that artifact. Candidate M keeps geometry and adds whole-tile
+UV alignment before interpolating parent coordinates toward outgoing branch
+coordinates; this avoids sweeping through many texture repeats across one join.
+Repeat both fork views, preserve L evidence, and seek independent review.
+### CLOUD-GPU-001/v1 - fixed-view supplementary GPU comparison
+
+Define before the first measurement. Use the same frozen source, saved world,
+lighting, tree/material/water state and hardware as the approved cloud figure-eight.
+Visible interactive play remains running; no asset builds or captures during timing.
+This supplements the canonical route and cannot override its relative gates.
+
+Render the actual ejected game viewport at physical1920x1080, verified through
+get_ejected_camera. Use its observed persistent FOV60 (the editor preference),
+not the one-shot FOV75 screenshot override. Camera position remains
+(1402.91565,399.2453,699.074036), with mixed angles(-18,135,0) and full-sky
+angles(-70,135,0). Freeze wind(0,0) and all other H parameters. Compare coverage0
+against0.32 at each view, in order mixed-off/mixed-on/sky-off/sky-on.
+
+After every pose/coverage change, wait20s so the existing10s rolling frame window
+contains only the selected state. Read the existing voxel_collision_info frame
+summary three times,10.2s apart, preserving raw responses and pose/size readbacks.
+Compare the medians of the three reported GPU frame averages. Targets are added
+GPU time <=1ms mixed and <=2ms sky. These are whole-frame differential observations
+with0.01ms reporting precision, not isolated GPU timestamps for the cloud draw.
+GPU scope lists are currently unavailable; an empty list is not zero cost.
+
+Reject and retain a run if source, world revision, camera, resolution, lighting,
+cloud settings or shared-editor activity changes during its measurement. Restore
+Game view, free viewport sizing and authored cloud wind after the series. No new
+runtime probe, alternate renderer, scene, component or test hook is introduced.
+
+### TREE-GROWTH-005/v1 development candidate N (2026-09-19, before run)
+
+Candidate N replaces interpolated collar UVs with two sampled bark frames: parent
+surface projection in UV1 and branch grain in UV0, blended by vertex alpha. The
+new oak-only tree_bark shader retains native trunk bending and PBR shading.
+Fixed close poses remain giant423 limbs (2827,1460,1100), angles(-17,0,0), and
+opposite (4227,1460,1100), angles(-17,180,0), both1600x900/FOV90. Existing crown,
+leaf count, skeleton and LOD distances remain fixed. Criteria: no transverse cuff
+bands, no abrupt grain scale/direction seam, no newly open attachment cracks;
+independent reviewer must inspect both actual images. Current world5550 differs
+from frozen v1 world5535: these are nonconforming development observations, not a
+scenario acceptance or performance pass. Check live shader compile, managed build
+and runtime warnings. Clean editor restart remains required before shader acceptance.
+Candidate N observed: runtime/editor compile succeeded; runtime build retains two
+pre-existing SB3006 warnings. New shader initially logged missing compiled shader/
+material resources; explicit compile_source_shader and full oak_bark asset compile
+then succeeded (shader profile upgrade warning). Tree rebuild reached Ready298,
+world5550,11,125,225vertices/23,446,596indices/472meshes. Incidental peaks2.969ms
+update,2.968upload,.731buffer,.104model; not a timed benchmark. First250ms disable
+interval did not rebuild; a subsequent1.5s disable was verified disabled before
+enabling. Actual growth-n-limbs.png and growth-n-limbs-opposite.png were inspected.
+No subsequent runtime warnings through cursor2322. Independent reviewer accepted
+visible junction texture continuity in both views: cuffs materially reduced,
+no definite crack/detached limb/new severe distortion. Bulky/crowded joins remain
+form concerns; concealed surfaces are unverified. No overall acceptance claimed.
+### TREE-LOD-007/v1 preparation, 2026-09-19
+
+Development visual scenario, defined before first run: engine26.09.15, current
+playable grassland world f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision5550, seed1337,
+recipe2, 24 shared variants, same298 placements. Camera-only controls, no terrain
+or player movement. Actual1600x900 captures, FOV75 except stated90. Candidate N
+near oak and unchanged near/mid pine/ash; new low oak/ash derived leaves and far
+2-triangle matched impostor. No figure-eight acceptance inferred.
+
+Use giant423 root(3527.377,1460.189,791.6777), looking along+x: camera(1727,1460,1400)
+FOV90 (mid), (-72.623,1460.189,1400)FOV75 (low~92m), and(-5122.623,1460.189,1400)
+FOV75 (far~220m). Additional far view from(3527.377,-7189.811,1400), yaw90; overhead
+(3527.377,-6030.5,5116.7), pitch30,yaw90 (approx220m). Capture all three species in
+population vistas from these views; log active variant/LOD through voxel_trees_info.
+Inspect against near/mid reference captures: shape/coverage/color continuity,
+missing/inverted/rectangular sprites, root grounding, overhead view and view
+switching. Far geometry must be2tri/variant, no missing assets/runtime errors.
+Independent reviewer decides visible quality; record limitations. This new visual
+scenario addresses new LOD behavior, not a replacement timed performance workload.
+### CLOUD-FIGURE8-001/v1 pre-run preparation details
+
+Both members of the new comparison will begin from a normal play restart of the
+same saved world, followed by the recorded fully settled start. This restores
+the player's identity eye rotation through its existing startup lifecycle and
+avoids giving only the second run terrain/model caches from an earlier route.
+No stop/restart or source compilation occurs inside either timing window.
+The editor's authored scene is retained; do not reload or discard unsaved scene
+changes. Verify saved terrain, one local first-person player, camera rotation,
+FOV75, physical2769x1529 and exact starting XY before each existing route trigger.
+
+The off control uses Coverage0 on the shipping component, its existing early
+return before cloud draw recording. The on run uses H defaults, including
+coverage0.32 and wind(8,3). No other settings change. This spells out the approved
+control mechanism and preparation; route, speed, distance, settling and acceptance
+limits remain unchanged. Both runs are still unperformed at this entry.
+
+### User branch realism objection, 2026-09-19 20:22
+
+The user requested an immediate screenshot and again rejected branch realism.
+Native camera_screenshot captured user-branch-realism-20260919.png without moving
+the view (1600x900, UI excluded). Pre-read camera(-1074.72717,3232.99976,699.012146),
+angles(-0.28896,-110.155937,0); the user could move between read and capture. Nearest
+logged subject497 is pine5, scale0.7842,4.71m away, nearLOD. The displayed library
+still contains N oak/previous pine, not the pending low/far implementation.
+Independent reviewer rejects this pine: repeated flat combs, coarse blade-like
+needles, unclear woody-branch-to-spray hierarchy. No physical disconnected vertices
+are inferred solely from the image. Supplemental context at(-2185.603,3361.543,780),
+angles(-12,0,0),FOV75 is user-pine-context-20260919.png; controls restored.
+
+The far bake was paused after24/96 newly frozen rows; prior48-row pass was already
+invalidated by low geometry edits. No stale row set was packed or enabled.
+First individual-needle preview uses the canonical production asset baker for
+pine5 row0, not a playable-world acceptance test. Actual3D paired needles on real
+curved shoots replace near crossed sprays. Main preview review rejects sparse
+coverage for4.5-8.5cm/24pairs, then6-9cm/48pairs. Second preview preserved as
+pine-needle-small-rejected-bake.png; first remains in conversation tool output.
+Near material uses a tight individual-needle color region without alpha clipping;
+mesh supplies silhouette. Native material/editor code compile succeeded. These
+previews do not establish real-world visuals or performance; not enabled live.
+University botanical facts distinguish paired2.5-8cm Scots needles from paired
+10-20cm maritime pine needles. Existing source is generic Pine Tree01, not proven
+Scots pine. Further branch/needle proportions must be reviewed together; simply
+adding density is insufficient. GPU/memory cost of full near needles is unaccepted.
+Pine needle candidate follow-up: source now uses paired12-20cm needles as an
+artistic long-needle pine reference (OSU Pinus pinaster reports10-20cm in pairs,
+clustered at branch ends), not an exact Scots pine claim. No width claim is made.
+Production bake5/0 reports2,492,091near vertices and1,378,160triangles, substantially
+above prior114,224near triangles. Main preview still finds crown coverage below
+prior sprays; pine-needle-long-bake.png preserves it. Need a close playable-world
+inspection before choosing whether this representation is useful; no acceptance.
+Native hotload had rejected changing static LodMeters array rank; replacement
+uses the distinct SpeciesLodMeters field for the different per-species contract.
+No subsequent warnings through cursor2384. Source parameters and actual output
+counts are now included in bake metadata; file hashes alone did not prove output.
+Closest pine transition is12m with10% hysteresis; broadleaf remains28m. Memory,
+frame and transition costs remain unmeasured and cannot be accepted from counts.
+### TREE-PINE-008/v1 close candidate setup, 2026-09-19
+
+Before the first candidate playable-world run: same visible world5550/seed1337,
+recipe2 and existing298placements, no terrain or player mutation. Capture1600x900.
+Subject497 pine5 root(-1285.603,3361.543,637.9462),scale0.7842. Close branch pose
+(-1135.603,3211.543,710),angles(-8,135,0),FOV75; whole-near pose
+(-1685.603,3361.543,710),angles(-20,0,0),FOV90. Supplemental original pre-read pose
+(-1074.72717,3232.99976,699.012146),angles(-0.28896,-110.155937,0),FOV75 is only an
+approximation of the user capture, because the player moved during that earlier
+capture sequence. Do not label it an exact matched pair.
+
+Criteria: readable limb/twig/needle attachment, fine curved paired needles with
+radial volume rather than repeated flat combs, no new detached fragments, credible
+whole-crown coverage. Independent visual decision required. Near geometry count
+must be recorded; heavy candidate is not performance accepted. Capture12m boundary
+from near then camera(-1810.603,3361.543,710),sameangles/FOV90 (mid after hysteresis),
+for silhouette/color/coverage change. Log actual LOD for each pose. Initial canonical
+library rebuild may take longer because of mesh count; wait for Ready and preserve
+errors. Keep target interactive and restore camera controls/Game view after capture.
+### TREE-PINE-008/v1 candidate result, 2026-09-19 20:44
+
+World5550/seed1337, engine26.09.15, recipe2,298placements. All96 bake rows were
+packed after source-hash validation;25 native materials compiled. Canonical live
+library rebuilt after a confirmed disable. It reported30,732,177vertices,
+54,921,744indices,1031meshes; near pine1,378,160triangles, far2 for all24variants.
+Observed build peaks: update1.761ms/upload1.519ms/buffer1.518ms/model0.284ms.
+These are development observations, not a comparable figure-eight acceptance.
+
+Fixed captures pine008-close/whole-near/mid.png use the declared poses; actual
+subject497 LOD0 at5.69m, LOD0 at10.32m, LOD1 at13.46m. Reviewer rejects near:
+dark stippled veil, insufficient coherent foliage mass, exposed repetitive tiers.
+Mid is much fuller/greener, creating a strong representation mismatch. Whole-near
+tip is clipped, limiting full-silhouette assessment. Near geometry alone failed
+to solve the user objection; no performance pass. Controls restored after capture.
+
+TREE-LOD-007/v1 development far views lod007-far/side/high.png were captured at
+the declared poses. Front is occluded by a nearer crown. A wrong variant filter
+(423/15) omitted target detail logs, so no target-specific LOD readback claim.
+Visible black rectangles were corrected by wiring F_ALPHA_TEST to S_ALPHA_TEST
+in tree_impostor.shader; native compilation succeeds with engine warnings.
+The next images have no solid black rectangles but distant canopies remain flat
+in lighting, especially compared with the textured foreground. Far quality is
+not accepted. Shader clean-start validation remains unperformed.
+
+### TREE-FORM-009/v1 development setup, 2026-09-19
+
+User again rejects close coherence and generic tree silhouettes. Canonical new
+candidate replaces the failed individual needles with five curved shoot groups
+per secondary twig, three folded/twisted near surfaces per shoot and two mid
+surfaces at matching attachments. The individual-needle path is removed.
+Pine now has eight age/exposure forms (7-28m authored height), differing crown
+base/spread/taper, plus one forked crown. Ash has eight7-27m forms with different
+clear trunk, girth, leader count, reach and leaning. Oak's existing age forms gain
+anisotropic, asymmetric and more lobed crown volumes. Placement IDs stay fixed.
+
+Before first run: world5550,seed1337,298placements,recipe2,1600x900. Reuse all
+TREE-PINE-008/v1 poses and logs for close and transition comparisons. Add pine5
+whole pose(-2185.603,3361.543,780),angles(-12,0,0),FOV75. Woodland overview uses
+(3527.377,-7189.811,1400),angles(0,90,0),FOV75. New near/mid forms only: existing
+far atlases are explicitly stale during this development capture and cannot be
+accepted; rebake required after source quality review. Criteria: grounded branches
+with readable connected shoot volumes, no flat comb dominance or floating needle
+fragments, no near-to-mid density collapse; clearly distinct young/mature/spreading
+forms in the live population. Independent reviewer decision required. Record
+actual counts/errors, restore camera controls, no terrain/player changes. This
+visual check does not replace canonical performance or authorize a new baseline.
+TREE-FORM-009 development qualification before capture: actual terrain revision
+is5551 (logged20:47:41), so upcoming captures do not conform to the5550 scenario.
+Do not infer comparable performance or a scenario pass. Subject497 root remains
+unchanged by readback. The earlier whole-near pose clipped the crown tip; add a
+clearly labeled supplemental framing(-1685.603,3361.543,850),angles(-25,0,0),FOV110
+after the close pose to retain near LOD through hysteresis. This establishes
+whole-form visibility only, not an exact prior-image comparison.
+TREE-FORM-009 candidateA development result20:50: world5551,298trees,
+12,763,710vertices/27,888,657indices/486meshes. Pine5near224,687tri/mid102,276.
+Observed build peaks upload0.949ms/update3.111ms; not comparable performance.
+Independent review accepts stationary coverage/color and demonstrated form
+variation, but rejects close quality: repeated fans at left silhouette and
+mechanically crowded limb entrances. Tall neighboring pine has similarly sized
+regular terminal tufts. Screenshots form009-close/whole-near/mid/context.png.
+
+Before candidateB capture, keep these poses and current5551world. Changes reduce
+pine main tiers, stagger and vary secondary counts/lengths, group4-7 uneven shoots
+toward twig tips, and curve main limbs laterally with varied girth. Near/mid retain
+matching attachment choices. Capture close, whole-near and mid; additionally
+inspect the earlier approximate player view(-1074.72717,3232.99976,699.012146),
+angles(-0.28896,-110.155937,0),FOV75 for twig proximity. Acceptance remains the same
+high-quality branch/grouping requirement; failures/history are retained.Supplemental candidateB twig view declared before capture: camera
+(-1135.603,3211.543,850),angles(0,135,0),FOV60. This raises the camera into the
+new crown's lower branches; it is not the original player's exact view.
+TREE-FORM-009 candidateB development result20:54: independent review partially
+accepts clearer main branching and stationary coverage, but rejects close needle
+realism. form009b-shoots.png shows repeated flattened sprays with thick blade-like
+needles/yellow details; wider shapes do not hide common source construction.
+Library12,605,706vertices/27,362,943indices/482meshes, update peak1.671ms/upload0.979ms
+are development observations only. No full performance or transition acceptance.
+
+CandidateC setup before runtime: preserve B geometry except shorter0.28-0.55m
+base shoot lengths and a twelve-triangle curved atlas surface. Replace the single
+scanned fan with an original four-shoot RGBA atlas generated by the built-in
+image tool. Original Tools/TreeSources/pine_shoot_atlas.png and exact
+pine_shoot_prompt.txt are retained; import extracts alpha and resizes to1024.
+Each atlas stem/bud anchor is mapped to the actual curved shoot so the attachment
+stays rooted. Three near surfaces can use different source shoots. Geometric
+surface normals and uniform roughness replace the mismatched scan normal map;
+no measured/calibrated needle material claim. Same B close/shoot/whole-near/mid
+poses and criteria, actual current world revision must be recorded. Far is stale
+and excluded until rebake. Review finer needle proportions, material repetition,
+root attachment and crown coverage together. No performance pass from compilation.
+TREE-FORM-009 candidateC development run21:03: native scene was found out of play
+mode during preparation (no agent stop). The disable/enable refresh touched the
+authored component and restored SpawnTreesEnabled=true; no scene save/discard was
+requested. Native play_start then loaded the existing saved world at revision5615;
+this is a normal play restart, not the required clean editor/shader cold start.
+298placements, same subject497 root. Actual candidateC library12,905,632vertices,
+28,712,610indices,487meshes. Startup showed25.749ms peak buffer upload at variant4
+part4 (update25.75ms): preserve this regression observation, not performance pass.
+The source build succeeds with the two existing SB3006 warnings; native material
+compile succeeded. No runtime warnings from startup through cursor2699.
+
+Captured form009c-shoots/whole-near/mid.png at the declared poses, actual LOD0 at
+7.62m and11.50m, LOD1 at13.46m. Restored game camera and camera controls. These are
+world5615 development views, not fixed5550/5551 comparison passes. Independent
+review pending. Far still uses stale original bakes and is excluded.
+### CLOUD-BUILD-001 - final source preparation, 2026-09-19
+
+Owned cloud C#/shader/baker/design sources and authored scene/project JSON use
+CRLF after normalization; no cloud behavior changed. Ordinary runtime build
+`dotnet build Code/voxels3.csproj --no-restore --nologo` succeeded with zero errors
+and two existing SB3006 warnings (VoxelManager.cs:428, Networking.cs:25).
+Both baked noise byte lengths/SHA-256 values match their manifest. Exactly one
+authored cloud component retains candidate H defaults and Sun/Fog references;
+loose binary resource inclusion is present. These checks do not establish runtime
+performance. The other task granted exclusive editor access after the user
+prioritized cloud validation. At this preparation point no sbox editor process
+is running and localhost:7269 refuses connection; permission to reopen was
+requested under AGENTS.md. No timed cloud run has started.
+
+### TREE-FORM-009 candidate C independent decision, 2026-09-19
+
+The independent reviewer rejects close visual quality. In form009c-shoots.png,
+finer tapered needles are an improvement, but the diagonal shoot at x670-1040,
+y80-400 and lower-center group x450-810,y550-800 still read as broad flat fans.
+Blunt pale stem ends appear near (185,815) and (385,180); an isolated pale sliver
+near (805,416) remains visually unexplained. The image alone does not prove an
+actual disconnected mesh. Whole-tree stationary coverage passes this limited
+review; pale-edged foliage in the mid view looks coarse and nearly broadleaf.
+There is no motion, far-LOD or performance acceptance. Preserve the 25.749ms
+startup buffer spike; it is not cleared by later warm observations.
+
+Shared-editor coordination: cloud task 01a0bbce-154e-7121-bfce-4c748035ed9c has
+explicit user priority. Tree work released the editor and froze all runtime,
+source and asset mutations until that task releases its validation window.
+The cloud task subsequently reports no live editor process and refused native
+endpoint connections; it is seeking permission to reopen the application.
+Tree work continues only offline source/image inspection and documentation.
+### TREE-FORM-009 candidate D file preparation, 2026-09-19
+
+Cloud validation released its temporary source/runtime freeze because the editor
+was unavailable. A fresh local process query found no sbox, sbox-dev or sbox-editor
+process. No launch or native runtime call was attempted. This entry records
+preparation, not an in-world result or performance scenario pass.
+
+The whole-shoot PineSpray path is removed. Candidate D uses28-39 small folded
+needle tufts per growth shoot, each6vertices/4triangles. Tufts turn radially
+around the supporting twig, base extent8.5-12.5cm, with source-specific root U/V
+coordinates and four texture shapes. The mesh's center column follows the root
+U so folding cannot displace the sheath. Triangle winding now agrees with the
+constructed surface normals. All detail levels retain the same three wood
+segments per growth shoot; the tuft base uses that rendered segment centerline,
+buried inside the triangular wood cross-section. Near/mid/low retain exact
+subsets of root positions (strides1/2/4) and compensate size by sqrt(stride),
+with additional sqrt(3) at low for the retained third of secondary twigs.
+This is a coverage heuristic requiring visual and cost measurements.
+
+Source: Tools/TreeSources/pine_needle_tuft_atlas.png,1254x1254RGBA,SHA256
+1260D0B6F7A1487F1B5D245212446C5765667C435B4C29930472E3B1FD10ED67.
+Exact built-in generation prompt is pine_needle_tuft_prompt.txt. The original
+whole-shoot art remains as rejected source history but is no longer consumed.
+The two superseded runtime whole-shoot PNGs were removed. The opacity import
+is1024x1024L and exactly equals the alpha channel of the1024x1024RGBA color
+import (difference bounding box None), range0-255. This verifies transfer, not
+filtered appearance. Current native material uses the0.4 alpha threshold.
+
+Independent input review initially rejected gray webbing/fringes. Subsequent
+read-only sampling found many visible gray pixels at alpha2-3/255, below the
+threshold, and revised the objection to require a native trial. A cleanup edit
+and a simpler needle-pair source were also generated but are not used. Original
+tuft grouping is selected for the trial to avoid returning to the prior sparse
+individual-needle representation. No source preview proves native visual quality.
+
+Before first native run: use the existing candidate C shoot/whole-near/mid poses,
+1600x900 and subject497/pine5. Re-read actual world revision and roots first;
+last observed world5615 is not asserted current. Add a reversed/underside view
+only after declaring its concrete pose. Inspect root continuity, clean tips
+against sky and dark foliage, fine needle proportions, radial volume, full
+crown coverage, and near/mid consistency. Record actual library counts, startup
+peaks and independent review. Existing far bakes are stale and excluded until
+rebaked. Canonical figure-eight and cold shader qualification remain incomplete.
+Candidate D offline checks: runtime .NET build succeeds with0errors and the
+two existing SB3006 host-migration warnings after the final attachment edit.
+Editor project build succeeds with0warnings/0errors (public geometry API is
+unchanged). Native game-code whitelist/material compilation has not run.
+Geometry source SHA256:
+8F962934AE09E334260A3A40F4A3B86D75B963AFFF6764ABF26FAC22FB765630.
+Importer SHA256:
+90D6BD575A8C8533151B61D2A9E695A9D85950BCCCD9BAEFD85E65ADCC323795.
+Pine material SHA256:
+F652BE0495A958255C9532BA94A1EAC7C57605C959D94520EFE8B4CFD49657A5.
+Imported color/opacity SHA256:
+EA0C68FBDF4B35391B7559EE0470CDA6E2B74105641C6FBEBADF24D1AA94214E /
+C6CA3EB476616889700E2CD0E3CE1929AA5FBEE34178E37F015454C1552FFB5E.
+
+Independent source review confirms root-UV mapping, four-triangle topology,
+winding/normal agreement and exact opacity transfer. It flagged the earlier
+continuous-curve root versus simplified wood mismatch; the final edit keeps
+three rendered growth segments at every LOD and uses their actual centerline.
+A focused reread of that correction is pending. Enlarged/thinned low foliage,
+edge filtering, actual mesh counts, visibility and performance remain unproven.
+Focused independent reread confirms the final attachment correction: all LODs
+use the same three growth segments, roots interpolate their rendered centerlines,
+and no radial offset remains. No concrete mismatch remains within that static
+finding. This closes the source defect only; native visual/performance review
+remains unperformed because the visible editor is unavailable.
+### TREE-BAKE-010/v1 - static impostor input contract, 2026-09-19
+
+Offline preparation only; native editor remains absent. The installed native
+trunk_bending.hlsl retains sine sway even when scene wind is zero. Native
+foliage.shader also relaxes its alpha cutoff from the material reference toward
+0.1 between500 and2000units camera distance. The old orthographic bake, positioned
+two frame diameters away, did not override either behavior. Thus passes were not
+explicitly guaranteed a common still pose or the intended close-source cutoff.
+
+The production baker now creates private copies of its two materials, sets trunk
+sway to0 and foliage edge/branch amplitudes to0, and moves alpha-distance start/end
+to4/5frame diameters. Camera is2diameters from center; all source vertices are
+within0.5diameter. The source reference cutoff remains unchanged. Failure to set
+any required parameter aborts the bake. No live source material is modified.
+Metadata declares both controls; packer rejects rows without them before outputs.
+The editor project compiles with0warnings/0errors. Native parameter binding,
+actual capture stability and visual improvement remain unverified.
+
+Before first offline guard run: use existing .codex/tree-build/impostor-bake rows
+unchanged, beginning variant00/row0, which predate these metadata fields. Invoke
+the actual Tools/pack_tree_impostors.py with bundled Python. Pass criterion is
+explicit rejection of obsolete capture settings and byte-identical shipping
+impostor PNG/material/manifest sources before and after. No synthetic inputs or
+alternate implementation. This cannot qualify native bakes, visuals or performance.
+TREE-BAKE-010/v1 offline guard result: the actual packer exits1 with
+ValueError: Obsolete capture settings0/0: rebake static geometry with fixed alpha cutoff.
+All97shipping impostor PNG/material/manifest sources retain identical SHA256
+before/after. Pass for obsolete-input rejection only; no atlas regenerated.
+Native editor remains absent and capture consistency/visual effect is unverified.
+
+Additional installed-engine evidence: reflected SceneCameraDebugMode.NormalMap
+has numeric value21, matching ToolsVisModes::NormalWs=21. ToolsVis.hlsl319-326
+packs the supplied world normal, then applies SrgbGammaToLinear for debug output;
+shadingmodel.hlsl223-224 supplies m.TangentNormal to the tangent mode and m.Normal
+to the world mode. Together this supports the current world/object normal
+interpretation for an identity-transformed bake object. No explicit readable
+managed assignment linking the enum to ToolsVisMode was found; preserve that
+limit. No new live normal-pass capture was performed.
+
+A reopen request is pending under the desktop/application-launch rule in AGENTS.md.
+The user's cloud validation retains first priority when the editor becomes available.
+Independent TREE-BAKE-010 source review accepts the wind/alpha logic: copies
+preserve original materials; zero sway and edge/branch amplitudes cover the
+installed positional animation paths; maximum source distance2.5diameters stays
+below the4diameter alpha-relaxation start. Explicit obsolete-setting/hash guards
+run before output replacement. Remaining native gates: parameter bindings,
+time-separated silhouette stability, Albedo/NormalMap alignment, preserved live
+wind and intended alpha coverage. No native visual/performance acceptance.
+The reviewer notes that legacy dimension/row assertions can be disabled by
+Python -O; documented/current invocation uses the normal interpreter, and this
+was not exercised under optimization. The explicit new capture/hash guards remain
+active regardless. No full pack is permitted until matching native bakes exist.
+### Tree goal blocked audit, 2026-09-19
+
+The visible-editor unavailability has persisted across three consecutive goal
+turns. The first two made concrete offline progress (candidate D geometry and
+reviewed attachment fix; then static bake/wind/alpha fix and stale-input guard).
+Fresh checks in the third find zero sbox/sbox-dev/sbox-editor processes, zero
+listeners on the verified native port7269, and no exposed sbox MCP tools.
+The explicit reopen request remains unanswered. No launch was attempted.
+Prepared geometry hash remains8F962934AE09E334260A3A40F4A3B86D75B963AFFF6764ABF26FAC22FB765630;
+baker hashEDA29DCDFFD83E8C56C86E0F85C6F59161C463BDF128E06973EB70203274CD4B.
+
+Source/build work is reviewable, but candidate D native visuals, matching new
+far bakes, corrected distant lighting, moving LOD quality, actual cost measurements
+and independent visual/performance acceptance are incomplete. Further visual
+changes without seeing this prepared candidate would be speculative. The goal
+is blocked pending a visible editor or explicit authorization to reopen it;
+cloud validation retains first use when available. This is not completion.
+### TREE-BRANCH-011/v1 definition, 2026-09-19 before runs
+
+Requested branch realism and variation follow-up. Fixed visual workload: visible
+basic_example, engine26.09.15, seed1337/gen48, world
+f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision5615/checkpoint31,
+298 placements,24 shared forms, unchanged materials/placement/LOD settings.
+Source begins at0113a5b plus pre-existing dirty tree/terrain/cloud work; exact
+pre-change geometry saved in .codex/tree-branches. Current library reports
+19,837,710 vertices /41,488,830 indices /698 meshes, peak upload15.093ms;
+these are incidental diagnostics, not a performance baseline.
+
+Reuse TREE-GROWTH-005/v1 young365, woodland339, giant423 front/lower limbs and
+broad316 front/side poses unchanged, plus TREE-FORM-009 whole pine5 pose.
+1600x900, declared FOVs,250ms settled camera, native visible ejected game view.
+Pass: connected forks, no pronounced short-step zigzags or abrupt swollen knots
+on major limbs, distinct fork/leader/crown structures across the eight forms,
+supported foliage, no new material/geometry errors, <=512 placements. Preserve
+failed captures/obstructions. This current-world follow-up does not overwrite
+historical v1 world5535 comparisons or establish botanical accuracy.
+
+Performance uses the approved current-world substitution recorded under
+CLOUD-FIGURE8-001/v1, retaining canonical GRASS-COVERAGE-001/v1 route/view/settings:
+start(-1.6258175,1.2225341,340), identity eyes,FOV75,2769x1529, one player,
+speed2500,distance50000,one loop,clearance393.7008,32x16 cells,gameplay8,
+visual128,LOD0-5,extents4/4,grass64m; fully settled start, automatic drain+10s.
+Both branch before/after retain clouds coverage0.32 and all other live settings,
+same saved world5615. No screenshots or source changes during measurement.
+Gates: <=5% FPS loss, <=10% tail/allocation/memory regression, no unexplained
+streaming/completion/correctness regression. Record unavailable controls as
+blocked rather than substitute another workload. Far atlases are already stale;
+source form qualification precedes a new bake, and distant matching remains open.
+
+### CLOUD-DISTANCE-001/v1 - user distant-cloud artifact reproduction
+
+The user rejected distant cloud blur/artifacts after the editor was reopened.
+Native camera captures user-distant-clouds.png (foreground-only while the user
+was navigating) and user-distant-clouds-2.png (cloud view) preserve the observations.
+The latter shows ragged noisy distant edges and soft interiors; H appearance
+acceptance is withdrawn pending a distance-filtering correction. No performance
+run has occurred. Existing project tools became available after ordinary hotload;
+Editor/VoxelMcpTools.cs was restored byte-for-byte after a temporary blank line.
+
+Define a repeatable image comparison before changes: native ejected game view,
+position(-37186.9219,-27105.709,2134.0293), angles(-8.08975124,144.585678,0),
+FOV75, capture2769x1391, wind(0,0), coverage0.32 and all other H defaults. Wait2s
+after each state change. Compare baseline64steps/divisor4, diagnostic96steps/4,
+and64steps/2 to distinguish integration and reconstruction artifacts. Diagnostics
+are not accepted settings or performance measurements. Production correction
+must reduce distant grain/banding without erasing cloud silhouettes/blue gaps
+or introducing foreground leaks, then pass canonical cloud performance gates.
+Restore normal game view/input and authored wind after captures.
+
+### CLOUD-DISTANCE-001/v1 result and v2 fixture correction
+
+The ejected camera overlapped the player mesh, producing large opaque wedges.
+Preserve all three diagnostic captures; they do not qualify whole-frame visual
+comparison. Both96steps and half-resolution retain visible distant stippling
+in the unobstructed sky. Version2 raises only camera Z by400units to2534.0293
+to clear the player; all other capture settings remain fixed. Establish a fresh
+64step/divisor4 H reference. Candidate I will smoothly average erosion detail
+when its noise texels become smaller than the traced pixel footprint; retain
+base shape, step count, coverage, resolution and all other H parameters. This
+addresses unresolved fine detail without relying on more expensive tracing.
+
+### CLOUD-DISTANCE-001/v2 - I observation / J diagnostic
+
+The first v2 H capture failed because the live view returned to Game mode; no
+reference image was produced. Preserve that failed attempt. Candidate I compiled
+and its repeated fixed-pose capture succeeded. Fine-detail averaging alone leaves
+obvious stippled/diagonal structure in distant cloud bodies. It is not accepted.
+J retains I but replaces per-pixel random ray-start offsets with midpoint sampling,
+with the same64steps. This isolates the remaining spatial jitter without adding
+temporal accumulation or increasing sample count. Inspect for replacement bands.
+
+### CLOUD-DISTANCE-001/v2 - J observation / K definition
+
+J removes much of the random stipple but exposes horizontal integration bands
+on long horizon rays. Reject J as final. K retains distance-filtered erosion and
+midpoint sampling, while increasing long-ray samples to target shapeScale/96
+meters or the traced pixel footprint, whichever is larger. ViewSteps remains
+the minimum; cap all rays at256steps. Overhead intervals still use64steps at
+default settings. Inspect the same cloud pose for bands/shape loss; unchanged
+performance gates remain binding. Ground streaming differs while the player
+navigates independently; these screenshots qualify clouds only.
+
+### CLOUD-DISTANCE-001/v2 - K confirmation
+
+K shader compilation passed. distance-v2-h-reference.png and
+distance-v2-k-confirmed.png show the same cloud pose and wind0, FOV75 at2769x1391.
+K visibly reduces H stippling and ragged distant edges while retaining the large
+clouds and blue gaps. Quarter-resolution softness remains; this is an improvement,
+not a claim of full-resolution detail or exhaustive temporal stability. The first
+K confirmation attempt encountered a transient native component-property error
+during a live scene transition; it produced no image. The reconciled component
+retained H scalar defaults, and the repeated capture succeeded. Game follow and
+wind(8,3) were restored. Ground streaming changed during user navigation and is
+not a cloud comparison result. K is the candidate for the pending cloud tests;
+no route/view/scenario inputs or acceptance gates change.
+
+TREE-BRANCH-011 baseline attempt: first native ejected capture was invalid because
+the rendered camera returned to the distant player. After returning the player
+to the declared subject area through native transform control, the close capture
+showed423 atLOD0,19.44m, with crowded steep limbs; the upper frame was partly
+occluded by the viewer body. No acceptance assigned. Camera follow was restored.
+A normal play restart restored identity eyes and the same saved world5615
+(checkpoint32, no edit revision change). Library19837710vertices/41488830indices.
+Canonical route began23:27:34 atXY(-1.626,1.223). At23:30:04 its result save failed:
+a concurrently opened PowerShell read of the519MB append-only results file held
+a Windows sharing lock. That reader was cancelled; no saved result exists for
+this attempt. Preserve the failure, including two TypeLibrary VolumetricClouds
+warnings23:29:47; no runtime source edit was applied during this measurement.
+The identical route was repeated23:30:30 on the settled, now-warm world. Treat
+the failed first route as the complete warmup, and give the candidate the same
+one-loop warmup before its measured repeat. Do not compare that warm repeat
+with a candidate's first cold route. File extraction will occur after save using
+a bounded seek/read that closes immediately; no result reader during runs.
+
+### CLOUD-FIGURE8-001/v1 - shared-editor interference discovered
+
+Before triggering any cloud benchmark, native world readback reported another
+active run, TREE-BRANCH-011-v1-before-repeat, begun23:30:30 local time. The newly
+active Improve tree branches and variation task was not covered by the earlier
+Research procedural tree generation handoff. Requested its immediate handoff
+and source/editor freeze under the user's cloud priority. Cloud shader edits and
+captures overlapped those tree runs; none of those measurements can serve as a
+cloud baseline. This also explains camera/play/resolution changes during the
+visual captures. Cloud timing has not started; wait for the actual controller
+to release and freeze fresh state before the matched pair.
+
+Shared-editor conflict23:31: cloud task01a0bbce-154e-7121-bfce-4c748035ed9c
+reported prior user priority and authorized cloud shader/capture activity during
+both tree attempts. Both tree timings are therefore invalid for a comparable
+baseline, independently of the first run's save failure. No performance claim.
+Tree work freezes live controls/runtime/source/assets/builds after the current
+indivisible route/drain completes and waits for the cloud task's explicit release.
+Production tree geometry is still byte-identical to the original hashes; all
+new branch code exists only in .codex/tree-branches/candidate, not in Code.
+The partly viewer-obstructed close frame is preserved as
+ValidationEvidence/SpawnTrees/branch-011-before-near-obstructed.png.
+TREE-BRANCH-011 overlapped repeat saved12f2916bb14f4601b68d14bc268f87a1
+at23:33:00, complete121.94173s/48603samples. Evidence:
+ValidationEvidence/SpawnTrees/branch-011-overlapped-before.json.
+398.58023FPS,p95/p99=4.7898/6.5316ms,max1217.6919ms;
+GPUmean2.18377ms,p95/p99=4.247904/5.517006ms,max349.82468ms.
+Allocated4,444,441,080bytes,91,443.76/frame,GCpause1102.342ms;
+processavg8,734,618,741/peak9,026,965,504bytes,GPUavg3,491,312,424bytes.
+Zero measured exceptions, pending collision0/failures0, transitionpending0,
+all recorded seam/table mismatch counters0. These are observations only.
+Additional invalidators: actual profiler2769x1391 despite requested2769x1529;
+repeat center(-1.6181488,1.1689596) drifted from declared start. No acceptance,
+no performance baseline selected, no thresholds weakened. Cloud task notified
+of the viewport discrepancy. Editor release confirmed23:33:15; freeze continues.
+
+### CLOUD-HEIGHT-001/v1 - varying cloud bases
+
+User requests some higher and some lower clouds, avoiding a single level row.
+Candidate L adds a bounded base-height variation input(default250m), driven by
+an independent smooth horizontal noise field advected with the existing wind.
+The density profile and cloud shape shift together; view-ray outer bounds expand
+by the same maximum variation. Reuse the same renderer, lighting and noise asset.
+No additional weather controller or duplicate cloud layer.
+
+Compare variation0 and250m, other K defaults, wind0, native ejected game camera
+at(1402.91565,399.2453,699.074036), FOV75,1600x900, mixed(-18,135,0), plus
+horizon(-3,135,0) and sunward(-20,225,0), wait2s after each state. Pass when groups
+have visibly different base elevations with coherent billows/blue gaps, smooth
+transitions and no clipping at the old layer boundary. Verify coverage0 and
+restore authored wind/Game view. Canonical performance gates remain unchanged.
+Cloud coordination follow-up: the exclusive window is extended for a newly
+requested varying-cloud-height change and timing. Tree runtime/source/assets
+remain frozen. Cloud task reports that native set_component with a component
+GUID may resolve the authored scene, while GameObject GUID plus explicit type
+resolves the runtime target. This explains why earlier UseCameraControls writes
+were not reliable evidence of runtime follow suspension. Subsequent tree checks
+must read back live properties and use the runtime GameObject/type target.
+
+### CLOUD-HEIGHT-001/v1 - verified live comparison and tool correction
+
+Earlier height-flat-mixed/height-varied-mixed/horizon/sunward captures used a
+component GUID that resolved an authored component, while active-scene readback
+continued to show variation250. Their purported 0-versus250 comparison is invalid.
+The initial quarter64/quarter96/half64 distance comparison likewise lacks verified
+live quality values; do not use it to conclude that additional steps/resolution
+cannot improve artifacts. Shader H/I/J/K changes were compiled separately.
+
+Runtime mutation now targets Main Camera GameObject633fa436-df01-42a2-8a30-6edbc7d3371b
+plus type VolumetricClouds and verifies the active scene properties. After normal
+play restart, height-live-flat.png and height-live-varied.png have verified
+variation0/250, wind0, coverage0.32 at the fixed mixed pose. The actual images
+show changed group elevations and coherent billows/blue gaps. Actual
+height-live-sunward.png and height-live-horizon.png retain those shapes without
+visible clipping at the prior layer boundary; height-live-off.png shows clear sky.
+JSON readbacks accompany each image. Visual criterion passes in these views;
+quarter-resolution softness remains a quality limitation. Restored variation250,
+coverage0.32, wind8/3 and normal Game view. Ordinary build and live shader compile
+passed; two pre-existing SB3006 warnings remain. Performance still pending.
+
+### CLOUD-FIGURE8-001/v1 - candidate L preflight
+
+Final candidate for this comparison is L, including base variation250m and K's
+adaptive horizon sampling/filtering; other recorded appearance settings unchanged.
+Both on/off members use exactly this source. Current saved world is approved by
+the user; native snapshots record its exact revision and all source hashes.
+Canonical physical2769x1529 is now verified in the possessed game profiler by
+setting1846x1019 logical editor dimensions (1.5 DPI scaling). Earlier requests
+2769x1529 were logical values and did not establish the intended render size.
+No change to the scenario's physical resolution, route, or acceptance limits.
+GPU supplemental on state also uses final L, with its separately recorded wind0.
+
+### CLOUD-FIGURE8-001/v1 - L origin-settling correction
+
+First off run e9abad9f0afb48f982f64dbaf6d89b3d completed at the exact declared
+startXY and physical2769x1529:438.51627FPS,p954.4675/p996.1983ms,
+GPU2.0170612ms,64989.082allocated bytes/frame,zero exceptions. Source signature
+0c43284d9b92551bb3920d0c14c1b6616a9fc08f782bddb26e0dad549a471f8e
+and world5615 remained unchanged. Raw figure8-l-off.json and snapshots retained.
+
+The following on trigger was rejected by the production guard: moving from the
+spawn at X0 to the declared negative start can start a new chunk update between
+transform and trigger calls. No on timing began. Both initial preparations settled
+at spawn before the final start teleport; this does not establish settled streaming
+at the declared start. Preserve the first off as a nonconforming development run,
+not the matched baseline. Restart both, position at the declared start BEFORE
+settling, then restore exact startXY/Z immediately before trigger after all queues
+are empty. Same route/start/world/resolution/gates; this corrects the preparation
+order to satisfy the existing fully-settled-start requirement.
+
+### CLOUD-FIGURE8-001/v1 - L corrected run interrupted
+
+Corrected off trigger2026-09-20T03:45:37.560937Z passed native settling checks
+at streaming center(-1,0,0), then began at exact declaredXY and2769x1529.
+At03:47:41Z the existing benchmark logged performance.test.interrupted
+reason=player-control; no accepted result saved. Retain before/trigger snapshots
+and figure8-l-off-settled-interruption.json. Engine warnings at03:47:15Z also
+reported a swap-chain present wait and GPU fence wait exceeding250ms.
+No performance claim or matched on run. Player input remains enabled.
+Clouds restored to coverage0.32/wind8,3/variation250 for user viewing; requested
+a quiet six-minute controls-idle window through asynchronous user clarification.
+
+### TREE-BRANCH-011 independent visual gate, before candidate review
+
+User explicitly requested an independent reviewer with a very strict quality
+and visual standard. Reviewer strict_tree_reviewer inspected the actual baseline
+branch-011-before-near-obstructed.png, without candidate code or implementer
+conclusions. No candidate approval was issued. Visible findings: crowded major
+limbs radiating from a central band, a spoke/fan pattern, swollen junction and
+abrupt proportions, limited taper on long exposed limbs and straight thin rods.
+Dense foliage hides terminal attachments. The viewer-body obstruction, cropped
+base/crown and single angle prevent broader conclusions.
+
+Fixed review gate for every subsequent candidate:
+- Believable trunk/primary-limb/twig hierarchy and plausible weight/direction;
+  no conspicuous spokes, racks, parallel rods or repeated mechanical bends.
+- Readable taper and convincing forks; no gaps, floating limbs, blunt ends,
+  abrupt diameter changes, cylinder intersections or distracting collars/lumps.
+- Unequal branch lengths, spacing, direction and curvature with coherent growth;
+  random disorder is insufficient.
+- Distinct species/form proportions and crowns beyond uniform scale/yaw changes.
+- Supported, three-dimensional leaf masses with convincing openings; foliage
+  concealment cannot establish sound attachment geometry.
+- Consistent close detail, mid-distance silhouette and wider stand appearance;
+  no conspicuous structural or crown changes in the supplied distance sequence.
+- Unobstructed close views from materially different sides, full trees including
+  base and crown, a wider stand, and representative instances of affected forms.
+
+Reviewer must return APPROVE or DECLINE, supported by the actual candidate
+images. All criteria require material evidence. Improvement alone, one favorable
+angle or implementation claims cannot compensate for defects or missing views.
+Performance acceptance remains separate and requires a valid matched workload.
+The user subsequently asked about alternative authoring tools; Blender/Python,
+optional Blender MCP, and SpeedTree were explained. No external tool installation,
+launch or switch of the production implementation has been performed.
+
+### CLOUD-FIGURE8-001/v1 - controls-idle matched pair
+
+User explicitly confirmed: Run now; I will leave the controls idle. After their
+intervening gameplay, the current saved world is5622 rather than5615. Freeze5622
+for BOTH fresh off/on runs under the already approved current-world substitution;
+do not compare either with any5615 timing. Source signature remains0c43284d...71f8e,
+engine26.09.15/RTX5090, canonical settings and acceptance limits unchanged.
+The preflight revision guard caught this before any new timing began.
+
+### CLOUD-FIGURE8-001/v1 - idle preflight orientation retry
+
+The first5622 preparation still observed player movement and non-identity camera
+rotation; guards rejected it before a benchmark trigger. Preserve
+figure8-l-off-input-preflight.json. A subsequent normal play restart and settled
+start passed all guards, including identity camera, one input-enabled player,
+zero pending terrain/collision work and physical2769x1529. Off-idle trigger
+2026-09-20T03:51:24.676561Z; source/world unchanged. No view-input disabling or
+new runtime control was added.
+
+### CLOUD-SHAPE-001 - independent realism review, candidate L
+
+User rejects unnatural shapes/lines and explicitly requests independent review.
+Captured current actual camera1920x1080 in user-unnatural-clouds-l.png, with
+matching camera/component readback JSON. Independent cloud_visual_review agent
+inspected that image plus fixed varied, sunward, horizon and K distance captures,
+then read the renderer. Decision DECLINE: long diagonal troughs/folded seams,
+repeated shelves near the horizon, smooth featureless interiors. The archived
+K image predates height variation, so L height warping is not established as the
+sole cause. Full observations, hypotheses, priorities and next-image criteria:
+[Independent review](ValidationEvidence/VolumetricClouds/IndependentVisualReview.md).
+Withdraw L realism acceptance; retain compile/control/other behavior evidence.
+
+Cloud-off idle run0d95a02ab1e14818a8b99eb107884f48 completed, world5622,
+source0c43284d9b92551bb3920d0c14c1b6616a9fc08f782bddb26e0dad549a471f8e
+unchanged before/after, correct2769x1529 and exact startXY. Moving406.46912FPS,
+p955.0053/p997.0643ms,GPU2.0887792ms,66737.97allocated bytes/frame; standing
+199.97554FPS,p956.5085/p998.4697ms,GPU4.605481ms,36468.973bytes/frame.
+Zero measured exceptions. Raw figure8-l-off-idle.json contains full metrics.
+On preparation first failed identity-camera guard (orientation-preflight saved),
+then restarted. User's appearance objection arrived before an on timing began.
+No matched cost or regression claim. Supplementary fixed-view GPU tests unrun.
+
+Explicitly released shared source/editor freeze to both tree tasks; current next
+owner Improve tree branches and variation launched Blender after release.
+Clouds retained atL defaults with normal Game view/free sizing. No commit or push
+of the unaccepted implementation. Continue cloud morphology work and request a
+fresh shared-editor timing window after visual acceptance.
+
+### CLOUD-SHAPE-001/v1 - controlled morphology comparison
+
+Before run: same current world5622, basic_example, engine26.09.15, existing
+lighting, camera(1402.91565,399.2453,699.074036), native ejected captures1600x900,
+FOV75. Views mixed(-18,135,0), sunward(-20,225,0), horizon(-3,135,0), wait2s each.
+Coverage0.32, base1000m, variation250m, thickness900m, shape2400m, density0.08,
+erosion0.22, steps64, divisor4, max24km, wind0. Capture L before and M after.
+M changes ONLY the height-profile plateau end from0.2 to0.55; the upper fade
+continues to1.0. This tests whether premature vertical attenuation flattens
+cloud bodies. No presumed diagnosis or performance equivalence. Same independent
+review criteria above, including zero long grooves across dominant clouds,
+secondary lobes, no repeated shelves/common cutoff. Restore wind8,3/Game view.
+Tree task is using Blender and explicitly permitted scoped cloud visual review;
+no concurrent s&box controls or tree source/build operations announced.
+
+### CLOUD-SHAPE-001/v1 - M observation and N definition
+
+M compiled successfully and produced matching mixed/sunward/horizon native images.
+Parent inspection finds enlarged connected masses and the same long diagonal
+troughs; extra vertical depth alone does not solve the defect. Independent review
+pending; retain images and source snapshot. No performance claim.
+
+Next controlled candidate N restores L's height profile and changes only erosion
+spatial frequency from18 to6, including the matching traced-footprint calculation.
+The current base/detail features are about600m/33m at their lowest octave; this
+creates a large scale gap, and mean filtering removes most tiny erosion at common
+ground-view distances. N puts the erosion's lowest-octave features around100m,
+testing whether resolved secondary billows break smooth shelves. All CLOUD-SHAPE
+v1 camera/settings/acceptance criteria unchanged; compare with original L.
+
+### CLOUD-SHAPE-001/v1 - independent M/N results
+
+Independent reviewer declines M: stronger depth/contrast exposes longer, more
+pronounced grooves and heavier slabs; no secondary-lobe acceptance. Declines N:
+no material morphology improvement over L, no major new regression; dominant
+sunward ribbon and upper-left shelf persist. Preserve all six candidate images
+and snapshots. Both experiments rejected for shipping acceptance.
+
+### CLOUD-LIGHTING-001/v1 - isolate shading from density
+
+Diagnostic on current N: same fixed sunward camera/settings as CLOUD-SHAPEv1,
+wind0,1600x900/FOV75,wait2s. Capture once with only the cloud component's Sun
+reference cleared using its existing property; the scene directional light and
+all density settings remain unchanged. This selects the renderer's supported
+ambient-only path. Read back null reference, capture, then restore exact Sun
+reference and wind/Game view. Assess whether the long internal groove persists
+without direct sun sampling. This can locate shading contribution; disappearance
+alone does not prove that the density morphology is physically correct. No new
+debug mode/test hook or performance acceptance.
+
+### CLOUD-LIGHTING-001/v1 result and candidate restoration
+
+shape-n-ambient-only.png was captured and inspected with verified null cloud Sun
+reference; the scene sun remained unchanged. Internal lit ribbon is no longer
+visible, while silhouettes remain smooth/elongated. This locates a lighting
+contribution, not proof of a specific ray-sampling or density cause. Restored the
+exact Sun reference, wind8/3 and Game view. M and N both independently declined;
+restored canonical shader byte-for-byte to L and compiled successfully. No M/N
+performance run or accepted change. Further work should address coherent group
+bases/secondary shape rather than retain either failed parameter experiment.
+
+### CLOUD-SHAPE-001/v1 - coherent-group candidate O definition
+
+Previous turn made progress: independent reviews and controlled native captures
+rejected M/N and exposed a direct-lighting contribution to the groove. No claims
+of a proven single cause. O now replaces continuous horizontal base warping with
+a baked 2D group layout: coverage, constant elevation within each group, and a
+separation mask at competing group boundaries. Six-by-six jittered groups in a
+256x256 RGBA8 map, seed41873, shader period5*ShapeScale (12km at defaults).
+Remove superseded noise-slice coverage/base definitions. No other shape, shading,
+view, capture or acceptance parameters change. Use the existing fixed mixed,
+sunward and horizon views and independent reviewer. Blender is active separately;
+no timing claims during its work. Runtime asset creation/disposal and packaging
+include the new map; hash/reproducibility and ordinary compilation required.
+
+### CLOUD-LIGHTING-002/v1 - sunlight integration convergence
+
+O native compile and ordinary build pass; shape/erosion payload hashes unchanged,
+new layout262144bytes/manifest verified. Native fixed images show separated
+groups but pronounced repeated lit bands across undersides. Parent hypothesis:
+coarse point samples toward the sun may contribute beyond the continuous-height
+warp already removed. Independent O morphology review remains pending.
+
+Controlled diagnostic P keeps all O density/layout/render/camera settings and
+changes only four exponential sunlight samples to12, preserving the35..424m
+endpoint range (exponent3.6/11). Same CLOUD-SHAPE sunward capture1600x900/FOV75,
+wind0,wait2s. Determine whether the repeated internal light bands converge away;
+record cost as unmeasured. This is a temporary source candidate, not a second
+renderer or new diagnostic mode. Restore/finalize after actual visual evidence.
+
 ### TREE-BLENDER-001/v1 - independent authoring study
 
 Before first review: author in Tools/BlenderTrees/oak_studies.blend, separate
@@ -32005,6 +36504,86 @@ claim game integration, LOD, wind, or performance acceptance. No runtime source,
 shipping asset or s&box controls will change in this authoring study, so in-world
 figure-eight validation is not applicable to this stage. Preserve declined drafts
 and review images. Existing branch/runtime acceptance remains open.
+### CLOUD-SHAPE-001/v1 - O/P findings and Q definition
+
+Independent O review: meaningful grouping improvement and dominant diagonal
+fold largely gone, but still DECLINE due to smooth large masses and parallel
+underside shelves. P (12 sunlight samples) changed lighting numerically but did
+not remove the parallel bands in parent inspection; not retained. Restore O's
+four sunlight samples. This does not establish sun integration as the cause.
+
+Q changes only layout group frequency6->16 at the same12km default period.
+O's2km groups span several600m base-noise cells; Q's750m groups assign coherent
+elevations at approximately the individual-cloud scale, testing whether shared
+elevations across multiple separated bodies produce visible rows. Same seed,
+map resolution, density/lighting, default properties, fixed views and criteria.
+Keep O payload/baker backup for comparison. Recreate owned textures through the
+existing cloud component lifecycle after the bake; no player input changes.
+
+
+### CLOUD-SHAPE-001/v1 candidate Q result
+
+2026-09-20. Native normal play stop/start recreated the owned layout texture before fixed-view captures. Q changes only layout group frequency6 to16 within the same12km period. Same positions, angles, FOV75,1600x900,wind0 and component defaults as O; Game follow and wind8,3 restored afterward. Independent reviewer DECLINE: smaller groups produce repeated rounded blocks, central sunward stacked caps/rims and a straight bright/shaded boundary in the upper-right body. Secondary lobes and repeated-shelf criteria fail; far cutoff still obscured by foliage. Evidence: [mixed](ValidationEvidence/VolumetricClouds/shape-q-mixed.png), [sunward](ValidationEvidence/VolumetricClouds/shape-q-sunward.png), [horizon](ValidationEvidence/VolumetricClouds/shape-q-horizon.png), plus matching state JSON. Q is rejected and group frequency6 restored. No performance acceptance claim.
+
+
+### CLOUD-SHAPE-001/v1 candidate R diagnostic definition
+
+2026-09-20. Restore O layout groups6. R changes only view integration to four times the sample density: target shapeScale/384 instead of/96, minimum4*ViewSteps, cap1024 instead of256. Native fixed mixed/sunward/horizon captures use the same declared scenario. This temporary quality diagnostic tests whether deterministic integration contributes to the visible thin bands; it is not a proposed performance configuration. Preserve baseline shader and restore if there is no material improvement.
+
+
+### CLOUD-SHAPE-001/v1 candidate R diagnostic result
+
+2026-09-20. Shader compile succeeded and owned textures recreated by normal visible play restart. Fixed captures show no material change to O's dominant sunward parallel bands or smooth surfaces despite four times view sampling. R rejected and O integration restored immediately. Foreground streaming differs immediately after play restart (the left tree is absent in R); sky pixels and camera pose still permit the scoped integration comparison. This is not an exact whole-frame benchmark or acceptance run. Evidence: shape-r-{mixed,sunward,horizon}.png and corresponding runtime JSON.
+
+
+### CLOUD-SHAPE-001/v1 candidate S definition
+
+2026-09-20. Independent source review proposes stronger secondary billows without changing layout or light. Relative to O, S changes only the base Perlin and base Worley octave weights at4/8/16 from0.625/0.25/0.125 to0.40/0.40/0.20. Detail noise, six-group layout, height profile, lighting, view integration and component defaults remain O. Bake, recreate textures through normal play restart, then use identical fixed morphology captures and criteria. The numerical weights are an experiment, not a verified fix; preserve O assets.
+
+
+### CLOUD-SHAPE-001/v1 candidate S result and T definition
+
+2026-09-20. Bake S passed manifest size/hash checks, unchanged erosion/layout checks, and native texture recreation. Parent inspection of fixed captures sees increased medium lobes, but the parallel underside bands remain; independent follow-up is pending. Shape SHA2560e327878aa6f875fe21458510cc570dc99512afbb60ddfa5e93dfc88a51f0b80. T changes only lower density-profile fade from0..0.1 to0..0.015 of layer thickness (90m to13.5m at defaults), retaining S's noise and O's layout/light/integration. Hypothesis: the broad translucent base transition exposes a separate illuminated underside contour. Same fixed captures/criteria; no assumption of improvement and no performance claim.
+
+
+### CLOUD-SHAPE-001/v1 S independent result and T rejection
+
+2026-09-20. Independent reviewer judges S a useful intermediate improvement over O: right-hand sunward cluster and left cluster edges gain asymmetric secondary bulges without an outweighing shape regression. Still DECLINE final acceptance because parallel underside bands and repeated shelves persist. T native compile and fixed captures passed operationally, but parent image inspection finds sharper/doubled underside stripes rather than removal. T rejected; S base fade0..0.1 restored. Evidence: shape-s-* and shape-t-* native images/state JSON. Final visual and performance acceptance remain incomplete.
+
+
+### CLOUD-SHAPE-001/v1 candidate U lighting definition
+
+2026-09-20. Relative to S, only sunlight integration changes: six distances5*exp2(index*1.28)m span5..422.24m, instead of four35*exp2(index*1.2)m spanning35..424.4m. View integration, density, layout, erosion and scene light unchanged. Hypothesis: the first35m skip misses nearby self-occlusion; P increased samples but preserved that gap. Same fixed morphology views/criteria. Extra light sampling cost is unmeasured; this is not a performance acceptance configuration.
+
+
+### CLOUD-SHAPE-001/v1 candidate U result
+
+2026-09-20. Native shader compilation succeeded and fixed captures completed with Game follow/wind restored. Parent inspection sees somewhat softer internal shading but persistent dominant right-hand parallel bands. U does not establish removal of the reported line defect; the additional light samples are not retained. S shader lighting restored (four35..424m samples), with S base-noise weights retained as an independently confirmed intermediate morphology improvement. No final visual or performance acceptance.
+
+
+### CLOUD-SHAPE-001/v1 V/W lighting isolation definition
+
+2026-09-20. Temporary controlled source edits isolate which existing lighting term reveals the parallel bands. V removes direct single scattering only; W restores direct scattering but replaces relaxed optical-depth attenuation with constant0.65, retaining sunlight color and ambient. Each is compared to S in the unchanged fixed-view morphology scenario. Neither is proposed as final lighting; restore S after capturing. This diagnoses contributions, not physical correctness or performance.
+
+
+### CLOUD-SHAPE-001/v1 V/W result and X definition
+
+2026-09-20. V/W native compiles and fixed captures succeeded. Removing direct scattering dims rims but retains broad underside bands. Removing relaxed attenuation (W) eliminates most dark bands but also flattens cloud volume; neither is retained. Candidate X preserves S direct sunlight and computes relaxed scattering from separate vertical sky optical depth at the same four distances. Density, view integration, layout and scene inputs unchanged. This approximates a different incoming direction for diffuse fill rather than reusing the direct shadow path. It adds four coarse density samples per lit view sample, so cost is explicitly unqualified. Same fixed morphology criteria.
+
+
+### CLOUD-HORIZON-002/v1 unobscured morphology supplement
+
+2026-09-20. Existing ground-level fixed horizon views are obscured by foliage, preventing the distant-fade criterion from being judged. Add a separate visual-only view, preserving CLOUD-SHAPE-001/v1 and all performance scenarios unchanged: native ejected camera(1402.91565,399.2453,8000),angles(-8,225,0),FOV75,1600x900,wind0,coverage0.32,all current cloud defaults,2s settling. This raises the view to203.2m, still below the cloud layer. Criteria: cloud shapes remain coherent at distance with no conspicuous shared horizontal cutoff. Save pose/cloud/source metadata and native image; restore Game follow/wind8,3. This supplements rather than replaces ground-level observations. First run uses candidate X.
+
+
+### CLOUD-SHAPE-001/v1 X independent result and Y definition
+
+2026-09-20. Independent review: X softens lighting while retaining S lobes/volume, but repetitive shelves remain. Some right-hand boundaries are separate overlapping clouds, not established internal grooves; the reviewer retracts the earlier stronger interpretation. No definite remaining internal groove spanning half a dominant cloud, but repeated flattened profiles fail. The clear elevated horizon capture also reveals a conspicuous shared transition to empty sky, requiring separate improvement. X extra sky samples are not retained for its limited gain. Y returns to S lighting and uses layout alpha for per-group vertical development: existing nominal thickness multiplied by0.45..1.55 from independent fixed seed42174. Coverage/elevation/separation channels must remain byte-identical to O. The outer slab expands conservatively to1.55*nominal thickness. Same fixed shape cameras and criteria; horizontal distribution, base variation, noise, light and nominal scene settings unchanged. No weather orchestration or new runtime texture.
+
+
+### CLOUD-SHAPE-001/v1 Y rejection and Z definition
+
+2026-09-20. Y bake/channel checks and native compile passed, but independent review requests rollback: varied thickness creates tapered pointed forms and retains broad repeated undersides. Restore S shader and layout alpha unused. Z changes only group occupancy relative to S: independent fixed seed42175 leaves35% of the periodic layout groups clear by setting their coverage channel to0. Elevation/separation/unused channels, shape/erosion payloads, base-height variation, lighting and profile remain S. Hypothesis: breaking the uniform population reduces overlapping shelf repetition while retaining full individual billows. Same fixed views/criteria. This is a density-layout implementation experiment, not a performance scenario change.
 
 ### TREE-BLENDER-001/v1 - A01 through C01 review and procedural controls
 
@@ -32019,6 +36598,21 @@ Scope is Blender authoring only, version5.2.2 LTS, native MCP, installed Tree La
 Pass criteria: (1) Repeated Generate from Seed with identical settings produces identical SHA256 of vertex coordinates for every visible tree mesh and guide coordinates. (2) Next Seed changes the primary skeleton and leaf/branch geometry. (3) Directional growth changed by120degrees changes the primary skeleton. (4) Moving the final3 controls of guide01 by(+2,-1,+1)m then Rebuild from Edited Guides changes descendant branch/leaf geometry and that limb's collision geometry while preserving its trunk attachment. (5) Rebuild without changes is stable. (6) All proxy meshes are closed convex solids, trunk pieces overlap continuously, semantic roles remain separate, overlays reveal only the current tree's proxies/guides. (7) Three growth habits/seeds retain materially distinct silhouettes at common scale. Strict independent visual APPROVE is required separately; passing controls is not visual acceptance. Capture results and failures without substituting seeds to obtain a pass.
 Z bake verification passed: shape/erosion unchanged, layoutG/B/A identical to O, layoutR equals old coverage or0 for every pixel. Layout SHA256486889943dd2f3e2772ab51a1b594515a313951038107ed1c7727bf5d05112fa. Density evaluation now returns early for zero local coverage before the shape fetch; bounded shape/profile values guarantee this is the same zero-density result as thresholding.
 
+
+### CLOUD-SHAPE-001/v1 Z independent result and AA definition
+
+2026-09-20. Independent reviewer retains Z as a composition improvement: irregular gaps, preserved lobes/volume, less crowded shelf repetition. Thin lower contours remain in central mixed/left sunward clusters, so final acceptance withheld. AA tests prefiltered far sunlight density inspired by pinned HDRP's progressively coarser light samples: derive32-cubed lighting_shape by averaging each4x4x4 block of the128-cubed shape; sunlight sample0 and all view samples use original shape, sunlight samples1..3 use the filtered shape through the same canonical density function. Same sample counts, layout, profile, erosion, light and scene inputs. One extra immutable32,768-byte texture replaces existing lookups rather than adding samples. Separate volume uses the already verified CreateVolume/WithData API because native full-mip upload ordering is not documented in inspected source. Fixed morphology criteria/cameras unchanged; compile, lifecycle and image checks required before retention.
+
+
+### CLOUD-SHAPE-001/v1 AA observation and AB definition
+
+2026-09-20. AA bake/hash checks passed; managed build0errors/2pre-existingSB3006warnings, native shader/runtime/editor compile passed. A hotload sequencing error briefly referenced lighting_shape before its asset existed (missing-file warnings00:46:25); asset created, final bake verified, normal play restart recreated textures before captures. Preserve warnings as development failure, not an acceptance run. Parent inspection sees reduced thin left sunward rim and preserved lobes, but central mixed double underside remains. Independent review pending. AB increases only far-light shape filtering:16-cubed volume averages8x8x8 base blocks instead of AA32-cubed/4x4x4. Existing3prefilteredlightlookups and firstfull-detail lookup unchanged. Generate asset before changing component dimensions, then normal play restart; same fixed visual scenarios/criteria.
+
+
+### CLOUD-UNDERBASE-001/v1 parallax diagnostic
+
+2026-09-20. Fixed stills do not distinguish an internal underside groove from separate overlapping bodies. Inspect the real cloud volume from two additional ejected views using candidate AB: elevated camera(1402.91565,399.2453,23622.0472),angles(-6,135,0), and lateral camera(21087.95565,20084.2853,699.074036),angles(-18,135,0). FOV75,1600x900,wind0,coverage0.32,all otherdefaults,2s aftereachmove. Compare central mixed cluster to shape-ab-mixed; record whether the lower contour separates by parallax or remains attached. This diagnostic does not replace the original fixed acceptance views or performance workload. RestoreGame/wind8,3.
+
 ### TREE-BLENDER-001/v1 - D01 through H01 findings
 
 2026-09-20. D01 independent DECLINE: distinctive leaning/off-center silhouette, but parallel sweeping limbs, dense foliage masses, triangular roots. F01 independent DECLINE overall; reviewer accepted shown natural-character silhouette but rejected blade-like major fork, inconsistent bark scale/flow, and raised cut root base. H01 independent DECLINE: same fork and bark defects; central root contact improved but an outer lip remains raised. E/F/H use native Cycles48 samples with RTX5090 OptiX; earlier candidates used Eevee, so shading comparisons are not geometry-only comparisons.
@@ -32031,6 +36625,30 @@ Native installed-operator runs in controls-repeat.json and controls-seeds.json p
 
 Version2 retains all v1 control criteria and fixed seeds, but incorporates the user's explicit morphology correction. Weathered defaults are now height14,spread1.1,girth1.15,lean7,upward0.4,droop0.45,branch_angle59,character0.65,fork_height0.17,growth_direction-25,crown_bias0.55,branch_density1,leaf_density1.5. Open_Grown1701 and Woodland2803 retain their documented panel defaults. Direction test uses95degrees and restores-25. Guide01 edit remains(+2,-1,+1)m on the last3 controls. Compare repeatability only within the recorded generator revision. High-detail source geometry remains outside game-performance acceptance.
 
+### CLOUD-SHAPE-001/v1 AB result and AC definition
+
+2026-09-20. AB native compile/restart succeeded;16-cubed light prefilter still leaves central mixed double underside, so AA/AB are rejected. Restore Z shader/component and dispose extra texture through normal play stop before removing that path. Underbase diagnostic views retain the lower contour with the same apparent cluster; they do not conclusively prove a separate overlapping body. AC addresses over-filtered surface detail: the old erosion signal fades fully to mean at a footprint of2texturetexels, even though its largest features span8texels. Bake one32-cubedRGBA erosion texture containing full4/8/16fBm, successively mean-replaced high octaves, and a constant mean. Center each band around0.5 to retain the prior unresolved-density baseline. Shader filters each band by its actual feature wavelength, and detail repeat frequency becomes8 rather than18 to restore medium breakup. Same one erosion texture lookup where resolved, unchanged base shape/layout/profile/lighting/sample counts. Same fixed visual criteria and additional horizon view; distance temporal stability remains required.
+
+
+### CLOUD-SHAPE-001/v1 AC observation and AD definition
+
+2026-09-20. AC bake/manifest and managed/native compiles passed; parent inspection finds only subtle surface changes and no removal of the double underside. Temporal detail filtering remains unqualified. AD changes only vertical base-shape sampling: smoothly clamp the lowest20% of the layer to the noise slice at that level, while preserving the existing density-height ramp and all upper-body sampling. Smooth-max transition spans localheight0.1..0.3. Hypothesis: separate vertical noise lobes inside the base transition create the lower skirt; a connected lower core should remove it without changing the group's flat base or upper billows. Same layout, coverage, lighting, RGBA erosion, ray sampling and fixed morphology cameras/criteria.
+
+
+### CLOUD-SHAPE-001/v1 AD rejection and AE definition
+
+2026-09-20. AD compile passed, but fixed images show a more pronounced base skirt and angular lower shapes. Reject vertical noise clamp and restore AC density. AE tests the missing density-dependent diffuse-collection term described by Horizon2015pp60-69 and the pinned HDRP PowderEffect implementation. Only relaxed scattered illumination is multiplied by lerp(1,saturate(2*(1-exp(-4*density))),viewWeight), with viewWeight0.35 toward sun to1 away using cosine smoothstep(-0.5,0.5). Direct sunlight, density field, ray counts and scene inputs stay AC. This is an artistic bounded adaptation, not a physical atmosphere claim. Same fixed image criteria; expected outcome is less bright thin-edge/skirt illumination while denser billows retain fill. Preserve failure if it only darkens clouds or creates outlines.
+
+
+### CLOUD-HORIZON-002/v1 AE/AF haze comparison definition
+
+2026-09-20. First capture current AE from unchanged unobscured horizon scenario as baseline. AF changes only aerial perspective from1-exp(-depth/14000) to1-exp(-(depth/9000)^2), preserving premultiplied colour/opacity and existing far-range fade. This artistic distance curve keeps close clouds clearer while making cloud contrast negligible before the24km trace boundary, addressing the observed common horizontal cutoff. It does not extend ray distance, alter coverage or change benchmark workload. Capture fixed horizon and standard morphology views; pass requires gradual fade/no obvious shared cutoff without washing out nearby volume.
+
+
+### CLOUD-SHAPE-001/v1 and CLOUD-HORIZON-002/v1 candidate AG consolidation
+
+2026-09-20. Independent AE review finds no established rim fix; omit its extra density-dependent lighting term. Parent AF horizon comparison shows substantially less conspicuous shared cutoff while retaining nearer volume. AG consolidates AC density/band-limited erosion and AF aerial-perspective curve, with original four-sample lighting and no extra lighting texture, vertical core clamp, or powder term. Re-run three original fixed morphology views plus unchanged clear horizon view. Reassess the original exact criteria (groove spanning more than half a dominantbody, secondarylobes on three largest unobscuredclouds, no obvious sequence of3repeatedshelves, gradual farfade); local smaller contours are recorded observations, not silently substituted for those fixed conditions. Source/consolidation is unaccepted until this review and performance/temporalchecks.
+
 ### TREE-BLENDER-001/v1 - I01/J01 and fuller crown revision
 
 I01 independent APPROVE for visible trunk/branch/fork scope in two directions and a close-up: slimmer trunk, restrained woody bends, compact junctions, preserved individuality. Full acceptance remained pending bare structure, other angles, leaves and other seeds. Parent inspection of I01's subsequent bare structure found an over-prominent central tapered tip. J01 routes99.5percent of scaffold cross-sectional area into major limbs rather than retaining8percent in the central tip, leaving a fine apical continuation. Guide data now removes orphan curve datablocks so regenerated guide names remain stable. The initial guide-edit check failed before editing because its exact object-name lookup encountered an old orphan-derived suffix; the rerun used the guide's stored order and the naming leak was repaired.
@@ -32042,21 +36660,47 @@ The user judged the tree better but insufficiently lush, requesting more branche
 ### TREE-BLENDER-CONTROLS-001/v3 - definition
 
 Retain v2 scenarios, fixed seeds and criteria. Change only branch_density to1.35 and leaf_density to1.9 for the three presets, as requested by the user. Weathered direction remains-25degrees, Open_Grown and Woodland0degrees. Revalidate repeatability and altered-guide rebuilds against the final source revision. Keep prior failures/results and exact source hashes. Authoring visuals still require independent acceptance.
-
 ### TREE-BLENDER-001/v1 - K01 partial visual approvals
 
 2026-09-20. Weathered3907 K01 has4597 generated woody branches and113812 leaves versus J01's3317/66339, approximately38.6percent and71.6percent increases. These are authoring counts, not runtime budgets. The existing strict reviewer APPROVE covers the shown front/back crown and bare structure: lush supported foliage, fine central continuation, slimmer trunk and restrained limbs. A second fresh independent reviewer, without prior findings, also APPROVE for those same three images, with no visible blocker at their render distances. Both explicitly exclude unshown views, close leaf quality, other seeds/forms and game acceptance. Full review coverage and final control runs remain pending.
+
+### CLOUD-SHAPE-001/v1 and CLOUD-HORIZON-002/v1 AG independent result
+
+2026-09-20. Independent reviewer approves AG against all four original fixed still-image criteria. Largest identified residual internal strip is about205px against at least520px exposed body width (<40%, below half-body failure threshold). Clear view establishes asymmetric lobes in three principal groups; irregular gaps break repeated shelf sequences; earlier haze reduces the conspicuous distant cutoff. Parent inspected actual AG sunward/clear images and agrees with the bounded result. Short rims, parallel overlaps and broad smooth interiors remain polish concerns. This is still-image acceptance only, not full realism, temporal stability or performance acceptance. Full review and actual captures: ValidationEvidence/VolumetricClouds/IndependentVisualReview.md. Current source signature3ecad14f673851b4308938c22c62fd6da8b2da10ea59c0a81289fee227931478; current saved world revision5626 requires a fresh matched off/on pair. Old world5622 OFF cannot serve as its comparison.
+
+
+### CLOUD-FIGURE8-001/v1 - AG matched-pair definition
+
+2026-09-20. Resume the previously user-approved current-saved-world off/on comparison after still-image review. Freeze source signature3ecad14f673851b4308938c22c62fd6da8b2da10ea59c0a81289fee227931478, worldf5ce10f3-6d75-428e-b3dd-63dee14891c6 revision5626, saveparallax-dirt-20260919, engine26.09.15. No route, viewport, speed, origin, warmup, operation count, player input policy or acceptance-limit changes. Both runs restart ordinary play, useAG cloud defaults including250m base variation and wind8,3; only Coverage changes0 to0.32. Set exact origin before settling, verify empty work queues and identity eyes at2769x1529/FOV75, restore exact start immediately before trigger. Preserve source/world readbacks before/after. Coordinate no Blender renders/builds/game mutations during both timings. Gates remain <=5% moving/standing FPS loss, <=10% frame-tail/allocation/memory regression and no material unexplained streaming/completion/correctness regression. GPU frame times are diagnostic; fixed-view GPU targets remain separate. This establishes a new matching control for current authorized saved state, not a comparison with world5622.
+
+
+### CLOUD-FIGURE8-001/v1 - AG matched pair FAIL
+
+2026-09-20 05:12:31–05:19:38 UTC. Off run d6ec3a1ded1c453ab8a1fd475ffd1508; on run f43a35137aaa48448d714890bfcfafa8. Both completed one121.95s route at frozen3ecad14f source/world5626; source/world before/after match. First off preflight waited for645 pending transitions; no timing began until settled. Exact raw records and before/after/trigger metadata are in ValidationEvidence/VolumetricClouds/figure8-ag-*.json.
+
+Moving off/on:392.3492/347.43063FPS (-11.45%, FAIL); p95 5.239/5.6109ms (+7.10%, PASS); p99 7.2616/7.5265ms (+3.65%, PASS); GPU2.145263/2.523135ms (+0.377873ms, diagnostic). Allocations/frame68695.195/72545.44bytes (+5.60%, PASS), total3286790416/3073532536bytes. Processaverage8458052456/7518993659bytes; peak9448468480/8126312448. GPUaverage3513093671/3516585922bytes; peak3520378643/3524051923 (memory PASS).
+
+Standing off/on:207.96877/121.85796FPS (-41.41%, FAIL); p95 6.4276/20.6773ms (+221.70%, FAIL); p99 7.9601/24.3369ms (+205.74%, FAIL); GPU4.368529/6.800262ms (+2.431733ms, diagnostic). Allocations/frame36527.715/45805.473bytes (+25.40%, FAIL), total75977648/55836872bytes. Processaverage8434001100/7166606540bytes; peak8434503680/7166771200. GPUaverage/peak3522608915/3524264915bytes (memory PASS).
+
+Both:0runtime/standing exceptions;4913/4913 collisionready;0collisionfailures/pending;0mesh/placement/transitionpending;0unsafecommits/fine/coarse/lateralmismatches/invalidtables. Drain16980.125/25263.383ms (+48.78%, unexplained regression); prepared106581/106557chunks. Material standing anomaly remains unexplained, so the pair is not accepted. Preserve failure, diagnose via existing fixed-view GPU scenario rather than discarding or changing gates. GPU percentage columns are diagnostics, not an additional unrecorded10% average-GPU gate; the analysis script was corrected to mark them ungated.
+
+### CLOUD-GPU-001/v1 - AG supplement preparation
+
+Run the existing frozen1080p/FOV60 four-state workload with currentAG defaults, wind0 and the same3ecad14f source/world5626. Retain poses, ordering,20s settling,three10.2s-separated windows and <=1ms mixed/<=2ms sky targets. No renders/builds/source changes from the shared editor owner. Check sample freshness before interpreting frame summaries; a stale profiler cannot establish cloud GPU cost.
+
+
+### CLOUD-GPU-001/v1 - AG reporting limitation
+
+2026-09-20. All four states completed at verified1920x1080/FOV60, with three20s-settled10.2s-separated windows each. Source/world remain3ecad14f/revision5626. All12 GPU averages stayed exactly5.02ms while FPS changed; ejected-camera GPU reporting is stale and cannot establish either added-GPU-time target. Do not interpret equal GPU values as zero cloud cost. FPS medians: mixedoff269.6/on246.6, skyoff516.4/on541.1; these are supplemental observations, not canonical performance acceptance. Rawgpu-ag-windows.json and summarygpu-ag-summary.json preserved. Game follow, free resolution, coverage0.32 and wind8,3 restored. Shared owner confirmed no competing render/build/source changes during05:12:31–05:19:38 UTC or the supplement, and was explicitly released afterward. Native Warn-or-higher console query sincecursor12090 found no messages through12163. Figure-eight failure remains unexplained/unaccepted.
 
 ### TREE-BLENDER-CONTROLS-001/v4 and ROOTS-001/v1 - definition
 
 2026-09-20. User explicitly requested a simple root system growing into the ground. Replace four short buttresses with seeded5–7 structural roots, two underground offshoots each, welded to the trunk and split into a separate Roots render part. Root random stream is independent of crown generation. This changes the fine-crown random sequence once relative to K01; K01 visual approvals are not transferred. Retain v3 preset densities and all other controls/scenario parameters. Add root_spread1 and root_depth1.2m to each preset. Fixed Weathered3907 comparison: repeat exact geometry/guide hashes; NextSeed3908 changes geometry; direction-25->95 changes guides and restoring-25 reproduces baseline. Edit guide order1's last3controls(+2,-1,+1)m, rebuild directly from Edit Mode, retain zero attachment error and identical repeated edited rebuild. Recheck closed/convex proxies, adjacent trunk joint overlap and current-only overlays. Roots are visual geometry; existing solid trunk and nonblocking coarse branch proxies are unchanged in role.
 
 Root pass criteria: every primary path starts inside trunk base;15–21 total root paths; every tip below local soil z=-0.065m by at least0.2m; terminal quartile of every path below soil; finite nonempty separate Roots mesh. Change spread1->1.5 and depth1.2->2.0; root geometry and extent/depth must change while guides, Twigs and Leaves hashes remain identical. Restore defaults and reproduce baseline. Native images must show natural above-ground contact without exposed cut rods and smoothly tapered branching below soil; strict independent reviewer must approve shown roots and revised full-tree appearance. Complete fixed four-angle Weathered visual coverage, bare structure, root/fork/leaf close-ups and three-form common-scale view. Blender authoring validation only; engine collision, LOD, player slowdown and performance remain unverified.
-
 ### TREE-BLENDER-ROOTS-001/v1 - L01 observation
 
 Parent inspected native L01: roots connect to trunk and descend underground; crown remains full. DECLINE below-soil diagnostic: root radii below0.035m voxel resolution break into floating flecks. M01 ends welded root geometry at0.05m radius and completes tips with overlapping continuous swept RootTips geometry, analogous to existing narrow twig tips. Criteria unchanged. Independent L01 review remains recorded separately when returned.
-
 ### TREE-BLENDER-001/v1 and ROOTS-001/v1 - M01 root approvals
 
 2026-09-20. Independent strict reviewer declined L01 root-detail acceptance for detached fine-tip slivers/dots, while accepting contact/crown. M01 source13a364e14a42a19a147faa3ddfebb067f65719d656a390dc01e11521d953da2f removes sub-voxel tip breakup with continuous RootTips meshes. Both existing strict and fresh independent reviewers APPROVE M01's shown full Weathered3907 tree, contact close-up and below-soil diagnostic: lush uneven supported crown, plausible trunk/limb proportions, continuous root shoulders entering soil without gaps, substantial roots tapering into secondary offshoots. Simple radial roots and buried trunk termination are consistent with requested scope. Approval excludes unseen angles/specimens, mesh topology, terrain conformity, collision and game/export quality.
@@ -32066,7 +36710,6 @@ Parent inspected native L01: roots connect to trunk and descend underground; cro
 Actual installed Blender0.4.0 operator, generator13a364e14a42a19a147faa3ddfebb067f65719d656a390dc01e11521d953da2f. controls-v4-roots-repeat.json: identical repeat and restored default hashes for all6 visible mesh parts and guides. Root spread1->1.5/depth1.2->2m changes both root parts; guides/Twigs/Leaves remain byte-identical. Large welded Trunk/Branches are retessellated by global voxel remeshing and their vertex hashes change; the growth skeleton is unchanged. Default21 root paths, shallowest tip-0.624838m, terminal-quartile maximum-0.528885m, maximum reach3.285869m, minimumZ-1.325491m. Changed reach4.904731m/minimumZ-2.219778m. Primary origins inside trunk, both root meshes finite/nonempty. All fixed root criteria PASS.
 
 controls-v4-guides-collision.json: guide order1 last3controls edited(+2,-1,+1)m while in Edit Mode; installed Rebuild completes in Object Mode. Branches/Twigs/Leaves and all3 affected limb proxies change; attachment error0m; repeated edited rebuild identical. All30 proxies closed/convex,16vertices/28triangles each; nine blocking trunk solids and21 nonblocking primary-limb interaction proxies. All8 trunk joints have shared center inside both adjacent solids. Only current guide/collision overlays visible. Restored tree from seed afterward. Functional authoring criteria PASS; physics behavior remains unimplemented/unverified in engine.
-
 ### TREE-BLENDER-BARK-001/v1 - user rejection and N01 definition
 
 2026-09-20. User rejects M01 bark despite reviewers' earlier scoped approval: stretching, scattered painted-looking colour and flat relief. Native bpy.ops.screen.screenshot captured the actual Blender window to blender-bark-before-ui.png; it confirms tight-fork grain distortion and pale scan patches. Existing tangent normal is connected at0.5strength; no height map or physical relief was present. Prior root/crown/control passes remain bounded to13a364e source; bark acceptance is withdrawn.
@@ -32075,12 +36718,82 @@ N01 uses unchanged CC0 Bark Brown02 by Rob Tuytel from Poly Haven (1x1m scan),4k
 
 Fixed checks: Weathered3907 existing settings/rootdefaults, unchanged lighting/Cycles48/1600x1600, original fork/root/full-tree views plus bark close (centre around lower trunk,2m frame) at two oblique directions and neutral-clay relief view. Pass requires visible grooves/ridges independent of albedo, restrained coherent bark colour, no obvious stretched streaks/blend bands at forks, no open seams/spikes/disconnected displaced parts; natural full silhouette and roots preserved. Native UI screenshot must show actual updated Blender material/geometry. Strict independent review required; inspect displacement extent/finite geometry and repeat generation at final revision. Retain failed candidates and user feedback.
 N01 static preflight before native execution identified remaining fine-sweep stretch, unfiltered height sampling and sampled-point parent inference. Correct all3 before first run: integrated taper-aware V coordinates on Twigs/RootTips, footprint-filtered height mip pyramid with smooth level interpolation, explicit generating-parent IDs on welded sweeps. Face ownership may still expose fork chart transitions; this is retained as an explicit visual gate. Displacement-before-split preserves shared boundary positions/normals; fine swept tips retain normal shading without added physical displacement. No render has occurred for N01 yet.
-
 ### TREE-BLENDER-BARK-001/v1 - N01 rejection and O01 definition
 
 N01 generator109f59ccdcc835ad9d6800c2b1230ac73a2f095d106b3d41d0271c12f8bda732 generated338186 welded vertices. Independent DECLINE: recognisable ring-knot/scar motifs repeat vertically and along limbs; tight forks still have combed narrow grain bands. Reviewer found coherent grey-brown colour and stronger apparent relief. Parent agrees with repetition rejection; neutral clay n01-bark-clay establishes only shallow broad relief, insufficiently resolved bark grooves. Height input native0/1/50/99/100percentiles=0/0.08188/0.24657/0.57366/1.
 
 O01 retains fixed scenarios/criteria. Planned changes: deterministic shifted texture patches with smooth transitions, applied identically to colour/roughness/normal/height to break long repeating knot columns without warping grain; seed-derived starting phase. Relax UV distortion locally at welded collars while pinning unaffected surface coordinates. Increase geometric sampling to two SIMPLE subdivisions and maximum full height range0.075m, capped by0.22localradius, centered at0.3; preserve footprint filtering. Matched normal detail remains separate from true geometric height. Validate actual native close/clay/oblique views before retaining; no game performance or shader-parallax claim.
+### DIRT-TRACKS-001/v1 — preregistration
+
+2026-09-20. User requests removal of tractor-chevron impressions from the current
+Dry Mud Field001 dirt and explicitly authorizes scripted multi-map editing. Keep
+2048px inputs, 3m chart, 120mm interval, shader, terrain and material bindings.
+Tools/remove_dirt_tracks.py clones clean areas of this same scan with shared donor
+coordinates/weights for color, height, fine-normal slopes, roughness and AO, then
+rebakes the existing mip2 macro normals. Untouched BZ inputs and failed candidates
+are retained in .codex/dirt-track-removal. Imagegen attempt was rejected for changing
+soil detail; offline candidate A was rejected for rectangular height patches, B for
+residual tread outside its mask. C expands the mask and continues broad surrounding
+height before adding clean donor clods. No runtime acceptance from these previews.
+
+Runtime visual parameters: visible basic_example, current parallax-dirt-20260919
+slot, seed1337/gen48, engine26.09.15, existing dirt patch around(2200,1450,780).
+Reuse DIRT-BUILD-001/v2 camera08 position(2200,1389.378222,820), angles(30,90,0),
+FOV60,1280x800; side cameras00/16 at(2169.689111,1397.5,820)/(2230.310889,1397.5,820),
+angles(30,60,0)/(30,120,0). Move player to(1800,1450,1000) to stream the area;
+20s settle and read actual canonical revision/material before comparing matched
+before/after views. Record current light pose and retain it for both captures.
+Pass: visible dirt, zero recognizable repeated tractor chevrons after, coherent
+clod relief with no rectangular patch seams, no compilation errors. This targeted
+visual scenario does not substitute for DIRT-BUILD temporal/parallax qualification.
+Restore player pose and game-camera mode after captures. No terrain edits.
+
+Canonical figure-eight preflight remains bound to GRASS-COVERAGE-001/v1 world3991/
+pages873,2769x1529 and its recorded route. Existing ledger reports this historical
+snapshot unavailable and newer world/baseline mismatches; do not silently replace
+its workload or claim a performance pass. Determine current identity before running.
+
+DIRT-TRACKS-001/v1 pre-change readback: current world f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision6598; historical column at z780 is now air. Existing dirt remains visible beyond the excavated stone rim in camera08. Add one fixed closer before/after view at(2260,1480,755),angles(45,90,0),FOV60,1280x800 to resolve the small tread impressions. Original and closer frames are supplementary current-world checks; historical4309/3991 scenarios remain incomparable. Light(49.9999733,45.000042,0) retained.
+
+### DIRT-TRACKS-001/v1 — result
+
+2026-09-20; shared dirty workspace HEAD4b2ea0b, engine26.09.15, world
+f5ce10f3-6d75-428e-b3dd-63dee14891c6 revision6598 before/after. Final C recipe
+and input/output hashes are in Assets/textures/terrain/dry_mud_field_001/manifest.json.
+All five active maps remain2048x2048; height remains16-bit. Repeat bake produced
+identical bytes in all five maps and matched installed asset/manifest hashes.
+24.4754% of pixels are outside the feathered replacement footprint; broad tread
+coverage requires patching the remainder. Height percentiles0/5/50/95/100 are
+0.153368/0.379828/0.506828/0.641840/0.771038, within the same120mm encoding interval.
+
+Native full asset_compile of materials/voxels/voxel_terrain.vmat succeeded.
+Editor reports zero compile errors; Warn-or-higher console query since12402
+returned no messages through12404. Root inspected matched1280x800 camera08 and
+close before/after, plus final00/16 side views. Final map inspection shows zero
+recognizable tractor chevrons; all four native final views show natural clod
+texture, without rectangular replacement patches. Existing large triangular
+relief/terrain seams are visible before and after and are outside this texture
+cleanup. These frames establish the targeted appearance only, not full parallax
+occlusion, temporal quality or performance acceptance.
+
+Evidence: [before](ValidationEvidence/DirtTracks/before.png),
+[after](ValidationEvidence/DirtTracks/after.png),
+[close before](ValidationEvidence/DirtTracks/close-before.png),
+[close after](ValidationEvidence/DirtTracks/close-after.png),
+[side00](ValidationEvidence/DirtTracks/side00-after.png),
+[side16](ValidationEvidence/DirtTracks/side16-after.png).
+Player position restored to(-232364.844,698426.312,0.121424988), game-camera mode
+restored, light unchanged; game remains visible, interactive, playing and unpaused.
+No world mutation was performed by this task; column revision stayed6598.
+
+Canonical figure-eight NOT RUN: current revision6598 differs from required3991;
+observed2769x1391 viewport differs from required2769x1529. Existing ledger already
+records historical-snapshot unavailability. Preflight stationary observation at
+this dirt check had visual/transition pending0, placementPendingfalse,
+collision4913ready/0pending/0failures and waterCellsReadytrue, but cannot satisfy
+the missing canonical workload. No performance comparison or acceptance claimed.
+Targeted texture/visual checks PASS; performance qualification remains blocked.
+Changes remain local and uncommitted/unpushed under the project acceptance gate.
 
 ### TREE-BLENDER-BARK-001/v1 - O01 user rejection and P01 definition
 
@@ -32089,29 +36802,151 @@ O01 retains fixed scenarios/criteria. Planned changes: deterministic shifted tex
 P01 replaces the main scan with unchanged Poly Haven Bark Willow matched maps (1m square), a visibly cleaner, low-knot source. No extra scar stamps: retain sparse wear inherent to the source. Saturation0.7/value1; current matched shader/height patch sampling, geometry relief and collar mapping retained. Fixed Weathered3907 parameters, cameras, lighting and bark criteria unchanged. Additional acceptance: intact bark should dominate; no dense recurring ring knots, large white blotches or peppered scars. Preserve minor natural wear and groove relief. Strict independent review of close, oblique, fork and full-tree views remains required. Record source hashes/provenance and actual installed-operator result.
 P01 source height median0.42681 (1/99percentiles0.15937/0.81308); center geometric displacement at0.43 to avoid inflating the trunk. Native source inspection only, before generation.
 
+## BIOME-SURVEY-001 / v1 — climate distribution
+
+Defined2026-09-20 before the first run. Status: authoring validation, not visual or
+performance acceptance. The user's latest scope is biome-only: no tree generation,
+assets, renderer or population changes belong to this task. Forest/jungle publish
+habitat semantics for vegetation integration elsewhere; prepared population work
+is withdrawn from implementation and acceptance.
+
+Parameters: existing playable basic_example, one visible interactive player,
+engine26.09.15. Query the active unedited recipe through ExportLandformSurvey;
+current save/edits remain in place but this existing authoring operation samples
+the procedural recipe. Seed1337 first; seeds2026 and-7331 remain pending their
+world setup. All use land.75, mountains.3, plains.6, continental77724.09,
+mountainRegion18681.756, local5232.39, relief3072, ruggedness.45, sea0.
+Grid minimumX/minimumY=-262144, pointsPerAxis129, spacing4096, inclusive maximum
++262144 in both axes. Keep the complete CSV, river CSV and recipe metadata.
+Climate uses the production TerrainBiomes sampler through the existing export;
+no separate/synthetic generator. Record exact source hashes and world identity.
+No captures or performance claims during this read-only authoring survey.
+
+Pass gates for EACH seed: every biome has >=0.5% dominant samples and a largest
+four-connected core >=9 samples at normalized weight>=.75. All weights finite,
+nonnegative, sum error<=1e-5; climate in[0,1]; snow support onlyT<=.30 and hot-desert
+support onlyT>=.70. Repeated canonical height equals initial height; local bounds
+enclose sampled height. Report all biome fractions, component/core sizes and
+nearest qualifying-core coordinates (squared distance, X, Y tie-break). Preserve
+all failures. This coarse grid does not prove fine transition width or rendering.
+
+The initial phase keeps generatorv48 height/material paths unchanged and adds
+climate/biome output to authoring. Later refinement/material integration requires
+separate actual-field, numeric-parity, visual and performance acceptance. The
+fresh-world figure-eight comparison approval remains pending; no performance
+baseline or biome visual run is represented by this scenario.
 ### TREE-BLENDER-BARK-001/v1 - P01 rejection and Q01 definition
 
 P01 source296f34b5824947df635e5c494253acefce706ba69c2785797c61fd1f367a6e23. Installed Generate operator FINISHED; repeat coordinates and UV hashes identical for all6parts, guides identical, all finite (controls-v5-bark-repeat.json). Both independent reviewers DECLINE rendered bark: prominent knots reduced, but material reads charcoal-dark; broad diagonal source ridges and swollen corrugation overwhelm lengthwise grain; fork has blurred broad bands. Both retain acceptance of lush crown/proportions/root contact in shown views.
 
 Q01 changes to the cleaner, finer lengthwise grain of Japanese Camphor Bark, unchanged matched Poly Haven maps. Use actual1.8m-square source dimension to choose integer circumference repeats; all matching maps and tapered arc mapping share that chart. Saturation0.55/value0.85. Reduce geometric relief fullrange0.075->0.045m, capped by0.15localradius, retaining fine normal detail. No discrete scar overlays. Fixed Weathered3907 controls/cameras/lighting and strict acceptance criteria unchanged; minor organic wear should remain with intact bark dominant. This is an art material choice rather than botanical identification. Record height midpoint after native source inspection before generation.
+### BIOME-SURVEY-001/v1 — seed1337 authoring run
 
+2026-09-20, live basic_example, engine26.09.15, generator48, sourceHEAD4b2ea0b
+plus biome sampler/query changes. Exact recipe/grid are unchanged from the
+scenario above. Raw export and derived statistics:
+[seed1337 evidence](ValidationEvidence/Biomes/seed-1337-authoring-v1/summary.json).
+16641 samples. PASS for the stated distribution/numeric authoring gates: all eight
+labels>=0.5%, all have four-connected weight>=.75 cores of at least9 samples;
+weight/eligibility/height-repeat/bound errors all0; max weight-sum error1.1e-7.
+Ocean27.44%, plains12.61%, hills2.85%, mountains17.75%, desert1.18%, snow15.20%,
+forest18.58%, jungle4.39%. Largest cores respectively1147,209,28,189,74,714,536,139.
+The bounded river export reached its100000-segment cap and is truncated; this run
+does not establish full drainage equality. Editor compilation succeeded with0
+errors. A buffered earlier terrain-edit rejection (actor entered build volume)
+is unrelated to the biome authoring query and is preserved in the editor log.
+
+Observed limitation: the nearest snow/forest/jungle climate cores can lie below
+water after inland river carving. Biome habitat is deliberately independent of
+that inland-water overlay. Such points cannot establish dry-land recognition.
+Before any visual run, site selection must additionally require actual dry
+exterior support for non-ocean views, and report dry-core coverage separately.
+No biome visuals, height-refinement runtime behavior or performance accepted.
+Q01 initial source load failed with tone-node indentation error; corrected before any scene generation. Native height1/50/99percentiles0.220905/0.455055/0.609751; midpoint0.455. Official maps independently MD5/SHA256 verified; Charlotte Baglioni, CC0,1.8m square. Source provenance in japanese_camphor_bark_source.json.
+
+### BIOME-SURVEY-001/v1 — seed-preview execution clarification
+
+Before the remaining seed runs: the existing terrain authoring export now accepts
+an optional previewSeed and records SourceWorld/IsSeedPreview explicitly. It uses
+the same production generation and biome functions with an immutable copy of the
+active recipe; it does not switch saved worlds or change the player's terrain.
+Run seeds2026 and-7331 through that option with the exact same fixed grid and
+settings. This clarifies the read-only authoring operation, not the workload or
+gates. It does not substitute for later rendering or benchmark tests in actual
+worlds using those recipes.
 ### TREE-BLENDER-BARK-001/v1 - Q01 visual acceptance
 
 2026-09-20. Generator7cccd76a61d445a1b919bdbe8ac2a199d4918b94949e864c68530062861f4adb; native installed operator FINISHED. Both strict and fresh independent reviewers APPROVE the six q01 Weathered3907 images: fine predominantly lengthwise fissures, restrained gray-brown tone, minor wear with intact bark dominant, no conspicuous recurring scars, blocking seams or smeared bands. Grain follows limbs through collars; neutral clay shows shallow actual relief without P01 swollen corrugation. Lush supported crown, credible proportions and ground-contact roots remain acceptable. Acceptance is limited to these Blender views/specimen. Other presets/seed and final source repeat checks follow; no engine/export/performance acceptance.
 
 M01 controls-v4-direction-seeds.json additionally records direction-25->95 changed guides, restoring-25 reproduced all mesh/guide hashes, NextSeed3907->3908 changed all6parts/guides and set seed3908. Those control results remain tied to13a364e geometry revision. Q01 bark changes require new geometry/UV repeat and variant checks; earlier guide editing/root control logic has not changed.
 
+### BIOME-SURVEY-001/v1 — remaining seed results
+
+2026-09-20: seeds2026 and-7331 used the production read-only previewSeed export
+with the fixed scenario recipe/grid. Both PASS all stated authoring gates over
+16641 samples each. Seed2026 fractions in enum order:24.72%,14.35%,1.75%,13.73%,
+1.90%,22.90%,17.54%,3.10%; largest cores3228,236,17,142,80,710,771,167.
+Seed-7331 fractions:11.21%,12.82%,2.93%,16.54%,7.54%,20.14%,22.86%,5.95%; largest
+cores982,435,33,300,318,604,487,136. Zero weight/eligibility/repeat-height/bound
+errors. Weight-sum maxima1.0611e-7 and9.8e-8. Each river export is truncated at
+100000 segments. Raw data/metadata/summaries are under
+ValidationEvidence/Biomes/seed-2026-authoring-v1 and seed-negative7331-authoring-v1.
+No active world switch was performed. Visual/performance acceptance remains open.
+
+### BIOME-DRY-SITES-001/v1 — selection definition
+
+Defined before visual captures and before running this derived selection.
+Analyze the complete production CSVs from BIOME-SURVEY-001/v1. Land core samples
+must have biome weight>=.75 and conditioned exterior height>=SeaLevel+32; ocean
+samples must have weight>=.75 and height<=SeaLevel-16. Form four-neighbor components
+and require at least9 samples. Select the nearest member of any qualifying
+component by squared XY distance, then X, then Y. Record all dry/marine core
+sizes and exact chosen positions separately, preserving original climate-core
+results. These are prospective sites: actual SDF support and material/rendered
+recognition remain to be checked in the playable world before acceptance.
+
+### BIOME-DRY-SITES-001/v1 — results
+
+All eight domains in all three seeds have qualifying dry/marine cores under the
+fixed selection rule. Largest cores in enum order: seed1337=1140,146,19,178,66,
+655,331,139; seed2026=3212,195,16,142,78,699,476,160; seed-7331=974,376,32,279,
+298,535,337,136. Exact prospective sites and climate values are frozen in
+[selection](ValidationEvidence/Biomes/dry-sites-v1.json). These are sampled
+procedural exterior sites, not verified actual player-support/camera positions.
+
+### BIOME-QUERY-001/v1 — repeated production climate queries
+
+Defined before running. Active saved seed1337 world remains unchanged. For each
+of its eight frozen BIOME-DRY-SITES-001/v1 sites, call InspectTerrainColumn twice
+with that exact x/y, minimumZ=recorded height-32, spacing16,count5. Compare exact
+returned Temperature, Moisture, Biome, BiomeWeights, Height, NaturalHeight and
+Settings between calls. Require eight correct labels, eight identical pairs and
+finite normalized weights; retain complete native responses. This tests repeated
+production climate output only, not reload/network/backend determinism or visible
+biome appearance. Current save revision may advance from the player's independent
+edits; do not treat revision metadata as a procedural-climate input.
 ### TREE-BLENDER-001/v1 - Q01 variants and repeat results
 
 Native installed operators generated Open_Grown1701 (6214finebranches,153494leaves), Woodland2803 (6658finebranches,164934leaves), Weathered3907 (5241finebranches,129844leaves), all final7cccd76 source. Strict reviewer APPROVE Open-grown front/back and four-direction Weathered coverage; lush supported crowns, credible restrained limbs, consistent bark, contact without gaps. Woodland front/back also APPROVE; tall clear stem and compact irregular lush crown. Underground root diagnostic APPROVE within simple buried-root scope: attached tapered branching with no detached flecks. A minor rear-left root collar transition remains visible underground; not approved as hero root close-up naturalism.
 
 Native q01-three-forms at54m-wide framing clipped far-right Weathered tips; preserve as framing failure. Wider62m frame with identical specimens, positions(-17,0,17)m and lighting will replace complete-silhouette coverage. controls-v6-bark-repeat.json: final7cccd76 source, installed Generate FINISHED, all6meshpart coordinate/UV hashes and guides byte-identical, all coordinates/UVs finite. Next-seed check and packed-file save follow.
-
 ### TREE-BLENDER-001/v1 - Q01 final saved authoring result
 
 2026-09-20. Strict reviewer APPROVE q01-three-forms-wide.png: all3crowns/bases fully framed with margin, distinct growth habits. APPROVE q01-next-seed.png and q01-next-seed-bark.png:3908 redistributes crown volumes and lower foliage while retaining plausible supported lushness and restrained bends; fine gray-brown fissured bark has sparse wear without conspicuous scars/seams.
 
 controls-v6-next-seed.json: final7cccd76 source, installed NextSeed operator FINISHED,3907->3908 changes coordinate hashes for all6renderparts and guide hash; resulting coordinates/UVs finite. Source and installed addon compile; installed addon byte-identical to repository0.4.0. Final actual Blender window screenshots blender-bark-final-ui.png and blender-tree-final-ui.png show Material Preview with Tree Lab panel. Native save() packed oak_studies.blend (836,907,989bytes) and recipes.json; all four saved collections Open_Grown1701, Woodland2803, Weathered3907/3908 record the same7cccd76 generator. Guides/proxies hidden, Weathered3907 selected as current panel tree, full-tree camera and visible interactive studio restored. Source/material/normal/height changes are in Blender authoring only. No game code/assets were changed; game collision/slowdown, export/LOD and engine performance remain outside acceptance. Historical rejected images and source-map provenance retained. Unused scan previews moved to task scratch rather than shipped assets.
+
+### BIOME-QUERY-001/v1 — collection attempts and result
+
+2026-09-20. First collection attempt was INCOMPLETE: the collector attempted to
+parse a native InvalidOperation response as JSON and stopped. The full native
+response was not retained, so its cause is unverified; do not recast it as a
+successful run. The collector was corrected to retain non-JSON/error responses.
+With identical inputs and no production logic change, attempt2 completed eight
+pairs. PASS: all expected labels and exact repeated climate/weight/height/settings
+values match. Native responses are in
+[repeated queries](ValidationEvidence/Biomes/repeated-queries-v1.json).
+This is not reload, network, GPU, visual or performance acceptance.
 
 ### TREE-BLENDER-SPECIES-001/v1 - definition before implementation
 
@@ -32122,27 +36957,22 @@ Initial scope Oak, Ash, Norway Spruce (conifer evergreen), Silver Birch; Juvenil
 Fixed native scenarios: seeds1701Oak,2701Ash,3701Spruce,4701Birch; each default Mature and Juvenile, plus Large Oak1701. Same studio Cycles48/1600square and matching per-species front/back camera; full gallery must fully frame all trees at common world scale. Close foliage/branch/bark views for species identification. Defaults will be explicitly recorded before each first operator run. Pass:4visually distinguishable species with correct leaf/needle type, plausible supported crown, juvenile topology/proportions differ beyond scale, full crowns and roots meet ground without obvious gaps. Strict independent reviewer required. Preserve failed candidates.
 
 Functional pass: all existing oak coordinates/UVs/material graphs unchanged; unique names and material ownership; regenerate each species/stage without altering other collections; repeat one Ash seed exactly; nextseed changes its skeleton/geometry; edited Ash guide propagates to branches/leaves/proxies with attachment retained; finite nonempty expected render parts and correct blocking/soft proxy roles on all generated types; gallery/selector returns current settings and no protected-reference mutation. Existing acceptance is authoring-only. No game-performance claim or figure-eight required for this isolated non-runtime tool.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S01 ash finding and S02 correction
 
 S01 juvenile Ash2701 installed Generate FINISHED (204branches,4998leaflets,134946foliage vertices,144752welded vertices). Strict reviewer DECLINE: dark blunt sleeve-like branch transitions, angular flat-looking leaflets, crowded compound rows and toe-like base roots. Preserve species-s01 images. S02 uses matching bark on fine/welded wood, finer juvenile welding grid (.018*height/10) with fewer smoothing iterations, trunk buried at least0.16m and juvenile roots starting0.095m below localzero. Compound leaves are spaced by shoot length with randomized orientation; leaflet silhouettes gain finer small serrations, secondary veins and fine surface normal detail. Birch uses a radius attribute to transition white mature bark to brown fine twigs instead of abrupt material boundaries. Same fixed Ash seed/settings/view; botanical sources and art-stage transfer limits in Tools/BlenderTrees/README.md. Original oak references untouched.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S02/S03 findings and S04 correction
 
 S02 ash remained declined by the strict reviewer for transverse twig boundaries, simple leaf surfaces and aligned leaflet rows. S03 introduces buried gradual twig/root-tip overlap, five-column curved blade surfaces, secondary veins and coherent, varied compound-leaf planes. S03 juvenile spruce was rejected by the main reviewer: sparse isolated flat whorls and a bare leader. S04 adds intermediate whorls, broader secondary sprays, tertiary density, varied spray elevation and needles on the leader. Fixed seeds, species/stages, panel defaults and full-view camera parameters remain unchanged; these are generator changes, not scenario changes.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S03 ash approval, S04/S05 spruce failures, S06 foliage decision
 
 Strict reviewer APPROVE S03 juvenile ash full/close views: supported youthful form, coherent joins, readable compound leaves, veins/curvature and clean ground contact. S04 spruce independently DECLINED for stacked shelves and broad blade-like needles. S05 restores thin closed volumetric needles and uneven branch attachments/lengths, but main visual review rejects its insufficient foliage coverage. Preserve both candidates. S06 bakes original deterministic needle-spray geometry in Blender to matched RGBA color and tangent normal textures, then distributes curved crossed sprays on the same seeded twig system. This is a reusable native Blender source asset, not an external species photo or engine feature; underlying render parts/collision/guide ownership remain unchanged. It retains fine needle appearance at substantially lower source mesh cost than individually expanding millions of needles. Atlas provenance/hashes are in Textures/spruce_spray_source.json.
 
 S04 mature Ash2701 generated 184396 leaflets / 11985740 foliage vertices. S05 spaces compound leaves by shoot length with at most two per mature shoot, preserving juvenile rules. Native regeneration reports 76219 leaflets / 4954235 foliage vertices, 5097 branches, 21 root paths and 1340602 welded wood vertices. Full and reverse renders retained. Only the studio ground plane is enlarged to remove its visible distant edge; reference specimen geometry/materials remain untouched.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S05 ash review and S06/S07 render correction
 
 Strict reviewer DECLINE S05 mature ash for insufficient crown mass in front and reverse views; woody connections/proportions/ground contact acceptable. S07 restores denser compound leaves with mature blades using ten longitudinal segments and three crosswise vertices, retaining finer juvenile blade topology and continuous vein shading. This spends mesh detail on mature crown coverage, without changing the recorded panel inputs. S06 spruce spray coverage was excessive; main reviewer rejected it. S07 places sprays on secondary shoots instead of also repeating whole sprays on every tertiary twig. Actual tertiary wood remains.
 
 S06 native Cycles render exposed a transparent path limit: the existing studio used eight transparent bounces, producing opaque black card silhouettes. S06b increases it to128 and removes those hard card silhouettes; density still required correction. Future native Cycles reviews use128 transparent bounces, with seed/settings/view,48samples and1600square unchanged. This corrects authoring render quality rather than changing the generator scenario workload. All failed images are retained.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S07 findings and S08 representation
 
 Independent reviewer approves S07 mature birch front/reverse silhouette, fine hanging branching and ground contact; close surface detail remains unreviewed. Juvenile birch declined for large angular paper-like blades and uniform tan stem. S08 softens only detailed juvenile blade outline, reduces its leaf size and shifts young stem toward gray; mature leaf topology stays at33vertices per blade.
@@ -32150,65 +36980,52 @@ Independent reviewer approves S07 mature birch front/reverse silhouette, fine ha
 S07 spruce is independently declined for visible flat spray sheets, fuzzy clumps, blunt apex and angular exposed fine branches. The spray-card implementation is removed. S08 uses actual closed square-section needles, instanced through a native Geometry Nodes modifier on the Leaves mesh. Each point owns deterministic orientation and scale; the prototype is12vertices/10faces. Finer twig generations provide needle-bearing shoots, with950needles/metre times density and0.55mmaximum foliated length per shoot. This controls source-memory growth while retaining actual needle depth. Export must realize instances or use a future foliage representation; this is documented as authoring behavior, not engine integration. Needle prototype and node group are species/stage-owned construction resources. S06/S07 failed renders remain evidence.
 
 S07 native mature ash generated144023leaflets /4752759foliage vertices, with the unchanged5097branches and21root paths. Its crown review remains pending.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S09/S10 reviews and preservation checkpoint
 
 Independent full-tree reviews APPROVE S07 mature ash, S09 juvenile oak and S10 Large oak. S10 spruce remains DECLINED for isolated upper foliage tiers; its middle/lower crown is now supported and varied. S11 adds intermediate upper branching, fuller upper reach and rising upper shoots, retaining the same fixed default seed/settings/cameras. Individual needles gain small angle variation. S10 juvenile birch uses a consistent young-wood color blend to remove radius-driven color seams; mature pale-bark rules remain unchanged.
 
 A separate read-only Blender load of the original oak_studies.blend produced species-original-oak-fingerprints.json. Live comparison in species-oak-preservation-checkpoint.json reports original_matches=true for all four original specimens: 204 objects plus four original materials, including mesh coordinates/topology/UVs, guide controls/handles, transforms and material graphs. This is a checkpoint, not yet the final post-gallery comparison. Large oak generation and both S10 renders completed although the MCP client timed out waiting for the combined operation; image files exist and were independently reviewed. Separate generation/render calls are used for subsequent expensive specimens.
-
 ### TREE-BLENDER-SPECIES-001/v1 - rejected spray archive
 
 The superseded spruce spray PNGs/provenance are archived as ValidationEvidence/BlenderTrees/rejected-spruce_spray_* rather than active Textures inputs. S06's earlier Textures/spruce_spray_source.json reference points to that historical candidate; no current generator path uses spray cards. Current spruce uses closed instanced needles.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S10 birch close failure and S11 correction
 
 S10 native juvenile birch regeneration FINISHED in49.70s; fingerprints of all10 other stored specimens stayed identical. Full silhouette/leaf shapes were acceptable, but independent close review DECLINED raised/notched wood overlap strips and angular small shoots. S11 moves juvenile birch fine continuation to6mm radius, welds branches above7mm, and uses a3mm weld grid. Fine shoot minimum radius is1.7mm and birch paths receive denser smooth sampling. Other species retain their accepted settings and wood rules. The same fixed juvenile birch inputs and cameras are used for the next review.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S11 spruce approval and mature setup
 
 Strict independent reviewer APPROVE S11 juvenile spruce front/reverse and needle close view: coherent narrowing crown through leader, supported overlapping foliage with natural openings, distinct volumetric needles, no visible flat sheets or blocking joins/contact defects. Similar rising tip curves and some regular needle rows remain nonblocking refinements. Native generation FINISHED in30.29s with13289branches,21roots,852087instanced needles/point vertices and675068welded vertices. All10 other specimen fingerprints remained unchanged. Realizing those needles alone would create10225044vertices; this is an authoring source, not a shipping mesh budget.
 
 Before first mature spruce generation: use native installed Generate, Spruce/Mature/Open_Grown/3701, all panel preset defaults (height18m), front/reverse azimuth-55/125, center(0,0,8.7), scale25.2, elevation8;48samples,1600square,128transparentbounces. Same acceptance criteria as the fixed v1 scenario.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S11 birch review and mature spruce generation
 
 S11 juvenile birch native regeneration FINISHED in104.38s, with all10 other specimen fingerprints unchanged. Independent reviewer APPROVE visible full/close regions: plausible juvenile crown, smoothly arcing shoots, connected leaf growth and continuous exposed wood. The fixed close framing rule (mean position of first five leaf blades) shifted with the changed geometry; foliage now obscures some former overlap locations. A further bare-wood diagnostic is required before claiming those exposed transitions repaired everywhere.
 
 Mature Spruce/Mature/Open_Grown/3701 generation FINISHED in137.71s with76771branches,21root paths,20055804needle source points and946716welded vertices. Fingerprints of all11 other specimens remain unchanged. Each needle instances12vertices, giving240669648vertices if fully realized. This is a significant authoring/export cost, not an engine-ready foliage mesh or game-performance result. Native renders and strict appearance review follow separately.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S11 mature spruce viewport crash
 
 Mature spruce geometry/isolation checks finished, but Blender subsequently crashed before the requested Cycles renders. The retained crash log reports EXCEPTION_ACCESS_VIOLATION in Eevee ShadowModule::sync_object / Instance::object_sync during viewport drawing. Earlier idle CPU/GPU measurements did not establish the cause; the recovery dialog and crash log confirmed the crash. The eleven-tree checkpoint was saved before mature spruce generation, so only that unsaved new specimen needs regeneration. No mature-spruce visual acceptance is claimed.
 
 S12 keeps full needle data for renders while the native Geometry Nodes Is Viewport branch selects one needle in24 for mature/large viewport display. Juvenile display stays complete. The two node types/sockets were verified in a clean Blender5.2.2 background process before implementation. This specifically reduces viewport instance load; renderer/export cost remains explicit and still requires validation.
-
 ### TREE-BLENDER-SPECIES-001/v1 - S12 rendering and S13 instance grouping
 
 S12 mature regeneration FINISHED in129.67s with identical counts and all11 other specimens unchanged; tree_library.blend checkpoint saved at3431455322bytes. The full front render completed, but strict review DECLINED its thin lower two-thirds. Coherent leader, taper, support and contact passed that front-only check. The renderer versus viewport selection remains to be checked directly before concluding whether the thin appearance is entirely structural.
 
 S13 replaces adult individual-needle instances with eight deterministic volumetric prototypes, each containing64 actual closed needles. Points place/rotate/choose these approximately6.7cm-long groups along the existing shoots, with axial fitting; young spruce retains its accepted individual-needle representation. This reduces object/point overhead while retaining 3D needle geometry, rather than returning to rejected image cards. Render/export realized geometry remains costly. Native GeometryToInstance multi-input and IntegerMath node sockets were verified in Blender5.2.2 before use. Integer modulo avoids float index precision loss above16777216 points. Same mature seed/settings/cameras remain fixed.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S13 coverage diagnostic and S14 correction
 
 S13 mature spruce generated 315,010 instance points carrying 20,160,640 volumetric needles; all 11 other specimen fingerprints remained unchanged. Full-render selection forced on produced the same visible thin lower crown as the normal render; viewport thinning was not the cause. S14 retains the fixed mature seed 3701, preset controls and cameras, and extends mature/large needle retention from 0.55m to 1.2m along each supported fine shoot. Juvenile retention remains 0.55m. Axial spray scale is bounded at 0.3–1.4 to prevent low-density settings from stretching needle organs excessively. Acceptance remains pending native renders and independent review.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S14 result and S15 fine-growth correction
 
 S14 generated 21,692,800 needles on 338,950 points in45.34s; all11 other specimen fingerprints unchanged. Front/reverse renders completed despite the client returning a communication error after its wait limit; native-progress.log ended TREE_ACTION_COMPLETE. Main visual review still rejects insufficient foliage mass. S15 derives adult tertiary twig radii from the actual parent attachment radius instead of its thick base radius, and adds four rather than two final needle-bearing offshoots per tertiary spray. Juvenile spruce geometry remains unchanged. Same fixed scenario inputs/cameras; acceptance pending.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S15 mature spruce full-tree approval
 
 Native Generate FINISHED in48.66s;125155branches,21root paths,31049856logical needles on485154source points,946716welded vertices. All11 other specimen fingerprints unchanged. Strict independent reviewer APPROVE both S15 mature spruce full-tree views: connected middle/lower foliage mass, coherent leader/taper, uneven reach, supported branches and ground contact. Thin outer lower sprays and similar upward tip curves remain nonblocking refinements. This verdict excludes close surfaces and performance. Separate juvenile birch S11 front/reverse review APPROVE full-tree regions; bare-wood junction detail remains pending.
-
 ### TREE-BLENDER-SPECIES-001/v1 — close review and S16 weld resolution
 
 Independent review APPROVE juvenile birch's exposed lowest attachment in both bare-wood crops; no open notch, detached strip or conspicuous seam. Hidden/full fork and other junctions remain outside those crops. S15 spruce needles and bark surface are acceptable, but strict close review DECLINE two angular branch bends and a collar-like continuation step. S16 reduces adult spruce weld grid from35mm to12mm and starts independent fine continuations at26mm radius instead of55mm. This targets voxel-stepped thin wood without changing the approved skeleton or needle placement. Fixed mature inputs and bark crop remain unchanged. Ash juvenile native regeneration FINISHED in20.07s with all11 others unchanged; repeat determinism still pending.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S16 authoring cost and S17 sampling budget
 
 S16 native Generate FINISHED in352.28s, all11 other specimens unchanged. Welded wood reached9374554vertices/9365280polygons. During this operation Blender private memory was observed at52.08GiB; this sample is not a measured peak. This candidate is too costly for routine authoring. S17 keeps the12mm structural weld and26mm continuation transition, but uses one simple relief subdivision for adult spruce instead of two. Nominal relief sampling becomes6mm, still finer than the original35mm/4=8.75mm sampling. Other species/stages retain their existing resolution. S16 appearance was not accepted or rendered; review proceeds on S17.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S17 diagnosis, S18 curve sampling and control checks
 
 S17 FINISHED in142.82s with2350594welded vertices; all11 others unchanged. Close reviewer still declined two elbows and an apparent collar. Enlarged native render of the collar region shows a crossing branch; the reviewer explicitly withdrew that collar blocker. The corrected camera-projection diagnostic identifies primary fine continuations13 and3 at the elbow pixels, each136vertices/17rings, with maximum sampled direction changes19.26 and12.21degrees. The earlier diagnostic omitted a view-layer update and used stale camera transforms; species-s17-branch-diagnostic.json is invalid for locating those pixels. Use its corrected counterpart.
@@ -32216,7 +37033,6 @@ S17 FINISHED in142.82s with2350594welded vertices; all11 others unchanged. Close
 S18 samples adult spruce Bezier guides with17points per segment rather than7, and fine continuations with65rings rather than17. Guide controls and growth intent remain unchanged. The costly S16/S17 weld/subdivision experiment is reverted to the S15 weld/tail/relief settings: the confirmed defect is curve sampling, and the suspected collar was a crossing branch. No other species/stage changes.
 
 Ash2701 juvenile repeat FINISHED in20.53s with exact identical mesh/UV/material/guide/attribute fingerprints and all11 others unchanged. Independent full front/reverse review APPROVE. Next Seed2702 changes geometry while preserving all12 originals. Edited Guide01 endpoint+x0.4m rebuild FINISHED; endpoint and attachment retained, twigs/leaves/nonblocking branch proxies changed, all other specimens unchanged. Exact native results are in species-final-seed-and-guide.json. Add-on0.6.1 also restores the current tree's camera framing before saving from gallery view; final save readback remains pending.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S18 outcome and S19 lower-bough correction
 
 S18 regenerated mature spruce 3701 through the installed native operator in 53.05057 seconds; 125,186 branches, 21 root paths, 31,080,768 logical needles in 485,637 spray points, and 949,082 welded vertices. All 12 other specimens retained their fingerprints. Strict close review DECLINED the lower boughs: denser sampling smoothed the surface but retained an unnatural U-shaped growth reversal. Enlarged native S17 evidence established the previously suspected collar was a crossing branch; that blocker is withdrawn, not claimed repaired. S16/S17 expensive welding experiments are superseded by the original adult welding settings.
@@ -32224,7 +37040,6 @@ S18 regenerated mature spruce 3701 through the installed native operator in 53.0
 S19 keeps the fixed mature spruce seed 3701, default settings and cameras. Lower adult bough controls now sag gradually and flatten, with a soil-clearance bound, rather than reversing upward at their ends. Juvenile and upper-crown growth are unchanged. Regenerate through the native operator, verify all other specimens remain unchanged, and submit the same bark crop plus front/reverse full views to strict independent review. No acceptance is assumed before those results.
 
 New mature oak 1701 native generation completed in 50.9192204 seconds with all 13 other specimens unchanged; 6,214 branches, 21 roots, 153,494 leaves and 1,331,864 welded vertices. Full front/reverse evidence is awaiting independent review. See species-final-oak-mature-generation.json and species-final-oak-mature[-back].png.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S19 close approval and final matrix checks
 
 S19 mature spruce native regeneration FINISHED in49.773788 seconds, all13 other specimens unchanged. It contains118490 branches,21 root paths,26653120 logical needles on416455 points,890742 welded vertices. Strict independent reviewer APPROVE exposed wood/bark in species-s19-spruce-bark.png: prior tight hooks resolved, continuous restrained curves, coherent bark and major attachments. Full-crown review remains pending. New mature oak front/reverse review APPROVE visible silhouette, supported foliage and proportions; excludes concealed close surfaces.
@@ -32232,19 +37047,15 @@ S19 mature spruce native regeneration FINISHED in49.773788 seconds, all13 other 
 The first S19 queue attempt failed before any generation because its validation dispatch omitted import runpy. After adding that import, the identical native operation completed; no source or scenario changed between attempts.
 
 Complete the original fixed matrix with native regeneration of Oak Juvenile1701, Oak Large1701, Ash Mature2701 and Birch Mature4701, each at the already recorded preset defaults. Compare all other collection fingerprints after every regeneration. If the same specimen's complete fingerprints are unchanged, retain its existing approved views; otherwise render matching full front/reverse cameras. Mature Ash/Birch close leaf crops use the mean local position of the first five33-vertex blades (first165 vertices), scale0.85/0.65 respectively, azimuth-55/elevation20. Bark crops use center(0,0,1.2),scale2.4,azimuth-55/elevation8, foliage hidden. Submit new visible coverage to independent review. No scenario inputs are tuned to obtain a pass.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S19 full-tree approval
 
 Strict independent reviewer APPROVE both species-s19-spruce-mature.png and species-s19-spruce-mature-back.png: coherent taper/leader, substantial supported foliage, restrained unequal lower boughs, complete framing and ground contact. Relatively open upper-middle growth and horizontal middle tiers are nonblocking refinements at this scale. Verdict excludes hidden junctions, unshown seeds and runtime behavior. This supplements, rather than replaces, the separate S19 exposed bark/branch crop approval.
-
 ### TREE-BLENDER-SPECIES-001/v1 — final oak regeneration results
 
 With final source8022ab65b2574438a364e6700d0f1da727cd266963bb070474aa8ae0a09901c9, native Oak Juvenile1701 regeneration FINISHED in28.7128866s:210 branches,21 roots,3130 leaves,860810 welded vertices. Native Oak Large1701 regeneration FINISHED in159.2119319s:8589 branches,21 roots,212438 leaves,4273418 welded vertices. Both complete same-specimen mesh/UV/material/guide/attribute fingerprints match their previously accepted versions exactly, and all13 other specimens remain unchanged in each run. Accordingly the existing S09 juvenile and S10 Large front/reverse approvals remain applicable; no redundant rerenders were performed. Exact records: species-final-oak-juvenile-regeneration.json and species-final-oak-large-regeneration.json. These are Blender authoring timings, not game-performance measurements.
-
 ### TREE-BLENDER-SPECIES-001/v1 — final mature ash result and reviews
 
 Native Ash Mature2701 regeneration FINISHED in62.6753733s under final source8022ab65, all13 other specimens unchanged. It contains5097 branches,21 roots,144023 leaflets,4752759 foliage vertices and1340602 welded vertices. Its fingerprint differs from the old S07 specimen, so fresh front/reverse and close evidence was rendered. Independent full-view reviewer APPROVE both species-final-ash-mature[-back].png: mature proportions, supported irregular leafy crown, complete framing and ground contact. Separate strict close reviewer APPROVE species-final-ash-leaves.png and species-final-ash-bark.png: paired compound leaflets, veins/curvature/attached stalks, fine fissured bark with restrained color and no blocking mapping seam. Slightly angular thin twigs/leaflet edges remain nonblocking refinements. Bark crop excludes major forks and foliage hides some wood; hidden surfaces are not claimed approved.
-
 ### TREE-BLENDER-SPECIES-001/v1 — final library validation setup
 
 After the fixed generation matrix, run native part inspection for every new stored specimen: finite render coordinates and UVs, expected nonempty parts (juvenile Roots may be empty when RootTips contains the small roots), all root-path endpoints below local soilzero, and closed finite convex simplified proxies with exactly the intended solid-trunk versus nonblocking branch-interaction roles. Exercise Saved Specimen for every collection and compare restored identity/settings, native All trees then Current tree with exact pose restoration, and protected-reference Rebuild from Edited Guides refusal with no specimen mutation.
@@ -32252,7 +37063,6 @@ After the fixed generation matrix, run native part inspection for every new stor
 Render a comparison of mature/juvenile pairs for Oak1701, Ash2701, Spruce3701, Birch4701 at one world scale: adult X=-27,-9,9,27m; juveniles offset(4,-7,0)m; camera azimuth-90,center(0,-2,8.7),orthographic scale74,elevation8;3200x1600,Cycles48 with the existing studio lighting. This gallery supplements each specimen's fixed front/reverse views and is not a substitute for close review. Temporary positions and captions must be removed/restored afterward.
 
 Finally use native Save Tree Library from gallery view, confirm current-tree camera framing and restored positions, record all collection fingerprints, reopen that same saved tree_library.blend and compare them. Verify packed file images, specimen count, installed addon version, and the unchanged original file metadata. Scope remains Blender authoring; no runtime or figure-eight acceptance is implied.
-
 ### TREE-BLENDER-SPECIES-001/v1 — mature birch close rejection and S20 correction
 
 Final-source8022ab65 mature Birch4701 native generation FINISHED in27.948101s, with4771 branches,21 roots,88206 leaves,2910798 leaf vertices,444098 welded vertices, and all13 other specimens unchanged. Both refreshed full-tree views received independent APPROVE for the slender, supported, hanging crown and contact. Strict close review DECLINED species-final-birch-leaves.png and species-final-birch-bark.png: geometric kite-like leaf edges/hard folds, an exposed blunt brown twig end near(320,290), and uniform white bark with clean black slash markings that appear painted. Preserve these failed crops. Full-view approval does not override the close rejection.
@@ -32260,19 +37070,16 @@ Final-source8022ab65 mature Birch4701 native generation FINISHED in27.948101s, w
 S20 changes only mature/large birch detail: curved asymmetric leaf width with18 length segments and5 transverse columns (95 vertices per blade), finer0.6mm terminal twig radii, and softly bounded, grain-warped lenticels with subtle pale bark mottling and integrated recessed bump. Juvenile birch and all other species are unchanged. Same seed4701/default controls/full cameras. The close rule remains mean of first five blades, now475 vertices, scale0.65/azimuth-55/elevation20; bark crop remains fixed. Native regenerate must preserve all13 other specimens; review both close crops and full views. No acceptance assumed.
 
 Pre-S20 native parts inspection reports10 new specimens with finite coordinates and valid closed convex collision roles. Native selection restored identity and controls for all14 specimens; All trees temporarily moved1748 objects and Current tree restored exact fingerprints. Protected oak guide rebuild was refused (expected CANCELLED/error), all specimens unchanged, and four original oak fingerprints exactly match the original disk reference. Detailed records are species-final-parts.json and species-final-interface-and-protection.json; parts must be refreshed after S20 because birch geometry changes.
-
 ### TREE-BLENDER-SPECIES-001/v1 — S20 close acceptance and parts refresh
 
 S20 mature Birch4701 native Generate FINISHED in51.0540689s;4771 branches,21 roots,88206 leaves,8379570 leaf vertices,440320 welded vertices. All13 other specimen fingerprints unchanged. Sourcef089c7b9f036051c9e67e6977176b9effe6f139dfd93398f8d0dc66786ccbaa0. Strict close reviewer APPROVE species-s20-birch-leaves.png and species-s20-birch-bark.png: fine toothed contours/gentler curvature, prior blunt twig replaced by continuous taper, irregular varied lenticels integrated with the surface. Slightly angular leaf edges remain a nonblocking refinement. Hidden joins/major forks excluded. Updated parts inspection again reports10 specimens, all finite coordinates and closed convex correctly assigned collision roles; detailed UV/root/part coverage is in species-final-parts.json.
 
 Before the S20 replacement, the native save-from-gallery check FINISHED:14 specimens,0 remaining gallery origins, current Ash Mature camera scale29 exactly matching20m height*1.45, all file images packed. This checkpoint's evidence was renamed from species-final-* to species-s19-comparison.png, species-s19-comparison-parameters.json, species-s19-parts.json, species-s19-save.json and species-s19-presave-fingerprints.json to preserve history. The fingerprint file was captured after saving and before reopening; its historical filename says presave but its timing is post-save. The independent selector/gallery/protection record remains species-final-interface-and-protection.json. Final updated library save and reopen verification follow S20 acceptance.
-
 ### TREE-BLENDER-SPECIES-001/v1 — final S20 visual acceptance and reopen attempt
 
 Fresh independent reviewer APPROVE both S20 mature birch full views. Comparison reviewer APPROVE species-final-comparison.png: all8 trees framed at common scale, readable labels, distinct species/stages and consistent contact; juvenile spruce slightly overlaps its adult's outer foliage but remains distinguishable. Current S20 parts data passes every checked finite-coordinate/UV, expected-part, below-soil-root and convex collision-role criterion for all10 new specimens.
 
 Native final save FINISHED, writing3307770832-byte tree_library.blend with14 specimens and packed images. Original oak_studies.blend remains836907989bytes with unchanged UTC timestamp2026-09-20T06:30:56.8363603Z. The actual reopen succeeded, but the first readback report failed while querying bpy.context.screen.areas because screen is None during the load callback; it wrote no acceptance result. Re-run readback on the now-open saved file using WindowManager windows for viewport metadata. This is a validation-context failure, not evidence of data loss or a passing round trip.
-
 ### TREE-BLENDER-SPECIES-001/v1 — final accepted Blender library
 
 PASS within the recorded Blender authoring scope. Reopen readback now completed successfully: all14 stored specimen mesh/UV/material/guide/foliage-attribute fingerprints equal the pre-reopen record; all4 protected oak references equal the original disk-reference fingerprints. Protection flags remain on Open_Grown1701, Woodland2803, Weathered3907/3908. No gallery-origin metadata remains. Ash Mature2701 is selected/active, camera scale29 matches the saved control height, all file images are packed, addon0.6.1 is active, and the visible 3D view is Material Preview in camera view. Exact result: species-final-reopen.json.
@@ -32282,10 +37089,458 @@ The fixed9-case native matrix is complete: Oak Juvenile/Mature/Large1701, Ash Ju
 Independent visual acceptance covers the recorded juvenile/mature views for all4 species, Large oak, the exposed close surfaces documented above, and the final8-tree comparison. S20 birch and S19 spruce resolved their recorded close-review blockers. It does not establish every seed/control combination, hidden junction, every Large preset, or biological age. The4 original oaks plus9 fixed specimens and1 edited Ash seed variant coexist in the library. Original oak_studies.blend remains untouched; final tree_library.blend is3307770832bytes. recipes.json schema2 records specimen identity, settings, source revisions, protection and guides. Large generated blend files remain local/ignored by Git; source, textures, recipes and evidence are versioned.
 
 Final canonical generator SHA256 f089c7b9f036051c9e67e6977176b9effe6f139dfd93398f8d0dc66786ccbaa0; repo/installed addon SHA256 fbc990ba65f442c07c94488246cdc2057f7ddc0188a344619d253297887e51ee, byte-identical. Both Python sources compile; scoped diff checks pass. New Pine Bark map bytes/SHA256 match provenance. Updated architecture/meshing/procedural routes were rechecked; this slice changes no game code, scene, terrain, network or playable-world behavior. Collision/slowdown integration, wind/billboards, export conversion, LODs and game performance remain outside acceptance; no figure-eight run or runtime performance claim is appropriate for this isolated authoring change. Detailed source counts are not shipping budgets.
-
 ### TREE-BLENDER-SPECIES-001/v1 — evidence formatting check
 
 Final staged whitespace validation passes for source, documentation, recipes and structured evidence. The unedited native species-s11-mature-spruce-crash.txt contains Blender-generated trailing spaces in its module listing; that single raw evidence file is excluded from whitespace lint so the retained crash report stays byte-faithful. The initial whole-index whitespace check reported those native spaces; no source or geometry failure occurred.
+## BIOME-FIGURE8-001/v1 — fresh-world qualification (2026-09-20)
+
+Before first run. The user explicitly authorized resetting the map and proceeding
+with implementation and in-game debugging. This resolves the pending workload
+approval. The prior edited generator48 save cannot be reinterpreted as generator49;
+retain it, create independent unedited seed1337 worlds via save-before-switch.
+This is a new baseline series, not a comparison with the historical cloud runs.
+
+Fixed recipe: land .75, mountains .3, plains .6, continental77724.09,
+mountainRegion18681.756, local5232.39, relief3072, ruggedness .45, sea0.
+Canonical route: origin(-1.6258175,1.2225341,340), identity view, FOV75,
+physical2769x1529; speed2500, distance50000, one loop, clearance393.7008.
+Gameplay8, visual128, LOD0–5, extents4/4, cells32x16, grass64m. Clouds .32,
+wind8,3, height variation250m, view steps64, resolution divisor4. One visible
+interactive player, fully settled start, zero velocity, grounded, motion enabled,
+streaming center(-1,0,0), no pending preparation/visual/transition/placement/collision
+work, water ready. Reset exact pose just before trigger. Automatic drain+10s
+stationary. Debug UI and terrain overlay off in both timed runs; no captures,
+hotloads or competing GPU renders. Record full source/assets, environment and
+actual runtime identity before each run; unexpected drift invalidates comparison.
+Moving/standing FPS regression <=5%; p95/p99, allocations/frame and memory <=10%;
+no unexplained drain/streaming/completion/correctness regression. Preserve all runs.
+
+## BIOME-DEBUG-001/v1 — F9 inspection acceptance (2026-09-20)
+
+Before first run. Same applied seed1337 recipe as BIOME-FIGURE8-001/v1.
+Native1600x900/FOV75 UI captures. Start closed; F9 opens readout; map opens from
+readout and closes with Escape/F9. Four layers: dominant biome, blended biomes,
+temperature, humidity. Climate legends use normalized0–1, cold/hot and dry/wet.
+Map129x129 cell-center samples, initial extent524288 units centered0,0;
+zoom range8192–1048576 units, pan half-span. Sample/marker orientation +X right,
++Y up. Player position and selected point show coordinates and exact CPU weights.
+Check origin/hills, (-8192,-20480)/forest, (0,36864)/ocean and fixed dry biome sites
+from dry-sites-v1.json. Readout must equal production inspect at identical XY.
+Map pixel and terrain overlay use the same texture/bounds, point filtered dominant
+labels and smoothly sampled blend/climate layers. Outside bounds show regular
+terrain. Surface colouring is diagnostic only, not material identity.
+
+World switch must clear old texture, selection and overlay before rebuilding.
+Map generation <=129*129 samples, <=4 rows/update, <=1 resident texture; no work
+when closed. Record measured build duration and worst row-batch cost; gate batch
+<=5ms and map completion<=2s after settled opening. No brush edits/camera look
+from map clicks, but F9/Escape must restore movement. Verify all eight legend
+entries, selected-point values, zoom/pan/recenter, negative coordinates, and UI
+readability without clipping at1600x900. Independent reviewer must inspect actual
+captures and performance evidence before acceptance.
+### BIOME-FIGURE8-001/v1 preflight — invalid start condition
+
+No timed benchmark ran. Fresh-world snapshots baseline-preflight.json,
+baseline-before.json and baseline-ready.json show seed1337 revision0, all streaming
+and water ready, identity camera, zero player velocity, but grounded=false at the
+required z340. Production column height at0,0 is259.1493. The former edited-save
+start cannot simultaneously be unedited, atz340 and grounded. Motion was toggled
+off/on through native properties and restored; no effect on the sleeping start.
+
+## BIOME-FIGURE8-001/v2 — corrected unedited start precondition
+
+Supersedes v1 before any timed run. All v1 parameters and criteria remain fixed
+except grounded is recorded, not required: the exact canonical z340 is above the
+unedited surface. Require motion enabled, zero velocity, no collision hold and
+all streaming/water ready. Both variants start at the same exact airborne pose;
+the existing figure-eight immediately owns terrain-following movement. This
+necessary consequence of the user-authorized fresh map is not an easing based on
+performance results. Preserve v1 and preflight evidence. Engine26.09.15,
+RTX5090 driver32.0.16.1664, Ryzen7 9800X3D. User prior world retained at
+parallax-dirt-20260919; fresh baseline worldaaa6bb2b-5f9b-42e4-a32a-3d8999a08cf5.
+## TREE-IMPORT-001/v1 — Blender model import and playable-world qualification
+
+Before first run, 2026-09-20. Import the existing fixed nine-specimen matrix:
+Oak Juvenile/Mature/Large1701, Ash Juvenile/Mature2701, Spruce Juvenile/Mature3701,
+and Birch Juvenile/Mature4701. Source tree_library.blend and protected original
+meshes/materials/guides must remain unchanged. The import owns reusable model
+assets and ordinary ModelRenderer/ModelCollider prefabs; it does not replace the
+other task's uncommitted spawn population or terrain/biome generation.
+
+Derive three explicit mesh LODs in Blender. Every level must retain its root
+origin, species silhouette, visible wood and foliage. Record triangles, bounds,
+source/exporter hashes and exact material dependencies. Require finite geometry,
+strictly decreasing triangle counts, correct meter-to-inch scale, no error
+materials, and nine simple solid trunk collision pieces per model. Branches and
+foliage must not enter blocking model collision. Preserve separate branch-proxy
+metadata for subsequent interaction implementation; slowdown is not claimed.
+
+Inspect actual compiled model LOD counts/bounds/physics and native game captures
+at near/mid/far distances, including forced LOD0/1/2 at a matched camera for
+transition review. Independent reviewers must explicitly approve or decline
+species identity, crown fullness, bark shading, leaf appearance, grounding and
+visible transitions. Preserve failed candidates. Traces across the lower trunk
+must hit the imported tree, adjacent air and representative branches must remain
+unblocked, and a real player approach must stop at the trunk. A trace alone is
+not a walking-collision pass. Use the normal playable basic_example world and
+ordinary native editor components, without new test-only scenes or components.
+
+Performance: coordinate with the biome task before touching the shared editor.
+Use the canonical BIOME-FIGURE8-001/v1 current authorized fresh-world workload
+unchanged for an unloaded/imported-prefab matched comparison. Freeze exact source,
+world, prefab placement and render configuration before timing; no Blender bakes,
+screenshots or asset hotloads during either timed run. Capture a baseline before
+adding tree instances. Same <=5% FPS and <=10% tail/allocation/memory limits, no
+unexplained streaming/completion/correctness regression. Extra static specimens
+are recorded workload inputs, not a qualification of a full forest population.
+### BIOME-DEBUG-001/v1 steering and first observations
+
+User reports F9 does not open the panel in their editor and explicitly requested a
+regular keyboard key. Replaced the old DebugOverlay/F9 action with BiomeDebug/B
+(no B keyboard conflict in Input.config); on-screen hints follow the action.
+All remaining scenario controls/criteria apply to B. This is a user-directed key
+change, not a performance workload change.
+
+First native map capture f9-biomes-first.png: all eight legend entries, map and
+player readout visible. Build187ms, sampling max batch1.17ms. Temperature137ms,
+batch0.99ms. Those batch measurements exclude upload/publication and UI rendering;
+added explicit upload/publication timing rather than claiming total frame cost.
+Independent review found panel-disable input capture and a concatenated subtitle;
+both corrected. During a two-part field rename, an intermediate compile reported
+9 missing _overlay references; the completed edit compiled successfully0errors.
+No acceptance based on that intermediate source. f9-temperature-overlay capture
+was interrupted by live UI state becoming Off, so it does not prove an overlay.
+### TREE-IMPORT-001/v1 — staged export drafts, not imported
+
+The juvenile oak prototype produced 42519/21519/6248 triangles. No game assets
+or scene were changed. Mature oak export initially stopped after baking because
+BMDeformVert requires explicit keys() when assigning the retained mesh parts;
+fixed and resumed from the derived wood cache. A subsequent CPU export produced
+265998/78998/23599 triangles, but its bark atlas visibly wasted most of the image
+on thousands of small twig islands. Declined before in-game import. Retained
+example: TreeImport/draft01-oak-mature-bark-atlas.png. The exporter now reserves
+baked bark for structural wood, keeps fine twigs/root tips on tiled scan materials,
+and reduces island padding. Texture and game validation remain pending.
+## BIOME-DESERT-SAND-001/v1 — variable desert layer (2026-09-20)
+
+Before first run. User requests top-surface sand extending5–10 blocks/cells,
+spatially varying with a bias toward10. Use applied seed1337 and the fixed biome
+recipe from BIOME-FIGURE8-001/v2. Depth is vertical below canonical unedited
+exterior, base cell16units. Desert-only thickness80..160units inclusive; actual
+material predicate0<=depth<thickness. No change to SDF heights or existing placed
+materials, shoreline/deposit predicates, water or air.
+
+Frozen distribution survey: minXY(-16384,-270336),33x33,spacing1024. Eligible dry
+core=desertWeight>=.75, height>sea+48 and selected desert sand coverage. Require
+>=20 eligible columns, all depths within5..10cells, median>=9cells, >=70% at least
+8cells, and observed thickness spread>=2cells. This is a predefined sampling gate,
+not a claim about global area percentages. Repeated points must be exact.
+
+Production column probes at fixed desert site(0,-253952) plus the eligible survey
+columns with minimum, median and maximum thickness (stable XY tie break). Sample
+from height-176 through height in2-unit steps. All solid unplaced nodes within
+layer are Sand6, above exterior Air0/Water4, below follows existing strata unless
+independently eligible shoreline deposits. Probe exact boundary±.01units.
+Controls: fixed plains(8192,0), forest(-8192,-20480), snow(20480,-53248), ocean(0,36864).
+Retain raw queries and native images of desert top and an excavation side face.
+Actual meshes must visibly show sand at top and through the dug layer, with the
+underlying material exposed below. No tree changes. Compile both dependent compute
+shaders, clean-editor restart, numeric production queries and mesh/density audits.
+Performance uses the already captured BIOME-FIGURE8-001/v2 generator48 baseline
+with final biome/sand candidate; no new performance workload. Keep UI/overlay off.
+## BIOME-SNOW-DEPTH-001/v1 — five-cell snow (2026-09-20)
+
+Before first run. User explicitly requested snow extend five cells down. Same
+seed1337/recipe as desert scenario. Snow layer80units=5basecells below dry canonical
+exterior; predicate0<=depth<80. Solid material ID5 throughout selected snow layer,
+including covered/internal and excavated nodes. Air/water/explicit placed material
+retain precedence. Dirt/stone resume below80; no density/height change.
+
+Fixed snow site(20480,-53248), plus its±256XY cardinal neighbors, all sampled at
+height-relative depths0.01,16,32,48,64,79.99,80.01,96,144,176. Record zero-thickness
+ineligible controls at plains(8192,0), forest(-8192,-20480), desert(0,-253952),
+ocean(0,36864) and any failed eligibility rather than substituting favorable sites.
+For eligible solid points require ID5 inside80, existing strata below, and repeat
+queries exact. Native top/dug-side visual captures must reveal a substantial snow
+layer. Share final compile/cold-start/figure-eight qualification with desert sand.
+## BIOME-SNOW-DEPTH-001/v2 — variable five-to-ten-cell snow (2026-09-20)
+
+Supersedes v1 before its first runtime run because the user explicitly changed
+snow depth to5–10cells. All v1 source/recipe, material precedence and visual
+requirements remain. Depth80..160units uses independent XY noise at2048units,
+seed salt62119, thickness=160-80*noise^3, biased toward10cells like desert sand.
+
+Frozen distribution survey: minXY(4096,-69632),33x33,spacing1024, seed1337.
+Eligible dry core=snowWeight>=.75, height>sea+48 and SnowDepth>0. Require>=20
+eligible columns, depth5..10cells, median>=9cells, >=70% at least8cells,
+and observed spread>=2cells. Retain all failed eligibility rather than selecting
+a new area. Repeated points must be exact. These gates describe this fixed sample.
+
+Probe fixed snow(20480,-53248), its±256 cardinal neighbors, and the eligible
+survey min/median/max thickness columns (stable XY tie break). Sample height-176
+through height+2 in2-unit steps and boundary±.01units. Require Snow5 at all solid,
+unplaced points0<=depth<thickness; existing strata below, Air0/Water4 above.
+Record the same non-snow controls as v1. Share cold-start, visual excavation,
+production audits and BIOME-FIGURE8-001/v2 performance with the desert candidate.
+### BIOME-DESERT-SAND-001/v1 and BIOME-SNOW-DEPTH-001/v2 — production depth results
+
+2026-09-20, engine26.09.15, generator49/protocol5 final variable-layer candidate.
+Both fixed1089-point surveys ran through ExportLandformSurvey using seed1337;
+export metadata retains original source world3edf6fdb-f552-44de-8573-539aa772810a.
+This world had156 user edits, which export does not sample: export is explicitly
+unedited recipe data. It was saved before switching. Layer probes ran in new
+world224da27d-e921-4b6f-804f-01502b831bc4 revision0 with the same fixed recipe.
+
+Snow:275 eligible dry columns, min5.039494/max9.999991 cells, median9.449924,
+88.3636%>=8cells, spread4.960498, zero out-of-range. Desert:421 eligible,
+min5.013264/max10, median9.03197,76.9596%>=8, spread4.986736,zero out-of-range.
+All frozen distribution gates pass. Evidence: snow-depth-v2/ and desert-sand-v1/.
+
+Fifteen fixed/min/median/max/control columns each sampled90 nodes and repeated
+exactly. All MaterialReady; no inside-layer or medium-precedence failures.
+Twelve layer boundaries sampled±.01unit return Snow5/Sand6 inside and Dirt2/Stone3
+below. Controls have both depths0. This verifies CPU production material behavior,
+not GPU weights, placed-material edits or excavation appearance. Raw evidence:
+layer-probes-v2.json. Both dependent compute shaders compiled successfully;
+C# LastCompileSucceeded=true,errors0. The first immediate play query correctly
+returned startup-not-ready; no result from that attempt was counted.
+
+Cold-start qualification remains incomplete: the previous quit advanced Sentry
+last_crash from2026-09-19T20:04:58.006387Z to2026-09-20T16:58:26.257954Z during
+shutdown. EditorPID16064 restarted at12:59:26 local; final source write12:59:33
+preceded voxels3 mount12:59:44. Current playable startup has no reported errors,
+but it is not a clean-restart pass and must not conceal the shutdown failure.
+### TREE-IMPORT-001/v1 — independent export implementation review
+
+Reviewer declined stale-cache reuse, generic fine-wood material substitution and
+inherited vertex-group ambiguity. Removed cache reuse; added separate source
+color/normal/roughness baking for fine wood, cleared inherited groups on copies,
+and required exact triangle conservation when splitting. Retained original
+broadleaf material indices and three foliage tones (tone transfer remains subject
+to visual review). Second review declined suffix-sensitive material destinations
+and partial re-export installation. Actual FBX material names now map to canonical
+asset filenames; completion manifests are invalidated before output changes and
+contain verified per-file hashes after a successful complete export. The installer
+rejects the earlier birch draft with 'Export did not complete', before installing
+anything. Python compilation passes. No game assets installed yet. GPU work is
+paused after the birch job for the biome task's candidate performance window.
+## BIOME-LAYER-VISUAL-001/v1 — exposed snow/sand faces
+
+Before first visual/edit run, final5–10cell recipes, seed1337, engine26.09.15.
+The frozen numeric sites are low enough that excavation would enter static water
+and hide the material boundary. This supplementary visual fixture does not replace
+those probes. Use desert's frozen maximum site(10240,-270336),height823.088,
+depth160. Snow site is nearest to its frozen core among the existing fixed survey
+rows meeting snowWeight>=.75,snowDepth>0,height>snowDepth+192; squared XY distance,
+then XY ties. Selection yields(32768,-50176),height427.35056,depth134.56294.
+Retain all survey rows. This selection ensures the cut stays visible above water.
+
+At each site move the real player to(x-512,y,height+96); detach native camera.
+Capture top from(x-512,y,height+320),pitch30,yaw0,FOV75,1600x900.
+Then queue one canonical voxel_terrain_edit at(x,y,height-64),radius384,strength1024.
+Wait until edit and visual/collision queues settle; capture dug face from the
+same view and, if needed to see the wall, camera(x-360,y,height+96),pitch15,yaw0.
+Require continuous white snow/tan sand from original surface down through a
+substantial layer, with distinct dirt/stone beneath, no material seams/error
+shader. Record actual camera and edit/readiness state. Material reconstruction
+softens boundaries and screenshots do not prove exact cell counts.
+Do not edit the preserved user save; current fresh world224da27d-e921-4b6f-804f-
+01502b831bc4 was used for completed timing and may now hold these visual edits.
+### BIOME-FIGURE8-001/v2 — baseline and final variable-layer candidate R1
+
+Source/evidence: baseline-result.json (runedd07a7532b248ee837591180ed86132),
+candidate-result.json (rund19b9fc96199459b99a0441435d42dc9), source/recipe/pose
+snapshots *-ready.json and candidate-after.json, performance-comparison-v2.json.
+Both completed the fixed route and10s standing. Screen2769x1529, identity camera,
+seed1337 recipe/settings match. No source changes during timed candidate. Tree
+export task confirmed GPU quiet before timing; released after result. Candidate
+world224da27d-e921-4b6f-804f-01502b831bc4 revision0, generator49, protocol5.
+
+Moving FPS362.1691->356.29688(-1.62%); p955.2522->5.3495(+1.85%),
+p996.9509->7.2492ms(+4.29%); allocation/frame66645.89->67908.41(+1.89%).
+Standing FPS191.37877->188.79535(-1.35%); p956.6893->6.7862(+1.45%),
+p998.3251->8.5578ms(+2.80%); allocation39011.535->38874.492(-.35%).
+Frame/pacing/allocation gates pass. GPU memory drops approximately3.8%.
+Process memory FAILS: moving peak2799169536->5083668480(+81.61%), standing
+peak2763681792->3883397120(+40.52%). Moving average+50.32%,standing average+40.50%.
+No runtime exceptions or collision failures. Candidate collision holds0 vs4.
+Post-loop drain16841.326->18366.465ms(+9.06%); both all queues ready afterward.
+
+Decision: NOT accepted because process-memory gates fail. Candidate followed two
+distant production surveys and multiple world switches; source RiverWorld retains
+bounded recipe/patch caches across Play restarts. This is a possible confound,
+not a proven cause or permission to discard the failure. A bounded repeat from a
+fresh editor, without prior surveys/distant queries, is required to distinguish
+retained authoring state from runtime feature cost. Keep route/criteria unchanged;
+record source, settings and startup state. Do not weaken memory criteria.
+BIOME-FIGURE8-001/v2 R1 correction: baseline moving peak process bytes are
+2799161344 (the preceding prose transcribed2799169536). Raw baseline-result.json
+and performance-comparison-v2.json retain the exact values; decision unchanged.
+## BIOME-LAYER-PLACED-001/v1 — placed dirt precedence
+
+Before first run, same final recipe and visual world after two recorded pits.
+At snow(32768,-50176,327.35056) and desert(10240,-270336,723.088), query a two-node
+column at Z=center and center+16. Record pre-edit state. Queue one existing
+voxel_terrain_edit per site, radius96,strength-2048 (normal Dirt2 build path).
+After both commits, repeat those exact production queries; require solid material2
+and MaterialReady at both heights, despite original snow/desert eligibility.
+Retain revision, density and medium. This exercises the canonical placed override;
+no alternate material implementation or direct page writes.
+### TREE-IMPORT-001/v1 — canonical performance reference correction
+
+Before any tree-import runtime timing, the shared biome task established
+BIOME-FIGURE8-001/v2 because a fresh world cannot start grounded at Z340.
+Tree comparison uses that recorded v2 unchanged: seed1337, airborne origin
+(-1.6258175,1.2225341,340), identity view,FOV75, physical2769x1529,
+speed2500,distance50000,one loop,clearance393.7008,automatic drain and10s standing.
+Use the final biome source/recipe and freeze tree placements before timing. The
+zero/imported-nine prefab difference is the tree workload declared above; this
+is not a full forest budget. Preserve all failed runs and the original v1 note.
+### BIOME-LAYER-VISUAL-001/v1 and placed-material results
+
+Snow and desert top/cut/wall PNGs inspected by main and independent reviewer.
+Both narrowly APPROVED: substantial continuous light material above darker
+underlying stone, readable softened boundary, no obvious seam/error material in
+these views. Desert views contain neighboring grass; this is not a grass-free
+or complete desert-recognition claim. Exact depth comes from CPU probes, not pixels.
+Snow target depth134.56294units; desert160units. Actual camera transforms are
+stored alongside images. get_ejected_camera reports the normal viewport FOV60
+and2713.5x1390.5; the screenshot request explicitly passes1600x900/FOV75, and
+Editor/VoxelMcpTools.cs381–391 temporarily applies75 during RenderToBitmap and
+restores the viewport value. Future capture metadata includes CaptureRequest.
+
+Two canonical dig operations committed at revision1/2; collision/visual/transition
+work settled (desert-layer-after-state.json). An early snow snapshot had collision
+work pending; no settled-collision claim is based on it. Production density audit
+covers6regular blocks(750samples),30transition blocks(3803),total4553; max error
+.0046691895, maximumLatticeError0, zero sign/nonfinite/bounds failures. Remaining
+masks64 and67645734912 are retained, so not every configured audit bit completed.
+Mesh audit88/88 completed, zero failures, degenerates, bad indices/positions,
+identity mismatches or oversized triangles. These audits do not measure materials.
+Raw: layer-audits-v1.log/json. No universal geometry correctness claim.
+
+Placed-material scenario first query returned pages-loading; no edits queued by
+that failed attempt. Same query retried after normal integration: both pit samples
+were Air0. After two prescribed normal build edits, revision4, all four exact
+samples became Solid/Dirt2 with MaterialReady=true, retaining explicit overrides
+inside otherwise snow/sand layers. Evidence placed-before-v1.json/placed-after-v1.json.
+
+### BIOME-DEBUG-001/v1 — final map layer observations
+
+Found a native tool targeting issue: engine SceneTools.ResolveComponent first
+searches all SceneEditorSession instances by component GUID, which can mutate the
+editor copy instead of the playable copy. Earlier unchanged Off captures do not
+establish user interruption. Targeting HUD game-object ID plus VoxelDebugOverlay
+uses the active scene and provides readback. No game source workaround was added.
+
+Actual b-humidity-wide,b-blends-wide,b-biomes-wide,b-temperature-retry PNGs show
+readable map/legend/current climate. Build170/157/158/561ms, sampling max.95/1.10/
+.92/1.22ms,upload.06/.07/.09/.08ms; pass bounded map gates. First Temperature
+assignment returned native Scene.cs916 NullReferenceException; b-temperature-wide
+therefore still depicts Blends and is not temperature evidence. Retry succeeded.
+The capture helper's earlier cp1252 printing exception occurred after files were
+saved; output now escapes Unicode, with no game code change. Native viewport
+terrain-temperature overlay visibly applies; matching Off capture removes it.
+Key press, map click/pan button dispatch and full world-reset lifecycle are not
+established by changing properties. B binding and source handlers remain present.
+## BIOME-WORLD-VIEWS-001/v1 — eight frozen domain views
+
+Before first full eight-domain visual run. Seed1337 final generator49 recipe,
+fixed BIOME-DRY-SITES-001/v1 coordinates in dry-sites-v1.json. Existing scene
+lighting/cloud properties stay unchanged, ordinary terrain materials, debug
+map/recolour off. No tree-system changes; existing spawn scenery is incidental.
+For each site use current canonical Height from InspectTerrainColumn(x,y,0,16,2),
+baseZ=max(Height,SeaLevel). Move real player to(x,y,baseZ+96). After streaming and
+collision settle, native ejected captures1600x900 with temporary FOV75:
+A at(x,y,baseZ+96),pitch5,yaw0; B same position,pitch5,yaw180;
+C at(x-2048,y,baseZ+2048),pitch35,yaw0. Keep capture argument/state metadata.
+Require eight correct climate labels and actual expected terrain/material domains:
+water ocean, grassy plains/hills, rocky mountain, sandy desert, white snow,
+forest/jungle climate surface coloration. Judge ground/material differences
+without requiring vegetation population in this biome-only slice. Independent
+review must distinguish numeric labels from visual recognition and preserve
+ambiguous/failed views. Do not relocate sites to conceal an observed failure.
+### TREE-IMPORT-001/v1 — foliage and disconnected shoot correction
+
+Before first game import, atlas inspection showed that the reduced oak diamond
+footprint clipped outer lobes. Replaced it with a full rectangular atlas footprint
+and raised central vertex at the same four triangles per retained leaf. The
+mature ash draft also retained57584 triangles at LOD2 because disconnected capped
+fine shoots cannot decimate below their per-component minimum. Generalized the
+source-order fine-shoot pruning already used for spruce: retain the4000 longest
+broadleaf shoots (spruce2000) before decimation/baking. Source meshes are unchanged.
+Previous manifests preserve draft counts; affected specimens will be re-exported.
+Native game appearance and contact behavior remain untested.
+### TREE-IMPORT-001/v1 — prefab contract review
+
+Independent reviewer APPROVED the static juvenile oak prefab/collision contract:
+nine solid static model cylinders, twelve nonblocking static branch capsules,
+identity prefab transforms, endpoint/radius scale matching the manifest, three
+valid RenderMeshFile/LODGroup references and automatic renderer LOD selection.
+Installed native scene/capsule examples and citizen ModelDoc LOD conventions
+were checked. All visible parts render together; separate meshes do not provide
+independent runtime bodygroup switches. Native compilation, visual quality,
+actual physics and automatic LOD behavior remain unqualified.
+### TREE-IMPORT-001/v1 — user-directed population replacement and scale failure
+
+User clarified that the actual visible forest must be replaced, then explicitly
+requested removing the old trees and prioritizing the game import. The earlier
+prefab-only scope is superseded. The existing terrain-support placement path now
+loads the nine shared Blender models; it no longer calls the old geometry builder.
+The same capacity512,240m disk,18m spacing and14m clearing remain. The compiled
+model owns automatic three-level LOD selection. Every placed tree receives static
+trunk-only ModelCollider physics. Branch interaction capsules remain in reusable
+prefabs; the population does not yet instantiate soft branch triggers or slowdown.
+
+First compiled juvenile oak FAILED visual scale: Blender5.2 export_fbx_bin.py
+3542-3545 multiplies FBX_SCALE_NONE object transforms by100 even with
+apply_unit_scale=False. ModelDoc RenderMeshFile import_scale0.01 compensates that
+extra factor; collision values already contain the correct meter-to-inch conversion
+and are unchanged. Four completed manifests were verified before updating only
+VMDL metadata/hash, retaining original exporter identity plus correction identity.
+Source Blender meshes remain unchanged. Old runtime population is confirmed disabled
+by voxel_trees_info. Native component writes must identify the live GameObject+type;
+component GUID alone resolved the edit-scene duplicate during the first disable.
+
+Compiled library loading now logs actual bounds, LOD count/switch distances and
+physics validity, and rejects bounds outside2inches of exported bounds. This is
+asset validation on the production load path, not acceptance from source metadata.
+Performance scope now covers the actual population, not the earlier nine-instance
+fixture. Fixed population parameters above remain; establish a matched no-tree/
+Blender-population canonical figure-eight before accepting runtime performance.
+### TREE-IMPORT-001/v1 — corrected compiled catalog and first populated view
+
+2026-09-20, engine26.09.15, same active world, revision6. All nine assets compiled.
+The native importer also rotated FBX geometry90degrees in XY; RenderMeshFile
+import_rotation[0,-90,0] corrects yaw. Physics endpoints remain unchanged. The
+first cached mature-oak load failed the bounds check, preserving the defect;
+explicit asset compilation followed by voxel_trees_reload resolved it. All nine
+actual compiled bounds now match exported inches within2inches, each reports
+three LODs, switches0/20/65 and valid physics. Native clutter_cull_cs.shader89-110
+identifies these switch values as a projected screen-coverage metric, not meters.
+The real population then reported294 trees, nine models,3793342 library vertices,
+7369068 indices and27 meshes; no old runtime geometry fallback was used.
+
+Actual1600x900 game capture first-populated-world.png shows the player and the
+new forest. Strict independent review DECLINED overall visuals: distant broadleaf
+crowns lose volume into sparse speckles/fragments; a dark wedge on one central
+trunk requires close inspection. Foreground juvenile oak coverage and approximate
+scale beside the72inch player are narrowly accepted for this view only. Roots,
+all model angles, LOD motion and bark detail are not established by that capture.
+This rejection remains open; static asset loading is not final art acceptance.
+
+Read-only physics ray crossed mature oak candidate394 at root+(0,0,36) from
+X-80 toX+80, hitting its nontrigger static ModelCollider at(2188.42285,797.729797,
+721.148071), distance56.728027inches. Parallel ray offset60inches inY missed.
+This establishes trunk physics at that placement, not a physical player walk test
+or coverage of all nine models. Peak observed update91.091ms/load14.532ms includes
+first integration and is not an accepted frame-cost measurement. Matched canonical
+figure-eight, physical player contact and final visuals remain incomplete.
+
+Source audit compared all14 Blender specimens against the pre-import fingerprints:
+source_unchanged=true, changed={}, both protected .blend bytes/mtime unchanged.
+Final native panel operator returned FINISHED with controls preserved. Evidence:
+TreeImport/source-preservation.json and export-operator.json. No wind is enabled.
 
 ### Tree wind research — September20
 
@@ -32300,6 +37555,1086 @@ This is research only, with no animation implementation or motion/performance pa
 Independent re-review APPROVED the corrected wind research recommendation.
 Approval is limited to technical framing and implementation boundaries; it does
 not qualify animation, visual quality or performance. No runtime wind changes.
+## TREE-POPULATION-002/v1 — library variation and canopy-preserving LODs
+
+User requested active spawning with many variations, then rejected see-through
+far LODs that expose players behind a previously dense crown. Preserve original
+Blender specimens, four species and the production placement entry point. Initial
+variation target: original nine plus one juvenile alternate seed and two mature
+habits (Woodland/Weathered) per species,21 distinct authored shapes total. Source
+seed/habit controls must produce branch differences, not merely instance scaling.
+Preserve capacity512,240m radius,18m spacing,14m clearing while qualifying the
+library; new world streaming/density is not introduced in this slice.
+
+Before first correction run, broadleaf LODs will retain the identical selected
+leaf set, positions, scale, materials and outline across all three levels. LOD1/2
+remove the internal fold (four to two triangles per blade) and simplify wood;
+they no longer drop most leaves and amplify a sparse subset. This increases far
+geometry cost and is not assumed to pass performance. Spruce retains its existing
+needle-cell representation pending direct review. Fixed in-game views1600x900,
+FOV75, actual scene lighting; record view transform, sample IDs and model hashes.
+Require full crown continuity across LODs, no newly exposed large canopy holes,
+plausible roots/trunks, and independent approval. Native metadata must show three
+decreasing triangle totals and aligned physics on every model. Physical trunk
+contact and canonical figure-eight remain acceptance requirements.
+
+Use unchanged BIOME-FIGURE8-001/v2 recipe/route/display and both full before/after
+results once GPU export work is idle. Preserve existing rejection and compare
+FPS<=5%,tails/allocations/memory<=10% regression limits with a matched tree workload.
+Variation generation and new LODs are candidate work until these checks pass.
+### TREE-POPULATION-002/v1 — wood LOD correction pre-run
+
+Native in-world inspection of candidate 473, Oak_Mature_Open_Grown_1701, found a dark triangular trunk patch at the distant camera (2416.14429, 2028.23962, 753.848572), angles (2.57600808, 167.413635, 0), FOV 75. The patch persisted in Albedo debug and disappeared in the close view (1047, 2840, 805), angles (7, 148, 0). The ray hit the ordinary trunk collider; evidence is TreeImport/trunk-wedge-ray.json. The prior exporter decimated an already-packed/baked UV atlas. Correction under validation: simplify each wood LOD first, pack all three into shared structural/fine atlases, bake those final surfaces, and export per-face LOD selections without further decimation. Pass criteria: no dark wedge at the recorded distant/close views, finite geometry/UVs, strict LOD triangle reduction, unchanged collision/scale, original 14 source fingerprints preserved. Same population scenario and performance gates apply.
+
+Independent source review declined collection cleanup ownership and completion-marker handling. Corrections preflight all three specimen collections, remove only newly created collections, invalidate the installed manifest before overwriting, and verify installed dependency hashes before catalog publication. Re-review requested; no acceptance claimed yet.
+### TREE-FIGURE8-001/v1 — live edited-world baseline definition
+
+The previously requested BIOME-FIGURE8-001/v2 world revision0 is no longer available in this live scene: user edits have advanced the same saved world to revision6, and the inherited first-person EyeAngles cannot be restored through native inspector properties. Resetting this world would destroy user edits. This substantive mismatch requires a separate baseline; prior v2 failures remain and are not compared as continuous results. Preserve the canonical figure-eight algorithm, speed2500, distance50000, loopCount1, clearance393.7008 and automatic GPU drain plus10s standing. Fixed originXY(-1.6258175,1.2225341), startingZ340; inherited camera angles(-0.717599094,156.492752,0), FOV75; physical2769x1529, normal first-person camera, controls enabled and visible. Native return must confirm the forced render size.
+
+Fixed world224da27d-e921-4b6f-804f-01502b831bc4 revision6, seed1337 generator49/protocol5, recipe land.75/mountains.3/plains.6/continental77724.09/mountainRegion18681.756/local5232.39/relief3072/ruggedness.45/sea0. Gameplay8,visual128,LOD0-5,extents4/4,cells32x16,grass64m, clouds coverage.32/wind8,3/heightVariation250/steps64/divisor4. Tree capacity512/radius240m/spacing18m/clearing14m/anchor0;294 placements. Baseline installed catalog10 (partly corrected LOD candidate, including the newly corrected mature oak), candidate target21. This measures remaining library expansion/LOD corrections, not the whole earlier import cost. Save source/catalog/manifest hashes and full native results. No Blender GPU work, captures, compilation or edits during timing. Criteria unchanged: FPS loss <=5%; p95/p99, allocations and CPU/GPU memory increases <=10%; completed streaming/correctness. No regression acceptance is implied by creating this baseline.
+
+Mature oak final-surface UV bake exported [265998,114996,100389] triangles, installed and compiled successfully. Actual unchanged camera capture oak-wood-lods-corrected.png shows previously black central trunks now continuous; other uncorrected models still show wedges. Independent source re-review APPROVED the two preservation fixes; visual/performance approval remains separate.
+TREE-FIGURE8-001/v1 baseline attempt1: started14:25:31, completed moving route and entered standing window. At14:28:06 native save failed with an exclusive file-use error on results-v1.jsonl while external polling read that file. No completed result was saved; this attempt is INVALID and retained as an infrastructure failure, not a performance pass. Stop all result-file reads until the native console reports performance.result.saved. Repeat exact unchanged scenario. Preflight corrected native logical dimensions1846x1019 to measured physical2769x1529 before the first run; requested2769x1529 had measured4154x2294 and was not used for timing.
+### TREE-POPULATION-002/v1 — fine branch correction pre-run
+
+User additionally rejected black branch lines and blurry small-branch textures. Native close canopy capture at(1010,2740,1110), angles(-10,138,0), FOV75 showed thin black fine-branch slivers even on the corrected mature oak. Source Twigs has484504 vertices/459628 faces, radius median.00202m, max.055m. The former export collapsed many disconnected tubes into a36k-triangle budget and projected them into a2048 atlas. New candidate reconstructs closed tapered tubes from their original rings, retains major bends, enforces4-6 sides with caps, and selects larger source sweeps within the existing triangle budgets. Fine branches keep cylindrical tiling, with a Blender-baked reusable young-bark color/normal/roughness tile instead of tiny per-branch atlas islands. Main wood retains the tested simplify-before-bake correction. Criteria: no black slivers/atlas wedges on the corrected specimen; round tapered fine branches with coherent surface detail in fixed near-canopy views; finite UVs/geometry, closed tubes and budget compliance; unchanged source fingerprints. Repeat one mature oak before batch publication.
+
+The unchanged figure-eight restart was rejected by the normal precondition while visual LODs settled; no timed attempt began. User subsequently changed camera orientation. The previous failed-save baseline cannot serve as a matched comparison; the pre-correction10-model assets have been preserved locally for a matched before/after pair after visual iteration, with camera/world parameters recorded before either run. No performance pass is claimed.
+Independent fine-branch source review DECLINED centerline-only ring selection: almost straight source attachments begin narrow, widen, then taper, and their middle radius could be discarded. That export completed but was withheld from installation. Corrected ring selection uses both centerline and radius interpolation error, preserving the attachment flare before budget selection. Re-export/re-review required; no visual approval implied.
+### TREE-POPULATION-002/v1 — fixed LOD inspection pre-run
+
+Use the ordinary installed mature-oak prefab in the current playable world at(300,0,315.855713), yaw0, scale1; soil ray hit(300,0,319.855713), four-inch root inset. Native ModelRenderer.LodOverride selects0,1,2, then returns automatic. No new component type, scene or test-only asset. Fixed1600x900 captures,FOV75; force viewport logical1846x1019 during the comparison. Full-tree camera(-1000,-900,800), angles(6.5,34.7,0). Near trunk camera(90,-110,410), angles(0,28,0). Inspect front/reverse branch surfaces and crown continuity. Temporary inspection prefab is removed after review; existing user-placed prefab is untouched. Actual player may be placed briefly behind the trunk for visibility checks, with its prior transform restored afterward. These static checks supplement actual population views and do not establish wind/temporal stability or a physical walking collision pass.
+### TREE-POPULATION-002/v1 — branch and bark correction, September 20
+
+The fixed oak captures `oak-fixed-lod0/1/2` preserve the crown. Independent visual
+review approved canopy continuity and player concealment in
+`oak-trunk-occlusion-reference/lod0/lod1/lod2`; the reference exposes the actual
+player and all three trunk LODs hide it. It declined clean wood continuity: tiny
+bright/dark cracks appear at LOD2 branch joins. `oak-near-bark.png` also shows
+insufficient bark resolution. The fine-branch before/after images were approved
+for rounded stems replacing black slivers, but their viewport magnification
+changed and they establish qualitative appearance only.
+
+Candidate correction: simplify the closed, fused Blender construction wood as
+one surface, then split semantic parts by face membership while preserving
+shared boundary positions and corner normals. All simplified structural edges
+must remain manifold. UV0 retains the unique bake; UV1 preserves branch-aligned
+source charts for tiled fine color/normal detail using the already installed
+young-bark tiles. Fade detail at welded collars, retain opaque wood, and allocate
+no additional texture set. Before acceptance, repeat the same fixed near-bark
+camera (300,-95,430), angles (0,90,0), and forced LOD2 occlusion camera
+(-100,0,380), angles (0,0,0), FOV75, 1600x900 capture, logical viewport1846x1019.
+Criteria: no daylight seams across structural joins, no black triangular shards,
+sharp aligned bark grain and readable relief without strong repeated stripes.
+Independent visual approval and the pending figure-eight remain required.
+The first continuous-wood export was rejected before installation because copied
+LOD attributes retained level0; corrected by overwriting the existing attribute
+and requiring all five semantic wood parts at every level. The corrected oak
+export has263516/114746/94750triangles, zero nonmanifold structural edges, and
+all parts. Independent source review approved the corrected exporter and shader.
+Native model and material compilation succeeded. FBX readback confirms separate
+UV0/UV1 channels and the collar mask. A temporary shader diagnostic demonstrated
+crisp detail sampling; it was removed. Blending the young-bark color directly
+introduced a visible collar color mismatch and was rejected. The candidate now
+modulates source color with normalized monochrome grain and blends the sharp
+tiled normal with the bake; no direct replacement of species color remains.
+Independent visual review approved the exposed wood continuity and absence of
+black slivers/collar bands, but DECLINED close bark relief: muted shallow grain
+still failed the close-view standard. The grain-only candidate also retained too
+much atlas softness. Current candidate uses uniform high-resolution color weight
+across collars (85%, reduced on birch), stronger tiled normals, and the engine's
+native derivative-aware parallax routine below eight meters. A matching2k height
+scan is now an explicit material/manifest dependency. This adds texture memory
+and near-view sampling cost, to be included in performance acceptance. No claim
+of animated foliage or geometric silhouette displacement follows from parallax.
+
+The authoring audit initially failed object fingerprints for all14specimens;
+materials and source attributes matched. Exact re-hashing with only signed zero
+normalized matched EVERY original object, proving that matrix restoration had
+changed Euler0.0 to-0.0, not geometry/UVs/materials/guides. Preserved the failure
+as source-preservation-signed-zero-failure.json. Builder cleanup now restores
+local transform channels exactly instead of decomposing a matrix. Restore only
+those zero signs in the open authoring objects, then repeat the original audit.
+Both protected .blend files retain their original byte lengths and timestamps.
+### TREE-POPULATION-002/v1 — conifer LOD inspection pre-run
+
+Inspect the ordinary mature-spruce prefab at the same temporary location
+(300,0,315.855713), yaw0,scale1. Fixed full-tree pose(-1000,-900,800),
+angles(6.5,34.7,0),FOV75,1600x900; logical viewport1846x1019. ForceLOD0/1/2
+through ModelRenderer, restoreautomatic afterward. Compare crown footprint,
+new canopy openings and needle-card scale. No player repositioning in this pass.
+The temporary oak inspection instance was removed; the user juvenile prefab
+is preserved. This diagnostic does not establish a performance pass.
+The exact seam-safe oak material passed independent source and visual review in
+oak-near-bark-seam-safe.png and oak-branch-bark-seam-safe.png. CircumferentialU
+remains integral (scale1), while Vscale0.5 enlarges plates. Height-derived
+microocclusion and stronger normals establish readable relief in the shaded
+canopy. Collar color modulation returns to the baked parent chart. This is an
+approval of the shown oak surfaces only, not moving parallax or all species.
+
+Spruce-before-lod0/1/2 reproduces a separate far-LOD defect: the coarse cell
+representation enlarges needle cards, makes basket-like gaps and changes crown
+coverage. Candidate correction uses shared fixed cells at every LOD,0.045m for
+juvenile and0.18m for mature. Every level retains identical centers, orientations,
+card sizes and texture coordinates; only wood/fine tubes simplify. Mature near
+foliage uses fewer cells than the old0.12m source, while distant foliage gains
+geometry versus the old0.44m level. This fidelity/cost tradeoff remains subject
+to unchanged visual/occlusion criteria and measured figure-eight acceptance.
+### TREE-POPULATION-002/v1 — mature spruce shared foliage result
+
+Native Blender export/install/model compile succeeded for Spruce_Mature_Open_Grown_3701: triangles248936/188200/168194,40361 foliage cells and0.18m cell size at every level, nine solid trunk shapes. Fixed-view spruce-shared-lod0/1/2 captures preserve the needle size and visible canopy footprint, replacing the oversized strip pattern in spruce-before-lod2. Main visual inspection found no new large canopy holes between these levels. Independent review is pending; no performance acceptance is inferred. Original source audit after signed-zero restoration passed all14 specimens exactly (source_unchanged=true), with protected files unchanged.
+
+Remaining species inspection uses ordinary installed prefabs sequentially at(300,0,315.855713),yaw0,scale1, preserving the existing user juvenile prefab. Full-tree views reuse(-1000,-900,800),angles(6.5,34.7,0),FOV75,1600x900,logical1846x1019 and forcedLOD0/1/2. Near branch/bark views use(300,-95,430),angles(0,90,0) and(295,-95,545),angles(-18,90,0); juvenile whole-tree view uses(-80,-300,460),angles(4,38.3,0). Repeat exact poses per comparison; record any framing that does not reveal the intended surface as insufficient evidence. Criteria remain closed wood, no black shards, coherent sharp branch detail, no newly exposed large LOD canopy holes. These ordinary temporary instances are removed before timing.
+Independent visual review APPROVED the central mature spruce's static LOD consistency in spruce-shared-lod0/1/2. No new large gaps, oversized angular rods or black blade-like artifacts were visible; close needles, hidden branches, motion and performance remain unqualified.
+
+The next batch completed Oak Juvenile(42440/15216/8486triangles), then withheld Ash Juvenile when the all-five-parts assertion failed. Read-only native inspection establishes Ash Juvenile and Birch Juvenile source wood contain only Trunk/Branches faces; their authored RootTips remain separate and their thick Roots mesh is empty. The exporter now requires exactly the parts present in the original source plus RootTips/Twigs, preserving triangle conservation and closed wood checks instead of fabricating thick roots or weakening missing-authored-part detection. Original source geometry remains untouched.
+
+Independent runtime source review DECLINED the missing finite-bounds guard: NaN comparisons could bypass the two-inch tolerance. Added explicit three-LOD structure, coordinate finiteness and ordering checks for exported and compiled bounds before comparison. Re-review and real catalog loading required.
+### TREE-OAK-VARIATIONS-001/v1 — user-directed oak library
+
+The user explicitly instructed: skip the performance test and prioritize a dozen interesting variations of the same tree, specifically oak. This supersedes the pending figure-eight gate for this task; no performance pass or regression acceptance is claimed. The new target is twelve oak source shapes: preserve original juvenile/mature/large1701 and add nine recipes1712-1720. Retain the other six original ash/birch/spruce specimens, for18 installed models total. Earlier21-model mixed-species target is superseded, not silently reported as complete.
+
+Recipes are fixed in catalog_variations.json version2 before generation: young spreading, tall woodland, weathered leaning, low fork, broad meadow, upright irregular, wide old, one-sided hillside, compact crooked. Each combines an explicit seed with modest height/spread/girth/fork/lean/asymmetry controls through the existing native Blender generator and editable guides. No source-reference overwrite, runtime mesh generator or new world density is introduced. Builder applies preset first, then validated growth-control overrides; recipe/build metadata records the actual settings.
+
+Acceptance: twelve distinct oak keys and completed model/prefab dependencies; three decreasing LOD counts and solid trunk physics; actual playable population selects every oak variant at least once under the existing scenario when terrain permits, reporting any absent variant; native fixed-angle views establish visibly different branching/crown silhouettes and retained near/far coverage, with strict independent review. Original14 source fingerprints and protected .blend timestamps/bytes must remain unchanged. Preserve failures and do not describe performance or wind as tested.
+The nine-profile source path passed independent review: allowed overrides reach the real Blender generation operator, settings/names persist in separate source libraries and ordinary prefabs, and cleanup still protects existing specimens. Exact export bytes are exempted from Git line-ending conversion because manifests validate text assets as well as binary meshes/textures.
+
+Independent static visual review APPROVED the corrected ash/birch branch material and LOD continuity in their fixed views. Their source crowns remain airy atLOD0; no additional large holes appear atLOD2. Ash close bark softness and angular birch leaf outlines are documented refinements, not an all-species art-quality approval.
+
+First oak review group APPROVED new Juvenile1712 and Woodland1713 plus preserved Large1701: distinct compact juvenile, long clear woodland stem/elevated crown, broad deep large-oak crown. LOD2 retains foliage size/coverage and no black slivers/daylight splits were found. Large1701 shows mild far-fork angularity and collar grain compression, nonblocking in the reviewed views. Evidence uses each key's lod0/lod2/bark images under TreeImport. Reverse/hidden surfaces and motion remain unverified; performance intentionally skipped.
+### TREE-OAK-VARIATIONS-001/v1 — second review and bark correction candidate
+
+2026-09-20: Independent visual reviewer approved low-fork oak 1715 and broad-meadow oak 1716. Weathered oak 1714 passed silhouette, density and LOD coverage but was declined for triangular smeared bark patches at the upper fork (x1240–1380/y80–380 in oak_mature_weathered_1714-bark.png). Preserve this failure image. Candidate: reproject final simplified wood faces onto original swept branch frames before atlas baking; do not change geometry, profile or seed. Source reviewer approved the approach for qualification. Require unchanged vertices, topology and export_part, finite UVs/weights and closed surfaces, then repeat the same native pose plus an oblique view and independent review. No performance run, per user instruction.
+### TREE-OAK-VARIATIONS-001/v1 — third independent review
+
+2026-09-20: Woodland1717 approved for shown LOD0/LOD2 and bark views: substantial irregular upright crown and supported foliage, preserved coverage/wood continuity. Large1718 form and LOD coverage approved; close-surface acceptance declined for jagged triangular bark transitions at x885–975/y30–300 in oak_large_open_grown_1718-bark.png. Preserve failure. Reuse the branch-frame reprojection candidate, if qualified on1714, for1718 and re-review. Hidden joins, moving transitions and performance not established. Code reviewer separately identified an RNA collection lifetime hazard in the candidate's assertion guard; replace the retained collection reference with reacquisition after binding before further exports. Current native1714 run is allowed to complete without modifying its source mid-run.
+## STONE-BREAKUP-001/v1 — fixed visual scenario (2026-09-20)
+
+One shared Stone3 material for exposed rock, cliffs and underground walls.
+Current source: dirty workspace, engine26.09.15; world224da27d-e921-4b6f-804f-01502b831bc4,
+revision121 at preflight, seed1337/generation49. No world edits authorized by this scenario.
+Use TERRAIN-RELIEF-001/v1 recorded rock positions as a supplementary visual
+check in this different world, not as a comparable historical performance result.
+Player(-342800,-216600,1750); settle20s. Cameras A(-342760,-216600,1730),
+B(-342744,-216600,1730), C(-342776,-216600,1730), angles(15,-90,0),
+FOV60,1280x800. Retain current light, render settings, world and source between
+before/after except stone baker, its five outputs and generated physical metadata.
+Return player to(1710.82751,-1652.08215,749.357361) and game-camera mode after checks.
+If stone is absent, record the failed preflight before selecting another actual
+stone location. Pass: recognizable three-metre motif rows disrupted; connected
+bedrock faces retained; no new patch/grid seams; aligned relief on A/B/C motion;
+zero shader/material compile errors. Compare exact repeated return pose for
+stability. All views are native game captures.
+Candidate keeps source scan, one material, existing runtime ray and texture reads;
+4096px/12m periodic warp replaces2048px/3m direct scan. Height interval180mm,
+minimum height mip1 retains the prior170.7height texels/metre. Color resolution
+falls from682.7to341.3texels/metre; total compiled stone mip storage estimated
+from21.3to85.3MiB (twoBC7 and oneR16F), an added64MiB. These are estimates,
+not measured frame cost. Ray algorithm, terrain geometry and world identity remain.
+Canonical figure-eight qualification remains required. The historical world3991/
+pages873 baseline is unavailable in this new generation49 world; do not silently
+substitute its workload, accept a regression, commit or push an unqualified candidate.
+
+STONE-BREAKUP-001/v1 preflight: recorded rock target is still Stone3 in world224da27d,
+revision121. The player changed position and camera mode during scouting; the
+original A/B/C sequence was not completed. Preserve their new player position.
+Unmatched user-camera before/after cliff captures are supplementary evidence only.
+For a new bounded close-view check, native trace from the current player view hits
+World at(-346150.25,-216473.625,2471.30127), normal(-.5222224,-.549172282,.652452052).
+Before close run, fix camera to hit minus100units along direction(pitch6.20823526,
+yaw42.9921265); side view offset16units along horizontal camera-left, same angles,
+return to exact first pose. FOV60,1280x800. No player movement. Pass: fracture/height
+features remain connected across these views, with no gross smearing or new grid seams.
+This is a supplementary visual check, not an independent POM-on/off proof.
+
+### TREE-OAK-VARIATIONS-001/v1 — collar continuity candidate
+
+2026-09-20: Reprojected1714 preserved geometry and LOD coverage but independent visual review declined remaining angular detailed patches at the same fork. An isolated material-strength0 capture (base-only-bark.png) removes those sharp detail patches; the exact original material bytes were restored and compiled immediately afterward. This narrows the defect to the extra detail contribution; it does not establish every source bake is perfect. The detail collar mask previously differed per corner across welded trunk/child boundaries. Candidate: reconcile mask to each vertex minimum, expand two edge rings and average three rings, then emit identical mask values at incident corners. Same geometry, same UV frames, same seed/profile. Require same-pose fork acceptance without masking the problem with a camera change; no performance test.
+### STONE-BREAKUP-001/v1 — candidate result
+
+Current world224da27d-e921-4b6f-804f-01502b831bc4 revision121/seed1337/gen49.
+Baker executed successfully twice; five4096px PNG hashes are identical between
+runs; manifest output and generator hashes match. Height uint16 range5711..53494;
+p5/50/95:22815/33279/42980, or62.664/91.405/118.050mm in the180mm interval.
+Baseline2048px range13276..47110, p5/50/95:25712/33070/39815,
+or47.081/60.554/72.905mm in120mm. Central90% depth span25.824to55.386mm.
+This measures authored map range, not a physical measurement of rendered rock.
+Native compile_source_shader(shaders/voxels/voxel_terrain.shader) succeeded,
+with profile-upgrade warningE41012; full voxel_terrain.vmat asset_compile succeeded.
+Editor reports zero managed compile errors. Latest console read includes asset
+recompile messages and unrelated tree-material edits, not a complete error audit.
+
+Main native captures before-cliff/after-cliff show the repeated diagonal motif
+rows disrupted into broader varied rock faces, but poses differ: no matched-image
+quality metric is claimed. Close camera readback(-346222.969,-216541.422,2482.11548),
+side(-346233.875,-216529.719,2482.11548), angles(6.20823526,42.9921265,0),FOV60,
+1280x800. Root inspected both images: connected faces/cracks, no new visible grid
+seams or gross smearing. Return image data is byte-identical to close image.
+No POM-off comparison, long motion sequence, underground lighting check, or cold
+editor restart was run; these remain unverified. Original historical A/B/C run
+was interrupted by the player's camera/position changes and is not a pass.
+Camera restored to Game mode; preserved the user's newer player position instead
+of moving them back against their navigation. No terrain mutations performed.
+
+Evidence: [cliff before](ValidationEvidence/StoneBreakup/before-cliff.png),
+[cliff candidate](ValidationEvidence/StoneBreakup/after-cliff.png),
+[close](ValidationEvidence/StoneBreakup/after-close.png),
+[side](ValidationEvidence/StoneBreakup/after-side.png),
+[return](ValidationEvidence/StoneBreakup/after-return.png).
+
+Decision: retain visually screened candidate for user review; not full acceptance.
+Canonical figure-eight not run: its historical world/pages baseline is unavailable
+and current generation49 differs; concurrent unrelated runtime asset changes also
+prevent a clean controlled comparison. No performance equivalence claimed. Cold
+restart pending. No commit/push under the project's acceptance gate. Preserve the
+pre-change stone inputs in.codex/stone-breakup/before for comparison/recovery.
+
+STONE-BREAKUP-001/v1 USER REJECTION: The user rejects the candidate as unnatural,
+weird-looking and a visual failure. The previous root visual screening was
+insufficient and is superseded by this rejection. Candidate output/screenshots
+remain historical evidence. Restored pre-task stone baker, generated constants,
+five stone maps and manifest from the exact pre-change backup. Future candidates
+must receive an independent rendered visual review and approval before acceptance.
+
+STONE-BREAKUP-001/v1 candidateB planned before bake/run: replace rejected coordinate
+warp with translated Cliff Side scan patches quilted by minimum color/height-error
+cut paths.4096px/6m,200mm authored scan-height interval,mip2. No AO-added height,
+source deformation or broad color suppression. Same five outputs and shared runtime
+path. Use fixed close/side/return poses above, plus native wide cliff view. Criteria
+unchanged; independent reviewer must approve rendered realism, sharp believable
+fracture structure and lack of visible quilting before claiming visual success.
+
+### TREE-OAK-VARIATIONS-001/v1 — continuous collar detail
+
+2026-09-20: Interim smoothed mask suppressed triangular seams but was declined for blurry collar texture. Final mask preserves its original zero-weight core after every averaging pass (source approved). Candidate shared bark shader now fills the collar with world-space triplanar detail using the same bark tiles; branch-aligned detail remains elsewhere. Native material compilation initially reported success while the asynchronous shader failed because a float4 lighting offset lacked .xyz; the first continuous-collar image used the previous shader and is invalid as evidence for the candidate. Corrected to .xyz. Source review also caught green-channel orientation: negate decoded Y consistently with engine TransformNormal and terrain gradient mapping. Qualification must verify compiled shader timestamp before new captures. Performance remains skipped.
+CandidateB rejected by independent reviewer: severe recurring ledges and diagonal
+fracture groups in rows; close view largely covered by new user-authored dirt.
+CandidateC retains angular scan forms with reflected as well as translated donor
+patches (fine normal signs follow reflections), expands field6to12m and authored
+height200to240mm. This is a candidate revision, not a changed validation criterion.
+Reviewer still must approve wide, stone-filled close, and oblique views. User terrain
+edits invalidate pixel-matched comparisons; do not erase those edits for testing.
+
+CandidateC additional fixed stone-only poses (declared before capture): close
+(-346052.469,-216724.172,2482.11548),angles(6.20823526,42.9921265,0),native trace hits
+World at(-345968.875,-216646.266,2469.6897). Oblique camera is that hit plus70units
+along its normal(-.503344238,-.568582773,.650659859) and150units along horizontal
+left(-sin42.9921265,cos42.9921265,0), looking at the same hit. FOV60,1280x800.
+These move off the user-authored dirt patch without mutating it. Inspect both
+actual captures for stone coverage before sending them to the independent reviewer.
+
+## STONE-DEPTH-001/v1 — exaggerated stone relief (2026-09-20)
+
+User explicitly approves candidateC stone texture and requests deep, exaggerated
+cracks and sharp jagged bedrock edges. Preserve C color/roughness/AO/height bytes;
+change authored height interval240to800mm and minimum height mip2to1, rebaking
+macro normals from exactly the same height. Stone-only full-depth distance16m,
+fade-out40m; other material fades8–16m unchanged. Stone ray steps follow projected
+height-texel travel at selected LOD, target1.25texels/step, cap128; retain existing
+4bisections and final interpolation. No shadow/silhouette/collision change claimed.
+
+Fixed native views reuse candidateC wide(-346814.812,-217093.141,2570.13184),
+close(-346052.469,-216724.172,2482.11548), angles(6.20823526,42.9921265,0), and
+oblique(-346106.406,-216576.344,2515.23584), angles(16.4483871,-26.9493732,0),
+FOV60,wide1600x900/close1280x800. Add a16unit horizontal-left translation of
+close and return to the exact close pose. Preserve current light/world and user
+edits; read revision each run. Pass: visibly deeper connected cracks/ledges in
+close and oblique views without gross ray streaking, tearing or grid seams;
+unchanged color/height/AO/roughness hashes; stable return; zero compile errors;
+independent rendered review approval. Reviewer may reject exaggerated depth
+if the requested sharp bedrock structure is lost. Canonical performance/cold-start
+requirements remain and cannot be inferred from visual approval.
+
+STONE-DEPTH-001/v1 D: shader and material compiled. Independent reviewer rejects
+striped/stretched projections at steep ledges and diagonal ridges, while noting
+strong convincing fissures in central/upper areas. Preserve D screenshots.
+The former close trace now misses World, so the scene has changed or its collision
+residency differs; do not claim a controlled C-to-D geometry comparison.
+E limits authored interval to500mm, still2.08times the approved texture's240mm,
+while retaining finer height mip and footprint-based128step bound. Central90%
+source height span is.375494, hence intended500mm interval spans187.747mm;
+this is materially exaggerated depth without D's800mm excursions. Same visual
+criteria, independent reviewer and fixed camera definitions remain.
+
+### TREE-OAK-VARIATIONS-001/v1 — fork qualification and branch palette failure
+
+2026-09-20: Final1714 preserved-core mask and continuous triplanar collar detail passed independent review in continuous-final-bark.png and LOD0/2. Reverse-fork capture clears only its exposed joins; leaves occlude much of the reverse. Source reviewer approved corrected shader green-channel convention and explicit absolute-position .xyz. Shader compiled16:34:08 aftersource16:34:02. Later user screenshot user-small-branch-color-before.png independently exposes an abrupt gray limb to dark brown twig boundary. Existing fine_textures imposed a65% fixed brown tint unrelated to the parent palette. This is a new visible failure and blocks final material acceptance.
+
+Candidate: copy native parent bark material palette onto the reusable fine tile, with scan image vectors reset to raw periodic UVs (no baked offset crossfades or double runtime offsets), gentler normals, and periodic torus coordinates for birch's procedural marks. Bake above root flare with explicit branch radius. A material-only refresh validates all completed staging hashes, invalidates its marker, rebuilds fine textures, verifies unchanged geometry/material/othertexture bytes, and publishes material provenance atomically. First qualify mature1701 at the user's captured view and ordinary close branch views; then all installed species/stages. Require no abrupt brown replacement on gray supporting branches, no new tile seams, original14sources unchanged and independent review. Performance test remains explicitly skipped.
+### TREE-OAK-VARIATIONS-001/v1 — material qualification interrupted by memory exhaustion
+
+2026-09-20: Source reviewer approved periodic parent-palette fine-tile baking and atomic material-only refresh. Native Blender refresh_fine_materials(oak_mature_open_grown_1701) completed, with all other dependency hashes unchanged; installer published it and fine-material native compilation returned Success:true. Before the after-image could be captured, s&box logged [mimalloc] error12: outofmemory at17:14:14 and exited. Blender was also no longer running when checked; its exit cause is not established. At17:19 only~1.5GBphysical memory was free on32GB; a separate game occupied~19.1GB. It was not controlled or terminated. User was asked to free memory. The before-image and camera pose are saved; after-image and visual acceptance remain pending. Do not label the color fix visually accepted. Only mature1701 has the material refresh installed so far. Ten oak models/six other models are installed; the last two requested oaks remain pending. Corrected Large1718 exists in staging but still needs installation. Performance remains skipped as requested.
+### TREE-OAK-VARIATIONS-001/v1 — preserved library and offline state
+
+During the app shutdown interval, tree_library.blend was saved at17:14:54 (3301980827bytes). The prior file remains as tree_library.blend1 with the exact earlier3307770832bytes and mtime_ns1789898923987851600. Preserve the newly saved file; its writer and content changes are not established. A separate archival copy of the prior file is held at .codex/tree-export/preserved-tree-library.blend before any future save can rotate .blend1. oak_studies.blend still has the original836907989bytes andmtime_ns1789885856836360300. Native14-specimen fingerprint comparison on the newly saved library remains pending; earlier source-preservation pass must not be described as a post-shutdown audit. Offline installed dependency verification passed for current16models/10oaks; exact counts and hashes are in variation-partial-manifest-audit.json. No task commit/push yet because native color qualification and final2oak builds are incomplete.
+## MARSH-SURVEY-001/v1 — frozen before first marsh runtime run (2026-09-20)
+
+Status: NOT RUN. Visible editor unavailable after a separately reported s&box out-of-memory termination; no headless substitute. Source candidate generator50, river14, water8, protocol6. Prior saves remain under independent versioned selectors.
+
+Parameters: one local host in basic_example; seed1337, LandAmount .75, MountainAmount .3, PlainsAmount .6, ContinentalScale77724.09, MountainRegionScale18681.756, LocalLandformScale5232.39, ReliefHeight3072, Ruggedness .45, SeaLevel0. Existing production ExportLandformSurvey only. Regional grid minimum(-262144,-262144),129x129,spacing4096. Local marsh grid minimum(69632,200704),33x33,spacing256, chosen from the existing generator48 seed1337 survey's humid lowland at(73728,204800), naturalHeight34.921303,T.7388779,M1,mountains0. This old sample is site evidence, not a generator50 result.
+
+Pass criteria: finite repeat-identical production heights; nine nonnegative biome weights summing to1 within1e-5; at least one new pool column with naturalHeight>=0, finalHeight<=-8 and MarshWeight>=.8 in the local grid; absolute final-minus-river height <=61.4401; all sampled heights enclosed by reported bounds. Run existing density and mesh audits at the local site, requiring their recorded sign/seam/invalid-geometry gates. Inspect existing water geometry diagnostics at loaded LODs, requiring zero invalid/reversed/degenerate geometry and valid decoded flow. Failure to find a new pool is a failed criterion, not permission to silently choose another grid.
+
+Visual procedure after production survey: choose the qualifying new-pool point nearest(73728,204800), then X/Y ascending for ties; record exact point, source hashes and camera parameters before capturing. Require eye-height, downward, ocean/river transition and far/LOD views with B-map/readout corroboration. Capture same-point views at least6seconds apart for calmness. Independent reviewer must judge pool readability, olive-brown tint, reflection/depth, muddy banks, ground/blade coherence, and absence of visible LOD holes/tint seams. This is not yet a completed visual run; any additional view/site must be documented before capture.
+
+Performance: reuse BIOME-FIGURE8-001/v2 unchanged. Freeze tree/assets and all settings before a new pre-marsh/candidate pair; use the saved pre-marsh source snapshots for the control, preserve saves, and capture full source/environment identity. Do the matched pair before distant survey travel. Require the existing FPS, pacing, allocation/memory, streaming and correctness gates; earlier candidate process-memory failure remains unresolved and is not a passing baseline. Additional appearance-page ownership and interior refinement work must be measured, not inferred from byte width.
+
+## MARSH source/build checks — 2026-09-20
+
+First managed build FAILED: three CS1061 errors in VoxelManager.Water.cs:325 because the existing inspection loop still treated RGBA bytes as Vector2 samples. Corrected that production diagnostic to decode signed XY and account for its documented quantization bound. Subsequent runtime build PASS (0errors,3warnings); editor build PASS (0errors,3warnings). Warnings: existing VoxelDebugOverlay.razor method-group CS8974 and two existing host-migration SB3006 warnings. These managed builds do not compile/qualify VFX shaders.
+
+Independent source review found hidden-pool support, shallow-river-cut pruning, shared atlas ownership and view-dependent masking issues; final source resolves the specific findings. See ValidationEvidence/Biomes/marsh-source-review.md. No in-world images, shader/cold-start, reset, material/medium audit or performance run has occurred for marsh. Not accepted, committed or pushed. Current editor unavailable; user must recover available memory and reopen the visible editor before native qualification can proceed.
+
+
+## GRAVEL-001/v1 — separate material and relief (defined before runtime)
+
+2026-09-20. Candidate Gravel7, density generator50/water8 unchanged, network
+protocol7. Source identities: [gravel hashes](ValidationEvidence/Gravel/source-sha256.json).
+Design and known costs: [gravel terrain](Plans/GravelTerrain.md). User requested
+large rough grains, parallax depth, and a separate terrain material.
+
+Production scenario: basic_example, one local host, seed1337; preserve current
+saved world and all edits. Use existing production column/material inspection
+and native camera tools only. Locate candidate points on the fixed XY grid
+minimum(-262144,-262144),129x129,spacing4096 with the current scene recipe
+(LandAmount.75,MountainAmount.3,PlainsAmount.6,ContinentalScale77724.09,
+MountainRegionScale18681.756,LocalLandformScale5232.39,ReliefHeight3072,
+Ruggedness.45,SeaLevel0). Select the first actual Gravel7 surface in ascending
+Y then X; record exact point, height, world revision and runtime settings before
+captures. No qualifying point is a failure, not permission to tune coverage.
+At that point inspect lattice-aligned samples at16-unit spacing from the first
+solid node down96units. Require Gravel7 within the declared32–64unit layer,
+normal underlying material below it, Air above the actual exterior, and identical
+repeated queries; retain existing placed Dirt2 overrides. Inspect regular and
+transition boundary views and existing density/mesh audits; require zero new
+invalid geometry, signs, seam failures or displaced collision.
+
+Visual workload: native1600x900,FOV75 at the selected point plus eye offsets
+(0,-64,48), looking toward its surface; translate16units in X, then return;
+repeat at(0,-192,48), then view from(0,-768,192). Record exact resolved camera
+poses before each capture and preserve light/settings. Require distinct3–7cm
+rough angular grains, visible relative depth/gaps under translation, stable
+return, matching normal/height features, no conspicuous tile-edge seams, ray
+streaks or material holes, and no grass rooted on pure gravel. The far view
+must fade depth continuously. Image generation produced1254x1254 RGB8 color
+and height; engine asset compilation must confirm their usable texture format.
+
+Performance qualification: reuse the existing BIOME-FIGURE8-001/v2 workload
+unchanged (its original recipe/route/display and gates, including frame pacing,
+process/GPU memory, allocation and settled streaming). A valid comparable
+pre-gravel baseline is required; the earlier process-memory failure is not an
+accepted baseline. Preserve current edits if its world/revision preconditions
+are unavailable; document the blocker rather than reset the world or silently
+change the workload. Record all source/environment differences and obtain the
+required scenario version decision before a noncomparable run. Frozen pre-edit
+source snapshots are retained under .codex/gravel-work. Include the extra4bytes
+per vertex and scratch edge in measured memory, not only frame rate.
+
+### Preparation/build results — 2026-09-20
+
+- Runtime C# build: PASS,0errors,3existing warnings (CS8974 method-group binding
+  in VoxelDebugOverlay; SB3006 host-migration warnings in VoxelManager and
+  VoxelManager.Networking). Editor C# build: PASS,0errors,the same3warnings.
+- Source inspection covered regular/transition vertex writes, forward material
+  inputs, depth/shadow buffer reads, grass roots, scratch allocation/accounting,
+  quantization totals and material precedence. Shared vertex size is32bytes.
+- Initial docs update encountered a local text-decoding error. It was corrected
+  using explicit UTF-8; source/doc output encoding and line endings rechecked.
+- Native editor_status failed with connection refused at127.0.0.1:7269/mcp;
+  no sbox process was available. No game/client was launched as a substitute.
+- Resourcecompiler help was inspected only. Prior project evidence shows missing
+  standalone mount context; no shader compile pass is claimed.
+- Runtime visual/material/LOD/cold-start and figure-eight checks: NOT RUN.
+  Managed builds do not validate VFX/HLSL. Candidate is not accepted, committed
+  or pushed while mandatory runtime qualification is unavailable.
+
+
+## CLAY-SURFACE-001/v1 — Independent clay asset (2026-09-20)
+
+Status: file preparation complete; runtime qualification NOT RUN/incomplete.
+Scope: independent material asset, not procedural placement. Existing terrain
+continues using voxel_terrain.vmat with F_CLAY_SURFACE disabled. No voxel Clay ID
+or world-distribution behavior is claimed. Pre-edit shader snapshots are in
+.codex/clay-work; other existing working-tree changes were preserved.
+
+Frozen asset parameters: original1254x1254 RGB8 color/height images;
+height uses linear R;0.5m world-space tile,0.008m height interval,minimum mip2,
+roughness0.88,cavity floor0.92. Color/height source hashes and full generation
+prompts are recorded in Assets/textures/terrain/clay/manifest.json. The same
+filtered height drives relief and normal slopes. Existing ray fade8–16m and
+texture-detail fade64–128m are retained.
+
+Before an in-world run, this asset requires an authorized actual clay terrain
+assignment through the production material path. No test scene/component or
+world-wide texture replacement is introduced to manufacture a passing visual.
+Record the resulting actual world revision, seed, surface point, material
+assignment and scene before freezing the live workload. Until that assignment
+exists, production-entry-point clay visual validation is blocked.
+
+Visual acceptance once that prerequisite is satisfied: native1600x900,FOV75,
+fixed lighting; eye offsets relative to the recorded clay surface point
+(0,-32,24), then translate8units in X and return; repeat(0,-96,24), then
+(0,-768,192). Aim each view at the recorded point and record resolved poses.
+Require fine muted blue-gray clay, shallow visible parallax during translation,
+stable return, aligned normals/height, no conspicuous tile seams or ray streaks,
+and continuous distance fade. No collision displacement is expected.
+
+Required integration checks: compile both F_CLAY_SURFACE variants through the
+native editor, inspect diagnostics, then clean-editor-start and unchanged crash
+marker/fresh log checks. Inspect unchanged existing material appearances because
+the height-surface sampling function is now parameterized. Performance requires
+the existing BIOME-FIGURE8-001/v2 workload and gates unchanged, including pacing,
+stream completion, memory and allocations, against a valid comparable pre-change
+baseline. No comparable accepted baseline is inferred from the existing failed
+biome memory run. Record any prerequisite blocker rather than changing workload.
+
+Preparation observations:
+- Both PNGs decode as1254x1254 RGB8. Color mean RGB=(114.94,122.96,133.02),
+  consistent with muted gray-blue; height R range0..225. Images were inspected
+  directly. Art inspection does not qualify the rendered result or exact map
+  registration. Opposite color-edge mean absolute differences are8.15/8.17
+  byte values on X/Y; seamlessness remains a rendered acceptance criterion.
+- Native endpoint127.0.0.1:7269 refused connection; no running sbox process.
+  No application was launched. Shader compile, clean-start, actual clay visuals
+  and figure-eight: NOT RUN. C# is unchanged; a managed build would not validate
+  these shaders and was not substituted for engine validation.
+- Acceptance, commit and push remain pending mandatory runtime qualification.
+
+
+## GRAVEL-001 correction — scattered placement removed (2026-09-20)
+
+User rejected random gravel patches around the world. Removed ProceduralGravel,
+its CPU selector, GPU coverage/depth recipe, bindings and column accumulation.
+The generator now emits zero gravel weight; the catalog, texture/parallax and
+six-weight transport remain. No substitute distribution or placement tool added.
+The v1 first-gravel-site workload is no longer applicable because its required
+natural distribution was explicitly withdrawn, not because a run failed. Prior
+v1 definition/history are preserved. No runtime result or performance acceptance
+is claimed by this correction; runtime qualification remains pending.
+
+Source pass criteria: zero references to ProceduralGravel, VoxelGravelCoverage,
+VoxelGravelDepth or gravelLayerDepth in Code/Assets; no CPU assignment to
+VoxelMaterials.Gravel; GPU generated gravel starts at0 and is never increased;
+material catalog and gravel color/height/shading bindings remain present. Check
+source and managed build. Native in-world regeneration remains unverified.
+
+Correction checks: source criteria PASS (no remaining placement symbols or CPU
+Gravel assignment); managed build PASS,0errors,3existing warnings. The editor
+subsequently became available: native editor_status identified voxels3,
+basic_example,playing,engine26.09.15. Forced compilation of both
+voxel_persistent_geometry_cs.shader and voxel_transition_geometry_cs.shader
+returned Success=true with empty diagnostic output. This establishes shader
+compilation, not regeneration of already resident meshes. No safe existing
+material-only refresh control was found; did not use ApplyTerrainRecipe, which
+creates a new world. Existing resident chunks may retain old material weights
+until normal regeneration/reloading. Visual/performance/cold-start qualification
+and commit/push remain pending; no scene/world reset was performed.
+
+### MARSH-SURVEY-001/v1 initial live observation and camera definition — 2026-09-20
+
+Editor recovered externally: sbox-dev PID25680, engine26.09.15, basic_example playing; native runtime/editor compilers report success,0errors/0warnings. No source changed this follow-up. Active world09e02f82-191f-4abc-b9dd-03cb10306e4a revision11, seed1337, matching frozen recipe. Local33x33 survey saved under ValidationEvidence/Biomes/marsh-survey-v1. It reports68 qualifying new-pool columns and195wet columns; maximum absolute refined-minus-river61.4400004, within61.4401 gate. First frozen nearest qualifying selection is(73984,205312): natural=river40.23603, refined=-9.670311, flowXY0, Marsh1. This demonstrates non-river depression samples, not yet enclosed rendered ponds.
+
+Before capture: player streaming position(73984,205312,96). Eye view camera(73728,205312,96),angles(10,0,0); downward view(73216,205312,1200),angles(50,0,0). Both1600x900,FOV75. Same-eye repeat at least6seconds later. Capture actual game ejected viewport. Preserve original player/camera state in .codex/biome-work/before-marsh-views.json and restore afterward. No water/terrain edits. Larger pond-shape candidate remains only a proposal until current rendered evidence establishes whether a change is needed.
+
+### MARSH-SURVEY-001/v1 follow-up results — 2026-09-20
+
+Local survey1089samples: repeat mismatches0, bound failures0, maximum nine-weight sum error5.000000014e-8. Four-neighbor connected components on the256-unit survey grid include two interior wet regions of75 and32samples; every sample in both has naturalHeight equal to riverHeight (no river carving). Coarse sampled enclosure is not proof of the continuous shoreline topology. Remaining five wet components touch the survey boundary. Evidence: marsh-survey-v1/analysis.json and samples.csv.
+
+Production column at(73984,205312),Z=-16..16,spacing4,count9: solid Dirt2 at-16/-12; Water4 at-8/-4; Air0 at0andabove. World09e02f82-191f-4abc-b9dd-03cb10306e4a revision11 unchanged. This confirms independent marsh depression, standing-water medium, and muddy bed in the canonical field.
+
+Frozen ejected eye capture NOT OBTAINED: although setting ejected camera succeeded, later screenshot returned not-GameEjected error. Subsequent read-only inspection found player at(68998.1328,201268.156,6305.97363),camera(68831.3828,201164.141,6534.45801),angles(37.2435341,31.956728,0); user/control ownership may have changed. Stopped camera/player mutations rather than reasserting the test view or restoring the old location. Native main-camera1600x900 capture current-view.png shows aerial marsh/coast and pond-like water features, but is not the frozen-site acceptance image. No source change was needed to establish existing river-independent pools; proposed larger-scale noise change was not applied. No new performance result. Editor released to the other task; independent aerial review pending, full near/far visual gates remain incomplete.
+
+Independent aerial review: visible isolated elongated pool on the right and an irregular central wetland with grassy islands; marsh water reads muted olive-gray versus turquoise coast. Reviewer confirms pond-like features beyond a river channel and finds no evidence requiring the proposed generator51 change solely to obtain ponds. Full high-fidelity acceptance remains pending: distant image looks flat/color-blocked, dark banks prominent, some angular boundaries. Walking-distance mud/depth/detail, time-separated stillness, river continuity and LOD checks remain required. Source stays generator50.
+
+## MARSH-POND-SIZE-001/v1 — user-requested larger ponds, 2026-09-20
+
+User approved the current marsh appearance and requested it be bigger. Intended isolated change: double the pond-shape XY wavelength512→1024units on CPU and GPU, retaining seed/salt, target vertical range-24..24, climate footprint, river protection, .02ReliefHeight displacement cap, mud and water appearance. Generator51 separates the changed field from generator50 saved worlds. This doubles the recipe's horizontal feature scale, not a guarantee every clipped pond doubles its area or width.
+
+Before applying: save current generator50 world and stop play; preserve original source under .codex/biome-work/pre-pond-size. Do not hotload a generator identity change into a live old world. Recompile dependent regular/transition compute and terrain shaders; restart play under the existing recipe-specific selector, preserving prior saves.
+
+Fixed local production comparison uses MARSH-SURVEY-001/v1's identical seed1337 recipe, minimum(69632,200704),33x33,spacing256. Require repeat-identical finite heights, weight sums within1e-5, bound containment, displacement<=61.4401 and actual nonriver wet columns. Compare sampled water-region sizes/shapes with the retained generator50 survey, without requiring each component to grow because fixed regional boundaries clip features. A matched aerial view must preserve the user-approved muddy/olive pool character and visibly broader forms. Independent review remains appropriate; source change alone is not visual or performance acceptance. Reuse canonical BIOME-FIGURE8-001/v2 unchanged for performance; concurrent tree asset mutation prevents a valid paired baseline and must cease before measurement. No pass is inferred from unchanged noise-call count.
+
+### MARSH-POND-SIZE-001/v1 results — generator51 rejected, generator52 retained
+
+Original user world09e02f82-191f-4abc-b9dd-03cb10306e4a revision138 explicitly saved before stopping Play and editing versioned density. Generator51's doubled wavelength compiled and ran, but fixed survey wet count195→134 and interior components75/32→20/12/3/1; this did not establish the requested larger existing ponds. Preserve candidate51 evidence in marsh-pond-size-v1. Do not accept that candidate based on the nominal wavelength.
+
+Revised implementation52 retains original512-unit noise and maps n→n*(.5+.5*n). This never raises the procedural target, preserves extrema positions and target range-24..24, and lowers the target by at most6units. Save/stop repeated before version change; prior world selectors remain preserved. Independent source review confirms the CPU/HLSL formulas, monotonic property and unchanged61.44-unit maximum displacement.
+
+Same immutable survey inputs, evidence marsh-pond-size-v2:1089samples, wet195→259 (+32.8205%), lost previously-wet samples0, raised columns0, repeat mismatches0, bound violations0, maximum weight-sum error5.000000014e-8, maximum displacement61.4400004. Survey version did not change; evidence folder v2 denotes the second implementation attempt, not a changed workload.
+
+Native managed runtime/editor compilers report0errors/0warnings. Explicit regular/transition compute and terrain shader rebuilds succeeded; terrain emitted a profile-implicitly-upgraded warning for the existing stone-pattern include. Cold editor restart was not run. Immediate first survey after play-start rejected scene-not-ready; later normal ready-state call succeeded. No retry of an uncertain mutation.
+
+Actual ejected1600x900,FOV75 aerial at(68831.3828,201164.141,6534.45801),angles(37.2435341,31.956728,0), captured and inspected in marsh-pond-size-v2/larger-ponds.png. Independent reviewer supports narrow visual result: broader/more connected central pond and coastal band, retained olive-gray water/dark mud/green islands. Earlier main-camera FOV was not frozen, so image-based area ratios are invalid; quantitative coverage comes from fixed survey. Returned editor camera to Game mode and released editor/asset hold. No terrain edit, tree change or destructive save reset.
+
+User-approved aerial character and larger-pond behavior are supported. Full walking-distance/LOD/stillness, cold-start and matched figure-eight qualification remain outstanding. No performance pass, commit or push: the larger marsh slice still carries its prior acceptance gaps.
+
+### TREE-OAK-VARIATIONS-001/v1 saved-library preservation follow-up — 2026-09-20
+
+After Blender closed, the current tree_library.blend had a new save timestamp and size; the prior file remains in tree_library.blend1 and an additional local archival copy. No overwrite/revert was attempted. Native incremental append audit of all14 preserved specimens reports exact original object/geometry/UV/transforms and selected-attribute fingerprints, but12 leaf material fingerprints differ from the prior live-context fingerprint. Preserve that failed aggregate result in source-preservation-after-reopen.json; do not silently replace it with a pass.
+
+A separate native comparison loaded those12 leaf materials from the previous saved library and current saved library under identical conditions. Every full material-node graph hash and packed image SHA matches, including oak_leaf_atlas.png SHA25645778bbb972c260f04dc08dc7304ae62457d63267fce2ba42e6451de5a6ef3df. Evidence saved-leaf-material-comparison.json reports saved_leaf_materials_equal=true. This establishes saved old/new leaf-content equality alongside exact geometry/UV/attribute preservation; the cause of the earlier live-context hash discrepancy was not proved. Material refreshes proceed by appending one source wood object at a time into the lightweight native Blender studio without saving either authoring library.
+### TREE-OAK-VARIATIONS-001/v1 parent-palette refresh and first visual result — 2026-09-20
+
+Native Blender material-only batch completed all15remaining installed specimens using one preserved source wood object at a time. Mature oak1701 had already completed the same refresh. Every refresh validated the original complete dependency set and verified all non-fine-texture dependencies unchanged. Installer republished16models/10oaks, including the corrected closed/reprojected Large1718 geometry. Original authoring libraries retain their post-reopen timestamps/sizes.
+
+Visible s&box26.09.15, basic_example playing, compiler initially0errors; current user world is the separate task's generator52, so this is not the pre-crash world qualification. Mature1701 ordinary prefab at(300,0,315.855713),yaw0,scale1; fixed1600x900,FOV75 near/full poses in parent-palette image metadata. Native fine/bark/model/prefab compiles each returned Success:true. Independent reviewer APPROVE for exposed gray-brown fine-to-main branch palette, exposed collar continuity without black seams/angular patches, and matched-framing LOD0/2 crown fullness. Hidden joins and continuous motion remain outside this review. The user before-image is a different tree/view, not a matched comparison. Temporary prefab deleted; ejected camera returned to Game mode.
+
+First batch compile helper erroneously sent Assets/models/... rather than mounted models/...; engine rejected the firstasset before compilation. Preserve parent-palette-native-compiles-path-error.json. Corrected helper uses paths relative to Assets; no asset/source repair was required. Full species/remainingvariant review remains pending. No performance test run.
+## COASTLINE-001/v1 — frozen before runtime checks, 2026-09-20
+
+Candidate: tenth Coastline label, material/protocol8, unchanged densitygenerator52/water8. Same localhost/basic_example and seed1337 recipe as MARSH-SURVEY-001/v1 (Land.75,Mountain.3,Plains.6,scales77724.09/18681.756/5232.39,Relief3072,Ruggedness.45,Sea0). No source applied yet; tree tasks own the current native baseline window. Coast patch staged outside Code/Assets.
+
+Production comparison: before and after ExportLandformSurvey minimum(-8192,24576),65x65,spacing512; preserve full source/environment/WorldId/revision and raw CSV/recipe. Pass: every final/natural/river height unchanged exactly; finite values, repeat mismatch0, bound violations0; after ten weights nonnegative and sum1 within1e-5; at least one dry Coastline core with coastlineWeight>=.8, snowWeight<.1,marshWeight<.1. Select nearest core to(0,32768), thenX/Yascending, before placing the review camera. Verify material columns through real InspectTerrainColumn and visible shoreline using the existing GPU material pipeline; core shallow ground Sand6, strongmarsh remainsDirt2/Grass1, coldcoasts respectSnow5, placedmaterial precedence unchanged.
+
+Retained marsh counterexample grid minimum(69632,200704),33x33,spacing256 must preserve generator52 heights and marshWeight from marsh-pond-size-v2. Confirm standalone marsh ponds do not acquire coastline merely due to biome carving; nearby actual natural shoreline can legitimately contribute coast weight when marsh is weak. Also inspect dry inland flat land and carved-river sites with no natural sea-level crossing. Source-documented limitation: localcardinal test does not establish globaloceanconnectivity and canundersample diagonalshore/narrowislands.
+
+Visuals: selectedcore shoreline eye/downward views, actualB-map/legend/readout with MapCenter(0,32768),MapSpan16384; use1600x900,FOV75 and recordexactposebeforecapture. Review continuity, sandwidth/shoredepth and transition to adjoiningterrain; independent review required. User camera movement interrupts scriptedview work; do not fight control. Shader rebuilds and native managed compile must pass; cold-restart qualification remains separate.
+
+Performance: canonicalBIOME-FIGURE8-001/v2 unchanged with samefullsettings/sourcefrozen exceptcoastcandidate; compare fixedprechangebaseline/candidate and actualcoastalchunk preparation. Added probes havebounded cost but no performancepass inferred. Do not combine treeassetmutation or Blenderbaking pressure with a purported matchedpair. Olderbiome/marshmemoryfailures and outstandinggates remainpreserved.
+
+### COASTLINE-001/v1 — 2026-09-20 implementation and survey checks
+
+Native engine26.09.15, visible basic_example, seed1337, unchanged generator52/water8. World6586ed88-1714-444a-984f-6e4118f4b70e preserved. Exact source/settings/terrain revision snapshots: ValidationEvidence/Biomes/coastline-baseline-before.json and coastline-candidate-before.json. Their only nine source differences are the coastline implementation files; tree/gravel asset sources match.
+
+Managed compilation passes with existing SB2000 warning; regular geometry, transition geometry and terrain shader forced compiles pass (existing terrain shader profile-upgrade warning). Evidence: coastline-v1/compile.json. A redundant play_stop while already stopped and an inspect before play_start were rejected; no code failure or world mutation resulted. Play then started normally.
+
+Production surveys: coastline-v1/before and after, fixed65x65/512 grid, 4225samples. Zero final/natural/river/water-height changes, zero repeat/bound/invalid-weight errors, maximum ten-weight normalization error8.71142485e-8. 144dominant coastal points,47qualifying drycores. Frozen selectedcore(-1536,33792),height2.8778324,coast0.9332081,marsh0.06679189. Marsh counterexample33x33/256 grid matches marsh-pond-size-v2 at all1089coordinates/heights/marshweights. Independent reviewer confirmed counts/order/finiteness and coast0 on newly flooded marsh ponds. Evidence: coastline-v1/survey-analysis.json. Survey acceptance partial; material, rendered, cold-start and performance gates remain separate.
+
+Performance pair uses BIOME-FIGURE8-001/v2 unchanged. Both start fully settled with zero held bodies, identity camera, physical2769x1529 and original pose. Baseline production coastline survey was exported after its performance run; candidate coastline/marsh surveys were exported before its performance run while terrain settled. These read-only exports can warm RiverWorld patch caches and are an environmental comparability limitation; do not infer a pure extra-probe cost from timing. No concurrent tree/render/Blender work occurred. Full raw runs and comparison will be retained, including failures.
+### COASTLINE-001/v1 — 2026-09-21 native result and qualification limits
+
+Actual material columns: selectedcore(-1536,33792) has Sand6; marsh(75008,203008) has Dirt2; plain(8192,0) and carvedriver(0,0) have coastline0 despite low final/river-cut terrain. Initial cold samples(57344,-98304)/(73728,-53248) were submerged and correctly sand-covered. Bounded cardinal128-unit neighbors of the first locate drycold(57344,-98176),height3.069065,coast1,snowdepth144.40027; actual surface/interior samples are Snow5. Raw columns.json, cold-neighbors.json and dry-cold-column.json retained. These additional cold-neighbor coordinates were selected to resolve the submerged initial samples; no performance inputs changed. Placed-material precedence remains source-reviewed only, not newly exercised with world edits.
+
+Native1600x900/FOV75 overview and eye captures retained with exact pose/request JSON. Independent reviewer passes first-slice sandy ocean/shore/inland appearance, no obvious terrain holes/seams in these views. It flags broken dark horizontal water speckles of unknown provenance and abrupt/local jagged grass edge; moving LOD continuity is not established. Actual UI capture passes ten-entry legend, coastline band and93%coast/7%marsh readout at frozen core. Map129x129 completed115ms, max sampling2.47ms/frame, upload0.32ms. UI opened through existing property; B-key delivery not exercised. Evidence: coastline-v1/{overview,eye,map}.png and review.md.
+
+BIOME-FIGURE8-001/v2 observed pair: baseline7e8e832226d746ec8a41cbe14286df08, candidate69e323f0f67f406bb5e1b47bd3d45d03. MovingFPS318.433→331.150; p95 7.0812→6.7788ms; p99 9.7393→9.4236ms; mean process memory+1.64%, peak+8.97%, allocations/frame-5.88%. StandingFPS183.122→188.277, p95-2.15%,p99-4.80%, mean process memory-2.34%. All recorded numeric gates pass. Both4913/4913collisionready, pending0, exceptions0, failures0, transition mismatches0, unsafecommits0. Postloopdrain20.903→19.045s. Raw results and full comparisons retained in coastline-v1. Survey/cache-order limitation above means this is an observed no-regression result, not isolated cost attribution or a new accepted baseline.
+
+Game remains visible/playable at selected coast, B-debug readout enabled. Runtime/editor ownership released to tree-visuals task after checks. Clean editor restart requires explicit relaunch permission under AGENTS.md; question is pending, so no launch/close attempted. No final acceptance, commit or push while cold-start/placed-override checks remain open. Prior biome/marsh/gravel qualification gaps are not waived.
+## TREE-REALISM-001/v1 — frozen iteration criteria, 2026-09-21
+
+User requests continued Blender/native-world iteration, independent visual approval,
+full mature overarching trees, distance LOD and believable attached wind. Initial
+1600x900 exploratory population image rejected independently: pole-like trunks,
+compact/stippled crowns and flat leaf patches. This is not an accepted baseline.
+
+Performance reuses BIOME-FIGURE8-001/v2 unchanged, including original recipe,
+pose, identity camera, physical2769x1529, 2500/50000/1, all original terrain,
+grass/cloud settings, automatic drain+10s standing and original numeric gates.
+Current environment engine26.09.15, density52/water8/protocol8, saved world
+6586ed88-1714-444a-984f-6e4118f4b70e, eighteen imported tree models. Freeze source
+hashes/settings before every timed run. Stop all competing native captures,
+Blender bakes and hotloads. Allow the normal terrain queues to settle at exact
+origin using temporary motion-off only during preparation; restore motion and
+zero velocity before the exact-pose trigger. Record grounded but do not require
+it, as v2 specifies. Retain every failed preflight/run. Older coastline results
+have different cache history and do not replace this task's matched baseline.
+Require moving/standing FPS no worse than5%, p95/p99, allocations/frame and
+process/GPU memory no worse than10%; zero exceptions/collision failures/unsafe
+commits/transition mismatch and fully completed streaming. Investigate drain
+regression, do not infer performance from triangle counts.
+
+Fixed visual set uses actual playable world,1600x900,FOV75. Retain existing
+TREE-IMPORT-001/v1 specimen inspection poses: mature/large tree prefab at
+(300,0,315.855713), yaw0,scale1; full camera(-1000,-900,800),angles(6.5,34.7,0);
+close(295,-95,545),angles(-18,90,0); reverse(445,-145,565),angles(-20,135,0).
+Juvenile full camera(-80,-300,460),angles(4,38.3,0). Include Oak1701/large1718,
+Ash2701,Birch4701,Spruce3701 and actual population at canonical origin. Additional
+underside camera(300,-80,390),angles(-65,90,0). Test native LOD0/1/2 at matched
+framing, and continuous camera distances50/80/100/120/150/200/350m with the same
+specimen and viewing direction, plus yaw90 for orientation changes. Record actual
+camera/source identities with images. Existing protected Blender libraries remain
+unchanged; only derived export meshes and explicitly new variants may change.
+
+Visual pass requires independent approval of mature crown mass/spread, supported
+layered branching and gaps, recognizable species, natural leaf scale/folds,
+non-flat oblique/underside views, grounded roots, coherent bark, and stable LOD
+silhouette/coverage without holes or conspicuous popping. Wind evidence must show
+attached leaves/limbs, fixed root, slower stiff-trunk motion, faster light-leaf
+motion, coherent direction and gust recovery, matching depth/shadows and no bounds
+clipping. Calm and reversed direction are checked through the same material wind
+input; weather/configuration UI is not part of this slice. Candidate deformation
+and fade ranges must be recorded before their native run. Still images cannot
+approve motion or performance. Preserve reviewer rejection and iterate.
+
+TREE-REALISM baseline preparation attempt1: no timed run. Streaming settled,
+identity/FOV/resolution/pose correct, motion restored, no collision hold, but
+restoring motion woke gravity and observed velocity(0,0,-16.9872608), violating
+zero-velocity precondition. Preserved baseline-preflight-failed.json. Use native
+Rigidbody.Sleeping=true after restoring motion and final pose (the earlier
+canonical accepted preflight also records sleeping=true); motion stays enabled.
+No scenario or threshold change.
+
+Baseline timed attempt1 reached completion but native result persistence FAILED
+at00:11:11: results-v1.jsonl was in use by another process. External readers used
+short reads during the run; the exact colliding reader is not established. No
+structured result survived. Preserve baseline-save-failed-before/trigger.json.
+Further inspection also found startZ339.464478 after gravity woke between native
+preparation calls, invalid for exactz340. Do not use this run as a baseline.
+Restore MotionEnabled and Sleeping together, then reset and assert full pose.
+Read results only after native performance.result.saved, never during the run.
+Same workload/criteria/source; no performance-tuning or scenario change.
+
+TREE-REALISM baseline completed: run67388031ea834669abb00dca52364f46, exact
+preflight origin and motion/velocity/queue gates pass. Moving317.61438FPS,
+p95=7.1208ms,p99=9.77ms; standing171.76878FPS,p95=6.9912ms,p99=7.8903ms.
+Moving mean/peak process7,406,829,232/7,496,568,832bytes; GPU mean/peak
+3,796,534,203/3,797,684,231bytes; allocations73,120.53bytes/frame.
+Collision4913/4913ready,pending0,failures0; mesh/transition/placementpending0,
+unsafecommits0, all transition mismatches0, exceptions0; drain17,759.121ms.
+Full raw and before-source snapshot retained in ValidationEvidence/TreeRealism.
+This is the matched tree baseline; previous older tree/performance gaps remain.
+
+Candidate shader probes: new files initially not yet mounted; first compile
+requests rejected missing mounted path. Include paths without trees/ prefix then
+failed resolution. Corrected mounted include paths; all bark/fine/foliage,
+impostor and depth shader compiles pass, with native profile-upgrade and common
+Decals dynamic-uniform warnings. Hot compilation is not cold-start approval.
+Native imported-model baker row1 for original oak1701 produced inspected nonempty
+1024RGBA albedo/normal/depth with transparent exterior. This is asset preparation,
+not an in-world appearance approval. Blender MCP read failed connection-reset;
+Blender process/server absent. Explicit reopen/cold-editor permission requested.
+
+TREE-REALISM candidate A native integration: original18 imported models retained
+while establishing distant rendering. Shader ambient direction(.8,.6,0),strength1,
+main flex.018, branch flex.028; population detailed/far smoothstep90–120m divided
+by uniform instance scale,900m render,65m shadows. Far mesh16vertical strips,
+32triangles with32native view/depth samples. New material frame center/diameter
+match native model bounds. This exploratory run does not qualify the unfinished
+near-material fade or foliage motion; full Blender re-export remains pending.
+Managed native compilation passes0errors with the existing SB2000warning.
+Initial code hotload retained an old population without far objects and raised
+one NullReferenceException at00:34:57. Existing voxel_trees_reload is required
+after this structural change; preserve this failure rather than counting it as a
+clean run. Do not add a parallel legacy rendering path to mask stale live state.
+
+TREE-REALISM candidate A results: normal library reload produced294placements,
+18models,76detailed/256distant/38crossfade at the original main-camera location.
+No new exceptions after reload. Ejected close diagnostics revealed missing far
+objects; replacing custom fragment depth with raster depth isolated depth output.
+Installed Depth.hlsl documents viewport min/max normalization. Applying the
+inverse mapping lerp(viewportMinZ,viewportMaxZ,projectedZ) restores distant trees.
+Temporary raster-only change was removed. Actual main-camera exploratory view
+(-346.25,-1988.20703,500.799988),angles0,FOV75,1600x900 shows candidate288 oak1701
+at99.27m with fade.083. Ejected close previews intentionally magnify a distant
+representation and do not count as a matched-distance LOD acceptance. Near leaf
+materials remain old pending Blender export, so full transition acceptance is open.
+Native attempts to set AdminFlightMode.Flying and PlayerController.EyeAngles were
+rejected as non-writable; no such property was changed. Main-view capture used
+brief native Rigidbody gravity-off/sleep, then restored gravity; input stayed enabled.
+
+User explicitly authorized reopening/restarting Blender. Visible Blender5.2.2LTS
+reconnected via native MCP protocol7; original .blend libraries were not opened
+for editing or saved. First full oak1701 export rebuilt meshes/textures but failed
+before publishing a manifest: motion PNG numeric roundtrip error.5438165665.
+Native readback shows save_render unpremultiplies numeric RGB by weight alpha
+(e.g.expected.5 with alpha.8145266 became.6138552), despite CHANNEL_PACKED.
+Preserve this failed export log; no partial model was installed. Numeric PNG is
+now serialized without display/alpha conversion and independently read back by
+Blender before publishing. Original source hashes and5-object studio are preserved.
+
+TREE-REALISM candidate full-canopy A: native Blender full oak1701 export completed
+in101.203s. Numeric motion PNG readback error7.68899917602539e-06; primary10,
+leaf attachments153494. LOD triangles701492/333734/313738, vertices813397/
+628841/618467. All authored leaves retained at original scale. Native import
+completed; matched full/LOD2/bark/oblique images saved underTreeImport with
+full-canopy-a suffix. Independent reviewer REJECTED: broader/heavier crown
+improved, but flat leaves, crowded canopy ceiling, smooth forks/fine bark and
+weak root flare remain. StaticLOD0/2 silhouette held; wind and performance were
+not approved. Original sources preserved; far bake is stale after this install.
+
+CandidateB design before the next visual run: regenerate a separate revision
+from the same seed/settings, never overwrite protected source.blend files. The
+canonical generator adds local collars, stronger mature root flare, curved
+shoots and smaller terminal oak blades; the near export retains the full3x3
+fold/curl rather than collapsing it to a center fan. Keep fixed visual cameras
+and performance scenario. New source revisions are derived artistic outputs;
+placement, authority and collision ownership remain unchanged.
+
+Distant shading revision: native AmbientOcclusion capture joins albedo, object
+normal and depth. Installed ToolsVis.hlsl:271 cancels target sRGB for AO, like
+normal debug output; depth via Albedo still requires sRGB decoding. Packer stores
+octahedral normalRG plus AOB and depthA in the existing second BC7texture, so
+no third sampled texture is added. Bake metadata becomesVersion2; matching runtime
+reader/shader are deployed with the completed new assets. OldVersion1 runtime
+resources remain in use until then. This is candidate work, not acceptance.
+
+CandidateB full native generation/export completed before a Blender crash:
+source revision saved a83c931c06c5189fb4919315e5371b1ca406b19b0f48c37cf919a17b757f4de4,
+original library remains226c9f55a827d5cafd1c33a8d19fe944fb9a5e9063d5d377974b254d3309b383.
+Generation+export168.291s, export108.633s. LOD triangles1243432/604698/295766,
+vertices1346468/737391/582538, retained144508leaves,10primary branches,
+motionPNG maxerror7.68899917602539e-06. Complete manifest and hashes verified by
+installer. At01:06:25 Blender5.2.2 crashed EXCEPTION_ACCESS_VIOLATION in
+image_get_gpu_texture -> Eevee material sync -> GPUOffScreen.draw_view3d during
+MCP viewport capture. Crash log preserved in.codex/tree-realism-work. Native call
+returned no data despite completed build files. User reported crash; no export
+rerun. Restarted visible lightweight studio in SOLID viewport to avoid that
+material-preview path; native handshake/scene recovered. This is recovery,
+not acceptance of the tree or an assertion that Blender's bug is fully resolved.
+
+CandidateB same-camera game captures saved withfull-canopy-b suffix. Main-agent
+inspection: leaf curl and crown gaps improved; trunk still has fine uniform
+camphor texture. CandidateC uses the existing licensedCC0 bark_brown_02 scan
+(coarser broken furrows), with matching color/normal/height from the authored
+material. Root shoulders become vertically elongated buttresses near the bole,
+rounding farther underground. Original source libraries andB revision preserved.
+Reference: Kew's oak profile describes broad trunks with rough grooved bark
+(https://www.kew.org/plants/oak-tree); adopted as a shape/material reference,
+not a biological growth simulation. Static lighting and full wind/performance
+qualification remain pending.
+
+TREE-REALISM-001/v1 motion observation before first sequence: ordinary oak1701
+prefab at(300,0,315.855713),yaw0,scale1,LOD0, native ejected1600x900,FOV75;
+whole-tree camera(-1000,-900,800),angles(6.5,34.7,0), and branch camera
+(445,-145,565),angles(-20,135,0). Each sequence36frames sampled at least.25s
+apart; record actual monotonic elapsed times and camera readback. Material cases
+ambient(.8,.6,0,1),calm(0,0,0,0),reversed(-.8,-.6,0,1) through existing uniform.
+Source defaults restored after captures. Pass criteria: roots stay fixed,
+branches bend continuously with attached foliage, higher-frequency leaf response,
+no tearing/clipping or billboard turning; calm is stationary. These image
+sequences do not measure frame performance; benchmark remains unchanged.
+
+CandidateC export finished in109.198s, total169.609s, same144508leaves;
+LOD triangles1243432/604698/295766. Native call timed out with no data, but the
+completed source/build/manifest hashes and subsequent live native scene/viewport
+responses confirm completion and cleanup. Blender remained alive inSOLID mode.
+The build.json initially absent during worker read was present on later exact
+readback; no rerun. Native model compile and matched game captures passed;
+full-canopy-c images submitted for independent static review. No acceptance yet.
+
+CandidateB ambient motion observation captured36frames over27.828s. Leaves and
+branches visibly change position without an observed open joint in sampled
+frames. Actual~.77s/frame is too slow to qualify the1–1.7Hz leaf flutter; treat
+this as sparse motion evidence only, not smoothness acceptance. Root camera was
+not included in this first sequence. Native registry has no recording/video tool.
+
+Independent candidateC judgment: REJECT static realism; APPROVE matchedLOD0/2
+silhouette/coverage only. Crown, curved leaves and bark improved. Remaining:
+exposed pointed roots, repetitive fan-like leaf arrangements, straight secondary
+limbs/weak fine branch transitions, and insufficient limb-scale crown layers.
+CandidateD changes before next run: roots descend below soil closer to the bole;
+per-shoot phyllotactic phase and per-leaf camber/twist vary deterministically;
+older inner oak limbs bear fewer secondary shoots, leaving structural gaps;
+shoot paths curve more. Fine export uses3/4radial sides on tiny tubes and72k
+mature twig budget to preserve more foliage attachments. Full leaf count remains
+source-derived, not randomly thinned. Same visual poses and benchmark parameters.
+
+TREE-MOTION-001/v2 supplementsTREE-REALISM-001: v1 1600x900 screenshot cadence
+was~1.3Hz, below the sampling needed for1–1.7Hz flutter, so it cannot qualify
+motion smoothness. Preserve its results. An exploratoryC640x360/no-delay native
+capture produced48frames in4.875s (~9.8Hz), establishing feasibility only.
+V2 fixed: oak1701 ordinary prefab(300,0,315.855713),yaw0,scale1,LOD0,FOV75,
+640x360,96consecutive native captures with no added delay per case; record actual
+monotonic timestamps. Branch pose(445,-145,565)/(-20,135,0) in ambient(.8,.6,0,1),
+calm(0,0,0,0),reverse(-.8,-.6,0,1); whole pose(-1000,-900,800)/(6.5,34.7,0)
+ambient; root pose(300,-100,340)/(5,90,0) ambient. Uniform edits are temporary
+existing material inputs and restored byte-for-byte in finally. Criteria:
+median capture gap<=.15s andp95<=.20s; roots fixed, continuous attached branch
+motion, visible faster leaf rotation, calm stationary, no intermediate gaps,
+clipping or billboard turning in reviewed sequences. Insufficient cadence is
+inconclusive, never a pass. Fixed figure-eight remains unchanged.
+
+CandidateD native generation/export completed:157.307691s total,103.665442s
+export,151512retained leaves. LOD triangles1335470/643538/312468; vertices
+1430047/778631/612014. Numeric motion PNG maxerror7.688999e-06. Source revision
+Tools/BlenderTrees/Revisions/realism-d/oak_mature_open_grown_1701/source.blend
+SHA256b3afb9305433a122a199871c1d61f12a2959f7cbd28d2ce2c6f588737fec81d3.
+Protected originals unchanged; installer hashes and native model compile passed.
+Independent static reviewer APPROVED this oak and matchedLOD0/2 coverage:
+broad irregular crown, limb-supported foliage sections/internal gaps, varied
+folded leaves, aged bark/junctions and grounded root flare. Residual soft/stretchy
+limb bark and angular fine twigs were nonblocking. Approval excludes other
+specimens, automatic transitions, moving camera, wind and performance.
+Evidence:TreeImport/oak_mature_open_grown_1701-full-canopy-d-{lod0,lod2,bark,oblique}.
+
+Native terrain trace at the fixed specimen origin reports floorZ319.855499 and
+normal(-.19835,-.24292,.94955); neighboringZ at(250,0)309.559387,(350,0)330.495514,
+(300,50)332.663208,(300,-50)307.225037. The fixedorigin315.855713 is4in below
+terrain on an approximately18degree slope; placement was not changed to conceal
+roots. D root geometry descends sooner into soil.
+
+TREE-MOTION-001/v2 D captured96frames per five fixed cases; output under
+TreeRealism/wind-d. Original fiveVMAT files restored byte-for-byte and native
+compiled, inspection object deleted and Game camera restored. Cadence and
+independent visual assessment follow; no performance result is inferred.
+
+TREE-MOTION-001/v2 independent verdict REJECT: calm leaves visibly rotate/shift
+in adjacent001-004,056-060 and095 despite the VMAT label. The shader wind is
+an object Attribute; the VMAT mutation did not establish an applied override.
+Reverse direction remains inconclusive. Sampled ambient leaf/branch continuity,
+whole-crown envelope and visible root seating were acceptable. All cases meet
+cadence:branch median.094s/p95.125s;whole/root.078s/.094s. This preserves a
+failed control path, not a successful calm/reverse qualification.
+
+TREE-MOTION-001/v3 before repeat: the v2 VMAT control route cannot set this
+object Attribute. Keep all specimen/camera/image/frame/cadence/vector inputs and
+acceptance criteria identical. Temporarily author each vector as the existing
+shared shader Attribute Default4, native compile all four production tree shader
+assets, capture, then restore the exact original include and compile in finally.
+No alternate runtime path or test hook is added. No per-object override exists on
+the ordinary prefab. Record this binding in each sequence; require observed calm
+stationarity. This is a new control-method version, not a performance scenario
+change, and does not prove future weather ownership/configuration.
+
+V3 first attempt stopped before capture: asset_compile does not accept shader sources. Shared shader bytes were restored; lingering temporary object/camera cleaned through native API. Corrected orchestrator to existing compile_source_shader; failure history retained.
+
+TREE-MOTION-001/v3 independent review APPROVED observed sampled motion and shared
+wind response: calm foreground leaves/branches remain aligned; mean adjacent
+foreground pixel change approximately.031 versus5.31 ambient. Reverse wind
+shows opposite-side displacement relative to calm/ambient. No conspicuous branch
+separation, clipping or snaps in reviewed intervals; visible root/lower trunk
+remain seated. Cadence medians/p95:ambient.109/.140s,calm.110/.140s,reverse
+.109/.125s,whole/root.093/.109s. Branch ambient076->077 has1.094s gap; continuity
+inside that interval is inconclusive. This approval does not cover every unseen
+frame, future weather control, moving-camera perspective or performance.
+Original shared include bytes were restored and all four dependent shaders
+compiled through native compile_source_shader.
+
+At2026-09-21T05:34:51Z s&box26.09.15 terminated natively with code-1073741819
+(access violation); Sentry marker advanced. Logs end during on-demand hot reload
+of installed large oak1718 model at01:34:47 local. Latest breadcrumbs report
+GPU fence wait>250ms and missing present events. No module/call stack is present
+in the small Sentry event; cause is not established. Earlier include-open
+errors are retained and need timestamp distinction from this failure. Evidence
+preserved underTreeRealism/crash-013451. The wind capture had completed and
+restored its original shader. Blender remains alive; large oak source/export
+completed329.232s total/192.049s export and installed hashes passed, but the
+subsequent native model-compile/capture call could not connect. No large oak game
+visual pass or performance pass is claimed. Relaunch permission requested under
+AGENTS.md application-launch restriction; Blender restart authorization does not
+explicitly cover s&box. Continue independent file/Blender work while pending.
+
+Crash timestamp correction from fully decoded MessagePack breadcrumbs: include
+file-open errors occurred04:17:17-04:17:59Z, before the mounted include paths were
+corrected. GPU fence warning was04:41:08Z; last present warning05:26:31Z. The
+05:34:51.056Z record is the native fatal code, not a same-time fence warning.
+Do not attribute the crash to those earlier warnings. Raw account/session event
+fields remain local under.codex; durable event-summary.json retains timestamp,
+fatal code and hardware only. No stack/module was available in the small event.
+
+Independent far-representation code review identified three candidate defects:
+wind-bent raster plane disagreed with reconstructed depth, octahedral normal
+mips could cross encoding seams, and base-level tile clamps allowed coarse-mip
+view bleed. PendingVersion2 now inverse-bends candidates on the actual raster
+camera ray before depth/UV lookup, retaining the deformed ray point for depth.
+Three bounded inverse iterations use small-angle polynomial rotation. Normals
+use the baked view's continuous front hemisphereXY plusAO, retaining twoBC7
+textures; explicit trilinear sampling caps at4pixels/tile and clamps to the
+coarser mip's texel centers. These fixes remain uncompiled/unmeasured while
+s&box is unavailable; game approval and the unchanged benchmark are required.
+
+Additional realism-d native Blender results (generation + full export):
+- oak_large_open_grown_1718: build329.232s/export192.049s; LOD triangles1617972/784754/383160; vertices1748521/955858/754148; motion error7.68899918e-06.
+- oak_juvenile_open_grown_1701: build62.518s/export33.298s; LOD triangles36694/16518/6632; vertices29205/14913/9771; motion error7.62939453e-06.
+- ash_mature_open_grown_2701: build158.286s/export91.401s; LOD triangles692272/321940/293854; vertices777559/590002/574861; motion error7.68899918e-06.
+- birch_mature_open_grown_4701: build126.800s/export78.576s; LOD triangles464342/208014/179900; vertices492539/361912/346741; motion error7.65919685e-06.
+- spruce_mature_open_grown_3701: build139.624s/export89.817s; LOD triangles284880/198986/170892; vertices393390/347242/331754; motion error7.68899918e-06.
+- spruce_juvenile_open_grown_3701: build62.184s/export33.975s; LOD triangles88834/66344/61962; vertices134813/121836/119403; motion error7.68899918e-06.
+All complete manifests/dependency hashes passed the installer; originals preserved. Native Blender scene/screenshot returned five-object studio after each operation. Spruce export now resolves its native regenerated mature prototype by material name; juvenile appends only the protected mature spray dependency, not the whole library. Native builder build_revision is the canonical immutable revision workflow; Python syntax checks passed. Game import/captures remain pending after the editor crash.
+
+
+No September21 minidump remains in Sentry reports or the target application CrashDumps folder; no matching Windows Application event was found for01:34-01:36. Older dumps were not used to infer this cause. Installer now copies each file to .installing and atomically renames it, preventing partial asset/manifest reads. This fixes a publication weakness but is not an established fix for the native crash. Future library replacement is performed outside Play, followed by native compilation and cold-start checks.
+
+
+TREE-REALISM-001/v1 library checkpoint (2026-09-21): all 18 native Blender
+realism-d revisions completed and were installed. The full
+[audit](ValidationEvidence/TreeRealism/realism-d-library-audit.json) records every
+specimen's build/export time, LOD counts, motion error and dependency hashes.
+Every installed file and saved revision matches its completion record; every
+recorded original source is unchanged. Protected tree_library.blend and
+oak_studies.blend match the pre-task hashes. No .installing files remain.
+
+Library totals for LOD0/1/2: vertices 15,612,827 / 8,940,398 / 7,276,895;
+triangles 14,497,272 / 7,026,068 / 3,729,564. Installed source dependencies total
+2,228,023,690 bytes on disk. These are neither GPU-memory measurements nor
+simultaneously rendered counts. Performance remains unqualified. Final Blender
+viewport/scene readback succeeded. One saved revised mature oak was appended to
+the disposable studio for inspection; no library or revision was overwritten.
+
+All 18 existing far bakes are stale relative to the new models. The production
+population rejects stale metadata, so this checkpoint is not a playable completed
+library. Still required: native compilation, per-species game visual review,
+72 new elevation-row bakes, packing and coordinated Version2 shader/reader
+publication, automatic transition review, clean-start validation and the unchanged
+figure-eight. Pending shader: .codex/tree-realism-work/tree_impostor-ao-pending.shader.
+The installed reader/textures remain Version1 until the new set is ready.
+The packer now atomically publishes complete PNGs and materials before its
+completion manifest. Syntax passed; full packing awaits native captures. This
+publication hardening is not an established crash fix.
+
+s&box remains closed after its native crash. Relaunch permission is unanswered;
+no launch was attempted. Blender MCP remains connected. Final visual/performance
+acceptance, commit and push remain pending.
+
+
+2026-09-21 user explicitly authorized visible s&box relaunch and continued pursuit of tree quality with independent approval. Recovery PID19184 opened voxels3, editor26.09.15, managed compile0errors. Edit mode remains active while the Version2 far shader/reader and regenerated assets are published. This is one coordinated installation outside Play; old far data remains rejected until replaced. Fixed TREE-REALISM-001/v1, TREE-MOTION-001/v3 and BIOME-FIGURE8-001/v2 criteria remain unchanged.
+
+Recovery attempt1 failed natively at2026-09-21T13:26:24.838260Z during the Version2 shader publication plus native compile batch, before any bake or Play. The console/transport returned no shader compiler result, so the individual failing program is unknown. Evidence: TreeRealism/crash-092624. No current minidump found. Attempt2 starts the same source unchanged to distinguish cold startup from the overlapping publication/explicit compile sequence; no acceptance claimed.
+
+Recovery diagnosis: unchanged Version2 cold startup failed13:28:10Z; restoring previous far shader also failed13:29:04Z. Thus the new far shader is not necessary to reproduce this failure. A local ProcDump capture of the next visible launch recorded access violation0xc0000005 writing address0x8 in resourcecompiler.dll+0x5ad1e1; referenced strings on the faulting thread stack name oak_large_open_grown_1701.vmdl_c. Raw131MBdump stays private under.codex; sanitized native-crash-summary.json is durable. Committed private address space was6,520,422,400bytes, not evidence by itself of allocation failure.
+Temporarily isolating10pending oak model definitions outside recognized .vmdl extensions allowed a Version2 shader startup to reach basic_example in Edit mode. Restoring8non-large definitions allowed woodland1717 to compile, then the editor crashed13:36:02Z before explicit native compile calls. Definitions are preserved byte-for-byte with .crash-isolation suffix; final restoration is required. Eight remain isolated after the small juvenile1712 positive control is restored. Native Blender FBX parsing found finite positions/UV/color/normal arrays for approved mature1701 and failing large1701 LOD0. A controlled full re-export of large1701 now requests Blender triangulate all faces before FBX publication; this tests the wood polygon import path without reducing crown geometry. It is a candidate, not an established fix.
+
+Recovery checkpoint (2026-09-21 09:51 local): PID31536 remained healthy in Edit mode with ten compiled models and seven still-untested models plus large1701 isolated. Native compilation of all five tree shaders succeeded; only stock SPIR-V/bindless warnings were returned. Mature oak1701 completed all four Version2 far elevation rows and packing. These checks do not establish full-library gameplay or performance.
+
+The full triangulated large1701 re-export completed with unchanged retained leaves180022 and LOD triangles1563410/757502/369494, motion error7.688999176e-06. Exporter SHA256 a54ba8bdb2412c2221bce94c8eef0fe0fdfda0d4727b22d4d73e214b068e3d8d. Initial live installation stopped on WinError5 replacing locked lod1.fbx after lod0 had been replaced; the completion marker was correctly absent. PID31536 closed gracefully with no unsaved scene changes. Restoring preserved model definitions and rerunning the installer while closed completed every dependency hash check and the18-entry catalog. Seven remaining untested definitions were re-isolated, leaving the triangulated large1701 as the only new model under test on visible launch PID31036 at09:51:36. This is a controlled importer check, not final acceptance.
+
+Triangulated-large import failed on startup PID21192 at13:53:34.860830Z before native compile success. PID31036 had stopped at a Steam initialization modal because the launch omitted the engine working directory; it closed normally and did not reach asset import. Launch21192 used the engine working directory. Evidence: TreeRealism/triangulated-large-import. Explicit triangulation is not a demonstrated fix.
+
+Next controlled import diagnosis temporarily points all three slots of the existing large1701 ModelDoc at its actual production lod2.fbx. The original definition is preserved under.codex/tree-realism-work/diagnostic-large-original.vmdl; manifest intentionally does not match during this diagnostic, so no gameplay or far bake is authorized from it. Seven other untested definitions remain isolated. This identifies whether the native failure requires the higher-detail FBX inputs. Restore exact source before normal validation.
+
+Large1701 LOD isolation: existing production ModelDoc with all slots using lod2.fbx compiled successfully (native asset_compile Success=true, compiled38,604,631bytes at09:55:47). All slots using lod1.fbx also compiled successfully (native Success=true,51,184,423bytes at09:56:22). Restoring exact original three-LOD definition triggered native crash13:57:00.293233Z; ProcDump captured the access violation09:56:56. Source definition is restored byte-for-byte and then isolated again. No diagnostic model was used in gameplay or a far bake.
+
+Native Blender FBX parser checks all three large FBXs: six non-empty meshes each, all triangles; every position/UV/normal/color finite, every index valid, zero repeated-index and zero-area triangles. Material connection graph is valid (the initial mechanical report followed the wrong direction and reported zero; corrected graph confirms three foliage slots). LOD0 foliage has1,620,198vertices/1,440,176triangles, LOD1 has900,110/720,088, LOD2 has720,088/360,044. Independent exporter source review found no actionable index/layer defect. Next candidate separates foliage by its existing material groups using Blender's native operator, preserving leaf/face/vertex totals and all UV/motion data. This is an importer packaging candidate; no cause/fix is yet established.
+
+Independent preliminary shape review (2026-09-21): native compiled LOD0 albedo views1-0 and1-2 of mature ash2701, birch4701 and spruce3701 received limited shape approval, with no definite anatomy/silhouette blocker in those views. Ash is relatively narrow with steep lower limbs and remains the weakest contributor to overarching canopy; verify coherent fine foliage at gameplay distance. Birch shows slender asymmetric form and hanging sprays; spruce shows substantial coverage and uneven tiers, with a somewhat blunt upper crown. Evidence: TreeRealism/species-shape-d. This does not establish absolute size, final shading, root placement, perspective, animation, transitions or performance.
+
+The split-material large1701 export completed with unchanged180022leaves, LOD triangles1563410/757502/369494, three foliage meshes perLOD, motion error7.688999176e-06. Revision source hash E0EDDE0101351A2A58E5095D57C3CABF086B7AC19E5F5B10F812F4293148B4BF unchanged. Exporter ab8fcaa3aeb303eda4ec517f06a16417939895ffdfa5462592041427fe3123cb. Closed editor cleanly, installed with full18-entry dependency validation, re-isolated seven untested definitions, then launched visible PID34332 at10:04:09 for the controlled import check. Nine additional valid specimens completed all36 Version2 elevation rows; packing is in progress.
+
+Launcher recovery qualification: direct launches PID34332 and35104 stopped at Steam Not Found before import. The transient steam_appid.txt diagnostic (590830 from installed app manifest, following Valve SteamAPI initialization docs) did not resolve it and was removed; no engine file remains from that attempt. The native sbox-launcher.exe opened successfully at10:06:55 (PID32584). Relaunching the requested project directly while its launcher is active is the next check. These are startup failures, not evidence against split foliage packaging. No Steam restart or unrelated app control occurred.
+
+Bound diagnosis: the later dump also faults at resourcecompiler.dll+0x5ad1e1, writing through nullr10. Main-agent parsing of the original bytes corrected a mechanical report's incorrectly transcribed address/base; final large-lod0-crash-summary.json matches ExceptionStream and ModuleListStream. Direct context/stack readback shows table count4,194,303 at rbp+0xb8 and loop index4,109,919 at rsp+0x34. The surrounding binary masks handles with0x3fffff. Evidence: native-import-table-limit.json. Exact engine table semantics remain unsymbolized, but the saturated22-bit count is directly observed.
+
+The split-material full import also failed14:08:05.087118Z. Separating objects does not avoid the saturated table. Removed that unsuccessful packaging change. The next canonical exporter caps eachLOD at1,350,000triangles (at most4,050,000triangle corners). For oversized oakLOD0 only, it evenly distributes a simpler five-vertex/four-triangle folded blade among the nine-vertex/eight-triangle blades, retaining every leaf, source scale, pivot, normal payload and outline coverage. Materials now follow each blade's actual triangle count. Native import and visual equivalence remain pending. Temporary foliage-only filter diagnosis never reached import because PID25420 stopped at Steam Not Found; its definition was restored exactly before isolation. Five other oaks below the candidate bound are restored for native import, leaving only large1701/1718 and mature1716 isolated. Launcher is started before visible editor32684 to resolve the startup dependency.
+
+Fifteen specimens now have complete, hash-validated Version2 far packs (all except large1701, large1718 and mature1716). Five newly restored oak models below the bound compiled successfully: woodland1713 at10:13:42, weathered1714 at10:13:49, open1715 at10:13:56, weathered1719 at10:14:03 and open1720 at10:14:13. Marker unchanged14:08:05Z. Their20new elevation rows completed and packed. The97unreferenced old numbered procedural impostor source files (80,681,645bytes) were archived with a size/count check under.codex/tree-realism-work/retired-numbered-impostors.zip, then removed from Assets; reference searches included source code, tools and scene/prefab/material/model/JSON/texture definitions. Current named catalog assets remain.
+
+Bounded large1701 export completed: LOD0=1,349,998triangles with126,669eight-triangle and53,353four-triangle leaves; all180,022leaves retained at everyLOD. LOD1/2 unchanged757,502/369,494; motion error7.688999176e-06, immutable source hash unchanged. Independent source review found no actionable budget/material/attachment error. Installed with editor closed and all18dependency checks passed. Only large1718 and mature1716 definitions remain isolated while their exports run.
+
+Native acceptance remains pending: direct launches34800 and31124 again stopped at Steam Not Found before import. A launcher-matching ProcessStartInfo/UseShellExecute restart attempt was rejected by automatic approval review with no specific reason, so it was not executed. User was asked asynchronously to open voxels3 from the existing launcher; no desktop or unrelated application control was used. Blender work and documentation continue. Temporary engine steam_appid.txt from the earlier unsuccessful diagnostic was removed.
+
+
+Bounded export checkpoint (2026-09-21): all 18 model definitions and dependency manifests are restored and installed; no crash-isolation or installing files remain. Large1718 retained 186,858 leaves with LOD triangles 1,350,000 / 784,754 / 383,160. Mature1716 retained 166,694 leaves with 1,350,000 / 704,308 / 342,828. Both source hashes remain unchanged and motion error is 7.688999176e-06. The full current audit, realism-d-bounded-export-audit.json, independently checks all installed file hashes, every saved revision and original, both protected libraries, and all 15 completed Version2 far packs. Library LOD triangle totals are 13,908,896 / 7,026,068 / 3,729,564; vertex totals are 15,024,451 / 8,940,398 / 7,276,895. These are source totals, not runtime memory or simultaneously rendered counts.
+
+The bounded exports record their actual executing exporter hash ea040493da7ae67677b6077e1d9271ec8d57ee16c26a6c066369bb899a541d5a. Subsequent CRLF-only normalization changes the current exporter hash to d8b5e3424245d746d8723cd79fa7a2ae792ff548cef4f286dec6523ec0055740; normalized text and Python AST compare equal. Provenance is recorded in bounded-export-eol-normalization.json. Python syntax checks pass for exporter, motion writer, installer and far packer. No behavior change is claimed from formatting.
+
+The failed Steam startup modal PID31124 was closed without touching the launcher, and the final two models were installed while no editor was running. Remaining work: native import of the three bounded models, their 12 elevation rows and Version2 packing, full-library playable visual/automatic-LOD review, clean startup and unchanged BIOME-FIGURE8-001/v2 measurement. Final acceptance, commit and push have not occurred. Independent approvals remain limited to earlier static oak views, sampled wind, the three isolated species shapes and source review. sbox-launcher PID32584 remains visible; user input to open voxels3 is pending after the rejected launcher-matching restart attempt.
+
+2026-09-21 recovery after user report: live editor26.09.15 is playing basic_example in voxels3, managed compile succeeds with zero errors. Console10:58:01 confirms oak_large_open_grown_1701 imports with matching bounds, three LODs and valid physics, then the population fails because its distant metadata is still Version1. The previous startup blocker is no longer current. This is incomplete coordinated publication, not a terrain-placement defect. Stop Play, compile the three bounded candidates, finish their12 Version2 native elevation rows and pack, then restart the real world. Existing TREE-REALISM-001/v1 and BIOME-FIGURE8-001/v2 parameters and criteria remain unchanged. Recovery pass requires18 valid imported models and current Version2 source hashes, nonzero placed/visible trees, no SpawnTrees failure, and an inspected rendered world view. This recovery check does not replace full visual or performance acceptance.
+
+Recovery result: all three bounded models and their far materials compiled successfully; all12 pending elevation rows completed, all18 Version2 packs now pass source/output/material hashes (completed-library-far-audit.json). Real-world population294,18 imported models,77detailed/256far/39crossfade at the observed camera; no new SpawnTrees error. Native gameplay frame restored-population.png confirms trees render. Independent review rejects cyan nearby ash trunk, blobby distant crowns and visible stippling. Follow-up identifies the cyan trunk as ash candidate366,36.68m,lodFade1. Native stock bark.shader documents VertexNeedsPropOrigin as required to prevent mesh combining when animation uses per-prop origins; both custom wood shaders omitted it. Added that attribute to bark/fine and recompiled successfully as the next corrective candidate. Same-camera comparison will qualify it. This shader edit invalidates far provenance, requiring fresh native bakes before final library acceptance.
+
+The prop-origin candidate removes the cyan ash silhouette in matched native main-camera capture prop-origin-candidate.png; remaining far crowns are still blurred/solid. Source far atlases retain detailed coverage. The procedural far mesh has coincident centers expanded only in its vertex shader and never supplies Mesh.UvDensity; installed API documents that value as the texture-streaming scale. Set explicit world/UV density diameter*8 for the eight-column atlas as the next candidate and verify through the same production population. This is a runtime streaming hypothesis until the matched image confirms it; no performance acceptance inferred.
+
+User-reported stationary transparent spruce captured without camera movement in user-left-transparent-lod.png/json. The distance-only crossfade held partial coverage indefinitely at intermediate distance. Corrective runtime selection uses100m return/110m exit divided by instance scale, midpoint105m for newly loaded placements, and a0.35s time-based fade. Existing0.1s selection cadence becomes per-frame only while a transition is active. Pass criterion for this regression: stationary camera has crossfadeTrees=0 after0.5s; crossing either boundary completes the transition, returning within the hysteresis interval does not repeatedly flip, and final silhouettes stay complete. Keep full TREE-REALISM and figure-eight gates unchanged. The earlier far EQUAL-depth candidate did not remove the same flat blue silhouettes and was reverted. A precise SV_Depth output is the next candidate for consistent reconstruction arithmetic across native depth/forward variants, following Microsoft's HLSL precise contract; capture required before retaining it.
+
+
+TREE-LOD-TRANSITION-001/v1 (2026-09-21, before timing run): actual production
+population candidate469, oak_large_open_grown_1718, root(-2337.59375,2950.61182,601.222778),
+scale0.9074 (exact native scale will be recorded), original seed/terrain. Native
+1600x900 stills and640x360 timing frames, FOV75. Place main camera500in above
+root and along negative worldX; solve horizontal offset so camera-root distance
+equals95/105/115/105/95m times actual scale. Temporarily use first-person for
+unambiguous camera distance and motion-off for scripted native camera checks,
+restoring both and player pose in finally. After each move sample the existing
+voxel_trees_info candidate output at approximately50ms intervals for0.6s, retain
+actual elapsed times/camera positions, and capture endpoints. Required final
+fade sequence1/1/0/0/1, no intermediate fade after0.5s, no repeated target switch
+inside the hysteresis interval, and independent approval of the visible transition.
+This is a bounded production observation, not a new test component or benchmark.
+Retain timing irregularities; it does not replace BIOME-FIGURE8-001/v2.
+
+Independent review accepts the user's stationary transparency correction in
+user-left-transparent-lod.png versus user-left-completed-lod.png. Runtime latter
+294trees,60detail,234far,crossfade0. It also confirms restored bark and sharper
+distant crowns, while overall review/performance remain pending. The reviewer
+identified an initial29% fade jump from consuming the idle0.1s polling interval;
+newly selected transitions now consume only RealTime.Delta on that first update.
+Combined finite fade/precise-depth candidate removes the previously blue far
+silhouettes in population-lod-finite-precise/80m.png. Source-level cause is not
+isolated between these last two changes. Full18 far packs are being regenerated
+after the wood shader correction; no near geometry or protected source changes.
+
+2026-09-21 refreshed far publication: native Edit compile succeeded with zero
+errors. All18 specimens/72 elevation rows completed after the wood shader fix.
+Packer completed18 packs. refreshed-wood-shader-far-audit.json verifies Version2,
+1,928 source hashes,72 output hashes,18 material hashes and338 near-manifest links,
+with zero missing/mismatching files. New Play produced294 trees,18 models and
+crossfade0. Startup peak load1213.297ms is retained; it is not the timed workload.
+
+TREE-LOD-TRANSITION-001/v1 result: numeric sequence1/1/0/0/1 passed. First sampled
+completed transitions at0.433/0.447/0.450s, all samples after0.5s settled. Actual
+root distances86.20/95.27/104.35m match the0.9074 instance scale. Captures introduce
+irregular sampling (final samples0.658–0.847s); this is not a frame pacing measure.
+Independent visual review cannot approve these frames: the player head obscures
+the target. Preserve all v1 evidence under TreeRealism/lod-transition-v1.
+
+TREE-LOD-TRANSITION-001/v2 defined before rerun: retain v1 production candidate,
+main camera/body placement, distances, timings, thresholds, resolution and FOV.
+Move only the detached observation camera100in forward along worldX and aim at
+the same target(rootZ+410). This corrects a substantive visibility failure in v1;
+main-camera LOD selection is unchanged. Record both cameras. Same numeric and
+visual criteria apply, with new evidence directory; v1 remains numerically passed
+and visually inconclusive. This is a separate visual observation, not a changed
+figure-eight workload. Benchmark after-finite-lod currently running unchanged,
+with source signature12ba8fd58dee91ef4a1687954f44f0993988561c7dfd6fabc465f1cc0cf3ddc6.
+
+BIOME-FIGURE8-001/v2 after-finite-lod completed run08f09f4774e147f78f219a5ebe4abed2
+on engine26.09.15 with exact original preflight/world/route/resolution. Source
+signature12ba8fd58dee91ef4a1687954f44f0993988561c7dfd6fabc465f1cc0cf3ddc6. Raw,
+preflight and comparison retained. Moving350.70966FPS(+10.42%),p955.4618ms
+(-23.30%),p997.9694ms(-18.43%); standing173.43106FPS(+0.97%),p957.107ms(+1.66%),
+p997.854ms(-0.46%). Allocation/frame70951.17moving(-2.97%),42308.473standing
+(+1.54%). Correctness passes: collision4913ready, all queues/failures/exceptions/
+unsafe commits/mismatches zero. Drain16,209.893ms versus17,759.121ms.
+FAIL memory: moving meanprocess11,403,191,413(+53.96%),GPU5,252,127,452(+38.34%);
+standing meanprocess11,422,451,302(+54.08%),GPU5,260,538,639(+38.50%). All mean/peak
+memory gates exceed10%. No waiver/acceptance; retained bake/editor resources and
+new geometry residency remain to distinguish. No competing capture or bake ran
+inside the timed window; result read only after performance.result.saved.
+
+TREE-LOD-TRANSITION-001/v2 numeric pass: first observed completed transitions
+0.375/0.390/0.404s; hysteresis holds correct. Independent visual REJECT: blue
+perforated crowns across0-95m-04 and2-115m-02/04, restored in07. Matched105m near/
+far endpoints also differ in crown density/outline around(1080,425). FOV metadata
+60 is the restored detached viewport: existing native screenshot implementation
+explicitly uses the75 override during RenderToBitmap, then restores60. Observer
+occlusion is fixed, but visible transition defects remain. Next depth-routing
+candidate declares alphatest on the shared fade include even for opaque geometric
+leaves/wood, since these surfaces perform custom pixel discard; installed native
+sbox_pixel.fxc and official shader attribute docs define this engine material flag.
+This is a hypothesis pending same-scenario capture, not a proven cause.
+
+The alphatest-routing candidate first failed with duplicate attribute declarations
+for already-alpha-tested variants, then all four shaders compiled after the
+!S_ALPHA_TEST guard. It did not resolve blue transition holes in
+lod-transition-v2-alphatest; reverted tree_lod_fade.hlsl exactly and recompiled.
+Next bounded candidate disables material batching on near/far SceneObjects.
+Installed Sandbox.Engine.xml documents SceneObject.Batchable specifically for
+dynamic render attributes. Each instance has its own TreeLodFade, but population
+never explicitly disabled batching. No shader/bake input change remains from this
+experiment. Same TREE-LOD-TRANSITION-001/v2 capture criteria; performance rerun
+required if this change is retained.
+
+The unbatched v2 repeat retains correct endpoint/timing behavior and independent
+review approves disappearance of blue perforations in all inspected intermediate
+frames. Source change retained. The separate near/far density shift remains.
+Next candidate removes MATERIAL_ALPHA_TEXTURE from the custom impostor shader:
+native AdjustOpacityForAlphaToCoverage otherwise multiplies already-baked whole-
+tree coverage by1+0.25*mip, as if it were a single leaf cutout. Retain reference
+threshold0.3 and every source/placement/camera input; same v2 capture criteria.
+No far bake source dependency changes for this rendering-only experiment.
+Native first compile request rejected a temporarily unmounted source path before
+compilation, so retry after mount readiness, preserving this error.
+
+Independent unbatched review approves the blue-hole correction across allfive
+endpoints and02/04/07samples of phases0/2/4; no further established shaderpass
+inconsistency was found. The whole-tree coverage compensation experiment compiles
+and preserves settled transitions, but does not materially resolve the flagged
+near/far crown contour/density difference. Reverted that ineffective shader change;
+no coverage/shader/bake parameter alteration retained. Overall acceptance remains
+pending. The user was asked to restart the editor because an earlier automatic
+approval review rejected direct relaunch without a specific reason; no blocked
+launch route is retried. Fresh-session memory qualification is pending user action.
+
+Read-only memory diagnostics in TreeRealism/memory-diagnostics-v1 record202 near
+textures with1,532MB reported size and36 distant textures with303MB,327 matched
+near resources among3,300 loaded. The engine explicitly says these texture totals
+show disk format without accounting for picmip/streaming, so they are not actual
+resident VRAM totals. All18 near manifests contain162 bark/fine/leafPNGs with88
+unique content hashes:857,750,650totalbytes,578,588,338uniquebytes,
+279,162,312duplicatebytes. These file counts identify duplication but establish
+neither its resident cost nor the timed memory regression's cause. No assetquality
+or geometry is reduced to mask the unresolved measurement.
 
 ## MTREE-FEASIBILITY-001/v1 — Blender module evaluation
 
@@ -32847,6 +39182,1987 @@ source-meshing change. Root/junction and measured resource criteria pass for the
 listed cases. Spruce crown calibration and the full goal remain OPEN; no solver
 change or game LOD/wind/leaf-perspective qualification is claimed by this step.
 
+007 crown calibration begins after meshing commit9fc6cd7. Fixed001 controls,
+species/ages/seeds are unchanged. The first solver correction splits allocation
+between the local terminal and each lateral bud, weights local buds consistently
+with descendant branches, and makes shoot length proportional to its own signal
+without the previous0.55 length floor or0.35 new-lateral vigor floor. Spruce's
+apical allocation parameter changes from0.91 to0.54: this is a profile hypothesis
+under the shared solver, not a measured biological constant. No foliage detail,
+density input or retention interval changes. Record fixed Spruce18 graph and
+source first; retain any appearance, connectivity or resource failures. Existing
+001 determinism/prefix and007 topology/resource/visual criteria still apply.
+
+007 first allocation correction: fixed Spruce18 generated6205 nodes/2303 axes
+in3.203s,623 dead nodes/1675 live tips,1219 blocked shoots. Source24.233s,
+420478 faces,727936 needles, one closed component, finite attributes/anchors.
+Native full-tree render and independent review: FAIL crown realism; more lower
+fine growth, still a bare skeleton and sparse upper crown. Fixed Spruce30 FAILS
+30000-node cap, preserving the previous source. No workload/budget waiver.
+The second audit entry is a duplicate readback of the preserved18-season source.
+Next implementation addresses the review's fixed0.06m exclusion versus short
+shoots, differentiates trunk whorls from limb buds, and shortens extension by
+branch order for the spruce profile. These are shared solver/profile changes;
+fixed scene controls, seed, age, foliage density/retention and budgets remain.
+
+007 limb-bud/clearance profile run: fixed Spruce18 has3063 nodes/1066 axes,
+310 dead/753 live tips, one blocked shoot, mean order2/3/4 segment lengths
+0.0859/0.0401/0.0216m. Source12.704s,227426 faces,204160 needles, closed
+connected geometry and finite attributes. Native crown-order-spruce18.png still
+FAILS crown fullness. Shorter shoots plus fewer radial whorls alone do not create
+needle-bearing branch sprays. This exposes the solver's single bud site per
+whole seasonal shoot; side branches also inherit the trunk's radial arrangement.
+Next correction gives a seasonal shoot multiple internodes with potential buds,
+and a species-data plane preference for limb branching. It remains one shared
+growth process. Saved old graphs are rebuilt unchanged. Retain fixed001 inputs
+and007 budgets; visual acceptance is not inferred from increased node counts.
+
+007 internode/profile run: fixed Spruce18 generated7149 nodes/1609 axes,
+176 dead/1433 live tips in8.070s; five blocked shoots. Bounds5.709x6.846x11.258m.
+A graph readback finds328 segments shorter than their own diameter, exposing
+that the old universal3mm initial radius is inappropriate for very short
+needle-bearing shoots. Next revision makes initial shoot/pipe radii profile
+traits and leaves extensions shorter than a bud diameter dormant. This changes
+new growth geometry, not source thickness behind the saved graph boundary.
+
+007 latest thin-shoot profile: fixed Spruce18 generated7140 nodes/1606 axes,
+177 dead/1429 live tips in8.138s, zero spatially blocked shoots and six dormant
+shoot attempts. Source24.958s/401050 faces/346112 needles; one closed component,
+finite geometry/UVs, maximum anchor error1.07um and2199 clearance-limited ports.
+Native crown-thinshoots-spruce18.png still FAILS fullness and lower-wood junction
+appearance. Independent prior-internode review identifies beaded lower trunk/
+limbs; smaller shoot/pipe radii do not resolve that appearance in the latest view.
+These growth experiments remain unaccepted and uncommitted. The reviewed oak
+junction/memory milestone remains9fc6cd7. No runtime assets have changed.
+The reviewer also found that a failed short lateral had been consumed despite
+being called dormant. The working correction tracks successful release per bud,
+reserves demand only for remaining buds, and retries failed buds during their
+existing eligibility window. It compiles but native validation is still pending.
+Annual bud density also affects this approximate growth-signal supply; length-
+weighted canopy area does not make allocation independent of bud spacing.
+
+## TREE-GROWTH-008/v1 -- Dense-junction solid union
+
+Defined before implementation runs. Reuse fixed001/006 Spruce6 and saved oak18
+graphs/settings, then007 latest failed dense Spruce18 graph2721cbd65b18bab6d8872b59b1958262183edf4512a24684af26820b15a018da
+with identical controls. Require one closed connected wood surface, zero boundary/
+non-manifold edges, finite coordinates/UVs, preserved graph checksum and foliage
+count, source<120s and final wood<1000000 faces, sampled private memory<8GiB.
+Inspect the same native spruce azimuth42/elevation8 full-tree view plus close
+lower trunk/limbs; require no repeated beaded necks or detached/socket joints.
+Repeat the approved oak root/three canopy angles for regressions. Record every
+failure. Compare the actual source/graph and environment hashes, not just counts.
+The proposed replacement uses Blender5.2.2's native MANIFOLD union of closed
+branch sweeps, then local rounded intersection edges, replacing convex port
+collars and their global subdivision. No voxel resolution or new external Python
+package is introduced. Original reference meshes/graph identities stay immutable;
+only exterior union geometry becomes the render source. Validate cancellation/
+temporary cleanup and repeat largest fixed sources if this approach succeeds.
+
+008 first union results: fixed Spruce6 source1.506s/21800 faces and dense
+Spruce18 source41.607s/635325 faces. Both preserve graph/foliage, one closed
+component and exact render-part attributes. Dense full-tree and close-up views
+remove repeated parent pinching; independent detailed review remains pending.
+Partial dense-run memory sample reaches10153136128 bytes private (9.456GiB):
+FAIL8GiB target, no waiver. It is not a complete-run resource qualification.
+Next revision drops only redundant operand rings with maximum original-corner
+deviation0.03 times the local stored radius; endpoints and immutable reference
+sweeps remain. Measure actual maximum error/ring counts and repeat same graph,
+settings and views. Remove the obsolete derived collar skeleton. The reviewer
+also identifies incidental crossing unions as an unresolved ancestry risk.
+
+008 compact dense union:27.630s/327447 faces;32815 of63878 input rings,
+maximum removed-corner deviation0.02999987 local radii. Graph/346112 needles
+preserved; one closed component, exact part attributes. Native same-angle
+union-compact-joints.png retains continuous parent thickness. Memory sample
+max10171154432 bytes private: FAIL8GiB, despite smaller surface. Foliage
+anchor audit finds36 errors>10um, maximum187um; explicit post-displacement
+tessellation refresh and binding to rendered triangles is the next correction.
+Intersection provenance audit finds104 non-parent branch pairs sharing edges;
+this includes adjacent collars and distant crossings and is not a claim that
+all104 are defects. union-crossings-v1.json records pairs and locations for
+classification. No acceptance of unintended anatomical grafts.
+
+008 oak compact union:8.385s/123871 faces, original graph and21858 leaves
+preserved. One closed component; fixed native view union-oak-joints-0.png
+shows stiffer fork transitions than desired. Triangle audit finds286 zero-area
+render triangles and372 skinny triangles with area/max-edge-squared<1e-5.
+Explicit fresh tessellation does not fully fix anchor readback (max20.6um).
+Blender bevel source confirms overlap clamping scales all selected edge widths
+by one minimum factor. Next revision applies the native bevel to each connected
+junction separately and removes numerical edges within0.1um; same geometry
+and fixed controls. This replaces the single global bevel modifier. Check all
+geometry/anchors again and retain graph/leaf identity. Prepared operand faces
+and union faces are capped before subsequent allocation; rounding rechecks the
+cap after each junction. Native union allocation itself is still an atomic step.
+
+008 local-bevel oak:16.381s/123866 faces/458 independent junction groups.
+Native union-local-oak-joints-0.png still has the hard U-fork elbow. Native
+ray readback identifies source axis2 ending exactly where successor axis8
+begins, both radius0.04337452m. The stopped axis retained a flat cap because
+round_tip was incorrectly disabled whenever any child existed. Round every
+axis endpoint, including stopped leaders carrying a successor; the graph
+centerlines and radii remain unchanged. Rebuild fixed oak before acceptance.
+
+008 rounded-cap oak:16.206s/124385 faces/459 junction groups. Same pose
+union-rounded-oak-joints-0.png removes the flat cut-plane silhouette but bark
+and bend continuity still need improvement. The graph confirms axis2 ends
+at node7 with exactly one successor (axis8), which likewise ends at a single
+successor (axis34). These degree-two transitions are continuous wood. Next
+revision transports one sweep frame through single-successor chains, retaining
+all graph positions/radii, the original primary motion groups, and explicit
+graph_axes ancestry on the derived sweep. True forks remain union junctions.
+This replaces the independent capped pieces for such chains, with no new
+growth path or species exception. Same fixed source/foliage checks apply.
+
+008 continuous-chain oak:16.142s/123503 faces/439 sweeps, unchanged graph
+and21858 leaves; one closed component. Native union-chains-oak-joints-0.png
+removes the U-bend cap and bark-direction seam. The broad fork saddle still
+needs the existing local26percent collar flare applied to generated graph
+branches; it had been restricted to legacy/manual sweeps by graph_axis<0.
+Enable that same local radius expansion for all non-trunk graph branches.
+Graph/radius records remain authoritative; this is derived junction geometry.
+
+008 graph-collar flare experiment:23.1s/136324 faces. Native fixed0/110-degree
+views FAIL: circumferential socket rims appear where expanded start caps
+protrude outside their parent volume. Revert graph flare; retain previous
+legacy/manual art. Use the existing attachment_radius inset for generated
+branches so their base caps close inside the parent, as its production helper
+was designed to do. Same graph, source parameters and visual criteria.
+
+008 inset-base oak failed closed-surface validation; transaction retained the
+previous completed source. Add explicit pre-rounding and post-rounding
+closure checks to locate the stage producing the invalid boundary before
+changing geometry again. No acceptance of the failed run.
+
+008 staged closure checks locate the inset-base failure in numerical cleanup;
+the union and locally rounded result are closed beforehand. Remove the global
+0.1um proximity weld/dissolve rather than opening valid close surface sheets.
+Keep both closure checks. The earlier BVH anchor measurement also returns
+nonzero distance for some of its own nearest points, so microscopic anchor
+readback requires a double-precision triangle-distance check before attributing
+all such distances to real detached foliage. No visible-gap claim is inferred.
+
+008 inset-base source16.101s/123817 faces; one closed component and exact
+part attributes. Independent review passes repaired U-bend but FAILS remaining
+central upright shoulder at(690,320) and flags opposite-angle shoulders.
+Explicit triangle-to-polygon ray mapping identifies the central shoulder as
+trunk axis0 ending at node9 with exactly one successor, axis6. The prior
+primary-motion exception had deliberately left these as separately capped
+volumes. Remove that exception: primary groups now branch from the continuous
+main stem, whose whole successor chain owns trunk motion. Derived primary
+count/pivots may change; graph identity and original assets remain unchanged.
+This source representation still needs game-adapter qualification. Root
+secondary start caps also use the same inside-parent closure. Native root view
+union-inset-oak-roots.png preserves evidence of the pre-correction collars.
+
+008 current per-junction dense spruce:117.801s/327673 faces; same graph and
+346112 needles, one closed component, exact part attributes. Memory sampler
+starts above target at9475989504 bytes private and never exceeds that initial
+value;180 samples cover the build and later idle time. Recorded absolute8GiB
+criterion still FAILS; no workload/budget waiver. Independent canopy review
+now passes original oak main bends and tight opposite elbow. Root secondary
+shoulders remain visually unaccepted. Next optimization executes the same
+per-junction bevel on the complete incident face fan, reinserting it along its
+unchanged boundary, avoiding repeated scans of the entire mesh. Compare native
+oak geometry against the current full-mesh result, require<=2um coordinate
+change with equal topology/foliage and preserved closed surface; then repeat
+dense source timing. No control/graph/geometry-density changes.
+
+008 local-patch oak13.816s with equal133847 vertices and face-size multiset,
+exact render-part attributes. Bidirectional nearest-coordinate difference is
+117.655um: FAIL2um optimization equivalence criterion. Diagnose copied local
+normal/frame context before accepting or replacing full-mesh rounding.
+
+008 first local-patch dense source87.029s, same351876 vertices and327673
+faces, closed and graph/needles preserved;204.756um bidirectional coordinate
+difference FAILS2um equivalence. The revised patch copies original vertex/
+face normals instead of recomputing an open boundary fan, and directly removes
+only replaced faces rather than invoking a global delete operator. Repeat
+against the same stored pre-patch coordinates; do not overwrite that baseline.
+
+008 local normal-copy/direct-face revision oak9.094s, same vertex/face counts,
+but257.598um maximum bidirectional delta: still FAIL2um equivalence. Next
+revision preserves the original edge creation order explicitly rather than
+letting face copying reorder the bevel vertex fans. Baseline stays unchanged.
+
+TREE-GROWTH-008/v1 local-patch edge-order attempt: oak 9.2472 s, equal 133847 vertices and face-size multiset, maximum bidirectional coordinate difference 257.598 micrometres; FAIL against the unchanged 2 micrometre equivalence criterion. Next bounded attempt includes the complete face fans of neighboring vertices, to preserve the overlap-clamp context. Same fixed oak graph, controls, baseline and criteria.
+
+TREE-GROWTH-008/v1 expanded-neighbor patch attempt: oak 9.13195 s, equal 133847 vertices and face-size multiset, maximum bidirectional coordinate difference 4.87675 mm; FAIL against unchanged 2 micrometre criterion. Local patch optimization reverted to full-mesh per-junction bevel. Root follow-up review confirms three raised shoulders, not demonstrated open gaps, and requires tight alternate views.
+
+TREE-GROWTH-008/v1 reverted full-mesh bevel: oak 16.1582 s, equal 133847 vertices/face-size multiset, max nearest-vertex delta 9.31323e-10 m; equivalence PASS. Root close-up union-root-shoulder-close.png shows continuous but hooked shoulder, no open gap. Candidate correction restricts trunk buttress swelling/vertical elongation to primary roots; secondary roots retain their path and nominal radius. Same fixed oak graph/controls; require closed connected wood, unchanged foliage, exact part parity and independent review of three root views before acceptance.
+
+TREE-GROWTH-008/v1 secondary buttress restriction: oak 16.1173 s, 123912 faces, graph/21858 leaves preserved, one closed component, exact part attributes/normals. Tight opposite views still show hooks (union-root-round-close.png and -110.png): visual FAIL. Stored secondary sweep 437 begins at z=-0.733958 and rises to -0.728652 before descending, despite descending control points. Uniform Catmull-Rom interpolates uneven root spans with overshoot. Replace root-only smooth_path with centripetal Catmull-Rom using reflected endpoint controls; retain root control points. Same fixed scenario and prior topology/visual criteria; additionally measure rising root samples before accepting.
+
+TREE-GROWTH-008/v1 centripetal root candidate: oak 16.20985 s, 123492 faces, one closed component, zero boundary/nonmanifold edges, exact split-part positions/UV/radius/weights/normals, unchanged graph and 21858 leaves. All 18 root sweeps descend at every sampled step (union-root-path-v1.json); independent visual review pending. Next cancellation check uses the same selected oak source through Generate and Cancel Build during junction rounding. Require exact old wood geometry/graph preservation, no temporary Build/Union IDs, and identical owned datablock inventory.
+
+TREE-GROWTH-008/v1 independent centripetal roots review: left provisional pass, right middle uncertain (requires mapped close-up), right outer FAIL natural blending (shelf-like takeoff/tight inside corner and reverse-view raised shoulder). No demonstrated open gap. Next root correction starts secondary curve along its parent tangent before the unchanged outer controls. Same fixed source/criteria and views. Cancellation during junction rounding retained exact source geometry/graph and owned datablock inventory with no temporary IDs; see union-cancellation-v1.json.
+
+TREE-GROWTH-008/v1 tangent-root candidate: oak 16.12847 s, 123088 faces, fixed graph and 21858 leaves preserved, one closed component and exact split-part data. Independent review uses full root view plus retargeted exposed fork437 from two angles and directly targeted fork436. Next same saved Spruce18 graph2721cbd6... and unchanged fixed controls through Generate, with full-build memory sampler union-tangent-memory-v1.jsonl; existing 120s/1mfaces/8GiB criteria remain unchanged.
+
+TREE-GROWTH-008/v1 independent tangent-root visual review PASS for the three flagged attachments: outer sweep437 gradual Y split in both angles, middle sweep436 smooth tapered join in targeted close-up, left smooth in full/fork coverage. No visible cuff/gap or replacement defect. Minor inside-fork bark-pattern stretching remains. This is narrow visible-junction acceptance, not hidden geometry, botanical realism, or export acceptance; union-review-v1.json records both failed and passing iterations.
+
+TREE-GROWTH-008/v1 dense tangent-root build: 118.816322 s, 326843 final wood faces, unchanged graph2721cbd6..., 346112 needles/5408 sprays. One closed component, no boundary/nonmanifold edges, finite motion IDs0..24 and exact render-part geometry/UV/radius/weights/normals. Time/face criteria PASS narrowly; no speedup claim. Complete surrounding memory sample144 values has max private9560543232 bytes (first sample), last7801577472: sampled8GiB criterion FAIL. Sampling started before source selection/build; exact build-only wall timestamps were not captured, so no build-only qualification claimed. Prior failed samples remain. Original oak/reference assets remain unchanged; current candidate is not accepted for overall resources, crossing ancestry, growth realism or game/export behavior.
+
+008 preservation: original oak full geometry/UV/index checksum3e1419a49db6ea97571b881c8ba294affdf26a486384dbf98fc9242df828504e and graph unchanged. Both original library SHA256s match prior baseline. Latest native tangent-root paths all18 descend; union-tangent-root-path-v1.json. Working .codex/tree-growth/authoring-workspace.blend saved with reviewed oak candidate/foliage visible; no original library or installed game asset writes. Final full spruce render still fails healthy crown coverage; leaf count preservation does not establish crown realism.
+
+## TREE-GROWTH-009/v1 -- Crown architecture and retained foliage
+Defined before new growth runs. Reuse immutable TREE-GROWTH-001 settings/seed/species/age from matrix-v1-rings.json (Spruce6/18/30 first, then all four species). Native Simulate Growth and Build Source Geometry remain entry points. Initial baseline is current solver including previously unvalidated spent-bud retry. Record graph/source hashes, node/axis/foliage counts, per-order annual shoot length distributions and retained needle-bearing length; save failed graphs and native azimuth42/elevation8 full-tree images. Preserve existing30k-node/1m-wood-face/120s-source/8GiB sampled-private budgets and growth determinism/developmental-prefix criteria. Native visual acceptance requires a foliated evergreen crown with lateral sprays, natural taper and no repeated junction waists/sockets; needle count alone is insufficient. Any new quantitative coverage metric must be fixed before using it for acceptance. Original oak reference and original libraries stay immutable; current fixed source controls are not tuned to obtain a pass.
+
+009 baseline native spent-bud retry: Spruce18 graphc4cfbbe8..., 7140nodes/1606axes,8.2892s. Annual shoot medians by order0..5 are0.629/0.193/0.0374/0.0139/0.00624/0.00258m;4-cohort retained length201.216m before dead-node exclusion. Profile candidate uses6 needle cohorts (primary literature6-8years in sunlit mature crowns; season remains model step), lateral extension factor0.8 instead0.6 per order (authoring calibration, not a measured universal ratio), and2000 needles/m reference density instead950 (144.6 needles per7.25cm in reported second-order shoots is about1994/m; site-specific evidence). Same fixed user controls, no changed scenario/budget/acceptance threshold. New native growth/source and independent crown review required.
+
+TREE-GROWTH-009/v1 calibrated Spruce18 source: 323.232622s, 544902 wood faces, 2597 sweeps, 1640704 needles in 25636 sprays. Saved graph9d31ce31 preserved; one closed component, zero boundary/nonmanifold edges; finite motion IDs0..28. Time FAIL120s; memory not sampled. Evidence crown-architecture-source-v1.json and crown-architecture-spruce18-before-needles.png. Independent code review identified cluster-center attachment burying inward needles, per-internode minimum clusters and density stretching needle shapes. Replace with individually attached, fixed-size needles and cumulative physical spacing. Before accepting require every needle ray to exit final bark, finite positive physical scales, one needle prototype at every age, count within one of retained-axis length times density per axis, and native full crown/close-up review. Same graph, controls and resource budgets; no count-only naturalness acceptance.
+
+009 independent pre-needle native crown review: FAIL density; upper crown has widely separated thinly foliated branches and open bands exposing the trunk; lower branches do not form a healthy foliage envelope. This image predates individual needle binding. Read-only code review confirms minimum clusters and shape stretching removed; flags the child-radius-only ray bound near thick parent attachments. Current native full source run began at Unix1790029770.2681642; record actual outcome before changing implementation.
+
+009 performance-equivalence instrumentation: observe the existing native pre-bark-projection yield and save unprojected coordinates/face sizes, if captured, in addition to immutable final full-mesh baseline. This read-only observation separates bevel geometry from later UV/relief effects; it changes no operator or geometry path. The existing2um final-coordinate criterion remains.
+
+009 individual ray attachment FAILED needle67; previous graph/source preserved and zero temporary collections. See needle-individual-failure-v1.json. End radius17.1mm/parent17.687mm; nearest bark16.977mm, radial probes exit18..126mm because some rays follow joined whorl limbs. Increasing parent-based cap alone is insufficient. Revised attachment projects each interpolated-radius angular target to nearest local final bark, retaining an explicit4x supporting-radius bound and outward shaft orientation. Record both target-to-base and centerline-to-base maximum distances and worst location; inspect angular bunching/foreign-limb attachment and representative shafts before acceptance. Whole sampled memory10708840448 private bytes FAIL8GiB, sampling bounds in needle-individual-memory-v1.jsonl.
+
+009 next same-graph native build also tests the local-junction optimization with full-global-fan vertex normal refresh after stitching. Preserves explicit edge creation order; no geometry-density/control changes. Compare both pre-bark and final coordinates with immutable full-mesh baselines, require <=2um final nearest-coordinate deviation and equal vertex/face-size counts, closed connected wood and exact render-part attributes. Prior local-patch failures remain; this hypothesis is not accepted.
+
+009 local-normal candidate pre-bark geometry matches full-mesh baseline exactly:585028 vertices, equal face-size multiset, bidirectional maximum0m. New source stopped at needle182940: target near1.60m height is5.149mm inside exterior of sweep14/axis24, radius28.7..31.7mm; originating shoot axis151 ancestry151/101/25/0 has radius1.09..1.27mm. This is unrelated branch overlap, not a valid parent collar. Do not expand attachment radius to relocate needles onto foreign wood. Existing source retained; sampled private10484785152 bytes FAIL8GiB. Evidence local-normal-parity-v1.json and needle-local-failure-v1.json.
+
+009 final geometry equivalence follow-up: same saved graph/control and current candidate. Run native Build Source Geometry, capture completed wood at its existing post-relief/pre-foliage yield, then use Cancel Build because the known needle intersection remains. Compare completed wood coordinates and face sizes against immutable full-mesh baseline <=2um; no complete-source timing/foliage success claim from this cancelled run.
+
+009 local-normal finished-wood equivalence: same585028 vertices and face-size multiset, pre-bark maximum delta0m; post-bark maximum3.7252903e-9m, p99zero. PASS2um geometry criterion. Finished wood reached in55.864s; native Cancel Build then preserved prior source. This is not complete-source timing or foliage acceptance. Next unchanged fixed Review_Oak18 source runs end-to-end through native Build Source Geometry, comparing existing full-mesh coordinates plus closed topology/exact part attributes/unchanged21858 leaves.
+
+009 fixed oak end-to-end local-normal source:9.240258s versus prior full-mesh16.128471s;123088 faces/132768 vertices/21858 leaves/7 primary groups. Graphb7ba3f6b preserved against saved baseline; one closed component, zero boundary/nonmanifold edges and exact split-part positions/UV/radius/weights/normals. Final nearest-coordinate maximum1.86264515e-9m, p99zero: PASS2um equivalence. General audit helper used an obsolete renewal graph snapshot and printed graph_preserved=false; that comparison is marked invalid in crown-architecture-source-v1.json, while dedicated saved-baseline comparison confirms preservation. Full source/crown/export/memory acceptance remains open.
+
+009 independent new oak junction image review PASS regression in inspected pose: smooth U-bend, continuous upright and side joins, no renewed sockets/gaps/pinching/shading seams. local-normal-oak-joints.png. Scope excludes spruce/needles and overall botanical realism.
+
+009 next native growth candidate: same fixed Spruce18 recipe/controls, replace endpoint-sphere probes with complete segment-capsule clearance using the seasonal radius-expanded spatial index. Existing parent/short ancestor exemptions remain; no later-thickening or curved-mesh collision guarantee claimed. Preserve current graph9d31ce31, generated source and failure artifacts as baseline. Record native growth latency/counts/hash and rerun source without relaxing needle attachment bound, source budgets or naturalness criteria.
+
+009 segment-clearance native growth: Spruce18 e7d57e29...,11002 nodes/2612axes,4.690991s,30blocked attempts,387dead nodes/2225live tips. Fixed settings retained. Graph snapshot preserved in crown009 and counts/source hash in crown-architecture-v1.json. Source run began Unix1790031070.9565. Native read-only observation captures finished wood at existing pre-foliage yield for diagnosis if attachment fails; transaction still removes failed unpublished scene IDs. Growth/source/visual acceptance pending.
+
+009 first segment-clearance source still FAILED needle182927 near the same1.60m crossing. Complete pre-foliage wood saved as e7d57e29-finished-wood.npz for diagnosis; source was not published. Independent code review found candidate thickness mismatch: continuing shoot checked initial radius but immediately indexed larger parent radius. Correct candidate broad/narrow-phase radius to max(parent.radius,initial radius) for same-axis growth; lateral birth uses initial radius. Same fixed recipe and criteria. Existing whole-ancestor/shared-parent exclusions, later thickening and curved interpolation remain explicit collision coverage limits.
+
+009 consistent-radius segment candidate: native Spruce18 graph7da2edc2...,10992nodes/2600axes,4.699486s,32blocked attempts. Source still FAILED needle182819 near same crossing; previous finished source retained. Captured native finished wood supports diagnosis: target25.376mm from axis24 straight centerline and25.471mm from derived curve, supporting radius31.500mm; both are inside wood. Curvature is not the main cause at this point. Exact production Simulation replay matches native graph SHA256. In season13, this target has7.375mm clearance; increasing axis24 radius crosses it in season16 (-0.725mm), reaching -6.125mm at18 while the small shoot remains alive. Evidence needle-clearance-failure-v1.json and crossing-season-history-v1.json. This establishes later thickening engulfment; no wood-contact retirement or secondary-growth constraint is implemented yet. Whole-source/foliage/crown acceptance remains open.
+
+009 saved working authoring-workspace.blend with reviewed oak and foliage visible, current growth preview7da retained separately and previous finished spruce9d preserved. local-normal-oak-foliage.png is an invalid below-ground viewport framing; corrected local-normal-oak-foliage-fitted.png shows the full specimen. Original libraries/game assets not written.
+
+
+TREE-GROWTH-009/v1 contact-exposure candidate, defined before implementation/run: reuse fixed Spruce18 recipe, then Spruce6/30 and other species. Model wholly enclosed shoot intervals from the complete post-increment canonical radius snapshot. Tapered swept-ball containment is a geometric authoring approximation, not physiological death. Store intervals and enclosing segment IDs; preserve live state, ancestry, positions and wood. Use exposed length for subsequent light/support and mesh foliage placement. Local attachment collars remain eligible. Partial circumference coverage and curved/bark differences remain outside this one-dimensional model; retain bounded bark-attachment failures. Require deterministic native graph/hash, valid bounded exposure intervals, no foliage generated within stored hidden intervals, explicit candidate/occluded/output counts, no forced descendant death, and unchanged resource/visual criteria. Historical length-count criterion applies to candidate count; output equals candidates minus recorded covered sites. This is an explicit growth-model correction, not unreported density thinning. USDA27767 (dead oak branch cover-up) and29345 (Douglas-fir mortality) do not establish death of a live crossing shoot; no mortality rule is adopted. Original source/library preservation remains required.
+
+009 first exposure invocation invalid for comparison: applying species after numeric controls triggered its panel preset, resetting age24/height18 despite intended fixed18/16. Native growth hit the30000-node cap and discarded the job; previous specimen remained. No graph was published and no passing result is claimed. Correct control application order is species/stage/form/seed first, then all numeric controls, read back complete settings before invoking. Same immutable scenario remains unchanged.
+
+009 contact-exposure native fixed Spruce18: graph0ade115727c8,10992nodes/2600axes,8.812605s.42nodes/58intervals; straight eligible595.217894m/exposed594.920190m (0.0500% covered). Same axes and live/dead states as preceding candidate; feedback changes later positions/radii slightly. Source completed73.383695s,543771faces,one closed component/zero boundary or nonmanifold edges,29motiongroups IDs0..28 finite. Candidate1620763 needles minus826 covered equals1619937 output,zero stored-interval violations; actual curved eligible600.284780m/exposed599.978249m. Fixed lengths19..29mm and widths preserved; minimum outward dot0.761824. Max target-to-base25.093384mm requires close-up review; source fullview contact-needles-spruce18-full.png still appears sparse, independent review pending. Time/faces pass; natural crown and memory do not pass from this result. General audit broadleaf_anchor_count=0 does not measure needle-base surface distance. Independent reviewer found canonical axis-changing start radius differs from single-successor mesher continuation and broadleaf skipped RNG draws move unrelated foliage. Next repair centralizes segment radii and decouples per-site appearance randomness. Same fixed inputs/criteria; preserve this source and data as first completed individual-needle result.
+
+009 independent full-crown review FAIL: thin isolated foliage, large tier gaps and exposed trunk, especially upper third. Close-up contact-needles-spruce18-max-attachment.png also exposes star-like needle bunches near a buried short shoot. First individual-needle memory sample150 values spans Unix1790032593..1790032744 (build, audit and material viewport); max private29517123584 bytes, first10548330496/last22113701888: FAIL8GiB. Sampling began23s after build invocation, so not full-run coverage. Next same-input revision shares segment taper for growth and meshing, records covered parent-collar foliage instead of exempting it (wood/live state unchanged), and uses the shoot radius rather than a distant thicker parent to bound attachment. This is intended to prevent relocation from a wholly buried collar to a large limb and preserve exposed continuation. Broadleaf per-node/per-candidate random streams make suppression independent of surviving appearance. Save/reload the owned working file before the next source build to distinguish retained scene caches from current build/display memory; retain prior measurements and criteria.
+
+009 shared-taper/collar candidate: native Spruce18 cd62834afae0,10164nodes/2347axes,6.916305s.1903nodes/3811hidden intervals; straight eligible544.109147m/exposed532.076060m. Replay exactly matches native hash; independent6-season run equals capturedseason6 and stable parent/axis/born/positions prefix with nondecreasing radii (contact-replay-v1.json). Source FAILED needle646493 at(-0.08453831,-0.08705992,6.50166988); previous0ade source preserved. Ownshoot603's curved path remains inside parent330 after straight exposure says it has emerged. Nearest bark7.776mm exceeds4*1.842mm; do not relax bound. Native finished wood snapshot retained. Complete failed-run sampler includes before/after, private max8484786176 bytes (below8GiB), after working-file reload; this does not qualify successful source/display resources. Next correction centralizes the existing nine-sample Hermite shoot curve in growth.py and uses those same samples/taper for canonical exposure and wood/foliage meshing. Keep explicit graph nodes authoritative; curves remain deterministic derivatives. Recompute exposure against curved subsegments with stable sorted candidates. Same fixed recipe, previous exposure/attachment/visual/resource criteria; no density/control change.
+
+009 shared-curve native source: graph3805d604950b,10288nodes/2371axes,15.366809s growth;1921covered nodes/3862intervals. Complete source62.043446s,497810faces,31motiongroups finite IDs0..30,closed1component/zero boundary or nonmanifold,exact render-part positions/radii/both UVs/weights/normals.1461501 needles from1511149 candidates minus49648 recordedcovered;zero intervalviolations; fixed physicalscales and minoutwarddot0.761797. Independent freshcloseup limited PASS visible distribution/no obviousfloatingstarburst; collarpartlyoccluded. FullcrownFAILthinuppertier/trunkexposure. Priorforegroundshoulder stillunresolved becausegraph/viewchanged. Savedworkingblend; originaloak graph/fullgeometryhashunchanged. Current materialview snapshot private17315344384 bytes FAIL8GiB; notfull-run sampling. No RealizeInstances change applied (schema read only).
+
+009 attachment audit: raw Blender BVH nearest-point reported329.729um maximum. Repeating queries on a352:1aspect triangle drifts along its surface; double-precision barycentrics put that alleged worstpoint only33.98nm from inside the triangle.2091 initially selected-triangle outliers needed neighboring triangles because floatBVH can choose an adjacent candidate. Full1461501-base double-precision audit with2mmcandidate neighborhoods leaves3points above2um, maximum56.7226um. Preserve allraw/audited evidence; do not call raw BVH distances demonstrated gaps. Next bounded production correction usesBVH only to selecttriangle, then vectorized float64 projection onto the actual triangle/edges for both needle and broadleaf anchors, retaining the existing4xshootradius/2mmminimum physicalbound. Same savedgraph3805/settings; require allbases<=2um on finalbark, finiteoutwardneedles, unchangedclosedwood/parts/counts, complete source<120s and visualreview. No source density/control changes.
+
+
+### Tree source attachment precision and rebuild visibility - 2026-09-21
+
+Fixed Spruce18 graph3805d604950bfb1c5757698f63b95f8ac84b01526ba309c63623528efac1cc41; original matrix settings unchanged. Double-precision bark binding completed the real source operator in211.4537708s, failing the120s cap. This run began with the prior1,461,501-needle Source visible; the62.0434456s run began from Preview. They are not equivalent display workloads. Needle counts/scales/exposure intervals unchanged. Material-view memory remains over8GiB; no acceptance.
+
+The full rendered-triangle audit had two remaining candidate-distance upper bounds above2um. Exhaustive float64 distance against every actual triangle resolves both: needle633047=0.104201um and822444=0.008536um. Thus every needle in this source has a verified bark triangle within2um. Native BVH candidate selection missed slender faces even in a2mm query neighborhood; earlier reported upper bounds are not physical gaps. Ordered wood arrays differed, but nearest-coordinate comparison of every old vertex to the new mesh has maximum3.7253e-9m, zero above2um, equal532234 counts. This proves positional agreement, not topology/order identity. Eight degenerate rendered triangles remain a separate meshing concern; neither outlier is on them. Evidence: precise-binding-bruteforce-v1.json and preserved prior audits.
+
+Next fixed validation: same source-start graph, SOLID viewport, real modal Build Source Geometry. Hide previous foliage only while rebuilding; keep previous wood and restore full previous display on cancellation. Require unchanged graph/counts/exposure, exact previous-source preservation on cancellation, no pending IDs afterward, completed build<=120s and unchanged8GiB memory cap. Record full-window memory without claiming that reduced redraws alone solve memory. A finite/nondegenerate projection guard is now present and must execute in this next build.
+
+009 source-start visibility correction: real modal rebuild completed62.6559555s (prior visible-source211.4537708s); graph3805 and1,461,501 needles,1,511,149 candidates,49,648 covered, fixed physical scales and zero interval violations preserved. Projection guard executed successfully. Cancellation during operand preparation restored the exact original object/data identities, graph and count with foliage visible and zero pending IDs. Current close-up maps the remaining foreground shoulder to sweep213,parent3 / graphaxis213,parent4 / attachment582. Material and single-color views both show the transition; this is not treated as a texture-only issue. Next diagnostic captures the same production union before rounding, then cancels; compare local junction edges and final surface to locate the retained shoulder, without publishing or changing the recipe.
+
+009 rebuild memory window:180 samples Unix1790034827..1790035008; peak private13,836,333,056 and working set8,883,982,336 bytes at1790034877. First private8,819,212,288, last8,297,680,896;8GiB FAIL remains. Includes build and subsequent wood-only material inspection, not a foliage material qualification.
+010 shoulder213 diagnosis: production unrounded union captured at its existing yield and cancelled. All22 boundary edges between sweeps3/213 are concave and selected; no convex-edge omission here. Requested width7.9919605mm, smallest boundary edge0.251801mm. Executing the production round_junction on the saved actual union creates88vertices, nearest-original-boundary-vertex displacement median0.119347mm, maximum0.306317mm. The native overlap clamp reduces effective blending to a tiny fraction of the requested width. This explains the retained shoulder; do not change edge selection or enlarge the requested width blindly. Saved actual union in crown010/spruce3805-unrounded.npz; original source remains published.
+
+010 diagnostic refinement: removing only short intersection edges at0.599mm or1.998mm did not release the clamp (median new-vertex displacement0.123/0.126mm); those readback-only candidates are rejected. A0.133mm spoke inside the child surface, adjacent to the boundary, is the tighter limiter. Cleaning all incident short edges at3% of the smaller branch radius increases median rounding displacement to0.826mm, maximum2.137mm, with zero nonmanifold edges on the actual union readback. Next production candidate uses only short edges incident to concave branch boundaries, with tolerance3% of the local bark radius, excludes edges to third branch identities, and then recomputes junction groups. No global weld, no radius changes or graph edits. Fixed graph3805 recipe unchanged; require one closed component, unchanged foliage eligibility/counts/scales, exact render-part data, no invalid motion IDs, source<=120s and8GiB cap. Natural shoulder acceptance requires independent inspection of the same targeted213 view plus an opposing unobscured view; shape changes are intentional, so former coordinate parity is not a pass criterion for this candidate.
+
+010 first cleanup candidate completed64.2765649s /497807faces; samegraph/counts/exposure, zero interval violations. Independent code review found that candidate-edge face checks omitted third identities at endpoint fans, and eligibility needed refresh after preceding collapses. Candidate not accepted. Corrected production checks full endpoint fans, retains each permitted identity pair, and rechecks validity/manifold/full-fan locality/current radii immediately before collapse. Adds cleanup stage counts/time. The first attempted close-up capture had been reset to full framing by source selection; retained as cleanup-first-spruce18-full-unframed.png and is not junction evidence. Fixed camera will be restored after the corrected build.
+010 production graph replay: current growth.py SHA653e6d812933a486fac78d8fb5ced942651e73bc5e803b7a119c70e6b1b0a603 reproduces native graph3805 exactly in15.431564s,10288nodes/2371axes. Separate age6 run0.103621s/174nodes/49axes exactly matches captured season6 state; stable parent/axis/born/p prefix and nondecreasing radii pass. Evidence shared-curve-replay-v1.json. This does not establish other species/ages or healthy-crown appearance.
+
+010 complete-fan cleanup build64.4873803s /497807faces; only2candidates/1operatorcall, stage0.8145414s. Targeted solid view shows no useful shoulder improvement. Readback finds EVERY original3/213 intersection vertex has bark_radius=0: native Manifold does not interpolate that point attribute at new intersections. Finished bark projection later restores it, but pre-rounding cleanup was using unset values. Reject this ineffective radius lookup. Next candidate bounds cleanup by the minimum of the three nearest immutable sweep-frame radii for both branch identities and both current endpoints; maximum sweep radii only provide an admission bound. Revalidates endpoint fan identity and manifold state before each mutation, yields every128candidates. No point-attribute fallback or arbitrary minimum radius. Same fixedgraph/view/criteria.
+
+010 sequential cleanup correctly found2605candidates but reached only384 before cancellation; individual native dissolve calls rescan the entire dense mesh. Preserved source remains intact. Candidate cancelled as an interactive/performance failure; not a complete source timing. Next production revision rounds each allowed tolerance DOWN to a power-of-two metre value, batches only cuts whose full neighboring face fans have disjoint vertices, and revalidates guards before every batch. Deferred overlapping cuts are rechecked after previous batches; no fixed-step assumptions or weakened locality. This changes implementation resolution conservatively, not workload/recipe or120s/8GiB criteria.
+
+010 batched candidate failed the production closure guard (Junction cleanup opened the surface); no source was published and previous64.49s source remains intact. Disjoint batches address operator interaction but do not make every edge collapse topology-safe. Next correction checks endpoint links: common neighbors must equal incident-triangle opposite vertices, shared endpoint faces must equal the edge faces, and no surviving endpoint-fan faces may become duplicates. Uses the native selected-edge collapse directly, omitting dissolve's extra degenerate-ear pass. Physical length/fan/identity/batch guards remain. Native implementation reference: https://raw.githubusercontent.com/blender/blender/blender-v5.0-release/source/blender/bmesh/operators/bmo_dissolve.cc (version qualification: source inspected is5.0, native validation runs5.2.2). Same unchanged real build and criteria.
+
+010 final link-checked cleanup source completed68.1921401s,493302faces, closedonecomponent/zero boundary/nonmanifold edges.2605candidates,1694attemptedcuts in45batches,6.3343877s cleanup. Graph3805,31motiongroups IDs0..30, fixed1,461,501 needles and zero interval violations preserved; split parts exact for positions/radii/bothUV/weights/normals. Independent visual review FAIL: opposing view still has blunt polygonal shoulder at213; full spruce crown remains sparse. Code review additionally requires prospective face inversion/degeneracy protection and manifold endpoint-fan evidence before accepting cleanup. Neither added yet. No blanket mesh/quality acceptance.
+
+User steering: authoring output quality is the priority;60-70second builds are acceptable and performance optimization is not the focus as long as generation completes. Record offline authoring timing/memory as observations, not the gate for visual sample approval. Preserve previous failures; do not apply this waiver to correctness, native import limits, or unmeasured game behavior.
+
+Independent reviewer approves the SPECIFIC Review_Oak_18_271828_Source (solid_union,9.2402584s,b7ba graph) for an initial in-game evaluation sample. This is NOT the similarly named protected Growth_Oak... source and NOT a rebuild with currentcleanup. Coherent silhouette/continuous reviewedforks pass narrow evaluation; open crown/uneven foliage remain unfinished realism. User condition for this one sample is satisfied. Preserve exact source; export fidelity, LOD/wind/leafvisibility and in-game rendering still need validation. Spruce is not approved for the sample set. Source snapshot and geometryidentity saved under .codex/tree-growth/samples010/reviewed_oak. Native sbox26.09.15 is live in voxels3/basic_example,playing,compileclean. Existing exporter assumes oldRootTips/Twigs and requires adaptation for connectedwood; no sample exported/installed yet.
+
+
+## TREE-FOLIAGE-011/v1 — density on preserved oak, 2026-09-21
+
+User requests 2–3x fuller foliage and retains wind/perspective-correction requirements. This is a new authoring scenario with explicit density inputs, not a replacement for previous growth scenarios. Source: Review_Oak_18_271828_Source, graph b7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43; exact reviewed source preserved at .codex/tree-growth/samples010/reviewed_oak/source.blend. Create a separate foliage working copy sharing immutable wood, guides and collision. Existing leaf density 1.9 / 21,858 leaves; candidate density 5.7. Same species Oak, season18, seed271828 and every growth/material/size control. Compare fixed full-crown azimuths42/132/222 degrees, elevation8, identical fit/distance, plus branch detail. Native Blender5.2.2, visible interactive authoring.
+
+Criteria: completed cancellable foliage update, zero wood/guide/collision/graph modifications, 2–3x original leaf count, finite blade geometry and attachment coordinates, unchanged physical blade size range, bases within2um of rendered wood, reproducible same-input foliage, and independent natural crown review without solid clumps or floating leaves. Cancelled update must preserve previous source and remove pending resources. Time/memory recorded only. Wind/edge-on camera correction and game LODs require later real game validation; this Blender run cannot establish them. No game assets or runtime edits in this slice; figure-eight not applicable yet.
+
+TREE-FOLIAGE-011/v1 cancellation sequence: after the completed density5.7 candidate, request density6.0 through the same native operator, then use the existing cancel_requested control at Publishing completed foliage, before publication. Require identical previous object/data identity, metadata and mesh; no pending collections/objects/meshes/groups remain. Restore displayed density from the stored source after cancellation.
+
+
+TREE-FOLIAGE-011/v1 completed density candidate: native3.70045s,21,858->60,688 leaves (2.77647x). Repeat3.76156s gives identical vertex SHA265d6a3775505b1b5b466e996625f9dbf305d70ae51cee509ea3eef2c7f1f0ff. All39 non-foliage objects retain shared geometry and transforms; graph unchanged; original reviewed source fingerprint99ac96cc9c455da0854ff916224f8f6f77e9211d7b9f9b6afeff6479c10a0f5b unchanged. Finite vertices and60,688 anchors; all anchors within0.9422um of rendered bark. One BVH candidate miss refined exhaustively to0distance. Cancellation at publication boundary retained original foliage object/data/settings and left zero pending IDs. Source and cancellation JSON plus foliage011-oak images are in ValidationEvidence/TreeGrowth.
+
+Independent reviewer: initial-game-evaluation PASS, final fullness NOT ACCEPTED. Denser terminal sprays, coherent silhouette and no obvious detached clumps at recorded distances; large spaces between shoots remain and some sprays are crowded. Source review accepted fixes for rollback before old-object retirement and preserving complete transforms. Native publication failure injection not performed. Matched views use distance15.7, center[-.8950554,.5517795,3.8673558], elevation8, az42/132/222; initial before42 wide-distance23.0147 image retained but excluded from comparison. No wind/camera-facing or game claim.
+
+## TREE-GROWTH-EXPORT-012/v1 — connected oak sample
+
+Before first run: source Foliage_Oak_18_271828_Source (scenario011, density5.7,60,688 leaves), graphb7ba3f6ba54c39c4db66630970f3ff87c0efe431293a9fd59bd9b3f707292f43. Native Blender5.2.2 through Tree Lab Prepare for s&box operator;4096 bark bake,8Cycles GPU samples. Key oak_growth_18_open_grown_271828, catalog_eligible=false. Export three levels with whole closed source wood atLOD0,0.3/0.075 lower wood ratios; all leaves retain count/size/attachment. Hard import limit1,350,000triangles/LOD.
+
+Criteria: source fingerprint unchanged; complete hashed files only; three descending nonzero LOD counts; original semantic Trunk/Branches/Roots retained, continuous closed wood before split; finite geometry/UVs; all60,688 motion pivots consistent acrossLODs, numeric image decoder within1.5/65535; nine solid trunk proxies; installation passes dependency validation and leaves existing catalog byte-identical. In-game model/material/leaf/wind/angle and automaticLOD checks remain required and separately recorded; export success alone is not runtime acceptance. Figure-eight remains required before shipping runtime changes.
+
+
+TREE-GROWTH-EXPORT-012/v1 result: real native Prepare for s&box completed90.0726s; original source geometry/UV/index fingerprint65ce915f96dc469db6af3d72018855c26c98afe9c7abd43e1f1c092484ffd2c0 unchanged. Three closed wood LODs before split, correct Trunk/Branches/Roots/Foliage parts;751,080/322,424/141,294 triangles, all below native cap. EachLOD retains60,688 leaves at coverage_scale1.0. Motion:7primary branches,60,688 pivots,256x256 RGBA16 image; maximum decoder error7.689e-6 (<1.5/65535). Nine blocking trunk pieces and18nonblocking triggers.
+
+Ordinary installer completed and20installed dependencies rehashed successfully. catalog_eligible=false; existing catalog bytes unchanged, SHA8398c95ec5990b1639427bf51baca82183f48439e3e44e562ed21699e5a9ed03. Independent source review found no blocker for this new sample key; requested collision guard added so samples cannot overwrite existing catalog/library assets. Restored fallback display name to ASCII hyphen after encoding check. No old installed models changed. Evidence connected-oak-export012-v1.json; immutable source/export logs under .codex/tree-growth/export012.
+
+Native import, actual game appearance, wind, camera correction, automatic LOD transitions and figure-eight NOT RUN. sbox native endpoint HTTPconnection failed; process list contains Blender and no sbox process. Do not launch/focus the editor under desktop restrictions. Camera-facing correction remains unimplemented; the exported wind data and existing shader do not establish its acceptance. Current slice passes authoring/export/install checks only, not final natural-crown or runtime acceptance.
+
+
+## TREE-CANOPY-013/v1 — annual-shoot branching and crown distribution
+
+Before baseline/candidate runs: fixed reviewed-oak settings from .codex/tree-growth/canopy013/settings.json:Oak18/Open_Grown/seed271828,all original001growth controls unchanged;leaf_density5.7 from requested011density comparison. Preserve stored reviewed/exported sources. Current graph in reviewed source:1489nodes,428axes,878foliage-bearing nodes;all1488annual shoots contain exactlyone graph node;mean annualshootlength.2594877m (range.1297370..6140328m). That specimen predates newer productiongrowth; run unchanged currentproductionSimulation as distinct code baseline before editing, do not claim its graphmatchesoldsource.
+
+Candidate scope: explicit multiple axillary-bud sites per annualextension through existingsharedinternode mechanism. Oak maximuminternode.12m,Ash.16m,Birch.10m (authoring hypotheses,notmeasuredspeciesconstants);Spruce unchanged. Foliagearea forlight/support and visibleleaf abundance must followshootlength so merelyaddingnodesdoesnotmultiply canopyarea. Blade physicalsizes andspeciesform unchanged. Count/placement may change because newbrancharchitecture is the testedbehavior; no recipeparameter adjustmentbetweenbaseline andcandidate.
+
+Criteria: realnativeSimulateGrowth andBuildSourceGeometry complete;deterministicsame-input graph;stableearlierseasonprefix/nondecreasingoldradii;no disconnected/nonfinitewood,leafbasesattach;independentfullcrownviewsaz42/132/222,elev8 atcommonfit andbranchcloseup improve coverage withoutmorecrowdedterminalclumps orbotanicalcharacterregression. Recordnodes/axes/exposedfoliageshootlength/leafcount,sourcebounds,closedcomponents andtimings. Densitycontrolsarenotretunedtogetpass. Allnewsourcecopiesdistinctfromprotectedreviewedsource/exportedsample. Nativegamevalidationpendingclosededitor;no runtimechanges inthisauthoringexperiment.
+
+TREE-CANOPY-013/v1 age extension check defined before run: same recorded Oak recipe, age30 instead of18, all other settings identical. Run production Simulation to establish whether the configured older-age authoring path completes; this is age coverage, not a substitute for fixed18 visual comparison. Preserve explicit caps/errors and graph evidence.
+
+
+TREE-CANOPY-013/v1 first candidate: current-code baseline graph07addcee had1002nodes/289axes and106.0674483m exposed bearing length. Candidate graph2fa5092c has12531nodes/2388axes,540.609947m exposed bearing length and82,561leaves. Native growth14.1476883s; source94.3725956s/519925woodfaces. Replay15.246674s matches graph exactly; age6 replay177nodes/42axes matches season6, stable position/ancestry prefix and nondecreasing radii. One closed wood component, zero boundary/nonmanifold edges; finite parts/UV/motion. Simple BVH anchor audit reports maximum188.665um; exact refinement not performed, so attachment-distance acceptance remains unresolved. Preserved source at .codex/tree-growth/canopy013/source.blend.
+
+Independent reviewer: fuller foliage distribution in42/132/222views, no obvious detached clumps at that distance; final crown FAIL for uniformly upright, top-heavy fan and exposed long framework. Junctions not qualified by full-tree views. Primary axes increased4->21; trunk ended season5 at3.267m and many old laterals nearly equal trunk thickness. Ash legacy count/placement issues corrected and re-reviewed; final legacy placement gate also retains per-node terminal sprays for stored profiles without length-based foliage.
+
+Age30 check FAIL: production cap30,000 reached during season22, last count29,300nodes/5501axes;33.018243s. Exact error and per-season counts retained in canopy013/age30.json. No cap or recipe adjustment, no completed graph.
+
+TREE-CANOPY-013/v1 next implementation candidate (same fixed settings/views): distal-bud preference uses normalized annual-shoot position, exponent3Oak/2Ash/2Birch/0Spruce, affecting demand and outgrowth probability. Supporting wood includes the combined existing child radii under the existing2.2pipe exponent, preserving old radii. Lateral direction approaches a gravity-relative inclination from the existing branch-angle/droop controls, replacing cumulative upward drift; leader rule remains upward. These are authoring approximations, not measured species calibration. Retain prior failures and the same visual/attachment/topology gates. Additional numeric criterion: at each fork, parent radius^2.2 >= sum(child radius^2.2) within1e-12relative tolerance. Age30 and deterministic age6 prefix checks remain required; authoring time is observational.
+
+
+TREE-CANOPY-013/v1 revisionB: graph052c4aef,4294nodes/592axes,rootradius.166755m and215.335587m exposed bearing length. Native growth4.3982276s andsource33.3s. Replays agree exactly and normalized age6/prefix/radius checks pass; original false comparison arose from tuple-vs-JSON-list representation and is preserved with correction in revision2/summary.json. Supporting cross-sections pass. Age30 stillfailscap: completed26seasons, attempted27. Visual rejection by main agent: sparse single-leader/layered form remains; no final oak acceptance. The initial42view clips the taller11.61m crown and is excluded from full-tree review. Refit to center[-.8950554,.5517795,5.6],distance23,elev8; use that same fit for all new comparison views.
+
+Next production revision: preserve distal resource priority, but remove the second probability penalty on already-resource-qualified buds. Prior dual suppression lost too much fine foliage-bearing branching. Correct Upward Growth so increasing it raises lateral inclination rather than increasing the speed of downward bending; fixed response. Gravity age starts at the actual first shoot, not the older attachment node. Same recipe/density remains fixed. Independent code review identified the upward-control issue and attachment-age caveat before this correction.
+
+Mesher guard correction before next build: edge cleanup now requires manifold endpoints and tests the original incident-face tessellation at the prospective midpoint. Reject surviving triangles that degenerate or invert. Native collapse implementation reference Blender5.0 bmo_removedoubles.cc:452-534 confirms midpoint for isolated selected edges; production batches have disjoint complete face fans. Native5.2.2 correctness/build still required, no new visual improvement claim from this guard.
+
+013C first source attempt failed transactionally: tessellate_polygon returns integer corner indices on nativeBlender5.2.2, unlike the assumed older vector return. No source published; corrected to native documented index return and rerun unchanged recipe/graph.
+
+013C completed50.1766061s,216747woodfaces,42406leaves;oneclosedcomponent,zeroboundary/nonmanifoldedges. Nativegraph765cf185 matches6.469244s independentreplay;age6/prefix/supportpass. Age30stillfailsatattempted26aftercompleted25. SimpleBVHattachmentauditmaximum366.104um needs exactrefinement. Audit exposed inherited windselection defect: voxel-derivedradiuscutoff.096506m excluded every lateral aftertrunkthickening(primary_count1). Replace with ancestry-owned main-stem lateral chains; supportsingle-stemmodelswith1motiongroup. Samegraph/source recipe will be rebuilt to verify finitecompletegroups, originalleafcount and topology.
+
+
+013C motion rebuild45.8178823s: same graph/42,406leaves,40motiongroups (IDs0..39 finite),217175faces,oneclosedcomponent. All42,406anchors pass2um attachment:2,191 BVHnearest false positives refined against all render triangles with overlapping2um bounds using independent double-precision plane/barycentric and edge-distance checks; maximum refineddistance8.662e-16m,zerofailures. Independent visualFAIL remains: pointedcentralleader,repeateddiagonaltierstructure,largeemptywedges. Source safeguards accepted, not visualacceptance.
+
+Next same-scenario revisionD addresses the observed parallel secondary branches: lateral tropism keeps each branch's own initial bud inclination rather than imposing the same world-relative angle on every order. Correct upward sign and actualbranchage remain. Oak distal-resource preference becomes linear (exponent1) instead ofcubic, retaining a distal preference while allowing more interior budsites to obtain resources. This profile calibration changes production behavior, not fixed recipe/seed/density. Other species exponents unchanged. Require the same full-crown/branch/joint/attachment/growth criteria; no acceptance from count alone.
+
+
+TREE-CANOPY-013/v1 revisionD: native graph9abe7b6b,9642nodes/1674axes,66059leaves (3.02x original21858),355580woodfaces,56primarymotiongroups. Source104.8220238s. Same-input replay9.132227s matches native exactly; age6=122nodes/27axes matches season6, prefix/radius/support checks pass. Age30 remains FAIL: completed23, attempted24 exceeds unchanged30000node cap. One closed wood component, zero boundary/nonmanifold edges, finite mesh/UV/motion. All66059leaf anchors pass2um;3154raw BVH false positives independently refined against actual triangles, maximum8.181e-16m and no failures. Reviewer: broader fuller crown with less parallel branching; final natural-crown FAIL for exposed middle framework/narrow foliage strips and isolated lower limb requiring closer inspection. Count and attachments do not substitute for visual acceptance. Original library and installed evaluation sample unchanged.
+
+## TREE-LEAF-FACING-014/v1 - attached camera correction
+
+Before first validation: use fixed canopy013 revisionD Oak18 seed271828 source (graph9abe7b6b). Export temporary broadleaf meshes through production leaf_mesh at LOD0/1/2 with unchanged source and full leaf identities. UV1 owns motion-pivot addressing; new UV2 stores octahedral authored blade long axis, identical for all vertices of a leaf and all LODs. Feature defaults off for existing materials; new broadleaf exports enable it. Old conifer cards keep existing payload. Minimum blade-plane facing0.35. Candidate rolls about the posed midrib, then tilts only near an axial view; pivot/fold and normal/tangent share rigid correction after existing wind.
+
+Criteria: all66059leaves retained at each LOD; exact pivot/axis identity between LODs; finite unit direction decode and <=0.5degree axis error after half-float UV storage; static numeric correction has >=0.34999 normal/view dot, unchanged pivot and all intra-blade distances to1e-6 relative; fixed camera directions include front/back/edge and within0.001radians of each long-axis pole. Native exporter/FBX channel roundtrip required. Independent source review and actual game orbit must reject camera pops, petiole detachment, flattened unnatural canopy or wind cancellation. Real s&box qualification additionally requires shader compilation, visible color/depth/shadow agreement, rotated/scaled instances, zero/default wind, LOD transitions and unchanged canonical figure-eight baseline comparison. Editor is closed; those runtime checks are pending and cannot be replaced by numeric checks. Candidate is not a qualified game asset.
+
+
+TREE-LEAF-FACING-014/v1 first source review FAIL before validation: cylindrical roll changes by180degrees across a blade-axis pole while finite20.5degree tilt remains, permitting a0.7blade-length tip jump. Camera roll can also exactly cancel flutter about the midrib. Replaced candidate with a rigid camera-frame mapping, preserving folded shape and fixed attachment; constant per-leaf roll and bounded authored lean vary the leaves. Flutter adds after facing. This deliberately changes world-space blade direction continuously with the camera; visual naturalness is unqualified. Camera up comes from installed gizmo_sprite.shader's g_vCameraUpDirWs; source/target frames remain orthogonal for visible camera rays. Native import UV2 convention and shadow camera consistency remain explicit gates. Fixed recipe and numeric criteria unchanged; additionally compare opposite1e-6rad approaches to each midrib pole with one continuous camera-up frame: no jump greater1e-4blade-length.
+
+
+014 camera-frame source review: eligible for native tests, no midrib-pole flip and flutter preserved. Finite camera-up fallback remains discontinuous outside the ordinary visible perspective frustum; no global-continuity claim. Review found object-space facing would not preserve world dimensions/facing under nonuniform scale. Before numeric run, changed facing to world space after the original wind/instance transform, with inverse-transpose normals and mirror handedness. Add fixed transforms: identity, Z rotation37degrees with scale(1.7,1.7,1.7), and Z rotation37degrees with scale(0.6,1.7,1.2), plus mirrored(-0.6,1.7,1.2). Measure rigid correction against already transformed source leaf dimensions, not against unscaled leaves. Existing disabled-feature path retains its previous transform behavior.
+
+
+014 payload native PASS: production leaf_mesh/tag_leaves/write executed on all66059D blades. LOD0/1/2 retain all66059 at528472/264236/132118foliage triangles, with UVMap/TreePivot/TreeLeafAxis and identical pivots/axes across LODs. UV2 half-float roundtrip angularerror maximum0.116686degrees (limit0.5); unit decode finite, identities valid. MotionPNG version2,56groups,256x512, maxnative readback7.689e-6. Temporary export scene/meshes removed, source unchanged. Evidence facing014-payload-v1.json.
+
+014 frame-algebra checks PASS on actual66059authored blades, 1849652cases per fixed transform (identity;37deg rotated uniform1.7; nonuniform.6/1.7/1.2; mirrored-.6/1.7/1.2). Maximum relative edge-length error2.974e-15, fixed-pivot error0, minimumblade-plane facing.35. Across each midrib pole, opposite1e-6rad approaches differ by2e-6blade lengths (limit1e-4). Includes front/back/edge/axial views, flutter-.4/0/.4 and clamp-stress2radians. These independent float64 calculations check frame algebra, not execution of HLSL, float precision at game world positions, actual wind or native rendering. Evidence facing014-frame-math-v1.json. Native FBX/game UV2, shader hot/cold compile, color/depth/shadow, visible wind/orbit/LODs and figure-eight remain pending. s&box endpoint still unavailable; do not release or mark game-qualified.
+
+
+014 FBX roundtrip: initial delegated audit had a Python SyntaxError before its body executed; no scene/files changed. Corrected audit then ran production LOD2 export with canonical exporter FBX settings and native Blender import. PASS:264236vertices/132118triangles/396354loops, all66059UV1 identities and UVMap/TreePivot/TreeLeafAxis layer order preserved; UV2 maximum difference0. Imported transform identity, temporary scene/objects/materials cleaned, original scene restored. This proves Blender roundtrip only; s&box UV2 V convention remains pending. Evidence facing014-fbx-v1.json; FBX SHA4fecf42748d8f3459055f14fa60cd222df2178e911046d0058722736705bdc87.
+
+014 final source review: world-space cofactor normals, rigid map and mirrored tangent sign have no new concrete blocker; eligible for native testing, not runtime acceptance. Added explicit braces only to camera-coincidence fallback after algebra run; final shaderSHA3727ebad0bd8548ef0c64e4c8572227310b13fcf113b0403d3ca54c59741b4be; algebra evidence hash17a7e2c5 differs only by those braces. Six production Python modules parse; tracked task diff whitespace check passes. No commit/push because visual/runtime qualification remains incomplete.
+
+013D lower close-up az132/elev8/center(-1.2,0,1.8)/distance8.5: reviewer sees no established open junction, socket rim, disconnected twig or ground penetration in visible region. Lowest left limb has a continuous but sharp elbow. Far-left end is cropped and some joints obscured; no claim for unseen surfaces. Full-crown distribution still fails final acceptance. Evidence canopy013d-lower132.png.
+
+
+## TREE-CANOPY-015/v1 - shoot-tip bud groups and acquired growth supply
+
+Previous goal turn was progress:013native canopy and014payload/frame/FBX evidence changed authoritative source and next action. Current native Blender available; s&box endpoint still closed. Baseline uses unchanged013D fixedrecipe/settings and graph9abe7b6b; no current density/seed/age-control changes. Additional age6 andage30 change onlyage. Preserve alloldgraphs/source and failurehistory. D statistics beforeediting: height<3m has247foliage-bearingnodes/18.7757mexposedlength;3..6m1793/138.9993m;>=6m3265/282.8713m. Only2livingtips excludedbyage, so extendingfoliageeligibility is not supported as main remedy.
+
+Candidate responsibilities: species-owned subapicalbudcount on annualshootends (Oak4, oldprofiledefault0 keeps existingrules); medianbudspacing unchanged. Separate actuallight-capture signal from competingbud demand, using same living/exposed foliage_weight as light/support. Bud count must not mint supply. Root supply is capturedsignal times existingresource control; one initialsignal unit represents seed reserve onlyinfirstseason. Existingdistribution partitions the finitebudget; eachbud releasesindependently withits own deterministicnoisestream and receivesonlyits allocatedshare. No decorativeadditionalbranches, secondsolver, nodecapchange or savedgraph mutation. This is a growth approximation, not physiologicalcalendar calibration.
+
+Acceptance: exactsameinputreplay; age6prefixpositions/ancestry immutable andradii nondecreasing; secondary supportconsistent; nativeSimulateGrowth/BuildSourceGeometry finishes withfiniteconnectedwood and<=2um boundleafanchors; primarymotiongroupscomplete<=256; comparefullcanopyaz42/132/222/elev8 commoncenter(-.8950554,.5517795,5.6)/distance23 andnecessarycloseups to013D. Independentreviewmustfindfullermiddlecoverage without terminalclumps, paralleltiers ormoreunnaturaljoints. Recordleafcount/distribution,axialbranchorders/annualgrowth,length,height,normalbuildtime (observational). Fixedage30mustcompleteunderexisting30000cap forolderageacceptance; failuresremainfailures. Runtime wind/facing/figure8 cannotbequalified withclosededitor.
+
+
+015 first candidate FAIL: native growth completed but tree died byseason9, only31nodes/7axes/maxheight1.92384m, no foliage at18. Exactgraphbd17158a and first-history.json preserved. Capturedsignal rose to1.959 atseason5, then extension consumedonly.820; season6supply1.667 butextension.162, season7supply.843 andextension0. Existing fixed terminalvigor.12/lateralvigor.07 thresholds discarded allocations that can still generate >6mm viable shoots. Nextcandidate shares one shoot_length conversion between terminalviability and extension and uses the existing2*shoot_radius minimum rather than separateactivationthresholds. Lateralallocatedsignal stillmustbe positive andsuccessfullyextendbeforebudspent; no artificialminimumgrowth floor or supply boost. Allfixedscenario criteriaunchanged.
+
+
+015 second candidate FAIL: viable activation alone yielded85nodes/21axes, all dead by18, height1.84111m, graph764362ec. Preserve second-native-graph.json. Next revision gives each annual shoot a canonical leaf_capacity=(annual_length/profile.extension)^leaf_area_exponent, divided by internode count when nodes are created. Broadleaf exponent.5 is an authoring hypothesis motivated by sublinear shoot leaf mass in Suzuki2003 DOI10.1093/aob/mcg144 (related species, not calibrated Englishoak/Ash/Birch). Spruce exponent1. Shading/acquisition/pipe support and broadleaf placement consume that same storedcapacity, so subdivision cannot manufacturearea and shortshoots retain a reasonable leaf display. Oldgraphs withoutcapacity retain their recorded profile's existing length/node fallback. No minimumsupplyfloor, no recipe/cap change. Radialgrowth remains separate from extensionsignal and is not a carbon-conservation model. Validate annualsum(capacity) matchespowerlaw, sameinput replay/ageprefix, all015visual/nativegates unchanged.
+
+
+015 third candidate FAIL: graph3dc492b090f146cbf19f6b518379c646e0ff30350a63209bd5a36b03e245d6a4 exact native/replay,542nodes212axes,height3.158454m. SourceSHAa84eca4d. Captured/root6.6650258, extension1.1080003, unused5.5570255;119losttips. Survived but failed mature-crown output; no full source built. third-history.json and rejected source bytes preserved in canopy015. Independent review also identified extra terminal leaf sprays and per-internode rounding inconsistent with a strictly shared rendered leaf budget; this candidate is rejected, not adopted.
+
+015 design correction: direct primary Palubicki2009 section4.2 uses accumulated bud-light Qbase and vbase=alpha*Qbase. Baseline demand-proportional signal was consistent with this image-synthesis model, not an established conservation bug. Capture-only acquisition, subapical grouping, sublinear leaf capacities and associated threshold/release changes all removed together; exact before015 source restored before next change. No physiological conservation claim.
+
+## TREE-CANOPY-016/v1 - age-dependent apical control
+
+Predeclared same fixed013D settings, age18, seed271828,density5.699999809; additionalages6/30 alteronlyage. Same visual viewpoints and geometry/replay/support/anchors/motion criteria as015. Candidate only: shared species apical_maturity parameter, default0 preserves constant control; Oak12seasons relaxes its .60 weighting linearly to .50 equal weighting based on each axis age from first actual shoot. Primary Palubicki2009 section4.2/Fig10-11 supports removal during development qualitatively; this interpolation and12seasons are authoring hypotheses, not a paper reproduction or measured oak calibration. Hypothesis: release old branches from continuing-axis preference and form broader mature crown. No leaf-density control changes, artificial leaf clouds, node-cap changes, or recipe retuning. Require reviewer fuller middle coverage and natural whole crown; older age cap failures remain failures. No native/game claims until actually run.
+
+
+016 native result: SimulateGrowth12.433210s; grapha72619c5855c4a8acf81a73ce60e0b7e0cff8614c18b710ed0c5a2f28d5cab6d,11536nodes2045axes,height10.16618m. BuildSourceGeometry155.486438s,75770leaves(3.46646x original21858),441610woodfaces,63motiongroups0..62. Original011source/installedsample and013Dsource unchanged. Frozen canopy016/source.blend SHA580d11b22966081fdc00f8e6e036f30961eed387d1207df28d487df59a9db8d9. Native source finite positions/indices/UVs/motion; one closed connected wood component,0boundary/nonmanifold. graph preserved exactly. Evidence canopy016-source-v1.json.
+
+016 anchors PASS: all75770 bound leaf anchors independently checked with float64 point-to-triangle distance (plane/barycentric/segment). Maximum8.681758149e-16m;0over2um. Native float BVH initially reported2617over2um,max160.764um; exact checks against actual triangles of the returned native nearest polygon resolve all,0fallback misses. Do not treat the approximate BVH distances as real gaps. Evidence canopy016-anchors-v1.json.
+
+016 replay PASS: sameinput16.185216s exact native hash; age6.120423s134nodes26axes, matches capturedseason6; unchanged prefix parent/axis/born/position and nonshrinking radii; supporting radius^2.2>=sum childradius^2.2. Ash/Birch/Spruce age6nodes/axes/statistics exactlymatch before015 under defaultzeroapicalmaturity. Metadata includesnewfield; hashesnotcomparedforcrossrevision. Age30 FAIL: completed22,attempted23 reached unchanged30000nodecap; no unfinishedgraphpublished. Evidence canopy016/replay.json.
+
+016 independentvisualreview of matched42/132/222 pairs: improvement PASS, finalnaturalEnglishoak FAIL. Middle/lower crown coverage improved acrossangles; lowappendage lessisolated andcentralcrown moreconnected. Remainingpointed/conicaltop (morepronouncedthanD), repeatedascendinglimbs, recognizabletiers andnarrowterminalsprays. Noexcessivecompactclumping identified. Noobviousopenjoint/detachedfoliageatwhole-crownscale; hiddenjoints unqualified. Evidence canopy016-oak42/132/222.png. This is a preservedimprovementcandidate, not finalvisual orlibraryacceptance.
+
+016 technicalcheck: builderrestoredexactlyto before015; onlynew growthdelta is speciesapical_maturity plus node-axis allocationweight interpolation. SixPythonmodulesparse; scopingdiff whitespacecheckpasses. Native s&box endpoint127.0.0.1:7269stillunavailable; facing014UV2 shadercompile/import, wind/orbit/shadow/LOD appearance andplayable-worldfigure8remainpending. No newgameinstall,commit,push orcatalogadoption.
+
+
+016 close-junction independentreview: no established socket/disconnection regression in lower132 foliage/barewood pair. Prominentlowerleftlimb/trunkandmiddleforksvisiblycontinuous. Frontcrossingthinbranchelbownearx645y355andlowestlefttwigkinknearx392y593remainangularbutcontinuous. Hidden/rear/croppedpartsunverified. Finalnative viewrestoredfullfoliage42 andworkingauthoring-workspace.blend saved; frozen016source retained.
+
+
+Previousgoalturn classified PROGRESS:016 changedproductionapicalallocation,completednative75770leafsource,andreviewconfirmedfullermiddle/lowercrown; finalnaturalshapeandage30stillfailed.
+
+## TREE-CANOPY-017/v1 - mature-age authoring budget
+
+Predeclared newbudgetscenario; earlier013/01630,000nodecapFAILures preserved. Samefixed013settings,Oakseed271828,density5.699999809,height16,allothercontrolsunchanged; age30changesonlyagefrom18. OnlysourcechangeMAX_NODES30,000to100,000, seasonmax80unchanged. No growth/tropism/foliagealgorithmorinputtuning. Reason:defaultMature24cannotcompleteonfixedseedwithexistinglimit; userexplicitlyprioritizesoutputoverofflinetime. Firstnativegrowonly; reviewgraphsize/hostmemorybeforemesh. Host32679292KiBphysical/free4489580KiB,commit99627948KiB/free29014940KiB beforechange; theseareobservationsnotguarantees.
+
+Acceptance: native30growthfinishesandexactreplay; snapshot18matches016graphnodes/axesandstatistics (requestedrecipeage/hashdiffexpected); nonshrinkingradii andsameexistingpositions/ancestry; nativecancellable30sourceonlyifmemorypermits,allfinitegeometryclosedonecomponentand0nonmanifold/boundary; leafanchors<=2um;completeprimarymotiongroups<=256; fullcrownviews42/132/222 fittedtoenclosewhole30crown plus exactsame016views ifwholecrownfits; reviewerassessesnaturalnessandmaturitywithoutingerringolderguaranteesrealism. Recordelapsedtimes,node/axis/leaf/trianglecounts andsampledprocessmemory. Fixedinputsnotreducedtogetpass. Runtimewind/facingandgameacceptancestillpendingvisibleeditor; nofigure8claimed.
+
+
+## TREE-MOTION-018/v1 - dense foliage pivot addressing
+
+Predeclared after observing actual017nativefoliage count346767 (sourcebuildongoing). Existingfixed256x<=1024 motionimageonlyaddresses261888leafpivots withhalfprecisionUV1; a346767-leafcrowncannotexportwithoutlosingidentity. NewcanonicalTreeMotion.texture_size growswidth256/512/1024whilebothaxes<=1024;first256lineartexelsremainbranchslots,leavesindex+256. EachLODusesidenticalshapeandentries. PNGwritesactualdimensions; TreeBranchPivot queriestexturewidthinsteadhardcoded256, verticalconventionunchanged. Widerpayloadmanifestversion3; oldwidth256 retainsv1/v2. No thinning, no sourceleafchanges; stillrejectabove1048320leaves.
+
+Acceptance: actual017allblades/allLODs UV1halfconversionretainsallleafIDs/pivots,UV2axesfiniteandmatch014tolerance. MotionPNG16bitnativeindependentreadback<=1.5/65535 error,allstructuralIDsvalid. Old66059leafD payloadUVs/PNGbytes matchpreservedbefore018exporter; reportprovenancedifferencesallowed. Samegraph/sourcefingerprintbeforeaftertemporaryexportvalidation,cleanuprestoresvisibleoriginalscene. HLSLsharedwindchangemustlatercompileandpassnativegamewind/orbit/LOD/shadowqualification;closededitorcannotestablishruntimecompatibility. Do notexpandotherbudgetsorclaim018passbeforechecks.
+
+
+018 firstlocalarithmeticcheckcouldnotimportnumpyinPython3.12; bodyneverexecutedandnoevidencefilewritten. RetriedusingstandardlibraryIEEEbinary16struct e: everyaxiscenterandCartesianproductfor256x512,256x1024,512x1024,1024x1024hasexactrepresentationand0decodedIDmismatches,includingV-flippedcoordinatesandall256branchslots. This is anindependentaddressabilityproof,notproductiontag_leavesorruntimeimport. Boundarylayoutsreviewedseparately;actualsourcepayloadvalidationpendingcompleted017build. Evidence motion018-half-grid-v1.json.
+
+
+017 results: native age30 growth completed149.469862s,88095nodes15109axes,height13.956993m, graph7b9c6c58006b250d890e591ad1135ddb80189d6e255a8ecd966d15641f202c78. Replay age18 exact016 hash18.414488s; age24 graph9ccdebf0770fac6f93385c437116f1f224d2e3ccabf16534f1c563b8033a8adc,36848nodes6297axes; age30 exactnativehash184.842256s. Unchanged position/parent/axis/birth prefix18to24/30,nonshrinkingradii,reverse radius^2.2 support tolerance1e-9 pass. Agent history clarification: THREE age24 invocations (combined18/24/30, standalone stdout outputlostattimeout, finalpersistedrun); two known timings74.318292s and64.372430s, samehash. Missing standalone result remains unavailable. replay.json retains final64.372430s; season elapsed values are CUMULATIVE, not individual callback times.
+
+017 source FAIL:346767nativeleafblades,14914branch operands; rejected beforeBoolean union by existing1m operand-face guard. Exactoperandfacecount not recorded by old error. Cleanup stalled live editor, one native status request returned No data received; same PID21540 recovered without restart. No F source published, pending collections empty, original E source restoredvisible. Native cancellation responsiveness NOT established. Monitoring910 samples02:25:21.4749222Z through02:42:24.9657178Z: WorkingSet4963553280..11780493312B; private16746434560..28182007808B; hostfreephysical790868..7307748KiB;freecommit16369260..27540260KiB. Not incremental model memory or guaranteed peak. Evidence canopy017/source-memory.jsonl and-summary.json; errors empty, stopmarkertermination.
+
+## TREE-SURFACE-019/v1 - dense offline meshing capacity
+
+Predeclared capacity experiment, old017sourceFAIL preserved. Same exact017 native age30 graph/settings and346767leaves, no input or ringtolerance changes. Central offline MAX_SURFACE_FACES4m replaces1m at operand/union/rounding checks; redundant builder check removed because same BMesh immediately becomes Mesh. Motivation: denser age30 has7.3x age18nodes; age18rounded441610faces scales to~3.2m (estimate, not measurement). 4m is an explicit source admission guard, NOT memory bound and NOT changed game1.35m triangle guard. NativeBoolean remains atomic; completion/memory must be observed. Preflight computes retained rings and exactclosedoperandfacecounts before operand IDs; build reuses those indices. Batch-remove locally-owned temporary objects/collection, then orphan meshes. Addon retirement likewise batches only namedtransaction objects/collections then unusedmatchingdata, preserving protectedsourcecheck and close-before-retire ordering.
+
+Acceptance: cancellation inpreflight and operandcreation leaves originalstoredsource fingerprints unchanged,no leftovertemporaryIDs, editor responds; record actualcleanupduration. Actual30 BuildSourceGeometry finishes finiteclosedonecomponent0boundary/nonmanifold,all346767leaves retained, anchors<=2um, motiongroups<=256; independentfullcrown/jointreview42/132/222. Recordoriginal/source/environment hashes,operand/roundedfacecounts/times/sampledmemory. Stop rather thanforceprocess ifunresponsive; do notpublishpartialsource. Native count/geometryparity checks alongside exactpreflight arrays. Thisofflineexperiment isnot export-ready:346767*4=1387068minimum leafLOD0triangles alreadyexceeds1.35m beforewood; export design/runtimequalification remain separate. No game promotion or figure8 claimed.
+
+
+019 native early cancellation checks on preservedE construction: preflight stopped64/2040 in.881155s,close.031881s; operandcreation stopped32/2040 in1.841322s,close.062765s. Fullobject/mesh/collection/material/nodegroup/curve nameinventory identical aftereachclose,source collectionpointer/graph/geometryUVfingerprintunchanged. This directly exercisesproductionbranch_surface.close,not an actualUIcancel nor atomicunion interruption. Evidence surface019/cancellation.json. Revieweridentifiedorphanmaterialdependency ordering ininitialretirebatch; fixedbefore30build byre-evaluatingusers aftereachmesh/curve/nodegroup/materialclassbatch. Productionretiremethod reloaded fromcurrentdisk; native30BuildSourceGeometry begunwithunchanged017graph. Sixmodulesparse, hashesstoredsurface019/source-hashes.json.
+
+
+019 independentfollowup found remaining quadratic cleanup bookkeeping: everyoperandmesh checks membership in a list of allmeshes, about111million comparisons for14914operands. Onlybase.data canbe replaced bytheBoolean; allothermeshes appendedbeforeobjectcreation. Corrected finally nowchecksbase.data once beforebatchdeletion, includingexceptionduringmodifierapply. No geometrychange. Active native019job had alreadyloadedoriginal019surface, frozen exactlysurface019/surface.py.run019 (bf8f9bd9519564a46d0af9f4420fc9cfc17fa775f6fc3b08b8abcd3afe31f64f); newerfile affects subsequentcalls only. This staticallyestablisheddefect doesnotestablishcurrentrunningframe orcauseofobserveddelay. Nativejoblastreportedjunctioncleanup27batches andthenstatuscallpending; no completionclaim.
+
+
+019 observed delay corrected diagnosis: installed workspace-local py-spy0.4.2 using publishedofficialprojectinstructions; noBlenderrestart/injection. Read-only dumpPID21540 at03:07UTC shows active+GIL MainThread in surface.py:238 <lambda> / branch_surface,called byfuse_wood/work/modal. Frozenrun019line238 is minimum-index selection over ALLremainingjunctionedges for EVERYdisconnectedgroup; itisnot thecleanupfinally loop. Native stack savedsurface019/native-stack-0307.txt. Corrected future productioncode traverses one sorted list of alljunctionedges, skips alreadygroupededges, retains same minimum-index seed andsameDFS/groupwidth order, yields every256groups. No geometry/resampling/collarwidth change. Currentloadedrunstillusesfrozen019version; completionpending. Baselinearray-to-IDplanning andbatchretirement remain.
+
+
+018 actualD LOD2 parity run: all66059blades,132118triangles,56groups. Before018/current exporter with identicalproductionheight=maxleafZ10.00330066680908m yielded bit-identical UV0/UV1/UV2/colors andPNGbytes, decodedPNGmaxerror7.62939453125e-6. SourcegeometryUV/graph/pointerunchanged, temporaryobject/mesh/imageIDs cleaned. Evidence motion018-D-parity-v1.json. Historical014PNG comparison FALSE:014reports position_scale39.36944547614226 (height9.842361369035565); thisrun actualproductionheightproduces40.01320266723633. Preserve falsecomparison; next check uses recorded014height to isolateformatparity. No sourceheightorproductionargumentchange; no denseF/allLOD/runtime claim.
+
+
+019 correctedgrouping productioncancellationcheck actualE: reached Findingwoodjunctions256 in18.320780s; close.147132s, fullIDsnameinventory andsourcepointer/graph/geometryUVfingerprintunchanged. SHAfb2cdbeb96b5e2ced11be95283744f0f9d6b7a743aa39c87807de1b02b139744. Evidence surface019-group-cancel-v1.json. No largejob speedclaim. Native019oldjob recovered andpassed all14811junctiongroups, closedwood326? exactcountpending; barkprogressreports3277706POLYGONS (notvertices).
+
+019 at03:15UTC pendingWood/Leaves objects wereboth visible while incrementallywritingmillionsofUVcorners. Parentchanged ONLY those two pendingobjects' viewport hiddenstate, preservingFgrowthpreview. This changesnooutputgeometry ororiginalsources. Privateprocessmemoryhadreached38.79GB andfreecommit~10mKiB; exactmonitorcontinues. Futureauthoringcode nowhidespendingcollectionobjects afterbuild_tree returns andbeforefuse_wood; completedpublication's existingselect_tree/show_forms restoresrender/viewport visibility. Runningjobstilloldworkfunction, itsvisibilitycorrection appliedexplicitly. Capturethisenvironmentchangeinmeasurements; no samevisibilitytimingcomparisonclaim.
+
+018historicalPNGheightcheck: actualD graphheight9.842361369035565m matches014report; withthatrecordedheight currentwriterproducesbit-identical original014motion.png,maxdecodeerror7.68899917602539e-6, sourcefingerprintunchanged. Before018/currentproductionheightcomparisonalsopassed; earlierhistoricalFALSEisfullyattributabletodifferentencodedheightinput. Evidence motion018-D-historical-height-v1.json. DenseF andotherLODs/game stillunqualified.
+
+
+019 polygoncount correction: nativecollection welded_faces andbarkloopdenominator both3277706; the earlierincompletefragment closedwood326? isnotameasurement. Active sourcecontains3,277,706 roundedwoodpolygons beforebark/foliagebinding. At03:16:33UTC bark946176/3277706,03:17:16UTC1482752/3277706. Visibilitychange preservedpositions,indices,UV algorithm andleafcount; before/aftertimingsareobservationsonly, notfixedscenario benchmark.
+
+018 densepayloadcheckclarification beforeexecution: sourceformat/motion qualification isseparatefromengineimport. AnytemporaryLOD0 leaf meshforUVmetadata-onlyinspection mayuse count*8 localtriangleallowance toretainfullblades; noFBX/.vmdlpublication or engineimport, globalMAX_LOD_TRIANGLES1.35m remainsunchanged. This cannotestablishanimportableasset. Ifused, recordallowanceandexplicitlylabelscope; allactualpivot/axis/halfUV/PNG/sourceimmutabilitycriteriaremainunchanged.
+
+
+019 native source COMPLETE: CanopyF_Oak_30_271828_Source, mesh_seconds1740.558354 (29.01minutes, includes interimread-onlypayload/cancellationchecks and explicitpendingvisibilitychange; not comparable authoringbenchmark). All346767leaves,94primarygroups;3381914plannedoperandfaces,3277706roundedwoodfaces;14914sweeps,14811junctiongroups,266166blendededges,12522cleanupedges. Union92.734963s,cleanup88.203125s;input779591rings,retained350002; maxrelativeomittedringcornererror.0299999849063<=.03. Actual30graph preserved exactly. Loadedgenerator0ba312c4de0487c4c8df13b93c1b6c16a278406e984be0ebb0f1de555c7be19e verifiedfromfrozenbuilder/surface/growthbytes. Currentdiskgrouping/visibilityfixes were not retroactively partofthisjob; their narrower nativecancellation andsourcereviewevidence recorded separately.
+
+019 native geometry PASS: everymeshpartfinitecoordinates/UVs/validindices; wood1connectedcomponent,0boundary/nonmanifoldedges. Motionclassificationfinite,IDs0..93. All346767leafanchors exactfloat64distance<=4.641313814898719e-7m (<2um);0failures. ApproximatefloatBVHreported6268over2um,max.00013981598m; exactnativeclosest-polygontrianglechecksresolveall,0overlapfallbacks. Evidence surface019-source-v1.json and-anchors-v1.json. Fullsourcefrozen .codex/tree-growth/surface019/source.blend (1075558826bytes,SHA1e63c78aa057263f9698b605150ea75035b1f01663ef1f120754748ebc82258b), includes source,94guides,288collisionobjects. Workingauthoring-workspace.blend saved withF, originalsretained.
+
+019 memory1585samples02:51:41.8106453Z..03:20:59.9213875Z,stopmarkertermination,errorsnone. WorkingSet1521623040..15937142784B;private19490369536..38805487616B;hostfreephysical246784..10296628KiB,freecommit9239784..44299676KiB. Private32GiBthresholdcrossed;hostfreecommit8GiBthresholdnotcrossed. These are sampledwholeprocess/hostobservations, notincrementalmodelmemory orcompletepeakcapture. Evidence surface019/source-memory.jsonl and-summary.json. Nativejobfinishedin samePID21540 withoutrestart; prolongedoldgroupingstall occurred andisnotresponsiveUIacceptance.
+
+019 independentwhole-crownreview42/132/222: improvementPASS; plausibleSOURCEPROTOTYPEforfuturestaticgameevaluationPASS conditionalonexportconstraints; finalvisualqualityFAIL. Fullerbroadercrown,strongertrunk,improvedmiddlecoverage. Stillrepeatedstraightascendinglimbs,comb-likebaretwigs,noticeablepointedapex/uniformuppermass,andsculptedrootflares. No cleargrossfloatingfoliage/openmajorlimb/socket atfulltreescale. Close lower132 foliage/woodreview retainsprototypeapproval: majorlowerleft/rightlimbs visiblyjoin; awkwardbluntforegroundlimbenduppercenter,abruptcentralforkshoulder/barkdirectiontransition,pointedundersideoflowerleftattachment,shorttriangularrootflares/sharpvalleys,anddenseangularcrossingtwigs. Hiddenfaces/animationnotcertified. Evidence surface019-oak42/132/222.png and-lower132(-wood).png. F remainscandidate,notfinalproductionapproval.
+
+018 denseF nativeofflinepayload PASS: all346767blades eachLOD; temporaryLOD0/1/2 triangles2774136/1387068/693534,vertices3120903/1733835/1387068. SAMEstoredentries/axes reusedbyproductionTreeMotion acrossLODs;allUV1halfdecodedIDmismatches0;UV2halfmaxangle.114570299deg<=.5. MotionPNGv3,512x1024,94branchslotsused,positionscale56.483642578125m, independentnativePNGmaxerror7.68899917602539e-6<=1.5/65535. Sourcecollectionpointer/graph/geometryUVfingerprintunchanged; alltemporaryobject/mesh/imageIDs cleaned. Evidence motion018-F-payload-v1.json, complete=true. This is metadata-only qualification withpredeclaredtemporaryallowance2774136; noFBXexport/nativeimport orshippingLODgeometryclaim. Current1.35mengineguardstillblocksF andhasnotchanged. NativeS&box editor_status failedconnection127.0.0.1:7269again; shadercompile/import/wind/orbit/shadows/LOD/figure8 remainNOTRUN. No gameassetpromotion,commit,push orcatalogadoption.
+
+Currentgoalturn classification PROGRESS: denserage30source nowfinishesandisfrozen,completegeometry/anchors/densemotiondatapass; sourceprototypeindependentlyapproved, finalnaturalshape/export/runtimequalification stillpending. Goalnotcomplete.
+
+### TREE-FOLIAGE-020 v1 - fuller oak defaults (predeclared 2026-09-22)
+Scope: production Blender authoring defaults only, not a new growth or meshing rule. New oak density5.7 is three times previous1.9 and uses the already reviewed013/016/019 comparison value. Ash/Birch/Spruce presets remain1.35. The generator species table owns these defaults; saved recipes and explicit density overrides retain their recorded values.
+Fixed native check: existing Blender5.2.2 OAK_STUDY_Studio, completed CanopyF_Oak_30_271828_Source, seed271828. Through the actual registered preset callback choose each4species x3age presets x3habits. Verify oak5.7 (float32 tolerance1e-6), other species1.35, all other preset controls exactly equal before020. Verify fresh RNA default, preserve full original scene settings/active selection/progress and source collection properties/geometry ID inventory. Verify explicit prior density1.9 remains when selecting the original saved Review_Oak source; selecting F restores5.7. The exact original source name must first be found read-only. Before/after AST equality of every function except preset_settings and build_tree's initial default resolution establishes unchanged leaf/wood/motion algorithms; existing native019 output at5.7 remains the visual reference, not a newly rebuilt020 model. Any changed algorithm invalidates reuse and requires a new source run.
+Pass criteria: all36 preset entries meet expected density and unchanged other controls; property default5.7; preserved recipe values/scene restoration/source properties and ID inventory unchanged; independent code review finds no blocker. Game figure-eight not applicable to this isolated offline default change; overall shader/export/runtime acceptance remains NOT RUN while editor unavailable. No native game assets/catalog installation is authorized by this check.
+TREE-FOLIAGE-020 v1 additional entry-point check, predeclared before execution: invoke real build_tree with species Oak/Ash/Birch/Spruce, seed271828, age1, other function defaults unchanged, once omitting leaf_density and once explicitly1.9. Advance only to its first yield before scene allocation, inspect captured settings density, then close. Expected omitted density5.7 Oak/1.35 other species, explicit1.9 all; ID inventory unchanged. These eight calls execute the canonical age1 growth/derived path until that yield; they do not validate finished geometry or species appearance.
+
+TREE-FOLIAGE-020 v1 results (2026-09-22): PASS within offline default scope.
+Live Blender5.2.2, existing OAK_STUDY_Studio: all36 actual preset callback combinations passed expected densities and exact unchanged non-density preset controls. RNA default5.699999809265137; saved Review_Oak_18_271828_Source restores1.899999976158142 and CanopyF_Oak_30_271828_Source restores5.699999809265137. Original scene settings, visibility, source collection properties and geometry ID inventory all unchanged/restored. Native evidence [defaults](ValidationEvidence/TreeGrowth/foliage020-defaults-v1.json).
+Eight actual build_tree calls (4species, omitted vs explicit1.9, age1 seed271828) passed up to first Building branch surfaces yield before scene allocation; no temporary IDs. Omitted defaults Oak5.7 and other species1.35; explicit1.9 retained. [Entry-point evidence](ValidationEvidence/TreeGrowth/foliage020-entry-v1.json).
+AST comparison to before020 confirms only preset_settings and build_tree default resolution changed; build_tree body after that first resolution is identical. All other builder functions/classes including foliage/wood geometry are identical. RNA default reads species owner. Direct non-oak callers omitting density intentionally now use1.35 instead of historical shared function1.9. Independent source reviewer: no actionable defect; source-level scope only, not fresh startup/full-species-appearance/game approval.
+Current code normalized back to CRLF after native evidence hashes were captured; only byte encoding changed after run. Existing019 source and frozen run files unchanged. No new full mesh generated for020; existing019 evidence uses the same effective density. No game run/import/install/catalog change. Shader and actual wind/orbit/shadow/LOD acceptance remain NOT RUN while visible editor unavailable. No task commit/push while overall acceptance remains incomplete.
+
+### TREE-ROOTS-021 v1 - exposed root descent (predeclared 2026-09-22)
+Problem: independent019 review identifies short pointed root flares/sharp valleys at soil Z0. Current primary guides reach soil by radial1.2*base_radius and immediately descend35%of final depth by46%of total length. New candidate keeps primary roots near the soil surface longer before descending. This is derived authoring geometry, not biological root simulation. Root count, seed/random calls, length, terminal depth, taper, cross-section, secondary root construction and entire growth/foliage model remain unchanged.
+Candidate fixed controls (relative to existing origin): at25%length descend.35*base_radius; at50%length descend.45*base_radius+.08*depth; at80%length descend.45*base_radius+.55*depth; final100% unchanged. The first horizontal distance is now a length fraction, ensuring ordered radial controls even at allowed root_spread.5; old fixed1.2radius could exceed the following .46length at minimum spread. Keep existing centripetal interpolation and6samples/span.
+Native fixed source cases: saved CanopyE_Oak_18_271828_Source graph a72619c5855c4a8acf81a73ce60e0b7e0cff8614c18b710ed0c5a2f28d5cab6d and CanopyF_Oak_30_271828_Source graph7b9c6c58006b250d890e591ad1135ddb80189d6e255a75035b1f01663ef1f120754748ebc82258b [exact F graph checksum must be verified against stored graph before run; this typed field is not source data]. Seed271828, all saved settings exactly, root_spread1/root_depth1.2000000476837158/leaf_density5.699999809265137. Build named Roots021_Oak_18_271828 and Roots021_Oak_30_271828 through actual registered Generate operator and existing stored-graph preview publication; preserve original E/F and libraries. Age18 first, then age30 only if no correctness blocker. No game assets install.
+Acceptance: exact graph/hash unchanged; same crown sweep positions/radii/UVs/indices and same leaf counts75770/346767; wood finite and one closed connected component with0boundary/nonmanifold; every leaf attachment distance<=2um; all root guides finite with descending sampled height (tolerance1e-6m), radial root controls ordered throughout root_spread range. Native root-close views at42/132/222degrees with same framing before/after, plus full foliage context. Independent reviewer must see a broader continuous root-to-soil transition without new sockets/floating roots, and no crown regression; no acceptance based only on topology/count. Offline elapsed time/resource sampling recorded without a speed target under user's output priority. Figure-eight/game import not run for this offline-only change while editor unavailable. Prior failures remain unchanged.
+TREE-ROOTS-021 pre-run checksum correction: F graph is 7b9c6c58006b250d890e591ad1135ddb80189d6e255a8ecd966d15641f202c78, as recorded in019. The preceding malformed pasted F value is a documentation transcription error, not a scenario/source change. Native start must assert this corrected value.
+
+TREE-ROOTS-021 v1 environment correction: the live preview floor's object transform is zero but all four mesh vertices are at worldZ=-0.06499999761581421m, inherited from setup_studio. The initial root-before42/132/222 captures used that floor; retain them and capture matching after views before changing it. Source roots/graph are defined relative to soilZ0, so this display offset exposes the trunk's basal cap above the floor.
+### TREE-ROOTS-021 v2 - intended soil plane, predeclared before floor change
+The v1 floor cannot establish appearance at the documented planting height. Retain v1 evidence, then establish a separate v2 visual baseline with the same E/F source models, view framing (center0,0,base_radius; distance8*base_radius; elevation12deg; azimuth42/132/222; MATERIAL) and all source settings, but set preview floor worldZ0. Compare original and candidate at this same corrected height. Canonical setup_studio must create/restore its owned flat floor atZ0 without changing model geometry. Criteria identical to v1; no v1/v2 quantitative continuity claim or retrospective pass. Geometry/graph/attachment checks are independent of this preview-plane correction and are recorded against their actual source versions.
+TREE-ROOTS-021 v1/v2 E18 results: completed83.051449s,441525wood polygons,75770leaves,63motion groups. Exact graph, crown sweeps and crown source vertex/index/UV fingerprint preserved; all6parts finite with valid indices/UVs, wood one closed component0boundary/nonmanifold. All18root guide paths descend (largest upward delta-.00578582287m). Every75770leaf anchor exact distance<=8.682e-16m (rawBVH had2620falsepositives>2um). Evidence roots021-E-source-v1.json and roots021-E-anchors-v1.json. Frozen loadedbuilder77e80110fc77e602a69cc4ec97dddbaca9310f603a55c05720b936ba3c222866; later studio-only fix distinct23825ddef19ef1c531f2fc2cde9c36d6b51e7e5fda4841be120b9349f388e26e.
+Independent visual decision: FAIL final root naturalness. Larger footprint but elongated similarly shaped pointed wedges; strong starfish silhouette and abrupt soil entry. No obvious new socket/detached root; no obvious full-crown regression. Preserve021candidate/comparisonimages; do not run/promote021F30 after this failed gate.
+
+### TREE-ROOTS-022 v1 - lower varied structural roots (predeclared)
+Supersedes rejected021root controls in the single production builder. Same saved E18/F30graphs,seed271828,source settings/leaf counts,root_spread1/root_depth1.2000000476837158, corrected flat preview soilZ0 and identical42/132/222 close/full framing from021v2. Do not alter inputs to obtain acceptance.
+Candidate: same number/order of root random draws; angular offset range +/-.42rad instead.22, length range3.5-8base_radii instead4.5-6.5, lateral curvature+/-.28length instead.13, primary thickness.24-.60base_radius instead.43-.57 (juvenile range unchanged). Primary guides descend from original bole origin to soil-relative-.025depth at22%length,-.08depth at52%length,-.42depth at80%, then existing-depth endpoint; juvenile pre-existing buried-origin offset retained. Primary root vertical shoulder amplification reduced from.9 to.4, decay length3radius to1.5radius; horizontal factor remainsunchanged. Source interpolation/taper/union/foliage unchanged. These are artist-directed shape approximations, not calibrated root physiology. UF/IFAS root-flare/source descriptions support a swollen trunk base transitioning into shallow horizontal roots; no fitted dimensions transferred (https://hort.ifas.ufl.edu/woody/root-growth-developing-flare.shtml and https://blogs.ifas.ufl.edu/duvalco/2021/11/30/roots-out-of-sight-out-of-mind/). Linked photo retrieval failed; do not claim photo-based comparison.
+Acceptance same geometry/anchor/preservation checks as021, plus independent matched-image review must see lower rounder irregular roots without new sockets/floatingwood. E18 first; F30 only after E has no correctness blocker and independent review supports improvement. Final root naturalness and full tree approval remain distinct. No game asset/catalog change.
+TREE-ROOTS-022 v1 E18: native91.1608265s,441510wood polygons,75770leaves,63motion groups. Exact graph/crown sweeps/source fingerprint preserved; one closed component0boundary/nonmanifold, finite6parts, all18paths descend(maxstep-.00216125697m), every75770anchor distance<=8.682e-16m. Evidence roots022-E-source-v1.json / roots022-E-anchors-v1.json. Independent review: FAIL close naturalness; asymmetry improves021 but thin planar fins, long triangular blades and abrupt vertical basal wall remain. Preserve output and images, do not build022F30 after failure.
+
+### TREE-ROOTS-023 v1 - radius-scaled shallow roots and continuous descent (predeclared)
+Fixed inputs/graphs/corrected-soil views remain022/021v2, E18 then F30 after review gate. Source algorithm changes are versioned candidate, not scenario retuning. Change the source root shape: mature root-origin height1.1*base_radius instead.45; juvenile origin unchanged. Primary adult radii.36-.70*base_radius; angle/length/turn variations from022 retained. Root random-draw order preserved, radius drawn at the same point before now radius-dependent guide calculation. First two below-soil controls use.4*shallow andshallow, where shallow=min(.2*final_depth,.25*root_radius); subsequent.42*depth andfull depth retained. This separates shallow structural-root emergence from the deep endpoint. Mature controls cancel their taller origin so shallow depths remainrelative to soilZ0; juvenile retains its historical extra buried offset.
+Root interpolation retains centripetal lateral(XY) Hermite controls; Z uses monotone cubic Hermite slopes with the nonuniform weighted-harmonic rule documented by SciPy PchipInterpolator(Fritsch/Butland), secant endpoints. This guarantees no height overshoot between monotone root controls; no SciPy dependency is added. The shared growth graph/shoot-curves/foliage/union/LOD/motion logic is unchanged. Root geometry remains an authoring approximation, not a soil/physiology model.
+Acceptance same as022: exact graph and crown source identity, leaf counts75770/346767, finite closed1component wood, everyanchor<=2um, descending finite primary/secondaryroot guides, matched42/132/222rootviews plusfullcontext and independent review of rounded flare/soilentry without fin/wedge regression. Any numerical failure or visible regression is retained and corrected before F30. No game asset installation.
+
+## TREE-CANOPY-024/v1: interior foliage renewal and abundance
+
+User explicitly rejected the remaining sparse interior and requested roughly 500-1000% more foliage. Root023 F30 comparison is deferred, not passed. Root023 E18 integrity passed (100.387884s,441196 closed wood faces,75770 leaves,63 groups,exact graph/crown preservation,all anchors within2um); independent review permitted a larger comparison but withheld final naturalness approval. Frozen E source SHA256 c3872d1b2d97695486848155b78567f946000e023576e2640f45fe6e7f99dc6c. Root023 monitor569samples,peak private35137695744B,no errors; baseline F remains loaded and unchanged. Additional F wide132 view was descriptive, not a predeclared root acceptance view.
+
+New fixed canopy evaluation: native Blender5.2.2 PID21540, source Roots023_Oak_18_271828_Source, original stored E graph a72619c5855c4a8acf81a73ce60e0b7e0cff8614c18b710ed0c5a2f28d5cab6d; unchanged growth recipe/wood/root023 source; density5.699999809265137 baseline ->17.1 authored float32 candidate. This is an explicit output setting comparison, not a repeat of prior unchanged-density scenarios. Production Update Foliage Only entry; old source frozen, originals/catalog preserved. Shared candidate renewal: recent eligibility retained; older living broadleaf twigs with endpoint radius<=4*species.shoot_radius also eligible; needles keep age retention. Recompute enclosure through canonical growth geometry for stored graphs. Views42/132/222 degrees,center(-.8950554,.5517795,5.6),distance17,elevation8,MATERIAL,groundZ0. First42 baseline captured before this declaration; remaining before and all after captures follow.
+
+Pass criteria: actual completed foliage increases at least5x baseline75770, reaches newly eligible old inner twigs with no dead/thick-old eligibility, finite geometry/UV and validindices, all bark attachments<=2um with exacttriangle fallback, original graph/wood/guides/collision/primary ancestry byte-identical, no orphan pending data after completed transaction. Matched views require materially fuller inner and outer canopy; reviewer must separately judge naturalness and any clumping. No runtime speed cutoff; record elapsed time/memory. Preserve failures, do not lower visual/correctness criteria after result. Existing live wind/facing/LOD tests remain NOT RUN. No game installation/catalog promotion; figure-eight applies when game behavior changes.
+
+Canopy024 pre-run implementation refinement from independent review: renewal uses max(canonical segment radii), not endpoint radius, so old thick segment starts are excluded too. Exposure yields during indexing/query and source consumers retain derived intervals separately; simulation commits intervals. Broadleaf metadata now records node/support radius; binding checks local offset<=max(4*support radius,.002m), which constrains locality but alone does not prove intended-surface identity. New simulations will change light/pipe support; only saved-graph foliage rebuild preserves wood. Native RNA update succeeded; attempted recipe-method refresh used nonexistent TREE_LAB_OT_Recipe and returned KeyError before any build; correct actual class symbol is inspected before retry.
+
+Canopy024/v1 completed native foliage rebuild in22.0708483s with279793 leaves versus75770 baseline (3.692662x, +269.266%). This FAILS the declared >=5x abundance criterion and is below the user's500-1000% increase. Do not call this sufficient. Completed images canopy024-E-after42/132/222 preserve this result. The density17.1 comparison is retained. A second deliberately higher density is a separate output comparison, not a retest of v1 with altered inputs. Source code review found no execution defect; remaining binding caveat is nearby competing surfaces, not unrestricted distant attachment.
+
+## TREE-CANOPY-025/v1: requested large abundance increase
+
+User output requirement remains500-1000% more leaves. Keep original024 E18 baseline recipe/graph/source identity and cameras, eligibility/exposure/binding implementation. Set density34.2, exactly6x the original5.7 abundance control. Use actual Update Foliage Only on the same owned E source; compare against original75770 count and before024 frames. Pass abundance6x-11x original; retain all024 geometry/attachment/source-preservation and independent visual requirements. Increasing count alone cannot pass naturalness. Native025 must record exactfloat32 setting, elapsedtime, changed source hashes and final leaf count. Original frozen023 source remains baseline. No gamepromotion or lower import cap.
+
+
+Canopy025 E18 completed34.4223965s,544606 leaves /75770=7.18762043x (+618.762%). All544606 bark anchors exactmax8.7691e-16m; raw BVH reports16099 false misses over2um, so final exacttriangle results own acceptance. Finite vertices/UV, validindices,alignednode/radiusmetadata;141979 renewed leaves on2421 old fine segments,0olddead/thickeligible. Graph and wood/guides/collision fingerprint23c272bb16e4e7ea5c8b1432c4ace98ffba14b4195f70d6e2dedafd8682a9440 identical. Full source frozen canopy025/source-E.blend273197471B. Independent visual review pending. User explicitly says current output looks better and shifts priority to oak exports/import, LODs and broken-up collisions; further simulation polishing deferred. Native s&box editor_status transport failed at127.0.0.1:7269; visible runtime tests NOT RUN.
+
+## TREE-EXPORT-026/v1: full-canopy oak evaluation
+
+Fixed first source Roots023_Oak_18_271828_Source aftercanopy025, exact E graph asabove,544606 leaves,density34.20000076293945,63groups,root023geometry. Asset key oak_growth_18_open_grown_271828_dense; catalog_eligible=false;4096 bark bake; original scene/library/catalog preserved. Three LODs preserve each leaf/pivot/axis/UV identity and relative positions; source wood continuous/sameLOD0, lowerwood0.3/0.075ratios. Oversized trees package deterministic whole-leaf ranges (maximumfloor(1350000/8)=168750leaves each) into separate models plus wood in one prefab. Guard<=1350000 triangles per model/LOD. No model split through a leaf; union of ranges exactly[0,544606) at eachLOD. Existing nine solid trunk pieces and independent branch interaction volumes are the initial collision baseline; branch-blocking preference requested asynchronously. No giant canopy hull.
+
+Passcriteria: export completes through productionentry;allhashdependencies/units/boundsvalid; all three LOD meshes per model, strict aggregateLODtriangle decrease, whole-source parts and leafcountconserved; exactattribute/geometry preservation at split; sharedmotionpayloadnativePNGcheck<=1.5/65535; installer readback/hashvalidation; sourcefingerprintunchanged; no temporary scene/data retained. Independent reviewer distinguishes game-evaluation suitability from final naturalness. In-game acceptance additionally needs native compile/import, visible tree/orbit/LOD/wind/collision checks and recordedfigure-eight; unavailable editor leaves those incomplete, not passed.
+
+Independent025 visual review approves initialgame evaluation inallthreefixedviews; finalnaturalness remainslimited bypointedtips/repeatedascendingbranches/uniformclusters. No further shapeiteration requiredbeforeevaluation. Independent026 source review foundtwo compatibility regressions; correctedbefore firstexport: legacy manifests withoutnative_triangle_budget nowvalidateagainstshared native_limits.py owner; multipartpreflight appliesonlytopreservedconnectedwood, leavinglegacydecimation admissionintact. Actualproductioninstaller prepare(oak_juvenile_open_grown_1701) passed36694/16518/6632triangles,9trunkpieces,12branchtriggers; noassetinstallation inthatregressioncheck. Native026 scheduled productionexport_specimen with4096textures, firstdenseEkey asdeclared. Do not launch a duplicate whileexport026/status.json isrunning.
+
+Export026 firstdenseE completed295.7494767s. Five models preserveall544606leaves and fullLOD0wood. Aggregate triangles5300996/2461668/1160022; wood944148/283244/70810; threefoliagepieces1350000/675000/337500 each; last306848/153424/76712. Rangeunion[0,544606)conserved. Globalmotiontagging/partitionexactgeometryUVcolorchecks passed. prepare() and--install succeeded;36dependenciesincludingprefab verifiedbyte/hashaftercopy. Fiveorigin0renderers,9solidtrunkpieces,186nonblockingbranchcapsules. CatalogSHA8398c95ec5990b1639427bf51baca82183f48439e3e44e562ed21699e5a9ed03 unchanged. Postexport sourcegraph/woodguidescollisionleafcountunchanged; noexporttemporaryscene/object remains. InitialpostexportinspectionhadPythonSyntaxError ininventorydictionary and executednothing; correctedreadback passed. Installedmanifest/evidence export026-installed-v1.json. Nativecompile/importandgameplayremainNOTRUN. Exportmonitor272samples04:33:08.921..04:37:59.487UTC (doesnotcoverfirst38s),peakprivate36975046656B,peakworking12922675200B,minhostfreevirtual29768848KiB;noerrors/alerts.
+
+## TREE-EXPORT-027/v1: younger oak companion
+
+Fixedsource: storedGrowth_Oak_6_Open_Grown_271828 graph9258a5b2da862fa16561af4c64a98f450de3d8debbbace364be86dcf862e32a0. Preserveoriginalpreviewandgraph. PublishnewExport027_Oak_6_271828preview withsamegrowthrecipe height16/seed271828/age6/allstoredgrowthcontrols. Source-only controls: stageJuvenile,density34.2,rootspread1/rootdepth1.2000000476837158. ProductionBuildSourceGeometry modal entry, canonical025builder/growthmodules; no newgrowthsimulation. Native sourcegeometry must befinite,validUV/indices,connectedclosedwood,allleafanchors<=2um. Sourcegraphchecksumunchanged. Firstviewcenter=(graphboundsmin+max)/2, distance=max(2,length(boundsmax-boundsmin)*1.2),elevation8;42/132/222azimuths. Independentreviewrequired for initialgameevaluation, notcalibratedageclaim.
+
+Ifsourcepasses, productionexport_specimen(label,2048,asset_key=oak_growth_6_open_grown_271828_dense,catalog_eligible=False). ThreeLODs, allleavespreserved,permodel1.35mcap,9compoundtrunkpiecesandseparatebranchinteractioncapsules,globalwind/facingmetadata. Same026hash/units/partition/sourcepreservation/installer/readbackcriteria. Keepanyfailure, noinputretuningtoobtainpass. Gamevalidationremainsunavailable.
+
+Export027/v1 first native source build FAILED: Solid wood union is disconnected. Source was not published; pending transaction collections were retired, original age6 preview and installed026 oak remain intact. Failure screenshot export027-young-source42.png shows the branch preview, not completed geometry. Native readback: growing=false, source_ready absent, no pending collections. Fixed source has base radius0.021m atZ0; current juvenile root origin isZ-0.095m. Diagnose actual union components before changing code; retain the same input settings for repair verification.
+
+Export027 diagnosis through production build_tree/branch_surface found exactly two closed union components: all18 root sweeps belowZ-0.07868375m and the7 crown/stem sweeps aboveZ-0.000375212m. Evidence export027-disconnected-v1.json. Repair only the juvenile root collar origin: attach at1.1*grown base radius inside the bole, then descend below grade by the existing0.45*radius burial. Mature root formula is algebraically unchanged. Re-run TREE-EXPORT-027/v1 with identical saved graph/settings and unchanged pass criteria; no lowered continuity guard or new scenario inputs.
+
+Export027/v1 collar-only repair still FAILED closed connectivity. Production union readback joins every branch/root into one main component but creates three tiny3-face components at the soil-level trunk end cap (13vertices total); they already exist before cleanup/rounding. Evidence export027-collar-repair-v1.json. Extend the derived juvenile bole2*base_radius below its first graph point along its stem tangent, keeping graph/guides/collision and every crown node unchanged; this supplies below-grade wood through the root collar instead of a cap at the crossing. Re-run same027 inputs/criteria. Adult code paths stay unchanged.
+
+Export027/v1 final repair source completed2.5771049s: one closed wood component,0boundary/0nonmanifold,18672woodtriangles,5753leaves,4primarygroups; finite/valid geometry. Exact anchors max2.0785e-16m; original graph9258a5b... unchanged. Frozen source-young.blend3140139B SHA3ca43ae20b634fd1854831bbfe61f9f1055a9554ac30aac6f6bb0b2d4854ae83. Independent source/visual review approves initial game evaluation, not final naturalness: repeated leaf sleeves/clumps remain;222degree frame crops upper foliage. Buried root appearance unjudged, connectivity proven by topology. The juvenile repair applies to all species and changes derived trunk flare/UV normalization abovegrade, not graph data; wider juvenile qualification remains unrun. Start declared2048 export with same027 key/settings.
+
+Export027/v1 production export completed16.0740602s with three LODs64696/28612/12906 triangles and all5753leaves retained. Installer prepare and --install passed;20 installed dependencies includingprefab verified by length/SHA256. One identity-transform renderer,9solidtrunk cylinders and9nonblockingbranch capsules. Catalog hash8398c95ec5990b1639427bf51baca82183f48439e3e44e562ed21699e5a9ed03 unchanged. Postexport sourcefingerprintcb6c23fb5f95f67fd866d59a1c406c3674c0e5fad17f5b89cec685db266662a2 identical; no temporary export scene/objects remain. Native editor_status transport still unavailable at127.0.0.1:7269: native compile/import/material/wind/facing/collision/automaticLOD/figure-eight NOT RUN. Python syntax checks passed for eight authoring/export modules; relevant tracked diff whitespace checks passed. No commit/push while required game acceptance remains incomplete.
+
+Independent026 final installed-package review approved initial native evaluation: all36 dependencies/prefab hashes,5 identity renderers,3 LODs/model, contiguouswholeleaf ranges covering544606, globalmotion/materialreferences,9solid+186triggercollisionpieces and catalogexclusion verified. This does not independently decode FBX serialization or prove engine behavior. Independent027 source and three-angle review also approved initial evaluation with stated naturalness limitations; final installed-package review pending.
+
+Independent027 final installed-package review approved initial native evaluation: all20 hashes, one renderer, threeLODs retaining5753leaves, nine solid trunk pieces/ninebranchtriggers, references and motionmetadata verified. Native acceptance remains incomplete. Authoringworkspace save status: {"status": "complete", "seconds": 9.180801153182983, "bytes": 2189293525, "path": "C:\\Users\\Gray\\Documents\\s&box projects\\voxels3\\.codex\\tree-growth\\authoring-workspace.blend"}.
+
+2026-09-22: user explicitly authorizes visible editor launch and requests removal of repeated launch approval. AGENTS.md updated with scoped target-editor launch authorization, retaining visible interactive/no-headless/no-unrelated-desktop restrictions. Started sbox-dev PID40416 with voxels3.sbproj; native editor_status confirms26.09.15,correctproject,0codecompileerrors. Resume TREE-EXPORT-026/v1 and027/v1 native import gates on unchanged installed specimens; automatic asset discovery began compiles. Canopy00 current/compiled; canopy01 missing compiled resource with dependency suppression warning. Force compile failing exact asset and preserve diagnostics before placing samples. No game acceptance claimed.
+
+## TREE-GAME-028/v1: dense oak and sapling native evaluation
+
+Fixed samples are unchanged026/027 installed prefabs; engine26.09.15,scene basic_example,seed1337,current repository terrain config gameplayRadius8,LOD0..5,halfextent4/cache4/cell16. This is a new sample scenario, not a comparable repeat of the legacy nine-specimen matrix or oldterrain snapshot. Terrain trace at(300,0) returnedZ279.303711; sapling(300,420) returnedZ422.264648, so the old315.855713 soilheight is inapplicable. Place denseoak(300,0,279.303711),young(300,420,422.264648),yaw0,scale1 via installedprefabs. Initialfull camera(-1000,-900,800),angles(6.5,34.7,0),FOV75,1600x900; barkcamera(300,-95,430),angles(0,90,0). Inspect all three forcedLOD levels, actual wind/facing and attachment continuity, trunkcollision hits and outsidecrown no giantblocker, and playerapproach. Independent visualreviewrequired. Keepcatalogunchanged. Native asset_info now confirms all6models compiled/current,0failed; foliageandbark shaderforcecompilesPASS withprofile-upgrade warnings. Originalcanopy01startupdependencyfailure resolvedbyoneforcecompile. play_start firstreportedalreadyplayingwhilelaterstatusfalse; reconciledstatus thensecondcallstartedactualplay; initialskyonlycapturewaseditingview, notgameacceptance. Performance remainsseparatecanonicalgate; no performance claims fromimport/visual checks.
+
+TREE-GAME-028 supplemental fixed full-crown detail view:camera(-380,-510,610),angles(4,36.87,0),FOV75,1600x900. Capture forcedLOD0/1/2 of all five mature renderers plus saplingrenderer, then restoreautomatic(null) everywhere. Retain first wide and inside-canopy frames; the latter is obstructed by dense leaves and does not establish bark/junction acceptance. Physics rays at densebaseZ310: acrossX from(250,0,310)to(350,0,310)shouldhittrunk; offsetY80 ray shouldnot hit sampletrunk (may hit realterrain/otherobjects, identifyowner). No claim that nonblocking branchtriggers are solid.
+
+TREE-GAME-028 detail captures LOD0/1/2 completed; fullcrown remains present at eachlevel; restored all6rendererLodOverride=null. Densebase rayhitSolidtrunk ModelCollider at290.391541,0,310; parallelrayY80missed. Supplemental saplingview camera(120,110,505),angles(3,60,0),FOV65,1200x900; take separated temporalframes thenazimuthorbit same crown for visiblewind/facing, withoutmaterial/sourcechanges. Staticframes cannotproveallviewangles or automatictransitiontiming.
+
+TREE-GAME-028/v1 native results, 2026-09-22: six models current and compiled; bark/foliage shader compilation passed. Evidence TreeGrowth/game028-native-v1.json and game028-*.png. Independent reviewer passed initial static sample integrity: mature crown preserved across all three forced LODs, no missing canopy partitions, young foliage intact from opposing views, textured exterior bark without an obvious open junction. Remaining appearance limitations include dense dark interior, repeated pointed crown projections, a pale abrupt collar patch and an angular root bend. Exterior bark view (250,-65,340), angles(8,52.43,0), FOV65,1200x900; opposing young views (0,420,505)/(600,420,505), angles(3,0,0)/(3,180,0), FOV65,1000x800. Sapling trunk ray (290,420,450)->(310,420,450) hit its own solid trunk at(298.375488,420,450). These ray checks do not establish physical player response. All six renderers restored to automatic LOD. Runtime sample placements are unsaved play-session objects; installed prefabs remain durable. Catalog unchanged.
+Continuous wind/facing/shadow quality, automatic LOD transitions, player approach/collision response and canonical figure-eight remain INCOMPLETE. No performance run was started. Current generator52 has no completed accepted comparable baseline; historical generator49/grass results must not be presented as tree acceptance. Canonical BIOME-FIGURE8-001/v2 route remains speed2500,distance50000,one loop,start(-1.6258175,1.2225341,340),FOV75,physical2769x1529,automatic drain plus10seconds standing. The viewport was corrected from an initial DPI-scaled oversize to logical1846x1019 (native physical2769x1528.5 reported); no timed run occurred at either size. Initial observations are not benchmarks.
+Launch authorization policy was selectively committed and pushed as d6e26108 (Allow target editor launches). Other task changes remain uncommitted pending required acceptance; unrelated working-tree changes preserved.
+
+## TREE-100-029/v1: user-requested 100 new dense oaks
+User explicitly requests removing old world trees and evaluating100 new trees. Preserve source assets; disable the old runtime population through SpawnTreesEnabled and remove the two runtime sample objects. This is an explicitly authorized new workload, not the old nine-tree comparison. Use100 copies of installed oak_growth_18_open_grown_271828_dense with automatic LOD, unchanged materials/wind/collision, unit scale; 10x10 grid XY(-1800+400*i,-1800+400*j), i,j0..9, yaw=(index*137.508)%360, terrain ray-grounded roots. No foliage reductions. Trace all positions before placement; report missing terrain rather than floating trees. Engine26.09.15,seed1337,current generator52/world settings unchanged. Fixed overview(-2800,-2800,2400),angles(25,45,0),FOV75. Collect identical empty-versus100 stationary observations after20s warmup,10 samples at1second spacing; these are rolling HUD observations, not frame-level benchmark statistics. Then canonical figure-eight speed2500,distance50000,1loop with regular production collector where available, unchanged route/view parameters. Report actual count, errors, visual integrity, frame/GPU time and memory; do not call deployment accepted solely from counts or timing. Input stays enabled. Keep exact layout/evidence for repeatability.
+
+TREE-100-029/v1 baseline completed run23250bc68fb4414aa4a22ed4358056d3, duration121.9454s,48330moving samples,396.32895FPS,p954.1487ms,p996.0146ms,GPU2.246858ms. Ten-second standing288.95782FPS,p954.6146ms,p996.5718ms,GPU3.1190717ms. Zero runtime exceptions/collision failures;4913regions ready. Raw game029-empty.json.gz. First start rejected while LODs were unsettled; second start accepted after settling. An earlier tool camera operation failed as play mode had ended; reconciled mode and restarted, no benchmark ran in edit mode.
+Native authored scene mutation: SpawnTreesEnabled=false; added Dense Oak Grove - 100 with100 intact prefab instances at predeclared terrain-traced positions. Saved actual basic_example.scene and restarted play; native readback100children. Existing player clothing prefab GUIDs were regenerated by normal editor serialization, no intended player behavior change. First overview capture game029-100-overview.png shows incomplete terrain during loading; NOT accepted as settled geometry. Initial rolling observation11.4FPS while1395regular meshes/1110seams pending, not steady-state. Temporarily point ejected camera upward during terrain warmup to allow loading; restore fixed overview before stationary collection. No model/material/LOD/collision settings changed.
+
+TREE-100-029/v1 settled overview rolling readbacks8.9-9.0FPS,p95122.49-126.26ms,p99130.88-132.97ms. The repeated HUD GPU value41.67ms is not sufficient to attribute preciseGPUcost; use saved frame-level results where available. The empty/full overview readings are contextual rather than strict matched benchmark: editorFOV resets to60 despite requested75, screenshot override75; viewport sizing was reset after playrestart. Native settled screenshotgame029-100-settled.png passes independent wide-view canopy/material integrity review, with visible repeated grid/crown shapes and speckled finefoliage; no continuous-motion claim. Saved scene inspection confirms100unique dense prefabinstances and SpawnTreesEnabled=false. Source aggregate54,460,600leaves; theoretical all-instance LOD0/1/2 triangle totals530,099,600/246,166,800/116,002,200, NOT actual simultaneous submitted or visible triangles.
+Candidate canonical run started after terrainsettled with identical routeorigin,identityplayer/maincamera,FOV75 and resetlogical1846x1019. Candidate revision d6e26108-working-generator52-100dense. No source hotload, screenshot or scene modification during timed route.
+
+TREE-100-029/v1 COMPLETE, candidate run4f984b3584b84bb7a13981c4c41a8375. Both canonical runs completed with identical speed/distance/loops/startcenter/terrain settings; finaltarget differs only~0.007in horizontal from settling. Raw game029-empty.json.gz/game029-100.json.gz, comparison game029-comparison.json. Candidate moving186.0386FPS vs396.32895(-53.06%);p9515.8475ms vs4.1487;p9975.2825ms vs6.0146;GPU4.8637834ms vs2.246858. Standing24.638128FPS vs288.95782(-91.47%);p9544.2653ms vs4.6146;p9946.0684ms vs6.5718;GPU40.25902ms vs3.1190717. Post-loopterrain drain148006.05ms vs10196.424ms. Both zero recordedruntimeexceptions/terraincollisionfailures; this is not a tree-player collision-response test.
+Standing GPUallocation4.776GiB vs0.824GiB; process memory lower in candidate is NOT an optimization claim because resource/cache histories differ. Route spends substantialtime awayfromgrove, so movingaverage understates costofviewing100trees. Fullviewrolling~9FPS remains a separate contextualobservation, notstrictmatched framebenchmark. Model/material/LOD/collision settings unchanged throughout. Candidate runtime player screenshotgame029-100-player.png shows the fullgrove fromrealplayercamera aftercompletion.
+Decision: evaluation requested byuser successfully installed/saved/measured100newtrees witholdpopulationdisabled; performance acceptance FAILS project10%regressiongates and is NOT a newacceptedbaseline. No generalproductionforestpromotion. Rendering dominates settledview (40.26ms GPU versus~40.59ms averageframe); distantcanopyrepresentation/LODandshadowcost require separate quality-preserving work, not wholesale near-canopy density removal. No specific subpass bottleneck proven. Keep100-tree scene available locally foruserinspection; do not commit/push the runtimecandidate asaccepted while this measuredregression remainsunresolved. Preserve unrelated working-tree changes and all sourceassets.
+
+TREE-100-029 independent final evidence review agrees: visually usable teststand, NOT production-performance-ready. Important additional cost: dense stationary enginePhysics8.605041ms/frame versusempty0.0044615; Render30.160357ms versus2.8400896. Dense run664terraincollision-holdsteps versusempty0, despitezero collisionfailures. Rendering is a major bottleneck, not the only cost; cheaperdistantrepresentation alone is not a demonstratedcompletefix. Investigate nearby-only detailedbranchinteraction/collision activation in addition to visualLODs while preservingrequiredsolidtrunks. Bothraw stationaryprofilers confirmphysical2769x1529. Savedsceneinventory game029-saved-scene.json independently records100unique prefabinstances,positions/rotationsanddisabledoldpopulation.
+
+## TREE-FAR-030/v1: complete multipart source capture
+Predeclared authoring-only extension of existing TreeImpostorBaker: dense026 key, unchangedfive installedmodels/materials, sourceLOD0,32views8azimuths*4elevations(-15,15,45,75),1024capture/512output. Captureall manifestpieces atidentityorigin;unionnativebounds;disablemotiononmaterialcopies. Fixedfirstrow0. Pass: allfive models listed, files/manifests verifiedhashes,finitepositiveframing,8views*4passes readable1024RGBA,visiblecompletecanopy/notwoodonly;originalsourcehashesunchangedandtemporaryscenedestroyed. Failure retainsdata and doesnotpromote runtime. No100grovechanges or performanceclaims frombaking; canonicalruntimecomparisonrequiredwhennewrepresentationis integrated.
+
+TREE-FAR-030 first row captures allfive models andcompletecrown; nativecompile/callpass. Sourceinspection found color materialcopy still enabled camera-facingleafrotation whiledepthshaderusedrestgeometry; rejectthiscaptureforpacking. Preserved .codex/tree-growth/far030-facing-mismatch. Disable leaf-facing on bake-onlymaterialcopies for matching color/normal/AO/depth geometry; runtime leaf-facing remains unchanged. Addexplicitmetadata. Rebake samefixedrow/allviews withunchangedsource andparameters.
+
+TREE-FAR-030/v1 revisednative capture completed fourrows/1281024RGBA images. Allfive models included; allsourcehashesunchanged; color/depthalpha masks at128 match exactly (IoU1.0 inall32views). Packed4096x2048color/coverage/normal/depth andmaterial; native materialcompilePASS. Evidence far030-capture-v1.json. Standalone Python312 lackedNumPy beforeanypackingwrite; usedexistingbundledPythonruntimewithNumPy/Pillow. Native sceneslistcontains onlyauthoredscene/playclone afterbake, no retainedtemporaryeditor scene. Representative0-0and2-2albedo captures inspectedcompletecrown. Runtime100grove remainsoriginal representation; noFPSgainclaimed.
+Additionalfixed regression input before run: young027 key oak_growth_6_open_grown_271828_dense, row0, same1024capture/eightazimuths/fourpasses,expectone model andcompletecrown. Do notreplaceitsnearassets orinstallfaroutputfromjustonerow.
+
+TREE-FAR-030 independentreviewqualifiedPASSforcapture/packing: all44sourcehashes,fourpackedtextures,packer/materialhashesverified; inspectedcompletecrown/trunk/rootswithclearimagemarginsandmatchingbroadcolor/depthsilhouettes. Approvaldoesnotcoverruntimeintegration/transitions/reconstruction/performance. Youngsinglemodelrow0nativecapturealsoPASSandrepresentativealbedoinspected;otherrows/packingnotrunforyoung. Nextrequiredwork is integratingexistingdistantrepresentationwithauthoredmultipartprefabs andmeasuringtheunchanged100treeworkload. Goalremainsactive; no runtimeperformanceimprovementorcompletionclaimed.
+
+## TREE-LOD-031/v1: authored dense grove distant integration
+Predeclarecandidate before runtime: unchanged100-tree layout029,unchangednearassetsandphysics; dense030packedsource,sharedfarloaderandtimedfade; authored32mreturn40mexit0.35sfade,unit-scaleasexistingprefabs. Oldpopulationremainsdisabled. Existingpopulationloaderwilldelegatecanonicalfarcreation andtransitionwithoutchangingits100/110mthresholds. Requirefail-visiblefallback,enable/disablecleanup,andallfive nearpiecesfade together. Nativevisualfixed029overview/playerposes plus boundaryapproach at32/36/40/44m tosame specimen; fullcrown,depthcorrectness,windandshadowsmust be reviewed. Preserve allfailures; don'tclaimnear/farappearanceequivalent fromcount. Canonical029routeconfiguration unchangedforperformanceaftervisualgate. Physicsnotoptimizedbythiscandidate.
+
+TREE-LOD-031/v1 runtime result, 2026-09-22: shared TreeDistantModel loader and TreeLodTransition integrated; TreeModelLod attached only to the 100 live play-session trees. Native compiler passed with zero errors. All 100 reported Distant at the overview distance. Main gameplay camera drives selection; moving only the ejected camera does not change LOD. Ejected camera (-2800,-2800,2400), angles(25,45,0), capture1200x900/FOV75; player moved to(-2800,-2800,1800) to avoid avatar obstruction. First overview and single-probe images were obstructed and are retained as non-acceptance evidence.
+Independent visual review withheld acceptance: far crowns preserve broad coverage but are lighter/flatter with black mottled patches and weaker branch separation. Comparison to029 also differs in lighting, so causal attribution remains unresolved. Same-session far/near Albedo and AmbientOcclusion captures and near shaded capture retained as lod031-*.png under ValidationEvidence/TreeGrowth. These diagnostics do not establish the exact defect. API enum labels NormalMap as World-Space Normals; installed ToolsVis.hlsl distinguishes NormalWs from NormalTs, so no evidence supports switching the baker to tangent-normal interpretation.
+Restored detailed geometry by clearing Specimen on all100 runtime components; no component was saved to scene/prefab. Source near meshes/materials and all physics remain unchanged. A set_component attempt to write __enabled was rejected as non-writable; clearing Specimen used the supported fallback instead. Fixed Restore to reset inspector Status to Waiting; existing already-restored hotloaded instances can retain their prior status until Restore next executes. No performance repeat, motion/transition acceptance or lifecycle acceptance claimed. Visual gate FAIL; candidate not promoted or committed. Saved029 evaluation grove remains the active deliverable, with performance failure preserved.
+Independent031 code review additionally found renderer identity/full manifest membership is not verified by TreeModelLod: a disabled/replaced interior canopy piece can leave aggregate bounds unchanged and accept the full-tree distant asset. This candidate remains unpromoted; fail-visible membership validation is required before acceptance. Existing population extraction matches before031 transition/mesh behavior; its limited provenance and missing-bake blocking predate extraction.
+
+TREE-LOD-031 membership follow-up predeclared: on live Dense Oak045 only, activate the unchanged complete specimen and expect Distant; disable Canopy2 GameObject and expect Detailed fallback with its requested disabled state preserved; restore Canopy2 and clear Specimen. No saved scene or asset modifications. Exact manifest model membership checked by shared loader; component checks active renderer membership/model/relative transform each frame. This is correctness validation, not appearance or performance acceptance.
+
+TREE-LOD-031 membership follow-up results: native compiler passed, zero errors. Dense Oak045 complete source reached Distant/DetailFraction0. Disabling Canopy2 afterward produced Detailed fallback/DetailFraction1 and one expected diagnostic Tree render membership changed. Restored Canopy2 and cleared Specimen. Additional initial-invalid case: disable Canopy2 before setting Specimen; loader rejected with Tree render pieces are missing, DetailFraction1. Restored Canopy2 and cleared Specimen. Exact model membership and active hierarchy are now checked; model/relative-transform changes invalidate the captured representation. No lifecycle disable/destroy or general model-replacement case claimed exercised.
+Captured matched1200x900/FOV75 world-normal diagnostics at prior031 pose: lod031-near-normals.png and lod031-far-normals.png. Near source exhibits broad pixel-scale normal-direction variation; far representation strongly smooths/biases that distribution. Current packer explicitly flips normals into the view-facing hemisphere before averaging and encodes only two components, while runtime near leaves also apply facing correction disabled during capture. These are concrete differences to isolate, not proof of one exclusive cause of the lighting mismatch. All100 components briefly activated for normal capture and then restored to empty Specimen. No source shader/material/mesh modifications and no performance repeat.
+Independent membership follow-up review closed the prior finding with no additional blocking defect in that scope. Removed its noted order-sensitive SequenceEqual check in favor of count and reference membership, so child reorder alone does not invalidate. Fallback remains intentionally latched until component toggle or Specimen change; visual/provenance gates remain outstanding.
+
+## TREE-NORMAL-032/v1: signed source-normal preservation
+Predeclare before change/run: retain unchanged dense030 capture and100-tree029 layout/physics,031overview camera(-2800,-2800,2400),angles25,45,0,1200x900/FOV75,player(-2800,-2800,1800). Replace lossy front-hemisphere normal encoding with signed object-space RGB normals; retain depth in normal texture alpha, move AO to separate linear texture. Packed format3; raw capture stays format2. Existing format2 far assets are not promoted through format3 loader; their original files remain untouched. Preserve before artifacts under .codex/tree-growth/far032-before. Require all32 frames keep source signed directions within quantization/filtering limits, unchanged color/coverage/depth, native shader/material compile and complete crown, compare shaded and world-normal near/far without source leaf reduction. Appearance failure remains failure, not permission to adjust color. Source capture still disables leaf-facing; signed-normal correction alone does not prove camera-facing equivalence. No performance claim without fixed029 repeat, no saved grove/prefab promotion before visual acceptance. Clean editor restart is required for changed shader before final acceptance.
+## TREE-LOD-033/v1: aggressive nearby detail evaluation
+User reports8FPS and explicitly requests aggressive LODs while preserving high nearby quality. Evaluate current format3 candidate with12m detailed-return/16m distant-exit and0.35s fade; all source near geometry/materials/physics unchanged, existing native mesh LODs retained. Use saved029100-tree layout and identical canonical029 figure-eight parameters/camera/resolution. This is a performance diagnostic despite outstanding distant lighting acceptance, authorized by the user's performance direction; it is not visual acceptance or a new accepted baseline. Record full results and compare to029. The temporary candidate is live evaluation only until appearance, shadow, motion, nearby transitions and cold-start requirements pass.
+TREE-NORMAL-032/v1 results:32 captures include4,258,066 opaque pixels;743,291 (17.4561%) normals had been reversed by hemisphere packing, per-view range0.0246819%-53.8671118%. Signed RGB pack angular error against alpha-weighted captured reference:1,079,475 retained512px samples,mean0.170053482 degrees,max0.382572949 degrees. Independent verification initially found low-bit color/AO differences after changed array precision; restored float64 dilation and repeated checks: color,coverage,depth and AO all pixel-identical to before032; only normal representation changes. Five packed output hashes plus packer/material hashes verified. Initial shader compile failed: engine rejects OutputFormat BC4; use proven BC7 format, then shader/material native compilation PASS. Material compilation alone had reported success despite prior shader failure, so shader compile result/logs are necessary evidence. Independent review accepts encoding consistency, but distant appearance still FAILS: lighter/flatter with coarse black mottling. Format3 loader rejects old format2 distant bakes; old population remains disabled and old assets preserved. Camera capture initially failed because user had returned to Game view; explicitly switched to ejected view for the fixed032capture, then restored Game for033. No acceptance from failed capture. Clean editor restart not yet run.
+
+TREE-LOD-033/v1 completed runtime run634938056c364d688f10624665ad2f3f. Evidence game033-aggressive.json.gz, game033-comparison.json, game033-source-v1.json, game033-player.png. Fixed route speed2500,distance50000,one loop,clearance393.7008,start(-1.6258175,1.2225341),physical2769x1529; camera restored through native set_player_view because generic component tool cannot write EyeAngles. Input remains enabled. Movement313.2988FPS versus029186.0386 (+68.405%); p957.6744 versus15.8475ms;p9910.8895 versus75.2825ms. Standing68.567696 versus24.638128FPS (+178.299%); GPU14.108969 versus40.25902ms;p9517.2551 versus44.2653ms;p9919.1528 versus46.0684ms. Zero recorded runtime exceptions and terrain collision failures. Collision hold steps10 versus664. Standing physics3.330984ms/frame versus8.605041; geometry/collision objects unchanged, so this is not evidence of a physics optimization. Moving allocations99416.19 versus91334.69bytes/frame (increase); standing88408.76 versus123095.77. End-position drift differs by roughly10inches and crosses streaming-center x=-1 to0; cache/run history also differs. Diagnostic gain is not a new accepted baseline. Source hashes confirm original scene,near prefabs/manifests/material shaders and world manager unchanged.
+After run native counts4Detailed/96Distant, matching close-only expensive geometry. Actual player screenshot inspected, full nearby crowns retained. Runtime candidate remains active for user evaluation; no scene/prefab promotion or commit. Distant lighting, continuous transitions/wind/shadows, cold-start and remaining goal requirements unresolved. New set_player_view editor control sets local PlayerController.EyeAngles via verified API without disabling input; generic EyeAngles set attempt rejected and retained as tool failure.
+033 source-check clarification: game029-source-v1 recorded the pre-grove scene hash, so that one comparison is false. Compared against the saved029 grove inventory instead: current scene hash matches game029-saved-scene.json exactly. All other near/source checks listed above pass. Independent033 player-view review confirms nearby visual richness remains, but distant crowns still visibly lighter/flatter/mottled; visual rejection remains.
+
+## TREE-FACING-034/v1: shared source shader depth capture
+Before editing: retain dense032 signed-normal packing, unchanged geometry/material source assets and03312/16m/.35s candidate. Replace separate rest-geometry depth shader with a compile-time capture feature on the three canonical tree shaders. Only depth material copies enable the feature; normal runtime code compiles it out. Preserve original source material leaf-facing feature for every capture pass. Capture all32views at same0301024pixels,512output and framing; require complete five-model capture,matching color/depth alpha silhouettes, verified dependencies and no source material feature mutations. Back up previous raw/packed/source artifacts in .codex/tree-growth/far034-before. Compare033player pose and032overview at1200x900/FOV75 with unchanged lighting. Reject if mismatch remains. Shader cold-start and fixed performance rerun remain required before final acceptance; no runtime appearance/performance claim from successful capture alone.
+TREE-FACING-034 supplemental shadow diagnostic, before run: fixed032overview camera and100far trees; temporarily set existing far SceneObject CastShadows false, reacquire representations and capture one shaded image, then restore true and reacquire. This changes no geometry/textures/material appearance settings; tests whether the dark mottling is attributable to far shadow casting. It is not approval to remove required tree shadows. Preserve both images and source state.
+TREE-FACING-034/v1 results: replaced separate rest-depth shader with compile-time F_TREE_BAKE_DEPTH in the three production tree shaders and shared tree_bake_depth.hlsl. Original capture material features preserved; depth copies change only capture feature. Obsolete tree_impostor_depth.shader removed from canonical source (backup retained). Native three-source shader and rebuilt distant material compilation passed. All128 captures1024RGBA; all32color/depth masks atalpha>=128 exactly match (4,708,925 pixels each, IoU1,0mismatchviews). All four row metadata list five render models, expected facing policy and44sourcehashes; all176referencedhash checks passed. Repacked format3, five output hashes verified. Evidence far034-capture-v1.json plus game034-player.png and lod034-facing-far-shaded.png. Independent source review found no blocking capture defect and confirmed materially improved ground-level match; elevated distant appearance still fails (lighter/flatter/coarse mottling). This corrects capture geometry, not full shading equivalence.
+The fixed overview with CastShadows=false still shows coarse dark mottling and similar broad brightness; lod034-no-shadow-diagnostic.png retained. Thus disabling far shadow casting does not remove the defect. Restored CastShadows=true in source, confirmed nativecompile and recreated all100runtime far objects; restored player(0.665507495,11.0610714,265.933136),Gameview. Candidate12/16m/.35 remains live, no prefab/scene save. No new benchmark claim;033 measurements predate034capture. Clean-start remains pending.
+Console inspection also found five pre-existing hotload/GameMenu method-resolution diagnostics at02:15:12 for TaskFactory<HttpListenerContext>.FromAsyncImpl, before033run and034changes. Native compiler currently succeeds and benchmark runtime exception counter was0, but do not call the entire editor log error-free. Expected prior membership-failure test diagnostics also retained.
+## TREE-LOD-035/v1: source level shading diagnostic
+Before run: fixed032overview camera/player; only Dense Oak001 at(-1800,-1800,186.125) temporarily uses detailed geometry with all five ModelRenderers forced toLOD0 thenLOD2. Other99trees remain034far. Capture each at1200x900/FOV75, restore all overrides null and original Specimen. Determine whether source level alone explains the observed major shading difference; does not qualify transitions/performance. No savedasset/scenemutation.
+
+035 original overview clips most of target001 at lower edge; retain lod035-source0 as insufficient evidence. Supplemental fixed target view camera(-2800,-2800,1050),angles(24,45,0),1200x900/FOV55 places target001 in frame. Repeat forcedLOD0/2 at identical pose before restoring.
+
+035 forcedLOD0/2 focused captures both retain similarly dark detailed target against lighter distant neighbors; meshlevelalone does not explain the gap. Additional predeclared diagnostic: same target/camera, forceLOD0 and set allfive ModelRenderer RenderType=Off (shadow casting off, visualmeshretained), capture, then restoreOn/automatic/sourcekey. This tests the detailed source's self-shadow contribution separately from034farshadowtest.
+
+035 normal-filter diagnostic predeclared: detailed self-shadow-off capture retains dark target; restored all shadows. Temporarily use point sampling of finest packed normal mip only (retain trilinear color/depth/AO and allviewweights) at032overview. Capture then restore production filtering. This isolates normal-mip smoothing as a contributor, not a proposed shipping filter or acceptance test.
+
+035 finest-normal result: distant grove visibly darkens and recovers finer contrast when onlynormalRGB uses finest-mip point sampling. Color/depth/AO/view interpolation unchanged. Both forceddetailedLODs and disabled detailed shadow casting retaineddarktarget; neither alone explained gap. Adopt finest normal sampling as next runtime candidate to preserve source angular variation through lighting, leaving depth/color/AO filtered. It is not accepted until independent appearance, moving-camera/shimmer and performance checks. No arbitrary color/tint factor added.
+
+035 normal compression diagnostic predeclared: current finest-normal candidate, same032overview, replace only normal/depth texture output BC7 with installed-supported RGBA8888 (core/shaders/vr_lighting.fxc evidence) and rebuild material. Retain32views/allsourcepixels/color/AO/depthvalues, no tint. Compare runtime appearance to035point-normal image; this isolates compression of high angular variation and retains normal/depth bytes. Sharedtexturememory rises; requires laterperformance/memoryvalidation.
+
+## TREE-NORMAL-036/v1: preserve capture-resolution lighting directions
+Before change/run: unchanged034capture camera framing/modelgeometry/materials/facing/wind policy,1024rawframes; increase mature packed tile512to1024 so raw source directions are not averaged2x2beforelighting. Keep finest point normal sampling/uncompressed RGBA8888 normal-depth and filteredcolor/depth/AO. Same12/16m/.35s100grove and032overview1200x900/FOV75. Compare to035/nearreference; no color darkening. Higher sharedtexturememory must be measured with nextcanonicalrun. Backup priorpacked/source in.codex/tree-growth/far036-before. This is a quality candidate, not acceptance.
+
+## TREE-LIGHT-037/v1: interpolate lit views rather than normal directions
+Before shader edit: same036 full-resolution source,frames/geometry/shadows/camera/12-16mLOD. Evaluate each of the four atlas-view material normals/albedos/AO through the canonical engine shading function separately, then blend resulting linear color by the existing coverage/view weights. Keep blended reconstructed depth and common surface world position. This avoids creating a new coherent normal by averaging unrelated leaf directions before nonlinear lighting. Costs up to4lighting evaluations/pixel; requires fixedperformancecomparison after visual check. No tint factor or nearassetreduction. Backup036shader retained.
+
+
+## TREE-PERFORMANCE-038/v1: preserve nearby quality toward 200 FPS (2026-09-22)
+
+Predeclared before measurements or implementation. User requests approximately
+200 FPS or better while retaining high tree quality near the player. Reuse the
+unchanged TREE-100-029/v1 100-tree saved grove, seed1337/generator52, unit scale,
+400-inch grid spacing, existing terrain/grass/light settings, engine26.09.15.
+Canonical BIOME-FIGURE8-001/v2 input remains start(-1.6258175,1.2225341,340),
+view(0,0,0), FOV75, physical2769x1529 (logical1846x1019), speed2500,
+distance50000, one loop, clearance393.7008, automatic drain then10s standing.
+Wait for existing production streaming/collision readiness before timing; input
+remains enabled and game visible. No source edits/captures during timed windows.
+No accepted current-generator tree baseline exists: record a fresh unchanged
+saved-scene baseline before optimizing. Historical029 and033 remain contextual.
+
+Target: >=190 FPS (5.263ms mean frame) both canonical moving and its standing
+window, aiming >=200; preserve fixed workload, tree count, terrain quality and
+resolution. Candidate p95/p99, memory and allocations must not regress >10%
+against fresh baseline; preserve zero timed exceptions/terrain collision failures,
+complete streaming and no unexplained drain regression. Report GPU, physics,
+render costs and exact memory/allocations, including missing profiler scopes.
+The older empty-world10% budget remains a stricter production qualification;
+meeting the user's200FPS target alone does not automatically waive that budget.
+Quality: inspect native player and close-canopy views, opposing views and moving
+near/far transitions; retain fine nearby leaf size, crown fullness, attached wind,
+solid trunk blocking and no missing pieces or visible transition holes.
+
+Bounded attribution observations reuse fixed main-player pose and2769x1529,
+20s warmup plus10 existing rolling readbacks at1s spacing (not frame-level
+benchmarks). Compare: unchanged baseline; only branch trigger child disabled;
+existing TreeModelLod12/16m/.35s; distant-only by existing property override;
+foliage renderers disabled (wood retained). Restore each isolated condition.
+These are diagnostics, not shipped quality settings. Preserve all failures.
+Source identities, hardware and environment recorded alongside each result.
+
+TREE-PERFORMANCE-038/v1 baseline COMPLETE: run f71296cc232a453b959d4e924786f4c7,
+source signature0b84ad9bfb8e967377bda5ceb0946ca55952458df29fcb81eaa1c4f08a73d7aa,
+RTX5090/driver32.0.16.1664, Ryzen9800X3D, visible26.09.15 editor. Sources unchanged
+through timed run. Moving182.631FPS, p95 16.4965ms,p99 77.9372ms,GPU4.9007ms;
+standing23.6675FPS,p95 49.5713ms,p99 51.6582ms,GPU41.7600ms. Standing physics
+9.958444ms/frame. Moving allocations87632.62bytes/frame; process peak14073585664B,
+GPU peak3897820711B. Zero measured exceptions/terrain collision failures.
+Baseline fails target and preserves prior029 failure. Full raw and summary in
+ValidationEvidence/TreePerformance/baseline.json.gz and baseline-summary.json;
+environment.json records hardware. This is the current-worktree comparison,
+not an accepted production baseline. The121.96204s value is movement duration,
+not terrain drain; retain raw streaming timing for the actual drain metric.
+
+038 diagnostic baseline: fixed floating start pose, settled100-tree view,
+rolling23.7-24.5FPS/GPU40.45-41.66ms. Disable only100 existing branch-interaction
+children: rolling23.4-24.0FPS/GPU41.29-42.16ms; physics drops from9.28-10.00ms
+to0.0407-0.0435ms/frame. Rendering remains limiting, so this is a demonstrated
+CPU saving, not a demonstrated FPS improvement in the GPU-bound view. All100
+children restored enabled. No code in Code/ references tree_branch,
+CapsuleCollider or trigger callbacks (bounded source search). Solid trunks stayed
+active; nearby geometry/materials were unchanged. Raw diagnostic-baseline.json,
+diagnostic-no-triggers.json and inspected native diagnostic-baseline.png retained.
+
+038 additional isolated diagnostic predeclared: repeat existing12/16m/.35s
+TreeModelLod view but force only detailed nearby ModelRenderers to existing
+LOD2 via LodOverride, retaining every source leaf. Restore all overrides to
+original null afterwards. This tests existing mesh complexity separately from
+far-view cost; no new mesh generation or reduction in tree count.
+First all-far setup failed during add_component immediately after prior component
+removals; finally restored completed adds. Readback confirmed0TreeModelLod and
+no matching runtime errors before retry. Second setup succeeded100components;
+failed setup has no measured result and is not silently treated as a run.
+
+038 isolated rendering results: no-leaves114.9-116.2FPS/GPU8.10-8.27ms;
+original latest037distant shader with4detailed/96distant53.2-54.1FPS/GPU18.09-18.38ms;
+all100distant69.2-70.7FPS/GPU13.76-14.05ms;4nearbyexistingLOD2/96distant66.7FPS,
+GPU14.66ms. Each retained branch triggers/trunks, then restored all changes.
+Allfar is diagnostic only and loses close leaf definition; originalnear visual
+reference and allfar/nativeLOD images inspected. Baseline actual post-loop drain
+162211.22ms (meshing.throughput.postLoopDrainMilliseconds).
+
+038 candidateA before compile/run: keep textures,32views,wind,depth reconstruction
+and four separate lighting evaluations unchanged. Enable forward depth equality
+and disable forward depth writes; reject pixels hidden by existing prepass depth
+before lighting, with1-inch tolerance for resolved coverage edges. Installed
+common/classes/Depth.hlsl supplies public read/linearize API. Same diagnostic
+allfar and lod2 views; require no new holes/depth mismatch and measure GPU change.
+This is not accepted until native compilation, imagery, fixed route and clean start.
+
+038 candidateA FAIL visual gate: native compileSuccess=true,12combos; fixed allfar
+78.5-79.4FPS/GPU12.19-12.35ms, but inspected image shows widespread blue pinholes.
+Revert depth-equality/manual prepass clipping together; preserve A shader in
+.codex/tree-performance/candidate-a.shader and measured image/results. Existing
+compile_source_shader initially rejected both valid asset-relative and absolute
+paths because its mounted-filesystem source check returned false during play.
+Corrected validation uses existing AssetSystem.FindByPath/GetSourceFile and native
+compile receives asset.Path; current native managed compile and explicit shader
+compile both pass. Existing unrelated editor diagnostics are not erased.
+
+038 candidateB before implementation: original037depth states/reprojection/wind,
+but use deterministic screen-pixel stratification to select one of the four
+neighboring atlas frames according to their existing angular weights. Read and
+light only that selected view, retaining its original normal distribution instead
+of averaging directions. This trades exact per-pixel four-view interpolation for
+spatial sampling; motion/grain/coverage and allfar performance must be inspected.
+Reject unacceptable holes, contour changes or shimmer; nearby meshes untouched.
+
+038 candidateB nativecompile PASS; allfar166.3FPS/GPU5.62ms, but inspected image
+has obvious stippled crown fringes where angular silhouettes disagree. Not accepted
+as a final distant representation. CandidateC predeclared: select nearest atlas
+view (round azimuth/elevation) through existing exactdepth/wind path to isolate
+single-view locality cost and inspect undithered crown. This is an attribution
+and quality candidate; discrete angular switching must be resolved before shipping.
+
+038 candidateC: allfar176.7-177.5FPS,GPU5.14-5.27ms; native compile passed.
+Inspected static image removes B's stippled fringes, but nearest-view angular
+switching remains unqualified. CandidateD predeclared: preserve C's output and
+replace three vector fixed-point inverse bends with two scalar Newton steps
+solving rest-height, then one inverse rotation. Existing bend/pivot/normal forward
+motion and all near shaders' called functions unchanged. A200000sample scalar
+arithmetic check,seed38,height405.887431in,k0..0.04,x+-2heights,z-1..2heights,
+found maxinverse error0.000264041in against exact forward rotation. This bounds
+only sampled double-precision arithmetic, not shader float behavior or all inputs.
+Move object-uniform local wind/gust evaluation from far pixel shader to vertex
+nointerpolation payload. Validate sameallfar and actualnear/LOD2 views; no change
+in source meshes/textures, renderresolution, trees or terrain.
+
+038 candidateD no demonstrated gain:166.9-173.4FPS/GPU5.40-5.49ms versus
+C176.7-177.5/GPU5.14-5.27ms. Revert scalarNewton and VS uniform motion changes;
+retain their shader snapshot. D's initial setup rejected TreeModelLod type lookup
+with0instances created; readback then found the type and0instances before retry.
+CandidateE predeclared attribution: exactCshader, set only far SceneObject
+CastShadows=false; retain all detailed shadows, geometry, materiallighting and
+collision. Measure allfar; this is not acceptance of removing distant shadows.
+Restore after isolated observation unless a separately validated policy replaces it.
+
+038 candidateE isolated allfar result:217.7-224.8FPS,GPU3.94-3.95ms with far shadows disabled. This is not a qualified full-grove or shipping result. Original live mesh state was restored after the observation, explaining the user's continued approximately10FPS overview. Restore far shadows before further candidate qualification.
+
+## TREE-WHOLEGROVE-039/v1: all-tree view acceptance
+User reports approximately10FPS looking across the trees; add this required view check alongside unchanged038canonicalroute/nearquality gates. Same saved100-tree grove, seed1337/generator52, engine26.09.15/hardware as038; no removedtrees, changes toterrain/lighting/renderquality, or hidden near geometry. Keep player at038origin to hold streaming workload fixed. Actual ejected Game viewport FOV60, logical1846x1019/physical2769x1529; verify actualcamera readback after settingresolution. Two fixed poses: closeoverview(-2800,-2800,2400),angles(25,45,0), matching029pose with honest actualFOV60; wholeoverview(-5500,-5500,4300),angles(28,45,0), aimed to frame all100crowns. Capture actual projection with noFOVoverride and inventory all100instance positions/LODstatuses. Visibility means inside viewfrustum, not simultaneously unoccluded through overlapping crowns. Record count from projected bounds and retain images.
+Before/after observations:20s warmup then10existing rollingdiagnostics at1s spacing for eachpose; report ranges, not independent frame-level percentiles. Goal>=190FPS bothviews, target200+, samevisualquality/zeroerror/physics criteria038. A failure to frameall100invalidates wholeview evidence and requires explicit recorded correction; do not silently movecamera or altercounts. Canonical038collector remains required for frame-level/tail/memory comparison. EjectedLOD camera ownership must be verified and corrected if it uses a different view. Source edits/captures outside timedwindows. Baseline has zeroTreeModelLod components; candidate must have100 and demonstrate actual expectedrepresentations before measuring. Leave qualified candidate active for user evaluation; don't report temporary settings as deployed.
+
+039 first baseline close reproduces10.6FPS/GPU94.33ms, but player readback was(-2270.12573,-3069.90381,415.777985), different from declaredstreamingorigin. Helper omitted restoring player atstart; retain baseline-*evidence as INVALID comparable baseline and rerun with explicitfixedplayerorigin. Camera setup/projection wascorrect. No candidate was measured against invalid baseline.
+
+039 baseline-fixed also INVALID: restoredplayerorigin caused streaming work beyond20s warmup, readbacks show placementPending=true and collision incomplete; editor diagnosticreadback code changed during wholeviewwindow. No acceptance from these results. Helper now waits allproductionmesh/seam/collisionreadiness before the20s window, assertsreadiness andfixedplayerposition eachsample, and recordssourceunchanged. Untimedwarmupmaylookup to letstreamingfinish, as029; exacttimedposesunchanged.
+
+039 settled baseline valid:100active trees,0TreeModelLod, sourceunchanged,0pending,4913collisionready, fixedplayerorigin. Closeoverview10.7FPS; wholeoverview9.9FPS. ActualcameraFOV60 physical2769x1528.5(native logical scaling rounds rasterheight1529). Nativeimages show whole100tree layout inframe. Maincamera remains(-1.62581754,1.22253406,404) while ejectedviewport is separate. TreeModelLod deliberately remains player-camera based, so this stress view will retain expensive nearbyplayer trees even when viewedfromafar. GPU rollingvalue42.71ms remains stale whileejected: exclude it from attribution; overallFPS/pacing andengineRender remain observed.
+039 candidateF predeclared: nearest-viewCshader with farshadows restoredtrue, existing12/16m/.35sLOD onall100trees, deactivateonly100unused branch-triggerchildren. Preserve solidtrunk ModelColliders, all sourcegeometry/materials, defaultnative meshautoLOD, all100trees. No branchtrigger consumers exist inCode. Measure bothfixed039views andinspect actualfullgroveimages before promotingpersistentprefab. Leave candidateactive aftermeasurement foruserevaluation; failuredoesnotjustify a200FPSclaim.
+
+039 candidateF firstactivation failednative type resolution after9adds; followingobservation aborted and not accepted. Readback9components, compilerhealthy. Resumeonlymissingtree components afterreconcilingnative type; require100components and100disabledbranchchildren before rerun.
+
+039 candidateF measured129.0-129.9FPS close,141.5-142.7FPS whole, bothsourceunchanged/100components(4Detailed96Distant)/0pending. Physics0.009-0.013ms/frame. Inspectedactualimages retain alltrees, crowns and groundshadows. Wholeview bound-sphere calculation underconservativehorizontal60deg verifies100/100fullyinside, minimumfrustum margin613.16in; closeview70/100fullyinside so it is not theall100proof. Goal190fails. Evidence whole039-candidate-f-* andwhole039-framing-*.
+039 candidateG predeclared: retain F and all544606sourceleaves at eachnative meshLOD, explicitlyselect authoredlevels by scaled gamecamera-root distance: LOD0 below3m,LOD1 from3to6m,LOD2 beyond6m until existing12/16mdistanttransition. This bounds detailedtriangle/shadowwork while keeping everynearleaf and highestdetailwithin3m. Honor nonnull authoredLodOverride; restore originaloverrides ondisable/destroy/fallback. Compare039views,038mainview andclosequality, inspect transitions beforeacceptance. No farshadow orangularshaderchange inG.
+
+User explicitly specifies trunk-only runtime collision. Removeunusedbranch child frominstalleddenseprefab and generation in canonicalinstaller, preserving9solidtrunkshapes andauthoring collisionmetadata. Updateinstalledprefab integritymetadata; renderedsourcefiles unchanged so distantbake geometryremainsvalid. Currentlive100branchchildren alreadydisabled; nextplayrestartmust confirmzeroCapsuleCollider and100solid ModelCollider.
+
+039 candidateG:129.9-133.8FPS close,141.9-143.5FPS whole, no materialwideview improvement. Mainviewlook-upGPU improved9.30to3.94ms but isnotcorrectcanonicalstandingview.100LODcomponents4Detailed96Distant, sourceunchanged,0pending; prefabhotreloadremovedall100branchchildren automatically;100solidtrunks remain. Notaccepted190goal.
+039 candidateH beforeedit: preserveG andfarshadowcasting. Correct directionalshadow/orthographic rays: billboard selects parallelcamera direction instead ofperspectivecamera-to-root direction, anddepthreprojection usesparallelpixel rays. Useone depth refinement fororthographicshadowprojection, retainthree forperspectivevisibleviews. This reducesfarshadowreconstruction cost; verifygroundshadowcoverage and silhouettes vsG. Installedcore shaders useg_matViewToProjection[3].w toidentifyorthographicprojection. No lighting/tint/mesh/treecountchange.
+
+039 candidateH129.9-131.3FPS close,142.0-143.6FPSwhole: no measurablegain. PreserveHshader snapshot thenrestoreGbefore nextisolated change; orthographic correction notqualifiedforadoption.
+039 candidateI predeclared: boundfar billboard rasterization to the projection of actual source-model boundingbox rather than its diagonal square. Carry sourcehalfextents withsharedmesh vertices, projectonto viewright/up, add32inches peredge forleaf-facing/wind/perspectivecoverage margin. Keepfragment reconstruction/lighting unchanged fromG; remap interpolatedUV backtofullcapture-squarecoords so texturefootprints retain existing scale. Conservativecullingbounds remainunchanged. Require no clippedcrowns/trunks atfixed039images andopposing/nearviews. Meshcache records layoutversion to rebuildderivedmeshes acrosshotload; no rebake/sourcegeometrychange.
+
+I firstshadercompilefailed because commonvertexinputUV1 exposesfloat2, notfloat4. No measurementrun. Use the existingMaterial.CreateCopy/Set path to carrybboxhalfextents in one sharedderived material permodelkey; retain originalvertexlayout. Native sourceevidence common/vertexinput.hlsl andTreeImpostorBaker.cs.
+
+039 candidateI compilefixedPASS, close148.8-152.2FPS andwhole161.8FPS; sourcesunchanged and4Detailed96Distant. Inspectedwholeviewpreservescrowns/shadows. Read-only get_ejected_camera nowalso exposesnativeFrameStats: close13,997,144triangles/502drawcalls/249renderedobjects/3sceneviews. This includes multiplerenderpasses andterrain, not sourcegeometrycount.
+039 cameraattributionJ predeclared: sameI/100trees/two039views, temporarilysetexistingLODreturn1/exit2m toputall100distant. Actualoverviewcamerasarefarfromalltrees; currentdistancecalculation insteadretains4detailed nearpossessedplayer. Compareallfar againstI thenrestore12/16 withoutclaimingallfaras validnearplayerconfiguration. This tests whetherwrongviewownership explainsremainingoverviewcost.
+
+039J allfar attribution: close365.9-366.8FPS,whole428.3FPS;100Distant. Nativeclosegeometry falls13,997,144to77,264triangles,draws502to358 (includesallpasses/world). Retainbothimages andrestore12/16m. This proves the remaining4detailedplayer-near trees dominateddetachedoverviewcost; temporary1/2m isnotacceptednearquality.
+039K predeclared: retainIqualitysettings andrestore12/16m; existingEditorEvent.Frame camera adapter forwards the real detachedcamera toTreeModelLod's transientEditorCamera reference, clearsoutsideejectedplay, andruntimechecksSceneownershipbeforeuse. Normalplayercamera remainscanonicalinGameview. Validateboth039views plusreturntoplayer/closeapproach withoutmanualLODoverrides;100farinoverview anddetailednearcamera expected. Nochange to player orstreamingorigin,meshcount,bakes,nearleafcount orshadows.
+
+039K actualcamera correctionPASS fixedoverviewperformance:367.2-372.7FPS close,426.5-430.1FPS whole,100Distant withnormal12/16m. ReturntoGame correctlyrestores nearbydetail;038fixedplayerobservations128.2FPS/GPU7.49ms, so overallgoal remainsincomplete. Nativecandidate-k-player.png captured andinspected: densecloseleaves/sourcebranches intact.
+038 candidateL beforeedit: reduceexcess detailedleaf work by actualleafpivot distance, keepingallleaveswithin3m andsmoothlyreducingretention to30% at8m. StableperleafUVhash selectsretainedleaves; an8percentagepoint continuousscale band preventsinstantindividualleaf pops, neverinflates leaves. Cull fullyretired leaves inVS beforewind/facingwork. Component suppliesactualviewposition toallpasses so foliage/shadows useidenticalretention, clearedonrestore. Defaultattribute isdisabled so authoredsource/baker/capture withoutTreeModelLod stillrendersallsourceleaves;nearshaderdefaultcapturepath mathematicallyunchanged. SourceFBX/model/materialfiles andfarimages remainunchanged. Require crownfullness/fineleafsize within3m andsmoothmovement;compare038player andcanonicalroute. This candidateisnot a reduction in treecount orterrainquality.
+
+038L nativelycompiled, fixedplayer152.3-153.3FPS/GPU6.24ms versusK128.2/GPU7.49. Stillbelow190target. CandidateM beforecompile: retainLdistances/density, butcamera-facing leaves animateonlytheirattachmentpivot throughbranch/root motion, thencarrytherigid authoredfold into the existingcameraframe. Previouslybothvertex/frame andpivot/frame werebent beforefacingreplacedtheorientation, repeatingwork. Preservepivottrajectory,leafroll/lean/flutter andworldspacefacing; omitminute bendgradientacrossindividualcamera-facing blades. Non-facing pathunchanged. Needclose temporal/wind/attachment inspection andfixedperformance comparison. AtleafScale1useoriginalsourceposition directly so disabled-density capture doesnotintroduceextra subtract/add rounding.
+
+038M151.9-155.0FPS/GPU6.17-6.18ms: no materialgainagainstL. Revertwindpathchange; retainno-op-atfullscale expressionfix.
+038N predeclared: separate shadowrepresentationfromvisibledetail. Eachauthoredtree sharesits existingbakedmodel forone shadow-onlySceneObject (CastShadowstrue,ExcludeGameLayertrue,WantsPrePassfalse,TreeLodFade0), all100trees stillcastshadows. Visiblefarobject no longer casts a duplicate shadow; detailedModelRenderer RenderTypeOff withoriginaltypes restoredondisable/fallback. Preserveallactualtrunkcollision andsourcevisualnear meshes/wind;shadowproxy carriesoriginalfullcrowncoverage. Comparefixed038playerview FPS andnear ground/trunkshadowquality; reject ifproxy leaksintocolor/depth or shadows vanish. This is a cheaper tree shadow, not removalofshadows. NativeAPI confirmsExcludeGameLayer omitsopaque/translucentpasses andCastShadows/WantsPrePass flags exist.
+
+038N measured181.0FPS/GPU5.25ms at fixed player view; inspected native image retains close crown detail and ground/tree shadows without visible proxy color leakage. This remains below190FPS criterion. Cold-start memory and canonical movement remain unqualified.
+
+038 trunk collision check before run: all100 current saved-grove roots, two opposing real scene rays per root from x-80 to x+80 at root.y/root.z+48 inches. Require each to hit that tree's Solid ModelCollider; inventory must contain100solid trunk colliders and zero branch CapsuleColliders. Save raw200ray results. This checks actual engine collision geometry, not player capsule motion or higher branch collisions (the latter intentionally removed per user).
+
+038O before edit: retain N shadow policy, all100trees and all source leaves within3m; smoothly thin detailed leaves to15% retention at6m instead of L's30%at8m. Same deterministic whole-leaf selection and8percentage-point scale band. No leaf-size inflation, no changes to distant captures, render resolution, light or terrain. Compare same fixed038player observation and native crown/branch image; canonical movement and temporal detail transitions remain required before acceptance.
+
+038O182.0-185.2FPS/GPU5.10-5.12ms, only a small gain versus N181.0/GPU5.25. Native image retained for comparison; revert to fuller L retention30%at8m before next candidate.
+038P before edit: clip fully transparent texels at the same1/255 threshold used by native ShadingModelStandard before extra foliage scatter/shadow sampling, and immediately after distant color fetch before normal/AO/material work. Alpha-tested variants only; retain native later alpha-to-coverage adjustment. No change to surviving pixels, geometry, density or lighting. Native compilation, same fixed player observation and image required.
+
+038 trunk rays PASS:200/200real engine traces hit their matching Solid ModelCollider;100trunks, zero grove CapsuleColliders. The one remaining scene CapsuleCollider belongs to the player. Evidence trunk-collision-038.json; this is geometry-ray validation, not a capsule walk test.
+038P natively compiles; fixed player187.1-189.4FPS/GPU5.00-5.01ms. Retain fuller30%at8m. Source compile finished before observation warmup ended; no measured shader compilation.
+038 temporal spot check before capture: camera orbit around Dense Oak001 source bounds center(-1779.083351,-1792.61467,362.14073),1000-inch radius,elevation15degrees,azimuth201/202/203/204,looking at center. All100trees remain active; use actual detached camera60degFOV,1600x900native captures and record native camera readbacks. Crosses baked-view boundary202.5degrees; require no abrupt crown/branch jump. This is a visual check, not a performance run.
+
+038P orbit visual gate FAIL:202-to203degree captures show a large lower-crown/branch change at the nearest-view boundary. Single-view selection cannot ship as final.
+038Q before edit: continuous angular blend only in a band of fractional atlas coordinates0.38..0.62 around each half-angle boundary; outside bands read/light one view. Use native dynamic branches to skip zero-weight views, blend independently lit view colors and alpha-weighted reconstructed depth (never averaged normals). At intersecting azimuth/elevation bands up to4views contribute, otherwise1or2. Retain projected billboard bounds and full shadow proxy; same100trees, source geometry, density, lighting and resolution. Reuse fixed orbit poses to verify transition and038/039performance gates; no acceptance merely from a smoother image.
+
+038Q151.9-153.6FPS/GPU6.23-6.24ms at fixed player. Angular image lighting blends, but coverage differences between captures remain visible. Performance fails190criterion.
+038R before edit: keep Q continuous color/coverage/depth reconstruction; sample one captured normal with probability proportional to its alpha-weighted angular contribution, then shade once. This preserves the leaf-normal distribution without averaging it into a bright lobe; screen-space stable sample pattern may introduce lighting grain and must be visually checked. Shadow-depth pass chooses the nearest view, since it does not benefit from blending independently lit normals. Retain all100tree shadow proxies. Compare fixed player and orbit views; reject new objectionable lighting noise or mismatch.
+
+038R178.6-179.0FPS/GPU5.24-5.32ms; native player image retains close leaf detail and shadows.190criterion not yet met. Canonical installer now attaches TreeModelLod to authored prefabs with installed bake metadata; runtime membership/hash validation remains authoritative. Dense prefab regenerated through this installer, trunk-only and12/16m/.35s; source render dependencies identical.
+038R cold-start validation before restart: stop play, preserve original saved scene and native-save unsaved editor state. Structural comparison shows only regenerated player child IDs and removed branch prefab-ID mappings; no authored property/world changes. Restore original scene bytes to avoid unrelated serialization churn. Native quit requested; restart same visible interactive project, require no new crash marker/compile errors and automatic100TreeModelLod,100trunks,zero branchcolliders with no manual activation. Then run unchanged038canonical figure-eight and039fixedviews. No input/resolution/workload threshold changes.
+
+038R shutdown note: native quit entered Source2Shutdown, but left process15668 at an Error window after prefab terrain_player cleanup assertion and EditorMainWindow.GetUnsavedResources NullReferenceException. Saved scene/world changes were verified above. Terminated only that verified editor process and reopened visible project as PID25476. No new Sentry crash marker (still2026-09-21T14:08:05Z). Shutdown log retained; this is not claimed to be a clean graceful exit or proven tree fault. Fresh startup/play validation proceeds separately.
+
+038 final visual checks predeclared during canonical R run (execute after it completes): reuse fixed201/202/203/204degree Oak001 orbit at1000in radius/elevation15, then approach alongazimuth225degrees at center-distances900,700,500,400,200,100in and retreat in reverse. Each pose0.5s settle before native screenshot; record actual view distance/detail state of Oak001, camera and source hashes. All100trees stay active and player stays at canonical end position (no streaming-origin mutation). Require expected12m/16m hysteresis, complete crown/trunk with no missing pieces, fine close leaves, retained ground shadows and no obvious discontinuity during0.35s fade. Screenshots qualify sampled views, not every possible wind phase or angle. Restore Game view afterwards.
+
+038R canonical cold result runadcd121a3a4f4356a3ea3bc0af69f5b6, source371541395f5c9f5371bc2e43f2c62b79504e3611b674d92d42b370b6984402a7 unchanged: moving416.34012FPS,p953.8542ms,p995.5022ms; standing174.66158FPS,p956.8552ms,p998.7525ms. Drain17953.037ms versus baseline162211.22ms; duration121.94728s. Process avg/peak13,737,766,710/13,870,960,640B; totalalloc4,542,449,936B across the higher frame count (compare per-frame metric separately).0collisionfailures,0runtimeexceptions. Moving/pacing/streaming improve strongly; standing fails190FPS. Cold startup retained100LOD/100trunks/0groveCapsuleColliders automatically. No HLSL/parser, shader-load, compute dispatch or TreeModelLod errors; pre-run engine resource-load errors and shader-cache rename warning preserved. Crash marker unchanged. Evidence candidate-r*; not accepted yet.
+038S before edit: retain R image/depth/normal/shadow policy. Compute per-object local wind vector and gust once in VS and pass as flat float4 to PS; eliminate identical per-pixel TreeGust evaluation without changing point-dependent inverse/forward bending. Earlier D changed inverse math as well as moving these values, so it did not isolate this cost. Compare fixed038player observation and same visual checks. No tree-count, geometry, light, texture or quality parameter changes.
+
+038S observation correction before edit/run: use the current canonical R post-loop stationary pose (recorded in candidate-s-player-before.json), without resetting to initial spawn height. This aligns shader attribution with the failing canonical standing view. It is a supplemental rolling diagnostic, not a replacement/version change to038canonical. Final canonical rerun remains unchanged.
+
+038S176.3-176.9FPS/GPU5.34-5.38ms at actual post-loop pose(-1.6714406,1.38634193,262.898468), versus canonical R174.66/GPU5.45. No material gain; restore R shader to avoid carrying an unproven change.
+038T before edit: batch fully distant color objects and always-distant shadow proxies by their shared model/material. Private distant material owns TreeLodFade0; only transitioning objects remain unbatchable with per-object fade. Detailed renderers keep independent view/fade attributes. This avoids per-tree draw submissions for identical stable state without altering tree count, source geometry, shadows or shading. Bump derived cache layout to3 so old private materials cannot persist after hotload, restart Play for clean acquisition. Require correct transforms/wind/individual transitions, no disappeared copies, lower native draw count and same038standing/039views before canonical acceptance. Native SceneObject.Batchable API documents dynamic attributes as a batching restriction; therefore never batch differing transition fades.
+
+038R detailed baseline comparison: moving per-frame managed allocations87,632.62to89,469.38B (+2.10%), despite totalalloc growth from2.28x more frames. Process avg/peak-0.29%/-1.44%; GPU avg/peak+6.92%/+6.93%. Both4913/4913collisions ready,0pending/failures; all recorded meshing pending categories0. Frame-tail reductions76.64/92.94%moving p95/p99 and86.17/83.06%standing. Actual drain-88.93%. All relative10%regression criteria pass; standing absolute190FPS does not. Exact JSON paths in candidate-r-comparison.json.
+038T rolling standing189.0-189.4FPS/GPU4.98-5.00ms after Playrestart, versus Rcanonical174.66/GPU5.45. Physics settled player to(-1.55969858,1.51990998,262.956146), within0.19in of intended Rpostloop pose; retain this environmental/readiness movement instead of pretending exactposition equality. This is diagnostic only; final fixed canonical remains required.
+
+038T visual gate failure under investigation: sampled approach500/400 images show broad blue background-shaped cutouts behind tree leaves. Fine close100image retains bark/leaf detail;12/16hysteresis statuses are correct. Do not accept its FPS gain. Isolation before edit: keep same material/shader, disable batching for both derived objects in active runtime, repeat exact approach400camera; this separates batching from prior R depth/coverage behavior.
+
+038T unbatched isolation retains the same broad blue cutouts, so batching is not their demonstrated cause. Source inspection finds R selected nearest views under S_MODE_DEPTH, which includes the perspective main depth prepass, while forward rendering blends depth. That can leave prepass occlusion without matching color.
+038U corrective candidate before compile: apply nearest selection only to orthographic projection (g_matViewToProjection[3].w), identically in depth and forward variants; perspective main prepass/forward retain identical blended reconstruction. Directional shadow projection keeps nearest sampling. Restore T batching policy after isolation; same material/texture/tree count. Repeat exact approach400 view; require cutouts gone, then whole039, quality sweep and canonical038. Previous R/T visual results are not final acceptance.
+
+038U nativecompilePASS. Same approach400 image removes the broad blue cutouts; full background foliage now appears behind the fine near mesh. This directly supports depth/forward reconstruction mismatch as their cause. Batching restored and all source geometry remains present. Standing measurement pending.
+
+038U rolling post-loop standing196.5-198.5FPS/GPU4.76-4.77ms,0pending/4913ready. Native approach400 cutouts resolved with batching enabled; current absolute target is reached in this supplemental view, not yet canonical acceptance. Remove unused former four-light arrays/output initialization and expand new branch braces before finalcompile (no semantic change). Freeze U source for cold-start, canonical038, fixed039 and sampled quality sweep. Cold restart repeats the prior project/scene/viewport requirements; no threshold or workload adjustment.
+
+038U canonical cold run743852a1fad8469e9368024df2d7895d/source d28141208ed5fdedaded5d2be5db6af7c76520f2cd179ac7ecd7ff6ed7c3df96 unchanged: moving417.3765FPS,p953.8342ms,p995.5939ms; standing173.49704FPS,p956.8641ms,p998.7458ms. Drain17890.97ms,0pendingstreams,4913readycollision,0exceptions/failures. Per-frame allocations+1.91%; CPUavg/peak-2.13%/-3.04%; GPUavg/peak+6.87%/+6.90%. All relative criteria pass, absolute standing190stillFAIL. Full comparison candidate-u-comparison.json. Cold compile/parser/runtime checks pass, crashmarkerunchanged; known engine missingresources retained.
+038U rolling standing comparison INVALID: retrospective profiler readback found2769x1391 after detached-camera captures, instead of required2769x1529. Its196.5-198.5FPS cannot qualify the goal. Observe helper now explicitly restores1846x1019logical viewport and asserts2769x1529 every sample; whole-view helper also needs actualcamera dimension assertions. Canonical U itself used correctfullresolution. Tstanding was2769x1529; R/Ucanonical postloop player positions differ naturally after traversal/physics (U current41.4748039,1.29084563,271.459259), so supplementalstanding positions are recorded and not presented as identicalcanonicalreruns. CurrentLODinventory99properties readable:4Detailed95Distant;one nativepropertyread unavailable, retained in evidence rather than omitted.
+038V before edit: keep U tree representations/density/shadows and shade policy. Preserve full bark parallax relief within80in(~2m), fade it tozero by157.5in(~4m) instead315in(~8m). Retain ordinary bark normal/color detail at every distance. This reduces two expensive height-ray searches on branches beyond useful close range while preserving arm-reach detail. Compare current Upostloop pose with fullresolution assertions and nativeclosebark images, then canonical if materialgain. No changes to foliage count/mesh/collision/terrain.
+
+038V175.0-176.8FPS/GPU5.37-5.44ms at asserted2769x1529, compared with U173.2/GPU5.50 currentpostloop. Gain is small; revert bark range to preserve original relief and capture shader.
+038W before edit: conservative forward-pass rejection of fully occluded distant tree pixels before depth reconstruction/lighting. Project the existing source half-bounds plus32-inch wind/leaf padding along actual view direction to find a front depth bound; compare to engine DepthChainDownsample mip0 public Depth API with an additional32-inch tolerance. Skip only if the scene is in front of the entire padded tree at that pixel. Depth/shadow passes unchanged, no forced EQUAL depth state (A combined that state with a tighter post-reconstruction test and failed). Native depth helpers and generic min/max producer read as evidence: common/classes/Depth.hlsl exposes mip0.R; downsample_cs.shader stores minR/maxG; native binding/MSAA resolution is not in source, so sampled alpha-edge and overlapping-crown imagery remain mandatory. Reject any blue holes/coverage loss. Restore U on failure. Same fullresolutionpostloop observation, then unchangedcanonical/039 if effective.
+038W full-resolution post-loop observation185.9-187.2FPS/GPU5.02-5.10ms. Fixed039close319.4-322.6FPS andwhole393.3-396.6FPS; all100active/Distant, sourceunchanged, asserted2769x1528.5viewport, native77,264triangles and83/82draws. Fullgroveimages retain100crowns andshadows. Native approach400checked: no recurrenceofbluecutouts; orbit202inspected. Standing190notqualified.
+038X before edit: preserve W reconstruction, coverage, blending, depth and lighting choices exactly; return each contributing view's final texture coordinate, select its alpha-weighted normal contribution, then sample normal/AO only once after selection. Current shader fetches/normalizes unused normal/AO for every contributing view before choosing one. No sampling-filter, mip, density, fade, geometry or lighting parameter changes. Compare the recorded U/W post-loop pose at fullresolution, then fixed039/quality/canonical if effective.
+038X fullresolution187.4-188.0FPS/GPU5.02-5.06ms: small gain, no standalone190qualification. Retain equivalent single selected normal/AO fetch for Y.
+038Y before edit: after W conservative padded-tree rejection and identical perspective depth reconstruction, reject forward fragments whose reconstructed surface lies more than4scaled inches behind the public scene depth. Keep default depth state and writes; no EQUAL state. This skips expensive material lighting only where the prepass already contains a nearer surface. Unlike failed A, preserve U identical depth/forward view blending and use a deliberate4inch tolerance. Both alpha-edge coverage and the previous approach400cutout reproduction must pass; revert Y on any holes. Observe unchanged Upostloop pose and fullresolution, then coldcanonical/039/quality if retained.
+038Y185.1-186.8FPS/GPU5.07-5.13ms: no gain over X, revert reconstructed-surface rejection before further qualification.
+038Z before edit: keep X exact depth/normal/shadow policy, narrow the continuous angular interpolation band from fractional0.38..0.62 to0.42..0.58. Azimuth transitions remain smooth over7.2degrees and elevationover4.8degrees; no nearest-view switch or density reduction. This reduces pixels requiring multiple captured-view reconstructions. Require sampled201..204orbit and approach/retreat quality to pass; preserve old failures and use identicalcanonical/039scenario parameters. Compare same Upostloop player pose/fullresolution.
+038Z187.5-188.2FPS/GPU5.00-5.04ms: negligible gain, restore broader X angular blend to preserve smoother transitions.
+038AA before edit: skip common ProcessVertex work for detailed leaves already fully retired by the existing distance selection. Calculate the existing motion entry/density decision first; fully culled blades return a zero-initialized output outside the clip volume, retained blades run the original common processing and unchanged wind/facing path. No density, distances, normals, geometry or visible pixel changes. Preserve X far shader. Native compile then same fullresolution standing observation; no performance claim without measurement.
+038AA187.4FPS/GPU5.06ms: no measured improvement. Restore original common-vertex ordering before final qualification.
+038AB before edit: preserve X perspective visible/depth reconstruction with3iterations; orthographic shadow projection uses2depth-refinement iterations. Retain original shadow ray/camera selection, full crown proxy and shadow casting. Earlier H changed ray construction and used1iteration while detailed leaf meshes stillcast expensive shadows, so it did not isolate the now-shared proxy path. Require intact ground/trunk shadow coverage and fixed views; reject notable shadow silhouette loss. Same Upostloop/fullresolution observation before unchangedcanonical.
+038AB186.3-188.0FPS/GPU5.04ms: no materialgain, restore3iterations for allprojections. Freeze X (W conservative early bound plus selected normal/AO fetch), broader0.38..0.62blend, originalnear30%at8m andfullbarkrelief. Reuse exact coldstart/038canonical/039fixedviews andsampledquality requirements; absolute190criterion remainsunchanged.
+038X cold restart: editor scene HasUnsavedChanges=false before quit. PID32652 enteredSource2Shutdown but left anErrorwindow after terrain_player prefab cleanup assertion andEditorMainWindow.GetUnsavedResources NullReferenceException, matchingR/Ushutdown behavior. Archivedcandidate-x-shutdown.log, terminatedonlyverifiededitorPID32652 andlaunchedsamevisibleprojectPID33048. Sentrylast_crash unchanged2026-09-21T14:08:05.087118Z. This is not claimed a clean graceful exit.
+038W quality evidence interpretation:15sampledposes (not16), correct12/16m hysteresis includingapproach500Distant/retreat500Detailed at14.09m; approach400Detailed11.71m. Native approach100/400,orbit202/203andwholeoverview images inspected: fine closeleaves/bark, fullcrown/groundshadows, no earlierbluecutouts. Orbit boundary shows gradualcoverage redistribution rather than the earliernearest-viewjump. Settled images do not prove every intermediate0.35sfade frame or everywindphase. X only defers unusednormal/AOfetches relativetoW; finalXimages stillrequired.
+038X canonical cold run44f3244a521247ae84919bd4e2e270de, sourcefdf525893e93beb6a0dd5208d9ca1598801d92d13db93de98892cdd522d402ec unchanged: moving419.9593FPS,p953.8422ms,p995.589ms; standing192.81212FPS,p956.2828ms,p998.1823ms. Bothabsolute190FPS gatesPASS. Moving allocations88,940.41B/frame (+1.49%); processavg/peak-0.53%/-0.79%; GPUavg/peak+7.91%/+8.17%, standingGPU+6.93%. Allrelative10%gatesPASS. Drain16,644.988ms (-89.74%),duration121.94632s,4913/4913collisionsready,allpendingmeshing0,0timedexceptions/collisionfailures. Raw,summary,comparison andcoldcompile/inventory evidence candidate-x*. Currentgoalperformance passes; olderemptyworld10%productionbudget isnot newlyqualifiedorwaived. FinalXvisual/039checksremain.
+038X supplementary visual coverage before capture: keepall100trees/currentlighting/sourcefrozen; Oak001center(-1779.083351,-1792.61467,362.14073),elevation15degrees,actualejectedFOV60,azimuth45/135/225/315 atcenter-distances1000then400in,0.5ssettle,1600x900nativeimages. Recordcamera/LOD/sourcehashes andinspectopposingcrowns,closebark/leafsize/shadows withno missingpieces orblueholes. This extends visualcoverage only, not FPSworkload oracceptancecriteria. Also inspect one existing0.35s transition by entering400infrom1000in alongaz225; recorddetailfractionimmediatelybefore/after nativecapture tostatewhetherimageactuallysamplesfade. RestoreGameview/resolution/playercontrolafterward.
+039X final fixed viewsPASS:close329.7-336.3FPS,whole408.0-414.3FPS versus10.7/9.9baseline. Both100active/Distant,sourceunchanged,physical2769x1528.5nativeviewport (raster1529),77,264triangles,83/82drawcalls includingworld/passes. All100remaininsideunchangedwholeviewfrustum. Inspectedfinalnativewholeimage andclose/orbit/approachimages preservecrowns,groundshadows,finecloseleaf/bark detail andno broadbluecutouts. Currentrealcamera drivesLOD; no tree removal orinputdisable.
+038X final quality15posesPASS sampled12/16m hysteresis (9Distant/6Detailed), plus8opposingviewcaptures withsourceunchanged. Opposing400/45 remainsDistant becauseactualrootdistanceexceeds12m; other400posesDetailed, asdesigned. Inspectedopposingfar45/135/315andnear135/315/45,crown/trunkcoverageintact. Transitioncapture bracket reads0before/1after overthe0.35s transition, so image cannotbe assignedanexactfraction; it shows a complete crown withtheexpectedinterpolatingrepresentation, no broadholes. This is sampled visualverification, not everyframe/windphase. The unchangednearwindpath remainsactive. Trunksretain200/200engine-raypasses andcold100colliderinventory. Full193standing/420movingtargetandallgroveviewgatesPASS; stricteroldemptyworldproductionoverheadbudget remainsunqualified.
+Postqualification formattingonly: normalized9new installer lines toexistingCRLF andupdatedonly manifest.prefab.installer_sha256 provenance accordingly. Installer token/content equality afternewline normalizationPASS; no runtimeC#/shader/prefab/renderdependency changes. Originalbenchmarksource identity retained (manifestprovenance hash necessarily differsafterformatonly); no runtime rerun warranted. Pythoncompile/integrity checksPASS. Publication pendinguserchoice becausepre-existing treecode/assets wereuncommittedbeforetask.
+
+## TREE-LIGHTING-040/v1: reported blue leaf lighting (2026-09-22)
+User reports blue leaf lighting after X performance work. Preserve100trees,trunk-onlycollision,XLOD/density,terrain/lighting/resolution andusergamepose. Initialnativeimage/state savedbefore-current underValidationEvidence/TreeLighting; playercamera(904.714722,-1563.91089,191.883438),angles(3.00471401,-148.674774,0),FOV75. Editor savedscene clean; liveplaychanges unsaved. Diagnosticimages use1600x900 actualgamecamera or detachedcamera matchingposition, explicitcaptureFOV75; restoreGameview afterchecks withoutchangingplayer. Closecheck reusesOak001center(-1779.083351,-1792.61467,362.14073),az45/225,elevation15,distance100in,FOV60,0.5ssettle. Beforeimplementation isolate nativeAlbedo/DiffuseLighting/SpecularLighting/TransmissiveLighting ifavailable; also temporarysunContribution andpostprocessing toggles ifneeded, alwaysrestoreoriginalvalues. No alteredlightsettingsareacandidatefix. Pass: eliminate reproducedunnaturalblue leaf contribution while retaininggreenalbedo,crowncoverage,nearveins/wind/shadows andXperformance. Requiredcanonical038and039scenarios unchanged; comparelatestacceptedXbaseline192.812standing/419.959moving,tail/memory/allocationsno>10%regression,zeroexceptions/collisionfailures,allstreamingcomplete. The firstcurrentcameraimage doesnotyet isolateorconfirm astrongblueleaflight, so nofixclaim.
+040initialdiagnostics:currentmainview,full2769x1391currentraster,andopposingclose100inaz45/225nativeimages showgreenleafsurfaces; reportedbluepatch not clearlyreproduced/isolated. NativeAlbedo/Diffuse/Reflect/Transmission imagesretained; enumReflect/Transmission aredebugviews, not assumedpurelight-lobeoutputs. TemporarysunContribution withoutSpecular andmaincameraEnablePostProcessing=false atcurrentpose didnot identifyaclearbluepatch; bothoriginalvaluesreadbackrestored. Allruntime/render sourcehashesunchanged. No candidatefix/no performanceclaim. Needuser-localizedreproduction beforechangingmateriallighting. Camera returnedGameview,playerposeunchanged.
+
+040 right-outline localization: user identifies the right-side leaf outline. Captured unchanged main camera at1920x1080 as TreeLighting/reported-right-outline.png with camera/source state. Next bounded attribution keeps this pose and captures baseline, clouds disabled, fog disabled, then both disabled via existing component enable flags; restore both original enabled states in finally and verify readback/source identity. Inspect edge color against sky/water, without changing materials, alpha thresholds, tree counts or performance settings. These are diagnostic comparisons only, not candidate acceptance.
+040 attribution API adjustment before run: installed set_component only accepts inspector [Property] values, so enable flags are unavailable. Use Coverage=0 to suppress clouds; use black NearColor/FarColor to identify haze color contribution (this preserves its blend mask and is not literally disabled fog). Restore Coverage=.32 and original fog colors in finally.
+040 capture-path finding: native console find screenshot documents the screenshot command. Its actual-frame capture reported-right-outline-live-frame.png (2769x1391) visibly reproduces cyan edging on right-hand foreground leaves that camera_screenshot renders did not show clearly. Camera-render attribution did not establish cloud/fog removal in its images and is INCONCLUSIVE. Re-run exact existing attribution using native screenshot command at unchanged actual viewport, preserving source and restoring scene properties. No desktop capture.
+040 candidate A before edit: native live-frame and user marked image reproduce fine cyan contours on overlapping right-side leaves. Live fog/cloud color comparisons retain the artifact; effects did not visibly change background, so no exclusion of their lifecycle is claimed. Disable only X/W forward manual single-depth early clip in tree_impostor.shader, retaining identical reconstruction, coverage, native per-sample depth testing, LOD, density and shadows. A single resolved scene depth can reject all pixel samples behind a partially covered foreground leaf; this is a hypothesis to isolate, not yet confirmed. Preserve X source backup. No further Steam screenshots following user instruction. Use attached reproduction and live user observation; no acceptance without visual and unchanged canonical performance gates.
+040A hot compile passes. Installed core/shaders/depthresolve_cs.shader:51-54 and depthresolve.shader:73-76 explicitly copy MSAA sample0; Depth.Get reads that single resolved texture. The removed optimization could clip all samples based on sample0, so it is not safe for partial foreground coverage. Keep sample-safe native depth behavior while measuring unchanged TREE-PERFORMANCE-038/v1 canonical route; no Steam screenshots. Hot-run measurements do not replace final cold-start acceptance. User visual feedback remains pending. Preserve and restore current player/view after route.
+
+040 candidate B prepared outside production while A benchmark is source-frozen: replace the removed single-sample pixel clip with native conservative depth output. For forward rendering only, move raster clip-Z to the front of the same padded source box plus32-inch tolerance; keep clip-X/Y/W and every interpolated reconstruction input unchanged. Emit SV_DepthLessEqual under reverse-Z GREATER_EQUAL testing, bounding final output to raster depth; depth/shadow programs remain SV_Depth with original geometry. Thus native sample coverage owns occlusion and no scene-depth texture is consulted. Installed sbox_pixel.fxc establishes reverse-Z comparison; Microsoft HLSL semantics documents the depth bound and retained early-Z capability (https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics). Engine/driver benefit remains empirical. Guard against new coverage, depth or shadow changes through existing040/038/039 views and canonical metrics, no threshold changes. Final cold-start remains required if adopted. No new Steam captures.
+040A canonical hot run b6e9f4a2fa064c548902a3af6d87db45 sourceUnchanged=true: moving377.4207FPS,p954.5359ms,p996.453ms; standing160.60548FPS,p957.7541ms,p999.6167ms. Completed streaming/collision,0exceptions. Absolute190 and relative frame-time gates FAIL. Restored user pose/free viewport. Removing manual rejection alone is not performance acceptance. Adopt predeclared B as next live candidate and recompile; it retains native per-sample occlusion without the single-sample clip.
+040B hot canonical run419b901d659849aaa3111d150081ed12 sourceUnchanged=true: moving372.92194FPS,p954.561ms,p996.5911ms; standing164.161FPS,p957.7025ms,p999.4946ms. Alloc90012.96B/frame; processavg/peak8905435908/9083850752B; GPUavg/peak4222430635/4225381711B. 4913ready,0pending,0collisionfailures,0runtimeexceptions. FAIL absolute190 and relative timing criteria. No material benefit from conservative-depth experiment; revert B to simpler A (manual single-sample rejection removed). Prepared B2 never activated; no acceptance. Camera/player restored and input remains enabled. No Steam screenshot after user stop. Visual confirmation of A at user-marked MSAA edges remains pending; cannot claim blue-fringe fix or performance acceptance. Only shader change vs X is removal of the unsafe resolved-depth clipping block. Source comparison confirms other runtime/render files unchanged since X except installer manifest provenance formatting. Further shader work should follow confirmation of the reproduced edge change rather than unverified lighting adjustments.
+
+## TREE-FLICKER-041/v1: temporal foliage stability (2026-09-22)
+The user requests a flickering fix following the marked cyan leaf-edge report.
+Use the current saved100-tree grove, seed1337/generator52, engine26.09.15 and
+unchanged trunk-only physics,12/16m hysteresis, near density, textures, wind,
+lighting and shadows. No Steam screenshots. Native camera renders remain allowed;
+they do not establish the full live viewport's MSAA edge behavior.
+Reproduction camera: position(904.714722,-1563.91089,191.883392),
+angles(4.33371449,-146.478912,0), horizontalFOV75. Preserve player's position.
+Capture6 native1600x900 frames,0.25s spacing after each return, recording actual
+camera/source state and timestamps; invalidate a sequence if camera moves.
+Inspect nearby detailed leaves and the finer distant crown on the right. Keep
+wind active; compare sustained visual stability, leaf/crown coverage, lighting
+continuity and camera movement across existing038az201..204/approach poses.
+Pass: no sparkling or randomized lighting switches, intact crown/trunk silhouettes
+and detailed nearby leaves, no new holes or errors. Still frames alone cannot
+qualify temporal appearance; retain sequences and user feedback with limits.
+Performance: unchanged038canonical and039all100views; >=190FPS, target200+,
+tail/memory/allocations no >10% regression against acceptedX, zero runtime and
+collision failures, complete streaming. Prior040A is the current failed performance
+diagnostic, not the accepted baseline. Required cold-start shader checks apply.
+Candidate A: remove screen-space stochastic normal-view selection and finest-mip
+point sampling from the distant shader. Accumulate filtered signed-object normals
+and AO using the same alpha/angular weights already used for color and depth;
+sample the existing trilinear mip matching projected footprint, normalize once,
+and shade once. Coverage, depth, wind, view blend, source leaf geometry and
+materials remain unchanged. Capture baseline before edit; preserve source backup.
+
+041A initial checks: native shader compile passed. Six before and six filtered
+frames retained under ValidationEvidence/TreeFlicker, with identical camera
+transforms and sourceUnchanged=true within each sequence. Actual frame spacing
+is approximately0.72-0.75s (capture latency plus prescribed0.25s pause), covering
+3.69s before and3.64s after; this is sparse temporal sampling, not a live video.
+Inspected frames0/2/5: fine speckled far-crown lighting is reduced while close
+leaf geometry, full crowns and shadows remain. Wind changes leaf positions;
+unmatched wind phases prevent pixel-difference attribution. These images do
+not establish live MSAA-edge behavior or prove absence of every flickering phase.
+Canonical hot performance run is in progress with production source frozen.
+
+041A hot canonical c5b70d086b20462486cf4ca323719908, sourceUnchanged=true:
+moving369.01303FPS,p954.5988ms,p996.5407ms; standing158.58444FPS,
+p957.8325ms,p999.5625ms. Moving allocations91848.8B/frame; processavg/peak
+9401463287/9714507776B; GPUavg/peak4222302249/4225070415B. All4913collisions
+ready,0pending,0collisionfailures,0exceptions. FAIL190FPS and timing comparison
+against X. The prior040A already failed at160.6standing; filtering does not
+recover the removed unsafe occlusion shortcut's performance. User pose restored.
+041A15pose quality run completed,sourceUnchanged=true,9Distant/6Detailed with
+expected12/16m hysteresis. Inspected orbit202/203 and approach100: full crowns,
+continuous sampled view change and detailed close leaf veins/bark retained.
+This is sampled appearance, not full temporal acceptance.
+041B before edit: simplify the existing inverse root-bend calculation without
+changing its three fixed-point steps or fourth-order rotation polynomial.
+Intermediate iterations only need height; evaluate that scalar recurrence and
+perform the full vector rotation once at the end, rather than three times.
+Preserve forward/depth reconstruction and all coverage/lighting/LOD parameters.
+Compare A/B at the fixed041 reproduction camera and logical1846x1019 viewport
+(actual2769x1529),20s warmup plus10 one-second rolling observations, wind active.
+This supplemental same-pose comparison is not canonical acceptance; retain only
+on a material gain, then require unchanged038/039 and cold-start validation.
+
+041B supplemental fixed pose: A139.0-139.4FPS/GPU6.78-6.79ms;
+B139.4-139.8FPS/GPU6.78-6.79ms. No material gain; revert the inverse-wind
+experiment to preserve the original shared include. Explicitly rebuild both
+dependent shaders. Retain only041A filtered continuous normal/AO lighting.
+
+041A cold startup: saved editor scene clean before stopping play and quitting.
+PID33048 again reachedSource2Shutdown but stalled in anErrorwindow after the
+known prefab cleanup assertion/EditorMainWindow.GetUnsavedResources exception.
+Archived TreeFlicker/flicker041-shutdown.log; terminated only that verified editor
+PID, then relaunched the same visible project asPID43904. This was a fresh start,
+not a clean graceful exit. Sentrylast_crash remains2026-09-21T14:08:05.087118Z.
+Fresh log has the same eight resource errors as the archived prior startup,
+including the existing missing tools-shading-complexity resource. No fresh HLSL,
+parser, missing pipeline, dispatch or managed exception was found. Native compile
+status succeeds with0errors; saved basic_example opened and play started normally.
+Source comparison against pre-flicker snapshot changes onlytree_impostor.shader;
+sharedwind include is byte-identically restored, shaderCRLF/final newline pass.
+Cold038/039 measurements are in progress with source frozen.
+
+041A cold canonical c620f319894548808c6c85f98a7a0222 sourceUnchanged=true:
+moving362.55133FPS,p954.7809ms,p996.7973ms; standing167.32207FPS,
+p957.6034ms,p999.518ms,GPU5.603004ms. Allocation94303.734B/frame (+6.03%vsX);
+CPUavg/peak-0.95%/-1.81%,GPUavg/peak-0.93%/-1.15%. Memory/allocation gatesPASS;
+absolute standing190FPS and relative frame-time gatesFAIL (movingp95/p99
++24.43%/+21.62%,standing+21.02%/+16.32%). 4913ready,0pending/failures/exceptions.
+039cold close294.6-298.3FPS,whole363.1FPS;100active/Distant in both, unchanged
+2769x1528.5native viewport,sourceUnchanged=true. Whole native82draws/77264triangles;
+all100transforms,enabled states and camera/projection exactly match acceptedX's
+whole view, retaining its all100frustum coverage. Both native images inspected.
+Post-039 restoration exposed a real camera handoff defect: Game mode and player
+pose were restored, but nearbyOak072 retained ViewDistanceMeters221.52228/Distant
+instead of its actual~4.83m. Six cold captures therefore used stale distant LODs
+and cannot qualify near quality. Preserve this failure; do not call restored quality
+correct based only on camera position. The editor frame callback did not clear the
+cached override by the time of repeated native readback. No cause for that callback
+delay is assumed.
+041C before edit: update the existing editor camera mode operation to synchronize
+TreeModelLod.EditorCamera immediately after verifying the requested mode: detached
+renderer camera inGameEjected, null inGame. Keep the existing frame adapter for
+ordinary interactive camera changes. No runtime LOD distances, density or shaders
+change. Validate two native whole-overview/Game handoffs from the fixed041 player
+pose, wait1s in each view and verify nearbyOak072 uses the actual active camera
+(~221.52mDistant inoverview/~4.83mDetailed inGame). Preserve source/camera/LOD
+readbacks and render restored game view; then unchangedcanonical/039 regression.
+
+041C editor handoff compiles successfully,0errors. The first fixed-pose cycle
+read221.52228m/Distant inoverview, then79.87427m/Distant inGame and failed its
+4.83m assertion. Subsequent main-camera/player readback shows player movement
+(to2999.16772,590.241028,798.022095), so that fixed-position check isINVALID,
+not evidence that the override remained stale. Stop further camera movement to
+leave the user in control. A same-batch passive read returned main-camera
+(2716.27148,2817.07642,743.52594) andOak072 at(1000,-1400,176.65918),
+ViewDistanceMeters116.53773: this matches the actual player-camera distance
+rather than the former221.52228m overview override. This verifies current camera
+ownership; the prescribed two fixed-pose cycles and post-editor-change canonical
+rerun remain uncompleted after player interruption. Earlier cold038/039 numbers
+qualify the041A shader source only; no claim of a200FPS pass or full041C acceptance.
+Current worktree changes vs pre-flicker aretree_impostor.shader (filtered normal/AO)
+and the existing editor mode handoff's immediate override synchronization.
+Runtime near geometry, density, wind, physics and view-distance thresholds are
+unchanged. Temporal user confirmation remains pending; sparse native renders do
+not qualify live MSAA edge behavior. No Steam screenshot was taken. Do not publish
+this provisional state as a fully accepted performance/flicker result.
+
+## TREE-PERFORMANCE-042/v1: recover standing performance (2026-09-22)
+User rejects167FPS as insufficient and requests further improvement. Reuse the
+unchanged038canonical figure-eight and039whole100-tree views, with190FPS minimum,
+200+FPS target and all existing tail/memory/allocation/correctness gates vs X.
+Current041shader/editor handoff state is the new diagnostic starting point, not
+an accepted regression. Keep near leaf quality, filtered continuous far lighting,
+trunk-only collision, native sample-safe depth, all100trees and player input.
+Never restore the unsafe resolved-sample0 pixel-wide depth clip. No Steam captures.
+Before editing, rerun038 on the current frozen source and save actual ending
+player/camera/LOD state before restoration. This supplies the standing reproduction
+for GPU-cost attribution; do not compare FPS from arbitrary resolutions/poses.
+Bounded diagnostic ablations may temporarily disable current scene tree groups
+through existing inspector controls with exact finally restoration. Such images,
+counts and timings are attribution only and cannot qualify performance. No new
+runtime hooks or alternate test implementation. Predeclare each ablation/production
+candidate before its run, preserve failures, require native close/orbit visuals
+and cold-start for final shader changes.
+
+042A before activation: add forward-only[earlydepthstencil] to the near-leaf shader,
+matching installed core/shaders/foliage.shader:184-189,298-305. Our existing forward
+state already usesDepthFuncEQUAL andDepthWriteEnablefalse, and the unchanged alpha-
+tested prepass supplies sample coverage. This avoids lighting hidden leaf fragments;
+no sampled resolved-depth texture or SV_Depth output is introduced. Retain all near
+geometry, densities, mip filters, motion, color and shadows. Prior038A was the
+*distant* four-view shader's depth-equality/manual resolved-depth experiment, not
+this isolated near-leaf native early-test declaration.
+After baseline, reproduce its exact recorded ending camera/player at1846x1019
+logical/2769x1529physical, settle streaming,20s warmup+10one-second observations.
+Capture before/after native1600x900 with source/camera/LOD state and restore full
+viewport before timing. Compare GPU/FPS and intact near leaves/overlapping crowns;
+use unchanged038/039 plus close/orbit/cold-start if material improvement.
+
+042current baseline c89702f45ec54ae7a481498532b5b695:382.5343FPS moving,
+p954.3619ms,p996.2707ms;158.15613FPS standing,p957.6876ms,p999.5764ms.
+sourceUnchanged=true,4913ready,0pending,0exceptions/collisionfailures. FAILstanding
+and relative timing gates. End-state inventory is contradictory: recorded main
+camera(-1.60839629,1.40895534,326.916992), butOak056 reported92.75226m/Distant;
+worker reports all tree reads preceded restoration. Do not treat that inventory
+as valid camera/LOD coverage. Directly restoring the same pose and waiting3s
+produces the geometrically correct7.2143574m/Detailed forOak056. Attribution
+probes use this verified fixed pose and native before-image; preserve discrepancy
+for final test evidence. All100trees remain active. User pose backupperf042-restore.
+
+042A fixed-pose before150.8-150.9FPS/GPU6.15-6.17ms; after151.8-152.8FPS/
+GPU6.10-6.15ms. Native compile passes; no material gain. Revert A before the next
+candidate. Do not report this rolling observation as canonical FPS.
+042B before activation: retry conservative native forward depth with depth writes
+*disabled*, unlike040B. The unchanged prepass owns depth writes. Move forward-only
+rasterZ to the padded-tree front bound, preserve XY/W/reconstruction and original
+screen-depth lighting input, output SV_DepthLessEqual with default reverse-Z test.
+No forced earlydepthstencil (that would ignore the reconstructed late depth test),
+no resolved-depth texture read. Native per-sample tests own final visibility.
+Retain041filtered normals/AO. This may enable hardware early rejection without
+writing depth in the forward pass; performance benefit is unproven. Same verified
+042fixedpose/resolution/20s+10observation, native image no holes, then canonical/
+039/quality/cold if materialgain. Restore041shader if no improvement or artifacts.
+
+042B fixed-pose rolling observation153.2-159.9FPS/GPU5.84-5.97ms versus
+150.8-150.9FPS/GPU6.15-6.17ms before. Native1600x900perf042-b.png inspected:
+near leaves, crowns and shadows intact in this pose. Modest gain only; not an
+acceptance result. B remains the frozen attribution source.
+042 attribution before run: enable existing overlay_gpu1 to expose engine GPU
+pass timers in the existing profiler. This is diagnostic overhead, not acceptance.
+Use the same verified042 standing pose,1846x1019logical/2769x1529physical.
+Record all100trees and actual camera, then four stages in order: all100enabled;
+only originally Detailed trees enabled (disable originally Distant roots);
+all100disabled; finally all100restored.20s warmup+10one-second observations each.
+Reject transition states or camera movement. Record exact IDs/status, GPU passes,
+source identity, active counts and correctness. Restore original enabled flags in
+finally and overlay_gpu0. These removed-tree timings are attribution ONLY; no
+claim of performance acceptance. No scene save or collision contract changes.
+
+042C predeclared candidate: extend B's conservative front-bound raster depth and
+SV_DepthLessEqual to depth/shadow passes, retaining depth writes in those passes.
+The existing ray, coverage, blended reconstructed surface and original lighting
+screen depth remain unchanged. Perspective and shadow raster bounds both contain
+the padded source box; clamp output to the raster depth to enforce the conservative
+contract. This targets the measured2.0ms depth prepass and0.86ms first shadow pass,
+not just the0.77ms forward pass. No earlydepthstencil or resolved depth sampling.
+Same042 fixed pose/resolution and20s+10observation; enable overlay_gpu1 consistently
+for a separate pass-cost observation, disable it before canonical acceptance.
+Compare intact native close/whole crown and shadow coverage; reject clipping or no
+material gain. B is the rollback source. Full038/039/quality/cold-start if retained.
+
+042 attribution complete on frozenB:4Detailed/96Distant. All100153.6FPS/GPU5.99ms,
+near-only177.4FPS/GPU5.17ms, no-trees260.6FPS/GPU3.42ms, restored100155.3FPS/
+GPU5.98ms. These are rolling samples with profiling enabled, not acceptance.
+Large depth prepass all2.017ms/near1.636ms/none0.924ms/restored1.980ms;
+first shadow cascade0.864ms/0.645ms/~0ms/0.861ms. Forward all0.774ms/near0.489ms.
+Removing foliage exposes more terrain, whose draw cost rises1.066ms to1.248ms;
+therefore differences are combined scene costs, not isolated additive tree costs.
+All100original enabled flags restored; sourceUnchanged=true; overlay restored0.
+Raw stage samples and exact tree groups:perf042-ablation.json. Both close geometry
+and the shared shadow/depth representation remain optimization targets.
+
+042C observation158.9-159.9FPS/GPU5.80-5.83ms; large prepass1.839ms,
+firstshadow0.856ms/forward0.725ms. Native fixed-pose image inspected: no broad
+missing crowns or new holes, original close-leaf detail retained. Incremental
+improvement only; not acceptance. Retain provisionally for next isolated trial.
+042D before activation: orthographic shadow views skip the iterative depth-ray
+refinement and use the root-bent captured plane with the same nearest-view color
+coverage. Perspective view, depth prepass and visible lighting remain identical
+C. This intentionally approximates shadow depth; judge ground/self-shadow shape
+against C, reject visibly detached/incorrect shadows or insufficient gain. Same
+fixed pose/resolution/20s+10observations, overlay_gpu1 for both C/D. C rollback.
+
+042D168.4-168.6FPS/GPU5.49-5.56ms,firstshadow0.586ms vsC0.856ms.
+Native same-pose image retains crown/ground shadow coverage; local self-shadow
+changes are visible as expected for planar depth. This is a quality tradeoff,
+not yet accepted. Keep provisional for close/shadow review; no200FPS claim.
+042E before activation: optimize camera-facing detailed leaves as rigid authored
+blades. Pose each leaf attachment once with existing branch/root wind, then face
+its original folded shape using the existing camera frame/roll/lean/flutter.
+Remove the duplicated deformation of every blade vertex followed by undoing its
+rotation during facing. Leaf count, authored fold/UV/normal, retention, pivot wind,
+flutter and light material remain; tiny height-varying bend across an individual
+blade is deliberately replaced with rigid shape around its posed attachment.
+Non-facing feature path retains its original motion. Calm/baker shape remains.
+Same042probe withD frozen, overlay1; require close leaf shape/attachment/normal,
+wind and approach/orbit checks, unchanged038/039 and cold qualification if retained.
+Rollback near shader to perf042-before-foliage.shader on no gain or visible failure.
+
+042E171.1-171.7FPS/GPU5.45-5.46ms; smallgain. Provisional, quality unqualified.
+042F before activation: use an explicit dynamic shader combo on the existing
+shadow-only object. Its nearest captured view is selected from the directional
+light direction (not cascade camera position), and its root-bent plane carries
+full captured alpha. Shadow variant uses native raster depth and alpha coverage,
+no per-pixel reprojection, normal/AO sampling or lighting. Visible distant trees
+retain C's full depth reconstruction and filtered lighting; restore its three
+refinements (D's runtime planar approximation superseded). Same shared mesh,
+textures, shadow object, batching and lifetime; no new population/asset path.
+The approximation is planar shadow depth and nearest-angle projection; full crown
+coverage, stable wind and trunk attachment are visual gates. Reject detached or
+popping shadows. Exact fixed042pose/20s+10/overlay1 then unchanged038/039, close
+orbit/shadow visuals and cold-start if retained. D+E rollback source snapshots.
+
+042F209.6-210.8FPS/GPU4.41-4.45ms at the fixed pose with overlay1. First shadow
+cascade0.139ms vsD0.586ms/C0.856ms. Native image inspected: full nearby leaves,
+trunks and ground shadows present. This probe is encouraging, not canonical
+acceptance. F2 before qualification: revert E entirely to preserve original near
+motion/normals; add explicit projected-mip tile-center clamping and outside-tile
+alpha to the F shadow variant so distant filtering cannot cross atlas tiles.
+No change to source textures, counts, collision or visible far reconstruction.
+Run unchanged038 then039/quality/cold validation with overlay_gpu0. F2 source
+frozen in perf042-f2-impostor.shader, near shader equals pre042 bytes.
+
+042F2 hot canonical e39e659a63e24419a4b10d58d1ff338a:416.18484FPS moving,
+p953.9535ms/p995.7845ms;230.72958FPS standing,p955.5363ms/p997.3182ms,
+GPU4.041499ms standing. Source unchanged,4913ready,0pending,0timed exceptions/
+collision failures. FPS/tails pass vsX. Process memory average17.55GB/peak19.61GB
+exceeds coldX after repeated hot shader builds; therefore hot memory gate FAIL,
+not accepted pending fresh-editor qualification. GPU memory~4.217GB and moving
+allocation90277.7B/frame remain within10%. Same-batch ending camera
+(36.8097191,1.28602445,334.657043),Oak056(200,200,351.177734),
+ViewDistanceMeters6.54469/Detailed agree. Agent's257.664986 distance was inches,
+not meters. All100 roots enabled. Final quality/039 will run after cold restart.
+Before restart: saved edit scene has no unsaved changes; current game changes are
+transient test poses. Sentry marker2026-09-21T14:08:05.087118Z. Preserve saved scene
+bytes and source hashes, stopPlay/nativequit, relaunch same visible project, verify
+fresh errors/compile/no marker advance, then unchanged038/039/quality.
+
+042 cold startup: native quit reachedSource2Shutdown but stalled in the existing
+prefab cleanup/EditorMainWindow.GetUnsavedResources shutdown errors. Archived
+perf042-shutdown.log, terminated only verified old editorPID43904, relaunched
+visible same projectPID44800. Saved scene bytes unchanged. Fresh compile succeeds,
+Sentry marker unchanged;8startup resource errors match the previously documented
+resource list, no new parser/HLSL/pipeline/dispatch/managed exception signatures.
+Exact fresh errors inperf042-startup-errors.json. First cold test trigger rejected
+by existing all-enabled-LOD-settled guard after the helper's final player reset;
+no timed run started. Preserve as invalid startup attempt, wait for actual world
+settling and retry identical038 parameters; no workload/criteria changes.
+
+042F2 cold canonical08d4c604a90a428fa7bd5250255a3e8d:408.85544FPS moving,
+p954.0165ms/p995.8661ms;223.9075FPS standing,p955.5395ms/p997.8002ms,
+GPU4.1678023ms standing. Average/peak process13.624/13.805GB, GPU4.199/4.216GB,
+allocation89714.94B/frame moving/59036.824standing. Every recorded10%relative
+FPS/tail/memory/allocation gate passes versusX, zero timed exceptions/collision
+failures,4913ready,0pending. Arrival1.2s firstLOD0/14.3s settled vsX1.8/15.8s.
+Same world/test parameters, sourceUnchanged=true. Matched actual camera/Oak056
+ViewDistanceMeters7.2146416 agree. Raw summary/comparison/matched JSON retained.
+Cold039 close336.5-341.3FPS, whole415.8-420.2FPS at2769x1529; all100active,
+all100Distant,0pending,4913ready. Source unchanged. Full-grove native image inspected
+with all crowns in view. Fifteen quality poses have9Distant/6Detailed with expected
+12/16m hysteresis. Full images at100/200in approach retain leaf veins/folds and
+bark detail;500in distant view retains full crown;202/203degree orbit remains
+continuous in sampled views with attached visible ground shadows. No new broad
+holes observed. Nearby shader bytes equal pre042; retained source delta is only
+impostor shader and TreeModelLod shadow combo. Shadow depth is approximate planar
+coverage; these observations do not certify dynamic sun or liveMSAA temporal edges.
+Finish the earlier041C two fixed camera-handoff cycles unchanged at the recorded
+041player pose, then six native041pose frames. Preserve native state/source and
+restore current user's pre042pose fromperf042-restore.json and free viewport.
+
+042 final camera/visual checks: both prescribed041C overview/Game cycles pass:
+Oak072~221.522m/Distant inoverview and~4.832m/Detailed inGame on each cycle.
+Six native frames at the original041complaint pose share the exact camera and
+unchanged source. Frames0/3/5 inspected: nearby crown and background leaves remain
+present through wind, without the previous fine point-normal lighting sparkle or
+broad blue cutouts in these captures. This is sparse native render evidence, not
+full-rate viewport/MSAA certification. No Steam capture used. Current user's
+pre042view restored (camera2716.2832,2817.06909,743.526672, physicalsettling<0.02in),
+free viewport restored, overlay_gpu0, input remains enabled, play visible and active.
+Saved edit scene bytes unchanged; final native compile success0errors and no
+TreeModelLod error. Retain F2; accept042 performance/recorded quality slice:223.9FPS
+standing/408.9moving plus415.8-420.2wholegrove. All relative gates pass vsX with
+its unsafe resolved-depth rejection still absent. Near shader/assets/trunk collision
+unchanged. The approximately200FPS goal is met for these fixed scenarios on this
+hardware; no minimum-at-every-pose or full temporal certification is claimed.
+Git publication is separate: both changed runtime files and their pre-existing
+entire tree system are untracked in Git. Exact current-task source diff is saved
+asperf042-final.patch; do not silently publish the earlier tree work under this fix.
+
+
+## TREE-OAK-DOZEN-043/v1 — twelve dense oak variants
+
+Defined before generation on 2026-09-22. User requests eleven more oaks alongside
+the current dense oak. Deliver twelve distinct reusable models, preserving the
+existing 271828 specimen and saved playable grove. This adds assets, not instances
+to the existing hundred-tree workload. Use the canonical seasonal growth/source,
+export, installer and imported-model distant bake paths; no alternate geometry.
+
+Fixed generation inputs: oak_variations.json version1, seeds271829 through271839,
+age18, Oak/Mature/Open_Grown; inherit original dense source_settings except the
+explicit per-variant overrides and seed. Leaf density remains34.20000076293945.
+Original seed271828 remains byte-identical. Save one immutable source.blend and
+complete recipe.tree.json per new specimen. Each export uses4096bark, all three
+mesh LODs, native per-model1,350,000triangle limit, nine solid trunk pieces and no
+runtime branch/leaf colliders. Bake all32 native directions, four passes each at
+1024px, with format3 signed-normal/depth/AO atlases; install TreeModelLod12/16m,
+0.35s transitions and current042F2 shaders unchanged.
+
+Acceptance: exactly11 new unique graph hashes/seeds plus original; every staged
+and installed dependency hash valid, all12 prefabs have trunk-only physics and
+optimized distant rendering. Inspect all new actual imported crowns and nearby
+leaf/bark detail through native render tools; preserve failures. Use the existing
+playable world for transient sequential variant checks at the same existing oak
+root, restoring the original afterward; no separate scene/component/test hook.
+Record exact positions and capture parameters before that runtime check.
+Canonical038 figure-eight parameters unchanged; latest accepted042F2 cold baseline
+08d4c604a90a428fa7bd5250255a3e8d (408.85544moving/223.9075standingFPS).
+Run with saved100-original-oak workload unchanged, matching viewport2769x1529,
+seed1337/gen52 and recorded038 route. Relative FPS/tails/memory/allocations within
+10%, no timed runtime exceptions/collision failures,4913ready/0pending. New mixed
+variant population performance is outside this unchanged baseline; do not claim
+it from asset generation or change the benchmark workload to obtain a pass.
+
+Environment: visible Blender5.2.2, visible s&box26.09.15; current dirty workspace
+preserved. Existing untracked tree system publication scope remains unresolved.
+
+Plan SHA256: bf21398c584dbee8224a64b834c2fd0d42732677169c2de925ba57f561a92903
+Original manifest SHA256: b0663a13a5ab5756b42960b8852e7cd033e964d6ac22eb52a570e688f9428864
+
+043 generation attempt1 FAIL before export: seed271829, Leaf1774 has no local bark
+attachment. The canonical transactional source operator removed the failed pending
+source; growth preview retained. No installed assets changed. Preserve first-attempt-
+failure.json and pre043 builder. Investigate nearest-surface candidate accuracy
+without changing seeds, density, attachment tolerance, or dropping failed leaves.
+
+043 attempts2/3 preserve the same failure. Exact inspection of retained failed
+source identifies four anchors1774..1777 on graphnode89, inside the final trunk
+(surfacebranch0),19.99-21.85mm beneath its skin. Twig support radius4.938mm gave
+19.752mm limit; surrounding bark radius257.9-264.1mm. This is actual parent-wood
+enclosure, not a missing exterior twig or solely float BVH error. Correct the
+source sanity bound for embedded anchors using that surrounding surface radius;
+retain original bound for exterior points, no seed/density/leaf removal changes.
+The exact-nearest fallback uses the native candidate's distance as upper bound.
+Production bind_foliage on the preserved real581651-leaf failed source now PASS:
+581651 retained,4 exact fallback queries/4 embedded anchors, maximumoffset
+0.021852247503m,8.3086s. Original source library and installed oak unchanged.
+This is focused source diagnosis, not final native import/visual acceptance.
+Restart the unchanged eleven-recipe queue through normal modal operators to
+produce complete current-code sources/exports. Evidence in OakDozen/*.json.
+
+043 native per-variant coverage fixed before first run: use the running
+basic_example world and existing Oak001 root(-1800,-1800,186.125), zero rotation,
+scale1. Disable only original Oak001 transiently, instantiate each production
+prefab at its exact transform, preserving99 other active oaks. Inspect all11
+sequentially, then delete only that transient instance and restore Oak001/Game.
+For each variant use source-metadata Center plus root position; orbitazimuth225,
+elevation15, FOV60,1600x900 native ejected captures. Full-crown distance is
+max(1000in,1.25*capturedDiameter); close-canopy distance300in; trunk camera offset
+(-55,-55,64)in and angles(-12,45,0). Wait1s each; require Distant/ Detailed/
+Detailed respectively, correct source membership and no TreeModelLod fallback.
+Two native physics rays cross solid trunk segment1's midpoint along worldX/Y,
+reach=max(3*segmentRadius,40in). Require hits on this prefab's Solid trunk child.
+Saved scene must remain byte-identical. User remains free to interrupt camera
+movement. These are quality/collision checks, not a timed performance workload.
+
+043 first variant271829 source/export PASS: graphaa5b22aa25efc993d495c470af2eb6a4a668ef423236e504f1537564e767ea3f,
+12572nodes/2241axes,581651leaves retained in all3LODs;5672898/2632510/1239778
+triangles across5render models. Build+export395.35s. First import compiled all5
+models and captured all32directions/fourpasses. Packing first attempt FAILED:
+Python3.12 lackednumpy. Preserved installation error, resumed pack with isolated
+uv Python3.13/numpy2.4.6/Pillow12.3.0; final metadata/material/prefab compile PASS.
+No regeneration/rebake needed. Original dense manifest/dependency hashes valid.
+
+043 first native quality/collision run271829 PASS: prescribed three views report
+Distant/Detailed/Detailed; two cross-trunk rays hit this prefab's Solid trunk.
+All three in-world images inspected: full foliage, visible close leaf shape/folds
+and continuous bark/trunk, no missing render piece. Grove background overlaps the
+far silhouette, so inspect existing isolated native bake1-5-Albedo as supporting
+whole-crown evidence: complete asymmetric rounded crown and connected buriedroots.
+Saved scene unchanged, temporary prefab removed, Oak001 restored, Game view/free
+viewport restored. This is sampled quality/collision coverage, not FPS acceptance.
+
+043 second variant271830 first native review FAILED visual acceptance: near
+canopy/bark and both trunk rays passed, but the distant card was magenta. The
+initial imported-model bake showed deformed leaf geometry. asset_compile returned
+Success while the distant material reported IsCompiledAndUpToDate=false; console
+reported generated-texture dependency recompiles. Preserve before-readiness images,
+installation record and review; the first transient null component-properties
+readback is also retained as review-attempt1. No shaders or runtime code changed.
+
+Correct the offline installation sequence: require all source materials/models to
+report compiled/up-to-date before native capture; full-compile the packed distant
+material and verify readiness afterward. The canonical installer now preserves
+byte-identical installed dependencies when adding TreeModelLod to the prefab,
+avoiding unnecessary live reimports of models/motion textures. Repeat all32 captures
+and pack for271830:72.21s, every readiness check passed. The corrected native isolated
+Albedo shows the complete broad crown, connected trunk and roots. Repeat prescribed
+in-world three poses and two trunk rays PASS; root inspected all three images,
+Distant/Detailed/Detailed, no magenta or deformed geometry, saved scene unchanged.
+Oak001 and Game view restored. Missing/unready texture data is the supported
+installation diagnosis; exact failed GPU resource contents were not captured.
+
+043 third variant271831 initial installation stopped before any capture: source
+canopy01 compile returned Success but immediate readback was IsCompiled=false,
+CompiledFile empty, no compile failure. Subsequent unmodified native readback
+became compiled/up-to-date. Preserve failed record. Readiness checks now poll the
+actual asset status for up to45s, fail on compile error, then allow one full
+recompile/readiness deadline when needed. This addresses asynchronous completion;
+no capture proceeds merely because a compile request returned Success.
+
+043 variant271831 corrected install PASS in61.65s. Prescribed three views and
+two trunk rays PASS; root inspected all three native in-world images and isolated
+bake1-5-Albedo. Upright crown/connected trunk, close leaf folds and bark retained,
+no missing distant material. Saved scene unchanged, original restored.
+
+043 editor refresh after third import: preserve current user pose and verify saved
+Scene has no unsaved edits. play_stop/quit entered the existing shutdown Error
+window; process44800 retained port7269. Terminate that specific stalled process;
+fresh attempt20532 had no native listener because the old instance still owned
+the port, so restart it after confirming the old process exited. Visible37352
+opened the same project successfully,0 compile errors, saved scene clean. Play
+and saved player/view restored after the player component initialized. No files
+or generation settings changed. Blender source queue continued independently.
+
+043 variant271832 install PASS165.43s after fresh editor; prescribed three views
+and two trunk rays PASS. Root inspected full/detailed/trunk images and isolated
+native bake1-5-Albedo: connected leaning crown/trunk, intact close leaves/bark,
+no missing material or render piece. Distant/Detailed/Detailed; saved scene
+unchanged; temporary instance removed, original Oak001 and Game view restored.
+
+043 variant271833 first install stopped after167.7s: far material remained stale
+for45s after compileSuccess, no compile failure,3 registered references. One more
+full compile after its generated children existed made it up-to-date with4 refs;
+prefab compiled. Three in-world poses/two trunk rays completed, but visual FAILED:
+far foliage forms a loose sphere; isolated native bake confirms malformed geometry.
+Near geometry and collision pass. Preserve before-load-await evidence. Compilation
+readiness alone did not resolve capture correctness; previous readiness diagnosis
+was incomplete. Canonical native baker now awaits installed Material.LoadAsync and
+Model.LoadAsync before copying materials and rendering. This affects editor asset
+baking only. Validate recapture271833 and first cold use of subsequent new variants;
+no geometry, density, leaf-facing or runtime shader changes.
+
+043 variant271833 recapture after asynchronous resource loading PASS64.80s.
+Root inspected isolated bake and all three prescribed in-world views: full low
+crown, connected trunk/roots, correct close leaves/bark. Both trunk rays pass;
+saved scene unchanged, original restored. This warm recovery alone cannot prove
+first-use correctness. Add a capture guard for the actual bound g_tTreeMotion:
+loaded and matching the authored texture dimensions within30s, otherwise fail
+before copying/rendering. Validate next new key from a fresh visible editor.
+
+043 fresh-editor first-use271834 PASS. After native stop/quit, old37352 again
+remained in Error; verified title/PID, terminated only that process and waited
+for exit before launching visible35536. Saved editor scene clean; user pose
+restored after play startup. Compiler0errors. First-ever271834 install113.29s:
+all32directions/fourpasses completed with awaited materials/models and loaded,
+authored-size motion texture guards. Root inspected isolated1-5-Albedo before
+any world instantiation: complete tall crown and connected trunk/roots. Then
+all three prescribed world images inspected: Distant/Detailed/Detailed, intact
+close foliage/bark, two trunk hits, saved scene unchanged; original/Game restored.
+This validates the loading correction on a previously unloaded new specimen.
+
+043 variant271835 first import PASS122.64s; loaded-motion guards passed all rows.
+Root inspected isolated1-5-Albedo and prescribed full/canopy/trunk in-world images:
+complete sweeping crown, connected wood, intact nearby leaves/bark. Three LOD
+states and both trunk rays pass; saved scene unchanged; original/Game restored.
+
+043 variant271836 first import PASS164.85s; loaded-motion guards passed all rows.
+Root inspected isolated1-5-Albedo and prescribed full/canopy/trunk images: complete
+crooked crown, connected bark/trunk, intact close leaves. All LOD states and both
+trunk rays pass; saved scene unchanged; original/Game restored. Before this run,
+35536 exited normally after native stop/quit; visible41600 reopened same clean
+saved scene,0compileerrors; current user pose restored. No forced termination.
+
+043 remaining import environment: after271836, stopping play did not promptly
+release enough committed memory. Preflight271837 found4.762GiB free virtual and
+correctly started no installation. Native quit41600 again stalled in Error;
+verified and terminated only41600, waited for exit, reopened visible15068 in edit
+mode,0compileerrors/clean saved scene. Import271837..39 in that editor state using
+the identical native baker views/passes/settings, then run the unchanged per-variant
+checks in the real playable world. This bounds authoring memory; timed canonical
+workload remains unchanged and waits for all generation/import work to finish.
+
+043 spreading271839 source FAILED: the canonical source operator rejected the
+rounded wood as disconnected. No source/export was published; the ten other new
+sources remain intact. Archive the actual union and rounded topology through a
+read-only wrapper of the existing modal generator, preserving the original
+failure and seed/settings. Do not skip branches or relax the connectivity guard.
+
+## TREE-OAK-OVERHEAD-044 / v1 � definition before generation
+
+User requested another batch with light directly above. Default batch12 additional
+oaks (seeds271840..271851), explicit plan Tools/BlenderTrees/oak_overhead_variations.json,
+base271828; source age18/open-grown/Mature, dense foliage34.20000076293945 and plan
+shape overrides. A pending quantity choice may revise the unstarted plan; record
+any revision before its first run. Original043 remains a separate12-tree set.
+Input plan SHA256: 9d35c337469ec717e9dab1b14678ce78e9128eba375aade9057ac67fadbcb4d0.
+
+The visible Blender5.2.2 Tree Growth operators remain the production entry point.
+Growth light is the saved boolean overhead_light=true, which selects exactly
+world+Z every season; existing recipes defaultfalse and retain the old directional
+field. Graphs/recipes, source geometry and manifests must agree on this input.
+Stored legacy graphs retain their original checksum and are compared through
+validated Recipe values. Moving studio lights alone does not alter simulation.
+No existing exported tree, saved100-tree grove or game sun is implicitly replaced.
+
+Criteria:12 unique seeds/graph hashes; each canonical source completes with one
+closed connected wood surface and all dense leaves retained across3LODs; declared
+export/installed sizes and hashes match; native material/model readiness including
+motion texture dimensions; complete32-view distant bake. Repeat043 real playable
+world full/canopy/trunk poses1600x900,FOV60 and the two specified trunk rays for
+each new prefab, using the same temporary Oak001 replacement/cleanup procedure.
+Inspect isolated native whole-crown bake and all3world captures. Only trunk solid
+collision. Zero compile errors; saved scene and original source pins unchanged.
+Final unchanged038 figure-eight against042F2 after generation/imports stop and a
+fresh visible editor; compareFPS/tails/memory/allocations within10%,4913ready/
+0pending,0exceptions/collisionfailures. Added variants do not change that fixed
+100-original-oak workload; no mixed-variant performance claim.
+
+043 topology evidence: rawBoolean and post-rounding both have3components. Exterior
+479952vertices/437029faces; two inner shells7vertices/5faces and6vertices/5faces.
+Signed volumes -3.17062e-9 and -2.18292e-11m3; centers6.81/6.82mm inside exterior.
+Production union now fills only negatively oriented enclosed shells whose branch
+IDs also occur on the exterior; every vertex/facecenter must be strictly inside.
+Detached positive shells or ambiguous containment still fail. Applying this step
+to the actual failed union removed10internalfaces/13vertices, retained every
+exterior position exactly, and produced one closed connected component. Evidence:
+OakDozen/spreading-void-fill.json plus archived component/island reports. Full
+source rebuild remains required. Initial resume preflight caught decimal-plan
+versus Blender float32 recipe inequality; compare the actual loaded authoring
+controls, as the canonical growth operator does. No geometry was published by
+that rejected resume. Original stored graph is retained for the retry.
+
+043 variants271837/38 installed157.95/165.36s; native full/canopy/trunk checks and
+both trunk rays pass. First271837 overview had missing terrain immediately after
+play startup; preserve before-streaming captures and repeat unchanged after4913
+ready/0preparation/0regular/0integration pending. Root inspected repeat271837 and
+271838 full views plus close leaves/bark and isolated native bakes: intact crown,
+wood, materials. Saved scene unchanged; original tree/Game restored.
+
+044 legacy recipe validation PASS: all ten stored043recipes271829..38 validate
+through current production growth.py; graph/settings Recipe values agree with
+new overhead_light defaultfalse. Ten original unique graph checksums remain
+unchanged. Existing addon controls cover every Recipe field. Blender studio Sun
+was rotated180degrees aroundX (rays upward); align it to straight-down rays(0,0,-1),
+preserving user azimuth. New growth input is separately(0,0,+1). Record original
+and corrected transforms in OakDozen/overhead-sun-alignment.json. Game sun unchanged.
+
+043 last source271839 PASS after sealed-cavity correction:114.6s source mesh,
+541.29s total rebuild/export,697411leaves retained. Saved source/recipe and complete
+three-LOD export published. Original growth graph reused; seed/settings unchanged.
+All eleven new source variants now complete. Native installation/review pending.
+
+043 editor recovery:15068 quit entered Error and was terminated. Its shutdown
+completed after25412 started, causing25412's native port registration to fail.
+After confirming15068 exited and25412 had the clean basic_example editor title,
+close25412 through its targeted native window-close API; process exited normally.
+Launch visible16320 only after no sbox-dev remains; correct voxels3/basic_example,
+clean edit scene,0compileerrors and native7269 verified. Current user pose preserved
+in restore-import5.json. No desktop input or Steam screenshots used.
+
+044 generation START: original043 source queue complete11newkeys; start the fixed
+12-key overhead plan through the same visible modal runner. No quantity response
+received; stated default12 used. No original recipe/source or saved grove replaced.
+
+043 final271839 native import PASS175.89s; review from fresh visible5992 after16320
+closed normally. Play/current pose restored,4913ready/0pending. Root inspected
+isolated native1-5-Albedo and full/canopy/trunk world captures: spreading crown,
+continuous trunk/bark, intact close foliage. Distant/Detailed/Detailed and both
+trunk rays pass; saved scene unchanged; original/Game restored. All eleven new
+prefabs have now passed per-variant native review. Final figure-eight remains
+pending until the additional user-requested044 batch finishes.
+
+044 first-growth input PASS: seed271840 graph955e6280210b184b8e01d25ac02bb2b736f46e93f7eaf04dbf456e09e136096e,
+10649nodes/2000axes; saved settings/Recipe overhead_light=true. Actual canonical
+LightField.sun and both canopy-column directions are exactly(0,0,1). Full source
+completed with488216leaves. Initial export FAILED before publication: LOD1 guard
+reported1nonmanifoldedge. Actual repeat on immutable source:884822source triangles,
+265446target/output, one8.05mm edge shared by4faces (pinch, not an open boundary).
+Preserve first-export-failure.json, first-lod-inspection.json and native failed
+mesh in .codex/oak-overhead/first-lod1.blend. Source recipe/.blend remain intact.
+
+044 simplification correction under validation: keep the same ratios/budgets and
+native collapse; if a closed source loses manifoldness, retry once from its exact
+source with the failed local face neighborhood fixed. Nearest source vertices plus
+two face rings receive zero collapse weights; all other vertices remain eligible.
+Require manifold edges AND vertex fans, one connected component and original
+triangle budget. LOD0/leaves unchanged. First diagnostic retry used group factor0,
+which disables weight input in native MOD_decimate; it failed identically. Cleanup
+also exposed invalidation of a VertexGroup RNA handle after native modifier apply;
+reacquire the owned group by name before removing it. Set factor1 to enable the
+zero-weight guard. Further source/export/world validation remains required.
+
+
+## TREE-LEAF-045/v1: full animated canopy optimization (2026-09-22)
+
+Predeclared before the first measurement or implementation. User requests high
+performance and high visual fidelity, retaining full leaf appearance and wind.
+Reuse the unchanged TREE-PERFORMANCE-038/v1 / BIOME-FIGURE8-001/v2 scenario:
+100 saved dense271828 oaks, seed1337/generator52, unit scale,400-inch grid,
+start(-1.6258175,1.2225341,340), view(0,0,0), FOV75, logical1846x1019 /
+physical2769x1529, speed2500,distance50000,one loop,clearance393.7008,
+automatic drain then10s standing; existing terrain/grass/light and player input.
+Engine26.09.15,RTX5090/Ryzen9800X3D; source HEAD e759d087 plus recorded worktree
+hashes. Current source differs from prior accepted042, so record a fresh current
+baseline before editing. Saved scene and source assets remain unchanged during
+timed runs. No acceptance of changing workload, tree count or resolution.
+
+Acceptance: >=190FPS moving and standing, aiming200+, no >10% regression in
+p95/p99 frame times, process/GPU memory or per-frame managed allocations versus
+fresh comparable baseline; zero timed exceptions/collision failures, complete
+streaming, no unexplained drain regression. Preserve current accepted042 for
+historical context, not as a substitute for current-source comparability.
+Require a material measured improvement in a relevant detailed-canopy view;
+report isolated/profiler observations separately from canonical acceptance.
+
+Reuse existing042 fixed camera(-1.60839629,1.40895534,326.916992),view0/FOV75,
+logical1846x1019 with20s warmup+10one-second rolling samples. Reuse039 whole/close
+views and all15 existing quality.py approach/retreat/orbit poses unchanged.
+Source geometry/leaf identity/count/scale/attachment must remain preserved.
+Current shader thins leaves between3and8m: any full-visibility reference or
+restoration is an explicitly labeled rendering candidate, not a revised workload
+or an assumed performance pass. No further density reduction is authorized.
+Inspect full canopy coverage/gaps/silhouette, leaf folds, underside/backlighting,
+wind attachment and flutter, stopped transitions, shadows and temporal edges.
+Native frame sequences support motion review; sparse stills alone do not certify
+full-rate temporal stability. Test both close geometry and distant wind.
+
+Record each candidate before activation, its exact source/parameters, failures,
+raw results and accept/revert decision here. Runtime runs use only existing game
+controls and native tools; no new test hooks/scenes. Initial user pose/source
+backup: .codex/leaf-optimization/restore.json. Restore pose/free viewport/input at
+handoff. Source changes to authoring/export are coordinated with active044 work;
+no overwriting that concurrent pipeline. Shader changes require native compile,
+clean visible editor restart, unchanged crash marker and fresh diagnostic review.
+
+
+## TREE-LOD-CONTINUITY-045/v1 (2026-09-22)
+
+Predeclared before controlled runtime comparison. User video (2.6s, 30fps)
+shows left crown branches disappearing during the detailed/distant crossfade.
+Use saved basic_example 100-tree grove, seed1337/generator52, engine26.09.15,
+existing terrain/grass/light and source assets unchanged. Target Dense Oak001
+(root -1800,-1800,186.125; yaw0; unit scale). Native detached game camera,
+1600x900 FOV75, eye root+64in high, aimed at root+176in. Compare horizontal
+distances12,15,17,24,40,80m at azimuth180 and225degrees. At17m capture
+automatic far and detailed mesh reference using temporary existing component
+return/exit properties10000/10001; restore12/16 after reference. No scene save.
+Review silhouettes at each distance, including empty-space holes and abrupt
+branch loss; pass requires all major crown limbs retained, no planar clipping,
+no abrupt whole-crown change and far trees remain visible. Record native images
+and component distance/fade readback. Fine leaf motion need not match exactly.
+Also replay the immutable TREE-PERFORMANCE-038/v1 figure-eight, compare latest
+accepted042F2 cold result and a fresh unchanged-source control if needed.
+Preserve >=190FPS moving/standing, <=10% p95/p99/memory/allocation regression,
+zero timed exceptions/collision failures and fully drained streaming. Changes
+that fail these gates remain unaccepted. Source hashes recorded per run.
+
+045 preliminary capture attempt: INVALID comparison. Native component-GUID
+setter edited the other open scene copy; runtime readback remained12/16 and
+detail0 for the requested mesh reference. Azimuth225 at root+64in intersected
+terrain/grass. Keep before.json/images as failed setup evidence, not paired
+mesh/far proof. An already-active TREE-LEAF-045 baseline also overlapped these
+camera operations; own control trigger was rejected as a test was collecting
+results. No tree shader/runtime edits applied. Live controls suspended pending
+coordination. Original requested component settings restored to12/16.
+
+045/v2 setup correction (predeclared): retain v1 history. The225degree ground
+camera cannot inspect the tree through intervening terrain. Use the existing
+039 quality.py poses instead: center(-1779.083351,-1792.61467,362.14073),
+elevation15degrees, azimuth201/202/203/204at1000in, azimuth225at
+900/700/500/400/200/100in approach and200/400/500/700/900in retreat.
+Native1600x900,FOV60; readback verifies every state. Add paired exact700in
+mesh/far reference by set_component with active game-object ID AND type,
+requiring runtime property readback before capture; restore12/16. Add distant
+2000/4000in same-ray views. Other acceptance and performance criteria unchanged.
+Candidate A prepared outside watched assets: project all eight padded source
+box corners onto the perspective billboard center plane; preserve orthographic
+shadow path, source meshes/textures, thresholds and pixel reconstruction.
+
+045 close-canopy attribution supplement, declared before observation: actual
+Dense Oak001 root(-1800,-1800,186.125), fixed detached camera
+(-1864,-1864,250.125),angles(-35,45,0), runtime FOV75 and physical2769x1529
+(logical1846x1019). Main player remains canonical start. This pose lies2.816m
+from root, exercising current meshLOD0.20s warmup+10one-second rolling samples;
+retain native1600x900 before/after and six fixed-camera frames at0.25s spacing.
+Do not claim frame-level percentiles from these smoothed samples. Existing
+15-pose quality sequence remains unchanged. This supplements, not replaces038.
+CandidateA will select only existing foliage-only pieces' four-triangle folded
+LOD1 at this pose, while retaining original woodLOD0, leaf texture/count/scale,
+shader/wind/facing, shadows and distances. Initial comparison uses existing
+ModelRenderer.LodOverride controls, restores exact overrides afterwards, and
+records rendered source inventory. If useful, implement canonical role-based
+foliage LOD selection from manifest metadata; no name-guessing or altered exports.
+
+045 close supplementv2, before any run: use detached runtimeFOV60, not75.
+Installed set_ejected_camera docs/source explicitly restore the preference FOV
+next frame; existing039 cold evidence records60. The main game camera remains75.
+This corrects an impossible persistent-FOV assumption in the unrun supplementv1;
+all other close-pose parameters unchanged. No v1 measurement exists and no timing
+was used to select this correction. Both baseline/candidate use actual60 readback.
+
+045 baseline attempt1 completed its game loop but FAILED evidence publication at
+18:09:45 local: native performance.result.failed reports results-v1.jsonl locked
+by another process. No saved run/summary exists; do not use this as a baseline.
+The delegated poller was reading the entire548MB result file every10s rather than
+the requested tail. Stop its verified pythonPID44772; avoid opening the result
+file until native log confirms publication. Retain failed-before/trigger and log
+line; retry identical038 workload with source unchanged. No renderer edits yet.
+
+045 offline evidence: inspected original native albedo captures at azimuth180/225,
+elevation-15/+15; full crown branch silhouettes exist in the source captures.
+Bounded asset-coordinate projection of73540 alpha-covered depth samples found
+some samples outside the old orthographic raster plane, including4.29in excess
+at17m/azimuth0/elevation-10. This establishes a bounds defect, not attribution
+of the video's entire branch loss; sparse-view disocclusion/reprojection remains
+unresolved until the corrected paired live capture. CandidateA has not been
+activated/compiled or accepted. No completed own figure-eight result exists.
+Concurrent leaf task continues using the same renderer/editor; requested user
+coordination before further live control or watched-source changes.
+
+045 resumed: user explicitly directs implementation, troubleshooting and resolution.
+Corrected native paired baseline captured at700in azimuth180/203/225 with
+verified runtime Detailed/Distant states (baseline.json); no source edit yet.
+Own first control trigger rejected while existing leaf baseline finalized; after
+its native save, unchanged038 control lod045-control started. No source edits
+or native image captures during its measured window.
+
+045 isolated silhouette supplement (predeclared before capture): same live tree001,
+center/15degree elevation and native component; temporarily disable only the other
+99 grove roots with exact Enabled-state backup. Restore all before performance
+tests/handoff. Native1600x900 FOV75, azimuth0/90/180/225/270/315 at700in,
+compare automatic12/16 and forced detailed10000/10001 with readback. Additional
+same-angle500/1000/2000/4000in views assess approach/retreat and distance.
+No cloned objects/test scenes/assets; isolate existing production rendering.
+Visual criteria unchanged; source/background visibility state recorded per capture.
+
+TREE-LEAF-045 baseline retry recorded: run9b0b85af412644ec987cf407de09acbb,
+source9bccf1688aa7d68dd9f77b13f644879fe5e765c0b830c9eedc6d452267abbc48,
+completed18:17:12 local. Moving368.0544FPS,p954.6836ms,p997.032ms,
+GPU2.3163066ms; standing191.25116FPS,p957.0117ms,p998.6004ms,
+GPU4.868803ms. Zero timed exceptions/collision failures,4913/4913 collision
+ready. Source remained unchanged. Fresh hardware/environment baseline rather
+than a claimed optimization result. Raw/summary evidence:TreePerformance/
+leaf045-baseline-retry.json.gz and leaf045-baseline-retry-summary.json.
+Concurrent TREE-LOD-045 work subsequently started lod045-control in the same
+editor. This leaf task has suspended live controls and watched-source edits to
+avoid contaminating its measurements/captures, and asked user coordination.
+Only offline candidate copies/patch exist in .codex/leaf-optimization; runtime
+leaf/wood/shader source remains unchanged. Candidate reads canonical manifest
+role=foliage and selects existing minimumLOD1 only for those renderers; preserves
+explicit overrides, mixed legacy models, and wind. Compile, close-view acceptance
+and post-change figure-eight are still pending, not claimed complete.
+
+TREE-LEAF-045 baseline retry INVALIDATED for performance comparison after camera
+operation audit: concurrent TreeLodContinuity/baseline-180/203/225 captures were
+written18:16:47-18:16:53, inside the leaf run18:14:47-18:17:12. Their capture.py
+explicitly ejects/moves the camera and changes tree001 thresholds during capture,
+then restores12/16 but leaves the detached camera active. Immutable source hashes
+do not establish unchanged rendered workload. Preserve the collected run and
+reported numbers as contaminated evidence, not an accepted baseline. A new
+exclusive-editor baseline and candidate run are required. No accepted leaf
+performance result or live implementation is claimed by this task yet.
+
+045 control749c24b5926b4504a08333d5652d40f6 completed with unchanged source:
+374.629FPS moving,206.030standing, p95/p99 moving4.6248/6.7725ms,
+standing6.472/8.158ms; timed exceptions0. Raw/summary in TreePerformance/lod045-control*.
+CandidateA compiled, isolated six-angle capture complete: perspective raster
+bounds alone do not remove the substantial crown mismatch. Retain failure.
+CandidateB predeclared: A plus single depth correction instead of three
+fixed-point iterations, to test divergence at discontinuous foliage depths.
+No asset, detail distance, population or benchmark parameter change.
+
+CandidateB compiled and six-angle isolation completed; reducing iteration count
+does not remove the principal silhouette mismatch. CandidateC diagnostic:
+zero depth corrections, unchanged source view and raster bounds. This attributes
+coverage changes to reprojection versus capture; not accepted shipping behavior.
+
+TREE-LEAF-045 resumed: user explicitly authorizes side-by-side implementation.
+Leaf task owns only TreeModelLod.cs role-based foliage selection,
+TreeDistantModel.cs manifest role output and SpawnTreePopulation.cs callsite.
+Concurrent distant shader/LOD fixes are preserved. Reuse close supplementv2;
+read back camera, full100-tree Enabled membership and source during observations.
+User authorization allows work to proceed but does not make contaminated timings
+valid. First close control uses current live source, then apply candidateA above.
+No shader/export/material/density/wind changes are part of this leaf candidate.
+
+TREE-LEAF-045 close-control attempt stopped before timed samples: native MCP
+connection reset during get_ejected_camera after warmup. No accepted close
+control exists. Applied candidateA to the three verified unchanged C# files;
+wind/foliage shaders, export sources and concurrent impostor fixes untouched.
+Production compile and runtime checks follow once native editor reconnects.
+
+045 candidateC confirms that disabling depth correction shrinks the perspective crown; it is rejected. CandidateD restores three corrections and pads the entire empty depth field from nearest covered texels, instead of resetting to the center plane beyond16pixels. Color/coverage/normals and source geometry remain unchanged. Test the same isolated six-angle700in pairs before acceptance. Live editor temporarily unavailable after a separate restart attempt (Steam Not Found); no visual or performance success inferred.
+
+TREE-LEAF-045 implementation build: dotnet build Code/voxels3.csproj --no-restore
+succeeded with0errors and3existing non-tree warnings (CS8974 UI, two SB3006
+host-migration warnings). The leaf task reopened the visible editor after finding
+no process; startup initially required Steam, now resolved. Native MCP reconnected
+at18:32 local to voxels3 and is compiling. Runtime checks remain pending.
+Close control will use the existing authored renderer override path on tree001:
+temporarily clear Specimen to restore captured artist settings, read/save original
+foliage LodOverride values, set only foliage pieces to0, restore Specimen, and
+run unchanged close supplementv2. Then repeat with original overrides restored
+(minimum1 selected by shipping controller). Keep wood, shaders, wind, view, grove,
+resolution and source unchanged; restore exact transient values in finally.
+This exercises the actual production override path and creates no test hooks.
+
+TREE-LEAF-045 close pair2 finished and native readback verifies woodLOD0 plus
+four foliageLOD1 pieces at2.816m. Rendered triangles10633800 ->6276952
+(-4356848,40.97%). Same100enabled trees, camera/resolution and leaf sources.
+Native before/after images show preserved crown density, leaf texture and folds.
+Timing comparison is INVALID: concurrent impostor PNG repack at18:35:07-09
+triggered on-demand material compilation18:35:11-23 during the control. Keep all
+data; do not report its88-151FPS vs163-165FPS as an optimization gain.
+Repeat identical control/candidate parameters after import; source snapshots now
+also hash specimen impostor PNG/JSON/material files, which prior source() omitted.
+No scenario values or acceptance criteria change. Current candidate source remains.
+
+045 ground-view supplement predeclared: same live isolated tree001 and six azimuths as isolated supplement; horizontal700in, eye worldZ250.125 (root+64in), aim at source center,1600x900 FOV75. Pair automatic12/16 and forced detail10000/10001. Terrain-occluded cameras are recorded as unavailable views, not passes. CandidateD six elevated pairs restore previously truncated branch tips; overall density still differs from the detailed mesh. Ground captures next.
+
+TREE-LEAF-045 repeat control completed: same source including impostor assets,
+100-tree/camera checks pass,10633800triangles,102draws, rolling176.5-177.0FPS,
+GPU5.37ms. Candidate timed samples aborted on exact camera-pose guard: concurrent
+ground-d captures moved camera to(-1284.10864,-2287.58936,250.125). No candidate
+sample accepted, original overrides were already restored. Retain this failed
+attempt and rerun only candidate with identical20s warmup/10observations after
+ground-d completion18:37:41. Compare full source/asset hashes across both legs.
+
+045 candidateE predeclared: ground azimuth180 provides a clear valid view and retains branches withD, but the full-density bake visibly fills holes that the runtime far-detail mesh retains. Align multipart foliage captures with production minimum leaf retention using the existing TreeLeafView attribute and coarsest authored LOD2. Legacy single-model population capture stays atLOD0/full retention because that path does not apply TreeLeafView. LOD task is rebuilding dense assets and performing visual captures now; a shared editor performance run would be invalid until these imports/captures finish. No benchmark or close timing claims during this window.
+
+TREE-LEAF-045 sprite candidate, predeclared: user explicitly requests simpler
+sprite leaves instead of folded close leaf geometry. Use the already exported
+LOD2 four-corner/two-triangle cutout card for every foliage-only piece; preserve
+wood's0/1/2 distance policy, same leaf identities/counts/UVs/material variations,
+pivot/axis metadata, camera facing and GPU wind. The user changes the close
+visual target from a physical center fold to flat sprite cards. Texture outline,
+canopy coverage, attachment, wind and depth/lighting still require visual checks.
+No new alpha overdraw geometry, density reduction, asset export or shader change.
+Leaf-only close totals:4356848 ->1089212triangles(75% fewer),
+4901454 ->2178424vertices(55.56% fewer),544606leaves unchanged.
+Reuse unchanged close supplementv2 and canonical038; previous4-triangle run
+leaf045-final finishes first and is retained as superseded candidate evidence.
+Then activate sprite selection, compile and repeat close/wind/15-pose quality
+and canonical038 checks. No benchmark workloads or performance gates change.
+
+TREE-LEAF-045 four-triangle canonical run saved c270432766b64cf99ff681d63e1cd4fc
+but INVALID for acceptance: independent native observer recorded enabledTrees1
+at22:41:50 and22:42:00UTC, and render distance19.9/19.6m versus actual moving
+game-camera857/225m. Other task's isolation captures changed the rendered workload.
+Retain raw/summary and final-watch; no acceptance/FPS gain attributed to this run.
+Sprite candidate activated after its publication18:42:26 local. Production
+controller now selects foliageLOD2; two triangles per leaf, wood policy unchanged.
+
+045 angular supplement predeclared: isolated tree001, same700in/elevation15/FOV75, azimuth22.5/67.5/201/202/203/204, paired automatic/forced detail. These exercise capture-bin boundaries; fixed six-angle scenario remains unchanged. E pairs retain major branch tips and better match the detailed crown density. Final acceptance still pending angular/temporal and canonical performance checks.
+
+045 candidateF predeclared: E angular midpoint views still differ visibly in crown structure. Increase multipart azimuths8to16 with unchanged1024px tile quality and four elevations; shader and texture streaming use capture metadata width. Expected dense atlas memory doubles while geometry/draws/samples stay unchanged. Gate unchanged: measure <=10% total GPU-memory and tail regression plus >=190FPS. Legacy8-view assets remain valid. Repeat fixed visual scenarios before any acceptance.
+
+TREE-LEAF-045 sprite close pair completed with identical source+asset hashes,
+100enabled trees and fixed camera throughout each leg. Native counts:
+10633800 ->4098528submitted triangles(-61.46%),104draws in both legs.
+Leaf-only geometry is75%fewer triangles and55.56%fewer vertices; same544606leaves.
+Rolling observations: control156.3-161.8FPS(mean158.50),sprite184.7-185.3FPS
+(mean184.82); GPU3.83 ->3.70ms. These are smoothed supporting observations,
+not frame-level benchmark percentiles or a general FPS guarantee; concurrent
+background work remains environmental context. Sources unchanged per leg and
+across pair. Native readback verifies woodLOD0, all four foliageLOD2, and override
+restoration. Six fixed-camera native frames retain active wind motion.
+The final sprite canonical038 run follows15-pose quality with the same immutable
+parameters. A read-only10s observer checks full grove membership and render
+view distance against game camera, to detect concurrent isolation/camera changes.
+
+TREE-LEAF-045 sprite canonical first trigger was not started: preflight caught
+2769x1391 transient viewport immediately after returning from detached capture.
+Subsequent native readback18:46:13 confirms required2769x1529. Preserve the failed
+setup observation (no benchmark result), retry unchanged parameters. Concurrent
+impostor shader compiled18:45:18; no tree-leaf shader was edited by this task.
+
+045 resumed asset/capture window after leaf045-sprite-final native result saved18:48:55. No LOD-task watched-source changes, asset writes, baking or camera mutations during that timed run18:46:28-18:48:55; lastF bake row completed18:46:03. F atlas packing and visual acceptance now in progress. This task will run canonical performance only after candidate imports/captures settle.
+
+045 temporal supplement predeclared: isolated live tree001, azimuth180 clear ground view; horizontal450..810in in10in increments then810..450in, worldZ250.125, aimed at source center, native1280x720 FOV75. Automatic12/16 thresholds throughout; settle0.6s atstart, record actual frame time and DetailFraction for eachcapture; no artificial fade duration. Abort if external camera movement exceeds2in, restore other99roots in finally. Require a complete monotonic fade on each leg, no whole branch loss, and distant/full detail endpoints; retain all frames and measurements. This is sampled rendered motion, not an asserted fixed-framerate benchmark.
+
+045 F first visual attempt INVALID: target tree001 retained an existing material copy with8-view layout while hot-reloaded textures became16-view, producing doubled images. Recreate the existing target component through its Enabled lifecycle before capture; bind view count explicitly from verified metadata and increment derived cache version. Preserve angular-f evidence as failed hot-reload setup. Repeat angular-f2 with unchanged visual parameters.
+
+TREE-LEAF-045 sprite final result:92e1e6bd21d34c4380681ec1593186d9,
+source909bb9c509490f1728bb68b73cfd2c38ffedae4cbc560174079f1ff8d1d38cbc,
+completed18:48:55 local. Moving389.02457FPS,p954.3911ms,p996.3569ms,
+GPU2.2920911ms; standing202.93936FPS,p956.4025ms,p997.9626ms,GPU4.624426ms.
+Zero timed exceptions and overall collision failures,4913ready,pending0,
+streaming14.9s. Compared recent lod045-control: FPS+3.84%/-1.50%; both frame
+p95/p99 and allocation changes within10%. Source unchanged. Native observer
+matched100enabled trees/game camera through22:47:58UTC; null reflection read
+at22:48:08 stopped it, recovered after run. Concurrent LOD task independently
+records no mutations/bakes/camera operations during18:46:28-18:48:55.
+Full acceptance INCOMPLETE: average process memory10.19GiB moving/9.69GiB
+standing versus prior hot control6.21/6.73GiB exceeds10%. Editor restart and
+multiple native bakes (last ended18:46:03) change memory residency; no comparable
+control establishes a leaf-caused memory regression or passes that gate. Do not
+waive it or publish production acceptance. GPU memory and allocation rate pass.
+Sprite implementation stays applied locally; task-only patch/source identity,
+visual evidence and detailed limitations are in TreePerformance/leaf045-report.md.
+No runtime source is committed/pushed while this qualification remains incomplete.
+
+045 F16-view midpoint coverage supplement: same isolated700in/15degree/FOV75 parameters at new bin midpoints11.25/56.25/191.25/213.75. Existing8-view midpoint scenarios remain required and passed visual branch-presence review onF2 after target recreation. No benchmark during captures.
+
+045 retainedF visual results: six original views plus8-view/new16-view angular boundaries retain major branch silhouettes; full captured temporal path has37frames each way,7.50s/leg, monotonic1to0 retreat and0to1 approach, intermediate fractions0.991/0.415 and0.007/0.659, both endpoints reached. Native frames reviewed; fine leaf/wind/parallax differences remain visible on close comparison, no claim of pixel identity. Ground225/270 were terrain-occluded and unavailable, not passes. Final line endings normalized and the same production64-view dense bake regenerated with exact current source hashes. Only the active grove specimen is rebaked; all100saved trees share it. Cold-start shader/parser and fixed038 performance validation follow. Compare original lod045-control and newer leaf045-sprite-final integration baseline; concurrent leaf geometry changes are recorded, no isolated leaf-performance attribution.
+
+045 restart observation: Play stopped and editing scene reported clean/no unsaved changes before native quit. Engine shutdown then logged a terrain_player prefab teardown assertion and ResourceLibrary.GetAll null reference in EditorMainWindow.ShowCloseDialog, leaving an Error process after Source2Shutdown. Preserved shutdown-editor.log; last_crash stayed17:11:21. Terminated only the identified already-shut-down voxels3 editor process to finish the authorized restart. Fresh startup and runtime checks remain required; shutdown errors are not hidden or counted as a clean exit.
+
+
+## TREE-SINGLE-SPRITE-046/v1 (2026-09-22, declared before validation)
+
+User explicitly requested clearing every test-tree placement, importing one fresh
+sprite-leaf tree, and deleting unused old trees. The native editor removed the
+100-tree grove and instantiated one fresh oak271828_dense prefab at
+(-1800,-1800,186.125), identity rotation/unit scale, named Sprite Leaf Test Oak.
+GUID8ecd0810-19a7-4b29-be95-792f0de4145f. Saved basic_example.scene.
+The old100-tree workload is preserved in
+ValidationEvidence/TreePerformance/single-tree-previous-grove.scene.gz.
+Do not restore that grove over the user's new scene. Concurrent LOD qualification
+using the old100-tree workload must not count this one-tree scene as equivalent.
+
+Cleanup retains the active dense oak plus every key in the runtime catalog; removes
+13 unreferenced experimental specimen directories and their exclusively owned
+impostor files. Shared shaders, sources, tree catalog and its dependencies remain.
+Exact manifest is single-tree-cleanup-plan.json.
+
+Acceptance: exactly one enabled authored tree; no removed specimen references in
+remaining shipping source/assets; original five non-tree roots unchanged; compiled
+active prefab/model resources; close woodLOD0 plus four foliageLOD2; fixed-camera
+wind frames show leaf movement; full tree, close foliage and distant views show
+complete material coverage and correct placement. Views use native1600x900,FOV60:
+full(-2500,-2500,470), close(-1864,-1864,250.125); both aimed at the tree.
+
+Figure-eight becomes TREE-PERFORMANCE-038/v2-single-tree: same v1 seed/world,
+player(-1.6258175,1.2225341,340), view0, speed2500,distance50000,one loop,
+2769x1529 actual render resolution,4913ready/zero pending collision+visual+seams
+and water-ready warmup; automatic completion and existing stationary window.
+Only authored tree count/placement changes as explicitly requested. Record FPS,
+p95/p99, memory, allocations, streaming, failures and source identity as a NEW
+baseline, with no direct performance comparison against the100-tree scenario.
+Require completion, zero timed exceptions/collision failures,4913ready/zero pending
+after settling; memory/performance trend is recorded without attributing the
+reduced workload to an algorithmic improvement. No production optimization
+acceptance is inferred for the prior incomplete100-tree memory gate.
+045 cold preflight lod045-final-cold did not start: native StartPerformanceTest rejected collision readiness after the final player reset. The scene also changed externally at19:10:43 from the recorded100-tree grove to one Sprite Leaf Test Oak; this fails the immutable workload and no result is accepted. Preserve that scene exactly at .codex/tree-lod-043/single-tree-scene-preserved.scene. Temporarily restore the exact canonical scene SHA d74c28f0f87001e73e026de19b599d8078f7069122af10a44f6ad694880e6105 for unchanged038/v1 and restore the newly saved one-tree scene afterward. Native custom tools were absent on cold start until a temporary editor-only tool description rebuild (restored byte-exactly); all88 tools then appeared with zero compile errors. Repeated Play worlds increased residency in this diagnostic session; restart for a single-Play final run. No scenario or pass criteria changes.
+
+
+046 coordination: unused asset cleanup finished19:15local with a reversible
+archive; permanent deletion command was rejected by automatic approval policy
+("blocked by policy").13unused specimens/838files/10584924600bytes moved from
+Assets into .codex/unused-tree-archive-20260922. No disk-space reclamation claimed.
+All active271828dense assets and18catalog specimens remain. Exact result manifest:
+TreePerformance/single-tree-cleanup-result.json. Original player prefab differs
+only in native regenerated clothing-object/component GUIDs on scene save; player
+settings and all other non-tree roots are unchanged.
+046 will leave the editor/camera untouched until the concurrent045 canonical run
+finishes and its temporary100-tree scene is restored to the new one-tree scene.
+Then046 performs the declared single-tree visual/baseline validation. Do not
+restore theoldgrove after046 begins its validation.
+045 cold2 preflight likewise rejected by native collision-settled guard; no timed run started. Source hashes exactly matched final-source.json and native grove readback100/100enabled. Cold startup restores GrassRenderRangeMeters96 from saved scene, whereas both recorded038 controls used64; set the existing runtime property to64 before final comparison. Other terrain parameters read/set to recorded8/0..5/4/4/32/16. These restore canonical inputs, not new test parameters. Confirm actual run world metadata. Final player reset can invalidate readiness across x=0; retain the existing reset and trigger sequence only after its fixed location settles.
+
+046/v2 configuration clarification before its first run: grass range64m as in
+038/v1 controls (saved scene loads96m); runtime-only set before warmup. Keep
+gameplay radius8,visual LOD0..5,halfextents4/4,cells32/base16,seed1337/gen52,
+canonical final player reset and native production start guard. Single-tree
+run remains a new workload baseline; no100-tree comparison or weakened gate.
+
+046 resumes editor ownership after045 run dad328b2ca92498dbfae00584b4262e8
+completed19:19:40 and its summary was saved19:19:54. Restoring the native-saved
+one-tree scene now for046 visual/figure-eight checks. Please leave this scene,
+assets, camera and source unchanged until single-tree046.result is saved.
+045 candidateF canonical cold3 completed dad328b2ca92498dbfae00584b4262e8,19:17:14-19:19:40. Exact final source b27eeb947abad6e8ee8eaeab6530037ecc1df198fc03b12217728581cdb029f0 unchanged.100trees and game-camera read-only observer confirmed throughout timed run. Moving391.46008FPS,p954.3801ms,p996.445ms;standing219.4459FPS,p955.9702ms,p997.7061ms. Zero timed exceptions/collision failures,4913ready0pending,settling14.0s. Frame/tail/alloc gates pass all three recorded controls. Process memory13827549620B moving/13926166118B standing is+1.49/+1.42% vs accepted042cold but exceeds recent hot controls; GPU4920504710/4937391443B is+5.29/+5.63% vs recentleaf control but+17.18/+18.50%vs042. No single comparable control passes all memory gates: do not combine convenient baselines for acceptance. Define matched source control next, unchanged038/v1 parameters and a fresh editor. Restore this task's original shader,baker,packer and TreeDistantModel before045 additions while preserving concurrent leaf-role changes; rebuild active32view/full foliage original bake with production tools. Preserve finalF four sources+derived assets byte-exactly, run cold control, then restoreF and the user's one-tree scene. This identifies memory cost without changing workload or waiving thresholds. No further candidate tuning unless matched control shows a regression.
+
+046 recovery: initial immediate reopen saw stale scene/resource types while the
+editor reloaded; no corrupted scene was saved. A delayed full asset compile and
+reopen restores all normal player/world components and the exact single-treeGUID.
+046 now owns the visible editor for declared verification. Defer045 matched
+control asset/source swaps and additional100-tree runs until046 finishes, since
+the latest user explicitly wants the new one-tree setup left ready.
+045/046 overlap discovered19:22:27: matched-control source swap happened19:21:56 before046 ownership note was observed. CandidateF16view textures are still installed but source shader is temporarily original8view; any046 visuals in this interval are INVALID.045 is finishing only its in-flight raw bake (no output pack), immediately restoring all fourF sources and exactFassets, then deferring matched control until046 releases editor. No additional camera/scene mutation by045 now. FinalF source/asset backup .codex/tree-lod-043/final-f is byte-exact. Further046 visual acceptance must begin after045 restoration/compile confirmation below.
+04519:23 restoration COMPLETE: all11 finalF source+assets match preserved SHA256s byte-exactly; tree_impostor.shader native force-compile succeeded with only stock warnings. The raw32view control bake completed but no packed asset was installed.045 leaves scene/camera/editor untouched for046. Fresh Play/component creation is required before046 acceptance because existing copied material layouts may reflect the overlap. This task's full memory qualification remains pending matched control after046 finish; final391/219FPS data remains valid.
+
+046 first visual capture INVALID (single-tree046-full/wind/visual evidence retained):
+045 had swapped shader/loader to8view while16view textures were still installed.
+Doubled distant image correctly failed inspection. No acceptance or benchmark
+from that setup.045 acknowledged the overlap and is restoringF before deferring;
+046 waits for confirmation, restartsPlay and repeats same views under a new
+verified suffix after normal streaming settles. No scenario tuning.
+
+046 independently confirms every final-f backed-up source/material/texture byte
+restored, native compile succeeded with0errors, shader compile log completed
+19:23:15. RestartingPlay now to clear stale material copies; preparing unchanged
+046/v2 single-tree performance baseline. No asset/source/camera edits during run.
+
+045 cold visual supplement: fifteen039 poses captured after dad328 result; selected retreat700 native image retains branch/trunk coverage. The225degree4000in ray returned a flat occluded image and is not a distant-visibility pass; another task stopped/reopened Play during the supplemental far captures, so cold-f-far images/readbacks are INVALID for acceptance. Earlier temporal/angularF evidence remains valid and finalF source/asset hashes all11 plus every manifest source/output/packer/material hash independently verified. Current046 is repeating one-tree visuals after a fresh Play and will provide current-scene evidence;045 has made no editor/camera/source changes since restoration.
+
+046/v2 first trigger rejected by native collision-settled guard after final
+player reset; no timed run started. Preserve single-tree046-preflight-rejected.json.
+Current player remains exact(-1.62581754,1.22253406,340); allow the existing
+production collision retirement/publication state to settle before retrying the
+same native trigger at this unchanged position. No guard bypass or input change.
+04519:29 status: no source/asset/editor mutations since19:23Frestore; observed046 result02dbf9db2e664b4881344906bf4e1dbb saved19:28:24. Still waiting for046 final visual/handoff completion before matched cold control. The temporary canonical100-tree scene, if needed for that already-declared validation, will never be left as the saved result: preserve/reinstate latest single-oak scene byte-exactly. FinalF source/assets remain installed now. Matched control raw bake is already captured, so only pack, cold startup and one unchanged038 loop remain before restoringF and fresh single-oak Play.
+045 matched-control window starts after046 result saved and verified visual set completed19:29:10; no046 Python process or further capture output since then. Preserve latest saved single-oak scene and native view before the temporary comparison. FinalF source/assets and one-tree scene will be restored byte-exactly before handoff.045 owns only this bounded pack/cold-control/restore window;046 measurements already completed are preserved. No new scene or test hook is introduced.
+
 
 ## TREE-SINGLE-SPRITE-046 final result (2026-09-22)
 
@@ -32884,6 +41200,18 @@ evidence: [046 report](ValidationEvidence/TreePerformance/single-tree046-report.
 Scene/assets remain local because the preexisting tree subsystem is untracked
 and its earlier100tree optimization memory qualification is incomplete. Only
 this task's documentation/evidence is eligible for publication here.
+
+046 task complete: native rendered full/close views, wind motion, collider and
+new single-tree baseline verified. Saved one-tree scene confirmed again; detached
+camera faces oak, viewport automatic, Play interactive. Cleanup report/evidence
+and isolated ledger result committed/pushed b56c022e; runtime scene/assets remain
+local as recorded. Current user-facing setup should remain the single test oak.
+Any subsequent older-workload validation must preserve and restore this scene
+and its F assets; no046 work or editor ownership remains active.
+045 matched-control preflight first attempt rejected native collision readiness after player reset; preserved preflight-rejected.json. Same exact inputs triggered successfully19:35:38, source3e98d54d5b91449694332c624232d611460fa15b7bb77c655d5f5c40809fd231.100enabled trees, canonical75FOV/2769x1529/grass64 and recorded terrain inputs. EarlierF cold3 editor started19:13:xx before046 completed unused asset archival19:15, whereas this control editor started19:33:xx afterward. FinalF must therefore repeat in a fresh editor with the same stable retained asset inventory, and grass64 applied immediately on Play before warmup, matching this control. This does not change038 workload parameters or thresholds; preserve earlierF run as valid measured behavior with residency environment qualification. No runtime code change is proposed for this mismatch.
+045 matched control fe21dbbc99254e0c9b799a52dfac1aa2 completed19:38:04, source unchanged. Moving395.8469FPS,p954.3312ms,p996.2969ms;standing214.95364FPS,p956.1544ms,p997.8512ms. Processaverage13381944269B moving;GPU4091097587B. Zero timed exceptions/collision failures,4913ready0pending. Raw/summary retained. FinalF11 source+asset files restored byte-exactly, shader/material native full compile success, clean saved scene confirmed before another cold startup. RepeatF under unchanged038/v1 inputs and same post-cleanup inventory, then restore preserved single-oak scene.
+045 final visual declaration: after matchedF benchmark and byte-exact restoration of user's single-oak scene, repeat original isolated six-angle700in/15degree/FOV75 mesh-vs-far pairs using newGUID8ecd0810-19a7-4b29-be95-792f0de4145f; same specimen/transform and isolated membership as original100tree isolation. Add clear azimuth180 distant2000/4000in views because225 ray and interrupted prior cold capture were unavailable. Require major branch presence/complete material coverage and readable distant tree; restore12/16, automatic viewport and046 full-tree camera(-2500,-2500,470),angles6.3,45,0,FOV60. No timing claims from captures.
+045 matchedF first preflight again rejected unsettled collision immediately after canonical reset; preserved lod045-matched-final-preflight-rejected.json. Exact same setup then triggered19:42:22 at recorded center, final sourceb27eeb947abad6e8ee8eaeab6530037ecc1df198fc03b12217728581cdb029f0, all watched hashes match original finalF.100enabled native observer active. No source, asset, camera or workload mutations during timing.
 
 ## TREE-LOD-CONTINUITY-045 final acceptance (2026-09-22)
 
@@ -32967,6 +41295,76 @@ untracked; publication includes only the task's isolated patch and evidence.
 [matched metrics](ValidationEvidence/TreePerformance/lod045-matched-comparison.json),
 [six-angle images](ValidationEvidence/TreeLodContinuity/final-six-angles.jpg),
 [temporal images](ValidationEvidence/TreeLodContinuity/temporal-f-contact.jpg).
+
+## TREE-SHADOW-047/v1 declaration (2026-09-22, before first run)
+
+Troubleshoot the single Sprite Leaf Test Oak's dark/flat self-shadowing in the
+real basic_example playable world. Preserve specimen oak_growth_18_open_grown_271828_dense,
+GUID8ecd0810-19a7-4b29-be95-792f0de4145f, position(-1800,-1800,186.125),
+unit scale/rotation,12/16m hysteresis,0.35s fade, original wind/light/material values.
+No added game-side test hooks or scene. Native MCP captures1600x900,FOV60:
+whole(-2500,-2500,470),angles(6.3,45,0); close(-1864,-1864,250.125),
+angles(-35,45,0); reverse(-1100,-1100,470),angles(6.3,225,0).
+Keep fixed poses/settings for original/candidate comparisons; six close frames
+0.25s apart check wind. Diagnostic removal of the proxy establishes its effect,
+not a candidate for acceptance. Preserve rejected results.
+
+Visual pass requires ground/trunk shadows, differentiated lit/shadowed leaves,
+no flat shadow plane cutting the canopy, no mismatched moving-leaf shadow
+geometry, and no visible missing/doubled tree during the normal detail handoff.
+Inspect both sides and close foliage. Shadows must follow the same visible leaf
+position/wind across rendering passes. No lighting-brightness workaround.
+
+Performance uses unchanged TREE-PERFORMANCE-038/v2-single-tree parameters:
+seed1337/gen52,engine26.09.15,physical2769x1529,FOV75,speed2500,distance50000,
+one loop,start(-1.6258175,1.2225341,340),view(0,0,0),grass64m,radius8,
+LOD0..5,halfextents4/4,cells32/base16,4913collision ready/no pending work,
+native start guard,automatic drain and10sstanding. Capture a fresh source-original
+baseline and compare final candidate with same source/environment except task
+changes. FPS>=190 and no>5% reduction; frame p95/p99, allocations and process/GPU
+mean/tail/peak memory no>10% regression; zero timedexceptions/collisionfailures,
+fully drained streaming and no unexplained material arrival regression. Prior
+single-tree046 run is context; current matched baseline owns this comparison.
+Shader changes require native compilation and a fresh visible editor startup,
+unchanged Sentry last_crash and fresh-log inspection before acceptance. Restore
+free viewport and camera facing the user's single oak after verification.
+047 visual declaration supplement, before first captures: add matched near
+(-2110,-2110,350),(-8,45,0) and reverse-near(-1490,-1490,350),(-8,225,0),
+FOV60/1600x900. Both are within12m, so real detailed rendering is exercised
+without overriding hysteresis; original whole pose exercises far rendering.
+Baseline ea0bfc041cfc407fb224b872996f7a73 completed before any code edits:
+95.63moving FPS,19.11/24.11ms p95/p99. This already fails the absolute190FPS
+criterion; retain evidence and compare matched relative changes, without waiving
+that gate or treating a pre-existing environment failure as a shadow regression.
+047 diagnostic evidence: proxy-off captures retain sun/materials and substantially
+brighten formerly uniformly shadowed near leaves. Rejected as a fix because it
+removes tree casting. Candidate uses original renderer shadow types in detail,
+shared visible-camera position/up/forward and wind distance in all leaf passes,
+complementary detailed/far shadow fades and atlas surface depth for far shadows.
+Native C#/both shader compilations pass (stock profile/Decals warnings only).
+Native quit after clean Play stop preserved saved-scene hash and reached
+Source2Shutdown, but left existing editor PID44800 in Error with prefab teardown/
+ResourceLibrary null exceptions. Preserved log; terminated only verified44800,
+then reopened the same visible project. Sentry marker unchanged before relaunch.
+047 fresh-editor candidate startup passes managed/shader loading; last_crash
+unchanged2026-09-22T21:11:21.351197Z. First candidate preflight rejected after
+canonical reset crossed collision cell boundary; no timed test started. Original
+preflight snapshot retained. Retry exact canonical position/settings after settle.
+047 close cost supplement declared before first observation: fixed close pose
+(-1864,-1864,250.125),(-35,45,0),FOV60,physical2769x1529,one original tree,
+20swarmup then10existing read-only diagnostic observations1sapart. Preserve
+world/light/grass64m and source identity. These rolling windows are supporting
+observations, not independent samples. Compare original/candidate mean reported
+FPS/GPU, triangles/draws and CPU render time; investigate any>10% cost change.
+047 cold attempt: first start was rejected by native unsettled-collision guard.
+After unchanged-position readiness, run started20:52:18,source23e356657d14ef5e41be9763ce68f087243e5c5f06e28ceefce72bfd9e6fc4f1.
+At20:54:42 it stopped for player-control; no accepted result was saved. Do not
+restart camera/player automation until the player permits resuming. One premature
+result fetch read original runea0bfc041cfc407fb224b872996f7a73 because the task ID
+was shared; artifacts are marked invalid. The fetcher now checks the expected
+source revision as well as scenario ID before writing any final result.
+Cold startup/Play reached the world with zero shader/parser/pipeline/dispatch
+or managed startup errors; Sentry last_crash remains2026-09-22T21:11:21.351197Z.
 
 
 ## TREE-SCALE-048/v1 - current tree cost and dense population experiments (2026-09-23)

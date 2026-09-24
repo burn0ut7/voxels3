@@ -1,0 +1,54 @@
+{
+  "version": 3,
+  "seed": 41873,
+  "format": "linear data, x then y then z, per-volume channels, no mip payload",
+  "volumes": [
+    {
+      "file": "shape.bin",
+      "size": [
+        128,
+        128,
+        128
+      ],
+      "format": "linear R8",
+      "channels": [
+        "density"
+      ],
+      "bytes": 2097152,
+      "sha256": "0e327878aa6f875fe21458510cc570dc99512afbb60ddfa5e93dfc88a51f0b80"
+    },
+    {
+      "file": "erosion.bin",
+      "size": [
+        32,
+        32,
+        32
+      ],
+      "format": "linear RGBA8",
+      "channels": [
+        "full",
+        "without frequency16",
+        "frequency4 only",
+        "mean"
+      ],
+      "bytes": 131072,
+      "sha256": "93a5fe0a86843c56e680e3d60182446dad15ebe7d149e225282ebb1f4f3d0bb0"
+    }
+  ],
+  "layout": {
+    "file": "layout.bin",
+    "size": [
+      256,
+      256
+    ],
+    "format": "linear RGBA8, x then y",
+    "channels": [
+      "coverage",
+      "elevation",
+      "separation",
+      "unused"
+    ],
+    "bytes": 262144,
+    "sha256": "486889943dd2f3e2772ab51a1b594515a313951038107ed1c7727bf5d05112fa"
+  }
+}

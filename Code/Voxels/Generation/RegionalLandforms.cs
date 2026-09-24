@@ -52,15 +52,15 @@ internal static class RegionalLandforms
 	private const float MinimumMountainShapeWeight = 0.5f;
 	private const float HillWidthScale = 0.75f;
 	private const float HillPatchScale = 5f;
-	internal const float MinimumHeightFraction = -0.70f - TerrainErosion.MaximumOffsetFraction;
-	internal const float MaximumHeightFraction = 1.72f + TerrainErosion.MaximumOffsetFraction;
+	internal const float MinimumHeightFraction = -0.70f - TerrainErosion.MaximumOffsetFraction - TerrainBiomes.MaximumReliefFraction;
+	internal const float MaximumHeightFraction = 1.72f + TerrainErosion.MaximumOffsetFraction + TerrainBiomes.MaximumReliefFraction;
 
 	public static Sample SampleWorld( Vector3 position, ProceduralTerrainSettings settings )
 	{
 		var natural = SampleNatural( position, settings );
 		var river = RiverWorld.For( settings ).GetPatch( RiverNetwork.PatchAt( position ) )
 			.SampleWorld( position, natural.Height, settings.SeaLevel );
-		return natural with { Height = river.Height };
+		return natural with { Height = TerrainBiomes.RefineHeight( position, settings, natural.Height, river.Height, natural.Mountains ) };
 	}
 
 	internal static Sample SampleNatural( Vector3 position, ProceduralTerrainSettings settings )
@@ -155,11 +155,12 @@ internal static class RegionalLandforms
 		var natural = BoundNaturalHeight( bounds, settings );
 		// Fixed-level river carving only lowers the natural exterior. This bound
 		// does not construct drainage on the classification thread.
-		return (MathF.BitDecrement( MathF.Min( natural.Minimum, settings.SeaLevel - RiverNetwork.MaximumDepth ) ),
-			natural.Maximum, natural.MountainMaximum);
+		var refinement = settings.ReliefHeight * TerrainBiomes.MaximumReliefFraction;
+		return (MathF.BitDecrement( MathF.Min( natural.Minimum, settings.SeaLevel - RiverNetwork.MaximumDepth ) - refinement ),
+			MathF.BitIncrement( natural.Maximum + refinement ), natural.MountainMaximum);
 	}
 
-	private static (float Minimum, float Maximum, float MountainMaximum) BoundNaturalHeight( SdfWorldAabb bounds, ProceduralTerrainSettings settings )
+	internal static (float Minimum, float Maximum, float MountainMaximum) BoundNaturalHeight( SdfWorldAabb bounds, ProceduralTerrainSettings settings )
 	{
 		var center = bounds.Minimum + (bounds.Maximum - bounds.Minimum) * 0.5f;
 		var radius = 0.75d * ((double)bounds.Maximum.x - bounds.Minimum.x + (double)bounds.Maximum.y - bounds.Minimum.y);
@@ -217,7 +218,7 @@ internal static class RegionalLandforms
 			(float)Math.Min( 1d, mountains.Maximum + 0.0001d ) );
 	}
 
-	private static float Noise( Vector3 position, float scale, uint seed, out Vector2 gradient )
+	internal static float Noise( Vector3 position, float scale, uint seed, out Vector2 gradient )
 	{
 		var x = position.x / scale;
 		var y = position.y / scale;

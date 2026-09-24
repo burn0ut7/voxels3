@@ -1,0 +1,368 @@
+{
+  "RootObject": {
+    "__guid": "eb788ede-2fdf-5fbc-bde7-84e0c7f19b77",
+    "__version": 2,
+    "Flags": 0,
+    "Name": "Oak - Mature",
+    "Position": "0,0,0",
+    "Rotation": "0,0,0,1",
+    "Scale": "1,1,1",
+    "Tags": "tree",
+    "Enabled": true,
+    "NetworkMode": 0,
+    "Components": [
+      {
+        "__type": "Sandbox.ModelRenderer",
+        "__guid": "2009988f-9fdd-5921-9c4a-2f48e97f59fd",
+        "__enabled": true,
+        "Flags": 0,
+        "Model": "models/tree_lab/oak_mature_open_grown_1701/oak_mature_open_grown_1701.vmdl",
+        "LodOverride": null,
+        "CreateAttachments": false
+      }
+    ],
+    "Children": [
+      {
+        "__guid": "9949d691-96d2-505b-8b95-8162d4804626",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Solid trunk",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "tree_trunk",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.ModelCollider",
+            "__guid": "d80e3d25-ad4a-55ef-b7ef-f0f9fef85a3f",
+            "__enabled": true,
+            "Flags": 0,
+            "Model": "models/tree_lab/oak_mature_open_grown_1701/oak_mature_open_grown_1701.vmdl",
+            "IsTrigger": false,
+            "Static": true
+          }
+        ],
+        "Children": []
+      },
+      {
+        "__guid": "d7fec2fb-4394-5dd5-bc63-324b590bc7a4",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "Nonblocking branch interaction",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "tree_branch",
+        "Enabled": true,
+        "NetworkMode": 0,
+        "Components": [
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "6381ce6d-7846-551c-a293-98a4cd396b28",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "4.168485,-5.050588,114.9592",
+            "End": "-81.5355,-36.1807,228.8",
+            "Radius": 23.37910712387814,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "f5be0608-3a92-5e3c-a639-f47c1c3aba53",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-79.63609,-35.45453,225.0543",
+            "End": "-122.5561,-53.52576,365.757",
+            "Radius": 20.562891466921215,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "5006ca6f-ac92-5f37-842d-711da7408562",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-121.1901,-52.95071,361.6898",
+            "End": "-171.6239,-74.1803,498.9866",
+            "Radius": 17.746683273800226,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "811e989c-2359-580f-bdfb-d8973cc87912",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "4.494962,-4.031349,140.5421",
+            "End": "79.99882,-45.61494,197.7112",
+            "Radius": 23.26435025974688,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "3755fef1-08dc-52a7-9e76-3d014e720add",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "76.78611,-44.25351,195.1786",
+            "End": "154.6896,-67.68532,258.9385",
+            "Radius": 20.494045524326733,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "7cac7655-ba25-5e33-b6fd-1a2801319f53",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "151.4373,-67.1186,256.1682",
+            "End": "228.8025,-70.73931,324.669",
+            "Radius": 17.723734274897424,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "8862ad8b-af48-5a69-b537-84efa2562aab",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "12.70849,-4.104513,190.7815",
+            "End": "1.553594,64.54209,269.0971",
+            "Radius": 21.325528124428338,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "8fcb80ca-e702-5b58-b003-5d6bec08c8c0",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "1.758742,62.36721,265.4489",
+            "End": "3.014111,99.61663,365.4656",
+            "Radius": 19.330751550051733,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "3900a995-f4d3-56e5-9a21-01adc20c04cb",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "2.759613,97.97002,361.4764",
+            "End": "14.02741,141.8017,457.9163",
+            "Radius": 17.335969991938914,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "928d4606-5d87-5de0-8acb-544b50e0027d",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "14.03577,-3.067349,220.6915",
+            "End": "-42.92607,-35.24232,251.5282",
+            "Radius": 21.613421258889716,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "b748f33e-aa31-5e22-9c95-7663e0b08041",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-39.6173,-33.02773,249.8619",
+            "End": "-93.20433,-74.84822,274.6996",
+            "Radius": 19.503502363959228,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "9ad2e731-6ef5-5d1d-8112-b98ac9e2d461",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-90.52721,-72.12912,272.7812",
+            "End": "-126.0482,-120.6846,311.6603",
+            "Radius": 17.393551059140098,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "bf08c6a8-fee1-5228-8808-abc92a296718",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "9.737023,-6.680781,246.0933",
+            "End": "83.59408,9.873599,319.1197",
+            "Radius": 21.49856415130972,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "e7096c39-cab8-5d3b-9002-32db91ff9430",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "81.13573,9.215786,315.6904",
+            "End": "127.5757,24.91364,411.0612",
+            "Radius": 19.434570669999346,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "94a7390c-0416-50f5-8f5f-ffa95201995c",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "125.4424,24.00551,407.4294",
+            "End": "184.2055,53.06164,491.2801",
+            "Radius": 17.37057449247664,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "19b1fdba-d1dd-5d12-9240-ae617fc52ae7",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "15.57622,-13.00011,294.3226",
+            "End": "-32.99927,40.67681,316.3356",
+            "Radius": 21.98580454315495,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "d3f0e85d-d6e8-5501-952a-56fa0882c138",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-30.34012,37.41119,315.4108",
+            "End": "-74.79731,98.00007,325.7421",
+            "Radius": 19.726909543029237,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "dbb46abd-105d-57ec-bde8-d7d97eac4744",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-72.91193,94.46613,324.4211",
+            "End": "-93.9284,155.9943,359.4117",
+            "Radius": 17.468032261019452,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "d399f298-6826-5a2e-abad-3ae0f1ae9d95",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "17.0529,-12.65583,322.3063",
+            "End": "25.05174,-85.10549,369.255",
+            "Radius": 21.846258154452308,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "938cb8b0-a182-575c-91af-26243bd69997",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "24.53381,-81.5404,366.8556",
+            "End": "37.26269,-151.7804,415.9389",
+            "Radius": 19.64319124159501,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "2faafc8b-368d-5a2c-abeb-27c80d2d56dd",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "36.39631,-148.4078,413.3802",
+            "End": "58.33815,-213.122,466.6868",
+            "Radius": 17.440127771655533,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "ab7aee74-13aa-572e-a0dd-13a7090599ba",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "17.47757,-16.67897,351.7115",
+            "End": "63.22597,3.945197,368.0988",
+            "Radius": 19.760019720529634,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "c4236b47-b53f-50b2-9297-f43afbf78099",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "59.42115,2.341817,366.7967",
+            "End": "106.4401,20.81028,382.1543",
+            "Radius": 18.391450032079828,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "bc738f10-3368-52ac-97cc-7fd9c2d20076",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "102.5748,19.52756,380.7114",
+            "End": "149.7641,32.32547,400.5206",
+            "Radius": 17.022865699264862,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "8da20763-9b12-57ca-bfe2-9a08e16638a3",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "24.51258,-16.67888,400.4893",
+            "End": "-21.88956,-12.73899,414.8397",
+            "Radius": 19.902228828195987,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "3a2656b6-1cc1-5774-9af7-49aecab69d33",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-17.73339,-12.77591,413.6693",
+            "End": "-64.74223,-15.87685,425.6256",
+            "Radius": 18.47677126441506,
+            "IsTrigger": true,
+            "Static": true
+          },
+          {
+            "__type": "Sandbox.CapsuleCollider",
+            "__guid": "c673b3cf-3404-5485-a904-393d9b2a4c0f",
+            "__enabled": true,
+            "Flags": 0,
+            "Start": "-61.01788,-14.92017,423.9261",
+            "End": "-96.93215,-32.95423,449.6349",
+            "Radius": 17.051310421644686,
+            "IsTrigger": true,
+            "Static": true
+          }
+        ],
+        "Children": []
+      }
+    ]
+  },
+  "ResourceVersion": 2,
+  "ShowInMenu": false,
+  "DontBreakAsTemplate": false,
+  "__references": [],
+  "__version": 2
+}

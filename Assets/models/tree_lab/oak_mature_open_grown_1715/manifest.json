@@ -1,0 +1,793 @@
+{
+  "label": "Oak_Mature_Open_Grown_1715",
+  "species": "Oak",
+  "stage": "Mature",
+  "display_name": "Low fork oak",
+  "source_generator_sha256": "cf703e53e0a3ca7c74e644e022d1eb3c5871c8166aea47fc1df43f2fbcd2e62b",
+  "exporter_sha256": "06c71a91e4ddb029282422f0733831dad9725a1c0d3c470006652100d2b04a11",
+  "fine_branches": "closed_source_tubes_with_parent_matched_bark_palette",
+  "structural_wood": "continuous_closed_lods_with_shared_boundary_normals",
+  "structural_uv": "reprojected_from_original_branch_frames_after_decimation",
+  "bark_collar_mask": "shared_vertex_minimum_preserved_core_two_ring_expansion_three_ring_smoothing",
+  "source_parts": [
+    "Branches",
+    "RootTips",
+    "Roots",
+    "Trunk",
+    "Twigs"
+  ],
+  "bark_detail": "branch_aligned_uv1_reuses_young_bark_tiles",
+  "meters_to_inches": 39.37007874015748,
+  "modeldoc_import_scale": 0.01,
+  "modeldoc_import_rotation": [
+    0.0,
+    -90.0,
+    0.0
+  ],
+  "lods": [
+    {
+      "lod": 0,
+      "vertices": 1030132,
+      "triangles": 980120,
+      "parts": [
+        "Trunk",
+        "Branches",
+        "Roots",
+        "RootTips",
+        "Twigs",
+        "Foliage"
+      ],
+      "foliage": {
+        "source_leaves": 107088,
+        "retained_leaves": 107088,
+        "coverage_scale": 1.0,
+        "canopy_selection": "shared_across_lods"
+      },
+      "bounds_inches": [
+        [
+          -271.22967529296875,
+          -230.5572967529297,
+          -51.91036605834961
+        ],
+        [
+          285.16107177734375,
+          322.1134033203125,
+          524.387939453125
+        ]
+      ]
+    },
+    {
+      "lod": 1,
+      "vertices": 556396,
+      "triangles": 465850,
+      "parts": [
+        "Trunk",
+        "Branches",
+        "Roots",
+        "RootTips",
+        "Twigs",
+        "Foliage"
+      ],
+      "foliage": {
+        "source_leaves": 107088,
+        "retained_leaves": 107088,
+        "coverage_scale": 1.0,
+        "canopy_selection": "shared_across_lods"
+      },
+      "bounds_inches": [
+        [
+          -271.22967529296875,
+          -230.5572967529297,
+          -51.90812683105469
+        ],
+        [
+          285.16107177734375,
+          322.1134033203125,
+          524.387939453125
+        ]
+      ]
+    },
+    {
+      "lod": 2,
+      "vertices": 434218,
+      "triangles": 223618,
+      "parts": [
+        "Trunk",
+        "Branches",
+        "Roots",
+        "RootTips",
+        "Twigs",
+        "Foliage"
+      ],
+      "foliage": {
+        "source_leaves": 107088,
+        "retained_leaves": 107088,
+        "coverage_scale": 1.0,
+        "canopy_selection": "shared_across_lods"
+      },
+      "bounds_inches": [
+        [
+          -271.22967529296875,
+          -230.5572967529297,
+          -49.71478271484375
+        ],
+        [
+          285.16107177734375,
+          322.1134033203125,
+          524.387939453125
+        ]
+      ]
+    }
+  ],
+  "collision": [
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_00",
+      "role": "solid_trunk",
+      "point0": [
+        0.0031466521322727203,
+        0.0041365846991539,
+        -0.5067338943481445
+      ],
+      "point1": [
+        -0.07715681195259094,
+        -0.10142988711595535,
+        0.8905966877937317
+      ],
+      "radius": 0.5411664347014166,
+      "source_radii": [
+        0.5807441365388654,
+        0.5015887328639678
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_01",
+      "role": "solid_trunk",
+      "point0": [
+        -0.07213422656059265,
+        -0.09312044829130173,
+        0.7810333967208862
+      ],
+      "point1": [
+        -0.12000533938407898,
+        -0.19960688054561615,
+        2.179715156555176
+      ],
+      "radius": 0.4603968464803664,
+      "source_radii": [
+        0.5015887252629166,
+        0.4192049676978161
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_02",
+      "role": "solid_trunk",
+      "point0": [
+        -0.11785370111465454,
+        -0.1957840919494629,
+        2.0699074268341064
+      ],
+      "point1": [
+        -0.12488310784101486,
+        -0.18686170876026154,
+        3.4719743728637695
+      ],
+      "radius": 0.40176774178668884,
+      "source_radii": [
+        0.4192049767774691,
+        0.3843305067959086
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_03",
+      "role": "solid_trunk",
+      "point0": [
+        -0.12558665871620178,
+        -0.19247451424598694,
+        3.3622376918792725
+      ],
+      "point1": [
+        -0.10059882700443268,
+        -0.058186985552310944,
+        4.758967876434326
+      ],
+      "radius": 0.3375398340351259,
+      "source_radii": [
+        0.38433050963533927,
+        0.29074915843491245
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_04",
+      "role": "solid_trunk",
+      "point0": [
+        -0.10270649194717407,
+        -0.06590565294027328,
+        4.649295330047607
+      ],
+      "point1": [
+        -0.07391351461410522,
+        -0.0032394547015428543,
+        6.051042556762695
+      ],
+      "radius": 0.2619894551599461,
+      "source_radii": [
+        0.2907491420217306,
+        0.23322976829816167
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_05",
+      "role": "solid_trunk",
+      "point0": [
+        -0.07296842336654663,
+        -0.00539054162800312,
+        5.94114875793457
+      ],
+      "point1": [
+        -0.12586897611618042,
+        -0.013165859505534172,
+        7.343350410461426
+      ],
+      "radius": 0.20636829759584857,
+      "source_radii": [
+        0.2332298037023119,
+        0.17950679148938528
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_06",
+      "role": "solid_trunk",
+      "point0": [
+        -0.12041912972927094,
+        -0.01643238589167595,
+        7.233609676361084
+      ],
+      "point1": [
+        -0.2064972072839737,
+        0.07461516559123993,
+        8.630187034606934
+      ],
+      "radius": 0.14768552831345955,
+      "source_radii": [
+        0.1795067764921565,
+        0.1158642801347626
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_07",
+      "role": "solid_trunk",
+      "point0": [
+        -0.20078051090240479,
+        0.06814495474100113,
+        8.520533561706543
+      ],
+      "point1": [
+        -0.26039159297943115,
+        0.1419842541217804,
+        9.918235778808594
+      ],
+      "radius": 0.06793728749238843,
+      "source_radii": [
+        0.11586430110904061,
+        0.020010273875736267
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOLID_Trunk_08",
+      "role": "solid_trunk",
+      "point0": [
+        -0.2583361268043518,
+        0.14468811452388763,
+        9.808650016784668
+      ],
+      "point1": [
+        -0.2510678768157959,
+        0.0017275253776460886,
+        11.204712867736816
+      ],
+      "radius": 0.0200051681875719,
+      "source_radii": [
+        0.020010324054004592,
+        0.02000001232113921
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_00_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.06165078282356262,
+        -0.15344850718975067,
+        1.282005786895752
+      ],
+      "point1": [
+        -2.40814208984375,
+        1.4477698802947998,
+        4.012674808502197
+      ],
+      "radius": 0.6046165622976322,
+      "source_radii": [
+        0.607539861572227,
+        0.6016932630230374
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_00_1",
+      "role": "branch_interaction",
+      "point0": [
+        -2.3573641777038574,
+        1.4145119190216064,
+        3.923755407333374
+      ],
+      "point1": [
+        -3.6744916439056396,
+        2.211573362350464,
+        7.636138916015625
+      ],
+      "radius": 0.528770122804899,
+      "source_radii": [
+        0.5316933366821281,
+        0.5258469089276698
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_00_2",
+      "role": "branch_interaction",
+      "point0": [
+        -3.6388659477233887,
+        2.191587209701538,
+        7.534023761749268
+      ],
+      "point1": [
+        -4.925186634063721,
+        2.855055093765259,
+        11.283961296081543
+      ],
+      "radius": 0.45292341703889427,
+      "source_radii": [
+        0.45584680651064124,
+        0.45000002756714735
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_01_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.15628068149089813,
+        -0.18538255989551544,
+        2.148361921310425
+      ],
+      "point1": [
+        2.045011043548584,
+        -1.0270452499389648,
+        4.417340278625488
+      ],
+      "radius": 0.5950819395408742,
+      "source_radii": [
+        0.5960982591251007,
+        0.5940656199566475
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_01_1",
+      "role": "branch_interaction",
+      "point0": [
+        1.9787383079528809,
+        -1.0065984725952148,
+        4.333052635192871
+      ],
+      "point1": [
+        3.7321369647979736,
+        -1.3838661909103394,
+        7.097618579864502
+      ],
+      "radius": 0.5230491627350662,
+      "source_radii": [
+        0.5240657651386668,
+        0.5220325603314657
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_01_2",
+      "role": "branch_interaction",
+      "point0": [
+        3.6708381175994873,
+        -1.3738832473754883,
+        7.006922245025635
+      ],
+      "point1": [
+        5.586978435516357,
+        -1.5943737030029297,
+        9.671993255615234
+      ],
+      "radius": 0.4510161795474834,
+      "source_radii": [
+        0.4520323915463857,
+        0.4499999675485811
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_02_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.13184355199337006,
+        -0.17741014063358307,
+        3.915879726409912
+      ],
+      "point1": [
+        0.6472303867340088,
+        2.1785011291503906,
+        4.998470783233643
+      ],
+      "radius": 0.6286257314943033,
+      "source_radii": [
+        0.636350853070913,
+        0.6209006099176936
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_02_1",
+      "role": "branch_interaction",
+      "point0": [
+        0.6074098944664001,
+        2.0874812602996826,
+        4.9522552490234375
+      ],
+      "point1": [
+        1.7856793403625488,
+        4.206902503967285,
+        6.141793727874756
+      ],
+      "radius": 0.5431753590041488,
+      "source_radii": [
+        0.5509003855320469,
+        0.5354503324762506
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_02_2",
+      "role": "branch_interaction",
+      "point0": [
+        1.7285423278808594,
+        4.129654407501221,
+        6.089925289154053
+      ],
+      "point1": [
+        3.35776424407959,
+        5.805406093597412,
+        7.44890022277832
+      ],
+      "radius": 0.45772537791539847,
+      "source_radii": [
+        0.46545029985549535,
+        0.4500004559753015
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_03_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.027434930205345154,
+        -0.0059035830199718475,
+        5.524369716644287
+      ],
+      "point1": [
+        -1.8573652505874634,
+        -0.505561888217926,
+        6.019036293029785
+      ],
+      "radius": 0.5629765039660402,
+      "source_radii": [
+        0.5575714727258522,
+        0.5683815352062282
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_03_1",
+      "role": "branch_interaction",
+      "point0": [
+        -1.757250189781189,
+        -0.46622300148010254,
+        6.002932548522949
+      ],
+      "point1": [
+        -3.497279167175293,
+        -1.3695346117019653,
+        6.082325458526611
+      ],
+      "radius": 0.5037856393106361,
+      "source_radii": [
+        0.498381267107001,
+        0.5091900115142713
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_03_2",
+      "role": "branch_interaction",
+      "point0": [
+        -3.415982961654663,
+        -1.3034632205963135,
+        6.062587738037109
+      ],
+      "point1": [
+        -4.556996822357178,
+        -2.7331905364990234,
+        6.677021026611328
+      ],
+      "radius": 0.4445954700682647,
+      "source_radii": [
+        0.4391906166158794,
+        0.45000032352065006
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_04_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.1513049602508545,
+        -0.01983872428536415,
+        6.854287624359131
+      ],
+      "point1": [
+        1.339152455329895,
+        0.41359713673591614,
+        7.167388439178467
+      ],
+      "radius": 0.5180155930778629,
+      "source_radii": [
+        0.5036187377465435,
+        0.5324124484091823
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_04_1",
+      "role": "branch_interaction",
+      "point0": [
+        1.2354302406311035,
+        0.38366061449050903,
+        7.146293640136719
+      ],
+      "point1": [
+        2.7315642833709717,
+        0.8122194409370422,
+        7.440597057342529
+      ],
+      "radius": 0.4768093551969953,
+      "source_radii": [
+        0.46241259437647353,
+        0.49120611601751707
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_04_2",
+      "role": "branch_interaction",
+      "point0": [
+        2.630542039871216,
+        0.7839022874832153,
+        7.409480094909668
+      ],
+      "point1": [
+        4.037736892700195,
+        1.169202446937561,
+        8.008760452270508
+      ],
+      "radius": 0.4356035086192901,
+      "source_radii": [
+        0.4212067640844796,
+        0.45000025315410064
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_05_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.1055268719792366,
+        -0.05660654231905937,
+        7.341480255126953
+      ],
+      "point1": [
+        -0.9315747618675232,
+        1.518849492073059,
+        8.20403003692627
+      ],
+      "radius": 0.5364047628484405,
+      "source_radii": [
+        0.5256855643779534,
+        0.5471239613189276
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_05_1",
+      "role": "branch_interaction",
+      "point0": [
+        -0.8840785026550293,
+        1.4361191987991333,
+        8.14985466003418
+      ],
+      "point1": [
+        -1.764852523803711,
+        2.8337206840515137,
+        9.234100341796875
+      ],
+      "radius": 0.4878429153190107,
+      "source_radii": [
+        0.4771237742123836,
+        0.4985620564256378
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_05_2",
+      "role": "branch_interaction",
+      "point0": [
+        -1.7182897329330444,
+        2.7646191120147705,
+        9.16358757019043
+      ],
+      "point1": [
+        -2.507005214691162,
+        3.8449866771698,
+        10.6064453125
+      ],
+      "radius": 0.43928062388002675,
+      "source_radii": [
+        0.42856184728383817,
+        0.4499994004762153
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_06_0",
+      "role": "branch_interaction",
+      "point0": [
+        -0.19776690006256104,
+        0.1365624964237213,
+        8.66598129272461
+      ],
+      "point1": [
+        -0.5696187615394592,
+        -1.37436842918396,
+        9.114802360534668
+      ],
+      "radius": 0.5290102872812424,
+      "source_radii": [
+        0.5168124311186219,
+        0.541208143443863
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_06_1",
+      "role": "branch_interaction",
+      "point0": [
+        -0.5517752170562744,
+        -1.268646478652954,
+        9.093426704406738
+      ],
+      "point1": [
+        -0.7063493728637695,
+        -2.8814096450805664,
+        9.275233268737793
+      ],
+      "radius": 0.4834060250743627,
+      "source_radii": [
+        0.4712080245966396,
+        0.4956040255520859
+      ]
+    },
+    {
+      "name": "OAK_STUDY_Oak_Mature_Open_Grown_1715_COL_SOFT_Branch_06_2",
+      "role": "branch_interaction",
+      "point0": [
+        -0.703676164150238,
+        -2.775672674179077,
+        9.24950885772705
+      ],
+      "point1": [
+        -0.6295743584632874,
+        -4.272314071655273,
+        9.820730209350586
+      ],
+      "radius": 0.4378020052667338,
+      "source_radii": [
+        0.4256041149036962,
+        0.4499998956297714
+      ]
+    }
+  ],
+  "motion": {
+    "version": 1,
+    "primary_branches": 8,
+    "leaf_pivots": 107088,
+    "texture_size": [
+      256,
+      512
+    ],
+    "position_scale_meters": 53.27781677246094,
+    "png_max_error": 7.62939453125e-06,
+    "exporter_sha256": "159af239ae93fe3854dad4ab74823c7243b2aedd64accc0b34b8d6e438dfe67a"
+  },
+  "files": {
+    "lod0.fbx": {
+      "bytes": 46372796,
+      "sha256": "624d3df0d3ea3f048d656ccaa5ec45ac5ea9a7b6a2edbd0418ecd098bd9fa6b8"
+    },
+    "lod1.fbx": {
+      "bytes": 24362396,
+      "sha256": "0a4268efb912f06b5914e688165740d25bc37a0f35a052c94ed55113bc7bbc78"
+    },
+    "lod2.fbx": {
+      "bytes": 17910796,
+      "sha256": "f2327c70e40c748a7b617e2279ac9451a4dd3734cf620bec2eadd99790dfc118"
+    },
+    "oak_mature_open_grown_1715.vmdl": {
+      "bytes": 4889,
+      "sha256": "faf82ef76b9da7d9b6bcc7f65ff78e6d44956805f732b6a19eadca4d947a8f56"
+    },
+    "oak_mature_open_grown_1715_bark.vmat": {
+      "bytes": 684,
+      "sha256": "5562e8416bad79f224cbf4459f8063ee16a1cfea139f16b8fa19040445967ef8"
+    },
+    "oak_mature_open_grown_1715_fine.vmat": {
+      "bytes": 412,
+      "sha256": "d708297dc0ed356e7d2e048f340ba3a14562a69536eece83a3152ea5059386b1"
+    },
+    "oak_mature_open_grown_1715_leaf0.vmat": {
+      "bytes": 441,
+      "sha256": "2df06a5fefc7cd6f8898660fbcdebc4d24198962d849a8d3ab8060b1547409d8"
+    },
+    "oak_mature_open_grown_1715_leaf1.vmat": {
+      "bytes": 443,
+      "sha256": "1c677d4b95e248227ff5fcf9a1f3a0e7ec5f4e44fdfca49da92b5afad10dc4d2"
+    },
+    "oak_mature_open_grown_1715_leaf2.vmat": {
+      "bytes": 443,
+      "sha256": "b9e49fd01e602dcaaeac159f0f0353b7ac258e74bdb51d2970ff80d3b9ca77c5"
+    },
+    "bark_color.png": {
+      "bytes": 13228687,
+      "sha256": "bc4cb6a44882702e54e9cbf34b4fd116bc2cf4e0c64e9653f4fce3ba19e51bc2"
+    },
+    "bark_normal.png": {
+      "bytes": 13679007,
+      "sha256": "65c6d357ef1a895392d10137d94d6c66586eeae5472345e4992b51add8ad8e70"
+    },
+    "bark_roughness.png": {
+      "bytes": 7579149,
+      "sha256": "8c6fc0adbb93893c5133d4a81af8f52c48703e6c75b24b2a5adce56dd9763202"
+    },
+    "fine_color.png": {
+      "bytes": 7174596,
+      "sha256": "ff161692254f6fdb2c9f28afefa86ec3390bb8dd21fc4e2a77f3d36ff0be0fe4"
+    },
+    "fine_normal.png": {
+      "bytes": 5287811,
+      "sha256": "3c2105a23a85290587998f3b5364d479820236c1a3fd8369e8ed27a592f0e997"
+    },
+    "fine_roughness.png": {
+      "bytes": 3569083,
+      "sha256": "c7d51a32e33d13782284808d0523563d5b7c3152f7b1cf339dcedd73fed2d1b1"
+    },
+    "motion.png": {
+      "bytes": 727144,
+      "sha256": "b329ca83f6c063a6ca71ff602a204ca51613a1bf828142c890656bd2222949cf"
+    },
+    "fine_height.png": {
+      "bytes": 6555476,
+      "sha256": "9428b672837475fac8fbd4377e5b10a8b344fa3f2a5ee8fed66cccff9c0e67d8"
+    },
+    "leaf_color.png": {
+      "bytes": 770907,
+      "sha256": "295f74f095dcd1667fea511e1284c2a37cf10af6b497773da253b700066c16c7"
+    },
+    "leaf_opacity.png": {
+      "bytes": 164044,
+      "sha256": "bb2dcab628a3bebe32abd67d8cd42c6725d3ec9ea2b58129b7df61b9ad529b83"
+    }
+  },
+  "complete": true,
+  "seconds": 84.44103145599365,
+  "prefab": {
+    "bytes": 10434,
+    "sha256": "8d991466669ba64db63dcc4674b315a4690cd0fc77e81fff0a9ab225894d50bd",
+    "installer_sha256": "144609afda7d549a6b25ba0b97962f834ba392d6dd06a9897811312a6d6794c3"
+  },
+  "blocking_trunk_pieces": 9,
+  "nonblocking_branch_triggers": 21
+}

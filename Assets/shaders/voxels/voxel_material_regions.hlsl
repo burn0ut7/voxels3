@@ -23,6 +23,38 @@ bool VoxelMaterialRegionContains( float3 position, float4 region, uint salt, boo
 	return dot( offset, offset ) <= 1.0;
 }
 
+float4 VoxelCoastBand < Attribute( "VoxelCoastBand" ); >;
+float2 VoxelCoastProximity < Attribute( "VoxelCoastProximity" ); >;
+
+float SampleVoxelCoastline( float2 position, float naturalHeight, float4 terrain, float4 scales, float4 shape )
+{
+	float height = naturalHeight - shape.y;
+	if ( height <= VoxelCoastBand.x || height >= VoxelCoastBand.w )
+	{
+		return 0.0;
+	}
+	float band = LandformSmooth( (height - VoxelCoastBand.x) / (VoxelCoastBand.y - VoxelCoastBand.x) ) *
+		(1.0 - LandformSmooth( (height - VoxelCoastBand.z) / (VoxelCoastBand.w - VoxelCoastBand.z) ));
+	float minimum = naturalHeight;
+	float maximum = naturalHeight;
+	for ( uint direction = 0u; direction < 4u; direction++ )
+	{
+		float2 offset = float2( 0.0, -VoxelCoastProximity.x );
+		if ( direction == 0u ) { offset = float2( VoxelCoastProximity.x, 0.0 ); }
+		if ( direction == 1u ) { offset = float2( -VoxelCoastProximity.x, 0.0 ); }
+		if ( direction == 2u ) { offset = float2( 0.0, VoxelCoastProximity.x ); }
+		float neighbor = SampleVoxelNaturalLandform( position + offset, terrain, scales, shape.x, shape.y ).x;
+		minimum = min( minimum, neighbor );
+		maximum = max( maximum, neighbor );
+		if ( minimum <= shape.y - VoxelCoastProximity.y && maximum >= shape.y + VoxelCoastProximity.y )
+		{
+			break;
+		}
+	}
+	return band * LandformSmooth( (shape.y - minimum) / VoxelCoastProximity.y ) *
+		LandformSmooth( (maximum - shape.y) / VoxelCoastProximity.y );
+}
+
 float4 VoxelSandOcean < Attribute( "VoxelSandOcean" ); >;
 float4 VoxelSandRiver < Attribute( "VoxelSandRiver" ); >;
 float3 VoxelSandWater < Attribute( "VoxelSandWater" ); >;
@@ -31,8 +63,17 @@ float2 VoxelSandReach < Attribute( "VoxelSandReach" ); >;
 float4 VoxelSandBuriedRegion < Attribute( "VoxelSandBuriedRegion" ); >;
 float3 VoxelSandSalts < Attribute( "VoxelSandSalts" ); >;
 
-float GenerateVoxelSandLayerDepth( float2 position, float height, float naturalHeight, float4 terrain, float4 scales, float4 shape )
+float GenerateVoxelSandLayerDepth( float2 position, float height, float naturalHeight, float4 terrain, float4 scales, float4 shape,
+	float mountains, float marshWeight, float cover )
 {
+	if ( 1.0 - marshWeight > cover )
+	{
+		float coast = (1.0 - marshWeight) * SampleVoxelCoastline( position, naturalHeight, terrain, scales, shape );
+		if ( coast > cover )
+		{
+			return mountains >= VoxelGeneratedMountain.x ? 0.0 : VoxelSandDepths.z + (VoxelSandOcean.w - VoxelSandDepths.z) * coast;
+		}
+	}
 	float seaLevel = shape.y;
 	uint seed = (uint)(int)terrain.x;
 	float relativeHeight = height - seaLevel;

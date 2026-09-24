@@ -1,5 +1,33 @@
 # GPU Voxel Meshing
 
+## Coastline candidate (2026-09-20)
+
+[Coastline](../Plans/CoastlineFirstSlice.md) binds the CPU-owned shore band and
+proximity parameters into regular/transition material generation. Eligible
+columns use at most four natural-height probes within the existing halo; there
+are no new per-pixel queries, vertex channels or resource bindings. Existing
+gravel layout remains intact. Hot compilation passes; cold startup and complete
+performance/visual acceptance remain pending.
+
+## Gravel vertex candidate (2026-09-20)
+
+[Separate gravel](../Plans/GravelTerrain.md) extends TerrainVertex to32bytes:
+position12, encoded identity/normal12, existing Color32 weights4, and float
+Gravel at byte28 (`TEXCOORD0`). All regular, transition, depth and grass GPU
+mirrors consume eight uint words. The edge-flags buffer now has three planes:
+edge coordinate, packed four weights, float gravel bits. No new buffer binding
+or draw is introduced. Scratch capacity accounting includes the third plane;
+fixed32MiB vertex arenas hold12.5% fewer vertices. Cold-start and figure-eight
+qualification are pending; earlier28-byte observations below are historical.
+
+Marsh candidate, 2026-09-20: the shared biome-height/material include adds bounded
+wetland conditioning and muddy strata. Terrain keeps its28-byte vertex layout;
+water's existing optional appearance pages now use four-byte RGBA8 samples for
+flow and marsh weight. Resource ownership and mesh publication stay unchanged.
+Managed builds and independent source review do not qualify the changed shaders:
+clean-start, density/mesh audits, actual pool/LOD visuals and the unchanged
+figure-eight remain pending. See [marsh design](../Plans/MarshFirstSlice.md).
+
 2026-09-15 integration: the user adopted the exact tested water-plus-prediction
 source snapshot for main. See [the adoption record](../ValidationEvidence/IdleWork/Experiment.md)
 for measurements and explicit allocation/drain exceptions. Historical prototype

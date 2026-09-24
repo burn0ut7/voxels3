@@ -1,7 +1,9 @@
 # Volumetric clouds: production research and first slice
 
-Research date: 2026-09-19. Status: design proposal, not implemented or performance
-accepted. User scope: attractive, performant volumetric clouds now; weather
+Research date: 2026-09-19. This document preserves the research and original
+proposal; [the cloud architecture](../Architecture/VolumetricClouds.md) owns the
+implementation and current qualification status. User scope: attractive,
+performant volumetric clouds now; weather
 orchestration in a later slice. The starting assumption is ground-view clouds;
 flight through clouds is a separate product requirement to confirm.
 

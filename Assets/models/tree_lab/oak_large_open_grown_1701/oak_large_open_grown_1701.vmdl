@@ -1,0 +1,140 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:modeldoc30:version{8c2d7a91-9c42-4bf0-883a-5a3b1762d4f1} -->
+{
+rootNode = {
+_class = "RootNode"
+children = [ {
+_class = "RenderMeshList"
+children = [ {
+_class = "RenderMeshFile"
+name = "LOD0"
+filename = "models/tree_lab/oak_large_open_grown_1701/lod0.fbx"
+import_scale = 0.01
+import_rotation = [ 0.0, -90.0, 0.0 ]
+}, {
+_class = "RenderMeshFile"
+name = "LOD1"
+filename = "models/tree_lab/oak_large_open_grown_1701/lod1.fbx"
+import_scale = 0.01
+import_rotation = [ 0.0, -90.0, 0.0 ]
+}, {
+_class = "RenderMeshFile"
+name = "LOD2"
+filename = "models/tree_lab/oak_large_open_grown_1701/lod2.fbx"
+import_scale = 0.01
+import_rotation = [ 0.0, -90.0, 0.0 ]
+} ]
+}, {
+_class = "LODGroupList"
+children = [ {
+_class = "LODGroup"
+switch_threshold = 0.0
+meshes = [ "LOD0" ]
+}, {
+_class = "LODGroup"
+switch_threshold = 20.0
+meshes = [ "LOD1" ]
+}, {
+_class = "LODGroup"
+switch_threshold = 65.0
+meshes = [ "LOD2" ]
+} ]
+}, {
+_class = "PhysicsShapeList"
+children = [ {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_00"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 36.304320150729055
+point0 = [ 0.08744048321340966, 0.08249846030408003, -32.478552164993886 ]
+point1 = [ -3.402993141666172, -3.2106528835972465, 53.82421917802706 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_01"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 33.36816186267049
+point0 = [ -3.404716455091642, -3.017855030814494, 49.501507301030195 ]
+point1 = [ 0.15308332490170096, -7.419012428268673, 135.71782374945212 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_02"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 30.424051583855427
+point0 = [ -0.1806490064605953, -7.3061813050367705, 131.4056201243964 ]
+point1 = [ 9.574928856271459, -7.407124352267409, 217.22658412663017 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_03"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 26.290010518683886
+point0 = [ 9.085750720632358, -7.490006488139235, 212.92526890912396 ]
+point1 = [ 18.83635253418149, -4.085318192722291, 298.61994615689974 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_04"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 22.85062231165191
+point0 = [ 18.63678726624316, -4.017143913610714, 294.310689911129 ]
+point1 = [ 16.839633307119055, -10.1449616312042, 380.46814325287585 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_05"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 17.574109091446044
+point0 = [ 16.722482020460713, -9.753181943743249, 376.1626040841651 ]
+point1 = [ 23.193657398223877, -19.25639749511959, 461.7859998087245 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_06"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 11.693251073290595
+point0 = [ 22.859617950409415, -18.893138864847618, 457.48504128043106 ]
+point1 = [ 29.71551315052303, -23.882867783073365, 543.4576920636996 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_07"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 5.521129357131411
+point0 = [ 29.387635978188104, -23.70456541617086, 539.1437800850456 ]
+point1 = [ 35.61541790098656, -25.82940294986635, 625.3182794165424 ]
+}, {
+_class = "PhysicsShapeCylinder"
+name = "OAK_STUDY_Oak_Large_Open_Grown_1701_COL_SOLID_Trunk_08"
+surface_prop = "wood"
+collision_tags = "solid"
+radius = 1.3515493535604293
+point0 = [ 35.24826971564706, -25.64432114128053, 621.0082346998801 ]
+point1 = [ 43.67582441314938, -30.90746055437824, 706.8754181148499 ]
+} ]
+}, {
+_class = "MaterialGroupList"
+children = [ {
+_class = "DefaultMaterialGroup"
+remaps = [ {
+from = "oak_large_open_grown_1701_bark.vmat"
+to = "models/tree_lab/oak_large_open_grown_1701/oak_large_open_grown_1701_bark.vmat"
+}, {
+from = "oak_large_open_grown_1701_fine.vmat"
+to = "models/tree_lab/oak_large_open_grown_1701/oak_large_open_grown_1701_fine.vmat"
+}, {
+from = "oak_large_open_grown_1701_leaf0.vmat"
+to = "models/tree_lab/oak_large_open_grown_1701/oak_large_open_grown_1701_leaf0.vmat"
+}, {
+from = "oak_large_open_grown_1701_leaf1.vmat"
+to = "models/tree_lab/oak_large_open_grown_1701/oak_large_open_grown_1701_leaf1.vmat"
+}, {
+from = "oak_large_open_grown_1701_leaf2.vmat"
+to = "models/tree_lab/oak_large_open_grown_1701/oak_large_open_grown_1701_leaf2.vmat"
+} ]
+use_global_default = false
+} ]
+} ]
+}
+}

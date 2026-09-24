@@ -148,14 +148,14 @@ internal sealed class RiverWorld
 			foreach ( var patch in patches ) PayloadBytes += patch.PayloadBytes;
 		}
 
-		public RiverNetwork.Sample SampleWorld( Vector3 position, float naturalHeight )
+		public RiverNetwork.Sample SampleWorld( Vector3 position, float naturalHeight, bool blendSurfaceFlow = false )
 		{
 			var coordinate = RiverNetwork.PatchAt( position );
 			var x = coordinate.X - Minimum.X;
 			var y = coordinate.Y - Minimum.Y;
 			if ( x < 0 || x >= Width || y < 0 || y >= Height )
 				throw new ArgumentOutOfRangeException( nameof( position ), "River sample exceeds its captured region." );
-			return _patches[x + y * Width].SampleWorld( position, naturalHeight, Settings.SeaLevel );
+			return _patches[x + y * Width].SampleWorld( position, naturalHeight, Settings.SeaLevel, blendSurfaceFlow );
 		}
 
 		public float MinimumWetRadius( Vector3 minimum, Vector3 maximum )

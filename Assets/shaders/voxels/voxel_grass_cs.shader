@@ -17,6 +17,7 @@ CS
 {
 	#include "common.fxc"
 	#include "shaders/voxels/voxel_grass_wind.hlsl"
+	#include "shaders/voxels/voxel_grass_shape.hlsl"
 	#include "shaders/voxels/voxel_grass_color.hlsl"
 	#include "shaders/voxels/voxel_terrain_normal.hlsl"
 	#include "shaders/voxels/voxel_material_blending.hlsl"
@@ -25,7 +26,7 @@ CS
 	struct TerrainVertex
 	{
 		uint4 First;
-		uint3 Second;
+		uint4 Second;
 	};
 	struct IndexedArguments
 	{
@@ -80,12 +81,12 @@ CS
 		}
 		// Include the entire wind sweep in both region and triangle culling.
 		// Wind only lowers tips; derive the vertical envelope from the tallest leaf.
-		const float minimumTuftLength = 25.0;
-		const float maximumTuftLength = 35.0;
+		const float minimumTuftLength = 22.0;
+		const float maximumTuftLength = 38.0;
 		const float patchHeightVariation = 0.15;
 		// Include the VS's longest leaf, maximum lean and leaf half-width.
-		const float maximumLeafLength = maximumTuftLength * (1.0 + patchHeightVariation) * 1.05;
-		const float horizontalPadding = maximumLeafLength * (0.5 + GRASS_MAX_WIND_BEND) + 0.75;
+		const float maximumLeafLength = maximumTuftLength * (1.0 + patchHeightVariation) * GRASS_MAX_LEAF_LENGTH;
+		const float horizontalPadding = maximumLeafLength * (GRASS_MAX_BASE_LEAN + GRASS_MAX_TIP_CURL + GRASS_MAX_SIDE_BEND + GRASS_MAX_WIND_BEND) + 0.75;
 		const float3 GrassLowerPadding = float3( horizontalPadding, horizontalPadding, 1.0 );
 		const float3 GrassUpperPadding = float3( horizontalPadding, horizontalPadding, maximumLeafLength + 1.0 );
 		uint slot = GrassFirstSlot + group.x;
@@ -154,8 +155,9 @@ CS
 				// Match the ground's continuous coverage with fewer full tufts,
 				// instead of ending the population at one hard material threshold.
 				float3 root = p0 * barycentric.x + p1 * barycentric.y + p2 * barycentric.z;
+				float gravel = dot( float3( asfloat( a.Second.w ), asfloat( b.Second.w ), asfloat( c.Second.w ) ), barycentric );
 				float4 mixture = BlendVoxelMaterials( materialsA * barycentric.x + materialsB * barycentric.y +
-					materialsC * barycentric.z, root, 0.0 );
+					materialsC * barycentric.z, gravel, root, 0.0 );
 				float coverage = smoothstep( 0.1, 0.9, mixture.x );
 				if ( GrassRandom( key + 17 ) >= coverage )
 				{
@@ -166,8 +168,11 @@ CS
 				density = lerp( density, 0.08, smoothstep( 12.0, 24.0, metres ) );
 				float farDensity = min( 1.0, 1024.0 / max( metres * metres, 1.0 ) );
 				density *= farDensity * (1.0 - smoothstep( GrassRangeMeters * 0.75, GrassRangeMeters, metres ));
-				// Thin the distant population without shrinking every remaining tuft.
-				float scale = saturate( (density - GrassRandom( key + 3 ) / candidateWeight) * 10.0 / farDensity );
+				// Preserve meadow height as density thins: the old 8% density
+				// left surviving tufts at only 40% size on average beyond 24 m.
+				// Keep the near fade, then shorten only the last ranks of survivors.
+				float sizeFadeDensity = lerp( 1.0, 0.08, smoothstep( 12.0, 24.0, metres ) );
+				float scale = saturate( (density - GrassRandom( key + 3 ) / candidateWeight) * 10.0 / (farDensity * sizeFadeDensity) );
 				if ( scale <= 0.0 )
 				{
 					continue;
@@ -187,7 +192,7 @@ CS
 					float patchTone = EvaluateGrassColor( root.xy );
 					uint packedAngleColor = angle | (f32tof16( 1.0 + patchTone ) << 16);
 					// Greener patches grow slightly taller; warmer patches stay shorter.
-					// Keep small, stable differences between neighboring tufts as well.
+					// Mix shorter and taller neighboring tufts while preserving mean length.
 					float tuftLength = lerp( minimumTuftLength, maximumTuftLength, GrassRandom( key + 5 ) ) *
 						lerp( 1.0 + patchHeightVariation, 1.0 - patchHeightVariation, patchTone );
 					GrassRoots[index * 2] = float4( root - float3( 0.0, 0.0, 0.3 ), scale );

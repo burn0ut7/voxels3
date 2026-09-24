@@ -21,6 +21,7 @@ internal static class VoxelPerformanceProfiler
 	public const string ProcessPendingMeshes = "Voxels3/ProcessPendingMeshes";
 	public const string RefreshRenderCameras = "Voxels3/RefreshRenderCameras";
 	public const string CommitDrawCommands = "Voxels3/CommitDrawCommands";
+	public const string WaterRender = "Voxels3/WaterRender";
 
 	public static PerformanceProfilerMetrics Capture()
 	{
@@ -39,7 +40,8 @@ internal static class VoxelPerformanceProfiler
 			IntegrateWarmChunks,
 			ProcessPendingMeshes,
 			RefreshRenderCameras,
-			CommitDrawCommands
+			CommitDrawCommands,
+			WaterRender
 		};
 
 		var engine = new List<PerformanceProfilerTiming>();

@@ -405,6 +405,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 	protected override async System.Threading.Tasks.Task OnLoad()
 	{
 		if ( Scene.IsEditor ) return;
+		GrassRenderRangeMeters = Game.Cookies.Get( GrassRangePreferenceKey, GrassRenderRangeMeters );
 		ResolveStreamingTarget();
 		_gpuMesher = new GpuVoxelMesher( Scene, RequiredCellsPerAxis, IsChunkContentPrepared, UpdateSurfaceWaterChunks,
 			key => { MarkWaterPresentationDirty( key ); _predictionReadyRegions.Remove( key ); },
@@ -471,6 +472,9 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_gpuMesher.GrassRenderRangeMeters = GrassRenderRangeMeters;
 		using var profiler = global::Sandbox.Diagnostics.Performance.Scope(
 			VoxelPerformanceProfiler.ManagerUpdate );
+		if ( (_playerFigureEightEnabled || _performanceVisibilityPending) &&
+			(Input.AnalogMove.LengthSquared > 0.01f || Input.Pressed( "Jump" ) || Input.Pressed( "Duck" )) )
+			StopPerformanceTest();
 		TrySaveCompletedPerformanceTest();
 		UpdateTerrainStorage();
 		UpdatePlayerFigureEight();
@@ -543,6 +547,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		AdvanceClipboxPreparation();
 		UpdateTerrainPrediction();
 		UpdateWaterCellGeneration();
+		UpdateSpawnTrees();
 		if ( _clipboxPlacementPending ) TryCommitPendingClipboxPlacement();
 		UpdateCoverageTrace();
 		int meshDispatches;
@@ -575,6 +580,8 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_exteriorPreparation = null;
 		_clipboxWarmInterestDirty = false;
 		ResetSurfaceWater();
+		_spawnTrees?.Dispose();
+		_spawnTrees = null;
 		_terrainEditCancellation.Cancel();
 		SaveTerrainOnUnload();
 		FinishDeformationBenchmark( "Scene teardown interrupted the workload." );
@@ -663,6 +670,23 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		{
 			Log.Warning( $"[VoxelWorld] performance.test.rejected reason=\"{exception.Message}\"" );
 		}
+	}
+
+	[Button( "Stop Performance Test" )]
+	public void StopPerformanceTest()
+	{
+		if ( !_playerFigureEightEnabled && !_playerFigureEightTestRunning && !_performanceVisibilityPending ) return;
+		_playerFigureEightEnabled = false;
+		_playerFigureEightTestRunning = false;
+		_playerFigureEightTestCompletionReady = false;
+		_playerFigureEightTarget = null;
+		_playerFigureEightBody = null;
+		_performanceVisibilityPending = false;
+		_performanceCompletionPhase = PerformanceCompletionPhase.None;
+		_performanceSnapshotReady = false;
+		_gpuMesher?.StopVisibilityMeasurement();
+		FramePerformance = "Performance test interrupted; player control restored";
+		Log.Info( "[VoxelWorld] performance.test.interrupted reason=player-control; no accepted result saved" );
 	}
 
 	private void StartPlayerFigureEight( float speed, float distance )
@@ -2475,7 +2499,7 @@ public sealed partial class VoxelManager : Component, IScenePhysicsEvents
 		_warmGenerationRevision++;
 		_terrainContentRevision++;
 		if ( !preserveTerrain ) _terrainField = new TerrainField( CurrentTerrainSettings );
-		_gpuMesher.Reset( _appliedCellsPerAxis );
+		_gpuMesher.Reset( _appliedCellsPerAxis, CurrentTerrainSettings.WorldSeed, CurrentTerrainSettings.SeaLevel );
 		_predictionRegions.Clear();
 		_predictionSeams.Clear();
 		_predictionRegionOrder.Clear();

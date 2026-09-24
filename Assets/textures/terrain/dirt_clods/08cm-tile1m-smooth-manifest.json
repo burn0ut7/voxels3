@@ -1,0 +1,28 @@
+{
+  "heightRemap": {
+    "source": "Assets\\textures\\terrain\\dirt\\dirt_disp_2k.png",
+    "sourceSha256": "0922d5f74b103921df549c4a1b7441c7023376c1a99714d05710ffd80cc8af97",
+    "lowPercentile": 1,
+    "highPercentile": 99,
+    "low": 0.24317344889044762,
+    "high": 0.5860456025600421,
+    "curve": "periodic Gaussian then clamped linear percentile range",
+    "gaussianSigmaTexels": 32.0,
+    "clippedFraction": 0.02
+  },
+  "status": "unaccepted prototype",
+  "tileMetres": 1.0,
+  "heightAmplitudeMetres": 0.08,
+  "approximateHeightMip": 2,
+  "macroDerivative": "periodic central difference at box mip2, bilinear upsample",
+  "fineResidual": "source slope minus periodic Gaussian32 source slope; vector length capped at1",
+  "fineClampedFraction": 0.02514171600341797,
+  "normalConvention": "OpenGL encoded X=-dH/dU, Y=+dH/dV; shader flips GL green",
+  "inputs": {
+    "Assets\\textures\\terrain\\dirt_clods\\dirt_clod_height_smooth.png": "d464fabf061333cce824f376a63e4b46f30d7c456f72b8a8baef6bff905f674a",
+    "Assets\\textures\\terrain\\dirt\\dirt_nor_gl_2k.png": "d269f7e4c8f113474735c1d9e346f48272dcb5c2cba72c3976b0181a0867d7aa"
+  },
+  "output": {
+    "Assets\\textures\\terrain\\dirt_clods\\dirt_normal_08cm_tile1m_smooth.png": "38e693f51ee2e6947864ea51566c27d77c3adc444f2a5fa457f7f92c6956fef1"
+  }
+}

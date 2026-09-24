@@ -1,6 +1,35 @@
 # Terrain meadow grass
 
-## Patch height
+## Blade variation (2026-09-19, qualification pending)
+
+The current refinement widens stable parent length from 25–35 to 22–38 units
+and leaf multipliers from 0.65–1.05 to 0.55–1.15. Both ranges retain their
+arithmetic midpoint, while shorter and taller leaves separate the canopy more.
+The existing +/-15% patch multiplier remains: final parent length is
+18.7–43.7 units and full-size leaf length is 10.285–50.255 units (26–128 cm)
+before shape and wind lowering. Distance fading can make leaves smaller.
+
+Leaves vary their middle height from 38–52%, heading by +/-0.45 radians and
+width multiplier from 0.65–1.15. Stable squared posture variation mixes upright
+shoots with splayed leaves: basal horizontal tilt is 0.06–0.75, with vertical
+rise sqrt(1-tilt squared). Independent quadratic tip curl is 0.12–0.45 and
+side bend is +/-0.12; posture adds 0.04–0.44 downward tip bend. More splayed
+leaves can droop below their middle, rather than all ending upright. Every
+shape term vanishes at the shared root. The existing two triangles per leaf
+remain a coarse bent silhouette, not a smooth multi-segment curve.
+
+These use the existing stable leaf seed, with no time or camera input to shape.
+Color and wind retain their existing owners. The shared shape include owns
+maximum leaf multiplier, basal tilt, curl and side bend for both vertex shape
+and compute culling. The conservative horizontal envelope is 92.2141 units;
+vertical padding remains 51.255 above and 1 below. Depth and forward share the
+same shape code; upward-biased lighting also varies with posture.
+Geometry counts, root storage and density are unchanged, but taller leaves and
+wider bounds may increase rendering work. Cold-start, rendered appearance and
+canonical figure-eight qualification remain pending; previous height acceptance
+below covers the earlier ranges only.
+
+## Previous patch height qualification
 
 Tuft length shares the existing smooth color patch: greener areas are up to 15%
 taller and warmer areas up to 15% shorter, with intermediate areas retaining
@@ -86,12 +115,15 @@ and intact tips. See [wind evidence](../ValidationEvidence/GrassWind/README.md).
 
 ## Adjustable range
 
-VoxelManager owns `GrassRenderRangeMeters`, a local scene property with a 64 m
-default and finite clamping to 0–128 m. The working-tree Q menu exposes the same value
-under Graphics for every local player; 0 disables grass. Menu changes last for the scene
-session; authored inspector values persist when the scene is saved. This option
-is not Sync/RPC world state. No new preference subsystem or terrain rebuild is
-needed. The manager publishes the scalar to its mesher; each depth view captures
+VoxelManager owns `GrassRenderRangeMeters`, a local scene property with a 96 m
+default and finite clamping to 0–256 m. The Q menu exposes the same value under
+Graphics → Grass distance for every local player; 0 disables grass. Applying
+the menu value calls `SaveGrassRenderRangePreference`, saving the local
+`graphics.grass-range-metres` preference through `Game.Cookies`. Playable-scene
+OnLoad reads it once, falling back to the authored property/default. Inspector
+and native assignments remain temporary overrides and do not save a preference.
+This is not Sync/RPC world state and does not rebuild terrain. The manager
+publishes the scalar to its mesher; each depth view captures
 one value, clears its old indirect arguments, and generates both draws from it.
 
 The compute shader consumes only already-published active regular terrain at
@@ -104,16 +136,23 @@ still cannot exceed that cap. Terrain LOD replacement can change root placement.
 
 Nearby density keeps the existing 6/12/24 m knots. Beyond 32 m it decreases with
 inverse squared distance, with final fade from 75% of the selected range to the
-endpoint. The distant size fade compensates for density thinning so extending
-range does not turn every retained distant tuft into a tiny speck. At 32 m,
-triangles below the sample cap keep the previous density/size formula. The view and triangle
+endpoint. The distant size fade compensates for both the inverse-square tail
+and the 0.08 mid-distance density. Its normalization changes smoothly from 1
+at 12 m to 0.08 at 24 m, retaining full meadow height for most distant survivors
+while shrinking the last density ranks. Previously these samples averaged only
+0.4 of full size at 24 m, contributing to the appearance of grass confined near
+the player. Population thresholds and near behavior through 12 m are unchanged.
+The view and triangle
 bounds share the range uniform; they cannot retain a stale hard-coded cutoff.
 Zero range skips generation dispatches and clears both draw counts. Root memory,
 geometry and two draw modes stay bounded as below. Range changes are recorded in
-production performance reports. GRASS-RANGE-001/v1 owns fixed qualification.
-The menu interaction checks were interrupted twice by user Escape; its UI file
-remains uncommitted pending those checks. Native range rendering and the shader
-refinements are qualified separately from clicking/typing in that menu.
+production performance reports. GRASS-COVERAGE-001/v1 owns qualification of the
+new 96 m default, saved preference and size correction; it is currently pending.
+Larger visible plants can increase pixel cost despite unchanged tuft counts.
+The 256 m maximum is an optional quality setting, not a performance guarantee.
+See [coverage evidence](../ValidationEvidence/GrassCoverage/README.md).
+GRASS-RANGE-001/v1 remains the historical 64 m, session-only qualification;
+its interrupted menu checks are not evidence for the current saved setting.
 
 Alternatives: enlarging LOD0 streaming increases terrain/collision-related work;
 changing only the shader cutoff still stops grass at the LOD0 boundary; scaling
@@ -137,11 +176,12 @@ blades. Each leaf uses two triangles between a narrow root, bent middle and tip.
 Deterministic
 height, width, orientation, outward lean and color variation break up repeated
 silhouettes. The user's meadow refinement replaces the short7..31cm tufts with
-approximately 35–107 cm upright leaf height and 1.3–3.8 cm full width at full size.
+approximately 26–128 cm nominal leaf length and 1.2–3.8 cm full width at full size.
 The five leaves overlap neighboring tufts while retaining varied silhouettes.
-Patch-adjusted parent height 21.25–40.25 in is multiplied by 0.65–1.05 per leaf;
-outward lean is 0.22–0.5 of leaf height. Conservative region bounds include
-43.0125 in horizontal spread with wind, 43.2625 in height and 1 in below terrain.
+Patch-adjusted parent height 18.7–43.7 in is multiplied by 0.55–1.15 per leaf;
+basal tilt, curl and droop follow the current blade variation above.
+Conservative region bounds include 92.2141 in horizontal spread with wind,
+51.255 in height and 1 in below terrain.
 Every leaf starts at the actual published surface root.
 
 Upward-biased two-sided normals and varied rich greens soften the previous
@@ -156,7 +196,7 @@ through6m,30%at12m,8%at24m. Beyond32m, the relative population decreases by
 hash thresholds and short size fades retain progressive thinning. Material
 eligibility, triangle sampling and the maximum16candidates/triangle retain their
 owners; coarse candidates are area weighted as described above. Shape and
-nearby density remain those of the accepted meadow.
+nearby density follow the current blade refinement and accepted meadow respectively.
 The compute pass rejects padded source-triangle bounds by range and guarded
 frustum before sampling, so offscreen parts of nearby regions do not generate
 roots. Region and triangle checks share padding constants; visible density and

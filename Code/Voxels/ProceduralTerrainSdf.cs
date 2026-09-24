@@ -10,7 +10,7 @@ public readonly record struct SdfWorldAabb( Vector3 Minimum, Vector3 Maximum );
 internal static class ProceduralTerrainSdf
 {
 	// Saved worlds identify this backend revision; it is not a variation control.
-	public const int CurrentVersion = 48;
+	public const int CurrentVersion = 52;
 	public const int DefaultWorldSeed = 1337;
 	public static float SampleGlobal(
 		Vector3Int globalSampleCoordinate,
@@ -67,7 +67,9 @@ internal static class ProceduralTerrainSdf
 			if ( !_sampled[column] )
 			{
 				var sample = RegionalLandforms.SampleNatural( position, _settings );
-				_landforms[column] = new Vector2( _rivers.SampleWorld( position, sample.Height ).Height, sample.Mountains );
+				var riverHeight = _rivers.SampleWorld( position, sample.Height ).Height;
+				_landforms[column] = new Vector2( TerrainBiomes.RefineHeight( position, _settings,
+					sample.Height, riverHeight, sample.Mountains ), sample.Mountains );
 				_sampled[column] = true;
 			}
 			var landform = _landforms[column];

@@ -1,0 +1,50 @@
+{
+  "heightSource": "authored curved ripples, 18 bands per period, variable spacing, local bends and smoothly tapered ridge breaks",
+  "colorGrain": "linear highpass sigma2.5 gain1.5",
+  "patchRotation": "none",
+  "combinedHeightGaussianSigmaTexels": 0,
+  "tileMetres": 1.0,
+  "amplitudeMetres": 0.12,
+  "minimumHeightLod": 2,
+  "normalRecipe": "quantized height box mip2, lattice chain rule, GL encoding; fine residual sigma8 cap1 gain0.18",
+  "fineNormalGain": 0.18,
+  "size": 4096,
+  "period": 8,
+  "blendExponent": 4,
+  "blendCutoff": 0.001,
+  "cutoffExponent": 4,
+  "numpy": "2.3.5",
+  "pillow": "12.3.0",
+  "generatorSha256": "f3c15b42f48c9a93e8f80fb268b02ab1c24ae7aad7c47675d022878958c04b3e",
+  "publisherSha256": "fda398f721d24cd09910825f0698cd99053a0a444a604966d1e53652abace6e7",
+  "source": {
+    "color": {
+      "path": "Assets/textures/terrain/ground101/Ground101_2K-PNG_Color.png",
+      "sha256": "2d08fb64f911b7c07cdf65ff1d1fba6d8c93d3960325310151d23df10bcb23dc"
+    },
+    "normal": {
+      "path": "Assets/textures/terrain/ground101/Ground101_2K-PNG_NormalGL.png",
+      "sha256": "cb07f50c719b4ab903449dbdce4faf0a8ddcea1ea7001e8aea2d4e3f3db6b5b5"
+    },
+    "roughness": {
+      "path": "Assets/textures/terrain/ground101/Ground101_2K-PNG_Roughness.png",
+      "sha256": "fce96671fb44562efbc47339e597df010efd7ea61760ac1e795be1604b11dce1"
+    },
+    "ao": {
+      "path": "Assets/textures/terrain/ground101/Ground101_2K-PNG_AmbientOcclusion.png",
+      "sha256": "5b48b9f1187580182cf25ef4783959d744bac0d72b1b1c17c15775c40e83eecf"
+    },
+    "height": {
+      "path": "Assets/textures/terrain/ground101/Ground101_2K-PNG_Displacement.png",
+      "sha256": "14dfaac3285fa945802205e6d934f18b94d4f2ec15f1867619c856425909aec6"
+    }
+  },
+  "output": {
+    "sand_ao.png": "32e3b6d6441e6157a0b52043c9f43272067ce2fc15c75f5958399a1ee1c2709e",
+    "sand_color.png": "d175bb4ce9a6ba8fdee6fa0f9fcbcedd26b80c37d059433ba57b1085aeac7912",
+    "sand_height.png": "6a6b277dd27671192af7fb08bd0bdb95e667f842985b965884a3aeaea11add10",
+    "sand_normal.png": "ba53a140ddd448ae6fdaf8c76a008d4eb1eafa57888532ad60b59ba700c8fd92",
+    "sand_roughness.png": "e84222bbfd08937c2f9eda50bf1452ea12bca0c3f270138989b9d7d868ba1432"
+  },
+  "shaderIncludeSha256": "5a68f6815ba2c8a30ea8dbe12db6bda266f7530a3678217de5b9ba1c30495a7a"
+}

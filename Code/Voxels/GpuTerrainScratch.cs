@@ -64,8 +64,8 @@ internal sealed class GpuTerrainScratch : IDisposable
 		_densitySamples = new GpuBuffer<float>( checked( (_haloSampleCount * 2 + _haloSize * _haloSize * 2) * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Density" );
 		_shader.Attributes.Set( "PlacedMaterialOffset", (_haloSampleCount + _haloSize * _haloSize * 2) * MaximumBatchSize );
 		_cells = new GpuBuffer<GpuCellData>( checked( _cellCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Cells" );
-		// Second plane stores generated material weights at the resolved cell edge.
-		_edgeFlags = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize * 2 ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Flags" );
+		// Two derived planes store packed material weights and the gravel weight.
+		_edgeFlags = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize * 3 ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Flags" );
 		_edgeVertexIds = new GpuBuffer<uint>( checked( _edgeSlotCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge IDs" );
 		_edgeGroupSums = new GpuBuffer<uint>( checked( _edgeGroupCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Edge Groups" );
 		_cellGroupSums = new GpuBuffer<uint>( checked( _cellGroupCount * MaximumBatchSize ), GpuBuffer.UsageFlags.Structured, "Voxel Terrain Scratch Cell Groups" );
@@ -120,7 +120,7 @@ internal sealed class GpuTerrainScratch : IDisposable
 			(long)MaximumBatchSize * 96 +
 			(long)(_haloSampleCount * 2 + _haloSize * _haloSize * 2) * MaximumBatchSize * sizeof( float ) +
 			(long)_cellCount * MaximumBatchSize * 12 +
-			(long)_edgeSlotCount * MaximumBatchSize * sizeof( uint ) * 3 +
+			(long)_edgeSlotCount * MaximumBatchSize * sizeof( uint ) * 4 +
 			(long)(_edgeGroupCount + _cellGroupCount) * MaximumBatchSize * sizeof( uint ) +
 			(long)MaximumBatchSize * (sizeof( uint ) * 8 + 64 + sizeof( uint ) * 5) +
 			(long)topology.Length * sizeof( int );

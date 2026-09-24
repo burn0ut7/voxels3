@@ -2,76 +2,298 @@
 @using Sandbox.UI
 @using System
 @using System.Linq
+@using System.Diagnostics
 @inherits PanelComponent
 @namespace Sandbox
 
 <root>
-	@if ( _visible )
+	@if ( View == BiomeDebugView.Readout )
 	{
 		<div class="debug-readout">
-			<div class="heading">VOXELS3 <span>@_toggleKey / DEBUG</span></div>
+			<div class="heading">BIOMES <span>@($"{_toggleKey} to hide / reopen map")</span></div>
 			<div class="row">@_position</div>
 			<div class="row">@_chunk</div>
-			<div class="row">Biome: Not implemented</div>
-			<div class="hint">World units / Z is up</div>
+			<div class="row">@_biome</div>
+			<div class="row">@_climate</div>
+			<div class="row">@_weights</div>
+			<div class="hint">@(OverlayTerrain ? "Terrain overlay: " + Layer : "Regional habitat · inland water is separate")</div>
+		</div>
+	}
+	else if ( View == BiomeDebugView.Map )
+	{
+		<div class="map-backdrop">
+			<div class="biome-window">
+				<div class="title-row"><div class="heading">BIOME EXPLORER</div><button onclick=@Hide>@($"Close · {_toggleKey}")</button></div>
+				<div class="hint">@($"Seed {_settings.WorldSeed} · +X right / +Y up · Click the map to inspect a location")</div>
+				<div class="layers">
+					@foreach ( var layer in Enum.GetValues<BiomeMapLayer>() )
+					{
+						<button class="@(Layer == layer ? "selected" : "")" onclick=@(() => ChangeLayer( layer ))>@layer</button>
+					}
+				</div>
+				<div class="map-content">
+					<div class="map-column">
+						<div class="map-frame">
+							<BiomeMapImage class="biome-image" Texture="@_mapTexture" Selected="@SelectPoint" />
+							@if ( _mapTexture is not null && MarkerInside( _playerPoint ) )
+							{
+								<div class="player-marker" style="@MarkerStyle( _playerPoint )">+</div>
+							}
+							@if ( _mapTexture is not null && _selection.HasValue && MarkerInside( _selection.Value ) )
+							{
+								<div class="selection-marker" style="@MarkerStyle( _selection.Value )">×</div>
+							}
+							@if ( _mapTexture is null ) { <div class="map-loading">@MapStatus</div> }
+						</div>
+						<div class="map-controls">
+							<button onclick=@(() => Pan( -1, 0 ))>←</button><button onclick=@(() => Pan( 0, 1 ))>↑</button>
+							<button onclick=@(() => Pan( 0, -1 ))>↓</button><button onclick=@(() => Pan( 1, 0 ))>→</button>
+							<button onclick=@(() => Zoom( 0.5f ))>Zoom +</button><button onclick=@(() => Zoom( 2f ))>Zoom −</button>
+							<button onclick=@CenterOnPlayer>You</button>
+						</div>
+						<div class="hint">@FormattableString.Invariant( $"{MapSpan * 0.0254f / 1000f:0.00} km across · {MapSpan * 0.0254f / MapSize:0.0} m per sample" )</div>
+					</div>
+					<div class="details">
+						<div class="section">YOUR LOCATION · WHITE +</div>
+						<div>@_position</div><div>@_biome</div><div>@_climate</div><div class="weights">@_weights</div>
+						<div class="section">SELECTED LOCATION · PINK ×</div>
+						<div class="selection-detail">@_selectedText</div>
+						<div class="section">LEGEND</div>
+						@if ( Layer == BiomeMapLayer.Biomes || Layer == BiomeMapLayer.Blends )
+						{
+							<div class="legend">
+								@for ( var index = 0; index < TerrainBiomes.Count; index++ )
+								{
+									<div class="legend-item"><div class="swatch" style="background-color: @PaletteHex[index]"></div>@((TerrainBiome)index)</div>
+								}
+							</div>
+							<div class="hint">@(Layer == BiomeMapLayer.Biomes ? "Strongest biome at each sample." : "Colours mix according to biome weights.")</div>
+						}
+						else
+						{
+							<div class="climate-legend">@(Layer == BiomeMapLayer.Temperature ? "0 cold (blue) → 1 hot (red)" : "0 dry (tan) → 1 wet (blue)")</div>
+							<div class="hint">Normalized generation values, not weather measurements.</div>
+						}
+						<button class="overlay-button" onclick=@ToggleOverlay>Terrain overlay: @(OverlayTerrain ? "ON" : "OFF")</button>
+						<button onclick=@PinReadout>Walk with readout</button>
+						<div class="hint">Overlay covers this map's area. Inland rivers remain part of their regional biome.</div>
+						<div class="status">@MapStatus</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	}
 </root>
 
 @code
 {
-	private bool _visible;
-	private string _toggleKey = "";
-	private float _refreshElapsed;
+	private const int MapSize = 129;
+	private static VoxelDebugOverlay _local;
+	private static readonly string[] PaletteHex = { "#377eb8", "#b6cd7c", "#858f40", "#777e89", "#e5bd66", "#e5eaf0", "#39865b", "#105548", "#927345", "#e9d6a3" };
+	private static readonly Color[] Palette = {
+		new(55f/255,126f/255,184f/255), new(182f/255,205f/255,124f/255),
+		new(133f/255,143f/255,64f/255), new(119f/255,126f/255,137f/255),
+		new(229f/255,189f/255,102f/255), new(229f/255,234f/255,240f/255),
+		new(57f/255,134f/255,91f/255), new(16f/255,85f/255,72f/255), new(146f/255,115f/255,69f/255), new(233f/255,214f/255,163f/255) };
+
+	[Property] public BiomeDebugView View { get; set; }
+	[Property] public BiomeMapLayer Layer { get; set; }
+	[Property] public Vector2 MapCenter { get; set; }
+	[Property] public float MapSpan { get; set; } = 524288f;
+	[Property, ReadOnly] public string MapStatus { get; private set; } = "Open map to sample this world.";
 	private PlayerController _player;
 	private VoxelManager _terrain;
-	private string _position = "XYZ: Waiting for player";
-	private string _chunk = "Chunk: Waiting for terrain";
+	private Guid _world;
+	private ProceduralTerrainSettings _settings;
+	private Texture _mapTexture;
+	private byte[] _pixels;
+	private int _nextRow = MapSize;
+	private Vector2 _builtCenter;
+	private float _builtSpan;
+	private BiomeMapLayer _builtLayer;
+	private BiomeDebugView _previousView;
+	[Property] public bool OverlayTerrain { get; set; }
+	private bool _previousOverlay;
+	private float _closedAt = -1f;
+	private float _refreshElapsed;
+	private Vector2 _playerPoint;
+	private Vector2? _selection;
+	private string _position = "Waiting for player";
+	private string _chunk = "Waiting for terrain";
+	private string _biome = "Biome: waiting for terrain";
+	private string _climate = "";
+	private string _weights = "";
+	private string _selectedText = "Click a location on the map.";
+	private long _buildStarted;
+	private double _maximumBatchMilliseconds;
+	private int _uiRevision;
+	private string _toggleKey = "B";
+
+	internal static bool CapturesInput( Scene scene ) => _local.IsValid() && _local.Enabled && _local.Scene == scene &&
+		(_local.View == BiomeDebugView.Map || RealTime.Now <= _local._closedAt + 0.1f);
 
 	protected override void OnUpdate()
 	{
-		if ( Input.Pressed( "DebugOverlay" ) )
+		if ( Scene.IsEditor || Scene != Game.ActiveScene ) return;
+		_local = this;
+		if ( Input.Pressed( "BiomeDebug" ) ) View = View == BiomeDebugView.Off ? BiomeDebugView.Map : BiomeDebugView.Off;
+		if ( View == BiomeDebugView.Map && Input.EscapePressed )
 		{
-			_visible = !_visible;
-			_refreshElapsed = 0.1f;
+			Input.EscapePressed = false;
+			PinReadout();
 		}
-
-		if ( _visible )
+		if ( _previousView != View )
 		{
-			_refreshElapsed += Time.Delta;
-			if ( _refreshElapsed >= 0.1f )
-			{
-				_refreshElapsed = 0f;
-				_toggleKey = Input.GetButtonOrigin( "DebugOverlay" );
-				if ( !_player.IsValid() || !_player.Enabled || _player.IsProxy )
-				{
-					_player = Scene.GetAllComponents<PlayerController>()
-						.FirstOrDefault( player => player.Enabled && !player.IsProxy );
-				}
-				if ( !_terrain.IsValid() || !_terrain.Enabled )
-				{
-					_terrain = Scene.GetAllComponents<VoxelManager>()
-						.FirstOrDefault( terrain => terrain.Enabled );
-				}
-
-				if ( _player.IsValid() )
-				{
-					var position = _player.WorldPosition;
-					_position = FormattableString.Invariant( $"XYZ: {position.x:0.00} / {position.y:0.00} / {position.z:0.00}" );
-					_chunk = _terrain.IsValid() && _terrain.TryGetChunkCoordinate( position, out var chunk )
-						? $"Chunk: {chunk.x} / {chunk.y} / {chunk.z}"
-						: "Chunk: Waiting for terrain";
-				}
-				else
-				{
-					_position = "XYZ: Waiting for player";
-					_chunk = "Chunk: Waiting for player";
-				}
-			}
+			if ( _previousView == BiomeDebugView.Map ) _closedAt = RealTime.Now;
+			_previousView = View;
+			_refreshElapsed = 1f;
+			if ( View == BiomeDebugView.Off ) { OverlayTerrain = false; ReleaseMap(); }
 		}
-
+		if ( View == BiomeDebugView.Off ) { base.OnUpdate(); return; }
+		if ( _previousOverlay != OverlayTerrain ) { _previousOverlay = OverlayTerrain; PublishOverlay(); }
+		if ( !_player.IsValid() || _player.IsProxy )
+			_player = Scene.GetAllComponents<PlayerController>().FirstOrDefault( p => p.Enabled && !p.IsProxy );
+		if ( !_terrain.IsValid() )
+			_terrain = Scene.GetAllComponents<VoxelManager>().FirstOrDefault( t => t.Enabled );
+		if ( !_terrain.IsValid() || !_terrain.TryGetBiomeContext( out var world, out var settings ) )
+		{
+			ReleaseMap();
+			_biome = "Biome: waiting for terrain";
+			base.OnUpdate();
+			return;
+		}
+		if ( world != _world || settings != _settings )
+		{
+			ReleaseMap();
+			_world = world;
+			_settings = settings;
+			_selection = null;
+			_selectedText = "Click a location on the map.";
+			OverlayTerrain = false;
+			_refreshElapsed = 1f;
+		}
+		MapSpan = float.IsFinite( MapSpan ) ? Math.Clamp( MapSpan, 8192f, 1048576f ) : 524288f;
+		var limit = TerrainField.MaximumWorldCoordinate - MapSpan * 0.5f;
+		MapCenter = new Vector2( float.IsFinite( MapCenter.x ) ? Math.Clamp( MapCenter.x, -limit, limit ) : 0f,
+			float.IsFinite( MapCenter.y ) ? Math.Clamp( MapCenter.y, -limit, limit ) : 0f );
+		if ( View == BiomeDebugView.Map )
+		{
+			if ( _builtCenter != MapCenter || _builtSpan != MapSpan || _builtLayer != Layer || (_mapTexture is null && _pixels is null) ) BeginMap();
+			if ( _pixels is not null ) BuildMapRows();
+		}
+		_refreshElapsed += Time.Delta;
+		if ( _refreshElapsed >= 0.1f && _player.IsValid() )
+		{
+			_refreshElapsed = 0f;
+			_toggleKey = Input.GetButtonOrigin( "BiomeDebug" );
+			var p = _player.WorldPosition;
+			_playerPoint = new Vector2( p.x, p.y );
+			_position = FormattableString.Invariant( $"XY {p.x:0}, {p.y:0} · Z {p.z:0}" );
+			_chunk = _terrain.TryGetChunkCoordinate( p, out var chunk ) ? $"Chunk {chunk.x}, {chunk.y}, {chunk.z}" : "Waiting for terrain";
+			ReadPoint( p, out _biome, out _climate, out _weights );
+			_uiRevision++;
+		}
 		base.OnUpdate();
 	}
 
-	protected override int BuildHash() => HashCode.Combine( _visible, _position, _chunk, _toggleKey );
+	private void ReadPoint( Vector3 p, out string biome, out string climate, out string weights )
+	{
+		var land = RegionalLandforms.SampleNatural( p, _settings );
+		var habitat = TerrainBiomes.SampleWorld( p, _settings, land.Mountains );
+		var coast = TerrainBiomes.SampleCoastline( p, _settings, land.Height );
+		biome = "Biome: " + habitat.Dominant( land, _settings.SeaLevel, coast );
+		climate = FormattableString.Invariant( $"Temperature {habitat.Temperature:0.00} · Humidity {habitat.Moisture:0.00}" );
+		weights = string.Join( " · ", Enumerable.Range( 0, TerrainBiomes.Count )
+			.Select( i => (Biome: (TerrainBiome)i, Weight: habitat.Weight( (TerrainBiome)i, land, _settings.SeaLevel, coast )) )
+			.Where( pair => pair.Weight >= 0.005f ).OrderByDescending( pair => pair.Weight )
+			.Select( pair => FormattableString.Invariant( $"{pair.Biome} {pair.Weight:P0}" ) ) );
+	}
+
+	private void BeginMap()
+	{
+		ReleaseMap();
+		_builtCenter = MapCenter;
+		_builtSpan = MapSpan;
+		_builtLayer = Layer;
+		_pixels = new byte[MapSize * MapSize * 4];
+		_nextRow = 0;
+		_buildStarted = Stopwatch.GetTimestamp();
+		_maximumBatchMilliseconds = 0;
+	}
+
+	private void BuildMapRows()
+	{
+		var started = Stopwatch.GetTimestamp();
+		var end = Math.Min( MapSize, _nextRow + 4 );
+		for ( ; _nextRow < end; _nextRow++ )
+		for ( var x = 0; x < MapSize; x++ )
+		{
+			var p = new Vector3( _builtCenter.x + ((x + 0.5f) / MapSize - 0.5f) * _builtSpan,
+				_builtCenter.y + (0.5f - (_nextRow + 0.5f) / MapSize) * _builtSpan, 0f );
+			var land = RegionalLandforms.SampleNatural( p, _settings );
+			var h = TerrainBiomes.SampleWorld( p, _settings, land.Mountains );
+			var coast = _builtLayer == BiomeMapLayer.Biomes || _builtLayer == BiomeMapLayer.Blends
+				? TerrainBiomes.SampleCoastline( p, _settings, land.Height ) : 0f;
+			Color c;
+			if ( _builtLayer == BiomeMapLayer.Temperature ) c = Color.Lerp( new Color( 0.16f, 0.36f, 0.85f ), new Color( 0.95f, 0.22f, 0.10f ), h.Temperature );
+			else if ( _builtLayer == BiomeMapLayer.Humidity ) c = Color.Lerp( new Color( 0.82f, 0.66f, 0.37f ), new Color( 0.08f, 0.45f, 0.80f ), h.Moisture );
+			else if ( _builtLayer == BiomeMapLayer.Biomes ) c = Palette[(int)h.Dominant( land, _settings.SeaLevel, coast )];
+			else
+			{
+				c = new Color( 0f, 0f, 0f );
+				for ( var i = 0; i < TerrainBiomes.Count; i++ ) c += Palette[i] * h.Weight( (TerrainBiome)i, land, _settings.SeaLevel, coast );
+			}
+			var index = (_nextRow * MapSize + x) * 4;
+			_pixels[index] = (byte)Math.Clamp( c.r * 255f, 0f, 255f );
+			_pixels[index + 1] = (byte)Math.Clamp( c.g * 255f, 0f, 255f );
+			_pixels[index + 2] = (byte)Math.Clamp( c.b * 255f, 0f, 255f );
+			_pixels[index + 3] = 255;
+		}
+		_maximumBatchMilliseconds = Math.Max( _maximumBatchMilliseconds, Stopwatch.GetElapsedTime( started ).TotalMilliseconds );
+		MapStatus = $"Sampling {_nextRow * 100 / MapSize}%";
+		if ( _nextRow < MapSize ) return;
+		var uploadStarted = Stopwatch.GetTimestamp();
+		_mapTexture = Texture.Create( MapSize, MapSize, ImageFormat.RGBA8888 ).WithData( _pixels ).Finish();
+		_pixels = null;
+		PublishOverlay();
+		MapStatus = FormattableString.Invariant( $"129 × 129 samples · {Stopwatch.GetElapsedTime( _buildStarted ).TotalMilliseconds:0} ms · sampling ≤{_maximumBatchMilliseconds:0.00} ms · upload {Stopwatch.GetElapsedTime( uploadStarted ).TotalMilliseconds:0.00} ms" );
+		_uiRevision++;
+	}
+
+	private bool MarkerInside( Vector2 p ) => MathF.Abs( p.x - _builtCenter.x ) <= _builtSpan * 0.5f && MathF.Abs( p.y - _builtCenter.y ) <= _builtSpan * 0.5f;
+	private string MarkerStyle( Vector2 p ) => FormattableString.Invariant( $"left: {(0.5f + (p.x - _builtCenter.x) / _builtSpan) * 100f:0.000}%; top: {(0.5f - (p.y - _builtCenter.y) / _builtSpan) * 100f:0.000}%;" );
+	private void SelectPoint( Vector2 uv )
+	{
+		if ( _mapTexture is null ) return;
+		var p = new Vector3( _builtCenter.x + (uv.x - 0.5f) * _builtSpan, _builtCenter.y + (0.5f - uv.y) * _builtSpan, 0f );
+		_selection = new Vector2( p.x, p.y );
+		ReadPoint( p, out var biome, out var climate, out var weights );
+		_selectedText = FormattableString.Invariant( $"XY {p.x:0}, {p.y:0}\n{biome}\n{climate}\n{weights}" );
+		_uiRevision++;
+	}
+	private void ChangeLayer( BiomeMapLayer layer ) { Layer = layer; }
+	private void Zoom( float factor ) { MapSpan = Math.Clamp( MapSpan * factor, 8192f, 1048576f ); }
+	private void Pan( float x, float y ) { MapCenter += new Vector2( x, y ) * MapSpan * 0.5f; }
+	private void CenterOnPlayer() { MapCenter = _playerPoint; }
+	private void ToggleOverlay() { OverlayTerrain = !OverlayTerrain; PublishOverlay(); }
+	private void PinReadout() { View = BiomeDebugView.Readout; _closedAt = RealTime.Now; }
+	private void Hide() { View = BiomeDebugView.Off; _closedAt = RealTime.Now; OverlayTerrain = false; ReleaseMap(); }
+	private void PublishOverlay()
+	{
+		if ( !_terrain.IsValid() ) return;
+		_terrain.SetBiomeDebugMap( OverlayTerrain ? _mapTexture : null,
+			new Vector4( _builtCenter.x - _builtSpan * 0.5f, _builtCenter.y + _builtSpan * 0.5f, _builtSpan, _builtSpan ),
+			_builtLayer != BiomeMapLayer.Biomes );
+	}
+	private void ReleaseMap()
+	{
+		if ( _terrain.IsValid() ) _terrain.SetBiomeDebugMap( null, default, false );
+		_mapTexture?.Dispose();
+		_mapTexture = null;
+		_pixels = null;
+		_nextRow = MapSize;
+	}
+	protected override void OnDisabled() { Hide(); if ( ReferenceEquals( _local, this ) ) _local = null; base.OnDisabled(); }
+	protected override void OnDestroy() { ReleaseMap(); if ( ReferenceEquals( _local, this ) ) _local = null; base.OnDestroy(); }
+	protected override int BuildHash() => HashCode.Combine( View, Layer, MapCenter, MapSpan, MapStatus, _uiRevision, OverlayTerrain );
 }

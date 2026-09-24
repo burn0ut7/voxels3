@@ -13,7 +13,7 @@ MODES
 FEATURES
 {
 	// Decode the exact refined world-axis coordinate written by the count stage.
-	// Dedicated 28-byte vertices with generated material weights; consumes the 96-byte regional terrain request.
+	// Dedicated 32-byte vertices with generated material weights; consumes the 96-byte regional terrain request.
 }
 
 COMMON

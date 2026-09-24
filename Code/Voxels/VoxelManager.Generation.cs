@@ -16,33 +16,47 @@ public sealed partial class VoxelManager
 			MathF.Abs( x ) > TerrainField.MaximumWorldCoordinate || MathF.Abs( y ) > TerrainField.MaximumWorldCoordinate ||
 			minimumZ < -TerrainField.MaximumWorldCoordinate || maximumZ > TerrainField.MaximumWorldCoordinate )
 			throw new ArgumentException( "Column requires 2–129 finite samples inside the supported world coordinates." );
-		var bounds = new SdfWorldAabb( new Vector3( x, y, minimumZ ), new Vector3( x, y, maximumZ ) );
+		var margin = Vector3.One * TerrainField.SampleSpacing;
+		var bounds = new SdfWorldAabb( new Vector3( x, y, minimumZ ) - margin, new Vector3( x, y, maximumZ ) + margin );
 		if ( !CurrentField.TryCaptureRegion( bounds, out var reader ) )
 			throw new InvalidOperationException( "Column pages are loading; retry after normal storage integration." );
 		var xy = new Vector3( x, y, 0f );
 		var natural = RegionalLandforms.SampleNatural( xy, reader.Settings );
 		var river = RiverWorld.For( reader.Settings ).GetPatch( RiverNetwork.PatchAt( xy ) )
 			.SampleWorld( xy, natural.Height, reader.Settings.SeaLevel );
-		var height = river.Height;
+		var height = TerrainBiomes.RefineHeight( xy, reader.Settings, natural.Height, river.Height, natural.Mountains );
+		var habitat = TerrainBiomes.SampleWorld( xy, reader.Settings, natural.Mountains );
+		var coast = TerrainBiomes.SampleCoastline( xy, reader.Settings, natural.Height );
 		return new
 		{
 			reader.WorldId, reader.Revision, reader.Settings, Height = height,
-			NaturalHeight = natural.Height, river.WaterHeight, river.Direction,
+			NaturalHeight = natural.Height, RiverHeight = river.Height, river.WaterHeight, river.Direction,
+			habitat.Temperature, habitat.Moisture, Biome = habitat.Dominant( natural, reader.Settings.SeaLevel, coast ).ToString(),
+			DesertSandDepth = ProceduralSand.SampleDesertLayerDepth( xy, natural.Height, habitat.Desert,
+				TerrainBiomes.CoverThreshold( xy, reader.Settings ), reader.Settings ),
+			SnowDepth = height >= river.WaterHeight && habitat.Snow > TerrainBiomes.CoverThreshold( xy, reader.Settings )
+				? ProceduralVoxelMaterials.SampleBiomeLayerDepth( xy, reader.Settings, ProceduralVoxelMaterials.Snow ) : 0f,
+			MarshWeight = habitat.MarshWeight( natural.Height, natural.Mountains, reader.Settings.SeaLevel ),
+			CoastlineWeight = habitat.Weight( TerrainBiome.Coastline, natural, reader.Settings.SeaLevel, coast ),
+			BiomeWeights = Enumerable.Range( 0, TerrainBiomes.Count ).ToDictionary( index => ((TerrainBiome)index).ToString(),
+				index => habitat.Weight( (TerrainBiome)index, natural, reader.Settings.SeaLevel, coast ) ),
 			Samples = Enumerable.Range( 0, count ).Select( index =>
 			{
 				var z = minimumZ + index * spacing;
 				var position = new Vector3( x, y, z );
 				var density = reader.SampleWorld( position );
+				var sampledMaterial = ProceduralVoxelMaterials.TrySample( reader, position, out _, out var material );
 				return new { Z = z, SurfaceDensity = z - height,
 					BaseDensity = ProceduralTerrainSdf.SampleWorld( position, reader.Settings ), Density = density,
-					Medium = SurfaceWater.Resolve( z, height, density, river.WaterHeight ).ToString() };
+					Medium = SurfaceWater.Resolve( z, height, density, river.WaterHeight ).ToString(),
+					Material = sampledMaterial ? material : (ushort)0, MaterialReady = sampledMaterial };
 			} ).ToArray()
 		};
 	}
 
-	/// <summary>Exports a bounded survey of the active unedited recipe for terrain authoring.</summary>
+	/// <summary>Exports the unedited recipe, optionally previewing another seed without changing the active world.</summary>
 	public async System.Threading.Tasks.Task<string> ExportLandformSurvey( float minimumX = -131072f,
-		float minimumY = -131072f, int pointsPerAxis = 65, float spacing = 4096f )
+		float minimumY = -131072f, int pointsPerAxis = 65, float spacing = 4096f, int? previewSeed = null )
 	{
 		if ( Scene.IsEditor || _terrainField is null || _landformSurveyRunning || pointsPerAxis < 2 || pointsPerAxis > 129 ||
 			!float.IsFinite( spacing ) || spacing < 16f || spacing > 65536f ||
@@ -51,8 +65,9 @@ public sealed partial class VoxelManager
 			minimumX + (pointsPerAxis - 1) * spacing > TerrainField.MaximumWorldCoordinate ||
 			minimumY + (pointsPerAxis - 1) * spacing > TerrainField.MaximumWorldCoordinate )
 			throw new InvalidOperationException( "Survey requires a playable world and a bounded grid of 2–129 points per axis." );
+		var settings = previewSeed.HasValue ? CurrentTerrainSettings with { WorldSeed = previewSeed.Value } : CurrentTerrainSettings;
+		if ( !settings.IsValid ) throw new ArgumentException( "Preview seed must be between -16777216 and 16777216." );
 		_landformSurveyRunning = true;
-		var settings = CurrentTerrainSettings;
 		var world = CurrentField.WorldId;
 		var cancellation = _terrainEditCancellation.Token;
 		try
@@ -61,7 +76,7 @@ public sealed partial class VoxelManager
 			{
 				var text = new System.Text.StringBuilder();
 				var riverPatches = new System.Collections.Generic.HashSet<RiverNetwork.NodeId>();
-				text.AppendLine( "x,y,height,land,mountains,plains,hills,slope,boundMin,boundMax,repeatHeight,naturalHeight,waterHeight,flowX,flowY" );
+				text.AppendLine( "x,y,height,land,mountains,plains,hills,slope,boundMin,boundMax,repeatHeight,naturalHeight,waterHeight,flowX,flowY,riverHeight,temperature,moisture,biome,oceanWeight,plainsWeight,hillsWeight,mountainsWeight,desertWeight,snowWeight,forestWeight,jungleWeight,refinementSlope,desertSandDepth,snowDepth,marshWeight,coastlineWeight" );
 				for ( var y = 0; y < pointsPerAxis; y++ )
 				{
 					cancellation.ThrowIfCancellationRequested();
@@ -80,7 +95,28 @@ public sealed partial class VoxelManager
 						var natural = RegionalLandforms.SampleNatural( position, settings );
 						var river = RiverWorld.For( settings ).GetPatch( RiverNetwork.PatchAt( position ) )
 							.SampleWorld( position, natural.Height, settings.SeaLevel );
-						text.AppendLine( FormattableString.Invariant( $"{position.x:R},{position.y:R},{sample.Height:R},{sample.Land:R},{sample.Mountains:R},{sample.Plains:R},{sample.Hills:R},{MathF.Sqrt( dx * dx + dy * dy ):R},{bounds.Minimum:R},{bounds.Maximum:R},{repeated:R},{natural.Height:R},{river.WaterHeight:R},{river.Direction.x:R},{river.Direction.y:R}" ) );
+						var habitat = TerrainBiomes.SampleWorld( position, settings, natural.Mountains );
+						var coast = TerrainBiomes.SampleCoastline( position, settings, natural.Height );
+						var weights = new float[TerrainBiomes.Count];
+						for ( var index = 0; index < weights.Length; index++ )
+							weights[index] = habitat.Weight( (TerrainBiome)index, natural, settings.SeaLevel, coast );
+						var desertSandDepth = ProceduralSand.SampleDesertLayerDepth( position, natural.Height, habitat.Desert,
+							TerrainBiomes.CoverThreshold( position, settings ), settings );
+						var snowDepth = sample.Height >= river.WaterHeight && habitat.Snow > TerrainBiomes.CoverThreshold( position, settings )
+							? ProceduralVoxelMaterials.SampleBiomeLayerDepth( position, settings, ProceduralVoxelMaterials.Snow ) : 0f;
+						var refinement = sample.Height - river.Height;
+						var refinementSlopeSquared = 0f;
+						for ( var axis = 0; axis < 2; axis++ )
+						{
+							var neighbor = position + (axis == 0 ? new Vector3( 16f, 0f, 0f ) : new Vector3( 0f, 16f, 0f ));
+							var neighborNatural = RegionalLandforms.SampleNatural( neighbor, settings );
+							var neighborRiver = RiverWorld.For( settings ).GetPatch( RiverNetwork.PatchAt( neighbor ) )
+								.SampleWorld( neighbor, neighborNatural.Height, settings.SeaLevel ).Height;
+							var neighborHeight = TerrainBiomes.RefineHeight( neighbor, settings, neighborNatural.Height, neighborRiver, neighborNatural.Mountains );
+							var slope = (neighborHeight - neighborRiver - refinement) / 16f;
+							refinementSlopeSquared += slope * slope;
+						}
+						text.AppendLine( FormattableString.Invariant( $"{position.x:R},{position.y:R},{sample.Height:R},{sample.Land:R},{sample.Mountains:R},{sample.Plains:R},{sample.Hills:R},{MathF.Sqrt( dx * dx + dy * dy ):R},{bounds.Minimum:R},{bounds.Maximum:R},{repeated:R},{natural.Height:R},{river.WaterHeight:R},{river.Direction.x:R},{river.Direction.y:R},{river.Height:R},{habitat.Temperature:R},{habitat.Moisture:R},{habitat.Dominant( natural, settings.SeaLevel, coast )},{weights[0]:R},{weights[1]:R},{weights[2]:R},{weights[3]:R},{weights[4]:R},{weights[5]:R},{weights[6]:R},{weights[7]:R},{MathF.Sqrt( refinementSlopeSquared ):R},{desertSandDepth:R},{snowDepth:R},{weights[(int)TerrainBiome.Marsh]:R},{weights[(int)TerrainBiome.Coastline]:R}" ) );
 					}
 				}
 				var directory = $"terrain-surveys/{Guid.NewGuid():N}";
@@ -103,7 +139,7 @@ public sealed partial class VoxelManager
 				FileSystem.Data.WriteAllText( $"{directory}/samples.csv", text.ToString() );
 				FileSystem.Data.WriteAllText( $"{directory}/rivers.csv", riverText.ToString() );
 				FileSystem.Data.WriteAllText( $"{directory}/recipe.json", System.Text.Json.JsonSerializer.Serialize(
-					new { World = world, Generator = ProceduralTerrainSdf.CurrentVersion, Settings = settings, minimumX, minimumY, pointsPerAxis, spacing,
+					new { SourceWorld = world, IsSeedPreview = previewSeed.HasValue, Generator = ProceduralTerrainSdf.CurrentVersion, Settings = settings, minimumX, minimumY, pointsPerAxis, spacing,
 						RiverVersion = RiverNetwork.CurrentVersion, RiverSegments = reaches.Count, riversTruncated,
 						RiverCoverage = "Unique segments from sampled patches, including their source halos" } ) );
 				return FileSystem.Data.GetFullPath( directory );

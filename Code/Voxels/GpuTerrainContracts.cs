@@ -9,6 +9,8 @@ internal struct TerrainVertex
 	public Vector3 Normal;
 	[VertexLayout.Color]
 	public Color32 Materials;
+	[VertexLayout.TexCoord( 0 )]
+	public float Gravel;
 }
 
 [StructLayout( LayoutKind.Sequential, Pack = 4, Size = 96 )]

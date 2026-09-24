@@ -71,13 +71,13 @@ internal static class RiverNetwork
 
 		public float MinimumWetRadius( Vector3 minimum, Vector3 maximum ) => _spatial.MinimumWetRadius( minimum, maximum );
 
-		public Sample SampleWorld( Vector3 position, float naturalHeight, float seaLevel )
+		public Sample SampleWorld( Vector3 position, float naturalHeight, float seaLevel, bool blendSurfaceFlow = false )
 		{
 			var x = (int)MathF.Floor( position.x / NodeSpacing ) - Coordinate.X * NodesPerPatch;
 			var y = (int)MathF.Floor( position.y / NodeSpacing ) - Coordinate.Y * NodesPerPatch;
 			if ( x < 0 || x >= NodesPerPatch || y < 0 || y >= NodesPerPatch )
 				throw new ArgumentOutOfRangeException( nameof( position ), "River sample is outside its acquired patch." );
-			return _spatial.SampleWorld( position, naturalHeight, seaLevel );
+			return _spatial.SampleWorld( position, naturalHeight, seaLevel, blendSurfaceFlow );
 		}
 	}
 

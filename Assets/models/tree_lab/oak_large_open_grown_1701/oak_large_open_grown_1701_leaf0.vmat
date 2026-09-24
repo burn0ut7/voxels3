@@ -1,0 +1,13 @@
+Layer0
+{
+	shader "shaders/trees/tree_lab_foliage.shader"
+	F_RENDER_BACKFACES 1
+	TextureColor "models/tree_lab/oak_large_open_grown_1701/leaf_color.png"
+	F_TREE_MOTION 1
+	TextureMotion "models/tree_lab/oak_large_open_grown_1701/motion.png"
+	g_flTreeHeight 897.2192
+	F_ALPHA_TEST 1
+	TextureTranslucency "models/tree_lab/oak_large_open_grown_1701/leaf_opacity.png"
+	g_flAlphaTestReference 0.35
+	g_flTintColor "[1 1.08 0.82]"
+}

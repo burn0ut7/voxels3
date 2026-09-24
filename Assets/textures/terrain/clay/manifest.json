@@ -1,0 +1,20 @@
+{
+  "material": "Clay",
+  "status": "candidate; engine compilation and rendered acceptance pending",
+  "source": "OpenAI built-in image generation; independent original clay artwork",
+  "base_color_prompt": "Create a square seamless tileable PBR base-color texture asset for natural fine-grained grayish blue clay terrain. Orthographic straight-down flat scan, fills entire image. Muted desaturated slate blue-gray, subtle cloudy mineral color variations, dense smooth compacted clay, extremely fine powdery grain and small soft shallow irregular depressions, occasional delicate tiny fissures but NO large cracked mud plates, no pebbles, no gravel, no sand grains, no vegetation, no objects. Fine soft surface not chunky, not rock. Even diffuse illumination, no directional shadows, no highlights, no perspective, no vignette, no text, no borders. Opposite edges should tile seamlessly. Single base-color texture only, not a material ball or multi-map grid. Save output as a local asset for game use.",
+  "height_prompt": "Convert this exact gray-blue clay texture into its matching grayscale HEIGHT/DISPLACEMENT map for subtle terrain parallax. Preserve pixel registration and every clay feature's position and size. White means higher clay, dark means lower tiny depressions and hairline fissures. Smooth shallow mid-gray compacted clay, finely textured, no illumination, no shadows, no new cracks or structures. Continuous seamless tileable opposite edges. Output one square grayscale height map only, same resolution and framing, not a grid. Avoid interpreting color mottling as large raised blobs.",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_format": "RGB8 PNG",
+  "height_channel": "R, linear",
+  "physical_constants_owner": "Assets/shaders/voxels/voxel_terrain.shader: TerrainClay*",
+  "normal": "Central differences of the same filtered height used for parallax, evaluated at its hit position.",
+  "placement": "Independent clay.vmat terrain surface; no procedural distribution or voxel material ID assigned.",
+  "files": {
+    "clay_color.png": "7d8b5e4b4d0e357a5640f13aa2ee05b754feacfc78aa6494f67f87f846507992",
+    "clay_height.png": "73cf9359eceb163b4fd879d3c618d081ccd1c24a0bb9d9ad479698765d436535"
+  }
+}

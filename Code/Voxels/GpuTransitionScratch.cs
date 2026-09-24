@@ -27,7 +27,7 @@ internal sealed class GpuTransitionScratch : IDisposable
 	private readonly GpuBuffer<GpuCellData> _cells = new(
 		CellCount * MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Cells" );
 	private readonly GpuBuffer<uint> _edgeFlags = new(
-		EdgeSlotCount * MaximumBatchSize * 2, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Edge Flags" );
+		EdgeSlotCount * MaximumBatchSize * 3, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Edge Flags" );
 	private readonly GpuBuffer<uint> _edgeVertexIds = new(
 		EdgeSlotCount * MaximumBatchSize, GpuBuffer.UsageFlags.Structured, "Voxel Transition Scratch Edge IDs" );
 	private readonly GpuBuffer<uint> _edgeGroupSums = new(
@@ -80,7 +80,7 @@ internal sealed class GpuTransitionScratch : IDisposable
 			(long)MaximumBatchSize * 144 +
 			(long)DensityCount * MaximumBatchSize * sizeof( float ) * 2 +
 			(long)CellCount * MaximumBatchSize * 16 +
-			(long)EdgeSlotCount * MaximumBatchSize * sizeof( uint ) * 3 +
+			(long)EdgeSlotCount * MaximumBatchSize * sizeof( uint ) * 4 +
 			(long)(EdgeGroupCount + CellGroupCount) * MaximumBatchSize * sizeof( uint ) +
 			(long)MaximumBatchSize * (sizeof( uint ) * 4 + 24 + 64 + 64) +
 			GpuVoxelMesher.TerrainVertexBytes + sizeof( uint ) +

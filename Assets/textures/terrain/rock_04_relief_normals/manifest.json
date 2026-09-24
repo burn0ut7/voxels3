@@ -1,0 +1,17 @@
+{
+  "status": "unaccepted prototype",
+  "tileMetres": 1.5,
+  "heightAmplitudeMetres": 0.16,
+  "approximateHeightMip": 3,
+  "macroDerivative": "periodic central difference at box mip3, bilinear upsample",
+  "fineResidual": "source slope minus mip3 source slope; vector length capped at1",
+  "fineClampedFraction": 0.004878997802734375,
+  "normalConvention": "OpenGL encoded X=-dH/dU, Y=+dH/dV; shader flips GL green",
+  "inputs": {
+    "Assets\\textures\\terrain\\rock_04\\rock_04_disp_2k.png": "6a92df89c866934bec8372da279957fbc45987d92a78b13a86ab3c111cde0d47",
+    "Assets\\textures\\terrain\\rock_04\\rock_04_nor_gl_2k.png": "1ec4f5cd8c7546361331c22a9976e4c3e15d3f5d39efe0c7ec7fbcced13f3bc8"
+  },
+  "output": {
+    "Assets\\textures\\terrain\\rock_04_relief_normals\\rock_04_normal_16cm.png": "0dd042acf50e32f017bb23f5694e471eb74017ac8ccc8505131fb04c7c9d3bbf"
+  }
+}

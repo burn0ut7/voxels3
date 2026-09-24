@@ -1,6 +1,27 @@
 # Static surface water
 
-Status, 2026-09-12: connected river appearance approved by the user; the shared
+## Marsh candidate (2026-09-20)
+
+Current source is generator50/water8, retaining river14 and the shared sea-level
+reservoir. Generated coverage now evaluates the same biome-refined bed as medium
+and terrain queries. Humid lowland cells also use conservatively pruned interior
+wet sampling, including the allowance for shallow existing river cuts.
+
+The existing optional appearance pages now use RGBA8888: signed flow XY around
+byte128, canonical marsh weight, and an unused byte. Data is sampled on dry banks
+too, and shared samples never depend on owner bounds. Each33x33tile is4356bytes;
+each528x528page is1,115,136bytes. `WaterStatus` retains its historical flow-texture
+label and reports the new actual byte count. The shader blends local olive-brown
+tint, shorter transmission and calmer ripples; full marsh has zero advection.
+Camera-ray depth affects optics, not the habitat mask. Strong river flow keeps
+its ordinary appearance. Terrain coverage, resource lifecycle and water elevation
+remain under their existing owners. See [design and limits](../Plans/MarshFirstSlice.md).
+
+This source candidate has managed build and independent source review only.
+The historical accepted water results below do not qualify marsh visuals,
+coarse-LOD tint, cold shader load or its performance.
+
+Historical status, 2026-09-12: connected river appearance approved by the user; the shared
 chunk lifecycle prototype passed the recorded local, edit and figure-eight checks. Current generation is48, river recipe14,
 water recipe7. [The drainage design](../Plans/RiverDrainageBasins.md)
 records the branching method that the user explicitly asked to preserve.
@@ -529,3 +550,182 @@ maximum-frame regression gate. The uniform shortcut was not demonstrated in the
 sampled owners. Both additions were withdrawn and the tested convex-hull control
 restored byte-for-byte. These paragraphs describe the experiment, not current
 runtime behavior. See [test evidence](../ValidationEvidence/WaterFast/README.md).
+
+
+## Flowing surface shading (2026-09-18 candidate)
+
+The water surface remains the existing generated convex hull at SeaLevel. Only
+its appearance changes: depth-based transmission and tint, dielectric lighting,
+and downstream-advected ripple normals. There is no displacement, wave simulation,
+water transport, changed collision, or changed field/save identity.
+
+GeneratedWaterCells owns immutable downstream XY samples on its existing 33 by
+33 corner lattice. The same RiverWorld.SampleWorld call already needed for each
+coverage sample opts into blended surface Direction; drawing never captures or traverses the river
+graph. Nonzero samples lazily allocate 8712 bytes per river chunk. Open-water and
+dry chunks retain no flow array. Bytes includes the added payload. Refinement
+continues to find narrow water coverage; it does not increase the shading lattice.
+Consequently very distant, sub-lattice rivers can lose directional detail; the
+shader fades unresolved ripple normals with screen footprint. This is an
+appearance approximation, not a different drainage authority.
+
+At junctions, the water-only sampling option accumulates every overlapping wet
+segment's downstream unit vector with weight(1-(distance/radius)^2)^2. Dividing
+by max(1,totalWeight) bounds speed to one and smoothly reduces the river influence
+at the bank. Both the weight and its slope vanish at the wet-support edge. This
+removes the nearest-segment direction switch that stretched the advected ripples
+into a visible streak at a confluence. The calculation reuses the existing bounded
+spatial traversal and segment distances; it adds no river queries or texture data.
+Default queries retain the original nearest-reach Direction, and carved height,
+water elevation, geometry and recipe/save identity are unchanged. Shared world
+positions use the same kernel regardless of their chunk owner. A separate blur
+pass was rejected because it would require chunk halos and extra queries merely
+to approximate information already available during canonical sampling.
+
+SurfaceWaterRenderer owns at most one RG32F flow texture per nonempty retained
+river draw, uploaded once alongside its existing vertices and disposed on the
+same retirement path. Open water binds the engine's zero texture. Publication,
+terrain pairing, cancellation, revision rejection, and edit invalidation retain
+their existing owners. Generation runs on the existing worker; resource creation
+and parameter updates stay on the existing engine/render boundary under its lock.
+No per-frame CPU river query, mesh rebuild, texture upload, or allocation is added.
+
+One translucent SceneCustomObject owns rendering for all water chunks. It retains
+infinite scheduler bounds and explicitly frustum-culls each published chunk.
+Before the first visible water draw in each rendering view, Graphics.GrabFrameTexture
+copies the opaque scene once, with two box-filtered mip levels. Every water chunk
+samples that same copy, preventing repeated captures or feedback from previously
+drawn water. No copy occurs when no published chunk intersects the frustum.
+This ownership change is required for a shared, correctly bound scene-color input;
+the engine's automatic framebuffer-copy flag did not supply usable color to the
+previous per-chunk custom Graphics.Draw path on build26.09.15.
+
+The shader uses opaque scene depth and no water depth writes. Half-transmission
+distance controls how quickly the bed disappears along the view ray; shallow
+intersections fade over 3 inches. A short perturbed transmission ray refracts bed
+detail; a depth check rejects offsets crossing foreground or dry banks. The color
+is composed once and premultiplied only by the shoreline fade. Standard material
+lighting adds dielectric sun highlights. With no environment map, the installed
+ScreenSpace::Trace follows the reflection ray through scene depth for at most64
+steps. Valid hits sample the shared scene color at mip1; unavailable/off-screen
+hits fall back to the camera background color and reflection elevation. These
+are screen-space reflections, with their inherent off-screen and thin-geometry
+limits; there is no second camera or planar-reflection pass.
+
+Warped, rotated procedural ripple slopes at11/27/63-inch scales fade with pixel
+footprint and advect in canonical downstream direction with two alternating
+6-second phases, avoiding unlimited distortion and visible phase resets. Zero
+river flow uses gentle open-water drift. Geometry remains flat. Downstream follows
+the existing drainage destination, including inland lake basins; it does not
+invent a route from every basin to the ocean.
+
+VoxelManager's Water inspector controls own local presentation: visibility in
+metres (half-transmission distance), sRGB tint, flow speed in inches/second, and
+ripple strength. They update render attributes only when changed and do not
+regenerate cells or alter network/world truth. Defaults are 3 metres, muted teal,
+32 inches/second and 0.16 ripple strength. Designer starting points: 12 metres
+for clear water; 0.25 metres and olive/brown tint for cloudy swamp water. These
+are global scene appearance controls; automatic biome profiles are not implemented.
+
+Alternatives: a per-fragment river atlas would repeat generation work in rendering
+and violate chunk ownership; per-vertex direction on the existing minimal hull
+would flatten bends across each large chunk. A small generated flow texture keeps
+the hull unchanged and bounds work and storage. Planar reflection, simulation and displacement remain deferred. A bounded engine
+screen-space trace and one shared scene-color copy provide reflected banks and
+refracted bed detail without an additional world render. Memory/CPU/GPU costs
+must satisfy the unchanged combined-source figure-eight gates.
+
+Qualification: WATER-SHADING-001/v1 in the validation ledger owns matched
+figure-eight gates, actual resource measurements, native visual captures,
+downstream motion, clear/cloudy checks and cold-start validation. Until those
+checks complete this section describes a candidate, not accepted runtime behavior.
+
+## Batched flow rendering candidate — 2026-09-18
+
+The accepted water control spends about0.165ms in managed draw submission in
+the terminal standing200-frame window. It has304published chunks and2508hull
+vertices. The shader zero-contribution experiment showed no moving gain and
+its standing view was interrupted. This candidate restores the accepted shader
+math and changes only derived draw-resource grouping and texture addressing.
+
+SurfaceWaterRenderer remains the sole owner of disposable GPU state. Inputs
+are the existing immutable published/retained chunks; generation, coverage,
+mesh positions, world state and all appearance controls remain unchanged.
+Engine-thread publication retires slots no longer retained or published, then
+uploads each newly admitted river field once into a33x33 RG32F atlas tile.
+First-fit pages contain16x16tiles (528x528texels,2230272bytes each); existing
+holes are reused before a new page is allocated. Empty pages are disposed.
+Page count is bounded by peak concurrently retained river owners, rather than
+distance travelled. Ocean-only chunks share one page without a flow texture.
+There is no mip chain use for flow: exact boundary texel centers and local
+clamping retain bilinear tile-edge behavior without neighbor contamination.
+
+Only on publication changes, each page concatenates its visible owners' small
+convex hulls into reused CPU/GPU capacity. A36-byte derived draw vertex carries
+the original position, exact clip rectangle and atlas origin; canonical12-byte
+WaterVertex geometry remains unchanged. Flat interpolants preserve per-chunk
+coverage and pixel-world flow mapping. All four original vertex clip planes
+remain. Draw-time frustum checks stop at the first visible owner of each page,
+then one draw submits its published hulls; the GPU clips off-screen hulls.
+The opaque-scene copy still occurs exactly once iff any owner intersects the
+view. Original64-step reflections, refraction, ripple evaluation and quality
+constants remain unchanged. Publication and drawing retain the existing lock.
+
+This supersedes per-chunk buffers/texture bindings. The earlier aggregate
+experiment copied millions of detailed mesh vertices; the current canonical
+hulls emit only2508at the fixed start. That concrete reduction makes bounded
+page concatenation worth measuring now. UploadedVertices will truthfully count
+all batch uploads, rather than once-per-descriptor uploads. Added batch/atlas
+diagnostics expose the real tradeoff. Maximum retained coverage still follows
+the manager's existing budget; no world-sized plane or new water cache exists.
+
+Validation must measure publication/streaming allocation and frame tails as
+well as WaterRender scope, GPU time and memory. Require the existing10% targeted
+cost improvement and unchanged whole-world gates. Preserve matched bank/close,
+junction motion, ocean, clear/cloudy and boundary appearance; check geometry
+digest/flow samples, owner handoff, lifecycle reset and fresh shader startup.
+Cached CommandList playback was rejected because installed public APIs do not
+support it in this path. No speculative public/internal API fallback remains.
+
+Historical isolation: the ocean lines also reproduced with the accepted per-chunk
+renderer. The current candidate again uses the bounded batching implementation;
+its performance acceptance remains pending. See the ledger for rejected trials.
+
+## Ocean ripple continuity correction — 2026-09-18
+
+RippleNoise now hashes signed integer lattice corners through deterministic
+32-bit unsigned mixing, then maps the upper24bits to[0,1). Shared corners are
+identical independent of floating expression reassociation. The former floating
+frac/hash formulation produced visible ripple-cell discontinuities in the far
+ocean view; integer hashing removes them through a full animation cycle. These
+were shading grid boundaries, not missing chunk geometry. The random pattern
+changes, but scales, weights, cubic interpolation, analytic slopes, flow phases,
+clarity, lighting and64-step reflection quality remain intact. No world recipe
+or save identity changes. Rejected ray-plane/quintic/SSR-filter experiments are
+not retained. Source/lifecycle/performance qualification is recorded in the ledger.
+
+The current candidate includes bounded flow-page batching and integer hashing.
+Native close/junction/clear-cloudy checks pass. A full run reduced terminal water
+submission scope cost, but later inspection found its saved terrain differed
+from both older comparators. Those measurements cannot establish performance
+acceptance; a matched control/candidate on the current saved terrain is pending
+the user approval required by the benchmark workload policy.
+
+## Reflection traversal correction candidate
+
+The distant head-on shoreline exposes comb-like SSR holes. Installed generic
+traversal uses cancellation-prone projected differences/boundary differences,
+2x2 terminal cells with direction-dependent neighboring-cell reads, and depth
+validation after a 1-depth conversion. Stable projection alone fixes part of
+the image; increasing64steps to256does not remove the remaining comb. The water
+shader now owns one bounded64iteration hierarchical traversal over the existing
+opaque depth pyramid, descending to the actual full-resolution cell before hit
+acceptance. It preserves all material/flow controls and reflection budget; no
+extra world state, render target or per-frame CPU work. It rejects submerged
+bed hits and uses existing sky fallback outside visible valid scene surfaces.
+This replaces the engine wrapper only for water; engine files stay untouched.
+Native matched head-on and angled motion checks pass; close river transmission
+and reflection remain visible. The unchanged source succeeded on a cold retry
+after a recorded startup AppHang; the cause of that first exit is unestablished.
+Final source also passed a fresh visible startup with no new crash marker or
+compile errors. Matched canonical timing remains pending workload approval.

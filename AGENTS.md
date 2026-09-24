@@ -9,6 +9,13 @@ instance first and use it when possible. Keep the editor visible and interactive
 do not launch headless game clients. This project-specific authorization takes
 precedence over a general instruction requiring separate editor-launch approval.
 
+For requested s&box development and validation, use native editor/game tools to
+inspect the scene, move cameras and change angles, capture rendered views, use
+play-mode controls and run existing project tests. These scoped operations are
+allowed without a separate confirmation. Keep the game visible and interactive.
+This does not authorize taking over the desktop, global mouse/keyboard, browsers
+or unrelated applications. Respect explicit requests to stop control immediately.
+
 ## Start Here
 
 - Use the `sbox` skill for s&box work before API research, planning, review, or

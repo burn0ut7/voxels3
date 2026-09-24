@@ -235,16 +235,19 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			PersistentDensity( block, int3(b) ), request.Terrain, request.TerrainScales, request.TerrainShape, request.Reserved0 != 0 );
 		EdgeFlags[index] = asuint( coordinate ) + 1u;
 		float3 world = VoxelEdgePosition( first, second, coordinate );
-		float4 materialWeights = GenerateVoxelMaterialWeights( world, request.Terrain, request.TerrainScales, request.TerrainShape );
+		float gravelWeight;
+		float4 materialWeights = GenerateVoxelMaterialWeights( world, request.Terrain, request.TerrainScales, request.TerrainShape, gravelWeight );
 		if ( request.Reserved0 != 0 )
 		{
 			uint materialBase = (uint)PlacedMaterialOffset + block * (uint)HaloSampleCount;
 			float dirt = lerp( DensitySamples[materialBase + PersistentHaloIndex( int3(a) )],
 				DensitySamples[materialBase + PersistentHaloIndex( int3(b) )], coordinate );
 			materialWeights = lerp( materialWeights, float4( 0.0, 1.0, 0.0, 0.0 ), saturate( dirt ) );
+			gravelWeight *= 1.0 - saturate( dirt );
 		}
-		EdgeFlags[(uint)EdgeSlotCount * (uint)BatchSize + index] =
-			PackGeneratedVoxelWeights( materialWeights );
+		uint2 packedWeights = PackGeneratedVoxelWeights( materialWeights, gravelWeight );
+		EdgeFlags[(uint)EdgeSlotCount * (uint)BatchSize + index] = packedWeights.x;
+		EdgeFlags[2u * (uint)EdgeSlotCount * (uint)BatchSize + index] = packedWeights.y;
 		InterlockedXor( Digests[block].y, PersistentHash( asuint(world.x) ^ PersistentHash(asuint(world.y)) ^ PersistentHash(asuint(world.z)) ^ slot ) );
 		return;
 	}

@@ -1,11 +1,19 @@
 {
+  "patchRotation": "none",
+  "combinedHeightGaussianSigmaTexels": 0,
+  "tileMetres": 1.4,
+  "amplitudeMetres": 0.02,
+  "minimumHeightLod": 2,
+  "normalRecipe": "quantized height box mip2, lattice chain rule, GL encoding; fine residual sigma8 cap1 gain0.5",
   "size": 4096,
   "period": 2,
-  "blendExponent": 4,
+  "blendExponent": 8,
   "blendCutoff": 0.001,
+  "cutoffExponent": 4,
   "numpy": "2.3.5",
   "pillow": "12.3.0",
-  "generatorSha256": "d089f712f47fa2263eeed53c97862ec81d725b81b624f73a7e1442f37e62b79e",
+  "generatorSha256": "b372c05c3d74d9e5f8f095bd5daba3bc47524c3978c85a3d7203b7fd3bb2c050",
+  "publisherSha256": "fda398f721d24cd09910825f0698cd99053a0a444a604966d1e53652abace6e7",
   "source": {
     "color": {
       "path": "Assets/textures/grass/grass004/Grass004_2K-PNG_Color.png",
@@ -22,13 +30,18 @@
     "ao": {
       "path": "Assets/textures/grass/grass004/Grass004_2K-PNG_AmbientOcclusion.png",
       "sha256": "a871074b75eb965b254e23786f56a56e3bcbb21a423d577ead874975e51ed3a5"
+    },
+    "height": {
+      "path": "Assets/textures/grass/grass004/Grass004_2K-PNG_Displacement.png",
+      "sha256": "9b9e3fc59effe22d563ab9f122b85c73108c520cb0d10d479b00ef7611015ccc"
     }
   },
   "output": {
-    "grass_ao.png": "b7c1811ece47e6ab7b78a2ad808d89d403fb4641296a4ce74b0204d9cd572dbd",
-    "grass_color.png": "0b9f0e182f87d3c0858987ce08be370462c8812cae1d9fe1cd2ac2d9cfbe8fd8",
-    "grass_normal.png": "3b9e42fc008ffdd996a5ffffd081eb5e652f247c55f4aa37ab62929b093bd99a",
-    "grass_roughness.png": "b3e85f4d40985428d7dd33e815abd7881d04974d6db5d4ca798ea1ee972480c2"
+    "grass_ao.png": "3db9564aa2f7dfd39f2f98575930885e19c498b632f179f17ea5e346808f4dff",
+    "grass_color.png": "711da3af9893d9e17973933936b9559bf3d279531c6c4474015141ab76e4436d",
+    "grass_height.png": "5ed2d755848f5490a3ba03ff44a04ba8514330cf2f7cacd84505161710b42539",
+    "grass_normal.png": "96dc7f2fb744373bdccf30449c7e7f9c4cd3f1c252c697c3cea3d239d0a861d5",
+    "grass_roughness.png": "de30047d28e506e3093c1ab46559f087aa29fe02b32b828d16666243e574887b"
   },
-  "shaderIncludeSha256": "79259b18ea304cfb402645f7a89665872d8ba1e882041fc2227bb8c7dafc92a4"
+  "shaderIncludeSha256": "acde46d255f168bd73a7bc320e85dd9dc9daf7288a37f3898e9cd44e9498a6ac"
 }

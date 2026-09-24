@@ -16,12 +16,14 @@ internal sealed class RiverSpatialIndex
 		Nodes = nodes.ToArray();
 	}
 
-	public RiverNetwork.Sample SampleWorld( Vector3 position, float naturalHeight, float seaLevel )
+	public RiverNetwork.Sample SampleWorld( Vector3 position, float naturalHeight, float seaLevel, bool blendSurfaceFlow = false )
 	{
 		var px = position.x;
 		var py = position.y;
 		var height = naturalHeight;
 		var direction = Vector2.Zero;
+		var surfaceFlow = Vector2.Zero;
+		var surfaceWeight = 0f;
 		var bestDistance = float.PositiveInfinity;
 		var shoulder = Math.Clamp( RiverNetwork.MinimumBankWidth + MathF.Max( 0f, naturalHeight - seaLevel ) * RiverNetwork.ValleySlope,
 			RiverNetwork.MinimumBankWidth, RiverNetwork.BankWidth );
@@ -60,6 +62,16 @@ internal sealed class RiverSpatialIndex
 				if ( distance >= radius + shoulder ) continue;
 				var surface = start.z + t * (end.z - start.z);
 				var normalized = distance / radius;
+				if ( blendSurfaceFlow && normalized < 1f && lengthSquared > 0f )
+				{
+					// All overlapping wet reaches contribute. The compact kernel and
+					// its slope vanish at the bank, so a joining branch cannot snap
+					// the shading direction at the nearest-reach boundary.
+					var weight = 1f - normalized * normalized;
+					weight *= weight;
+					surfaceFlow += new Vector2( dx, dy ) * (weight / MathF.Sqrt( lengthSquared ));
+					surfaceWeight += weight;
+				}
 				var depth = segment.StartDepth + t * (segment.EndDepth - segment.StartDepth);
 				var bed = surface - depth * MathF.Max( 0f, 1f - normalized * normalized );
 				var bank = Math.Clamp( (distance - radius) / shoulder, 0f, 1f );
@@ -74,6 +86,9 @@ internal sealed class RiverSpatialIndex
 			}
 			nodeIndex = node.Escape;
 		}
+		// Keep the terrain/query direction contract unchanged by default. Water
+		// generation opts into this bounded visual velocity; no extra traversal.
+		if ( blendSurfaceFlow ) direction = surfaceFlow / MathF.Max( 1f, surfaceWeight );
 		return new RiverNetwork.Sample( height, seaLevel, direction );
 	}
 

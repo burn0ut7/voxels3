@@ -9,8 +9,12 @@ link to it elsewhere instead of copying its state, settings, or results.
 | What constraints apply to a domain? | [Agent routes](../AGENTS.md#route-map): domain-specific design and validation requirements, not implementation snapshots. |
 | How do host debug flight and teleport work? | [Admin menu](Architecture/AdminMenu.md). |
 | What controls the two-color fog and camera far-plane fade? | [Distance fog](Architecture/DistanceFog.md). |
-| How should performant volumetric clouds be built before weather? | [Cloud rendering research](Research/VolumetricClouds.md): Horizon/Nubis, Frostbite, Unreal and HDRP evidence, s&box integration, first-slice proposal and qualification; not implemented. |
+| What owns volumetric cloud rendering? | [Cloud layer](Architecture/VolumetricClouds.md): density, lighting, camera integration, resources and qualification status. |
+| Which production cloud techniques informed this renderer? | [Cloud rendering research](Research/VolumetricClouds.md): Horizon/Nubis, Frostbite, Unreal and HDRP evidence, transfer limits and alternatives. |
 | What owns terrain state, coordinates, generation, and CPU preparation? | [Voxel foundation](Architecture/VoxelChunkFoundation.md). |
+| What marks sandy ocean shores? | [Coastline first slice](Plans/CoastlineFirstSlice.md): tenth biome, natural shore proximity, sand and acceptance limits. |
+| What adds shallow pools and muddy lowlands? | [Marsh first slice](Plans/MarshFirstSlice.md): ninth biome, water appearance, limits and pending qualification. |
+| What adds separate large-grain gravel with parallax? | [Gravel terrain](Plans/GravelTerrain.md): placement, six-weight rendering and pending qualification. |
 | What owns material identity, soil layers and checker appearance? | [Voxel materials](Architecture/VoxelMaterials.md). |
 | Which water/prediction performance changes were adopted? | [Completed-work experiments](ValidationEvidence/IdleWork/Experiment.md): measured gains, explicit adoption and allocation/drain exceptions. |
 | How do meadow grass, wind, color and render range work? | [Meadow grass](Architecture/StaticGrass.md): local range, coherent GPU wind, soft color patches, published terrain geometry, budgets and qualification. |
@@ -28,9 +32,12 @@ link to it elsewhere instead of copying its state, settings, or results.
 | Which larger CPU/memory capabilities are worth investigating? | [Performance enhancement directions](Research/PerformanceEnhancementDirections.md): bounded metadata, planning, admission and revisit reuse; separate from local optimizations. |
 | What should change in GPU extraction, allocation, or rendering? | [GPU meshing study](Research/GpuMeshingOptimizationStudy.md): source audit, external comparisons, deletion candidates, and measurement gates. |
 | How should forests, grasslands, hills and mountains be generated? | [Biome terrain generation](Research/BiomeTerrainGeneration.md): primary-source comparisons, deep-module ownership, landform/climate ordering, compatible biome transitions, bounded population and future feature boundaries; research only. |
+| What is the eight-biome groundwork implementing? | [Biome slice](Plans/BiomesFirstSlice.md): live climate/label authoring, three-seed distribution evidence, prepared surface/relief integration and independent acceptance gates; biome-only scope, no vegetation changes. |
 | How do new trees grow across species and ages? | [Shared tree growth](Architecture/TreeGrowth.md): deterministic seasonal graph, species profiles, Blender authoring jobs and source/export boundaries. |
 | How can we keep full canopies while reducing leaf rendering cost? | [Leaf rendering optimization](Research/LeafRenderingOptimization.md): dense-oak source audit, runtime thinning, existing GPU evidence, shipped-game comparisons and ranked same-count/coverage-preserving proposals; research only. |
-| Should each tree have unique generated geometry? | [Tree generation research](Research/TreeGeneration.md): unique meshes, reusable generated variants, instancing evidence, visual variety and measurement gates; research only. |
+| How should convincing trees, leaves and distant LODs be made? | [Tree generation research](Research/TreeGeneration.md): primary game-production comparisons, materials, branch/leaf geometry, baking, impostors, reuse and staged validation; proposals only. |
+| What generates the spawn-area trees and their LODs? | [Spawn trees](Architecture/SpawnTrees.md): imported Blender oak/ash/spruce/birch catalog, terrain support, shared models, trunk collision, visual qualification and current limits. |
+| How are seeded tree profiles built and exported from Blender? | [Blender tree imports](Architecture/BlenderTreeImport.md): protected source library, oak profiles, material baking, mesh parts, LODs and verified installation. |
 | How should Blender trees move in the wind? | [Tree wind research](Research/TreeGeneration.md#wind-for-the-blender-library-september-20): authoring data, inherited branch/leaf motion, native engine limits and proposed validation. |
 | What is the first terrain-generation slice? | [Regional landform plan](Plans/RegionalLandformsFirstSlice.md): replace the exterior generator, retain caves, expose eight global shaping controls, and qualify landforms before climate/biomes; planned, not implemented. |
 | Where does procedural erosion apply? | [Mountain erosion prototype](Plans/SelectiveErosionPrototype.md): mountain-dominant terrain only; implementation and qualification history. |

@@ -1,41 +1,30 @@
 VoxelDebugOverlay {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	pointer-events: none;
-	font-family: Consolas;
-	font-size: 18px;
-	color: #eeeeee;
-
-	.debug-readout {
-		position: absolute;
-		top: 16px;
-		left: 16px;
-		max-width: 96%;
-		flex-direction: column;
-		align-items: flex-start;
-	}
-
-	.heading, .row, .hint {
-		background-color: rgba(0, 0, 0, 0.72);
-		padding: 3px 7px;
-	}
-
-	.heading {
-		font-weight: bold;
-		margin-bottom: 8px;
-
-		span {
-			margin-left: 18px;
-			color: #aaaaaa;
-		}
-	}
-
-	.hint {
-		font-size: 14px;
-		color: #aaaaaa;
-		margin-top: 8px;
-	}
+	position: absolute; width: 100%; height: 100%; pointer-events: none;
+	font-family: Arial; font-size: 16px; color: #e9eef2;
+	.debug-readout { position: absolute; top: 16px; left: 16px; max-width: 720px; flex-direction: column; background-color: rgba(13,20,27,0.9); padding: 14px; gap: 5px; border-radius: 6px; }
+	.heading { font-size: 23px; font-weight: bold; letter-spacing: 1px; }
+	.heading span { font-size: 13px; color: #b0bdcb; margin-left: 14px; }
+	.hint { font-size: 13px; color: #adbdcb; flex-shrink: 0; }
+	.map-backdrop { position: absolute; width: 100%; height: 100%; pointer-events: all; justify-content: center; align-items: center; background-color: rgba(0,0,0,0.22); }
+	.biome-window { width: 1020px; max-width: 96%; max-height: 94%; overflow: scroll; flex-direction: column; padding: 22px; gap: 12px; background-color: rgba(13,20,27,0.97); border: 1px solid #516477; border-radius: 10px; }
+	.title-row { justify-content: space-between; align-items: center; flex-shrink: 0; }
+	.layers, .map-controls { gap: 7px; flex-shrink: 0; }
+	button { padding: 9px 12px; background-color: #293b4c; border-radius: 4px; cursor: pointer; flex-shrink: 0; &:hover { background-color: #425c74; } &.selected { background-color: #386884; color: white; } }
+	.map-content { gap: 22px; flex-shrink: 0; }
+	.map-column { width: 520px; flex-shrink: 0; flex-direction: column; gap: 10px; }
+	.map-frame { width: 520px; height: 520px; background-color: #070e14; position: relative; overflow: hidden; border: 1px solid #506171; }
+	.biome-image { width: 100%; height: 100%; cursor: crosshair; }
+	.player-marker, .selection-marker { position: absolute; transform: translate(-50%, -50%); font-size: 26px; font-weight: bold; text-shadow: 0px 1px 3px black; pointer-events: none; }
+	.player-marker { color: white; }
+	.selection-marker { color: #ff82c5; }
+	.map-loading { position: absolute; width: 100%; height: 100%; justify-content: center; align-items: center; pointer-events: none; }
+	.map-controls button { padding: 8px 10px; }
+	.details { flex-grow: 1; flex-direction: column; gap: 9px; }
+	.section { font-size: 12px; font-weight: bold; color: #97b7d1; margin-top: 5px; }
+	.weights { font-size: 14px; min-height: 35px; }
+	.selection-detail { white-space: pre-line; font-size: 14px; min-height: 82px; }
+	.legend { flex-wrap: wrap; gap: 7px; }
+	.legend-item { width: 45%; align-items: center; font-size: 14px; gap: 7px; }
+	.swatch { width: 16px; height: 16px; border-radius: 3px; }
+	.status { color: #9faebe; font-size: 12px; }
 }

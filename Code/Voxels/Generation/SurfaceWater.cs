@@ -9,7 +9,7 @@ public enum WorldMedium
 /// <summary>Static surface reservoirs above the pre-cave seabed. No simulation or mutable state.</summary>
 internal static class SurfaceWater
 {
-	public const int CurrentVersion = 7;
+	public const int CurrentVersion = 8;
 	public const float DefaultSeaLevel = 0f;
 	public const float MinimumSeaLevel = -8192f;
 	public const float MaximumSeaLevel = 8192f;

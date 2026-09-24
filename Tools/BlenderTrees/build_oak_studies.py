@@ -16,16 +16,14 @@ EVIDENCE = ROOT / "Docs/ValidationEvidence/BlenderTrees"
 PREFIX = "OAK_STUDY_"
 TAPER = 1.15
 BARK_TILE_METRES = 1.8
-NEEDLES_PER_METRE = 950
-NEEDLES_PER_SPRAY = 64
-NEEDLE_SPRAY_LENGTH = NEEDLES_PER_SPRAY / NEEDLES_PER_METRE
+NEEDLES_PER_METRE = 2000
 SPECIES = {
-	"Oak": {"name":"English oak", "height":16, "leaf":"lobed", "bark":"japanese_camphor_bark", "tile":1.8},
-	"Ash": {"name":"Common ash", "height":20, "leaf":"compound", "bark":"japanese_camphor_bark", "tile":1.8},
-	"Spruce": {"name":"Norway spruce", "height":18, "leaf":"needle", "bark":"pine_bark", "tile":2.0},
-	"Birch": {"name":"Silver birch", "height":16, "leaf":"triangular", "bark":"japanese_camphor_bark", "tile":1.8},
+	"Oak": {"name":"English oak", "height":16, "leaf":"lobed", "bark":"bark_brown_02", "tile":1.8, "leaf_density":34.2},
+	"Ash": {"name":"Common ash", "height":20, "leaf":"compound", "bark":"japanese_camphor_bark", "tile":1.8, "leaf_density":1.35},
+	"Spruce": {"name":"Norway spruce", "height":18, "leaf":"needle", "bark":"pine_bark", "tile":2.0, "leaf_density":1.35},
+	"Birch": {"name":"Silver birch", "height":16, "leaf":"triangular", "bark":"japanese_camphor_bark", "tile":1.8, "leaf_density":1.35},
 }
-TREE_SETTINGS = ("height","spread","girth","lean","upward","droop","branch_density","leaf_density","branch_angle","character","fork_height","growth_direction","crown_bias","root_spread","root_depth","age","competition","light_response","resource")
+TREE_SETTINGS = ("height","spread","girth","lean","upward","droop","branch_density","leaf_density","branch_angle","character","fork_height","growth_direction","overhead_light","crown_bias","root_spread","root_depth","age","competition","light_response","resource")
 
 
 def growth_module():
@@ -93,10 +91,10 @@ def publish_growth(graph, label, settings, generator_sha256=None):
 def preset_settings(species="Oak",stage="Mature",form="Open_Grown"):
 	values={"Open_Grown":(16,1,1,0,.55,.35,57,.45,.24,.25),"Woodland":(21,.8,.8,2,.8,.12,44,.35,.47,.2),"Weathered":(14,1.1,1.15,7,.4,.45,59,.65,.17,.55)}[form]
 	keys=("height","spread","girth","lean","upward","droop","branch_angle","character","fork_height","crown_bias")
-	settings=dict(zip(keys,values));settings.update(branch_density=1.35,leaf_density=1.9,growth_direction=-25 if form=="Weathered" else 0,root_spread=1,root_depth=1.2)
+	settings=dict(zip(keys,values));settings.update(branch_density=1.35,leaf_density=SPECIES[species]['leaf_density'],overhead_light=False,growth_direction=-25 if form=="Weathered" else 0,root_spread=1,root_depth=1.2)
 	if species!="Oak":
 		settings["height"]=SPECIES[species]["height"]*(1.15 if form=="Woodland" else .9 if form=="Weathered" else 1)
-		settings.update(branch_density=1.05,leaf_density=1.35)
+		settings.update(branch_density=1.05)
 		if species=="Ash":settings.update(upward=.68,droop=.16,branch_angle=48,fork_height=.30)
 		elif species=="Spruce":settings.update(spread=1,upward=.28,droop=.5,branch_angle=72,fork_height=.10,character=.25,crown_bias=.12)
 		elif species=="Birch":settings.update(girth=.78,upward=.6,droop=.75,branch_angle=48,fork_height=.28,character=.42)
@@ -125,13 +123,30 @@ def point_on(points, t):
 
 
 def smooth_path(controls, steps=5):
+	"""Centripetal root curves with monotone height between soil controls."""
 	controls = [Vector(p) for p in controls]
+	spans=[max((b-a).length**.5,1e-8) for a,b in zip(controls,controls[1:])]
+	slopes=[(b.z-a.z)/span for a,b,span in zip(controls,controls[1:],spans)]
+	heights=[slopes[0]]
+	for i in range(1,len(controls)-1):
+		left,right=slopes[i-1],slopes[i]
+		# Fritsch-Butland harmonic slopes preserve shallow/deep transitions
+		# without a descending root briefly turning upward between controls.
+		w1=2*spans[i]+spans[i-1];w2=spans[i]+2*spans[i-1]
+		heights.append((w1+w2)/(w1/left+w2/right) if left*right>0 else 0)
+	heights.append(slopes[-1])
 	result=[]
 	for i in range(len(controls)-1):
-		a=controls[max(0,i-1)]; b=controls[i]; c=controls[i+1]; d=controls[min(len(controls)-1,i+2)]
+		b=controls[i];c=controls[i+1]
+		a=controls[i-1] if i else b*2-c
+		d=controls[i+2] if i+2<len(controls) else c*2-b
+		x=max((b-a).length**.5,1e-8);y=max((c-b).length**.5,1e-8);z=max((d-c).length**.5,1e-8)
+		m0=(c-b)+y*((b-a)/x-(c-a)/(x+y))
+		m1=(c-b)+y*((d-c)/z-(d-b)/(y+z))
+		m0.z=heights[i]*y;m1.z=heights[i+1]*y
 		for j in range(steps):
 			t=j/steps
-			result.append(0.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t))
+			result.append(b*(2*t**3-3*t*t+1)+m0*(t**3-2*t*t+t)+c*(-2*t**3+3*t*t)+m1*(t**3-t*t))
 	result.append(controls[-1])
 	return result
 
@@ -141,8 +156,9 @@ class Geometry:
 		self.verts=[];self.face_vertices=array('i');self.face_sizes=array('i');self.uv=array('f');self.mats=array('i');self.part=0
 		self.sweeps=[];self.branch_ids=array('i');self.active_branch=-1
 		self.tile=tile
-		self.radii=[];self.needle_rotations=[];self.needle_scales=[];self.needle_variants=[]
-		self.attachments=[]
+		self.radii=[];self.needle_batches=[];self.needle_distance=0;self.needle_length=0
+		self.needle_candidate_count=0;self.needle_occluded_count=0;self.needle_exposed_length=0
+		self.attachments=[];self.attachment_nodes=[];self.attachment_radii=[]
 
 	def face(self, indices, uv, material=0):
 		self.face_vertices.extend(indices);self.face_sizes.append(len(indices))
@@ -189,7 +205,11 @@ class Geometry:
 			growth_radius=r
 			if start_blend:
 				blend=min(1,t/start_blend);r*=max(.001,blend*blend*(3-2*blend))
-			if root:r*=1+.18*math.exp(-t*20)
+			if root and (profile is not None or parent==0):r*=1+.32*math.exp(-t*20)
+			elif not start_blend and graph_axis<0:
+				# A branch collar grows into its parent instead of meeting it as
+				# an unexpanded pipe. Keep the swelling local to the attachment.
+				r*=1+.26*math.exp(-distance/max(radius*2.2,.015))
 			previous_v=v
 			if last_radius is not None:v+=(p-path[i-1]).length/(math.tau*(last_radius+r)*.5/repeats)
 			last_radius=r
@@ -197,7 +217,14 @@ class Geometry:
 			for j in range(sides):
 				a=2*math.pi*j/sides
 				irregular=1+.036*math.sin(3*a+phase+t*2)+.021*math.sin(5*a-phase+t*4)
-				self.verts.append(tuple(p+(axis*math.cos(a)+cross*math.sin(a))*r*irregular))
+				radial=(axis*math.cos(a)+cross*math.sin(a))*r*irregular
+				if root and profile is None and parent==0:
+					# Structural root shoulders are upright buttresses near the
+					# bole, becoming round buried roots farther from it.
+					shoulder=math.exp(-distance/max(radius*1.5,.02))
+					radial.x*=1-.18*shoulder;radial.y*=1-.18*shoulder
+					radial.z*=1+.4*shoulder
+				self.verts.append(tuple(p+radial))
 				self.radii.append(growth_radius)
 			if i:
 				for j in range(sides):
@@ -218,11 +245,12 @@ class Geometry:
 		across,normal=across*math.cos(roll)+normal*math.sin(roll),normal*math.cos(roll)-across*math.sin(roll)
 		start=len(self.verts)
 		width=length*rng.uniform(.62,.78)
+		camber=rng.uniform(.13,.22);twist=rng.uniform(-.085,.085)
 		for row in range(3):
 			t=row/2
 			for col in range(3):
 				x=col-1
-				fold=length*(.11*math.sin(math.pi*t)-.095*abs(x)*math.sin(math.pi*t)-.08*t*t)
+				fold=length*(camber*math.sin(math.pi*t)-camber*.72*abs(x)*math.sin(math.pi*t)-.13*t*t+twist*x*t*t)
 				self.verts.append(tuple(base+axis*length*t+across*x*width*.5+normal*fold))
 		for row in range(2):
 			for col in range(2):
@@ -234,6 +262,25 @@ class Geometry:
 	def object(self,name,collection,materials):
 		import numpy as np
 		mesh=bpy.data.meshes.new(name)
+		if self.needle_batches:
+			points=np.concatenate([batch[0] for batch in self.needle_batches])
+			mesh.vertices.add(len(points));mesh.vertices.foreach_set('co',points.ravel())
+			for index,key in enumerate(('needle_centerline','needle_forward','needle_scale'),1):
+				values=np.concatenate([batch[index] for batch in self.needle_batches])
+				mesh.attributes.new(key,'FLOAT_VECTOR','POINT').data.foreach_set('vector',values.ravel())
+			values=np.concatenate([batch[4] for batch in self.needle_batches])
+			mesh.attributes.new('needle_radius','FLOAT','POINT').data.foreach_set('value',values)
+			for index,key,kind in ((5,'growth_node','INT'),(6,'shoot_parameter','FLOAT')):
+				values=np.concatenate([batch[index] for batch in self.needle_batches])
+				mesh.attributes.new(key,kind,'POINT').data.foreach_set('value',values)
+			mesh.attributes.new('needle_rotation','FLOAT_VECTOR','POINT')
+			self.needle_batches.clear();mesh.update()
+			obj=bpy.data.objects.new(name,mesh);collection.objects.link(obj)
+			mesh.materials.append(materials[0]);obj['needle_bearing_length']=self.needle_length
+			obj['needle_candidate_count']=self.needle_candidate_count;obj['needle_occluded_count']=self.needle_occluded_count
+			obj['needle_exposed_length']=self.needle_exposed_length
+			# Instances are added only after all bases have reached final bark.
+			return obj
 		# Broadleaf crowns contain millions of corners. Publish packed buffers
 		# directly instead of flattening nested face and UV tuples into more lists.
 		mesh.vertices.add(len(self.verts));mesh.vertices.foreach_set('co',np.asarray(self.verts,np.float32).ravel())
@@ -251,12 +298,10 @@ class Geometry:
 			attribute=mesh.attributes.new("branch_id","INT","FACE")
 			attribute.data.foreach_set("value",self.branch_ids)
 			obj["sweeps"]=json.dumps(self.sweeps)
-		if self.attachments:obj['foliage_attachments']=json.dumps(self.attachments,separators=(',',':'))
-		if self.needle_rotations:
-			for name,values in (('needle_rotation',self.needle_rotations),('needle_scale',self.needle_scales)):
-				mesh.attributes.new(name,'FLOAT_VECTOR','POINT').data.foreach_set('vector',[value for vector in values for value in vector])
-			if self.needle_variants:mesh.attributes.new('needle_variant','INT','POINT').data.foreach_set('value',self.needle_variants)
-			instance_needles(obj,materials[0],collection.get('stage','Mature'))
+		if self.attachments:
+			obj['foliage_attachments']=json.dumps(self.attachments,separators=(',',':'))
+			obj['foliage_nodes']=json.dumps(self.attachment_nodes,separators=(',',':'))
+			obj['foliage_support_radii']=json.dumps(self.attachment_radii,separators=(',',':'))
 		return obj
 
 	def blade(self,base,direction,length,roll,kind,rng,surface_normal=None,detailed=True):
@@ -282,63 +327,67 @@ class Geometry:
 				self.face((start+row*columns+col,start+row*columns+col+1,start+(row+1)*columns+col+1,start+(row+1)*columns+col),((col/(columns-1),row/rows),((col+1)/(columns-1),row/rows),((col+1)/(columns-1),(row+1)/rows),(col/(columns-1),(row+1)/rows)),mat)
 		if kind!='compound':self.attachments.append((start,len(self.verts),tuple(base)))
 
-	def needle(self,base,direction,length,rng):
-		self.attachments.append((len(self.verts),len(self.verts)+1,tuple(base)))
-		self.verts.append(tuple(base));self.needle_rotations.append(tuple(direction.to_track_quat('Z','Y').to_euler()))
-		width=rng.uniform(.00055,.0008);self.needle_scales.append((width,width,length))
+	def needle_shoot(self,path,radius,support_radius,density,rng,ranges,node_id):
+		"""Sample physical spacing continuously across an axis's internodes."""
+		import numpy as np
+		if density<=0:return 0
+		points=np.asarray(path,np.float64);spans=np.linalg.norm(np.diff(points,axis=0),axis=1)
+		distances=np.concatenate(([0.],np.cumsum(spans)));length=float(distances[-1]);self.needle_length+=length
+		count=max(0,math.floor((length-self.needle_distance)*density)+1)
+		self.needle_candidate_count+=count
+		for low,high in ranges:
+			self.needle_exposed_length+=float(np.interp(high,np.linspace(0,1,len(points)),distances)-np.interp(low,np.linspace(0,1,len(points)),distances))
+		positions=self.needle_distance+np.arange(count)/density
+		self.needle_distance+=count/density-length
+		if not count:return 0
+		indices=np.minimum(np.searchsorted(distances,positions,side='right')-1,len(spans)-1)
+		tangents=(points[indices+1]-points[indices])/np.maximum(spans[indices,None],1e-12)
+		bases=points[indices]+tangents*(positions-distances[indices])[:,None]
+		ref=np.zeros_like(tangents);ref[:,2]=1;ref[np.abs(tangents[:,2])>.9]=(1,0,0)
+		across=np.cross(tangents,ref);across/=np.linalg.norm(across,axis=1)[:,None]
+		other=np.cross(tangents,across);randoms=np.random.default_rng(rng.getrandbits(32))
+		angles=np.arange(count)*2.399963229728653+randoms.uniform(0,math.tau)+randoms.uniform(-.35,.35,count)
+		radial=across*np.cos(angles)[:,None]+other*np.sin(angles)[:,None]
+		forward=tangents*randoms.uniform(.15,.65,count)[:,None]
+		widths=randoms.uniform(.00055,.0008,count)
+		scales=np.column_stack((widths,widths,randoms.uniform(.019,.029,count)))
+		# Query the surface near this angular position, not a ray that can
+		# follow an intersecting whorl limb far away from the living shoot.
+		parameters=(indices+(positions-distances[indices])/np.maximum(spans[indices],1e-12))/len(spans)
+		local_radius=radius[0]+(radius[1]-radius[0])*parameters
+		targets=bases+radial*local_radius[:,None]
+		exposed=np.zeros(count,dtype=bool)
+		for low,high in ranges:exposed|=(parameters>=low)&(parameters<=high)
+		kept=int(exposed.sum());self.needle_occluded_count+=count-kept
+		if kept:
+			self.needle_batches.append((targets[exposed].astype(np.float32),bases[exposed].astype(np.float32),forward[exposed].astype(np.float32),scales[exposed].astype(np.float32),np.full(kept,support_radius,np.float32),np.full(kept,node_id,np.int32),parameters[exposed].astype(np.float32)))
+		return kept
 
-	def needle_spray(self,base,direction,stretch,rng):
-		self.attachments.append((len(self.verts),len(self.verts)+1,tuple(base)))
-		self.verts.append(tuple(base));rotation=direction.to_track_quat('Z','Y')@Quaternion((0,0,1),rng.uniform(0,math.tau))
-		self.needle_rotations.append(tuple(rotation.to_euler()));self.needle_scales.append((1,1,stretch));self.needle_variants.append(rng.randrange(8))
 
-
-def instance_needles(obj,material,stage='Mature'):
-	"""Keep true three-dimensional needles instanced in the native authoring mesh."""
-	clustered=stage!='Juvenile';prototypes=[]
-	for variant in range(8 if clustered else 1):
-		name=material.name+(f'_NeedleSpray_{variant}' if clustered else '_NeedleSource');prototype=bpy.data.objects.get(name)
-		if prototype is None:
-			mesh=bpy.data.meshes.new(name);vertices=[];faces=[];rng=random.Random(83521+variant*1049)
-			for needle in range(NEEDLES_PER_SPRAY if clustered else 1):
-				start=len(vertices);base=Vector((0,0,0));rotation=Quaternion();width=length=1
-				if clustered:
-					base.z=NEEDLE_SPRAY_LENGTH*((needle+rng.uniform(.1,.9))/NEEDLES_PER_SPRAY-.5)
-					angle=needle*2.399+rng.uniform(-.7,.7);direction=Vector((math.cos(angle),math.sin(angle),rng.uniform(.15,.65))).normalized()
-					rotation=direction.to_track_quat('Z','Y');width=rng.uniform(.00055,.0008);length=rng.uniform(.019,.029)
-				for z,radius in ((0,.6),(.42,1),(1,.035)):
-					vertices.extend(tuple(base+rotation@Vector((math.cos(i*math.pi/2)*radius*width,math.sin(i*math.pi/2)*radius*width,z*length))) for i in range(4))
-				for row in range(2):
-					for i in range(4):faces.append(tuple(start+v for v in (row*4+i,row*4+(i+1)%4,(row+1)*4+(i+1)%4,(row+1)*4+i)))
-				faces.extend((tuple(start+i for i in (3,2,1,0)),tuple(start+i for i in (8,9,10,11))))
-			mesh.from_pydata(vertices,[],faces)
-			collection=bpy.data.collections.get(PREFIX+'NeedleSources')
-			if collection is None:
-				collection=bpy.data.collections.new(PREFIX+'NeedleSources');bpy.context.scene.collection.children.link(collection)
-			prototype=bpy.data.objects.new(name,mesh);collection.objects.link(prototype)
-			prototype.hide_render=True;prototype.hide_set(True);prototype['construction_source']=True
-		prototype.data.materials.clear();prototype.data.materials.append(material);prototypes.append(prototype)
-	group=bpy.data.node_groups.get(material.name+'_Needles')
-	if group is None:
-		group=bpy.data.node_groups.new(material.name+'_Needles','GeometryNodeTree')
-		group.interface.new_socket(name='Geometry',in_out='INPUT',socket_type='NodeSocketGeometry');group.interface.new_socket(name='Geometry',in_out='OUTPUT',socket_type='NodeSocketGeometry')
-	n=group.nodes;l=group.links;n.clear();entry=n.new('NodeGroupInput');output=n.new('NodeGroupOutput');instances=n.new('GeometryNodeInstanceOnPoints')
+def instance_needles(obj,material):
+	"""One fixed physical needle per bark attachment, at every tree age."""
+	name=obj.name+'_NeedleSource';mesh=bpy.data.meshes.new(name);vertices=[];faces=[]
+	for z,radius in ((0,.6),(.42,1),(1,.035)):
+		vertices.extend((math.cos(i*math.pi/2)*radius,math.sin(i*math.pi/2)*radius,z) for i in range(4))
+	for row in range(2):
+		for i in range(4):faces.append((row*4+i,row*4+(i+1)%4,(row+1)*4+(i+1)%4,(row+1)*4+i))
+	faces.extend(((3,2,1,0),(8,9,10,11)));mesh.from_pydata(vertices,[],faces);mesh.materials.append(material)
+	collection=bpy.data.collections.get(PREFIX+'NeedleSources')
+	if collection is None:
+		collection=bpy.data.collections.new(PREFIX+'NeedleSources');bpy.context.scene.collection.children.link(collection)
+	prototype=bpy.data.objects.new(name,mesh);collection.objects.link(prototype)
+	prototype.hide_render=True;prototype.hide_set(True);prototype['construction_source']=True
+	group=bpy.data.node_groups.new(obj.name+'_Needles','GeometryNodeTree')
+	group.interface.new_socket(name='Geometry',in_out='INPUT',socket_type='NodeSocketGeometry');group.interface.new_socket(name='Geometry',in_out='OUTPUT',socket_type='NodeSocketGeometry')
+	n=group.nodes;l=group.links;entry=n.new('NodeGroupInput');output=n.new('NodeGroupOutput');instances=n.new('GeometryNodeInstanceOnPoints')
 	l.new(entry.outputs['Geometry'],instances.inputs['Points'])
-	variants=n.new('GeometryNodeGeometryToInstance') if clustered else None
-	for prototype in prototypes:
-		info=n.new('GeometryNodeObjectInfo');info.inputs['Object'].default_value=prototype;info.transform_space='ORIGINAL'
-		l.new(info.outputs['Geometry'],variants.inputs['Geometry'] if clustered else instances.inputs['Instance'])
-	if clustered:
-		l.new(variants.outputs['Instances'],instances.inputs['Instance']);instances.inputs['Pick Instance'].default_value=True
-		index=n.new('GeometryNodeInputNamedAttribute');index.data_type='INT';index.inputs['Name'].default_value='needle_variant';l.new(index.outputs['Attribute'],instances.inputs['Instance Index'])
+	info=n.new('GeometryNodeObjectInfo');info.inputs['Object'].default_value=prototype;info.transform_space='ORIGINAL'
+	l.new(info.outputs['Geometry'],instances.inputs['Instance'])
 	for attribute,socket in (('needle_rotation','Rotation'),('needle_scale','Scale')):
 		field=n.new('GeometryNodeInputNamedAttribute');field.data_type='FLOAT_VECTOR';field.inputs['Name'].default_value=attribute;l.new(field.outputs['Attribute'],instances.inputs[socket])
 	l.new(instances.outputs['Instances'],output.inputs['Geometry'])
-	modifier=obj.modifiers.get('Living three-dimensional needles') or obj.modifiers.new('Living three-dimensional needles','NODES');modifier.node_group=group
-	obj['foliage_representation']='Instanced volumetric 64-needle sprays (768 vertices each); realize instances for mesh export' if clustered else 'Instanced 12-vertex closed square needles; realize instances for mesh export'
-	if clustered:
-		old=bpy.data.objects.get(material.name+'_NeedleSource')
-		if old and old.get('construction_source'):bpy.data.objects.remove(old,do_unlink=True)
+	modifier=obj.modifiers.new('Living three-dimensional needles','NODES');modifier.node_group=group
+	obj['foliage_representation']='Individually bark-bound instanced 12-vertex closed needles; realize instances for mesh export'
 
 
 def material_setup(species="Oak",stage="Mature",height=16,tag=None):
@@ -503,7 +552,114 @@ def make_guides(name,paths,scene,offset):
 	return collection
 
 
-def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,girth=1.0,lean=0.0,upward=.55,droop=.35,branch_density=1.35,leaf_density=1.9,branch_angle=57,character=.45,fork_height=.24,growth_direction=0,crown_bias=.25,root_spread=1,root_depth=1.2,label=None,species="Oak",stage="Mature",age=24,competition=.65,light_response=.4,resource=1.0,graph=None):
+def build_foliage(graph,settings):
+	"""One graph-derived foliage path for full builds and density adjustments."""
+	module=growth_module();species=settings['species'];stage=settings['stage']
+	seed=settings['seed'];age=settings['age'];leaf_density=settings['leaf_density']
+	leaves=Geometry();petioles=Geometry(SPECIES[species]['tile']);leaf_rng=random.Random(seed+8191)
+	children=[[] for _ in graph['nodes']]
+	for index,node in enumerate(graph['nodes']):
+		if node['parent']>=0:children[node['parent']].append(index)
+	child_counts=[len(child) for child in children]
+	shoot_paths=[None]+[[Vector(p) for p in path] for path in module.shoot_curves(graph['nodes'],children)[1:]]
+	leaf_count=0
+
+	def shoot_foliage(path,radius,support_radius,ranges,node_id):
+		nonlocal leaf_count
+		if species=="Spruce":
+			leaf_count+=leaves.needle_shoot(path,radius,support_radius,NEEDLES_PER_METRE*leaf_density,leaf_rng,ranges,node_id)
+			return
+		# Broadleaf placement uses arc distance; graph enclosure uses the
+		# Hermite sample parameter retained by each derived shoot path.
+		import numpy as np
+		distances=np.concatenate(([0.],np.cumsum([(b-a).length for a,b in zip(path,path[1:])])))
+		ranges=[tuple(float(np.interp(t,np.linspace(0,1,len(path)),distances))/max(float(distances[-1]),1e-12) for t in interval) for interval in ranges]
+		# Each candidate owns its appearance stream, even when covered.
+		node_rng=random.Random((seed<<32)^node_id^0xB5297A4D)
+		shoot_length=float(distances[-1])
+		node=graph['nodes'][node_id];parent=graph['nodes'][node['parent']]
+		annual_base=not foliage_profile.foliage_by_length or parent['born']!=node['born'] or parent['axis']!=node['axis']
+		if species=="Ash":
+			count=round(shoot_length/(.12 if stage=='Juvenile' else .16)*leaf_density);phase=node_rng.uniform(0,math.tau)
+			if not foliage_profile.foliage_by_length:count=max(1,min(5 if stage=='Juvenile' else 4,count))
+			base=.15 if annual_base else .02
+			for i in range(count):
+				site_rng=random.Random(node_rng.getrandbits(64))
+				t=base+(.97-base)*(i+.3)/count
+				if not any(low<=t<=high for low,high in ranges):continue
+				leaf_start=len(leaves.verts);stem_start=len(petioles.verts)
+				p,tangent=point_on(path,t)
+				ref=Vector((0,0,1)) if abs(tangent.z)<.9 else Vector((1,0,0));axis=tangent.cross(ref).normalized();other=tangent.cross(axis)
+				angle=phase+i*math.pi+site_rng.uniform(-.25,.25);direction=(axis*math.cos(angle)+other*math.sin(angle)+tangent*.4+Vector((0,0,.15))).normalized()
+				length=site_rng.uniform(.23,.33);end=p+direction*length;petioles.branch([p,end],.0014,.0005,site_rng,4)
+				across=direction.cross(Vector((0,0,1))).normalized();normal=across.cross(direction).normalized();twist=site_rng.uniform(-.45,.45)
+				across,normal=across*math.cos(twist)+normal*math.sin(twist),normal*math.cos(twist)-across*math.sin(twist)
+				pairs=site_rng.randint(3,4)
+				for pair in range(pairs):
+					t=.18+pair*.67/pairs;anchor=p+direction*length*t
+					for sign in (-1,1):
+						leafdir=(across*sign+direction*site_rng.uniform(.28,.55)+normal*site_rng.uniform(-.15,.15)).normalized()
+						leaves.blade(anchor,leafdir,site_rng.uniform(.09,.13)*(1-.2*t)*(1 if stage=='Juvenile' else 1.08),site_rng.uniform(-.25,.25),'compound',site_rng,normal,stage=='Juvenile');leaf_count+=1
+				leaves.blade(end-direction*.025,direction,.12,site_rng.uniform(-.2,.2),'compound',site_rng,normal,stage=='Juvenile');leaf_count+=1
+				leaves.attachments.append((leaf_start,len(leaves.verts),tuple(p)));petioles.attachments.append((stem_start,len(petioles.verts),tuple(p)))
+			return
+		# A growth node is a bud site, not necessarily an entire annual shoot.
+		# Preserve old stored profiles while new internode profiles allocate
+		# foliage by physical length instead of multiplying a spray per node.
+		count=round(node_rng.randint(9,14)*leaf_density*(shoot_length/foliage_profile.extension if foliage_profile.foliage_by_length else 1))
+		shoot_phase=node_rng.uniform(0,math.tau)
+		base=(.30 if species=='Oak' else .1) if annual_base else .02
+		for i in range(count):
+			site_rng=random.Random(node_rng.getrandbits(64))
+			# Leaf-bearing current growth forms terminal sprays; older interior
+			# shoot bases stay visible between them.
+			t=base+(.98-base)*(i+site_rng.random()*.45)/count
+			if not any(low<=t<=high for low,high in ranges):continue
+			p,tangent=point_on(path,t)
+			a=shoot_phase+i*2.399+site_rng.uniform(-.65,.65)
+			side=Vector((math.cos(a),math.sin(a),site_rng.uniform(-.24,.56)))
+			direction=(tangent*.32+side).normalized()
+			length=site_rng.uniform(.16,.25)
+			if species=="Birch":leaves.blade(p,direction,length*(.32 if stage=='Juvenile' else .46),site_rng.uniform(-.6,.6),'triangular',site_rng,detailed=stage=='Juvenile')
+			else:leaves.leaf(p,direction,length*.78,site_rng.uniform(-1.1,1.1),site_rng.randrange(4),site_rng)
+			leaf_count+=1
+		# One terminal spray per annual growth unit, not per internode.
+		if foliage_profile.foliage_by_length and any(graph['nodes'][child]['axis']==node['axis'] and graph['nodes'][child]['born']==node['born'] for child in children[node_id]):return
+		for i in range(3):
+			site_rng=random.Random(node_rng.getrandbits(64))
+			t=.93+i*.02
+			if not any(low<=t<=high for low,high in ranges):continue
+			p,tangent=point_on(path,t)
+			direction=(tangent+Vector((site_rng.uniform(-.6,.6),site_rng.uniform(-.6,.6),site_rng.uniform(-.1,.5)))).normalized()
+			if species=="Birch":leaves.blade(p,direction,site_rng.uniform(.05,.075) if stage=='Juvenile' else site_rng.uniform(.075,.11),site_rng.uniform(-.6,.6),'triangular',site_rng,detailed=stage=='Juvenile')
+			else:leaves.leaf(p,direction,site_rng.uniform(.125,.18),site_rng.uniform(-1.5,1.5),site_rng.randrange(4),site_rng)
+			leaf_count+=1
+
+	# Foliage follows living shoots and fine twigs in the graph; no recursive twig
+	# generator can create a second crown unrelated to the simulated branches.
+	yield 'Placing foliage on living shoots'
+	foliage_profile=module.Species(**graph['profile'])
+	exposure=[[] for _ in graph['nodes']]
+	for index,intervals in module.foliage_exposure(graph['nodes'],age,foliage_profile):
+		if index>=0:exposure[index]=intervals
+		if index<0 or index%128==0:yield 'Checking foliage exposure along the branches'
+	for axis in graph['axes']:
+		leaves.needle_distance=.5/max(NEEDLES_PER_METRE*leaf_density,1e-12)
+		for parent_id,node_id in zip(axis['nodes'],axis['nodes'][1:]):
+			node=graph['nodes'][node_id]
+			radii=module.segment_radii(graph['nodes'],node_id,child_counts)
+			if module.supports_foliage(node,age,foliage_profile,max(radii)):
+				starts=(len(leaves.attachments),len(petioles.attachments))
+				shoot_foliage(shoot_paths[node_id],radii,max(radii),list(module.foliage_ranges(node,exposure[node_id])),node_id)
+				for geometry,start in zip((leaves,petioles),starts):
+					count=len(geometry.attachments)-start
+					geometry.attachment_nodes.extend([node_id]*count);geometry.attachment_radii.extend([max(radii)]*count)
+			if node_id%128==0:yield 'Placing foliage on living shoots'
+	return leaves,petioles,leaf_count
+
+
+def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,girth=1.0,lean=0.0,upward=.55,droop=.35,branch_density=1.35,leaf_density=None,branch_angle=57,character=.45,fork_height=.24,growth_direction=0,crown_bias=.25,root_spread=1,root_depth=1.2,label=None,species="Oak",stage="Mature",age=24,competition=.65,light_response=.4,resource=1.0,overhead_light=False,graph=None):
+	if leaf_density is None:leaf_density=SPECIES[species]['leaf_density']
 	settings={key:value for key,value in locals().copy().items() if key in TREE_SETTINGS or key in ('species','stage','form','seed')}
 	module,recipe=growth_recipe(settings)
 	if graph is None:
@@ -511,50 +667,55 @@ def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,g
 		while job.step():pass
 		graph=job.finish()
 	module.validate(graph)
-	if graph['recipe'] != module.asdict(recipe):raise ValueError('Growth controls changed; simulate again before building geometry')
+	if module.Recipe(**graph['recipe']) != recipe:raise ValueError('Growth controls changed; simulate again before building geometry')
 	rng=random.Random(seed)
-	leaf_rng=random.Random(seed+8191)
 	scene=bpy.context.scene
 	name=PREFIX+(label or f"{species}_{stage}_{form}_{seed}")
 	if bpy.data.collections.get(name) and bpy.data.collections[name].get("protected_reference"):raise ValueError("This oak is a preserved reference. Generate a new named specimen to edit.")
 	# Meshing scale follows grown wood, not the potential adult height. Otherwise
 	# an eighteen-season sapling loses every side limb to adult voxel thresholds.
 	resolution=min(1,max(.08,graph['nodes'][0]['radius']/.3))
-	voxel_size=max(.001,min(.035,graph['nodes'][0]['radius']/6))
 	# Primary limbs remain first for the existing s&box motion packing. The
 	# complete graph retains all finer ancestry, independently of mesh grouping.
 	# Curved reference sweeps retain every graph point for bark and motion.
-	# The connected collar surface owns visible wood; foliage binds to that
-	# finished surface after subdivision and bark displacement.
+	# The union surface owns visible wood; foliage binds to that finished
+	# surface after local intersection rounding and bark displacement.
 	children=[[] for _ in graph['nodes']]
 	for index,node in enumerate(graph['nodes']):
 		if node['parent']>=0:children[node['parent']].append(index)
-	tangents=[]
-	for index,node in enumerate(graph['nodes']):
-		incoming=Vector(node['direction'])
-		if children[index]:
-			preferred=max(children[index],key=lambda child:(graph['nodes'][child]['axis']==node['axis'],graph['nodes'][child]['radius'],-child))
-			outgoing=(Vector(graph['nodes'][preferred]['p'])-Vector(node['p'])).normalized()
-			incoming=(incoming+outgoing).normalized()
-		tangents.append(incoming)
-	axis_paths=[];shoot_paths={}
+	child_counts=[len(child) for child in children]
+	shoot_paths=module.shoot_curves(graph['nodes'],children)
+	axis_paths=[]
 	for axis in graph['axes']:
-		nodes=[graph['nodes'][index] for index in axis['nodes']]
-		radii=[node['radius'] for node in nodes]
-		if axis['parent']>=0 and len(children[axis['attachment']])>1:radii[0]=radii[1]
 		path=[];sampled_radii=[]
-		for i,(start_id,end_id) in enumerate(zip(axis['nodes'],axis['nodes'][1:])):
-			a=Vector(nodes[i]['p']);b=Vector(nodes[i+1]['p']);length=(b-a).length
-			m0=tangents[start_id]*length;m1=tangents[end_id]*length
-			span=[]
-			for sample in range(9):
-				t=sample/8;t2=t*t;t3=t2*t
-				span.append(a*(2*t3-3*t2+1)+m0*(t3-2*t2+t)+b*(-2*t3+3*t2)+m1*(t3-t2))
-				if sample<8:path.append(span[-1]);sampled_radii.append(radii[i]*(1-t)+radii[i+1]*t)
-			shoot_paths[end_id]=span
-		path.append(Vector(nodes[-1]['p']));sampled_radii.append(radii[-1])
+		for node_id in axis['nodes'][1:]:
+			r0,r1=module.segment_radii(graph['nodes'],node_id,child_counts)
+			path.extend(Vector(p) for p in shoot_paths[node_id][:-1])
+			sampled_radii.extend(r0+(r1-r0)*sample/8 for sample in range(8))
+		path.append(Vector(shoot_paths[axis['nodes'][-1]][-1]));sampled_radii.append(graph['nodes'][axis['nodes'][-1]]['radius'])
 		axis_paths.append((path,sampled_radii))
-	primary=[0]+[i for i,axis in enumerate(graph['axes']) if axis['parent']==0 and axis_paths[i][1][0]>voxel_size*3]
+	shoot_paths=[None]+[[Vector(p) for p in path] for path in shoot_paths[1:]]
+	# A stopped shoot with one successor is a continuous limb, not a fork.
+	# Transport one cross-section frame through that bend instead of meeting
+	# two independent caps there. The continuous main stem owns trunk motion.
+	continuations={}
+	for i,axis in enumerate(graph['axes']):
+		following=children[axis['nodes'][-1]]
+		if len(following)==1:
+			child=graph['nodes'][following[0]]['axis']
+			continuations[i]=child
+	continued=set(continuations.values());axis_chains={};axis_heads={}
+	for i in range(len(axis_paths)):
+		if i in continued:continue
+		chain=[i];path=list(axis_paths[i][0]);radii=list(axis_paths[i][1])
+		while chain[-1] in continuations:
+			child=continuations[chain[-1]];chain.append(child)
+			path.extend(axis_paths[child][0][1:]);radii.extend(axis_paths[child][1][1:])
+		axis_paths[i]=(path,radii);axis_chains[i]=chain
+		for member in chain:axis_heads[member]=i
+	# Wind ownership follows branch ancestry, not the obsolete voxel radius
+	# cutoff: a thick supporting trunk must not erase its lateral motion groups.
+	primary=[0]+[i for i,axis in enumerate(graph['axes']) if i not in continued and axis['parent']>=0 and axis_heads[axis['parent']]==0]
 	paths=[(axis_paths[i][0],axis_paths[i][1][0],axis_paths[i][1][-1]) for i in primary]
 	yield 'Building branch surfaces'
 	make_guides(name,paths,scene,offset)
@@ -566,7 +727,7 @@ def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,g
 	collection['growth_graph']=json.dumps(graph,separators=(',',':'))
 	collection['primary_count']=len(primary)
 	bark,leafmats,twigmat=material_setup(species,stage,height,name.removeprefix(PREFIX))
-	wood=Geometry(SPECIES[species]['tile']);leaves=Geometry();petioles=Geometry(SPECIES[species]['tile'])
+	wood=Geometry(SPECIES[species]['tile'])
 	trunk,base_radius,trunk_end=paths[0]
 	# Resample radius by arc length because graph internodes need not be equal.
 	profiles=[]
@@ -584,142 +745,69 @@ def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,g
 	guide_objects=sorted(bpy.data.collections[name+'_Guides'].objects,key=lambda o:o['order'])
 	guide_objects[0]['radius_profile']=trunk_profile
 	axis_to_wood={}
-	order=primary+[i for i in range(len(axis_paths)) if i not in primary]
+	order=primary+[i for i in range(len(axis_paths)) if i not in primary and i not in continued]
 	for position,axis_id in enumerate(order):
 		path,radii=axis_paths[axis_id];radius,end=radii[0],radii[-1]
+		if axis_id==0 and stage=='Juvenile':
+			# Continue the young bole below grade through its root collar. Roots
+			# crossing an exposed soil-level end cap create sliver solids there.
+			path=[path[0]-(path[1]-path[0]).normalized()*radius*2,*path];radii=[radius,*radii]
 		parent_axis=graph['axes'][axis_id]['parent']
 		while parent_axis>=0 and parent_axis not in axis_to_wood:parent_axis=graph['axes'][parent_axis]['parent']
 		parent=axis_to_wood.get(parent_axis,0)
 		wood.part=0 if axis_id==0 else 1
-		wood.branch(path,radius,end,rng,16 if axis_id==0 else 10,axis_id==0,profiles[axis_id],parent,path_radii=radii,graph_axis=axis_id,round_tip=not children[graph['axes'][axis_id]['nodes'][-1]])
-		axis_to_wood[axis_id]=wood.active_branch
+		attachment=graph['nodes'][graph['axes'][axis_id]['attachment']]['radius'] if axis_id else 0
+		wood.branch(path,radius,end,rng,16 if axis_id==0 else 10,axis_id==0,profiles[axis_id],parent,path_radii=radii,graph_axis=axis_id,attachment_radius=attachment,round_tip=True)
+		wood.sweeps[-1]['graph_axes']=axis_chains[axis_id]
+		for member in axis_chains[axis_id]:axis_to_wood[member]=wood.active_branch
 		if position%64==63:yield f'Branch surfaces {position+1} / {len(order)}'
 	yield 'Building roots'
 	# Roots have their own random stream; changing their controls preserves the crown.
 	root_rng=random.Random(seed+4093);root_paths=[]
 	wood.part=2;root_count=root_rng.randint(5,7);root_phase=root_rng.uniform(0,math.tau)
-	surface_nodes=[dict(node) for node in graph['nodes']];root_axis=len(graph['axes'])
-	root_origin=min(trunk,key=lambda p:abs(p.z)).copy();root_origin.z=-.095 if stage=="Juvenile" else base_radius*.03
+	# Attach every root collar inside the bole. A fixed below-ground origin
+	# leaves small juvenile roots disconnected from the trunk at soil level.
+	root_origin=min(trunk,key=lambda p:abs(p.z)).copy();root_origin.z=base_radius*1.1
+	root_drop=root_origin.z+(base_radius*.45 if stage=="Juvenile" else 0)
 	def root_mesh(path,radius,end,sides,parent=0):
-		nonlocal root_axis
 		end=min(end,radius*.3)
-		# Root ancestry is explicit. A secondary root can attach only to its
-		# own parent's sampled path, never whichever root happens to be nearby.
-		parent_ids,parent_sweep=parent if isinstance(parent,tuple) else ([0],0)
-		attachment=min(parent_ids,key=lambda i:(Vector(surface_nodes[i]['p'])-path[0]).length_squared)
-		wood.branch(path,radius,end,root_rng,sides,True,parent=parent_sweep)
-		length=sum((b-a).length for a,b in zip(path,path[1:]));steps=max(2,math.ceil(length/max(radius*8,.08)))
-		ids=[attachment];previous=attachment
-		# Reserve space around real lateral attachments. Crowding them with
-		# redundant curve samples forces the shared collar to pinch the root.
-		attachments=(.4,.66) if not isinstance(parent,tuple) else ()
-		parameters={j/steps for j in range(1,steps+1) if all(abs(j/steps-critical)>.75/steps for critical in attachments)}|set(attachments)|{1.0}
-		if isinstance(parent,tuple):
-			# Leave a transition roughly six parent diameters long before the
-			# first lateral sample; the narrow child's sampling interval must
-			# not dictate the width of the thicker parent junction.
-			first=min(.85,surface_nodes[attachment]['radius']*12/max(length,1e-8))
-			parameters={t for t in parameters if t>first}|{first}
-		for t in sorted(parameters):
-			index=len(surface_nodes);surface_nodes.append({'parent':previous,'axis':root_axis,'p':tuple(point_on(path,t)[0]),'radius':radius_at(radius,end,t)})
-			ids.append(index);previous=index
-		root_axis+=1
-		return ids,wood.active_branch
+		wood.branch(path,radius,end,root_rng,sides,True,parent=parent,attachment_radius=wood.sweeps[parent]['radius'])
+		return wood.active_branch
 	for i in range(root_count):
-		a=root_phase+i*math.tau/root_count+root_rng.uniform(-.22,.22)
-		length=base_radius*root_rng.uniform(4.5,6.5)*root_spread
+		a=root_phase+i*math.tau/root_count+root_rng.uniform(-.42,.42)
+		length=base_radius*root_rng.uniform(3.5,8)*root_spread
 		depth=root_depth*root_rng.uniform(.8,1.15)
 		d=Vector((math.cos(a),math.sin(a),0));side=Vector((-d.y,d.x,0))
-		turn=side*length*root_rng.uniform(-.13,.13)
-		path=smooth_path([root_origin,root_origin+d*base_radius*.65+Vector((0,0,-base_radius*.13)),root_origin+d*length*.46+turn*.5+Vector((0,0,-.16-depth*.18)),root_origin+d*length*.8+turn+Vector((0,0,-depth*.64)),root_origin+d*length+turn*.8+Vector((0,0,-depth))],6)
-		radius=base_radius*root_rng.uniform(.34,.47)
+		turn=side*length*root_rng.uniform(-.28,.28)
+		radius=base_radius*root_rng.uniform(.36,.70) if stage!='Juvenile' else base_radius*root_rng.uniform(.34,.47)
+		shallow=min(depth*.2,radius*.25)
+		# Let the buttress become a shallow structural root before descending.
+		# Length fractions keep controls ordered even at minimum root spread.
+		path=smooth_path([root_origin,root_origin+d*length*.22+Vector((0,0,-root_drop-shallow*.4)),root_origin+d*length*.52+turn*.5+Vector((0,0,-root_drop-shallow)),root_origin+d*length*.8+turn+Vector((0,0,-root_drop-depth*.42)),root_origin+d*length+turn*.8+Vector((0,0,-root_drop-depth))],6)
 		root_parent=root_mesh(path,radius,.012,16);root_paths.append(path)
 		for j in range(2):
 			t=.4+j*.26;p,tangent=point_on(path,t)
 			angle=a+(-1 if j==0 else 1)*root_rng.uniform(.5,.95)
 			direction=Vector((math.cos(angle),math.sin(angle),0))
 			reach=length*root_rng.uniform(.30,.46)
-			departure=(tangent*.35+direction*.65).normalized()
-			child=smooth_path([p,p+departure*reach*.28,p+direction*reach*.65+Vector((0,0,-depth*.18)),p+direction*reach+Vector((0,0,-depth*.35))],5)
+			# Begin along the parent before turning away, so the secondary root
+			# grows out of its supporting wood instead of forming an elbow lip.
+			child=smooth_path([p,p+tangent*reach*.28,p+direction*reach*.65+Vector((0,0,-depth*.18)),p+direction*reach+Vector((0,0,-depth*.35))],5)
 			root_mesh(child,radius_at(radius,.012,t)*.62,.008,10,root_parent);root_paths.append(child)
 	wood.part=1
-	leaf_count=0;branch_count=len(paths)
-
-	def shoot_foliage(path,radius):
-		nonlocal leaf_count
-		if species=="Spruce":
-			length=sum((b-a).length for a,b in zip(path,path[1:]));foliated=min(length,.55 if stage=='Juvenile' else 1.2);count=max(8,round(foliated*NEEDLES_PER_METRE*leaf_density));start=max(0,1-foliated/max(length,.001))
-			if stage!='Juvenile':
-				groups=max(1,round(count/NEEDLES_PER_SPRAY));stretch=max(.3,min(1.4,foliated/(groups*NEEDLE_SPRAY_LENGTH)))
-				for i in range(groups):
-					p,tangent=point_on(path,start+(1-start)*(i+.5)/groups);leaves.needle_spray(p,tangent,stretch,leaf_rng)
-				leaf_count+=groups*NEEDLES_PER_SPRAY;return
-			for i in range(count):
-				p,tangent=point_on(path,start+(1-start)*(i+leaf_rng.random()*.7)/count)
-				ref=Vector((0,0,1)) if abs(tangent.z)<.9 else Vector((1,0,0));a=tangent.cross(ref).normalized();b=tangent.cross(a)
-				angle=i*2.399+leaf_rng.uniform(-.7,.7);direction=(a*math.cos(angle)+b*math.sin(angle)+tangent*leaf_rng.uniform(.15,.65)).normalized()
-				leaves.needle(p,direction,leaf_rng.uniform(.019,.029),leaf_rng);leaf_count+=1
-			return
-		if species=="Ash":
-			shoot_length=sum((b-a).length for a,b in zip(path,path[1:]));count=max(1,min(5 if stage=='Juvenile' else 4,round(shoot_length/(.12 if stage=='Juvenile' else .16)*leaf_density)));phase=leaf_rng.uniform(0,math.tau)
-			for i in range(count):
-				leaf_start=len(leaves.verts);stem_start=len(petioles.verts)
-				p,tangent=point_on(path,.15+.82*(i+.3)/count)
-				ref=Vector((0,0,1)) if abs(tangent.z)<.9 else Vector((1,0,0));axis=tangent.cross(ref).normalized();other=tangent.cross(axis)
-				angle=phase+i*math.pi+leaf_rng.uniform(-.25,.25);direction=(axis*math.cos(angle)+other*math.sin(angle)+tangent*.4+Vector((0,0,.15))).normalized()
-				length=leaf_rng.uniform(.23,.33);end=p+direction*length;petioles.branch([p,end],.0014,.0005,leaf_rng,4)
-				across=direction.cross(Vector((0,0,1))).normalized();normal=across.cross(direction).normalized();twist=leaf_rng.uniform(-.45,.45)
-				across,normal=across*math.cos(twist)+normal*math.sin(twist),normal*math.cos(twist)-across*math.sin(twist)
-				pairs=leaf_rng.randint(3,4)
-				for pair in range(pairs):
-					t=.18+pair*.67/pairs;anchor=p+direction*length*t
-					for sign in (-1,1):
-						leafdir=(across*sign+direction*leaf_rng.uniform(.28,.55)+normal*leaf_rng.uniform(-.15,.15)).normalized()
-						leaves.blade(anchor,leafdir,leaf_rng.uniform(.09,.13)*(1-.2*t)*(1 if stage=='Juvenile' else 1.08),leaf_rng.uniform(-.25,.25),'compound',leaf_rng,normal,stage=='Juvenile');leaf_count+=1
-				leaves.blade(end-direction*.025,direction,.12,leaf_rng.uniform(-.2,.2),'compound',leaf_rng,normal,stage=='Juvenile');leaf_count+=1
-				leaves.attachments.append((leaf_start,len(leaves.verts),tuple(p)));petioles.attachments.append((stem_start,len(petioles.verts),tuple(p)))
-			return
-		count=round(leaf_rng.randint(9,14)*leaf_density)
-		for i in range(count):
-			t=.1+.88*(i+leaf_rng.random()*.45)/count
-			p,tangent=point_on(path,t)
-			a=i*2.399+leaf_rng.uniform(-.5,.5)
-			side=Vector((math.cos(a),math.sin(a),leaf_rng.uniform(-.24,.56)))
-			direction=(tangent*.32+side).normalized()
-			length=leaf_rng.uniform(.16,.25)
-			if species=="Birch":leaves.blade(p,direction,length*(.32 if stage=='Juvenile' else .46),leaf_rng.uniform(-.6,.6),'triangular',leaf_rng,detailed=stage=='Juvenile')
-			else:leaves.leaf(p,direction,length,leaf_rng.uniform(-1.1,1.1),leaf_rng.randrange(4),leaf_rng)
-			leaf_count+=1
-		for i in range(3):
-			p,tangent=point_on(path,.93+i*.02)
-			direction=(tangent+Vector((leaf_rng.uniform(-.6,.6),leaf_rng.uniform(-.6,.6),leaf_rng.uniform(-.1,.5)))).normalized()
-			if species=="Birch":leaves.blade(p,direction,leaf_rng.uniform(.05,.075) if stage=='Juvenile' else leaf_rng.uniform(.075,.11),leaf_rng.uniform(-.6,.6),'triangular',leaf_rng,detailed=stage=='Juvenile')
-			else:leaves.leaf(p,direction,leaf_rng.uniform(.16,.23),leaf_rng.uniform(-1.5,1.5),leaf_rng.randrange(4),leaf_rng)
-			leaf_count+=1
-
-	# Foliage follows living recent shoots in the graph; no recursive twig
-	# generator can create a second crown unrelated to the simulated branches.
-	yield 'Placing foliage on living shoots'
-	foliage_profile=module.Species(**graph['profile'])
-	for axis in graph['axes']:
-		for parent_id,node_id in zip(axis['nodes'],axis['nodes'][1:]):
-			node=graph['nodes'][node_id]
-			if module.supports_foliage(node,age,foliage_profile):
-				shoot_foliage(shoot_paths[node_id],node['radius'])
-			if node_id%128==0:yield 'Placing foliage on living shoots'
+	leaves,petioles,leaf_count=yield from build_foliage(graph,settings)
 	branch_count=len(graph['axes'])
 	yield 'Creating source meshes'
 	wood_obj=wood.object(name+"_Wood",collection,[bark,bark,bark])
 	leaf_obj=leaves.object(name+"_Leaves",collection,leafmats)
 	if petioles.verts:petioles.object(name+'_Petioles',collection,[twigmat])
-	collection['surface_skeleton']=json.dumps({'nodes':surface_nodes},separators=(',',':'))
 	for obj in collection.objects: obj.location=offset
 	wood_obj["form"]=form;wood_obj["seed"]=seed
 	wood_obj["branch_count"]=branch_count;leaf_obj["leaf_count"]=leaf_count
 	wood_obj["root_count"]=len(root_paths)
 	collection["root_paths"]=json.dumps([[tuple(p) for p in path] for path in root_paths])
 	collection["seed"]=seed;collection["form"]=form
-	collection["species"]=species;collection["stage"]=stage;collection["primary_radius_threshold"]=voxel_size*3
+	collection["species"]=species;collection["stage"]=stage;collection['primary_selection']='main_stem_laterals'
 	collection["bark_asset"]=SPECIES[species]["bark"];collection["bark_relief_factor"]=(.18 if stage=="Juvenile" else .35 if species=="Birch" else 1)
 	collection["generator_sha256"]=hashlib.sha256((OUT/"build_oak_studies.py").read_bytes()+(OUT/"growth.py").read_bytes()+(OUT/'surface.py').read_bytes()).hexdigest()
 	collection["settings"]=json.dumps(settings)
@@ -728,6 +816,90 @@ def build_tree(form="Open_Grown",seed=1701,offset=(0,0,0),height=16,spread=1.0,g
 		if mesh.name.startswith(name+'_') and mesh.users==0:bpy.data.meshes.remove(mesh)
 	print(json.dumps({"form":form,"branches":branch_count,"roots":len(root_paths),"leaves":leaf_count,"wood_vertices":len(wood.verts),"leaf_vertices":len(leaves.verts)}))
 	return collection
+
+
+def closest_triangle_points(points, triangles):
+	"""Refine BVH candidates in double precision on slender branch triangles."""
+	import numpy as np
+	points=np.asarray(points,np.float64);triangles=np.asarray(triangles,np.float64)
+	a,b,c=triangles[:,0],triangles[:,1],triangles[:,2];u=b-a;v=c-a;normal=np.cross(u,v)
+	denominator=np.sum(normal*normal,axis=1)
+	if not np.all(np.isfinite(denominator)&(denominator>1e-40)):
+		raise ValueError('Foliage attachment selected a degenerate bark triangle')
+	delta=points-a;safe=denominator
+	s=np.sum(np.cross(delta,v)*normal,axis=1)/safe;t=np.sum(np.cross(u,delta)*normal,axis=1)/safe
+	inside=(s>=0)&(t>=0)&(s+t<=1)&(denominator>1e-40)
+	result=points-normal*(np.sum(delta*normal,axis=1)/safe)[:,None]
+	distance2=np.where(inside,np.sum((points-result)**2,axis=1),np.inf)
+	for start,end in ((a,b),(b,c),(c,a)):
+		edge=end-start;fraction=np.clip(np.sum((points-start)*edge,axis=1)/np.maximum(np.sum(edge*edge,axis=1),1e-40),0,1)
+		candidate=start+edge*fraction[:,None];candidate_distance2=np.sum((points-candidate)**2,axis=1);closer=candidate_distance2<distance2
+		result[closer]=candidate[closer];distance2=np.minimum(distance2,candidate_distance2)
+	return result,normal/np.sqrt(safe)[:,None]
+
+
+def resolve_wood_tessellation(obj):
+	"""Choose non-conflicting diagonals where joined n-gons share several arcs."""
+	import bmesh
+	import numpy as np
+	mesh=bmesh.new();mesh.from_mesh(obj.data)
+	try:
+		mesh.verts.index_update();mesh.faces.index_update();mesh.normal_update()
+		if any(not edge.is_manifold for edge in mesh.edges):raise ValueError('Wood is open before tessellation')
+		fixed=0;previous=None
+		while True:
+			mesh.faces.index_update();mesh.faces.ensure_lookup_table()
+			triangles=mesh.calc_loop_triangles()
+			indices=np.array([[loop.vert.index for loop in triangle] for triangle in triangles],dtype=np.int32)
+			owners=np.tile(np.array([triangle[0].face.index for triangle in triangles],np.int32),3)
+			edges=np.sort(np.concatenate((indices[:,[0,1]],indices[:,[1,2]],indices[:,[2,0]])),axis=1)
+			unique,counts=np.unique(edges,axis=0,return_counts=True)
+			bad=unique[counts!=2]
+			if not len(bad):break
+			if previous is not None and len(bad)>=previous:raise ValueError('Wood tessellation repair did not reduce conflicting diagonals')
+			previous=len(bad);pair=bad[0]
+			candidates={mesh.faces[int(index)] for index in owners[np.all(edges==pair,axis=1)]}
+			replacement=None
+			for face in sorted(candidates,key=lambda item:(len(item.verts),item.index)):
+				if len(face.verts)<=3:continue
+				vertices=list(face.verts);ids={v.index for v in vertices}
+				boundary={tuple(sorted((vertices[i-1].index,v.index))) for i,v in enumerate(vertices)}
+				other=(owners!=face.index)&np.isin(edges[:,0],list(ids))&np.isin(edges[:,1],list(ids))
+				reserved={tuple(edge) for edge in edges[other]}-boundary
+				axis=max(range(3),key=lambda i:abs(face.normal[i]));axes=[i for i in range(3) if i!=axis]
+				points={v:(float(v.co[axes[0]]),float(v.co[axes[1]])) for v in vertices}
+				area=math.fsum(points[vertices[i-1]][0]*points[v][1]-points[v][0]*points[vertices[i-1]][1] for i,v in enumerate(vertices))
+				if area==0:continue
+				sign=1 if area>0 else -1
+				extent=max(max(p[i] for p in points.values())-min(p[i] for p in points.values()) for i in range(2))
+				epsilon=extent*extent*1e-12
+				def turn(a,b,c):
+					a,b,c=points[a],points[b],points[c]
+					return sign*((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))
+				remaining=vertices.copy();result=[]
+				while len(remaining)>3:
+					for index,b in enumerate(remaining):
+						a,c=remaining[index-1],remaining[(index+1)%len(remaining)]
+						if tuple(sorted((a.index,c.index))) in reserved or turn(a,b,c)<=epsilon:continue
+						if any(turn(a,b,p)>=-epsilon and turn(b,c,p)>=-epsilon and turn(c,a,p)>=-epsilon for p in remaining if p not in (a,b,c)):continue
+						result.append((a,b,c));remaining.pop(index);break
+					else:break
+				if len(remaining)!=3 or turn(*remaining)<=epsilon:continue
+				if any(tuple(sorted((remaining[i-1].index,v.index))) in reserved for i,v in enumerate(remaining)):continue
+				result.append(tuple(remaining));replacement=(face,result);break
+			if replacement is None:raise ValueError('Joined wood polygon has no non-conflicting triangulation')
+			face,result=replacement;loops={loop.vert:loop for loop in face.loops}
+			for vertices in result:
+				triangle=mesh.faces.new(vertices);triangle.copy_from(face)
+				for loop in triangle.loops:loop.copy_from(loops[loop.vert])
+			mesh.faces.remove(face);fixed+=1
+		if fixed:
+			if any(not edge.is_manifold for edge in mesh.edges) or any(not vertex.is_manifold for vertex in mesh.verts):
+				raise ValueError('Wood tessellation changed manifold topology')
+			mesh.normal_update()
+			mesh.to_mesh(obj.data);obj.data.update()
+		return fixed
+	finally:mesh.free()
 
 
 def fuse_wood(form="Open_Grown"):
@@ -741,50 +913,187 @@ def fuse_wood(form="Open_Grown"):
 	collection.objects.link(source);source.hide_render=True;source.hide_set(True)
 	for other in bpy.context.selected_objects: other.select_set(False)
 	obj.select_set(True);bpy.context.view_layer.objects.active=obj
-	yield 'Building continuous branch collars'
+	yield 'Building continuous branch volumes'
 	spec=importlib.util.spec_from_file_location('voxels_tree_surface',OUT/'surface.py');surface=importlib.util.module_from_spec(spec);spec.loader.exec_module(surface)
-	bm,statistics=yield from surface.branch_surface(json.loads(collection['surface_skeleton']))
+	bm,statistics=yield from surface.branch_surface(source)
 	mesh=bpy.data.meshes.new(name+'_ConnectedSurface')
 	bm.to_mesh(mesh);bm.free();mesh.update()
 	for material in obj.data.materials:mesh.materials.append(material)
 	obj.data=mesh
 	for key,value in statistics.items():collection[key]=value
 	collection['welded_faces']=len(mesh.polygons)
-	# Each convex triangle produces three smooth quads. Keep the final surface
-	# within the same one-million-face authoring budget before allocating it.
-	if sum(len(p.vertices) for p in mesh.polygons)>1000000:raise ValueError('Connected wood exceeds the 1,000,000-face surface budget')
-	yield 'Rounding connected branch surface'
-	# The reference retains the original sweep mesh; the visible surface owns
-	# only the rounded result. Release the intermediate control mesh promptly.
-	obj.data=surface.round_surface(mesh)
-	bpy.data.meshes.remove(mesh)
-	collection['detailed_faces']=len(obj.data.polygons);collection['surface_method']='shared_collars'
+	collection['detailed_faces']=len(mesh.polygons);collection['surface_method']='solid_union'
 	yield 'Preparing bark projection'
 	yield from bind_fused_uv(obj,source)
 	yield 'Sampling bark relief'
 	displace_bark(obj)
-	# Bind each leaf (or complete compound leaf and petiole) to the final wood.
-	# Surface smoothing must not leave attachment points on a different curve.
-	yield 'Attaching foliage to the finished wood'
-	from mathutils.bvhtree import BVHTree
-	import numpy as np
-	tree=BVHTree.FromObject(obj,bpy.context.evaluated_depsgraph_get());max_offset=0.0
-	for suffix in ('_Leaves','_Petioles'):
-		foliage=bpy.data.objects.get(name+suffix)
-		if foliage is None or not foliage.get('foliage_attachments'):continue
-		coordinates=np.empty(len(foliage.data.vertices)*3,np.float32);foliage.data.vertices.foreach_get('co',coordinates);coordinates=coordinates.reshape(-1,3)
-		bound=[]
-		for start,end,anchor in json.loads(foliage['foliage_attachments']):
-			point,normal,_,distance=tree.find_nearest(Vector(anchor));delta=point-Vector(anchor)
-			coordinates[start:end]+=np.array(delta);max_offset=max(max_offset,distance);bound.append((start,end,tuple(point)))
-		foliage.data.vertices.foreach_set('co',coordinates.ravel());foliage.data.update();foliage['foliage_attachments']=json.dumps(bound,separators=(',',':'))
-	collection['foliage_attachment_max_offset']=max_offset
+	yield 'Checking rendered wood triangles'
+	collection['resolved_wood_polygons']=resolve_wood_tessellation(obj)
+	collection['foliage_attachment_max_offset']=yield from bind_foliage(obj,[bpy.data.objects.get(name+suffix) for suffix in ('_Leaves','_Petioles')])
 	for polygon in obj.data.polygons: polygon.use_smooth=True
 	# Retain editable branch source in a clearly labelled hidden object.
 	source.hide_viewport=True
 	yield from split_wood_parts(name,obj,source,collection)
 	print(json.dumps({"fused":form,"vertices":len(obj.data.vertices),"polygons":len(obj.data.polygons)}))
 	obj.hide_render=True;obj.hide_set(True);obj["construction_source"]=True
+
+
+def bind_foliage(obj,foliage_objects):
+	# Bind each leaf (or complete compound leaf and petiole) to the final wood.
+	# Surface smoothing must not leave attachment points on a different curve.
+	yield 'Attaching foliage to the finished wood'
+	from mathutils.bvhtree import BVHTree
+	import numpy as np
+	# Refresh tessellation after relief before binding to the triangles that
+	# are actually rendered. Cached pre-displacement quad diagonals can differ.
+	obj.data.calc_loop_triangles()
+	wood_coordinates=np.empty((len(obj.data.vertices),3),np.float32);obj.data.vertices.foreach_get('co',wood_coordinates.ravel())
+	wood_triangles=np.empty((len(obj.data.loop_triangles),3),np.int32);obj.data.loop_triangles.foreach_get('vertices',wood_triangles.ravel())
+	tree=BVHTree.FromPolygons(wood_coordinates.tolist(),wood_triangles.tolist(),all_triangles=True);max_offset=0.0
+	triangle_min=wood_coordinates[wood_triangles].min(axis=1)
+	triangle_max=wood_coordinates[wood_triangles].max(axis=1)
+	wood_radii=np.empty(len(obj.data.vertices),np.float32);obj.data.attributes['bark_radius'].data.foreach_get('value',wood_radii)
+
+	def nearest_bark(targets,limits):
+		faces=np.array([tree.find_nearest(Vector(point))[2] for point in targets],np.int32)
+		points,normals=closest_triangle_points(targets,wood_coordinates[wood_triangles[faces]])
+		distances=np.linalg.norm(points-targets,axis=1)
+		misses=np.flatnonzero(distances>limits)
+		# Float BVH candidate selection can miss slender branch faces. Refine
+		# only failed candidates against every triangle whose bounds can improve
+		# that distance. The native candidate gives an upper bound, not proof
+		# that its face is the actual nearest surface.
+		for index in misses:
+			target=np.asarray(targets[index],np.float64)
+			gap=np.maximum(np.maximum(triangle_min-target,target-triangle_max),0)
+			candidates=np.flatnonzero(np.sum(gap*gap,axis=1)<=(max(limits[index],distances[index])+1e-7)**2)
+			if not len(candidates):continue
+			triangles=wood_coordinates[wood_triangles[candidates]].astype(np.float64)
+			normal=np.cross(triangles[:,1]-triangles[:,0],triangles[:,2]-triangles[:,0])
+			valid=np.sum(normal*normal,axis=1)>1e-40
+			triangles=triangles[valid];candidates=candidates[valid]
+			if not len(triangles):continue
+			refined,directions=closest_triangle_points(target[None,:],triangles)
+			best=int(np.argmin(np.sum((refined-target)**2,axis=1)))
+			points[index]=refined[best];normals[index]=directions[best];faces[index]=candidates[best]
+		# A fine twig can emerge through an expanded trunk/collar. An anchor
+		# inside that closed union binds to its surrounding wood, whose radius
+		# is larger than the twig's. Exterior anchors keep the original bound;
+		# a missing branch must not attach its foliage across an empty gap.
+		inside=np.sum((targets-points)*normals,axis=1)<0
+		surface_radii=wood_radii[wood_triangles[faces]].max(axis=1)
+		allowed=np.where(inside,np.maximum(limits,surface_radii),limits)
+		embedded=int(np.count_nonzero((np.linalg.norm(points-targets,axis=1)>limits)&inside))
+		return points,normals,allowed,len(misses),embedded
+
+	for foliage in foliage_objects:
+		if foliage is not None and foliage.data.attributes.get('needle_centerline'):
+			mesh=foliage.data;count=len(mesh.vertices)
+			coordinates=np.empty((count,3),np.float32);mesh.vertices.foreach_get('co',coordinates.ravel())
+			origins=np.empty_like(coordinates);mesh.attributes['needle_centerline'].data.foreach_get('vector',origins.ravel())
+			forward=np.empty_like(coordinates);mesh.attributes['needle_forward'].data.foreach_get('vector',forward.ravel())
+			radii=np.empty(count,np.float32);mesh.attributes['needle_radius'].data.foreach_get('value',radii)
+			rotations=np.empty_like(coordinates);minimum_facing=1.;maximum_distance=0.;maximum_center_distance=0.;worst_attachment=None;fallbacks=0;embedded=0
+			for start in range(0,count,4096):
+				end=min(count,start+4096);targets=coordinates[start:end].copy()
+				points,normals,allowed,fallback_count,enclosed=nearest_bark(targets,np.maximum(radii[start:end]*4,.002));fallbacks+=fallback_count;embedded+=enclosed
+				distances=np.linalg.norm(points-targets,axis=1);invalid=np.flatnonzero(distances>allowed)
+				if len(invalid):
+					index=start+int(invalid[0]);raise ValueError(f'Needle {index} has no local bark attachment at {tuple(float(v) for v in coordinates[index])}')
+				local=int(distances.argmax());index=start+local;distance=float(distances[local])
+				if distance>maximum_distance:
+					maximum_distance=distance;worst_attachment={'index':index,'target':targets[local].tolist(),'centerline':origins[index].tolist(),'base':points[local].tolist(),'support_radius':float(radii[index])}
+				maximum_center_distance=max(maximum_center_distance,float(np.linalg.norm(points-origins[start:end],axis=1).max()))
+				coordinates[start:end]=points
+				directions=normals+forward[start:end];directions/=np.linalg.norm(directions,axis=1)[:,None]
+				minimum_facing=min(minimum_facing,float(np.sum(directions*normals,axis=1).min()))
+				rotations[start:end,0]=0;rotations[start:end,1]=np.arccos(np.clip(directions[:,2],-1,1));rotations[start:end,2]=np.arctan2(directions[:,1],directions[:,0])
+				yield f'Attaching individual needles {end} / {count}'
+			mesh.vertices.foreach_set('co',coordinates.ravel());mesh.attributes['needle_rotation'].data.foreach_set('vector',rotations.ravel());mesh.update()
+			foliage['needle_minimum_outward_dot']=minimum_facing;foliage['needle_maximum_attachment_distance']=maximum_distance
+			foliage['bark_candidate_fallbacks']=fallbacks
+			foliage['embedded_bark_attachments']=embedded
+			foliage['needle_maximum_center_distance']=maximum_center_distance;foliage['needle_worst_attachment']=json.dumps(worst_attachment)
+			for key in ('needle_centerline','needle_forward','needle_radius'):mesh.attributes.remove(mesh.attributes[key])
+			instance_needles(foliage,mesh.materials[0]);max_offset=max(max_offset,maximum_distance)
+			continue
+		if foliage is None or not foliage.get('foliage_attachments'):continue
+		coordinates=np.empty(len(foliage.data.vertices)*3,np.float32);foliage.data.vertices.foreach_get('co',coordinates);coordinates=coordinates.reshape(-1,3)
+		bound=[];attachments=json.loads(foliage['foliage_attachments'])
+		radii=json.loads(foliage['foliage_support_radii'])
+		if len(radii)!=len(attachments):raise ValueError('Leaf attachment support metadata is incomplete')
+		maximum_distance=0.0;fallbacks=0;embedded=0
+		for first in range(0,len(attachments),4096):
+			batch=attachments[first:first+4096];anchors=np.array([a for _,_,a in batch],np.float64)
+			points,_,allowed,fallback_count,enclosed=nearest_bark(anchors,np.maximum(np.asarray(radii[first:first+len(batch)])*4,.002));fallbacks+=fallback_count;embedded+=enclosed
+			distances=np.linalg.norm(points-anchors,axis=1)
+			invalid=np.flatnonzero(distances>allowed)
+			if len(invalid):raise ValueError(f'Leaf {first+int(invalid[0])} has no local bark attachment')
+			maximum_distance=max(maximum_distance,float(distances.max()))
+			for (start,end,anchor),point in zip(batch,points):
+				delta=point-anchor;coordinates[start:end]+=delta;max_offset=max(max_offset,float(np.linalg.norm(delta)));bound.append((start,end,point.tolist()))
+			yield f'Attaching leaves {first+len(batch)} / {len(attachments)}'
+		foliage['leaf_maximum_attachment_offset']=maximum_distance
+		foliage['bark_candidate_fallbacks']=fallbacks
+		foliage['embedded_bark_attachments']=embedded
+		foliage.data.vertices.foreach_set('co',coordinates.ravel());foliage.data.update();foliage['foliage_attachments']=json.dumps(bound,separators=(',',':'))
+	return max_offset
+
+
+def rebuild_foliage(label,density,pending):
+	"""Replace foliage transactionally while preserving completed wood and guides."""
+	name=PREFIX+label;collection=bpy.data.collections[name]
+	settings=json.loads(collection['settings']);settings['leaf_density']=density
+	graph=json.loads(collection['growth_graph'])
+	leaves,petioles,count=yield from build_foliage(graph,settings)
+	temporary=bpy.data.collections.new(PREFIX+pending);bpy.context.scene.collection.children.link(temporary)
+	previous=bpy.data.objects[name+'_Leaves']
+	leaf=leaves.object(PREFIX+pending+'_Leaves',temporary,list(previous.data.materials));leaf['leaf_count']=count
+	leaf.parent=previous.parent;leaf.matrix_parent_inverse=previous.matrix_parent_inverse.copy();leaf.matrix_world=previous.matrix_world.copy()
+	if petioles.verts:
+		previous_stems=bpy.data.objects.get(name+'_Petioles')
+		if previous_stems is None:raise ValueError('Stored compound foliage is missing its petiole material')
+		stem=petioles.object(PREFIX+pending+'_Petioles',temporary,list(previous_stems.data.materials))
+		stem.parent=previous_stems.parent;stem.matrix_parent_inverse=previous_stems.matrix_parent_inverse.copy();stem.matrix_world=previous_stems.matrix_world.copy()
+	maximum=yield from bind_foliage(bpy.data.objects[name+'_Wood'],list(temporary.objects))
+	updates={'settings':json.dumps(settings),'foliage_attachment_max_offset':maximum,
+		'foliage_generator_sha256':hashlib.sha256((OUT/'build_oak_studies.py').read_bytes()+(OUT/'growth.py').read_bytes()).hexdigest()}
+	previous_values={key:collection.get(key) for key in updates}
+	old_objects=[obj for suffix in ('_Leaves','_Petioles') if (obj:=bpy.data.objects.get(name+suffix)) is not None]
+	old_names=[(obj,obj.name) for obj in old_objects]
+	new_names=[(item,item.name) for database in (bpy.data.objects,bpy.data.meshes,bpy.data.node_groups) for item in database if item.name.startswith(PREFIX+pending+'_')]
+	new_objects=list(temporary.objects);linked=[]
+	yield 'Publishing completed foliage'
+	# Old geometry stays alive until every fallible publication step succeeds.
+	# A failed link, rename or property assignment rolls back before cancel
+	# retires the still-owned pending resources.
+	try:
+		for obj in new_objects:collection.objects.link(obj);linked.append(obj)
+		for obj,old_name in old_names:obj.name=PREFIX+pending+'_Retired'+old_name[len(name):]
+		for item,old_name in new_names:item.name=name+old_name[len(PREFIX+pending):]
+		for key,value in updates.items():collection[key]=value
+	except Exception:
+		for item,old_name in new_names:item.name=old_name
+		for obj,old_name in old_names:obj.name=old_name
+		for obj in linked:collection.objects.unlink(obj)
+		for key,value in previous_values.items():
+			if value is None:
+				if key in collection:del collection[key]
+			else:collection[key]=value
+		raise
+	for old in old_objects:
+		mesh=old.data;groups=[modifier.node_group for modifier in old.modifiers if modifier.type=='NODES' and modifier.node_group]
+		bpy.data.objects.remove(old,do_unlink=True)
+		if mesh.users==0:bpy.data.meshes.remove(mesh)
+		for group in groups:
+			if group.users:continue
+			prototypes=[node.inputs['Object'].default_value for node in group.nodes if node.type=='GEOMETRY_NODE_OBJECT_INFO']
+			bpy.data.node_groups.remove(group)
+			for prototype in prototypes:
+				if prototype and prototype.get('construction_source') and prototype.users==1:
+					mesh=prototype.data;bpy.data.objects.remove(prototype,do_unlink=True)
+					if mesh.users==0:bpy.data.meshes.remove(mesh)
+	bpy.data.collections.remove(temporary)
 
 
 def bind_fused_uv(obj,source):
@@ -977,8 +1286,16 @@ def setup_studio():
 		return obj
 	camera=add("Camera",bpy.data.cameras.new(PREFIX+"CameraData"));scene.camera=camera
 	camera.data.type="ORTHO";camera.data.ortho_scale=21
-	mesh=bpy.data.meshes.new(PREFIX+"GroundMesh");mesh.from_pydata([(-1000,-1000,-.065),(1000,-1000,-.065),(1000,1000,-.065),(-1000,1000,-.065)],[],[(0,1,2,3)])
-	ground=add("Ground",mesh)
+	ground=bpy.data.objects.get(PREFIX+"Ground")
+	if ground is None:
+		mesh=bpy.data.meshes.new(PREFIX+"GroundMesh");mesh.from_pydata([(-1000,-1000,0),(1000,-1000,0),(1000,1000,0),(-1000,1000,0)],[],[(0,1,2,3)])
+		ground=add("Ground",mesh)
+	# The graph's root origin defines soil Z=0. A lowered preview floor
+	# exposes the basal cap and makes attached roots appear to float.
+	inverse=ground.matrix_world.inverted()
+	for vertex in ground.data.vertices:
+		point=ground.matrix_world@vertex.co;point.z=0;vertex.co=inverse@point
+	ground.data.update()
 	mat=bpy.data.materials.get(PREFIX+"GroundMat") or bpy.data.materials.new(PREFIX+"GroundMat")
 	mat.diffuse_color=(.24,.255,.23,1);mat.use_nodes=True
 	shader=next(n for n in mat.node_tree.nodes if n.type=="BSDF_PRINCIPLED");shader.inputs["Base Color"].default_value=(.24,.255,.23,1);shader.inputs["Roughness"].default_value=.92

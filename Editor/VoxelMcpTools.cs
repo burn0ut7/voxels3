@@ -8,12 +8,12 @@ public static class VoxelMcpTools
 	[McpTool( "compile_source_shader" )]
 	public static async System.Threading.Tasks.Task<object> CompileSourceShader( string path )
 	{
-		if ( string.IsNullOrWhiteSpace( path ) || !path.EndsWith( ".shader", StringComparison.OrdinalIgnoreCase ) ||
-			!Editor.FileSystem.Mounted.FileExists( path ) )
+		var asset = string.IsNullOrWhiteSpace( path ) ? null : Editor.AssetSystem.FindByPath( path );
+		if ( asset?.AssetType?.FileExtension != "shader" || !System.IO.File.Exists( asset.GetSourceFile( true ) ) )
 		{
 			throw new ArgumentException( "Provide an existing mounted .shader source path.", nameof(path) );
 		}
-		var result = await Editor.EditorUtility.CompileShader( path,
+		var result = await Editor.EditorUtility.CompileShader( asset.Path,
 			new Sandbox.Engine.Shaders.ShaderCompileOptions { ConsoleOutput = false, ForceRecompile = true },
 			System.Threading.CancellationToken.None );
 		var output = new System.Collections.Generic.List<string>();
@@ -59,13 +59,13 @@ public static class VoxelMcpTools
 		return FindManager().InspectTerrainColumn( x, y, minimumZ, spacing, count );
 	}
 
-	/// <summary>Export a bounded survey of the active playable world's landform recipe.</summary>
+	/// <summary>Export a bounded terrain/biome survey; previewSeed inspects another seed without changing the active world.</summary>
 	[McpTool( "export_landform_survey" )]
 	public static async System.Threading.Tasks.Task<object> ExportLandformSurvey( float minimumX = -131072f,
-		float minimumY = -131072f, int pointsPerAxis = 65, float spacing = 4096f )
+		float minimumY = -131072f, int pointsPerAxis = 65, float spacing = 4096f, int? previewSeed = null )
 	{
 		if ( !Game.IsPlaying ) throw new InvalidOperationException( "Start play mode first." );
-		return new { Path = await FindManager().ExportLandformSurvey( minimumX, minimumY, pointsPerAxis, spacing ) };
+		return new { Path = await FindManager().ExportLandformSurvey( minimumX, minimumY, pointsPerAxis, spacing, previewSeed ) };
 	}
 
 	/// <summary>Stage designer controls; apply uses the same save-before-switch inspector action.</summary>
@@ -129,6 +129,7 @@ public static class VoxelMcpTools
 	[EditorEvent.Frame]
 	public static void RepairEjectedRenderCamera()
 	{
+		TreeModelLod.EditorCamera = null;
 		if ( !Game.IsPlaying ) return;
 		var sceneView = Editor.SceneViewWidget.Current;
 		if ( sceneView?.CurrentView != Editor.SceneViewWidget.ViewMode.GameEjected ) return;
@@ -137,6 +138,7 @@ public static class VoxelMcpTools
 			Log.Info(
 				"[VoxelWorld] editor.camera.recreated reason=\"ejected camera scene has no main camera\"" );
 		}
+		TreeModelLod.EditorCamera = sceneView.GetGameTarget()?.Renderer.Camera;
 	}
 
 	/// <summary>
@@ -182,6 +184,25 @@ public static class VoxelMcpTools
 
 		var result = FindManager().StartPerformanceTest( speed, distance, loopCount, task, revision );
 		return $"Performance test {result}.";
+	}
+
+	/// <summary>Orient the local player's view without disabling interactive look controls.</summary>
+	/// <param name="angles">View angles as 'pitch,yaw,roll'.</param>
+	[McpTool( "set_player_view" )]
+	public static object SetPlayerView( string angles )
+	{
+		if ( !Game.IsPlaying || Game.ActiveScene is null )
+			throw new InvalidOperationException( "Start play mode before setting the player view." );
+		PlayerController player = null;
+		foreach ( var candidate in Game.ActiveScene.GetAllComponents<PlayerController>() )
+		{
+			if ( !candidate.Active || candidate.IsProxy ) continue;
+			if ( player is not null ) throw new InvalidOperationException( "Exactly one local player is required." );
+			player = candidate;
+		}
+		if ( player is null ) throw new InvalidOperationException( "No active local player." );
+		player.EyeAngles = Angles.Parse( angles );
+		return new { player.Id, player.EyeAngles };
 	}
 
 	/// <summary>
@@ -286,6 +307,9 @@ public static class VoxelMcpTools
 				$"Editor camera mode did not change to {desiredView}; current mode is {sceneView.CurrentView}." );
 		}
 
+		// Apply the handoff now; editor frame events may not run between native
+		// mode changes and the next game render.
+		TreeModelLod.EditorCamera = ejected ? sceneView.GetGameTarget()?.Renderer.Camera : null;
 		return $"Editor camera mode is {sceneView.CurrentView}; " +
 			$"recreatedStaleCamera={recreatedStaleCamera}.";
 	}
@@ -296,7 +320,7 @@ public static class VoxelMcpTools
 	/// </summary>
 	/// <param name="position">World position as 'x,y,z'.</param>
 	/// <param name="angles">View angles as 'pitch,yaw,roll'.</param>
-	/// <param name="fieldOfView">Perspective vertical field of view in degrees.</param>
+	/// <param name="fieldOfView">Immediate field of view. Editor preferences restore the viewport FOV next frame; use the screenshot override for a fixed capture projection.</param>
 	[McpTool( "set_ejected_camera" )]
 	public static object SetEjectedCamera(
 		string position,
@@ -317,18 +341,21 @@ public static class VoxelMcpTools
 		camera.WorldRotation = state.CameraRotation;
 		camera.FieldOfView = fieldOfView;
 		var rendererScene = viewport.Renderer.Scene;
+		// MCP readback can run without an active game-scene context.
+		var gameScene = Game.ActiveScene;
+		var gameCamera = gameScene?.Camera;
 		return new
 		{
 			Position = camera.WorldPosition,
 			Angles = camera.WorldRotation.Angles(),
 			camera.FieldOfView,
-			CameraSceneIsGameScene = ReferenceEquals( camera.Scene, Game.ActiveScene ),
+			CameraSceneIsGameScene = gameScene.IsValid() && ReferenceEquals( camera.Scene, gameScene ),
 			CameraSceneCameraValid = camera.Scene.IsValid() && camera.Scene.Camera.IsValid(),
 			CameraSceneCameraIsGameSceneCamera = camera.Scene.IsValid() &&
-				ReferenceEquals( camera.Scene.Camera, Game.ActiveScene.Camera ),
-			RendererSceneIsGameScene = ReferenceEquals( rendererScene, Game.ActiveScene ),
+				gameScene.IsValid() && ReferenceEquals( camera.Scene.Camera, gameCamera ),
+			RendererSceneIsGameScene = gameScene.IsValid() && ReferenceEquals( rendererScene, gameScene ),
 			RendererSceneCameraIsGameSceneCamera = rendererScene.IsValid() &&
-				ReferenceEquals( rendererScene.Camera, Game.ActiveScene.Camera ),
+				gameScene.IsValid() && ReferenceEquals( rendererScene.Camera, gameCamera ),
 			RendererSceneCameraValid = rendererScene.IsValid() && rendererScene.Camera.IsValid()
 		};
 	}
@@ -337,21 +364,65 @@ public static class VoxelMcpTools
 	[McpTool.ReadOnly( "get_ejected_camera" )]
 	public static object GetEjectedCamera()
 	{
-		var camera = GetEjectedViewport().Renderer.Camera;
-		return new { Position = camera.WorldPosition, Angles = camera.WorldRotation.Angles(), camera.FieldOfView };
+		var viewport = GetEjectedViewport();
+		var camera = viewport.Renderer.Camera;
+		// Ejecting resets viewport sizing; Sandbox.Screen retains the possessed
+		// game's dimensions and cannot describe this camera's render workload.
+		var renderSize = viewport.Renderer.Size * viewport.DpiScale;
+		return new
+		{
+			Position = camera.WorldPosition,
+			Angles = camera.WorldRotation.Angles(),
+			camera.FieldOfView,
+			RenderWidth = renderSize.x,
+			RenderHeight = renderSize.y,
+			GameCameraPosition = Game.ActiveScene?.Camera?.WorldPosition,
+			RenderingGameCamera = ReferenceEquals( camera, Game.ActiveScene?.Camera ),
+			Frame = new
+			{
+				Sandbox.Diagnostics.FrameStats.Current.TrianglesRendered,
+				Sandbox.Diagnostics.FrameStats.Current.DrawCalls,
+				Sandbox.Diagnostics.FrameStats.Current.ObjectsRendered,
+				Sandbox.Diagnostics.FrameStats.Current.SceneViewsRendered
+			}
+		};
 	}
 
 	/// <summary>
 	/// Render the actual detached game viewport camera, including inherited runtime camera command lists.
 	/// </summary>
+	/// <param name="width">Capture width in pixels.</param>
+	/// <param name="height">Capture height in pixels.</param>
+	/// <param name="fieldOfView">Capture field of view in degrees, or zero to preserve the current viewport projection. Does not change editor preferences.</param>
+	/// <param name="debugMode">Optional native render mode, such as Albedo or NormalMap. Restored after capture.</param>
 	[McpTool.ReadOnly( "ejected_camera_screenshot" )]
 	public static object EjectedCameraScreenshot(
 		[Sandbox.Range( 16, 4096 )] int width = 1280,
-		[Sandbox.Range( 16, 4096 )] int height = 720 )
+		[Sandbox.Range( 16, 4096 )] int height = 720,
+		[Sandbox.Range( 0f, 140f )] float fieldOfView = 0f,
+		string debugMode = null )
 	{
+		if ( fieldOfView != 0f && (fieldOfView < 10f || fieldOfView > 140f || !float.IsFinite( fieldOfView )) )
+			throw new ArgumentOutOfRangeException( nameof( fieldOfView ), "Use zero or a field of view from 10 to 140 degrees." );
 		var viewport = GetEjectedViewport();
+		var camera = viewport.Renderer.Camera;
+		var originalFieldOfView = camera.FieldOfView;
+		var originalDebugMode = camera.DebugMode;
+		var captureDebugMode = originalDebugMode;
+		if ( debugMode is not null && !Enum.TryParse( debugMode, true, out captureDebugMode ) )
+			throw new ArgumentException( "Use a native SceneCameraDebugMode name.", nameof( debugMode ) );
 		var bitmap = new Bitmap( width, height );
-		viewport.Renderer.Camera.RenderToBitmap( bitmap, false );
+		try
+		{
+			if ( fieldOfView != 0f ) camera.FieldOfView = fieldOfView;
+			camera.DebugMode = captureDebugMode;
+			camera.RenderToBitmap( bitmap, false );
+		}
+		finally
+		{
+			camera.FieldOfView = originalFieldOfView;
+			camera.DebugMode = originalDebugMode;
+		}
 		return bitmap;
 	}
 

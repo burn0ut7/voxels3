@@ -1,5 +1,23 @@
 # Voxel Chunk Foundation
 
+## Coastline candidate, 2026-09-20
+
+[Coastline](../Plans/CoastlineFirstSlice.md) adds a tenth label and shore sand,
+using natural-height crossings without changing density generator52 or water8.
+Existing saved world identity and edits remain intact. Protocol8 includes the
+new material behavior. Production surveys confirm unchanged coast/marsh heights;
+full native acceptance remains pending.
+
+## Marsh candidate, 2026-09-20
+
+Generator50 adds a ninth biome and bounded wetland bed conditioning after the
+existing river result. `TerrainBiomes` owns this pure rule; both regular and
+transition GPU paths consume its mirror. Natural height remains unchanged for
+classification and the existing interval bound includes the maximum .02-relief
+displacement. Water coverage now shares the refined exterior used by medium
+queries. Saved identities remain separated by generator/water versions. See the
+[marsh design](../Plans/MarshFirstSlice.md) for contracts and pending acceptance.
+
 ## Scope
 
 This document owns terrain state, spatial conventions, procedural generation,

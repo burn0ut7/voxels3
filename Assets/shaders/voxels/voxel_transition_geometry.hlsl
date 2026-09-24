@@ -53,7 +53,7 @@ struct TransitionAllocationDescriptor
 struct TransitionTerrainVertexWords
 {
 	uint4 First;
-	uint3 Second;
+	uint4 Second;
 };
 
 StructuredBuffer<TransitionRequest> TransitionRequests < Attribute( "TransitionRequests" ); >;
@@ -547,16 +547,19 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 			request.Terrain, request.TerrainScales, request.TerrainShape, request.Reserved0 != 0 );
 		TransitionEdgeFlags[index] = asuint( coordinate ) + 1u;
 		float3 world = VoxelEdgePosition( firstWorld, secondWorld, coordinate );
-		float4 materialWeights = GenerateVoxelMaterialWeights( world, request.Terrain, request.TerrainScales, request.TerrainShape );
+		float gravelWeight;
+		float4 materialWeights = GenerateVoxelMaterialWeights( world, request.Terrain, request.TerrainScales, request.TerrainShape, gravelWeight );
 		if ( request.Reserved0 != 0 )
 		{
 			uint materialBase = (uint)TransitionPlacedMaterialOffset + block * (uint)TransitionDensityCount;
 			float dirt = lerp( TransitionDensitySamples[materialBase + TransitionDensityIndex( int2(first), 0 )],
 				TransitionDensitySamples[materialBase + TransitionDensityIndex( int2(second), 0 )], coordinate );
 			materialWeights = lerp( materialWeights, float4( 0.0, 1.0, 0.0, 0.0 ), saturate( dirt ) );
+			gravelWeight *= 1.0 - saturate( dirt );
 		}
-		TransitionEdgeFlags[(uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] =
-			PackGeneratedVoxelWeights( materialWeights );
+		uint2 packedWeights = PackGeneratedVoxelWeights( materialWeights, gravelWeight );
+		TransitionEdgeFlags[(uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] = packedWeights.x;
+		TransitionEdgeFlags[2u * (uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] = packedWeights.y;
 		uint worldHash = TransitionHash( asuint( world.x ) ^ TransitionHash( asuint( world.y ) ) ^
 			TransitionHash( asuint( world.z ) ) );
 		InterlockedXor( TransitionDigests[block].y, TransitionHash( worldHash ^ slot ) );
@@ -730,8 +733,9 @@ void MainCs( uint3 dispatchId : SV_DispatchThreadID, uint3 groupId : SV_GroupID,
 		TransitionTerrainVertexWords output;
 		output.First = uint4( asuint( position.x ), asuint( position.y ),
 			asuint( position.z ), encodedRecordIdentity );
-		output.Second = uint3( asuint( encodedNormal.x ), asuint( encodedNormal.y ),
-			TransitionEdgeFlags[(uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] );
+		output.Second = uint4( asuint( encodedNormal.x ), asuint( encodedNormal.y ),
+			TransitionEdgeFlags[(uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index],
+			TransitionEdgeFlags[2u * (uint)TransitionEdgeSlotCount * (uint)TransitionBatchSize + index] );
 		TransitionOutputVertices[allocation.VertexOffset + localVertex] = output;
 	}
 }
