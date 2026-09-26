@@ -357,13 +357,13 @@ combat, simulation and multiplayer claims. Never quietly change the workload or
 relax failed thresholds. Historical subsystem exceptions do not automatically
 apply to the new gameplay.
 
-A fresh general-purpose reviewer who did not implement a change inspects the final
-sources, requirements, references and raw results. Review includes real workflows,
-edge cases, visible quality and relevant performance. Resolve material findings,
-then have the same reviewer recheck the fix and affected regressions. Record
-pass/fail/unverified/not-applicable coverage and a ready/changes-required/
-verification-incomplete decision. Unverified required behavior blocks acceptance,
-commit and push of that implementation.
+Follow the global task-level review policy once the requested task or explicitly
+agreed delivery milestone is integrated and validated, not after each edit or
+internal slice. Review the full outcome, overall design, architecture, integration,
+real workflows, edge cases, visible quality and relevant performance. Batch fixes
+for the same reviewer's consolidated recheck. Record pass/fail/unverified/
+not-applicable coverage and a ready/changes-required/verification-incomplete
+decision. Unverified required behavior blocks acceptance, commit and push.
 
 Perfection in a single pass is not an acceptance criterion that can be honestly
 proven. The working commitment is complete bounded increments, candid evidence,
